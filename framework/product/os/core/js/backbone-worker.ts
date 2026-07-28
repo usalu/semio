@@ -6,7 +6,8 @@
  */
 // #endregion Header
 
-import type { BackboneWorkerRequest, BackboneWorkerResponse, DocumentActorConfig, DocumentActorMsg, DocumentEvent, DocumentSyncStatus, HubClientFrame, HubServerFrame, OperationEnvelope, PersistenceBinding, RemoteState } from "./index";
+import type { BackboneWorkerRequest, BackboneWorkerResponse, ClientFrame, CommandAckOutcome, DocumentActorConfig, DocumentActorMsg, DocumentEvent, DocumentPresencePeer, DocumentSyncStatus, OperationEnvelope, PersistenceBinding, RemoteState, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireOperationEnvelope } from "./index";
+import { decodeClientFrame, decodeServerFrame, encodeClientFrame, encodeServerFrame } from "./index";
 
 type RustWorkerHost = {
   handleRequestJson(json: string): void;
@@ -74,7 +75,16 @@ type DocumentState = {
   reconnectDelayMs: number;
   pendingOperations: OperationEnvelope[];
   status: DocumentSyncStatus;
-  sinceVersion: number;
+  /** 🏔️ Last frontier the hub reported (`Welcome.server_frontier` / `Commands.frontier` /
+   * `Ack.frontier`) — the wire-v2 replacement for the old `sinceVersion: number` counter. */
+  frontier: WireFrontierSummary | null;
+  /** 🎟️ The hub's last `Welcome.resume_token`, echoed back on the next `hello` after a reconnect. */
+  resumeToken: string | null;
+  /** 🧺 Outbound `Commands` batches awaiting an `Ack`, keyed by `batch_id`. */
+  pendingBatches: Map<number, OperationEnvelope[]>;
+  nextBatchId: number;
+  /** ⏰ Logical tick counter for {@link nextWireTimestamp} on every outbound wire envelope. */
+  hlcCounter: number;
   closed: boolean;
 };
 
@@ -107,6 +117,101 @@ function hubBinding(config: DocumentActorConfig): Extract<PersistenceBinding, { 
   return binding ?? null;
 }
 //#endregion 🔖DocumentState
+
+//#region 🔖WireBridge
+/** 🧮 A stable, deterministic 32-bit seed for an actor id string, for `WireOperationEnvelope.
+ * timestamp.actor` — the TS twin of the Rust actor's `actor_seed` (`framework/sync/rs/lib.rs`
+ * `🔖WireBridge`). Not cryptographic, just a cheap deterministic fold — matches the Rust side's own
+ * `DefaultHasher`-based approach in spirit (both are wire-local ordering metadata, never round-
+ * tripped back into an app-level {@link OperationEnvelope}). */
+function actorSeed(actor: string): number {
+  let hash = 0;
+  for (let index = 0; index < actor.length; index++) {
+    hash = (Math.imul(hash, 31) + actor.charCodeAt(index)) | 0;
+  }
+  return hash >>> 0;
+}
+
+/** ⏰ Advances `state.hlcCounter` and stamps a fresh wire timestamp for an outbound envelope —
+ * the TS twin of the Rust actor's `next_timestamp`. */
+function nextWireTimestamp(state: DocumentState): WireOperationEnvelope["timestamp"] {
+  state.hlcCounter += 1;
+  return { actor: actorSeed(state.config.actor), physical_ms: Date.now(), logical: state.hlcCounter };
+}
+
+/** #️⃣ A cheap, non-cryptographic FNV-1a-style digest for {@link toWireEnvelope}'s placeholder
+ * `payloadHash` on the way back through {@link fromWireEnvelope}. This TS fallback never verifies
+ * `payloadHash` against anything (it's a "deliberately dumb" relay twin — see this file's header
+ * doc — the real content-addressed check happens Rust-side via `semio_framework_hash::hash_bytes`
+ * once the wasm actor is available), so a real blake3 dependency isn't worth adding here just to
+ * fill an otherwise-unused field. */
+function placeholderPayloadHash(payload: unknown): string {
+  const json = JSON.stringify(payload) ?? "null";
+  let hash = 0x811c9dc5;
+  for (let index = 0; index < json.length; index++) {
+    hash ^= json.charCodeAt(index);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
+/** 🌉 Converts this fallback's local, camelCase {@link OperationEnvelope} into the snake_case
+ * {@link WireOperationEnvelope} `protocol_wire::ClientFrame::Commands`/`ServerFrame::Commands`
+ * carry — the TS twin of the Rust actor's `to_wire_envelope`. */
+function toWireEnvelope(envelope: OperationEnvelope, timestamp: WireOperationEnvelope["timestamp"]): WireOperationEnvelope {
+  return {
+    operation_id: envelope.id,
+    document_id: envelope.document,
+    actor: envelope.actor,
+    dependencies: [...(envelope.deps ?? [])],
+    diff: { schema: envelope.diff.schemaId, payload: envelope.diff.payload },
+    inverse: { schema: envelope.inverse.inverseDiff.schemaId, inverse_diff: envelope.inverse.inverseDiff.payload },
+    timestamp,
+  };
+}
+
+/** 🌉 The inverse of {@link toWireEnvelope} — the TS twin of the Rust actor's `from_wire_envelope`.
+ * `baseVersion` is recovered from the payload's own `sequenceNumber` (this actor's payloads are
+ * always edit-shaped JSON), mirroring the Rust side's identical recovery. */
+function fromWireEnvelope(envelope: WireOperationEnvelope): OperationEnvelope {
+  const payload = envelope.diff.payload;
+  const sequenceNumber = payload !== null && typeof payload === "object" && "sequenceNumber" in payload ? Number((payload as Record<string, unknown>).sequenceNumber) : 0;
+  return {
+    id: envelope.operation_id,
+    actor: envelope.actor,
+    document: envelope.document_id,
+    schemaVersion: envelope.diff.schema,
+    deps: [...envelope.dependencies],
+    payloadHash: placeholderPayloadHash(payload),
+    diff: { schemaId: envelope.diff.schema, payload },
+    inverse: {
+      targetOperation: envelope.operation_id,
+      inverseDiff: { schemaId: envelope.inverse.schema, payload: envelope.inverse.inverse_diff },
+      baseVersion: Number.isFinite(sequenceNumber) ? Math.max(0, sequenceNumber) : 0,
+      dependencies: [],
+      undoPolicy: "exactBaseOnly",
+    },
+  };
+}
+
+/** ↩️ Synthesizes a local "undo" envelope from a speculative envelope's own precomputed `inverse` —
+ * the TS twin of the Rust actor's `rollback_envelope` (see that function's doc comment for why
+ * replaying the envelope's own inverse, rather than calling into typed operation-inverse machinery,
+ * is the right move for this schema-agnostic relay). */
+function rollbackEnvelope(envelope: OperationEnvelope): OperationEnvelope {
+  const undoId = `${envelope.id}~undo`;
+  return {
+    id: undoId,
+    actor: envelope.actor,
+    document: envelope.document,
+    schemaVersion: envelope.schemaVersion,
+    deps: [envelope.id],
+    payloadHash: placeholderPayloadHash(envelope.inverse.inverseDiff.payload),
+    diff: { schemaId: envelope.inverse.inverseDiff.schemaId, payload: envelope.inverse.inverseDiff.payload },
+    inverse: { targetOperation: undoId, inverseDiff: { schemaId: envelope.diff.schemaId, payload: envelope.diff.payload }, baseVersion: envelope.inverse.baseVersion, dependencies: [], undoPolicy: envelope.inverse.undoPolicy },
+  };
+}
+//#endregion 🔖WireBridge
 
 //#region 🔖Folder
 function folderEnvelopeUrl(binding: Extract<PersistenceBinding, { kind: "folder" }>, documentId: string): string {
@@ -175,14 +280,31 @@ function connectHub(state: DocumentState, binding: Extract<PersistenceBinding, {
   setRemote(state, { kind: "connecting" });
   const wsBase = binding.baseUrl.replace(/^http/, "ws");
   const socket = new WebSocket(`${wsBase}/studios/${encodeURIComponent(binding.studioId)}/documents/${encodeURIComponent(state.config.documentId)}/ws`);
+  // 🎞️ Binary frames (`protocol_wire`), not JSON text — see this file's header + `WireBridge` region.
+  socket.binaryType = "arraybuffer";
   state.socket = socket;
   socket.onopen = () => {
     state.reconnectDelayMs = HUB_RECONNECT_MIN_MS;
-    sendHubFrame(state, { kind: "hello", actor: state.config.actor, token: binding.token, sinceVersion: state.sinceVersion });
+    sendWireFrame(state, {
+      Hello: {
+        wire_version: 1,
+        protocol_version: 1,
+        schema: state.config.schema,
+        // 🔖 No client-side schema pack hashing wired this wave (matches the Rust actor's identical
+        // placeholder — see `framework/sync/rs/lib.rs` `try_connect_hub`); the hub is JSON-only until
+        // CW6 anyway, so this is never validated yet.
+        pack_schema_hash: new Array(32).fill(0),
+        actor: state.config.actor,
+        token: binding.token ?? null,
+        resume_token: state.resumeToken,
+        frontier: state.frontier,
+      },
+    }, "command");
   };
   socket.onmessage = (messageEvent) => {
     try {
-      handleHubFrame(state, JSON.parse(messageEvent.data as string) as HubServerFrame);
+      const bytes = new Uint8Array(messageEvent.data as ArrayBuffer);
+      handleHubFrame(state, decodeServerFrame(bytes).frame);
     } catch (error) {
       console.error("[backbone-worker] malformed hub frame", state.config.documentId, error);
     }
@@ -197,40 +319,101 @@ function connectHub(state: DocumentState, binding: Extract<PersistenceBinding, {
   socket.onerror = () => socket.close();
 }
 
-function sendHubFrame(state: DocumentState, frame: HubClientFrame): void {
-  if (state.socket?.readyState === WebSocket.OPEN) state.socket.send(JSON.stringify(frame));
+function sendWireFrame(state: DocumentState, frame: ClientFrame, lane: WireLane): void {
+  if (state.socket?.readyState === WebSocket.OPEN) state.socket.send(encodeClientFrame(frame, lane));
 }
 
-function handleHubFrame(state: DocumentState, frame: HubServerFrame): void {
-  switch (frame.kind) {
-    case "welcome":
-      state.sinceVersion = frame.version;
-      setRemote(state, { kind: "live", peerCount: frame.presence.length });
-      if (frame.envelope != null) emitEvent(state.config.documentId, { kind: "snapshotReplaced", envelopeJson: JSON.stringify(frame.envelope) });
-      if (frame.backlog.length > 0) emitEvent(state.config.documentId, { kind: "remoteOperations", envelopes: frame.backlog });
-      emitEvent(state.config.documentId, { kind: "presence", peers: frame.presence });
-      break;
-    case "operations":
-      state.sinceVersion = frame.version;
-      if (frame.origin !== state.config.actor) emitEvent(state.config.documentId, { kind: "remoteOperations", envelopes: frame.envelopes });
-      break;
-    case "snapshotReplaced":
-      state.sinceVersion = frame.version;
-      emitEvent(state.config.documentId, { kind: "snapshotReplaced", envelopeJson: JSON.stringify(frame.envelope) });
-      break;
-    case "presence":
-      emitEvent(state.config.documentId, { kind: "presence", peers: frame.peers });
-      break;
-    case "ack":
-      state.pendingOperations = state.pendingOperations.filter((envelope) => envelope.id !== frame.operationId);
-      setStatus(state, { pendingOperations: state.pendingOperations.length });
-      break;
-    case "conflict":
-      emitEvent(state.config.documentId, { kind: "conflict", message: frame.message });
-      break;
-    case "error":
-      console.error("[backbone-worker] hub error", state.config.documentId, frame.message);
-      break;
+/** 🧺 Builds + sends one `Commands` batch, tracking it in `pendingBatches` for
+ * {@link handleAck}. Mirrors the Rust actor's `relay_operations_to_hub`. */
+function relayOperationsToHub(state: DocumentState, envelopes: readonly OperationEnvelope[]): void {
+  if (state.socket?.readyState !== WebSocket.OPEN || envelopes.length === 0) return;
+  const batchId = state.nextBatchId;
+  state.nextBatchId += 1;
+  const wireEnvelopes = envelopes.map((envelope) => toWireEnvelope(envelope, nextWireTimestamp(state)));
+  state.pendingBatches.set(batchId, [...envelopes]);
+  sendWireFrame(state, { Commands: { batch_id: batchId, envelopes: wireEnvelopes } }, "command");
+}
+
+/** 📮 Resolves one outbound `Commands` batch's terminal `Applied` stage — mirrors the Rust actor's
+ * `handle_ack`. `pendingOperations` (the UI-facing "unconfirmed" count) is trimmed by id, the same
+ * way the old per-operation `ack` frame used to. */
+function handleAck(state: DocumentState, batchId: number, stages: readonly WireAckStage[]): void {
+  for (const stage of stages) {
+    if (typeof stage !== "object" || !("Applied" in stage)) continue;
+    const sent = state.pendingBatches.get(batchId);
+    state.pendingBatches.delete(batchId);
+    if (!sent) continue;
+    const sentIds = new Set(sent.map((envelope) => envelope.id));
+    state.pendingOperations = state.pendingOperations.filter((envelope) => !sentIds.has(envelope.id));
+
+    const outcome = stage.Applied.outcome;
+    let ackOutcome: CommandAckOutcome;
+    if (outcome === "Accepted") {
+      ackOutcome = { kind: "accepted" };
+    } else if ("Transformed" in outcome) {
+      const rollbacks = [...sent].reverse().map(rollbackEnvelope);
+      if (rollbacks.length > 0) emitEvent(state.config.documentId, { kind: "remoteOperations", envelopes: rollbacks });
+      const converted = fromWireEnvelope(outcome.Transformed.envelope);
+      emitEvent(state.config.documentId, { kind: "remoteOperations", envelopes: [converted] });
+      ackOutcome = { kind: "transformed" };
+    } else {
+      const rollbacks = [...sent].reverse().map(rollbackEnvelope);
+      if (rollbacks.length > 0) emitEvent(state.config.documentId, { kind: "remoteOperations", envelopes: rollbacks });
+      ackOutcome = { kind: "rejected", reason: outcome.Rejected.reason };
+    }
+    setStatus(state, { pendingOperations: state.pendingOperations.length });
+    emitEvent(state.config.documentId, { kind: "commandOutcome", batchId, outcome: ackOutcome });
+  }
+}
+
+function handleHubFrame(state: DocumentState, frame: ServerFrame): void {
+  if (typeof frame === "string") return; // no unit-variant `ServerFrame` exists today; defensive.
+  if ("Welcome" in frame) {
+    state.resumeToken = frame.Welcome.resume_token;
+    state.frontier = frame.Welcome.server_frontier;
+    // 📡 `Welcome` no longer carries a presence roster (wire v2 splits it into its own `Presence`
+    // frame) — `peerCount` is corrected once that frame arrives.
+    setRemote(state, { kind: "live", peerCount: 0 });
+    // 📦 Pack-based snapshot bootstrap (`Welcome.bootstrap.Snapshot`): no client-side pack decoder
+    // wired this wave (db/pack integration is a CW6+ hub-rebuild concern, mirrors the Rust actor's
+    // identical deferral) — accepted and ignored; catch-up relies on the hub's follow-up `Commands`.
+    return;
+  }
+  if ("SnapshotChunk" in frame || "SnapshotDone" in frame) {
+    // 📦 See the `Welcome.bootstrap.Snapshot` note above — accepted and ignored.
+    return;
+  }
+  if ("Commands" in frame) {
+    state.frontier = frame.Commands.frontier;
+    if (frame.Commands.origin !== state.config.actor) {
+      const envelopes = frame.Commands.envelopes.map(fromWireEnvelope);
+      emitEvent(state.config.documentId, { kind: "remoteOperations", envelopes });
+    }
+    return;
+  }
+  if ("Ack" in frame) {
+    state.frontier = frame.Ack.frontier;
+    handleAck(state, frame.Ack.batch_id, frame.Ack.stages);
+    return;
+  }
+  if ("Preview" in frame) {
+    if (frame.Preview.actor !== state.config.actor) emitEvent(state.config.documentId, { kind: "preview", actor: frame.Preview.actor, key: frame.Preview.key, seq: frame.Preview.seq, payload: frame.Preview.payload });
+    return;
+  }
+  if ("Presence" in frame) {
+    // 📡 `ServerFrame::Presence.peers` is opaque JSON on the wire (`Vec<serde_json::Value>`);
+    // trusted-cast to the locally-known peer shape, same trust boundary the Rust actor's
+    // `presence_from_json` (`serde_json::from_value`) crosses.
+    emitEvent(state.config.documentId, { kind: "presence", peers: frame.Presence.peers as DocumentPresencePeer[] });
+    return;
+  }
+  if ("CreditGrant" in frame) {
+    // 🪙 Command-lane credit-based flow control: no client-side backpressure implemented this wave
+    // (scope is frame plumbing, not congestion control) — accepted and ignored.
+    return;
+  }
+  if ("Error" in frame) {
+    emitEvent(state.config.documentId, { kind: "conflict", message: frame.Error.message });
   }
 }
 //#endregion 🔖Hub
@@ -384,7 +567,11 @@ function openDocument(config: DocumentActorConfig): void {
     reconnectDelayMs: HUB_RECONNECT_MIN_MS,
     pendingOperations: [],
     status: { persisted: false, pendingOperations: 0, remote: { kind: "detached" } },
-    sinceVersion: 0,
+    frontier: null,
+    resumeToken: null,
+    pendingBatches: new Map(),
+    nextBatchId: 0,
+    hlcCounter: 0,
     closed: false,
   };
   documents.set(config.documentId, state);
@@ -420,7 +607,7 @@ async function handleLocalMsg(state: DocumentState, message: DocumentActorMsg): 
       state.pendingOperations.push(...message.envelopes);
       setStatus(state, { pendingOperations: state.pendingOperations.length });
       state.channel.postMessage(message.envelopes);
-      sendHubFrame(state, { kind: "operations", envelopes: message.envelopes });
+      relayOperationsToHub(state, message.envelopes);
       const folder = folderBinding(state.config);
       // 📁 Folder persistence only understands whole-envelope snapshots today (`vcs::FolderSqliteStorage`
       // stores one json blob per document) — a local operation still marks the document dirty so the next
@@ -439,12 +626,17 @@ async function handleLocalMsg(state: DocumentState, message: DocumentActorMsg): 
           console.error("[backbone-worker] folder write failed", state.config.documentId, error);
         }
       }
-      const hub = hubBinding(state.config);
-      if (hub) sendHubFrame(state, { kind: "putEnvelope", version: state.sinceVersion, envelope: JSON.parse(message.envelopeJson) });
+      // 📸 No client -> hub whole-envelope push exists in wire v2 (`ClientFrame` has no snapshot-put
+      // variant, only causally-ordered `Commands`) — mirrors the Rust actor's identical deferral
+      // (`framework/sync/rs/lib.rs` `drain_and_relay`'s `BackboneMessage::Snapshot` arm) rather than
+      // a bug here; the folder write above still persists it.
       break;
     }
     case "presenceHeartbeat":
-      sendHubFrame(state, { kind: "presence", peer: message.peer });
+      sendWireFrame(state, { Presence: { peer: message.peer } }, "preview");
+      break;
+    case "publishPreview":
+      sendWireFrame(state, { PreviewPublish: { key: message.key, seq: message.seq, payload: message.payload } }, "preview");
       break;
     case "externalChanged": {
       const folder = folderBinding(state.config);
@@ -476,3 +668,96 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
 }
 //#endregion 🔖MessageBridge
 //#endregion 🔖TsFallback
+
+//#region 🧪Tests
+// 🧵 Whole block stripped from production builds (see this file's header doc) — `node:*` imports
+// below are dynamic specifically so they never get bundled into the actual browser Worker script.
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+
+  function sampleEnvelope(): OperationEnvelope {
+    return {
+      id: "edit-1",
+      actor: "actor-1",
+      document: "doc-1",
+      schemaVersion: "demo/v1",
+      deps: [],
+      payloadHash: "unused-in-this-fallback",
+      diff: { schemaId: "demo/v1", payload: { n: 5, sequenceNumber: 1 } },
+      inverse: { targetOperation: "edit-1", inverseDiff: { schemaId: "demo/v1", payload: { n: 0 } }, baseVersion: 0, dependencies: [], undoPolicy: "exactBaseOnly" },
+    };
+  }
+
+  describe("backbone-worker wire bridge", () => {
+    it("round-trips an OperationEnvelope through toWireEnvelope/fromWireEnvelope", () => {
+      const envelope = sampleEnvelope();
+      const wire = toWireEnvelope(envelope, { actor: 1, physical_ms: 2, logical: 3 });
+      expect(wire.operation_id).toBe(envelope.id);
+      expect(wire.document_id).toBe(envelope.document);
+      expect(wire.actor).toBe(envelope.actor);
+      expect(wire.diff.payload).toEqual(envelope.diff.payload);
+
+      const recovered = fromWireEnvelope(wire);
+      expect(recovered.id).toBe(envelope.id);
+      expect(recovered.document).toBe(envelope.document);
+      expect(recovered.diff.payload).toEqual(envelope.diff.payload);
+      expect(recovered.inverse.inverseDiff.payload).toEqual(envelope.inverse.inverseDiff.payload);
+    });
+
+    it("rollbackEnvelope synthesizes an undo from the original inverse", () => {
+      const envelope = sampleEnvelope();
+      const rollback = rollbackEnvelope(envelope);
+      expect(rollback.deps).toEqual([envelope.id]);
+      expect(rollback.diff.payload).toEqual(envelope.inverse.inverseDiff.payload);
+      expect(rollback.id).not.toBe(envelope.id);
+    });
+
+    it("encodeClientFrame/decodeClientFrame round-trip a Hello frame", () => {
+      const frame: ClientFrame = { Hello: { wire_version: 1, protocol_version: 1, schema: "demo/v1", pack_schema_hash: new Array(32).fill(0), actor: "actor-1", token: null, resume_token: null, frontier: null } };
+      const bytes = encodeClientFrame(frame, "command");
+      const decoded = decodeClientFrame(bytes);
+      expect(decoded.lane).toBe("command");
+      expect(decoded.frame).toEqual(frame);
+    });
+
+    // 🎬 Shared fixtures: the exact same bytes `framework/sync/rs/lib.rs`'s
+    // `wire_fixtures_stay_byte_identical_across_rust_and_ts` test generates and verifies Rust-side.
+    // Decoding them here, then re-encoding the decoded value and diffing against the original bytes,
+    // proves the TS codec agrees with `protocol_wire`'s Rust codec byte-for-byte, not just shape-wise.
+    it("decodes the Rust-generated binary wire fixtures byte-identically", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const { dirname, join } = await import("node:path");
+      const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), "../../../../sync/fixtures/wire");
+
+      const helloBytes = new Uint8Array(readFileSync(join(fixturesDir, "client-hello.bin")));
+      const hello = decodeClientFrame(helloBytes);
+      expect(hello.lane).toBe("command");
+      if (typeof hello.frame === "string" || !("Hello" in hello.frame)) throw new Error("expected a Hello frame");
+      expect(hello.frame.Hello.schema).toBe("demo/v1");
+      expect(hello.frame.Hello.actor).toBe("actor-1");
+      expect(encodeClientFrame(hello.frame, "command")).toEqual(helloBytes);
+
+      const commandsBytes = new Uint8Array(readFileSync(join(fixturesDir, "client-commands.bin")));
+      const commands = decodeClientFrame(commandsBytes);
+      if (typeof commands.frame === "string" || !("Commands" in commands.frame)) throw new Error("expected a Commands frame");
+      expect(commands.frame.Commands.envelopes).toHaveLength(1);
+      expect(commands.frame.Commands.envelopes[0]?.diff.payload).toEqual({ n: 5, sequenceNumber: 1 });
+      expect(encodeClientFrame(commands.frame, "command")).toEqual(commandsBytes);
+
+      const welcomeBytes = new Uint8Array(readFileSync(join(fixturesDir, "server-welcome.bin")));
+      const welcome = decodeServerFrame(welcomeBytes);
+      if (typeof welcome.frame === "string" || !("Welcome" in welcome.frame)) throw new Error("expected a Welcome frame");
+      expect(welcome.frame.Welcome.resume_token).toBe("resume-1");
+      expect(encodeServerFrame(welcome.frame, "command")).toEqual(welcomeBytes);
+
+      const ackBytes = new Uint8Array(readFileSync(join(fixturesDir, "server-ack.bin")));
+      const ack = decodeServerFrame(ackBytes);
+      if (typeof ack.frame === "string" || !("Ack" in ack.frame)) throw new Error("expected an Ack frame");
+      expect(ack.frame.Ack.batch_id).toBe(1);
+      expect(ack.frame.Ack.stages).toHaveLength(3);
+      expect(encodeServerFrame(ack.frame, "command")).toEqual(ackBytes);
+    });
+  });
+}
+//#endregion 🧪Tests

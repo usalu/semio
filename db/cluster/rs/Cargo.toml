@@ -16,3 +16,13 @@ db_actor = { path = "../../actor/rs" }
 db_wal = { path = "../../wal/rs" }
 db_storage = { path = "../../storage/rs" }
 db_sync = { path = "../../sync/rs" }
+
+[dev-dependencies]
+# 🎯 Genuinely missing additions (not in the stub's dependency list), noted per the wave's
+# instructions: this crate's tests need to seed a leader `DocumentWal` with real
+# `protocol::OperationEnvelope` commands (via `db_sync::encode_command_envelope`) to exercise
+# `replicate_document` end to end — the same fixture shape `db_sync`'s own tests already use.
+# Neither crate is a runtime dependency of `db_cluster` itself (see the module doc's "no `blake3`"
+# note for the parallel reasoning on why the ring hash doesn't pull in a real dependency either).
+protocol = { path = "../../../protocol/rs" }
+serde_json = "1"

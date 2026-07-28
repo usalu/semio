@@ -1,0 +1,88 @@
+CW4 integration verification (post-workflow + manual clippy triage)
+
+All 24 db/* crates implemented by the CW4 Workflow (24 agents across 7 dependency-respecting
+batches: core -> {actor, state, storage, observe} -> {wal, snapshot, index, security,
+storage_sqlite, storage_postgres, storage_neo4j} -> {conflict, projection, query, preview} ->
+{document, compact, sync} -> {cluster, engine} -> {facade, testkit, cli}).
+
+Discovered mid-run: the db_cli agent self-corrected partway through its own turn (db facade
+became real while it was running, in the same parallel phase) and left an inconsistent
+intermediate state — Cargo.toml trimmed to depend on the `db` facade alone, but ~110 call sites in
+lib.rs still used the individual db_* crate paths directly, which no longer compiled. Completed
+that migration by hand rather than reverting it: rewrote every db_engine::/db_storage::/db_wal::/
+db_snapshot::/db_conflict::/db_cluster::/db_observe::/db_document::/db_actor::/db_state:: path to
+its db::-facade equivalent, with care around two places where a facade-promoted type and a
+same-named lower-crate type are NOT the same (db_core::Frontier vs the facade's db::Frontier are
+distinct types per the engine/core layering; db::core::DocumentId has no facade-root promotion) -
+verified against db/rs/lib.rs's actual re-export list rather than guessing. Also restored a direct
+`pack` dependency db_cli's own trim had dropped (SnapshotManager::verify needs pack's own
+VerificationLevel, not protocol's same-named enum - a real two-crate type collision, not a
+migration artifact).
+
+Full-family build (all 24 crates together): clean, zero errors.
+Full-family test run: 490 tests total across all crates (db_core 3, db_actor 15, db_state 12,
+db_storage 12, db_storage_sqlite 23, db_storage_postgres 20, db_storage_neo4j 19, db_wal 25,
+db_snapshot 21, db_index 12, db_conflict 29, db_projection 23, db_query 22, db_preview 14,
+db_security 34, db_document 26, db_compact 19, db_sync 27, db_cluster 16, db_observe 22,
+db_engine 23, db 9, db_testkit 21, db_cli 23 [9 lib + 9 bin target + 5 doctest-shaped]) - 0
+failures.
+
+Clippy (-D warnings, --no-deps to isolate pre-existing pack_async/pack_value findings out of
+scope for this ticket) went through six rounds of fix-and-reverify. Real issues found and fixed
+(not blanket-suppressed):
+  - db_state: PText::from_str renamed to from_text (clippy::should_implement_trait - collided with
+    the std::str::FromStr trait method name); an fn body's local `use std::hash::{Hash, Hasher}`
+    trimmed to just Hasher (Hash was already in scope via the function's own generic bound).
+  - db_actor: run_actor_loop's receiver/emit params changed to references (verified against the
+    thread::spawn closure call site - safe since the closure still owns them, only the inner call
+    borrows).
+  - db_observe: gated an Emit-trait import behind #[cfg(test)] (only exercised by this crate's own
+    tests).
+  - db_document: five needless_pass_by_value findings triaged individually rather than blanket-
+    fixed - json_err stays by-value with a documented #[allow] (used as a bare `.map_err(json_err)`
+    fn-pointer, which requires FnOnce(E) by contract of Result::map_err); DocumentEngine::open's
+    storage param changed to &Arc<..> (verified it only ever .clone()s, never moves, across all 3
+    call sites); submit/query stay by-value with documented #[allow]s (deliberate API ownership
+    choice / high call-site count for no behavioral gain); publish_preview's entries changed to a
+    slice (2 call sites, both in this crate). Also added a StatePageEntries type alias for
+    decode_state_page's flagged complex return type.
+  - db_engine: to_engine_frontier's core param changed to a reference (3 call sites, all verified
+    non-reused-afterward); map_vcs_error kept by-value with a documented #[allow] (same
+    map_err-fn-pointer reasoning as json_err); checkpoint_document's authors param changed to a
+    slice (3 test call sites); query's consistency param KEPT by-value with a documented #[allow]
+    because it is the frozen contract signature
+    (DocumentHandle::query(&self, query: Query, consistency: Consistency) - contract.md's Stable
+    API block) - the one place a clippy-suggested signature change was correctly refused.
+  - db_storage_sqlite: sqlite_err kept by-value with a documented #[allow] (same map_err-fn-pointer
+    reasoning, ~50 call sites); the private lock() helper's always-Ok Result wrapper removed and
+    all ~29 `self.lock()?` call sites mechanically updated to `self.lock()`.
+  - db_compact: two redundant `document: document` struct-init field names collapsed to shorthand.
+  - db_cli / db_testkit / the db_testkit criterion bench (benches/db.rs, which normal
+    build/test invocations don't compile by default and so needed a separate --benches pass to
+    catch): ~10 mechanical `.map(f).unwrap_or(a)`-style chains rewritten to `.map_or(a, f)` per
+    clippy's own exact suggested diff, one `Arc<dyn db_storage::DbStorage>` unnecessary
+    qualification trimmed to `Arc<dyn DbStorage>`, and the DocumentEngine::open/publish_preview
+    signature-change ripple applied to the 3 call sites the bench file has (missed by the earlier
+    normal build/test passes since cargo doesn't compile bench targets by default).
+  - db_cli's lib-target `fn main()` dead_code finding under `--all-targets --no-deps -D warnings`
+    is NOT a bug - confirmed pack_cli and protocol_cli (the established precedent for this repo's
+    single-file lib+bin CLI pattern) have the byte-for-byte identical finding under the same
+    invocation. Left as-is, matching precedent; a plain `cargo build -p db_cli` (the shape the
+    real repo verification gate uses) shows it only as a warning, not a hard failure.
+  - Final round: only that one accepted precedent-matching item remains; every other crate is
+    clean under --no-deps -D warnings.
+
+Final full-workspace `cargo build --workspace`: clean, zero errors - confirms no regression to any
+of the ~600 pre-existing crates in the monorepo, including the protocol family (also independently
+rebuilt clean) and the concurrent CW3 kernel-cut-over work in vcs/framework-core/framework-plugin.
+
+Status: CW4 complete and verified. Individual per-crate agent reports are at cw4-<crate>.txt in
+this same folder (written by each CW4 workflow agent, before the manual clippy-triage pass
+documented above).
+
+Remaining waves (not started this session): CW5 wire v2 client integration (framework/sync native+
+wasm actors, worker, backbone-worker.ts, binary fixtures), CW6 hub rebuilds (os-hub, compose-hub on
+db::Database + HubDirectory), CW7 app fan-out (~40 crates onto protocol traits - overlaps with the
+in-progress concurrent CW3 work, needs re-assessment of what that session already covered before
+starting), CW8 shim removal + policy lints, CW9 end-to-end verification (hub integration tests,
+crash harness at long/exhaustive levels). Ticket intentionally left open.

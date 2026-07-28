@@ -29,13 +29,31 @@ db_sync = { path = "../sync/rs" }
 db_cluster = { path = "../cluster/rs" }
 db_observe = { path = "../observe/rs" }
 db_engine = { path = "../engine/rs" }
+# 🎯 Genuinely missing addition (this facade's non-test code names `pack_core::ContentHash`
+# directly — `CommandReceipt.state_hash`'s type — and re-exports it as `db::ContentHash`; `pack`
+# (not `pack_core` directly) because `pack`'s own facade already re-exports `ContentHash` plus the
+# `deflate` feature this crate forwards, one dependency edge instead of two).
+pack = { path = "../../pack/rs", default-features = false }
 
 [features]
-default = ["fs", "thread", "vcs"]
+default = ["fs", "thread", "deflate", "vcs"]
 fs = ["db_storage/fs"]
 thread = ["db_actor/thread"]
+# 🎯 `pack`'s own default is `["deflate"]`, and `db_storage` (a mandatory dependency of this
+# facade, transitively of every other db crate that touches pack files) depends on `pack` with
+# its own default features — deflate is therefore already unification-enabled workspace-wide
+# regardless of this flag. This feature still forwards explicitly (mirroring `pack`'s own
+# `deflate = ["pack_format/deflate"]` and `protocol`'s `deflate = ["protocol_format/deflate"]`)
+# so the toggle stays real and load-bearing if `db_storage`'s own pack edge ever gains
+# `default-features = false`.
+deflate = ["pack/deflate"]
 vcs = ["db_engine/vcs"]
 tokio = ["db_engine/tokio"]
+# 🎯 `db_cluster` is already a mandatory (non-optional) dependency of `db_engine` — its own
+# Cargo.toml has no cluster-shaped feature toggle to forward into, and this crate's scope this
+# wave is only its own `Cargo.toml` + `lib.rs`. This feature therefore gates this facade's own
+# `db_cluster` RE-EXPORTS (API surface), not `db_cluster`'s compilation — it is still compiled
+# unconditionally as a transitive dependency either way.
 cluster = []
 otel = ["db_observe/otel"]
 sqlite = ["dep:db_storage_sqlite"]
@@ -53,4 +71,13 @@ optional = true
 [dependencies.db_storage_neo4j]
 path = "../storage/neo4j/rs"
 optional = true
+
+# 🎯 Genuinely missing addition (not in the stub's dependency list), noted per the wave's
+# instructions: the facade's own `//#region 🧪Tests` exercises a full submit -> durable -> query
+# round trip purely through this crate's re-exported names, which requires constructing a real
+# `protocol::OperationEnvelope` fixture directly (mirroring `db_engine`'s own test fixtures) —
+# `protocol` is not otherwise named anywhere in this crate's non-test code.
+[dev-dependencies]
+protocol = { path = "../../protocol/rs" }
+serde_json = "1"
 

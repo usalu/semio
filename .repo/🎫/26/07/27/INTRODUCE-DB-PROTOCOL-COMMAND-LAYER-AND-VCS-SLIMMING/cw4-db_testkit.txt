@@ -1,0 +1,133 @@
+db_testkit — implementation report (wave CW4)
+
+Files touched (all under db/testkit/rs, per this wave's ownership boundary):
+  - db/testkit/rs/lib.rs        (full implementation, replacing the stub)
+  - db/testkit/rs/Cargo.toml    (added dependencies, see "Dependency additions" below)
+  - db/testkit/rs/benches/db.rs (full criterion benchmark suite, replacing the stub)
+
+Build/test status: PASS
+  - `cargo build -p db_testkit`          -> clean, zero warnings in db_testkit itself.
+  - `cargo test -p db_testkit`           -> 23/23 tests pass.
+  - `cargo build -p db_testkit --benches`-> clean.
+  - `cargo bench -p db_testkit -- --test`-> all 3 benchmark groups (7 cases) run to completion
+    without panics (single-iteration smoke mode, not a full statistical run).
+
+## What was implemented
+
+SimRuntime (seeded deterministic scheduling):
+  - `SplitMix64`: hand-rolled PRNG (NOT proptest/quickcheck), matching pack_testkit's precedent.
+  - `SimClock`: manually-advanced virtual clock, never reads the wall clock.
+  - `SimRuntime`: collects named `schedule()`d closures, then `run()` shuffles them via a
+    seed-derived Fisher-Yates permutation and advances SimClock by seeded jitter between each —
+    same seed reproduces an identical task order + timing byte-for-byte.
+  - `explore_interleavings(base_seed, permutations, run_one)`: the bounded interleaving explorer —
+    derives N distinct seeds and calls a caller-supplied closure once per seed, collecting
+    observations (e.g. a resulting state hash). Tested by driving a real
+    `db_document::DocumentEngine` through 12 different interleavings of 5 disjoint-path commits
+    and asserting every interleaving converges to the identical content hash.
+
+FaultStorage (scriptable-fault db_storage::DbStorage wrapper):
+  - Implements the full `WalStorage`/`SnapshotStorage`/`PayloadStorage`/`CatalogStorage`/
+    `IndexStorage`/`LeaseStorage`/`DbStorage` trait family, wrapping a real inner backend.
+  - `FaultScript{fail_nth_write, torn_write_at, fsync_lies, cas_conflict_nth}` — all four
+    requested fault types, injected only at the WAL append/sync and catalog-CAS boundaries (the
+    rest of the trait family passes straight through to `inner`, documented as this testkit's
+    stated crash-simulation scope).
+  - Each fault type has a dedicated unit test proving it fires exactly as scripted and that
+    everything else passes through untouched.
+
+CrashHarness::run_crash_after_every_write:
+  - Discovers a workload's true `WalStorage::append` call count via an unfaulted baseline run,
+    then for every write boundary after genesis, reruns the workload with `fail_nth_write` set to
+    that boundary (workload stops at the first injected error — simulated crash), then reopens a
+    fault-free `DocumentEngine` on the same (now-faulted) storage and asserts: (a) reopening never
+    errors, (b) the recovered frontier/state is EXACTLY the prefix of commands durably committed
+    strictly before the crash, no more, no less.
+  - A separate direct test (`document_wal_open_recovers_from_a_torn_write_by_truncating_the_tail`)
+    exercises `FaultScript::torn_write_at` against real `db_wal` recovery, asserting
+    `MaterializeReport.torn_tail_bytes` reports exactly the discarded bytes.
+  - An `exhaustive` submodule (`mod tests::exhaustive`) drives `pack_testkit::{fuzz_truncation,
+    fuzz_bit_flips}` against `db_document::DocumentEngine::open` over a real committed WAL
+    segment's raw bytes, proving recovery never panics under truncation/bit-flip corruption
+    (per pack_testkit's documented precedent, as instructed).
+
+Generators (splitmix64-seeded, not proptest/quickcheck):
+  - `CommandGen`: random paths/actors/JSON values/operation ids.
+  - `WorkloadGen::disjoint_batch`: deterministic, mutually disjoint-path envelope sequences (used
+    by every law/harness above as their workload — disjoint so final state never depends on
+    submit order, which several laws rely on).
+
+Cross-crate law assertions (all eight required):
+  - `assert_replay_deterministic` — drives real `db_engine::Database::open_at` over `FsStorage`;
+    proves WAL replay after reopen reproduces an identical frontier, AND an independent replica
+    driven by the same seeded workload converges to a byte-identical frontier.
+  - `assert_snapshot_plus_suffix_equals_replay` — drives real `db_document::DocumentEngine::
+    {create, submit, snapshot_now, open}`; a replica that snapshots partway and reopens must reach
+    the exact frontier a never-snapshotting, full-replay replica reaches.
+  - `assert_projection_rebuild_equals_incremental` — drives real `db_projection::ProjectionEngine`
+    over `MemoryStorage`'s real `IndexStorage`; incremental `apply_envelope` must equal pure
+    `rebuild_in_memory`.
+  - `assert_inverse_undo_roundtrip` — drives real `db_document::DocumentEngine::undo`; undo then
+    undo-of-undo (redo) must restore the exact original value via protocol's inverse-operation
+    machinery.
+  - `assert_sync_convergence` — drives real `db_sync::{replay_sync_state, missing_commands}` over
+    real `DocumentEngine` replicas; a one-shot catch-up replica and a two-batch resumed catch-up
+    replica both converge to the server's exact frontier.
+  - `assert_fencing_excludes_stale_writer` — generic over any real `&dyn CatalogStorage`; exercised
+    against both `MemoryStorage` and `FsStorage`; a stale-epoch cas_root is fenced and never
+    overwrites the root.
+  - `assert_preview_never_durable` — drives a real `DocumentEngine`/`db_preview::PreviewStore`;
+    publishing a preview never appends a WAL byte, never creates a segment, never advances the
+    frontier, while still correctly shadowing the committed value for its own reader.
+  - `assert_overlay_structural_sharing` — drives real `db_state::OverlayRoot`; each write grows the
+    overlay by exactly one entry, and every earlier snapshot remains exactly as it was, unaffected
+    by later derivations (the functionally-testable half of structural sharing — see deviation
+    note below).
+
+benches/db.rs (criterion, harness=false):
+  - `command_submit` group: single-command submit latency at 10/100/1000 existing paths — proves
+    small commands don't scale with document size.
+  - `recovery` group: `DocumentEngine::open` latency for full-from-genesis replay at 10/100/500
+    ops, plus a snapshot ⊕ 10-command-suffix case over 1000 total ops — proves open cost tracks
+    the suffix, not the whole history, once a snapshot exists.
+  - `preview_commit` group: a real commit's latency at 0/50/500 already-published previews on the
+    same document — proves publishing previews never delays a commit.
+
+## Deviations from the contract / design choices
+
+1. Which "real db" each law drives: `db/rs` (the facade) is still an unimplemented stub as of this
+   wave. The facade-shaped laws (`assert_replay_deterministic`) drive `db_engine::Database`
+   directly — the exact type the facade will re-export verbatim once it lands (per db_engine's own
+   module doc: "the crate that assembles every other db_* crate into the stable... Database/
+   DocumentHandle API"). Laws needing capabilities db_engine's current `DocumentHandle` documents
+   as deliberately unreachable this wave (real snapshot publish, preview publish/read, inverse
+   undo, projection wiring — db_engine's own "Design choice (scope)" note) drive
+   `db_document::DocumentEngine` directly instead, one layer below the facade. This is documented
+   in db_testkit's own module doc as a deliberate scope choice, not a workaround — it is still
+   "a minimal real db" (real db_wal/db_storage/db_state/db_conflict/db_preview underneath), just
+   not yet reachable through the facade's actor-mailbox boundary.
+2. `assert_overlay_structural_sharing` checks the functionally-testable half of "structural
+   sharing" — persistence (an older OverlayRoot is never mutated by deriving a newer one from it,
+   and each write grows the overlay by exactly one entry) — rather than a literal memory-layout/
+   allocation-count assertion, which a black-box unit test cannot make honestly. Documented inline
+   on the function itself.
+3. `CrashHarness::run_crash_after_every_write` deliberately does not exercise write boundary #1
+   (the document's own genesis header write) — recovering from a genesis-write failure would need
+   `DocumentEngine::open` to tolerate a pre-existing, empty segment left behind by a partially
+   failed `DocumentEngine::create` (today's `create` always assumes a clean slate and would hit
+   `AlreadyExists` if retried against that same storage). This is a real gap in db_document's
+   create/open split, not in this testkit, and is documented inline on the harness function rather
+   than silently special-cased away or faked as passing.
+4. Cargo.toml: added `db_core`, `db_storage`, `db_state`, `db_document`, `db_engine`,
+   `db_projection`, `db_sync`, `db_actor`, `protocol`, `pack`, `serde_json` as dependencies — all
+   genuinely needed (named directly by the laws/harness above, or, for `pack`, required to name
+   `pack::ByteRange`/`pack::ContentHash` verbatim in `FaultStorage`'s trait impl signatures, which
+   must repeat `db_storage`'s own trait signatures exactly). Left `db` (the stub facade) and
+   `pack_testkit` (already present) in place; `db` compiles fine as an empty crate and is not
+   referenced by name anywhere in this crate.
+
+## Extension seams left as genuine "not yet implemented" (no stubs, no panics)
+
+None beyond what's already documented above (item 3) — every public function in this crate either
+performs its real, tested job or documents inline exactly what upstream gap it is honestly working
+around (never a TODO, never `unimplemented!()`/`panic!()` in a reachable path).

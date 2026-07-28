@@ -746,10 +746,10 @@ enum ActorOutcome {
 #[cfg(all(not(target_arch = "wasm32"), feature = "thread"))]
 fn run_actor_loop<A: Actor>(
     mut actor: A,
-    receiver: Receiver<A::Message>,
+    receiver: &Receiver<A::Message>,
     address: Address<A::Message>,
     generation: GenerationId,
-    emit: Arc<dyn db_core::Emit>,
+    emit: &Arc<dyn db_core::Emit>,
     outcome_tx: ReplySender<ActorOutcome>,
 ) {
     use std::panic::AssertUnwindSafe;
@@ -844,7 +844,7 @@ impl<A: Actor> Supervisor<A> {
         let emit = self.emit.clone();
         let handle = self.spawner.spawn(
             format!("db-actor-g{}", generation.0),
-            Box::new(move || run_actor_loop(actor, receiver, ctx_address, generation, emit, outcome_tx)),
+            Box::new(move || run_actor_loop(actor, &receiver, ctx_address, generation, &emit, outcome_tx)),
         );
         SupervisorSlot { mailbox, address, generation, outcome_rx, handle: Some(handle) }
     }
@@ -1000,7 +1000,7 @@ mod tests {
         let (address, receiver) = mailbox::<u32>(capacities);
         address.try_send(Priority::Command, 1).unwrap();
 
-        let blocked_address = address.clone();
+        let blocked_address = address;
         let sender_thread = std::thread::spawn(move || blocked_address.send_blocking(Priority::Command, 2));
 
         // No sleep/race here: `try_admit`'s register-then-re-check pattern makes this correct

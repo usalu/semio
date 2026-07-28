@@ -1,0 +1,157 @@
+db_query — wave CW4 implementation report (updated: db_projection integration follow-up)
+==========================================================================================
+
+This ticket folder already contained a prior report (below, preserved) covering the initial
+full implementation. This update covers the one follow-up item that report explicitly flagged as
+deliberately deferred: wiring the crate's declared-but-unused `db_projection` dependency now that
+`db_projection` (db/projection/rs/lib.rs) is complete.
+
+What changed in this pass
+--------------------------
+Re-read db/query/rs/lib.rs fresh (it already contained the full ~1197-line implementation from the
+prior pass, not a stub) and extended it — did not replace it. Added one new region,
+`//#region 🔖ProjectionBridge`, between `🔖QuerySource` and `🔖Planner`:
+
+- `impl db_projection::ProjectionState for Value` — a hand-rolled, tag-byte canonical binary
+  codec (`encode_value`/`decode_value`, via a bounds-checked `ValueCursor` that never panics/
+  indexes out of bounds on truncated input, `DbError::Corrupt` instead). Lets any
+  `db_projection::ProjectionClass` (registered by a higher layer such as `db_document`) declare
+  `State = Value` and get this crate's query/planner/live-diff machinery for free over its
+  checkpointed state.
+- `ProjectionSource` — a `QuerySource` impl over one decoded projection-state `Value`: a `List`
+  row-shapes to positional `RowId`s (matching `PVec<Value>`'s existing convention), a `Map`
+  row-shapes to one row per entry in ascending-key order, anything else becomes a single
+  `RowId(0)` row.
+- `projection_query_source(state_bytes: &[u8]) -> Result<ProjectionSource, DbError>` — decodes
+  bytes into a `ProjectionSource`.
+- `MAX_PROJECTION_VALUE_ELEMENTS` ceiling on declared `List`/`Map` element counts, checked via
+  `db_core::check_len` BEFORE allocating (family-wide "validate before allocating" invariant).
+
+Why this takes raw bytes, not a `&db_projection::ProjectionEngine` reference
+------------------------------------------------------------------------------
+Investigated wiring this crate directly against `db_projection::ProjectionEngine::state_at`/
+`preview_augmented`. Constructing or even referencing a real `db_projection::ErasedProjection`/
+`ProjectionClass` requires naming `protocol::OperationEnvelope` in the `apply`/`apply_bytes`
+signature the trait fixes — `db_projection`'s own trait definition, not this crate's choice. This
+crate's frozen per-crate dependency row (`db_core, db_state, db_index, db_projection` — no
+`protocol`) does not grant it that type, and adding `protocol` (even as a dev-dependency, just for
+tests) would be an undocumented deviation with no precedent elsewhere in the family (checked
+db_index/db_conflict/db_state/db_projection/db_security's Cargo.tomls — none use
+`[dev-dependencies]`, and every crate that needs `protocol` declares it as an ordinary dependency).
+`db_projection::ProjectionEngine::state_at`/`::preview_augmented` both already return the bare,
+version-prefix-stripped state bytes (`Result<Option<Vec<u8>>, DbError>` / `Result<Vec<u8>, DbError>`
+respectively) — so the clean seam is a function of those bytes, not of the engine. The layer that
+already holds both `db_projection`'s engine AND `protocol` (i.e. `db_document`, which owns envelope
+interpretation per both crates' module docs) calls `state_at`/`preview_augmented` and hands this
+crate only the resulting bytes; `projection_query_source` is exactly that seam. This is documented
+in the module doc's rewritten `db_projection` paragraph and in `projection_query_source`'s own
+docstring.
+
+Considered and rejected: re-implementing `db_projection`'s private version-prefix framing
+(`encode_versioned`/`decode_versioned`, both non-`pub`) locally in `db_query` to read a
+`db_index::ProjectionIndex` directly and bypass the engine. Rejected as a fragile, undocumented
+coupling to an internal format that could silently drift — worse than the bytes-in seam above.
+
+Tests added (8, all passing; 34/34 total in the crate now)
+-------------------------------------------------------------
+New `mod projection_bridge` under the existing `//#region 🧪Tests`:
+- `value_projection_state_round_trips_every_variant_including_nesting` — a `Map` containing
+  Text/Int/Float/Bytes/List/Null/nested-Map round-trips exactly through encode/decode.
+- `value_projection_state_round_trips_null_and_empty_containers`.
+- `decode_rejects_truncated_bytes_and_unknown_tag_without_panicking` — truncated text length,
+  unknown tag byte 200, and empty input all surface `DbError::Corrupt`, never panic.
+- `decode_rejects_trailing_bytes_after_a_complete_value`.
+- `decode_value_rejects_an_over_large_declared_element_count_before_allocating` — a declared
+  `List`/`Map` count of `MAX_PROJECTION_VALUE_ELEMENTS + 1` with no backing bytes is rejected via
+  `DbError::LimitExceeded` before any `Vec`/`BTreeMap` allocation is attempted.
+- `projection_source_shapes_list_map_and_scalar_values_into_rows` — verifies the List/Map/scalar
+  row-shaping rules directly.
+- `projection_query_source_decodes_bytes_into_a_queryable_source` — the end-to-end law this bridge
+  exists for: bytes standing in for what a caller would retrieve from a real
+  `ProjectionEngine::state_at`/`preview_augmented` call decode into a source that `execute()` (the
+  crate's ordinary query path, unmodified) runs a real filtered query over correctly.
+- `projection_query_source_surfaces_corrupt_bytes_as_an_error_not_a_panic`.
+
+Build/test status (this pass)
+-------------------------------
+`cargo build -p db_query`: PASS, zero warnings (one elided-lifetime warning was introduced and
+immediately fixed — `ValueCursor<'_>` — before this report was written).
+`cargo test -p db_query`: PASS, 34/34 tests green (26 pre-existing + 8 new).
+`cargo clippy -p db_query --all-targets`: PASS, zero warnings attributable to this crate (grepped
+clippy output for `db_query` — no matches; all warnings shown originate in pack_value, pack_async,
+db_state, none touched by this crate).
+
+Deviations
+-----------
+None from the frozen stable API (`Consistency`'s six variants, `Frontier`/`DurabilityClass`
+untouched). The `ProjectionBridge` region's exact byte encoding, the List/Map/scalar row-shaping
+convention, and the "bytes not engine reference" seam design are all "your choice" per the contract
+(db_query's public surface beyond the frozen `Consistency` enum was left open) and are documented
+design decisions, not deviations from anything frozen.
+
+Files touched
+--------------
+- /Users/ueli/Documents/semio/db/query/rs/lib.rs (only file changed this pass; extended the
+  existing ~1197-line implementation from the prior pass, did not replace it — the module doc's
+  `db_projection` paragraph was rewritten to describe the actual wiring; net +~300 lines: one new
+  `🔖ProjectionBridge` region plus its `mod projection_bridge` tests)
+- Cargo.toml: NOT modified (the pre-existing `db_core, db_state, db_index, db_projection`
+  dependency set was exactly what this integration needed; no dev-dependency added — see the
+  "why raw bytes" rationale above for why `protocol` was deliberately NOT added)
+
+Downstream note for db_document (or whichever crate ends up owning ProjectionClass registration)
+----------------------------------------------------------------------------------------------------
+To query a projection's state through this crate: register your `ProjectionClass` with
+`State = db_query::Value` (it already implements `db_projection::ProjectionState` — no adapter
+code needed on your side), call `engine.state_at(id, frontier_seq)` or
+`engine.preview_augmented(id, base_frontier_seq, &envelope)`, then pass the resulting
+`Option<Vec<u8>>`/`Vec<u8>` straight to `db_query::projection_query_source(&bytes)` to get a
+`QuerySource` usable with `db_query::execute`/`LiveQuery::refresh` unmodified. Row shape:
+if your projection's `Value` is a `List`, each element is a row (positional `RowId`); if it's a
+`Map`, each entry is a row (ascending-key `RowId` order); anything else is a single-row source.
+
+---
+
+(preserved from the prior pass's report, still accurate for the parts it describes)
+
+db_query — wave CW4 implementation report
+==========================================
+
+Scope: /Users/ueli/Documents/semio/db/query/rs/lib.rs (full replacement of the stub). Cargo.toml
+was NOT modified — the four declared dependencies (db_core, db_state, db_index, db_projection)
+were exactly what was needed / usable.
+
+What was implemented
+---------------------
+A query engine matching the contract's db_query responsibility line ("Consistency modes
+(Canonical/AtLeast/Exact/Historical/Speculative/PreviewAugmented), typed+dynamic queries, planner,
+pushdown, streaming/live queries, limits, diagnostics"):
+
+- 🔖Value: a dynamic `Value` tree (Null/Bool/Int/Float/Text/Bytes/List/Map) — this crate's own
+  value model (pack_value is a forbidden dependency per the contract's hard rules). `From` impls
+  for common Rust scalars give the "typed" construction affordance. `PathSegment`/`Path` address
+  into a `Value` tree, with both a typed builder (`Path::field(..).push_field(..)`) and a dynamic
+  dotted-string parser (`Path::parse("a.b.0")`) — the "typed+dynamic" duality shares one
+  representation. `compare_values` gives `Value` a total order (needed since raw `f64` isn't `Ord`).
+- 🔖Consistency: the six-variant `Consistency` enum (frozen shape from the facade's stable API) and
+  `resolve_consistency` against a small `ConsistencyResolver` trait — `AtLeast` uses
+  `db_core::Frontier::dominates` (the contract's own definition of that mode), `Exact` uses
+  frontier equality, `Historical` looks up a commit id via the resolver. `IndexConsistencyResolver`
+  is a ready-made adapter wired to real `db_index::CommitIndex`/`FrontierIndex`.
+- 🔖Query: `Predicate` (Eq/Ne/Lt/Lte/Gt/Gte/Exists/Contains/FullText/And/Or/Not), `Select`
+  (All/Paths), `SortKey`, and the builder-style `Query` struct.
+- 🔖Limits: `QueryLimits` (max_scan_rows/max_result_rows/max_result_bytes), enforced via
+  `db_core::check_len` before allocating further.
+- 🔖QuerySource: the `QuerySource`/`FullTextLookup` traits the planner/evaluator run against.
+  `db_state::PVec<Value>` gets a built-in `QuerySource` impl; `db_index::FullTextIndex` gets a
+  real `FullTextLookup` impl.
+- 🔖Planner / 🔖Execute: `plan()` recognizes a bare or top-level-conjoined `Predicate::FullText` and
+  chooses `QueryPlan::FullTextPushdown`; `execute()` runs the plan, always re-verifying the FULL
+  predicate tree against each candidate row. Diagnostics returned alongside every result.
+- 🔖Stream: `QueryResult::into_stream()` — a `QueryStream` implementing `Iterator`.
+- 🔖LiveQuery: `LiveQuerySpec`/`LiveQuery::refresh` produces a `QueryDiff` (added/removed/updated).
+
+Build/test status
+-------------------
+cargo build -p db_query: PASS. cargo test -p db_query: PASS, 26/26 tests green (now 34/34 after
+the follow-up pass above). cargo clippy -p db_query: PASS, zero warnings from this crate.

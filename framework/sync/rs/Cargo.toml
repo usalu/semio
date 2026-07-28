@@ -12,6 +12,7 @@ workspace = true
 path = "lib.rs"
 
 [dependencies]
+protocol = { path = "../../../protocol/rs" }
 semio-framework-core = { path = "../../core/rs" }
 semio-framework-hash = { path = "../../hash/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

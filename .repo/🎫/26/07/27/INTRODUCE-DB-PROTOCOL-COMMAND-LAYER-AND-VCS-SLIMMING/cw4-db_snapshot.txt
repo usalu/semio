@@ -1,0 +1,184 @@
+CW4 wave report — db_snapshot
+==============================
+
+Scope: implemented db/snapshot/rs/lib.rs (was a stub) per the frozen contract's db_snapshot row:
+"Snapshots as pack files: pages in KIND_CHUNK, descriptor in reserved KIND_SNAPSHOT segment;
+incremental generations via Footer.prev_footer_offset + REQUIRED_FOOTER_CHAIN; triggers,
+selection, retention/leases, verification." Only file touched: db/snapshot/rs/lib.rs. No
+Cargo.toml change was needed — the pack facade crate already re-exports every pack_core/
+pack_format primitive this crate needed (ByteReader/ByteWriter, ContentHash, crc32c,
+read_varint_u64, PackSource, PackWriter/PackFile/Footer/WriteOptions/Manifest, HEADER_SIZE/
+FOOTER_SIZE, KIND_SNAPSHOT, REQUIRED_CHUNKED/REQUIRED_FOOTER_CHAIN, VerificationLevel), so
+db_core/db_state/db_storage/pack (the existing dependency set) sufficed.
+
+What was implemented
+---------------------
+1. SnapshotDescriptor (region Descriptor): the KIND_SNAPSHOT segment payload — document,
+   generation, parent_generation, frontier fields (head_seq/commit_seq/epoch/chain_hash),
+   protocol_version, vcs_head, base_pack_hash, roots, new_pages (content hashes of the pages
+   whose KIND_CHUNK lives in THIS generation's own blob, in ChunkId order), created_at_ms. Own
+   versioned varint wire encoding via pack::ByteWriter/ByteReader (this crate's own choice — the
+   contract fixes the segment kind, not the descriptor's byte layout). Every count/string length
+   is validated via db_core::check_len before allocation.
+
+2. Generation build/read (region SegmentIo + Generation):
+   - build_generation() writes one generation's complete, independently-valid .spk pack file via
+     the real pack::PackWriter: KIND_SNAPSHOT descriptor as the FIRST segment (fixed local offset
+     pack::HEADER_SIZE, so it's locatable without a dedicated Manifest span field — pack::Manifest
+     has none for this newly-real segment kind), then new pages as KIND_CHUNK segments (index i ==
+     ChunkId(i), matching descriptor.new_pages[i]), then the standard finish() trailer.
+   - decode_snapshot_segment() reads that fixed-offset KIND_SNAPSHOT segment back using only
+     pack_core-level primitives re-exported by the pack facade (crc32c, read_varint_u64,
+     PackSource) — this is the one piece of pack-format framing this crate had to hand-write,
+     because pack_format's own encode_segment/decode_segment_at are private to that crate and
+     pack::PackFile exposes no generic "find segment by kind" API. It mirrors pack_format's
+     documented identity-codec framing exactly (kind, flags, varint seg_len, payload, crc32 LE)
+     and is covered by round-trip + corruption tests.
+   - SubSource: a small pack::PackSource adapter (base offset + bounded length over a borrowed
+     slice) used to open one generation's own pack structure at an arbitrary offset inside a
+     larger multi-generation concatenation.
+   - open_latest/open_ancestor/read_page: the actual Footer.prev_footer_offset +
+     REQUIRED_FOOTER_CHAIN chain-walk. Design decision (documented at length in the module doc,
+     since db_storage::SnapshotStorage stores each generation as an independently-deletable,
+     self-contained blob, not one physically-growing file): prev_footer_offset is defined as the
+     absolute offset, within a virtual concatenation of every generation from the chain's root
+     through this one (in generation order), of the PARENT generation's own footer.
+     REQUIRED_FOOTER_CHAIN disambiguates "prev_footer_offset == 0" (a real, valid case: the parent
+     is the very first generation, occupying byte 0) from "no parent". Walking uses only
+     pack::read_footer_only + pack::PackFile::open_manifest/read_chunk (public API) against
+     SubSource views — no pack_format private internals are reimplemented for this part.
+   - patch_prev_footer_offset(): pack::PackWriter::finish always writes prev_footer_offset = 0
+     (no public constructor knob for it). This patches the trailing 84-byte footer's
+     prev_footer_offset field (wire bytes [72..80], pinned against pack_format's own Footer
+     layout/tests) in place and recomputes the footer's CRC-32C over the preceding 80 bytes, so
+     the result still parses cleanly through pack::read_footer_only/PackFile::open_superblock.
+     Verified directly: test footer_chain_flag_and_prev_offset_are_genuine_pack_wire_data opens a
+     built generation via pack::PackFile::open_superblock (pack's own public API, not this
+     crate's) and asserts REQUIRED_FOOTER_CHAIN is set and prev_footer_offset/file_len match.
+
+3. SnapshotManager (region Manager) — db_storage::SnapshotStorage integration:
+   - publish(document, SnapshotOrigin::{FullBaseline,Incremental}, new_pages, SnapshotBody):
+     builds + writes the next generation. Incremental errors DbError::InvalidArgument if there's
+     no prior generation to chain to.
+   - materialize_chain(): fetches every generation from the chain's root through a target
+     generation (walking SnapshotDescriptor.parent_generation backward, concatenating forward)
+     into the one buffer the footer-offset chain addresses.
+   - load_latest(), select_generation() (picks the highest-generation snapshot whose head_seq
+     does not exceed a target — the "selection" the contract calls for, for a materializer
+     choosing where to start replaying the WAL suffix from).
+   - retain_from(floor_generation): deletes every generation below floor_generation via
+     SnapshotStorage::delete_generation. Deliberately REJECTS a floor that is itself an
+     incremental generation (has a parent) with DbError::InvalidArgument, rather than silently
+     leaving a dangling chain reference — see scope boundary below.
+   - verify(): opens the generation via pack::PackFile::open_manifest at the requested
+     VerificationLevel and reads every declared local chunk; at VerificationLevel::Full this
+     transitively checks each chunk's content hash via pack::PackFile::read_chunk's own internal
+     check (no separate hash recomputation/extra blake3 dependency needed).
+   - SnapshotPolicy::should_snapshot(ops/bytes/ms since last, thresholds) — the "triggers" the
+     contract calls for; simple OR-of-thresholds, this crate's own choice of shape.
+
+Deviations from the contract
+-----------------------------
+None in the sense of "did something the contract forbids". One genuine interpretive judgment call
+(explicitly flagged, since the contract states the mechanism but not its exact semantics for an
+independently-per-generation-keyed storage trait): what a "generation" physically is and what
+Footer.prev_footer_offset addresses, spelled out in the module's two "Design choice" doc comments
+and summarized above. This was necessary because db_storage::SnapshotStorage (already implemented
+by an earlier CW4 batch) stores/deletes generations independently and states outright that it
+"never parses" the bytes — which rules out the naive "one physically-growing pack file" reading of
+the contract line and requires the virtual-concatenation definition implemented here.
+
+Extension seams left (deliberately, not stubs/panics)
+--------------------------------------------------------
+- Retention here is a mechanical, safe pruning primitive only; it does not itself coordinate with
+  db_storage::LeaseStorage to fence an in-flight reader off an about-to-be-deleted generation, and
+  it does not itself roll an incremental chain up into a fresh full baseline before allowing a
+  prune. Both are explicitly db_compact's stated responsibilities ("online compaction with
+  manifest CAS + fencing", "snapshot consolidation" — see contract's db_compact row), not
+  db_snapshot's; retain_from's full-baseline-floor guard is the safety contract db_compact is
+  expected to satisfy before calling it. Documented in the module doc's "Scope boundary" note.
+- select_generation()/materialize_chain() are O(generations) — they read every generation's bytes
+  (list_generations / walk parent pointers) rather than caching a lightweight generation index.
+  Fine for this crate's scope (chains between compactions are expected to be short); a real
+  deployment's db_compact consolidation keeps them short in practice. No index cache was added —
+  would be a reasonable future optimization, not required for correctness.
+- db_snapshot does not itself diff db_state's persistent structures to decide which pages changed
+  between generations — callers (db_document's publish pipeline) are expected to supply
+  new_pages: &[db_state::Page] already computed via db_state's TouchedRegion/PageStore. This
+  matches the contract's crate-responsibility split (db_snapshot's own row is pack-file structure/
+  triggers/selection/retention/verification, not state diffing).
+
+Testing
+-------
+17 inline unit tests in the trailing 🧪Tests region (plain #[test] fns; no quick/long/exhaustive
+tiers needed — nothing here is genuinely slow/crash-harness-shaped at this crate's scope):
+- Descriptor: encode/decode round-trip (all fields set, and all-None optionals), rejects a bad
+  format-version tag, never panics across every truncation length.
+- Generation: single-generation build+open round-trips through a REAL, independent
+  pack::PackFile::open_manifest call (not just this crate's own reader) at VerificationLevel::Full;
+  build_generation rejects a new_pages/descriptor mismatch; the footer-chain flag/offset test reads
+  the built footer via pack::PackFile::open_superblock (pack's own public API) to prove
+  REQUIRED_FOOTER_CHAIN/prev_footer_offset are genuine pack wire data, not just internally
+  self-consistent; open_latest rejects every truncation length of a valid buffer.
+- The explicitly-requested 2-generation incremental chain test
+  (two_generation_incremental_chain_resolves_inherited_pages): builds gen0 (2 pages) and gen1 (1
+  changed page, chained via Footer.prev_footer_offset + REQUIRED_FOOTER_CHAIN), concatenates them,
+  opens the latest generation, walks to the ancestor via open_ancestor, and confirms both a
+  page new in gen1 and a page only present in gen0 (inherited, not re-embedded) resolve correctly
+  via read_page's chain walk; a hash present in neither generation returns NotFound, not a panic.
+- Manager: publish (full baseline + incremental, including the incremental-with-no-parent error
+  case), load_latest, materialize_chain + inherited-page resolution end to end through
+  db_storage::MemoryStorage, select_generation (multiple candidates, and the empty-document case),
+  retain_from (both the accept path and the reject-non-baseline-floor path), verify (accepts an
+  intact generation, rejects a byte-flipped one).
+- SnapshotPolicy: fires on each threshold independently, not on none.
+
+Final status
+------------
+cargo build -p db_snapshot: PASS, no warnings from this crate.
+cargo test -p db_snapshot: PASS, 17/17 tests green.
+cargo clippy -p db_snapshot --all-targets: no warnings from this crate (two initial
+map().unwrap_or() lints were fixed to map_or()).
+
+Files touched: db/snapshot/rs/lib.rs only (replaced the CW1 scaffold stub). No Cargo.toml change.
+
+ADDENDUM — second pass on the same crate (concurrent session)
+================================================================
+
+I was independently assigned db_snapshot after the implementation above already landed (the
+file was live and being edited concurrently — a trivial clippy fix to select_generation's
+map/unwrap_or landed under me mid-session). Per CLAUDE.md I did not overwrite or restructure
+the existing, correct, fully-tested implementation described above; I read it in full,
+verified it (cargo build/test both green, matching the report above), and made one small
+additive contribution to close the one gap against the task brief's explicit
+"triggers, selection, retention/leases, verification" list: LEASES.
+
+Added (new //#region 🔖Lease block, after //#endregion 🔖Manager, nothing else touched):
+- SnapshotLease: a thin db_storage::LeaseStorage wrapper (resource/acquire/renew/release/
+  current), keyed by format!("snapshot:{document}"). This is exactly the fencing primitive
+  this file's own "Scope boundary" module doc note names as the caller's responsibility
+  ("retain_from here is the safe, mechanical pruning primitive that caller is expected to
+  call after fencing itself") — SnapshotLease gives db_document/db_compact that primitive
+  without changing retain_from's existing contract or behavior.
+- Two new tests: snapshot_lease_round_trips_acquire_renew_release_via_memory_storage and
+  snapshot_lease_resource_name_is_scoped_per_document, both against db_storage::MemoryStorage.
+- New imports added to the existing use block: db_core::EpochFence, db_storage::{LeaseInfo,
+  LeaseStorage} (db_storage was already a dependency; no Cargo.toml change needed).
+
+Bug caught in my own first draft, not in the pre-existing code: I initially assumed
+MemoryStorage::release "expires" a lease (next acquire bumps the fence). It actually removes
+the record outright, so the next acquire sees no record and returns EpochFence::INITIAL; only
+a hand-off from an unreleased-but-time-expired lease bumps the fence. Found via an actual
+failing `cargo test` run (not assumed), fixed the test to exercise both paths, reran to green.
+Noting this here since it's a genuine db_storage::LeaseStorage behavioral detail relevant to
+anyone else building lease-fencing logic on top of it (e.g. db_cluster, db_compact).
+
+Final status (re-verified after my addition):
+cargo build -p db_snapshot: PASS, no warnings from this crate.
+cargo test -p db_snapshot: PASS, 19/19 tests green (17 pre-existing + 2 added).
+cargo clippy -p db_snapshot --lib --tests: one PRE-EXISTING style nit at line ~591
+(select_generation's map_or(true, ...) could be is_none_or(...) per a newer clippy version)
+that predates and is unrelated to my change — left untouched, not in my scope. My own
+SnapshotLease addition is clippy-clean.
+
+Files touched (this pass): db/snapshot/rs/lib.rs only (additive edits, see above).

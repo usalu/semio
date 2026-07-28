@@ -1,8 +1,8 @@
 mod header { // 🧲Header
              // 2026 Ueli Saluz <ueli@compose-tech.de>
              // AGPL-3.0
-             // Specs: Single-binary session-backend consolidating domain, command, event, state, error, schema, persistence, actor, directory, API, and WS modules.
-             // Summary: Consolidated session-backend service for compose. PostgreSQL-backed, single-writer actor per session, HTTP+WS API with axum, in-memory state with typed entity structs, property-clock conflict resolution.
+             // Specs: Single-binary session-backend consolidating domain, command, event, state, error, store, actor, directory, API, WS, and admin modules.
+             // Summary: Consolidated session-backend service for compose. `db`-backed (db::Database owns WAL/conflict/durability), single-writer actor per session, HTTP+WS (protocol_wire v2) API with axum, in-memory state with typed entity structs.
 } // 🧲Header
 
 pub use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
@@ -14,18 +14,11 @@ pub use axum::{Json, Router};
 pub use dashmap::DashMap;
 pub use futures::{SinkExt, StreamExt};
 pub use serde::{Deserialize, Serialize};
-pub use sqlx_core::row::Row;
-pub use sqlx_postgres::{PgPool, PgPoolOptions};
 pub use std::collections::BTreeMap;
 pub use std::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
 pub use std::sync::Arc;
 pub use std::time::Instant;
-#[cfg(test)]
-pub use testcontainers::runners::AsyncRunner;
-#[cfg(test)]
-pub use testcontainers_modules::postgres::Postgres;
 pub use thiserror::Error;
-pub use time::OffsetDateTime;
 pub use tokio::sync::{broadcast, mpsc, oneshot};
 pub use uuid::Uuid;
 
@@ -774,8 +767,10 @@ mod error {
         Conflict { property: String, reason: String },
         #[error("validation error: {0}")]
         Validation(String),
+        // 🗄️ CW6b: the bespoke Postgres error variant is retired — `db::Database`/`DocumentHandle`
+        // (WAL, conflict detection, durability) now own document persistence end to end.
         #[error("database error: {0}")]
-        Database(#[from] sqlx_core::Error),
+        Database(#[from] db::DbError),
         #[error("actor mailbox closed")]
         ActorGone,
         #[error("idempotent duplicate: command {0} already processed")]
@@ -814,568 +809,295 @@ mod error {
 } // 🎼Error
 pub use error::*;
 
-mod schema {
-    // 🎞️Schema
-    // Specs: Migrations create all schemas, enums, and tables on startup. Schema names: runtime, core, history, compose.
-    // Summary: SQL schema creation and migration for the session backend.
+mod store {
+    // 🗄️Store
+    // Specs: `db::Database` (WAL/conflict/durability/frontier authority, generic path-value document
+    // documents per `db_document`'s schema-erased convention) replaces the bespoke Postgres schema +
+    // persistence layer. `ComposeDirectoryStore` holds identity/tenancy-shaped bookkeeping db does not
+    // own (session ownership, share tokens, compaction config) — the compose-hub analog of the plan's
+    // `HubDirectory` split, file-backed (zero-touch, no external service) instead of sqlite/postgres/
+    // neo4j since compose-hub's own storage-swappability surface was never itemized in the campaign
+    // contract (only `db`'s and os-hub-directory's were) — a swappable `ComposeHubDirectory` trait is
+    // future work, flagged in this ticket's report. `HistoryStore` holds compose's own bespoke kit
+    // history/lookback/compaction feature: `db_query`'s `Query::Get`/`GetMany` are point lookups only
+    // (no historical/range read yet — see `db_engine::Consistency::Historical`'s doc), so time-travel
+    // reconstruction keeps its own lightweight, file-backed snapshot + change-log store, now JSON files
+    // instead of Postgres rows.
+    // Summary: db-backed document storage bridge, file-backed directory/history stores, and the pure
+    // kit-JSON (de)serialization + change-log replay helpers.
 
     use super::*;
-    pub async fn run_migrations(pool: &PgPool) -> Result<(), SessionError> {
-        create_schemas(pool).await?;
-        create_enums(pool).await?;
-        create_runtime_tables(pool).await?;
-        create_core_tables(pool).await?;
-        create_compose_tables(pool).await?;
-        create_history_tables(pool).await?;
-        tracing::info!("database migrations complete");
-        Ok(())
+
+    //#region 🔖Database
+    /// 🗄️ Opens (or creates) the `db::Database` backing every compose session document, rooted at
+    /// `<data_dir>/db`. Zero-touch: `FsStorage`, the family's default profile is overridable via
+    /// `COMPOSE_HUB_DB_PROFILE` (`dev` default, `prod`, or `test`).
+    pub fn open_database(data_dir: &std::path::Path) -> Result<db::Database, SessionError> {
+        let profile = match std::env::var("COMPOSE_HUB_DB_PROFILE").ok().as_deref() {
+            Some("prod") => db::Profile::Prod,
+            Some("test") => db::Profile::Test,
+            _ => db::Profile::Dev,
+        };
+        let root = data_dir.join("db");
+        std::fs::create_dir_all(&root).map_err(|e| SessionError::Internal(format!("create db dir {}: {e}", root.display())))?;
+        Ok(db::Database::open_at(&root, profile)?)
     }
 
-    async fn create_schemas(pool: &PgPool) -> Result<(), SessionError> {
-        for schema in &["runtime", "core", "history", "compose"] {
-            sqlx_core::query::query(&format!("CREATE SCHEMA IF NOT EXISTS {}", schema)).execute(pool).await?;
+    /// 🗄️#️⃣ The document id a compose session's `db::Database` document lives under.
+    pub fn document_id(session_id: Uuid) -> protocol::DocumentId {
+        protocol::DocumentId(session_id.to_string())
+    }
+
+    /// 🗄️🌉 `db::Frontier` -> `protocol::RuntimeFrontierSummary` (the `protocol_wire` frame shape) —
+    /// `head_edit_id` has no direct db counterpart (a frontier summary carries no per-op label), so a
+    /// deterministic `<document>@<head_seq>` stand-in is used; only `head_edit_ordinal`/`chain_hash`
+    /// participate in `protocol::runtime_frontier_delta`'s actual comparison.
+    pub fn frontier_to_wire(frontier: &db::Frontier) -> protocol::RuntimeFrontierSummary {
+        protocol::RuntimeFrontierSummary { document_id: frontier.document.clone(), head_edit_ordinal: frontier.head_seq, head_edit_id: format!("{}@{}", frontier.document.0, frontier.head_seq), last_commit_seq: frontier.commit_seq, chain_hash: frontier.chain_hash }
+    }
+
+    /// 🗄️⏰ A `HybridLogicalTimestamp` for one submit: `actor` seeded from the first 8 bytes of the
+    /// submitting person's uuid (stable per-person tiebreak), `physical_ms` real wall-clock.
+    pub fn now_hlc(actor_person_id: Uuid) -> protocol::HybridLogicalTimestamp {
+        let bytes = actor_person_id.as_bytes();
+        let actor_seed = u64::from_be_bytes([bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]]);
+        let physical_ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as u64;
+        protocol::HybridLogicalTimestamp::new(actor_seed, physical_ms)
+    }
+
+    fn now_ms() -> i64 {
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as i64
+    }
+    //#endregion 🔖Database
+
+    //#region 🔖Atomic JSON File
+    /// 🗄️✍️ Reads `path` as JSON, defaulting to `T::default()` if the file does not exist yet.
+    fn read_json_or_default<T: serde::de::DeserializeOwned + Default>(path: &std::path::Path) -> Result<T, SessionError> {
+        match std::fs::read(path) {
+            Ok(bytes) => serde_json::from_slice(&bytes).map_err(|e| SessionError::Internal(format!("corrupt store file {}: {e}", path.display()))),
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(T::default()),
+            Err(e) => Err(SessionError::Internal(format!("read {}: {e}", path.display()))),
         }
-        Ok(())
     }
 
-    async fn create_enums(pool: &PgPool) -> Result<(), SessionError> {
-        let stmts = [
-            "DO $$ BEGIN CREATE TYPE lifecycle_status AS ENUM ('active', 'tombstoned'); EXCEPTION WHEN duplicate_object THEN NULL; END $$",
-            "DO $$ BEGIN CREATE TYPE session_status AS ENUM ('active', 'passivated', 'closed'); EXCEPTION WHEN duplicate_object THEN NULL; END $$",
-            "DO $$ BEGIN CREATE TYPE command_status AS ENUM ('pending', 'accepted', 'rejected'); EXCEPTION WHEN duplicate_object THEN NULL; END $$",
-        ];
-        for s in &stmts {
-            sqlx_core::query::query(s).execute(pool).await?;
+    /// 🗄️✍️ Writes `value` to `path` atomically (temp file + rename) so a crash mid-write never
+    /// corrupts the previous contents — the same `write_atomic` convention `pack`/`FsStorage` use.
+    fn write_json_atomic<T: serde::Serialize>(path: &std::path::Path, value: &T) -> Result<(), SessionError> {
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| SessionError::Internal(format!("create dir {}: {e}", parent.display())))?;
         }
+        let bytes = serde_json::to_vec_pretty(value).map_err(|e| SessionError::Internal(format!("serialize {}: {e}", path.display())))?;
+        let tmp = path.with_extension("json.tmp");
+        std::fs::write(&tmp, &bytes).map_err(|e| SessionError::Internal(format!("write {}: {e}", tmp.display())))?;
+        std::fs::rename(&tmp, path).map_err(|e| SessionError::Internal(format!("rename {} -> {}: {e}", tmp.display(), path.display())))?;
         Ok(())
     }
+    //#endregion 🔖Atomic JSON File
 
-    async fn create_runtime_tables(pool: &PgPool) -> Result<(), SessionError> {
-        sqlx_core::query::query(
-            "CREATE TABLE IF NOT EXISTS runtime.session (
-            session_id UUID PRIMARY KEY, root_kit_id UUID NOT NULL,
-            owner_token UUID NOT NULL,
-            domain_version BIGINT NOT NULL DEFAULT 0, compose_version BIGINT NOT NULL DEFAULT 0,
-            status session_status NOT NULL DEFAULT 'active',
-            created_at TIMESTAMPTZ NOT NULL DEFAULT now(), updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-        )",
-        )
-        .execute(pool)
-        .await?;
-
-        sqlx_core::query::query(
-            "CREATE TABLE IF NOT EXISTS runtime.share_token (
-            token UUID PRIMARY KEY,
-            session_id UUID NOT NULL REFERENCES runtime.session(session_id),
-            access_mode TEXT NOT NULL DEFAULT 'viewer',
-            entity_kind TEXT,
-            entity_id UUID,
-            label TEXT,
-            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-            expires_at TIMESTAMPTZ
-        )",
-        )
-        .execute(pool)
-        .await?;
-
-        sqlx_core::query::query(
-            "CREATE TABLE IF NOT EXISTS runtime.session_command (
-            command_id UUID PRIMARY KEY, session_id UUID NOT NULL REFERENCES runtime.session(session_id),
-            client_id UUID NOT NULL, request_id UUID NOT NULL, base_domain_version BIGINT NOT NULL,
-            accepted_domain_version BIGINT, command_kind TEXT NOT NULL, actor_person_id UUID NOT NULL,
-            received_at TIMESTAMPTZ NOT NULL DEFAULT now(), applied_at TIMESTAMPTZ,
-            status command_status NOT NULL DEFAULT 'pending',
-            UNIQUE (session_id, client_id, request_id)
-        )",
-        )
-        .execute(pool)
-        .await?;
-
-        sqlx_core::query::query(
-            "CREATE TABLE IF NOT EXISTS runtime.property_clock (
-            session_id UUID NOT NULL, entity_kind TEXT NOT NULL, entity_id UUID NOT NULL,
-            property_key TEXT NOT NULL, last_changed_domain_version BIGINT NOT NULL,
-            last_command_id UUID NOT NULL,
-            PRIMARY KEY (session_id, entity_kind, entity_id, property_key)
-        )",
-        )
-        .execute(pool)
-        .await?;
-        Ok(())
+    //#region 🔖Directory
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct SessionRecord {
+        pub root_kit_id: Uuid,
+        pub owner_token: Uuid,
+        pub status: SessionStatus,
+        pub created_at: String,
+        pub updated_at: String,
     }
 
-    async fn create_core_tables(pool: &PgPool) -> Result<(), SessionError> {
-        create_core_kit(pool).await?;
-        create_core_author(pool).await?;
-        create_core_location(pool).await?;
-        create_core_folder(pool).await?;
-        create_core_file(pool).await?;
-        create_core_tag(pool).await?;
-        create_core_concept(pool).await?;
-        create_core_port(pool).await?;
-        create_core_quality(pool).await?;
-        create_core_type(pool).await?;
-        create_core_connector(pool).await?;
-        create_core_representation(pool).await?;
-        create_core_prop(pool).await?;
-        create_core_attribute(pool).await?;
-        create_core_design(pool).await?;
-        create_core_layer(pool).await?;
-        create_core_piece(pool).await?;
-        create_core_group(pool).await?;
-        create_core_connection(pool).await?;
-        create_core_stat(pool).await?;
-        Ok(())
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct ShareTokenRecord {
+        pub session_id: Uuid,
+        pub access_mode: AccessMode,
+        pub entity_kind: Option<String>,
+        pub entity_id: Option<Uuid>,
+        pub label: Option<String>,
+        pub created_at: String,
+        pub expires_at: Option<String>,
     }
 
-    async fn exec(pool: &PgPool, sql: &str, name: &str) -> Result<(), SessionError> {
-        sqlx_core::query::query(sql).execute(pool).await.map_err(|e| {
-            tracing::error!(target: "compose_hub", "migration {name} failed: {e}");
-            SessionError::Database(e)
-        })?;
-        Ok(())
+    #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+    struct DirectoryState {
+        sessions: BTreeMap<Uuid, SessionRecord>,
+        share_tokens: BTreeMap<Uuid, ShareTokenRecord>,
+        compaction_configs: BTreeMap<Uuid, Vec<String>>,
     }
 
-    async fn create_core_kit(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.kit (
-        session_id UUID NOT NULL, kit_id UUID NOT NULL, name TEXT NOT NULL, version TEXT,
-        description TEXT, icon TEXT, image TEXT, preview TEXT, remote TEXT, homepage TEXT, license TEXT,
-        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, kit_id)
-    )",
-            "core.kit",
-        )
-        .await?;
-        Ok(())
+    /// 🗄️🧭 File-backed identity/tenancy bookkeeping compose-hub owns directly (not `db`'s concern,
+    /// mirroring the plan's `os-hub`/`HubDirectory` split): session ownership + status, share tokens,
+    /// per-session compaction (lookback) configuration.
+    pub struct ComposeDirectoryStore {
+        path: std::path::PathBuf,
+        state: std::sync::Mutex<DirectoryState>,
     }
 
-    async fn create_core_author(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.author (
-        session_id UUID NOT NULL, author_id UUID NOT NULL, name TEXT NOT NULL, email TEXT,
-        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, author_id)
-    )",
-            "core.author",
-        )
-        .await?;
-        Ok(())
+    impl ComposeDirectoryStore {
+        pub fn open(data_dir: &std::path::Path) -> Result<Self, SessionError> {
+            let path = data_dir.join("directory.json");
+            let state = read_json_or_default(&path)?;
+            Ok(Self { path, state: std::sync::Mutex::new(state) })
+        }
+
+        fn with_state<R>(&self, f: impl FnOnce(&mut DirectoryState) -> R) -> Result<R, SessionError> {
+            let mut guard = self.state.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+            let result = f(&mut guard);
+            write_json_atomic(&self.path, &*guard)?;
+            Ok(result)
+        }
+
+        pub fn create_session(&self, session_id: Uuid, root_kit_id: Uuid) -> Result<Uuid, SessionError> {
+            let owner_token = Uuid::now_v7();
+            let now = chrono_now_iso();
+            self.with_state(|s| {
+                s.sessions.insert(session_id, SessionRecord { root_kit_id, owner_token, status: SessionStatus::Active, created_at: now.clone(), updated_at: now });
+            })?;
+            Ok(owner_token)
+        }
+
+        pub fn session_record(&self, session_id: Uuid) -> Result<SessionRecord, SessionError> {
+            let guard = self.state.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+            guard.sessions.get(&session_id).cloned().ok_or_else(|| SessionError::SessionNotFound(session_id.to_string()))
+        }
+
+        pub fn touch_session(&self, session_id: Uuid) -> Result<(), SessionError> {
+            self.with_state(|s| {
+                if let Some(rec) = s.sessions.get_mut(&session_id) {
+                    rec.updated_at = chrono_now_iso();
+                }
+            })
+        }
+
+        pub fn set_session_root_kit(&self, session_id: Uuid, root_kit_id: Uuid) -> Result<(), SessionError> {
+            self.with_state(|s| {
+                if let Some(rec) = s.sessions.get_mut(&session_id) {
+                    rec.root_kit_id = root_kit_id;
+                    rec.updated_at = chrono_now_iso();
+                }
+            })
+        }
+
+        pub fn close_session(&self, session_id: Uuid) -> Result<bool, SessionError> {
+            self.with_state(|s| match s.sessions.get_mut(&session_id) {
+                Some(rec) => {
+                    rec.status = SessionStatus::Closed;
+                    rec.updated_at = chrono_now_iso();
+                    true
+                }
+                None => false,
+            })
+        }
+
+        pub fn load_owner_token(&self, session_id: Uuid) -> Result<Uuid, SessionError> {
+            Ok(self.session_record(session_id)?.owner_token)
+        }
+
+        #[allow(clippy::too_many_arguments)]
+        pub fn create_share_token(&self, session_id: Uuid, access_mode: AccessMode, entity_kind: Option<&str>, entity_id: Option<Uuid>, label: Option<&str>, expires_at: Option<&str>) -> Result<Uuid, SessionError> {
+            // Referential check mirroring the old `runtime.share_token`'s FK on `session_id`.
+            self.session_record(session_id)?;
+            let token = Uuid::now_v7();
+            let record = ShareTokenRecord { session_id, access_mode, entity_kind: entity_kind.map(str::to_string), entity_id, label: label.map(str::to_string), created_at: chrono_now_iso(), expires_at: expires_at.map(str::to_string) };
+            self.with_state(|s| {
+                s.share_tokens.insert(token, record);
+            })?;
+            Ok(token)
+        }
+
+        pub fn resolve_share_token(&self, token: Uuid) -> Result<ResolvedShareToken, SessionError> {
+            let guard = self.state.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+            let record = guard.share_tokens.get(&token).ok_or_else(|| SessionError::EntityNotFound { kind: "share_token".into(), id: token.to_string() })?;
+            if let Some(expires_at) = &record.expires_at {
+                if expires_at.as_str() < chrono_now_iso().as_str() {
+                    return Err(SessionError::EntityNotFound { kind: "share_token".into(), id: token.to_string() });
+                }
+            }
+            Ok(ResolvedShareToken { session_id: record.session_id, access_mode: record.access_mode, entity_kind: record.entity_kind.clone(), entity_id: record.entity_id, label: record.label.clone() })
+        }
+
+        pub fn list_share_tokens(&self, session_id: Uuid) -> Result<Vec<ShareTokenRow>, SessionError> {
+            let guard = self.state.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+            let mut rows: Vec<(String, ShareTokenRow)> = guard
+                .share_tokens
+                .iter()
+                .filter(|(_, r)| r.session_id == session_id)
+                .map(|(token, r)| {
+                    let mode = match r.access_mode {
+                        AccessMode::Owner => "owner",
+                        AccessMode::Viewer => "viewer",
+                    };
+                    (r.created_at.clone(), ShareTokenRow { token: *token, session_id: r.session_id, access_mode: mode.to_string(), entity_kind: r.entity_kind.clone(), entity_id: r.entity_id, label: r.label.clone(), created_at: r.created_at.clone(), expires_at: r.expires_at.clone() })
+                })
+                .collect();
+            rows.sort_by(|a, b| b.0.cmp(&a.0));
+            Ok(rows.into_iter().map(|(_, row)| row).collect())
+        }
+
+        pub fn delete_share_token(&self, token: Uuid) -> Result<bool, SessionError> {
+            self.with_state(|s| s.share_tokens.remove(&token).is_some())
+        }
+
+        pub fn resolve_access(&self, session_id: Uuid, bearer: Option<&str>) -> Result<AccessMode, SessionError> {
+            match bearer {
+                Some(token_str) => {
+                    let token = Uuid::parse_str(token_str).map_err(|_| SessionError::Unauthorized("invalid token format".into()))?;
+                    let owner_token = self.load_owner_token(session_id)?;
+                    if token == owner_token {
+                        return Ok(AccessMode::Owner);
+                    }
+                    let resolved = self.resolve_share_token(token).map_err(|_| SessionError::Unauthorized("invalid or expired token".into()))?;
+                    if resolved.session_id != session_id {
+                        return Err(SessionError::Unauthorized("token does not match session".into()));
+                    }
+                    Ok(resolved.access_mode)
+                }
+                None => Ok(AccessMode::Viewer),
+            }
+        }
+
+        pub fn compaction_config(&self, session_id: Uuid) -> Vec<String> {
+            let guard = self.state.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+            guard.compaction_configs.get(&session_id).cloned().unwrap_or_else(|| lookback_tokens().iter().map(|s| s.to_string()).collect())
+        }
+
+        pub fn set_compaction_config(&self, session_id: Uuid, tokens: Vec<String>) -> Result<(), SessionError> {
+            self.with_state(|s| {
+                s.compaction_configs.insert(session_id, tokens);
+            })
+        }
+
+        pub fn all_sessions(&self) -> Vec<(Uuid, SessionRecord)> {
+            let guard = self.state.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+            guard.sessions.iter().map(|(id, rec)| (*id, rec.clone())).collect()
+        }
+
+        pub fn all_share_tokens(&self) -> Vec<(Uuid, ShareTokenRecord)> {
+            let guard = self.state.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+            guard.share_tokens.iter().map(|(id, rec)| (*id, rec.clone())).collect()
+        }
     }
 
-    async fn create_core_location(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.location (
-        session_id UUID NOT NULL, location_id UUID NOT NULL, name TEXT NOT NULL, description TEXT,
-        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, location_id)
-    )",
-            "core.location",
-        )
-        .await?;
-        Ok(())
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct ResolvedShareToken {
+        pub session_id: Uuid,
+        pub access_mode: AccessMode,
+        pub entity_kind: Option<String>,
+        pub entity_id: Option<Uuid>,
+        pub label: Option<String>,
     }
 
-    async fn create_core_folder(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.folder (
-        session_id UUID NOT NULL, folder_id UUID NOT NULL, name TEXT NOT NULL, parent_folder_id UUID,
-        description TEXT, lifecycle lifecycle_status NOT NULL DEFAULT 'active',
-        PRIMARY KEY (session_id, folder_id)
-    )",
-            "core.folder",
-        )
-        .await?;
-        Ok(())
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct ShareTokenRow {
+        pub token: Uuid,
+        pub session_id: Uuid,
+        pub access_mode: String,
+        pub entity_kind: Option<String>,
+        pub entity_id: Option<Uuid>,
+        pub label: Option<String>,
+        pub created_at: String,
+        pub expires_at: Option<String>,
     }
+    //#endregion 🔖Directory
 
-    async fn create_core_file(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.file (
-        session_id UUID NOT NULL, file_id UUID NOT NULL, name TEXT NOT NULL, remote TEXT, folder_id UUID,
-        size_bytes BIGINT, hash TEXT, blob_ref TEXT,
-        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, file_id)
-    )",
-            "core.file",
-        )
-        .await?;
-        Ok(())
-    }
-
-    async fn create_core_tag(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.tag (
-        session_id UUID NOT NULL, tag_id UUID NOT NULL, name TEXT NOT NULL, description TEXT, icon TEXT,
-        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, tag_id)
-    )",
-            "core.tag",
-        )
-        .await?;
-        Ok(())
-    }
-
-    async fn create_core_concept(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.concept (
-        session_id UUID NOT NULL, concept_id UUID NOT NULL, name TEXT NOT NULL, description TEXT, icon TEXT,
-        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, concept_id)
-    )",
-            "core.concept",
-        )
-        .await?;
-        Ok(())
-    }
-
-    async fn create_core_port(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.port (
-        session_id UUID NOT NULL, port_id UUID NOT NULL, name TEXT NOT NULL, description TEXT, icon TEXT, max_children INTEGER,
-        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, port_id)
-    )",
-            "core.port",
-        )
-        .await?;
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.port_compatibility (
-        session_id UUID NOT NULL, port_id UUID NOT NULL, compatible_port_id UUID NOT NULL,
-        PRIMARY KEY (session_id, port_id, compatible_port_id)
-    )",
-            "core.port_compatibility",
-        )
-        .await?;
-        Ok(())
-    }
-
-    async fn create_core_quality(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.quality (
-        session_id UUID NOT NULL, quality_id UUID NOT NULL, key TEXT NOT NULL, name TEXT NOT NULL,
-        description TEXT, icon TEXT, unit TEXT,
-        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, quality_id)
-    )",
-            "core.quality",
-        )
-        .await?;
-        Ok(())
-    }
-
-    async fn create_core_type(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.type_entity (
-        session_id UUID NOT NULL, type_id UUID NOT NULL, name TEXT NOT NULL, parent_type_id UUID,
-        description TEXT, icon TEXT, image TEXT, folder TEXT, unit TEXT, stock INTEGER,
-        is_abstract BOOLEAN, virtual_type BOOLEAN, location_id UUID,
-        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, type_id)
-    )",
-            "core.type_entity",
-        )
-        .await?;
-        Ok(())
-    }
-
-    async fn create_core_connector(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.connector (
-        session_id UUID NOT NULL, connector_id UUID NOT NULL, type_id UUID NOT NULL, name TEXT,
-        t DOUBLE PRECISION NOT NULL DEFAULT 0,
-        point_x DOUBLE PRECISION NOT NULL DEFAULT 0, point_y DOUBLE PRECISION NOT NULL DEFAULT 0,
-        point_z DOUBLE PRECISION NOT NULL DEFAULT 0,
-        direction_x DOUBLE PRECISION NOT NULL DEFAULT 0, direction_y DOUBLE PRECISION NOT NULL DEFAULT 0,
-        direction_z DOUBLE PRECISION NOT NULL DEFAULT 1,
-        description TEXT, port_id UUID, mandatory BOOLEAN, max_children INTEGER,
-        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, connector_id)
-    )",
-            "core.connector",
-        )
-        .await?;
-        Ok(())
-    }
-
-    async fn create_core_representation(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.representation (
-        session_id UUID NOT NULL, representation_id UUID NOT NULL, type_id UUID NOT NULL, file_id UUID NOT NULL,
-        name TEXT, description TEXT,
-        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, representation_id)
-    )",
-            "core.representation",
-        )
-        .await?;
-        Ok(())
-    }
-
-    async fn create_core_prop(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.prop (
-        session_id UUID NOT NULL, prop_id UUID NOT NULL, quality_id UUID NOT NULL, value TEXT NOT NULL,
-        unit TEXT, owner_kind TEXT NOT NULL, owner_id UUID NOT NULL,
-        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, prop_id)
-    )",
-            "core.prop",
-        )
-        .await?;
-        Ok(())
-    }
-
-    async fn create_core_attribute(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.attribute (
-        session_id UUID NOT NULL, attribute_id UUID NOT NULL, key TEXT NOT NULL, value TEXT,
-        definition TEXT, owner_kind TEXT NOT NULL, owner_id UUID NOT NULL,
-        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, attribute_id)
-    )",
-            "core.attribute",
-        )
-        .await?;
-        Ok(())
-    }
-
-    async fn create_core_design(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.design (
-        session_id UUID NOT NULL, design_id UUID NOT NULL, name TEXT NOT NULL, parent_design_id UUID,
-        description TEXT, icon TEXT, image TEXT, folder TEXT, unit TEXT,
-        is_abstract BOOLEAN, can_scale BOOLEAN, can_mirror BOOLEAN,
-        active_layer_id UUID, location_id UUID,
-        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, design_id)
-    )",
-            "core.design",
-        )
-        .await?;
-        Ok(())
-    }
-
-    async fn create_core_layer(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.layer (
-        session_id UUID NOT NULL, layer_id UUID NOT NULL, design_id UUID NOT NULL, path TEXT NOT NULL,
-        is_hidden BOOLEAN, is_locked BOOLEAN, color TEXT, description TEXT,
-        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, layer_id)
-    )",
-            "core.layer",
-        )
-        .await?;
-        Ok(())
-    }
-
-    async fn create_core_piece(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.piece (
-        session_id UUID NOT NULL, piece_id UUID NOT NULL, design_id UUID NOT NULL, name TEXT,
-        type_id UUID, design_ref_id UUID,
-        plane_origin_x DOUBLE PRECISION, plane_origin_y DOUBLE PRECISION, plane_origin_z DOUBLE PRECISION,
-        plane_x_axis_x DOUBLE PRECISION, plane_x_axis_y DOUBLE PRECISION, plane_x_axis_z DOUBLE PRECISION,
-        plane_y_axis_x DOUBLE PRECISION, plane_y_axis_y DOUBLE PRECISION, plane_y_axis_z DOUBLE PRECISION,
-        center_u DOUBLE PRECISION, center_v DOUBLE PRECISION, scale DOUBLE PRECISION,
-        mirror_origin_x DOUBLE PRECISION, mirror_origin_y DOUBLE PRECISION, mirror_origin_z DOUBLE PRECISION,
-        mirror_x_axis_x DOUBLE PRECISION, mirror_x_axis_y DOUBLE PRECISION, mirror_x_axis_z DOUBLE PRECISION,
-        mirror_y_axis_x DOUBLE PRECISION, mirror_y_axis_y DOUBLE PRECISION, mirror_y_axis_z DOUBLE PRECISION,
-        is_hidden BOOLEAN, is_locked BOOLEAN, color TEXT, description TEXT,
-        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, piece_id)
-    )",
-            "core.piece",
-        )
-        .await?;
-        Ok(())
-    }
-
-    async fn create_core_group(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.group_entity (
-        session_id UUID NOT NULL, group_id UUID NOT NULL, design_id UUID NOT NULL, name TEXT,
-        color TEXT, description TEXT,
-        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, group_id)
-    )",
-            "core.group_entity",
-        )
-        .await?;
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.group_piece (
-        session_id UUID NOT NULL, group_id UUID NOT NULL, piece_id UUID NOT NULL,
-        ordinal INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (session_id, group_id, piece_id)
-    )",
-            "core.group_piece",
-        )
-        .await?;
-        Ok(())
-    }
-
-    async fn create_core_connection(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.connection (
-        session_id UUID NOT NULL, connection_id UUID NOT NULL, design_id UUID NOT NULL,
-        parent_piece_id UUID NOT NULL, parent_design_piece_id UUID, parent_connector_id UUID,
-        child_piece_id UUID NOT NULL, child_design_piece_id UUID, child_connector_id UUID,
-        gap DOUBLE PRECISION NOT NULL DEFAULT 0, shift_val DOUBLE PRECISION NOT NULL DEFAULT 0,
-        rise DOUBLE PRECISION NOT NULL DEFAULT 0, rotation DOUBLE PRECISION NOT NULL DEFAULT 0,
-        turn DOUBLE PRECISION NOT NULL DEFAULT 0, tilt DOUBLE PRECISION NOT NULL DEFAULT 0,
-        u DOUBLE PRECISION, v DOUBLE PRECISION, description TEXT,
-        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, connection_id)
-    )",
-            "core.connection",
-        )
-        .await?;
-        Ok(())
-    }
-
-    async fn create_core_stat(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS core.stat (
-        session_id UUID NOT NULL, stat_id UUID NOT NULL, design_id UUID NOT NULL, quality_id UUID NOT NULL,
-        unit TEXT, min DOUBLE PRECISION, min_excluded BOOLEAN, max DOUBLE PRECISION, max_excluded BOOLEAN,
-        lifecycle lifecycle_status NOT NULL DEFAULT 'active', PRIMARY KEY (session_id, stat_id)
-    )",
-            "core.stat",
-        )
-        .await?;
-        Ok(())
-    }
-
-    async fn create_compose_tables(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS compose.person (
-        session_id UUID NOT NULL, person_id UUID NOT NULL, frontend_id TEXT NOT NULL,
-        display_name TEXT, color TEXT, is_present BOOLEAN NOT NULL DEFAULT true,
-        last_seen_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-        PRIMARY KEY (session_id, person_id, frontend_id)
-    )",
-            "compose.person",
-        )
-        .await?;
-
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS compose.cursor (
-        session_id UUID NOT NULL, person_id UUID NOT NULL, frontend_id TEXT NOT NULL,
-        u DOUBLE PRECISION NOT NULL, v DOUBLE PRECISION NOT NULL,
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-        PRIMARY KEY (session_id, person_id, frontend_id)
-    )",
-            "compose.cursor",
-        )
-        .await?;
-
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS compose.look (
-        session_id UUID NOT NULL, person_id UUID NOT NULL, frontend_id TEXT NOT NULL,
-        position_x DOUBLE PRECISION NOT NULL, position_y DOUBLE PRECISION NOT NULL, position_z DOUBLE PRECISION NOT NULL,
-        forward_x DOUBLE PRECISION NOT NULL, forward_y DOUBLE PRECISION NOT NULL, forward_z DOUBLE PRECISION NOT NULL,
-        up_x DOUBLE PRECISION NOT NULL, up_y DOUBLE PRECISION NOT NULL, up_z DOUBLE PRECISION NOT NULL,
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-        PRIMARY KEY (session_id, person_id, frontend_id)
-    )",
-            "compose.look",
-        )
-        .await?;
-
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS compose.selection_piece (
-        session_id UUID NOT NULL, person_id UUID NOT NULL, frontend_id TEXT NOT NULL, piece_id UUID NOT NULL,
-        PRIMARY KEY (session_id, person_id, frontend_id, piece_id)
-    )",
-            "compose.selection_piece",
-        )
-        .await?;
-
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS compose.selection_design (
-        session_id UUID NOT NULL, person_id UUID NOT NULL, frontend_id TEXT NOT NULL, design_id UUID NOT NULL,
-        PRIMARY KEY (session_id, person_id, frontend_id, design_id)
-    )",
-            "compose.selection_design",
-        )
-        .await?;
-        Ok(())
-    }
-
-    async fn create_history_tables(pool: &PgPool) -> Result<(), SessionError> {
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS history.domain_commit (
-        session_id UUID NOT NULL,
-        domain_version BIGINT NOT NULL,
-        command_id UUID NOT NULL,
-        committed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-        PRIMARY KEY (session_id, domain_version)
-    )",
-            "history.domain_commit",
-        )
-        .await?;
-
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS history.kit_snapshot (
-        session_id UUID NOT NULL,
-        domain_version BIGINT NOT NULL,
-        kit_json JSONB NOT NULL,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-        PRIMARY KEY (session_id, domain_version)
-    )",
-            "history.kit_snapshot",
-        )
-        .await?;
-
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS history.entity_change_log (
-        session_id UUID NOT NULL,
-        domain_version BIGINT NOT NULL,
-        changes_json JSONB NOT NULL,
-        PRIMARY KEY (session_id, domain_version)
-    )",
-            "history.entity_change_log",
-        )
-        .await?;
-
-        exec(
-            pool,
-            "CREATE TABLE IF NOT EXISTS history.compaction_config (
-        session_id UUID NOT NULL,
-        lookback_tokens JSONB NOT NULL DEFAULT '[]'::jsonb,
-        last_compacted_at TIMESTAMPTZ,
-        PRIMARY KEY (session_id)
-    )",
-            "history.compaction_config",
-        )
-        .await?;
-        Ok(())
-    }
-} // 🎞️Schema
-pub use schema::*;
-
-mod persistence {
-    // 🔮Persistence
-    // Specs: Pool creates a connection pool from DATABASE_URL. Session CRUD creates, loads, and updates session metadata.
-    // Summary: PostgreSQL persistence: pool creation, session CRUD, snapshot loading.
-
-    use super::*;
-    pub async fn create_pool(database_url: &str) -> Result<PgPool, SessionError> {
-        Ok(PgPoolOptions::new().max_connections(20).connect(database_url).await?)
-    }
-
+    //#region 🔖Kit Identity
     pub fn session_kit_id(kit_json: &serde_json::Value) -> Result<Uuid, SessionError> {
         let id = kit_json.get("id").and_then(|value| value.as_str()).ok_or_else(|| SessionError::Validation("kit snapshot must include string id".into()))?;
         Uuid::parse_str(id).map_err(|err| SessionError::Validation(format!("invalid kit id '{id}': {err}")))
@@ -1389,7 +1111,1139 @@ mod persistence {
         kit_json.get(field).and_then(|value| value.as_str()).map(|value| value.to_string())
     }
 
-    fn initial_session_kit(fallback_kit_id: Uuid, fallback_kit_name: &str, initial_kit: Option<&serde_json::Value>) -> Result<(Uuid, String, serde_json::Value), SessionError> {
+    pub fn chrono_now_iso() -> String {
+        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default();
+        let secs = now.as_secs();
+        let nanos = now.subsec_nanos();
+        format!("{}.{:09}Z", secs, nanos)
+    }
+    //#endregion 🔖Kit Identity
+
+    //#region 🔖Kit Serialization
+    /// 🗄️📤 Serializes a `SessionState` into the same kit JSON shape the compose GraphQL schema
+    /// expects — unchanged from the pre-CW6b implementation (pure function, no storage dependency).
+    pub fn serialize_session_kit(state: &SessionState) -> serde_json::Value {
+        let types: Vec<serde_json::Value> = state
+            .types
+            .values()
+            .filter(|t| t.lifecycle.is_active())
+            .map(|t| {
+                serde_json::json!({
+                    "id": t.type_id, "name": t.name,
+                    "description": t.description, "icon": t.icon, "image": t.image,
+                    "folder": t.folder, "unit": t.unit, "stock": t.stock,
+                    "isAbstract": t.is_abstract, "virtual": t.virtual_type,
+                    "parent": t.parent_type_id.map(|id| serde_json::json!({ "id": id })),
+                    "location": t.location_id.map(|id| serde_json::json!({ "id": id })),
+                    "connectors": t.connectors.values().filter(|c| c.lifecycle.is_active()).map(|c| serde_json::json!({
+                        "id": c.connector_id,
+                        "name": c.name,
+                        "t": c.t,
+                        "point": { "x": c.point[0], "y": c.point[1], "z": c.point[2] },
+                        "direction": { "x": c.direction[0], "y": c.direction[1], "z": c.direction[2] },
+                        "description": c.description,
+                        "port": c.port_id.map(|id| serde_json::json!({ "id": id })),
+                        "mandatory": c.mandatory,
+                        "maxChildren": c.max_children,
+                    })).collect::<Vec<_>>(),
+                    "representations": t.representations.values().filter(|m| m.lifecycle.is_active()).map(|m| serde_json::json!({
+                        "id": m.representation_id,
+                        "file": { "id": m.file_id },
+                        "name": m.name,
+                        "description": m.description,
+                    })).collect::<Vec<_>>(),
+                })
+            })
+            .collect();
+        let designs: Vec<serde_json::Value> = state
+            .designs
+            .values()
+            .filter(|d| d.lifecycle.is_active())
+            .map(|d| {
+                let pieces: Vec<serde_json::Value> = d
+                    .pieces
+                    .values()
+                    .filter(|p| p.lifecycle.is_active())
+                    .map(|p| {
+                        serde_json::json!({
+                            "id": p.piece_id, "name": p.name, "type": p.type_id,
+                            "center": p.center.map(|c| serde_json::json!({"u": c[0], "v": c[1]})),
+                            "isHidden": p.is_hidden, "isLocked": p.is_locked,
+                            "color": p.color, "description": p.description,
+                            "design": { "id": d.design_id },
+                        })
+                    })
+                    .collect();
+                let connections: Vec<serde_json::Value> = d
+                    .connections
+                    .values()
+                    .filter(|c| c.lifecycle.is_active())
+                    .map(|c| {
+                        serde_json::json!({
+                            "id": c.connection_id,
+                            "parent": {
+                                "piece": { "id": c.parent_piece_id },
+                                "designPiece": c.parent_design_piece_id.map(|id| serde_json::json!({ "id": id })),
+                                "connector": c.parent_connector_id.map(|id| serde_json::json!({ "id": id })),
+                            },
+                            "child": {
+                                "piece": { "id": c.child_piece_id },
+                                "designPiece": c.child_design_piece_id.map(|id| serde_json::json!({ "id": id })),
+                                "connector": c.child_connector_id.map(|id| serde_json::json!({ "id": id })),
+                            },
+                            "gap": c.gap, "shift": c.shift, "rise": c.rise,
+                            "rotation": c.rotation, "turn": c.turn, "tilt": c.tilt,
+                            "u": c.u, "v": c.v, "description": c.description,
+                        })
+                    })
+                    .collect();
+                serde_json::json!({
+                    "id": d.design_id, "name": d.name,
+                    "description": d.description, "icon": d.icon, "image": d.image,
+                    "folder": d.folder, "unit": d.unit, "isAbstract": d.is_abstract,
+                    "canScale": d.can_scale, "canMirror": d.can_mirror,
+                    "parent": d.parent_design_id.map(|id| serde_json::json!({ "id": id })),
+                    "activeLayer": d.active_layer_id.map(|id| serde_json::json!({ "id": id })),
+                    "location": d.location_id.map(|id| serde_json::json!({ "id": id })),
+                    "pieces": pieces, "connections": connections,
+                })
+            })
+            .collect();
+        let authors: Vec<serde_json::Value> = state.authors.values().filter(|a| a.lifecycle.is_active()).map(|a| serde_json::json!({"id": a.author_id, "name": a.name, "email": a.email})).collect();
+        let tags: Vec<serde_json::Value> = state.tags.values().filter(|t| t.lifecycle.is_active()).map(|t| serde_json::json!({"id": t.tag_id, "name": t.name, "description": t.description, "icon": t.icon})).collect();
+        let concepts: Vec<serde_json::Value> = state.concepts.values().filter(|c| c.lifecycle.is_active()).map(|c| serde_json::json!({"id": c.concept_id, "name": c.name, "description": c.description, "icon": c.icon})).collect();
+        let ports: Vec<serde_json::Value> = state
+            .ports
+            .values()
+            .filter(|p| p.lifecycle.is_active())
+            .map(|p| {
+                serde_json::json!({
+                    "id": p.port_id,
+                    "name": p.name,
+                    "description": p.description,
+                    "icon": p.icon,
+                    "maxChildren": p.max_children,
+                    "compatiblePorts": p.compatible_port_ids.iter().map(|id| serde_json::json!({ "id": id })).collect::<Vec<_>>(),
+                })
+            })
+            .collect();
+        let qualities: Vec<serde_json::Value> = state
+            .qualities
+            .values()
+            .filter(|q| q.lifecycle.is_active())
+            .map(|q| {
+                serde_json::json!({
+                    "id": q.quality_id,
+                    "key": q.key,
+                    "name": q.name,
+                    "description": q.description,
+                    "icon": q.icon,
+                    "unit": q.unit,
+                })
+            })
+            .collect();
+        let folders: Vec<serde_json::Value> = state
+            .folders
+            .values()
+            .filter(|f| f.lifecycle.is_active())
+            .map(|f| {
+                serde_json::json!({
+                    "id": f.folder_id,
+                    "name": f.name,
+                    "parent": f.parent_folder_id.map(|id| serde_json::json!({ "id": id })),
+                    "description": f.description,
+                })
+            })
+            .collect();
+        let files: Vec<serde_json::Value> = state
+            .files
+            .values()
+            .filter(|f| f.lifecycle.is_active())
+            .map(|f| {
+                serde_json::json!({
+                    "id": f.file_id,
+                    "name": f.name,
+                    "remote": f.remote,
+                    "folder": f.folder_id.map(|id| serde_json::json!({ "id": id })),
+                    "size": f.size,
+                    "hash": f.hash,
+                    "blob": f.blob,
+                })
+            })
+            .collect();
+        serde_json::json!({
+            "id": state.kit.kit_id, "name": state.kit.name,
+            "version": state.kit.version, "description": state.kit.description,
+            "icon": state.kit.icon, "image": state.kit.image,
+            "preview": state.kit.preview, "remote": state.kit.remote,
+            "homepage": state.kit.homepage, "license": state.kit.license,
+            "types": types, "designs": designs, "authors": authors, "tags": tags,
+            "concepts": concepts, "ports": ports, "qualities": qualities, "folders": folders, "files": files,
+            "createdAt": chrono_now_iso(), "updatedAt": chrono_now_iso(),
+        })
+    }
+
+    pub fn apply_change_log_to_kit(kit: &mut serde_json::Value, changes: &serde_json::Value) {
+        let changes_arr = match changes.as_array() {
+            Some(a) => a,
+            None => return,
+        };
+        for change in changes_arr {
+            let operation = change.get("operation").and_then(|v| v.as_str()).unwrap_or("");
+            let entity_kind = change.get("entity_kind").and_then(|v| v.as_str()).unwrap_or("");
+            let entity_id = change.get("entity_id").and_then(|v| v.as_str()).unwrap_or("");
+            match operation {
+                "Created" => {
+                    let snapshot = change.get("snapshot").cloned().unwrap_or(serde_json::json!({}));
+                    let mut entity = snapshot.clone();
+                    if entity.get("id").is_none() {
+                        entity["id"] = serde_json::Value::String(entity_id.to_string());
+                    }
+                    match entity_kind {
+                        "type" => push_to_array(kit, "types", entity),
+                        "design" => push_to_array(kit, "designs", entity),
+                        "author" => push_to_array(kit, "authors", entity),
+                        "tag" => push_to_array(kit, "tags", entity),
+                        "piece" => {
+                            if let Some(design_id) = change.get("snapshot").and_then(|s| s.get("design_id")).and_then(|v| v.as_str()) {
+                                push_to_design_array(kit, design_id, "pieces", entity);
+                            }
+                        }
+                        "connection" => {
+                            if let Some(design_id) = change.get("snapshot").and_then(|s| s.get("design_id")).and_then(|v| v.as_str()) {
+                                push_to_design_array(kit, design_id, "connections", entity);
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                "Updated" => {
+                    let changed_fields = change.get("changed_fields").cloned().unwrap_or(serde_json::json!({}));
+                    match entity_kind {
+                        "kit" => {
+                            if let Some(obj) = kit.as_object_mut() {
+                                if let Some(fields) = changed_fields.as_object() {
+                                    for (k, v) in fields {
+                                        obj.insert(k.clone(), v.clone());
+                                    }
+                                }
+                            }
+                        }
+                        "type" | "design" | "author" | "tag" => {
+                            let collection_key = match entity_kind {
+                                "type" => "types",
+                                "design" => "designs",
+                                "author" => "authors",
+                                "tag" => "tags",
+                                _ => "",
+                            };
+                            update_in_array(kit, collection_key, entity_id, &changed_fields);
+                        }
+                        "piece" => {
+                            if let Some(design_id) = changed_fields.get("design_id").and_then(|v| v.as_str()) {
+                                update_in_design_array(kit, design_id, "pieces", entity_id, &changed_fields);
+                            }
+                        }
+                        "connection" => {
+                            if let Some(design_id) = changed_fields.get("design_id").and_then(|v| v.as_str()) {
+                                update_in_design_array(kit, design_id, "connections", entity_id, &changed_fields);
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                "Deleted" => match entity_kind {
+                    "type" => remove_from_array(kit, "types", entity_id),
+                    "design" => remove_from_array(kit, "designs", entity_id),
+                    "author" => remove_from_array(kit, "authors", entity_id),
+                    "tag" => remove_from_array(kit, "tags", entity_id),
+                    "piece" => remove_from_design_arrays(kit, "pieces", entity_id),
+                    "connection" => remove_from_design_arrays(kit, "connections", entity_id),
+                    _ => {}
+                },
+                _ => {}
+            }
+        }
+    }
+
+    pub fn push_to_array(kit: &mut serde_json::Value, key: &str, item: serde_json::Value) {
+        if let Some(arr) = kit.get_mut(key).and_then(|v| v.as_array_mut()) {
+            arr.push(item);
+        } else {
+            kit[key] = serde_json::json!([item]);
+        }
+    }
+
+    pub fn push_to_design_array(kit: &mut serde_json::Value, design_id: &str, key: &str, item: serde_json::Value) {
+        if let Some(designs) = kit.get_mut("designs").and_then(|v| v.as_array_mut()) {
+            for d in designs.iter_mut() {
+                if d.get("id").and_then(|g| g.as_str()) == Some(design_id) {
+                    if let Some(arr) = d.get_mut(key).and_then(|v| v.as_array_mut()) {
+                        arr.push(item);
+                    } else {
+                        d[key] = serde_json::json!([item]);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    pub fn update_in_array(kit: &mut serde_json::Value, key: &str, entity_id: &str, fields: &serde_json::Value) {
+        if let Some(arr) = kit.get_mut(key).and_then(|v| v.as_array_mut()) {
+            for item in arr.iter_mut() {
+                if item.get("id").and_then(|g| g.as_str()) == Some(entity_id) {
+                    if let Some(obj) = item.as_object_mut() {
+                        if let Some(f) = fields.as_object() {
+                            for (k, v) in f {
+                                obj.insert(k.clone(), v.clone());
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    pub fn update_in_design_array(kit: &mut serde_json::Value, design_id: &str, key: &str, entity_id: &str, fields: &serde_json::Value) {
+        if let Some(designs) = kit.get_mut("designs").and_then(|v| v.as_array_mut()) {
+            for design in designs.iter_mut() {
+                if design.get("id").and_then(|g| g.as_str()) != Some(design_id) {
+                    continue;
+                }
+                if let Some(items) = design.get_mut(key).and_then(|v| v.as_array_mut()) {
+                    for item in items.iter_mut() {
+                        if item.get("id").and_then(|g| g.as_str()) == Some(entity_id) {
+                            if let Some(obj) = item.as_object_mut() {
+                                if let Some(f) = fields.as_object() {
+                                    for (k, v) in f {
+                                        obj.insert(k.clone(), v.clone());
+                                    }
+                                }
+                            }
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn remove_from_array(kit: &mut serde_json::Value, key: &str, entity_id: &str) {
+        if let Some(arr) = kit.get_mut(key).and_then(|v| v.as_array_mut()) {
+            arr.retain(|item| item.get("id").and_then(|g| g.as_str()) != Some(entity_id));
+        }
+    }
+
+    pub fn remove_from_design_arrays(kit: &mut serde_json::Value, key: &str, entity_id: &str) {
+        if let Some(designs) = kit.get_mut("designs").and_then(|v| v.as_array_mut()) {
+            for design in designs.iter_mut() {
+                if let Some(items) = design.get_mut(key).and_then(|v| v.as_array_mut()) {
+                    items.retain(|item| item.get("id").and_then(|g| g.as_str()) != Some(entity_id));
+                }
+            }
+        }
+    }
+    //#endregion 🔖Kit Serialization
+
+    //#region 🔖History
+    #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+    struct SessionHistory {
+        domain_commits: Vec<(i64, Uuid, i64)>,
+        kit_snapshots: Vec<(i64, serde_json::Value)>,
+        entity_change_logs: Vec<(i64, Vec<EntityChange>)>,
+        last_compacted_at: Option<String>,
+    }
+
+    #[derive(Debug, Clone, Serialize)]
+    pub struct CompactionResult {
+        pub snapshots_created: u32,
+        pub logs_deleted: u64,
+    }
+
+    /// 🗄️🔩 Compose's own bespoke kit-history/lookback/compaction feature — see this module's doc for
+    /// why it stays a lightweight file-backed store rather than reaching into `db`'s WAL directly.
+    pub struct HistoryStore {
+        root: std::path::PathBuf,
+    }
+
+    impl HistoryStore {
+        pub fn open(data_dir: &std::path::Path) -> Self {
+            Self { root: data_dir.join("history") }
+        }
+
+        fn path(&self, session_id: Uuid) -> std::path::PathBuf {
+            self.root.join(format!("{session_id}.json"))
+        }
+
+        fn load(&self, session_id: Uuid) -> Result<SessionHistory, SessionError> {
+            read_json_or_default(&self.path(session_id))
+        }
+
+        fn save(&self, session_id: Uuid, history: &SessionHistory) -> Result<(), SessionError> {
+            write_json_atomic(&self.path(session_id), history)
+        }
+
+        pub fn record_domain_commit(&self, session_id: Uuid, domain_version: DomainVersion, command_id: Uuid) -> Result<(), SessionError> {
+            let mut history = self.load(session_id)?;
+            if !history.domain_commits.iter().any(|(v, _, _)| *v == domain_version) {
+                history.domain_commits.push((domain_version, command_id, now_ms()));
+            }
+            self.save(session_id, &history)
+        }
+
+        pub fn store_kit_snapshot(&self, session_id: Uuid, domain_version: DomainVersion, kit_json: &serde_json::Value) -> Result<(), SessionError> {
+            let mut history = self.load(session_id)?;
+            match history.kit_snapshots.iter_mut().find(|(v, _)| *v == domain_version) {
+                Some((_, existing)) => *existing = kit_json.clone(),
+                None => history.kit_snapshots.push((domain_version, kit_json.clone())),
+            }
+            self.save(session_id, &history)
+        }
+
+        pub fn store_entity_change_log(&self, session_id: Uuid, domain_version: DomainVersion, changes: &[EntityChange]) -> Result<(), SessionError> {
+            let mut history = self.load(session_id)?;
+            if !history.entity_change_logs.iter().any(|(v, _)| *v == domain_version) {
+                history.entity_change_logs.push((domain_version, changes.to_vec()));
+            }
+            self.save(session_id, &history)
+        }
+
+        pub fn get_latest_snapshot_before(&self, session_id: Uuid, target_version: DomainVersion) -> Result<Option<(DomainVersion, serde_json::Value)>, SessionError> {
+            let history = self.load(session_id)?;
+            Ok(history.kit_snapshots.iter().filter(|(v, _)| *v <= target_version).max_by_key(|(v, _)| *v).cloned())
+        }
+
+        pub fn get_change_logs_in_range(&self, session_id: Uuid, from_version_exclusive: DomainVersion, to_version_inclusive: DomainVersion) -> Result<Vec<(DomainVersion, serde_json::Value)>, SessionError> {
+            let history = self.load(session_id)?;
+            let mut logs: Vec<(DomainVersion, serde_json::Value)> = history.entity_change_logs.iter().filter(|(v, _)| *v > from_version_exclusive && *v <= to_version_inclusive).map(|(v, changes)| (*v, serde_json::to_value(changes).unwrap_or(serde_json::json!([])))).collect();
+            logs.sort_by_key(|(v, _)| *v);
+            Ok(logs)
+        }
+
+        pub fn get_version_at_time(&self, session_id: Uuid, seconds_ago: i64) -> Result<Option<DomainVersion>, SessionError> {
+            let history = self.load(session_id)?;
+            let cutoff_ms = now_ms() - seconds_ago * 1000;
+            Ok(history.domain_commits.iter().filter(|(_, _, at_ms)| *at_ms <= cutoff_ms).map(|(v, _, _)| *v).max())
+        }
+
+        pub fn reconstruct_kit_at_version(&self, session_id: Uuid, target_version: DomainVersion) -> Result<serde_json::Value, SessionError> {
+            let (snap_version, mut kit) = self.get_latest_snapshot_before(session_id, target_version)?.ok_or_else(|| SessionError::Internal("no baseline snapshot found".to_string()))?;
+            if snap_version < target_version {
+                let logs = self.get_change_logs_in_range(session_id, snap_version, target_version)?;
+                for (_version, changes) in &logs {
+                    apply_change_log_to_kit(&mut kit, changes);
+                }
+            }
+            Ok(kit)
+        }
+
+        pub fn get_kit_at_lookback(&self, session_id: Uuid, lookback_token: &str) -> Result<serde_json::Value, SessionError> {
+            let seconds = lookback_seconds(lookback_token).ok_or_else(|| SessionError::Validation(format!("unknown lookback token: {}", lookback_token)))?;
+            let target_version = self.get_version_at_time(session_id, seconds)?.ok_or_else(|| SessionError::Internal("no version found at lookback time".to_string()))?;
+            self.reconstruct_kit_at_version(session_id, target_version)
+        }
+
+        pub fn last_compacted_at(&self, session_id: Uuid) -> Option<String> {
+            self.load(session_id).ok().and_then(|h| h.last_compacted_at)
+        }
+
+        pub fn compact(&self, session_id: Uuid, current_state: &SessionState) -> Result<CompactionResult, SessionError> {
+            let mut snapshots_created = 0u32;
+            let mut logs_deleted = 0u64;
+            let current_version = current_state.domain_version;
+            let current_kit = serialize_session_kit(current_state);
+            self.store_kit_snapshot(session_id, current_version, &current_kit)?;
+            snapshots_created += 1;
+            for &(token, seconds) in LOOKBACK_POINTS {
+                let boundary_version = self.get_version_at_time(session_id, seconds)?;
+                if let Some(bv) = boundary_version {
+                    if bv > 0 {
+                        let existing = self.get_latest_snapshot_before(session_id, bv)?;
+                        match existing {
+                            Some((sv, _)) if sv == bv => {}
+                            _ => match self.reconstruct_kit_at_version(session_id, bv) {
+                                Ok(kit) => {
+                                    self.store_kit_snapshot(session_id, bv, &kit)?;
+                                    snapshots_created += 1;
+                                }
+                                Err(_) => {
+                                    tracing::warn!("compaction: could not reconstruct kit at version {} for lookback {}", bv, token);
+                                }
+                            },
+                        }
+                    }
+                }
+            }
+            let oldest_seconds = LOOKBACK_POINTS.last().map_or(31536000, |(_, s)| *s);
+            let oldest_version = self.get_version_at_time(session_id, oldest_seconds)?;
+            if let Some(ov) = oldest_version {
+                if ov > 0 {
+                    let mut history = self.load(session_id)?;
+                    let before = history.entity_change_logs.len();
+                    history.entity_change_logs.retain(|(v, _)| !(*v < ov && history.kit_snapshots.iter().any(|(sv, _)| *sv >= *v)));
+                    logs_deleted = (before - history.entity_change_logs.len()) as u64;
+                    history.last_compacted_at = Some(chrono_now_iso());
+                    self.save(session_id, &history)?;
+                }
+            }
+            Ok(CompactionResult { snapshots_created, logs_deleted })
+        }
+    }
+    //#endregion 🔖History
+} // 🗄️Store
+pub use store::*;
+
+mod actor {
+    // 🎹Actor
+    // Specs: ActorMessage is the inbox message kind. SessionActor processes commands one at a time in
+    // arrival order, submitting through `db::DocumentHandle` (WAL/conflict/durability/frontier
+    // authority) and keeping an in-memory `SessionState` replica for fast reads + kit-JSON history.
+    // Summary: Session actor: single-writer task processing commands sequentially against `db`.
+
+    use super::*;
+
+    pub enum ActorMessage {
+        DomainCommand { envelope: CommandEnvelope, command: DomainCommand, reply: oneshot::Sender<Result<CommandResult, SessionError>> },
+        ComposeCommand { envelope: ComposeEnvelope, command: ComposeCommand, reply: oneshot::Sender<Result<(), SessionError>> },
+        GetSnapshot { reply: oneshot::Sender<SessionSnapshot> },
+    }
+
+    #[derive(Debug, Clone, Serialize)]
+    pub struct SessionSnapshot {
+        pub session_id: Uuid,
+        pub domain_version: DomainVersion,
+        pub compose_version: ComposeVersion,
+        pub kit: serde_json::Value,
+    }
+
+    /// 🎞️ What the actor broadcasts on the `protocol_wire` lanes — the WS layer (see `ws` module)
+    /// encodes these into real `ServerFrame::Commands`/`ServerFrame::Preview` binary frames. Kept
+    /// separate from the legacy JSON `SessionEvent` broadcast (still emitted, still exercised by
+    /// existing tests/admin introspection) rather than replacing it, since the two serve different
+    /// consumers: `SessionEvent` is compose's own typed domain event, `WireEvent` is the wire-v2
+    /// envelope/frontier pair `protocol_wire` clients (framework/sync-style actors) expect.
+    #[derive(Clone)]
+    pub enum WireEvent {
+        Commands { envelope: protocol::OperationEnvelope, frontier: db::Frontier },
+        Preview { actor: protocol::ActorId, key: String, seq: u64, payload: Vec<u8> },
+    }
+
+    pub struct SessionActor {
+        session_id: Uuid,
+        state: SessionState,
+        handle: db::DocumentHandle,
+        history: Arc<HistoryStore>,
+        directory: Arc<ComposeDirectoryStore>,
+        event_tx: broadcast::Sender<SessionEvent>,
+        wire_tx: broadcast::Sender<WireEvent>,
+    }
+
+    impl SessionActor {
+        pub fn new(session_id: Uuid, state: SessionState, handle: db::DocumentHandle, history: Arc<HistoryStore>, directory: Arc<ComposeDirectoryStore>, event_tx: broadcast::Sender<SessionEvent>, wire_tx: broadcast::Sender<WireEvent>) -> Self {
+            Self { session_id, state, handle, history, directory, event_tx, wire_tx }
+        }
+
+        pub async fn run(&mut self, mut rx: mpsc::Receiver<ActorMessage>) {
+            while let Some(msg) = rx.recv().await {
+                match msg {
+                    ActorMessage::DomainCommand { envelope, command, reply } => {
+                        let result = self.handle_domain_command(envelope, command).await;
+                        let _ = reply.send(result);
+                    }
+                    ActorMessage::ComposeCommand { envelope, command, reply } => {
+                        let result = self.handle_compose_command(envelope, command);
+                        let _ = reply.send(result);
+                    }
+                    ActorMessage::GetSnapshot { reply } => {
+                        let _ = reply.send(self.build_snapshot());
+                    }
+                }
+            }
+        }
+
+        async fn handle_domain_command(&mut self, envelope: CommandEnvelope, command: DomainCommand) -> Result<CommandResult, SessionError> {
+            // 🗄️ `db::DocumentHandle::submit` dedupes durably by `operation_id` — keyed here by
+            // `(client_id, request_id)` (this actor's own logical idempotency key, matching the old
+            // `runtime.session_command` UNIQUE(session_id, client_id, request_id) constraint) rather
+            // than the client-supplied `command_id`, so a retried request with a fresh `command_id`
+            // still dedupes correctly. A resubmit resolves to the SAME cached `CommandReceipt` (same
+            // frontier) db_document already returned for the first submit — comparing the frontier
+            // before/after is this actor's way of telling a genuine commit from a replay, since this
+            // actor is the sole writer to its document (single-writer-per-session, unchanged from the
+            // pre-CW6b design).
+            let before_seq = self.handle.frontier()?.head_seq;
+
+            let mut trial_state = self.state.clone();
+            let mut entries: Vec<(String, Option<serde_json::Value>)> = Vec::new();
+            let mut changes: Vec<EntityChange> = Vec::new();
+            apply_domain_command(&mut trial_state, &command, envelope.command_id.0, &mut entries, &mut changes);
+
+            let payload: serde_json::Map<String, serde_json::Value> = entries.into_iter().map(|(path, value)| (path, value.unwrap_or(serde_json::Value::Null))).collect();
+            let op_envelope = protocol::OperationEnvelope {
+                operation_id: protocol::OperationId(format!("{}:{}", envelope.client_id.0, envelope.request_id.0)),
+                document_id: document_id(self.session_id),
+                actor: protocol::ActorId(envelope.actor_person_id.0.to_string()),
+                dependencies: Vec::new(),
+                diff: protocol::DocumentDiff { schema: "generic".to_string(), payload: serde_json::Value::Object(payload) },
+                // 🎯 No real inverse yet — compose-hub has no undo/redo feature today (the original
+                // Postgres implementation didn't have one either); a per-command-kind inverse is
+                // future work, flagged in this ticket's report.
+                inverse: protocol::InverseOperation { schema: "generic".to_string(), inverse_diff: serde_json::Value::Object(serde_json::Map::new()) },
+                timestamp: now_hlc(envelope.actor_person_id.0),
+            };
+            let batch = db::document::CommandBatch::new(vec![op_envelope.clone()]).map_err(SessionError::Database)?;
+            let receipt = self.handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync }).await??;
+
+            if receipt.frontier.head_seq == before_seq {
+                return Ok(CommandResult::IdempotentDuplicate);
+            }
+
+            let new_version = receipt.frontier.head_seq as DomainVersion;
+            self.state = trial_state;
+            self.state.domain_version = new_version;
+            self.history.record_domain_commit(self.session_id, new_version, envelope.command_id.0)?;
+            self.history.store_entity_change_log(self.session_id, new_version, &changes)?;
+            let _ = self.directory.touch_session(self.session_id);
+            if new_version % 50 == 0 {
+                if let Err(e) = self.history.compact(self.session_id, &self.state) {
+                    tracing::warn!("compaction failed at version {}: {}", new_version, e);
+                }
+            }
+
+            let _ = self.event_tx.send(SessionEvent::DomainCommandAccepted { command_id: envelope.command_id, domain_version: new_version, changes });
+            let _ = self.wire_tx.send(WireEvent::Commands { envelope: op_envelope, frontier: receipt.frontier });
+            Ok(CommandResult::Accepted { domain_version: new_version })
+        }
+
+        /// 🌫️ Compose presence (cursor/look/selection) is ephemeral by design — never submitted to
+        /// `db` (matches `db_preview`'s "never durable" law and `protocol_wire`'s loss-tolerant
+        /// Preview lane), broadcast-only. The pre-CW6b Postgres implementation persisted these to
+        /// `compose.cursor`/`compose.look`/`compose.selection_*` tables but never actually wrote them
+        /// into `SessionState.compose_people` (a latent dead field) — fixed here: presence now
+        /// genuinely updates the in-memory replica admin/introspection reads.
+        fn handle_compose_command(&mut self, envelope: ComposeEnvelope, command: ComposeCommand) -> Result<(), SessionError> {
+            let pid = envelope.person_id.0;
+            let fid = envelope.frontend_id.clone();
+            let new_version = self.state.compose_version + 1;
+            let key = (pid, fid.clone());
+            let person = self.state.compose_people.entry(key).or_insert_with(|| ComposePersonState { person_id: pid, frontend_id: fid.clone(), display_name: None, color: None, is_present: true, cursor: None, look: None, selected_piece_ids: Vec::new(), selected_design_ids: Vec::new() });
+            let update = match &command {
+                ComposeCommand::UpsertCursor(c) => {
+                    person.cursor = Some([c.u, c.v]);
+                    person.is_present = true;
+                    ComposeUpdate::CursorMoved { u: c.u, v: c.v }
+                }
+                ComposeCommand::UpsertLook(l) => {
+                    person.look = Some(LookState { position: l.position, forward: l.forward, up: l.up });
+                    person.is_present = true;
+                    ComposeUpdate::LookChanged { position: l.position, forward: l.forward, up: l.up }
+                }
+                ComposeCommand::SetSelection(s) => {
+                    person.selected_piece_ids = s.piece_ids.clone();
+                    person.selected_design_ids = s.design_ids.clone();
+                    ComposeUpdate::SelectionChanged { piece_ids: s.piece_ids.clone(), design_ids: s.design_ids.clone() }
+                }
+                ComposeCommand::ClearPresence(_) => {
+                    self.state.compose_people.remove(&(pid, fid.clone()));
+                    ComposeUpdate::PresenceCleared
+                }
+            };
+            self.state.compose_version = new_version;
+            let _ = self.event_tx.send(SessionEvent::ComposeUpdated { compose_version: new_version, person_id: envelope.person_id, frontend_id: envelope.frontend_id.clone(), update: update.clone() });
+            if let Ok(payload) = serde_json::to_vec(&update) {
+                let _ = self.wire_tx.send(WireEvent::Preview { actor: protocol::ActorId(pid.to_string()), key: format!("compose:{}:{}", pid, envelope.frontend_id), seq: new_version as u64, payload });
+            }
+            Ok(())
+        }
+
+        pub fn build_snapshot(&self) -> SessionSnapshot {
+            let kit_json = serialize_session_kit(&self.state);
+            SessionSnapshot { session_id: self.state.session_id.0, domain_version: self.state.domain_version, compose_version: self.state.compose_version, kit: kit_json }
+        }
+    }
+
+    //#region 🔖Command Apply
+    fn find_design_id_for_piece(state: &SessionState, piece_id: Uuid) -> Option<Uuid> {
+        state.designs.values().find(|d| d.pieces.contains_key(&piece_id)).map(|d| d.design_id)
+    }
+
+    fn find_design_id_for_connection(state: &SessionState, connection_id: Uuid) -> Option<Uuid> {
+        state.designs.values().find(|d| d.connections.contains_key(&connection_id)).map(|d| d.design_id)
+    }
+
+    /// 🗄️ Mutates `state` and collects `(path, value)` diff entries (the `db_document` generic
+    /// path-value convention — `None` is an explicit tombstone) plus typed `EntityChange`s for the
+    /// kit-history change log. Pure/synchronous — no I/O — unlike the pre-CW6b version this replaces
+    /// (which interleaved a Postgres `UPDATE`/`INSERT` per field inside this same match).
+    fn apply_domain_command(state: &mut SessionState, command: &DomainCommand, cmd_id: Uuid, entries: &mut Vec<(String, Option<serde_json::Value>)>, changes: &mut Vec<EntityChange>) {
+        match command {
+            DomainCommand::PatchKit(patch) => {
+                if let Some(name) = patch.fields.get("name").and_then(|v| v.as_str()) {
+                    state.kit.name = name.to_string();
+                    entries.push((format!("kit/{}/name", state.kit.kit_id), Some(serde_json::json!(name))));
+                }
+                changes.push(EntityChange::Updated { entity_kind: EntityKind::Kit, entity_id: state.kit.kit_id, changed_fields: patch.fields.clone() });
+            }
+            DomainCommand::CreateType(create) => {
+                let name = create.fields.get("name").and_then(|v| v.as_str()).unwrap_or("Untitled");
+                entries.push((format!("types/{}", create.entity_id), Some(create.fields.clone())));
+                state.types.insert(
+                    create.entity_id,
+                    TypeState {
+                        type_id: create.entity_id,
+                        name: name.to_string(),
+                        parent_type_id: None,
+                        description: None,
+                        icon: None,
+                        image: None,
+                        folder: None,
+                        unit: None,
+                        stock: None,
+                        is_abstract: None,
+                        virtual_type: None,
+                        location_id: None,
+                        connectors: BTreeMap::new(),
+                        representations: BTreeMap::new(),
+                        props: BTreeMap::new(),
+                        lifecycle: Lifecycle::Active,
+                    },
+                );
+                changes.push(EntityChange::Created { entity_kind: EntityKind::Type, entity_id: create.entity_id, snapshot: create.fields.clone() });
+            }
+            DomainCommand::DeleteType(del) => {
+                entries.push((format!("types/{}", del.entity_id), None));
+                if let Some(t) = state.types.get_mut(&del.entity_id) {
+                    t.lifecycle = Lifecycle::Tombstoned { at: state.domain_version, by: CommandId(cmd_id) };
+                }
+                changes.push(EntityChange::Deleted { entity_kind: EntityKind::Type, entity_id: del.entity_id });
+            }
+            DomainCommand::PatchType(patch) => {
+                if let Some(type_state) = state.types.get_mut(&patch.entity_id) {
+                    if let Some(name) = patch.fields.get("name").and_then(|v| v.as_str()) {
+                        type_state.name = name.to_string();
+                        entries.push((format!("types/{}/name", patch.entity_id), Some(serde_json::json!(name))));
+                    }
+                    if let Some(description) = patch.fields.get("description").and_then(|v| v.as_str()) {
+                        type_state.description = Some(description.to_string());
+                        entries.push((format!("types/{}/description", patch.entity_id), Some(serde_json::json!(description))));
+                    }
+                }
+                changes.push(EntityChange::Updated { entity_kind: EntityKind::Type, entity_id: patch.entity_id, changed_fields: patch.fields.clone() });
+            }
+            DomainCommand::CreateDesign(create) => {
+                let name = create.fields.get("name").and_then(|v| v.as_str()).unwrap_or("Untitled");
+                entries.push((format!("designs/{}", create.entity_id), Some(create.fields.clone())));
+                state.designs.insert(
+                    create.entity_id,
+                    DesignState {
+                        design_id: create.entity_id,
+                        name: name.to_string(),
+                        parent_design_id: None,
+                        description: None,
+                        icon: None,
+                        image: None,
+                        folder: None,
+                        unit: None,
+                        is_abstract: None,
+                        can_scale: None,
+                        can_mirror: None,
+                        active_layer_id: None,
+                        location_id: None,
+                        pieces: BTreeMap::new(),
+                        connections: BTreeMap::new(),
+                        layers: BTreeMap::new(),
+                        groups: BTreeMap::new(),
+                        stats: BTreeMap::new(),
+                        props: BTreeMap::new(),
+                        lifecycle: Lifecycle::Active,
+                    },
+                );
+                changes.push(EntityChange::Created { entity_kind: EntityKind::Design, entity_id: create.entity_id, snapshot: create.fields.clone() });
+            }
+            DomainCommand::DeleteDesign(del) => {
+                entries.push((format!("designs/{}", del.entity_id), None));
+                if let Some(d) = state.designs.get_mut(&del.entity_id) {
+                    d.lifecycle = Lifecycle::Tombstoned { at: state.domain_version, by: CommandId(cmd_id) };
+                }
+                changes.push(EntityChange::Deleted { entity_kind: EntityKind::Design, entity_id: del.entity_id });
+            }
+            DomainCommand::PatchDesign(patch) => {
+                if let Some(design_state) = state.designs.get_mut(&patch.entity_id) {
+                    if let Some(name) = patch.fields.get("name").and_then(|v| v.as_str()) {
+                        design_state.name = name.to_string();
+                        entries.push((format!("designs/{}/name", patch.entity_id), Some(serde_json::json!(name))));
+                    }
+                    if let Some(description) = patch.fields.get("description").and_then(|v| v.as_str()) {
+                        design_state.description = Some(description.to_string());
+                        entries.push((format!("designs/{}/description", patch.entity_id), Some(serde_json::json!(description))));
+                    }
+                }
+                changes.push(EntityChange::Updated { entity_kind: EntityKind::Design, entity_id: patch.entity_id, changed_fields: patch.fields.clone() });
+            }
+            DomainCommand::CreatePiece(create) => {
+                let name = create.fields.get("name").and_then(|v| v.as_str());
+                entries.push((format!("designs/{}/pieces/{}", create.design_id, create.piece_id), Some(create.fields.clone())));
+                if let Some(design) = state.designs.get_mut(&create.design_id) {
+                    design.pieces.insert(
+                        create.piece_id,
+                        PieceState { piece_id: create.piece_id, name: name.map(|s| s.to_string()), type_id: None, design_ref_id: None, plane: None, center: None, scale: None, mirror_plane: None, is_hidden: None, is_locked: None, color: None, description: None, lifecycle: Lifecycle::Active },
+                    );
+                }
+                changes.push(EntityChange::Created { entity_kind: EntityKind::Piece, entity_id: create.piece_id, snapshot: create.fields.clone() });
+            }
+            DomainCommand::PatchPiece(patch) => {
+                let center_u = patch.fields.get("center").and_then(|center| center.get("u")).and_then(|v| v.as_f64());
+                let center_v = patch.fields.get("center").and_then(|center| center.get("v")).and_then(|v| v.as_f64());
+                if let Some(design_id) = find_design_id_for_piece(state, patch.entity_id) {
+                    if center_u.is_some() || center_v.is_some() {
+                        entries.push((format!("designs/{}/pieces/{}/center", design_id, patch.entity_id), Some(serde_json::json!({"u": center_u, "v": center_v}))));
+                    }
+                    if let Some(name) = patch.fields.get("name").and_then(|v| v.as_str()) {
+                        entries.push((format!("designs/{}/pieces/{}/name", design_id, patch.entity_id), Some(serde_json::json!(name))));
+                    }
+                }
+                for design in state.designs.values_mut() {
+                    if let Some(piece) = design.pieces.get_mut(&patch.entity_id) {
+                        if let Some(name) = patch.fields.get("name").and_then(|v| v.as_str()) {
+                            piece.name = Some(name.to_string());
+                        }
+                        if let (Some(u), Some(v)) = (center_u, center_v) {
+                            piece.center = Some([u, v]);
+                        }
+                        if let Some(is_hidden) = patch.fields.get("isHidden").and_then(|v| v.as_bool()) {
+                            piece.is_hidden = Some(is_hidden);
+                        }
+                        if let Some(is_locked) = patch.fields.get("isLocked").and_then(|v| v.as_bool()) {
+                            piece.is_locked = Some(is_locked);
+                        }
+                        if let Some(color) = patch.fields.get("color").and_then(|v| v.as_str()) {
+                            piece.color = Some(color.to_string());
+                        }
+                        if let Some(description) = patch.fields.get("description").and_then(|v| v.as_str()) {
+                            piece.description = Some(description.to_string());
+                        }
+                        break;
+                    }
+                }
+                changes.push(EntityChange::Updated { entity_kind: EntityKind::Piece, entity_id: patch.entity_id, changed_fields: patch.fields.clone() });
+            }
+            DomainCommand::DeletePiece(del) => {
+                if let Some(design_id) = find_design_id_for_piece(state, del.entity_id) {
+                    entries.push((format!("designs/{}/pieces/{}", design_id, del.entity_id), None));
+                }
+                for design in state.designs.values_mut() {
+                    if let Some(piece) = design.pieces.get_mut(&del.entity_id) {
+                        piece.lifecycle = Lifecycle::Tombstoned { at: state.domain_version, by: CommandId(cmd_id) };
+                        break;
+                    }
+                }
+                changes.push(EntityChange::Deleted { entity_kind: EntityKind::Piece, entity_id: del.entity_id });
+            }
+            DomainCommand::CreateConnection(create) => {
+                let connected_piece = create.fields.get("parent_piece_id").and_then(|v| v.as_str()).and_then(|s| Uuid::parse_str(s).ok()).unwrap_or(Uuid::nil());
+                let connecting_piece = create.fields.get("child_piece_id").and_then(|v| v.as_str()).and_then(|s| Uuid::parse_str(s).ok()).unwrap_or(Uuid::nil());
+                entries.push((format!("designs/{}/connections/{}", create.design_id, create.connection_id), Some(create.fields.clone())));
+                if let Some(design) = state.designs.get_mut(&create.design_id) {
+                    design.connections.insert(
+                        create.connection_id,
+                        ConnectionState {
+                            connection_id: create.connection_id,
+                            parent_piece_id: connected_piece,
+                            parent_design_piece_id: None,
+                            parent_connector_id: None,
+                            child_piece_id: connecting_piece,
+                            child_design_piece_id: None,
+                            child_connector_id: None,
+                            gap: 0.0,
+                            shift: 0.0,
+                            rise: 0.0,
+                            rotation: 0.0,
+                            turn: 0.0,
+                            tilt: 0.0,
+                            u: None,
+                            v: None,
+                            description: None,
+                            lifecycle: Lifecycle::Active,
+                        },
+                    );
+                }
+                changes.push(EntityChange::Created { entity_kind: EntityKind::Connection, entity_id: create.connection_id, snapshot: create.fields.clone() });
+            }
+            DomainCommand::PatchConnection(patch) => {
+                if let Some(design_id) = find_design_id_for_connection(state, patch.entity_id) {
+                    if let Some(description) = patch.fields.get("description").and_then(|v| v.as_str()) {
+                        entries.push((format!("designs/{}/connections/{}/description", design_id, patch.entity_id), Some(serde_json::json!(description))));
+                    }
+                    if let Some(u) = patch.fields.get("u").and_then(|v| v.as_f64()) {
+                        entries.push((format!("designs/{}/connections/{}/u", design_id, patch.entity_id), Some(serde_json::json!(u))));
+                    }
+                    if let Some(v) = patch.fields.get("v").and_then(|v| v.as_f64()) {
+                        entries.push((format!("designs/{}/connections/{}/v", design_id, patch.entity_id), Some(serde_json::json!(v))));
+                    }
+                }
+                for design in state.designs.values_mut() {
+                    if let Some(connection) = design.connections.get_mut(&patch.entity_id) {
+                        if let Some(description) = patch.fields.get("description").and_then(|v| v.as_str()) {
+                            connection.description = Some(description.to_string());
+                        }
+                        if let Some(u) = patch.fields.get("u").and_then(|v| v.as_f64()) {
+                            connection.u = Some(u);
+                        }
+                        if let Some(v) = patch.fields.get("v").and_then(|v| v.as_f64()) {
+                            connection.v = Some(v);
+                        }
+                        break;
+                    }
+                }
+                changes.push(EntityChange::Updated { entity_kind: EntityKind::Connection, entity_id: patch.entity_id, changed_fields: patch.fields.clone() });
+            }
+            DomainCommand::DeleteConnection(del) => {
+                if let Some(design_id) = find_design_id_for_connection(state, del.entity_id) {
+                    entries.push((format!("designs/{}/connections/{}", design_id, del.entity_id), None));
+                }
+                for design in state.designs.values_mut() {
+                    if let Some(connection) = design.connections.get_mut(&del.entity_id) {
+                        connection.lifecycle = Lifecycle::Tombstoned { at: state.domain_version, by: CommandId(cmd_id) };
+                        break;
+                    }
+                }
+                changes.push(EntityChange::Deleted { entity_kind: EntityKind::Connection, entity_id: del.entity_id });
+            }
+            DomainCommand::Batch(batch) => {
+                for sub in &batch.commands {
+                    apply_domain_command(state, sub, cmd_id, entries, changes);
+                }
+            }
+            _ => {
+                tracing::warn!("unhandled command variant: {:?}", std::mem::discriminant(command));
+            }
+        }
+    }
+    //#endregion 🔖Command Apply
+} // 🎹Actor
+pub use actor::*;
+
+mod directory {
+    // 🎯Directory
+    // Specs: SessionHandle holds the sender to an active session actor. SessionDirectory provides
+    // get-or-create semantics, rebuilding a cold session's typed `SessionState` by reconstructing its
+    // kit JSON from `HistoryStore` (snapshot + change-log replay) and reading `db`'s own frontier for
+    // the authoritative `domain_version`.
+    // Summary: Session directory: process-global registry mapping SessionId to actor handles.
+
+    use super::*;
+    #[derive(Clone)]
+    pub struct SessionHandle {
+        pub command_tx: mpsc::Sender<ActorMessage>,
+        pub event_tx: broadcast::Sender<SessionEvent>,
+        pub wire_tx: broadcast::Sender<WireEvent>,
+        pub active_connections: Arc<AtomicUsize>,
+        pub activated_at: Arc<Instant>,
+    }
+
+    //#region 🔖ActiveSessionInfo
+
+    #[derive(Debug, Clone, Serialize)]
+    pub struct ActiveSessionInfo {
+        pub session_id: Uuid,
+        pub active_connections: usize,
+        pub activated_at_secs_ago: u64,
+    }
+
+    //#endregion 🔖ActiveSessionInfo
+
+    //#region 🔖StateRehydration
+    /// 🗄️📥 Rebuilds a typed `SessionState` from a reconstructed kit JSON (`HistoryStore::
+    /// reconstruct_kit_at_version`/a freshly-seeded genesis kit) — the single place both session
+    /// creation and cold-activation funnel through, so they can never drift from each other. Scope
+    /// matches the pre-CW6b `load_session_state`'s own (it too never populated `locations`/
+    /// `compose_people` — those stay empty here too, `compose_people` because presence is ephemeral
+    /// by design, `locations` because no command ever produced one).
+    pub fn session_state_from_kit_json(session_id: Uuid, domain_version: DomainVersion, compose_version: ComposeVersion, kit_json: &serde_json::Value) -> Result<SessionState, SessionError> {
+        let kit_id = session_kit_id(kit_json)?;
+        let kit = KitState {
+            kit_id,
+            name: session_kit_name(kit_json)?.to_string(),
+            version: session_kit_string(kit_json, "version"),
+            description: session_kit_string(kit_json, "description"),
+            icon: session_kit_string(kit_json, "icon"),
+            image: session_kit_string(kit_json, "image"),
+            preview: session_kit_string(kit_json, "preview"),
+            remote: session_kit_string(kit_json, "remote"),
+            homepage: session_kit_string(kit_json, "homepage"),
+            license: session_kit_string(kit_json, "license"),
+            lifecycle: Lifecycle::Active,
+        };
+        fn uuid_at(v: &serde_json::Value, key: &str) -> Option<Uuid> {
+            v.get(key).and_then(|x| x.as_str()).and_then(|s| Uuid::parse_str(s).ok())
+        }
+        fn str_at(v: &serde_json::Value, key: &str) -> Option<String> {
+            v.get(key).and_then(|x| x.as_str()).map(str::to_string)
+        }
+
+        let mut authors = BTreeMap::new();
+        for a in kit_json.get("authors").and_then(|v| v.as_array()).into_iter().flatten() {
+            if let Some(id) = uuid_at(a, "id") {
+                authors.insert(id, AuthorState { author_id: id, name: str_at(a, "name").unwrap_or_default(), email: str_at(a, "email"), lifecycle: Lifecycle::Active });
+            }
+        }
+        let mut tags = BTreeMap::new();
+        for t in kit_json.get("tags").and_then(|v| v.as_array()).into_iter().flatten() {
+            if let Some(id) = uuid_at(t, "id") {
+                tags.insert(id, TagState { tag_id: id, name: str_at(t, "name").unwrap_or_default(), description: str_at(t, "description"), icon: str_at(t, "icon"), lifecycle: Lifecycle::Active });
+            }
+        }
+        let mut concepts = BTreeMap::new();
+        for c in kit_json.get("concepts").and_then(|v| v.as_array()).into_iter().flatten() {
+            if let Some(id) = uuid_at(c, "id") {
+                concepts.insert(id, ConceptState { concept_id: id, name: str_at(c, "name").unwrap_or_default(), description: str_at(c, "description"), icon: str_at(c, "icon"), lifecycle: Lifecycle::Active });
+            }
+        }
+        let mut ports = BTreeMap::new();
+        for p in kit_json.get("ports").and_then(|v| v.as_array()).into_iter().flatten() {
+            if let Some(id) = uuid_at(p, "id") {
+                ports.insert(id, PortState { port_id: id, name: str_at(p, "name").unwrap_or_default(), description: str_at(p, "description"), icon: str_at(p, "icon"), max_children: p.get("maxChildren").and_then(|v| v.as_i64()).map(|n| n as i32), compatible_port_ids: Vec::new(), lifecycle: Lifecycle::Active });
+            }
+        }
+        let mut qualities = BTreeMap::new();
+        for q in kit_json.get("qualities").and_then(|v| v.as_array()).into_iter().flatten() {
+            if let Some(id) = uuid_at(q, "id") {
+                qualities.insert(id, QualityState { quality_id: id, key: str_at(q, "key").unwrap_or_default(), name: str_at(q, "name").unwrap_or_default(), description: str_at(q, "description"), icon: str_at(q, "icon"), unit: str_at(q, "unit"), lifecycle: Lifecycle::Active });
+            }
+        }
+        let mut folders = BTreeMap::new();
+        for f in kit_json.get("folders").and_then(|v| v.as_array()).into_iter().flatten() {
+            if let Some(id) = uuid_at(f, "id") {
+                folders.insert(id, FolderState { folder_id: id, name: str_at(f, "name").unwrap_or_default(), parent_folder_id: f.get("parent").and_then(|p| uuid_at(p, "id")), description: str_at(f, "description"), lifecycle: Lifecycle::Active });
+            }
+        }
+        let mut files = BTreeMap::new();
+        for f in kit_json.get("files").and_then(|v| v.as_array()).into_iter().flatten() {
+            if let Some(id) = uuid_at(f, "id") {
+                files.insert(id, FileState { file_id: id, name: str_at(f, "name").unwrap_or_default(), remote: str_at(f, "remote"), folder_id: f.get("folder").and_then(|p| uuid_at(p, "id")), size: f.get("size").and_then(|v| v.as_i64()), hash: str_at(f, "hash"), blob: str_at(f, "blob"), lifecycle: Lifecycle::Active });
+            }
+        }
+        let mut types = BTreeMap::new();
+        for t in kit_json.get("types").and_then(|v| v.as_array()).into_iter().flatten() {
+            if let Some(id) = uuid_at(t, "id") {
+                types.insert(
+                    id,
+                    TypeState {
+                        type_id: id,
+                        name: str_at(t, "name").unwrap_or_else(|| "Untitled".to_string()),
+                        parent_type_id: t.get("parent").and_then(|p| uuid_at(p, "id")),
+                        description: str_at(t, "description"),
+                        icon: str_at(t, "icon"),
+                        image: str_at(t, "image"),
+                        folder: str_at(t, "folder"),
+                        unit: str_at(t, "unit"),
+                        stock: t.get("stock").and_then(|v| v.as_i64()).map(|n| n as i32),
+                        is_abstract: t.get("isAbstract").and_then(|v| v.as_bool()),
+                        virtual_type: t.get("virtual").and_then(|v| v.as_bool()),
+                        location_id: t.get("location").and_then(|p| uuid_at(p, "id")),
+                        connectors: BTreeMap::new(),
+                        representations: BTreeMap::new(),
+                        props: BTreeMap::new(),
+                        lifecycle: Lifecycle::Active,
+                    },
+                );
+            }
+        }
+        let mut designs = BTreeMap::new();
+        for d in kit_json.get("designs").and_then(|v| v.as_array()).into_iter().flatten() {
+            let Some(id) = uuid_at(d, "id") else { continue };
+            let mut pieces = BTreeMap::new();
+            for p in d.get("pieces").and_then(|v| v.as_array()).into_iter().flatten() {
+                let Some(pid) = uuid_at(p, "id") else { continue };
+                let center = match (p.get("center").and_then(|c| c.get("u")).and_then(|v| v.as_f64()), p.get("center").and_then(|c| c.get("v")).and_then(|v| v.as_f64())) {
+                    (Some(u), Some(v)) => Some([u, v]),
+                    _ => None,
+                };
+                pieces.insert(
+                    pid,
+                    PieceState {
+                        piece_id: pid,
+                        name: str_at(p, "name"),
+                        type_id: uuid_at(p, "type"),
+                        design_ref_id: None,
+                        plane: None,
+                        center,
+                        scale: None,
+                        mirror_plane: None,
+                        is_hidden: p.get("isHidden").and_then(|v| v.as_bool()),
+                        is_locked: p.get("isLocked").and_then(|v| v.as_bool()),
+                        color: str_at(p, "color"),
+                        description: str_at(p, "description"),
+                        lifecycle: Lifecycle::Active,
+                    },
+                );
+            }
+            let mut connections = BTreeMap::new();
+            for c in d.get("connections").and_then(|v| v.as_array()).into_iter().flatten() {
+                let Some(cid) = uuid_at(c, "id") else { continue };
+                let parent_piece_id = c.get("parent").and_then(|p| p.get("piece")).and_then(|p| uuid_at(p, "id")).unwrap_or(Uuid::nil());
+                let child_piece_id = c.get("child").and_then(|p| p.get("piece")).and_then(|p| uuid_at(p, "id")).unwrap_or(Uuid::nil());
+                connections.insert(
+                    cid,
+                    ConnectionState {
+                        connection_id: cid,
+                        parent_piece_id,
+                        parent_design_piece_id: c.get("parent").and_then(|p| p.get("designPiece")).and_then(|p| uuid_at(p, "id")),
+                        parent_connector_id: c.get("parent").and_then(|p| p.get("connector")).and_then(|p| uuid_at(p, "id")),
+                        child_piece_id,
+                        child_design_piece_id: c.get("child").and_then(|p| p.get("designPiece")).and_then(|p| uuid_at(p, "id")),
+                        child_connector_id: c.get("child").and_then(|p| p.get("connector")).and_then(|p| uuid_at(p, "id")),
+                        gap: c.get("gap").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                        shift: c.get("shift").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                        rise: c.get("rise").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                        rotation: c.get("rotation").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                        turn: c.get("turn").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                        tilt: c.get("tilt").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                        u: c.get("u").and_then(|v| v.as_f64()),
+                        v: c.get("v").and_then(|v| v.as_f64()),
+                        description: str_at(c, "description"),
+                        lifecycle: Lifecycle::Active,
+                    },
+                );
+            }
+            designs.insert(
+                id,
+                DesignState {
+                    design_id: id,
+                    name: str_at(d, "name").unwrap_or_else(|| "Untitled".to_string()),
+                    parent_design_id: d.get("parent").and_then(|p| uuid_at(p, "id")),
+                    description: str_at(d, "description"),
+                    icon: str_at(d, "icon"),
+                    image: str_at(d, "image"),
+                    folder: str_at(d, "folder"),
+                    unit: str_at(d, "unit"),
+                    is_abstract: d.get("isAbstract").and_then(|v| v.as_bool()),
+                    can_scale: d.get("canScale").and_then(|v| v.as_bool()),
+                    can_mirror: d.get("canMirror").and_then(|v| v.as_bool()),
+                    active_layer_id: d.get("activeLayer").and_then(|p| uuid_at(p, "id")),
+                    location_id: d.get("location").and_then(|p| uuid_at(p, "id")),
+                    pieces,
+                    connections,
+                    layers: BTreeMap::new(),
+                    groups: BTreeMap::new(),
+                    stats: BTreeMap::new(),
+                    props: BTreeMap::new(),
+                    lifecycle: Lifecycle::Active,
+                },
+            );
+        }
+        Ok(SessionState { session_id: SessionId(session_id), domain_version, compose_version, status: SessionStatus::Active, kit, authors, locations: BTreeMap::new(), folders, files, tags, concepts, ports, qualities, types, designs, compose_people: BTreeMap::new() })
+    }
+
+    /// 🗄️🌱 The kit JSON a brand-new session starts from — `initial_kit` (if the caller supplied one)
+    /// is used as-is; otherwise an empty kit named `fallback_kit_name`. Unchanged pure logic from the
+    /// pre-CW6b implementation, still the single seeding path `create_session` and
+    /// `session_state_from_kit_json` both funnel through (fixing a latent pre-CW6b gap: a caller-
+    /// supplied `initial_kit`'s nested `types`/`designs` are now actually reflected in the session's
+    /// typed state and `db` documents, not just the very first history snapshot row).
+    pub fn initial_session_kit(fallback_kit_id: Uuid, fallback_kit_name: &str, initial_kit: Option<&serde_json::Value>) -> Result<(Uuid, String, serde_json::Value), SessionError> {
         match initial_kit {
             Some(kit_json) => Ok((session_kit_id(kit_json)?, session_kit_name(kit_json)?.to_string(), kit_json.clone())),
             None => Ok((
@@ -1413,1501 +2267,84 @@ mod persistence {
             )),
         }
     }
-
-    pub async fn create_session(pool: &PgPool, session_id: Uuid, fallback_kit_id: Uuid, fallback_kit_name: &str, initial_kit: Option<&serde_json::Value>) -> Result<Uuid, SessionError> {
-        let (kit_id, kit_name, initial_kit) = initial_session_kit(fallback_kit_id, fallback_kit_name, initial_kit)?;
-        let owner_token = Uuid::now_v7();
-        let mut tx = pool.begin().await?;
-        sqlx_core::query::query("INSERT INTO runtime.session (session_id, root_kit_id, owner_token) VALUES ($1, $2, $3)").bind(session_id).bind(kit_id).bind(owner_token).execute(&mut *tx).await?;
-        sqlx_core::query::query(
-            "INSERT INTO core.kit (session_id, kit_id, name, version, description, icon, image, preview, remote, homepage, license)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
-        )
-        .bind(session_id)
-        .bind(kit_id)
-        .bind(&kit_name)
-        .bind(session_kit_string(&initial_kit, "version"))
-        .bind(session_kit_string(&initial_kit, "description"))
-        .bind(session_kit_string(&initial_kit, "icon"))
-        .bind(session_kit_string(&initial_kit, "image"))
-        .bind(session_kit_string(&initial_kit, "preview"))
-        .bind(session_kit_string(&initial_kit, "remote"))
-        .bind(session_kit_string(&initial_kit, "homepage"))
-        .bind(session_kit_string(&initial_kit, "license"))
-        .execute(&mut *tx)
-        .await?;
-        sqlx_core::query::query("INSERT INTO history.kit_snapshot (session_id, domain_version, kit_json) VALUES ($1, 0, $2)").bind(session_id).bind(&initial_kit).execute(&mut *tx).await?;
-        // Store initial compaction config with default lookback tokens
-        let default_tokens: Vec<&str> = lookback_tokens();
-        let tokens_json = serde_json::to_value(&default_tokens).unwrap_or(serde_json::json!([]));
-        sqlx_core::query::query("INSERT INTO history.compaction_config (session_id, lookback_tokens) VALUES ($1, $2)").bind(session_id).bind(&tokens_json).execute(&mut *tx).await?;
-        tx.commit().await?;
-        Ok(owner_token)
-    }
-
-    pub async fn load_session_meta(pool: &PgPool, session_id: Uuid) -> Result<(DomainVersion, ComposeVersion), SessionError> {
-        let row = sqlx_core::query_as::query_as::<_, (i64, i64)>("SELECT domain_version, compose_version FROM runtime.session WHERE session_id = $1")
-            .bind(session_id)
-            .fetch_optional(pool)
-            .await?
-            .ok_or_else(|| SessionError::SessionNotFound(session_id.to_string()))?;
-        Ok(row)
-    }
-
-    pub async fn bump_domain_version(pool: &PgPool, session_id: Uuid, new_version: DomainVersion) -> Result<(), SessionError> {
-        sqlx_core::query::query("UPDATE runtime.session SET domain_version = $2, updated_at = now() WHERE session_id = $1").bind(session_id).bind(new_version).execute(pool).await?;
-        Ok(())
-    }
-
-    pub async fn bump_compose_version(pool: &PgPool, session_id: Uuid, new_version: ComposeVersion) -> Result<(), SessionError> {
-        sqlx_core::query::query("UPDATE runtime.session SET compose_version = $2, updated_at = now() WHERE session_id = $1").bind(session_id).bind(new_version).execute(pool).await?;
-        Ok(())
-    }
-
-    pub async fn replace_session_snapshot(pool: &PgPool, session_id: Uuid, kit_json: &serde_json::Value) -> Result<(DomainVersion, ComposeVersion), SessionError> {
-        let kit_id = session_kit_id(kit_json)?;
-        let kit_name = session_kit_name(kit_json)?.to_string();
-        let (domain_version, compose_version) = load_session_meta(pool, session_id).await?;
-        let mut tx = pool.begin().await?;
-        sqlx_core::query::query("UPDATE runtime.session SET root_kit_id = $2, updated_at = now() WHERE session_id = $1").bind(session_id).bind(kit_id).execute(&mut *tx).await?;
-        sqlx_core::query::query("DELETE FROM core.kit WHERE session_id = $1").bind(session_id).execute(&mut *tx).await?;
-        sqlx_core::query::query(
-            "INSERT INTO core.kit (session_id, kit_id, name, version, description, icon, image, preview, remote, homepage, license)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
-        )
-        .bind(session_id)
-        .bind(kit_id)
-        .bind(&kit_name)
-        .bind(session_kit_string(kit_json, "version"))
-        .bind(session_kit_string(kit_json, "description"))
-        .bind(session_kit_string(kit_json, "icon"))
-        .bind(session_kit_string(kit_json, "image"))
-        .bind(session_kit_string(kit_json, "preview"))
-        .bind(session_kit_string(kit_json, "remote"))
-        .bind(session_kit_string(kit_json, "homepage"))
-        .bind(session_kit_string(kit_json, "license"))
-        .execute(&mut *tx)
-        .await?;
-        sqlx_core::query::query(
-            "INSERT INTO history.kit_snapshot (session_id, domain_version, kit_json) VALUES ($1, $2, $3)
-         ON CONFLICT (session_id, domain_version) DO UPDATE SET kit_json = $3, created_at = now()",
-        )
-        .bind(session_id)
-        .bind(domain_version)
-        .bind(kit_json)
-        .execute(&mut *tx)
-        .await?;
-        tx.commit().await?;
-        Ok((domain_version, compose_version))
-    }
-
-    pub async fn load_session_state(pool: &PgPool, session_id: Uuid) -> Result<SessionState, SessionError> {
-        let (domain_version, compose_version) = load_session_meta(pool, session_id).await?;
-        let kit = load_kit(pool, session_id).await?;
-        let authors = load_authors(pool, session_id).await?;
-        let tags = load_tags(pool, session_id).await?;
-        let concepts = load_concepts(pool, session_id).await?;
-        let ports = load_ports(pool, session_id).await?;
-        let qualities = load_qualities(pool, session_id).await?;
-        let folders = load_folders(pool, session_id).await?;
-        let files = load_files(pool, session_id).await?;
-        let types = load_types(pool, session_id).await?;
-        let designs = load_designs(pool, session_id).await?;
-        Ok(SessionState {
-            session_id: SessionId(session_id),
-            domain_version,
-            compose_version,
-            status: SessionStatus::Active,
-            kit,
-            authors,
-            locations: BTreeMap::new(),
-            folders,
-            files,
-            tags,
-            concepts,
-            ports,
-            qualities,
-            types,
-            designs,
-            compose_people: BTreeMap::new(),
-        })
-    }
-
-    async fn load_kit(pool: &PgPool, sid: Uuid) -> Result<KitState, SessionError> {
-        let row = sqlx_core::query_as::query_as::<_, (Uuid, String, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>)>(
-            "SELECT kit_id, name, version, description, icon, image, preview, remote, homepage, license
-         FROM core.kit WHERE session_id = $1 AND lifecycle = 'active' LIMIT 1",
-        )
-        .bind(sid)
-        .fetch_one(pool)
-        .await?;
-        Ok(KitState { kit_id: row.0, name: row.1, version: row.2, description: row.3, icon: row.4, image: row.5, preview: row.6, remote: row.7, homepage: row.8, license: row.9, lifecycle: Lifecycle::Active })
-    }
-
-    async fn load_authors(pool: &PgPool, sid: Uuid) -> Result<BTreeMap<Uuid, AuthorState>, SessionError> {
-        let rows = sqlx_core::query_as::query_as::<_, (Uuid, String, Option<String>)>("SELECT author_id, name, email FROM core.author WHERE session_id = $1 AND lifecycle = 'active'").bind(sid).fetch_all(pool).await?;
-        Ok(rows.into_iter().map(|r| (r.0, AuthorState { author_id: r.0, name: r.1, email: r.2, lifecycle: Lifecycle::Active })).collect())
-    }
-
-    async fn load_tags(pool: &PgPool, sid: Uuid) -> Result<BTreeMap<Uuid, TagState>, SessionError> {
-        let rows = sqlx_core::query_as::query_as::<_, (Uuid, String, Option<String>, Option<String>)>("SELECT tag_id, name, description, icon FROM core.tag WHERE session_id = $1 AND lifecycle = 'active'").bind(sid).fetch_all(pool).await?;
-        Ok(rows.into_iter().map(|r| (r.0, TagState { tag_id: r.0, name: r.1, description: r.2, icon: r.3, lifecycle: Lifecycle::Active })).collect())
-    }
-
-    async fn load_concepts(pool: &PgPool, sid: Uuid) -> Result<BTreeMap<Uuid, ConceptState>, SessionError> {
-        let rows = sqlx_core::query_as::query_as::<_, (Uuid, String, Option<String>, Option<String>)>("SELECT concept_id, name, description, icon FROM core.concept WHERE session_id = $1 AND lifecycle = 'active'").bind(sid).fetch_all(pool).await?;
-        Ok(rows.into_iter().map(|r| (r.0, ConceptState { concept_id: r.0, name: r.1, description: r.2, icon: r.3, lifecycle: Lifecycle::Active })).collect())
-    }
-
-    async fn load_ports(pool: &PgPool, sid: Uuid) -> Result<BTreeMap<Uuid, PortState>, SessionError> {
-        let rows = sqlx_core::query_as::query_as::<_, (Uuid, String, Option<String>, Option<String>, Option<i32>)>("SELECT port_id, name, description, icon, max_children FROM core.port WHERE session_id = $1 AND lifecycle = 'active'")
-            .bind(sid)
-            .fetch_all(pool)
-            .await?;
-        Ok(rows.into_iter().map(|r| (r.0, PortState { port_id: r.0, name: r.1, description: r.2, icon: r.3, max_children: r.4, compatible_port_ids: vec![], lifecycle: Lifecycle::Active })).collect())
-    }
-
-    async fn load_qualities(pool: &PgPool, sid: Uuid) -> Result<BTreeMap<Uuid, QualityState>, SessionError> {
-        let rows = sqlx_core::query_as::query_as::<_, (Uuid, String, String, Option<String>, Option<String>, Option<String>)>("SELECT quality_id, key, name, description, icon, unit FROM core.quality WHERE session_id = $1 AND lifecycle = 'active'")
-            .bind(sid)
-            .fetch_all(pool)
-            .await?;
-        Ok(rows.into_iter().map(|r| (r.0, QualityState { quality_id: r.0, key: r.1, name: r.2, description: r.3, icon: r.4, unit: r.5, lifecycle: Lifecycle::Active })).collect())
-    }
-
-    async fn load_folders(pool: &PgPool, sid: Uuid) -> Result<BTreeMap<Uuid, FolderState>, SessionError> {
-        let rows =
-            sqlx_core::query_as::query_as::<_, (Uuid, String, Option<Uuid>, Option<String>)>("SELECT folder_id, name, parent_folder_id, description FROM core.folder WHERE session_id = $1 AND lifecycle = 'active'").bind(sid).fetch_all(pool).await?;
-        Ok(rows.into_iter().map(|r| (r.0, FolderState { folder_id: r.0, name: r.1, parent_folder_id: r.2, description: r.3, lifecycle: Lifecycle::Active })).collect())
-    }
-
-    async fn load_files(pool: &PgPool, sid: Uuid) -> Result<BTreeMap<Uuid, FileState>, SessionError> {
-        let rows = sqlx_core::query_as::query_as::<_, (Uuid, String, Option<String>, Option<Uuid>, Option<i64>, Option<String>, Option<String>)>(
-            "SELECT file_id, name, remote, folder_id, size_bytes, hash, blob_ref FROM core.file WHERE session_id = $1 AND lifecycle = 'active'",
-        )
-        .bind(sid)
-        .fetch_all(pool)
-        .await?;
-        Ok(rows.into_iter().map(|r| (r.0, FileState { file_id: r.0, name: r.1, remote: r.2, folder_id: r.3, size: r.4, hash: r.5, blob: r.6, lifecycle: Lifecycle::Active })).collect())
-    }
-
-    async fn load_types(pool: &PgPool, sid: Uuid) -> Result<BTreeMap<Uuid, TypeState>, SessionError> {
-        let rows = sqlx_core::query_as::query_as::<_, (Uuid, String, Option<Uuid>, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>, Option<i32>, Option<bool>, Option<bool>, Option<Uuid>)>(
-            "SELECT type_id, name, parent_type_id, description, icon, image, folder, unit, stock, is_abstract, virtual_type, location_id
-         FROM core.type_entity WHERE session_id = $1 AND lifecycle = 'active'",
-        )
-        .bind(sid)
-        .fetch_all(pool)
-        .await?;
-        Ok(rows
-            .into_iter()
-            .map(|r| {
-                (
-                    r.0,
-                    TypeState {
-                        type_id: r.0,
-                        name: r.1,
-                        parent_type_id: r.2,
-                        description: r.3,
-                        icon: r.4,
-                        image: r.5,
-                        folder: r.6,
-                        unit: r.7,
-                        stock: r.8,
-                        is_abstract: r.9,
-                        virtual_type: r.10,
-                        location_id: r.11,
-                        connectors: BTreeMap::new(),
-                        representations: BTreeMap::new(),
-                        props: BTreeMap::new(),
-                        lifecycle: Lifecycle::Active,
-                    },
-                )
-            })
-            .collect())
-    }
-
-    async fn load_designs(pool: &PgPool, sid: Uuid) -> Result<BTreeMap<Uuid, DesignState>, SessionError> {
-        let rows = sqlx_core::query_as::query_as::<_, (Uuid, String, Option<Uuid>, Option<String>, Option<String>, Option<String>, Option<String>, Option<String>, Option<bool>, Option<bool>, Option<bool>, Option<Uuid>, Option<Uuid>)>(
-            "SELECT design_id, name, parent_design_id, description, icon, image, folder, unit, is_abstract, can_scale, can_mirror, active_layer_id, location_id
-         FROM core.design WHERE session_id = $1 AND lifecycle = 'active'",
-        )
-        .bind(sid)
-        .fetch_all(pool)
-        .await?;
-        let mut designs: BTreeMap<Uuid, DesignState> = rows
-            .into_iter()
-            .map(|r| {
-                (
-                    r.0,
-                    DesignState {
-                        design_id: r.0,
-                        name: r.1,
-                        parent_design_id: r.2,
-                        description: r.3,
-                        icon: r.4,
-                        image: r.5,
-                        folder: r.6,
-                        unit: r.7,
-                        is_abstract: r.8,
-                        can_scale: r.9,
-                        can_mirror: r.10,
-                        active_layer_id: r.11,
-                        location_id: r.12,
-                        pieces: BTreeMap::new(),
-                        connections: BTreeMap::new(),
-                        layers: BTreeMap::new(),
-                        groups: BTreeMap::new(),
-                        stats: BTreeMap::new(),
-                        props: BTreeMap::new(),
-                        lifecycle: Lifecycle::Active,
-                    },
-                )
-            })
-            .collect();
-        load_pieces_into_designs(pool, sid, &mut designs).await?;
-        load_connections_into_designs(pool, sid, &mut designs).await?;
-        load_layers_into_designs(pool, sid, &mut designs).await?;
-        Ok(designs)
-    }
-
-    async fn load_pieces_into_designs(pool: &PgPool, sid: Uuid, designs: &mut BTreeMap<Uuid, DesignState>) -> Result<(), SessionError> {
-        let rows = sqlx_core::query_as::query_as::<_, (Uuid, Uuid, Option<String>, Option<Uuid>, Option<Uuid>, Option<f64>, Option<f64>, Option<bool>, Option<bool>, Option<String>, Option<String>)>(
-            "SELECT piece_id, design_id, name, type_id, design_ref_id, center_u, center_v, is_hidden, is_locked, color, description
-         FROM core.piece WHERE session_id = $1 AND lifecycle = 'active'",
-        )
-        .bind(sid)
-        .fetch_all(pool)
-        .await?;
-        for r in rows {
-            if let Some(design) = designs.get_mut(&r.1) {
-                design.pieces.insert(
-                    r.0,
-                    PieceState {
-                        piece_id: r.0,
-                        name: r.2,
-                        type_id: r.3,
-                        design_ref_id: r.4,
-                        plane: None,
-                        center: match (r.5, r.6) {
-                            (Some(u), Some(v)) => Some([u, v]),
-                            _ => None,
-                        },
-                        scale: None,
-                        mirror_plane: None,
-                        is_hidden: r.7,
-                        is_locked: r.8,
-                        color: r.9,
-                        description: r.10,
-                        lifecycle: Lifecycle::Active,
-                    },
-                );
-            }
-        }
-        Ok(())
-    }
-
-    async fn load_connections_into_designs(pool: &PgPool, sid: Uuid, designs: &mut BTreeMap<Uuid, DesignState>) -> Result<(), SessionError> {
-        let rows = sqlx_core::query::query(
-            "SELECT connection_id, design_id, parent_piece_id, parent_design_piece_id, parent_connector_id,
-                child_piece_id, child_design_piece_id, child_connector_id,
-                gap, shift_val, rise, rotation, turn, tilt, u, v, description
-         FROM core.connection WHERE session_id = $1 AND lifecycle = 'active'",
-        )
-        .bind(sid)
-        .fetch_all(pool)
-        .await?;
-        for r in rows {
-            let connection_id: Uuid = r.get(0);
-            let design_id: Uuid = r.get(1);
-            if let Some(design) = designs.get_mut(&design_id) {
-                design.connections.insert(
-                    connection_id,
-                    ConnectionState {
-                        connection_id,
-                        parent_piece_id: r.get(2),
-                        parent_design_piece_id: r.get(3),
-                        parent_connector_id: r.get(4),
-                        child_piece_id: r.get(5),
-                        child_design_piece_id: r.get(6),
-                        child_connector_id: r.get(7),
-                        gap: r.get(8),
-                        shift: r.get(9),
-                        rise: r.get(10),
-                        rotation: r.get(11),
-                        turn: r.get(12),
-                        tilt: r.get(13),
-                        u: r.get(14),
-                        v: r.get(15),
-                        description: r.get(16),
-                        lifecycle: Lifecycle::Active,
-                    },
-                );
-            }
-        }
-        Ok(())
-    }
-
-    async fn load_layers_into_designs(pool: &PgPool, sid: Uuid, designs: &mut BTreeMap<Uuid, DesignState>) -> Result<(), SessionError> {
-        let rows = sqlx_core::query_as::query_as::<_, (Uuid, Uuid, String, Option<bool>, Option<bool>, Option<String>, Option<String>)>(
-            "SELECT layer_id, design_id, path, is_hidden, is_locked, color, description
-         FROM core.layer WHERE session_id = $1 AND lifecycle = 'active'",
-        )
-        .bind(sid)
-        .fetch_all(pool)
-        .await?;
-        for r in rows {
-            if let Some(design) = designs.get_mut(&r.1) {
-                design.layers.insert(r.0, LayerState { layer_id: r.0, path: r.2, is_hidden: r.3, is_locked: r.4, color: r.5, description: r.6, lifecycle: Lifecycle::Active });
-            }
-        }
-        Ok(())
-    }
-
-    pub async fn check_property_clock(pool: &PgPool, session_id: Uuid, entity_kind: &str, entity_id: Uuid, property_key: &str, base_version: DomainVersion) -> Result<bool, SessionError> {
-        let row = sqlx_core::query_as::query_as::<_, (i64,)>("SELECT last_changed_domain_version FROM runtime.property_clock WHERE session_id = $1 AND entity_kind = $2 AND entity_id = $3 AND property_key = $4")
-            .bind(session_id)
-            .bind(entity_kind)
-            .bind(entity_id)
-            .bind(property_key)
-            .fetch_optional(pool)
-            .await?;
-        match row {
-            Some((v,)) => Ok(v <= base_version),
-            None => Ok(true),
-        }
-    }
-
-    pub async fn upsert_property_clock(pool: &PgPool, session_id: Uuid, entity_kind: &str, entity_id: Uuid, property_key: &str, domain_version: DomainVersion, command_id: Uuid) -> Result<(), SessionError> {
-        sqlx_core::query::query(
-            "INSERT INTO runtime.property_clock (session_id, entity_kind, entity_id, property_key, last_changed_domain_version, last_command_id)
-         VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (session_id, entity_kind, entity_id, property_key)
-         DO UPDATE SET last_changed_domain_version = $5, last_command_id = $6",
-        )
-        .bind(session_id)
-        .bind(entity_kind)
-        .bind(entity_id)
-        .bind(property_key)
-        .bind(domain_version)
-        .bind(command_id)
-        .execute(pool)
-        .await?;
-        Ok(())
-    }
-
-    /// 🧾 Params for [`record_command`]: bundled to keep the fn under clippy's arg-count limit.
-    pub struct CommandRecord {
-        pub session_id: Uuid,
-        pub command_id: Uuid,
-        pub client_id: Uuid,
-        pub request_id: Uuid,
-        pub base_version: DomainVersion,
-        pub command_kind: String,
-        pub actor_person_id: Uuid,
-    }
-
-    pub async fn record_command(pool: &PgPool, cmd: &CommandRecord) -> Result<bool, SessionError> {
-        let result = sqlx_core::query::query(
-            "INSERT INTO runtime.session_command (command_id, session_id, client_id, request_id, base_domain_version, command_kind, actor_person_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (session_id, client_id, request_id) DO NOTHING",
-        )
-        .bind(cmd.command_id)
-        .bind(cmd.session_id)
-        .bind(cmd.client_id)
-        .bind(cmd.request_id)
-        .bind(cmd.base_version)
-        .bind(cmd.command_kind.as_str())
-        .bind(cmd.actor_person_id)
-        .execute(pool)
-        .await?;
-        Ok(result.rows_affected() > 0)
-    }
-
-    pub async fn mark_command_accepted(pool: &PgPool, command_id: Uuid, accepted_version: DomainVersion) -> Result<(), SessionError> {
-        sqlx_core::query::query("UPDATE runtime.session_command SET status = 'accepted', accepted_domain_version = $2, applied_at = now() WHERE command_id = $1").bind(command_id).bind(accepted_version).execute(pool).await?;
-        Ok(())
-    }
-
-    mod auth {
-        // 🔑Auth
-        // Specs: Auth persistence: load owner token, create/resolve/list/delete share tokens, resolve access mode from bearer token.
-        // Summary: Auth token persistence for session ownership and share tokens.
-
-        use super::*;
-        pub async fn load_owner_token(pool: &PgPool, session_id: Uuid) -> Result<Uuid, SessionError> {
-            let row = sqlx_core::query_as::query_as::<_, (Uuid,)>("SELECT owner_token FROM runtime.session WHERE session_id = $1").bind(session_id).fetch_optional(pool).await?.ok_or_else(|| SessionError::SessionNotFound(session_id.to_string()))?;
-            Ok(row.0)
-        }
-
-        #[derive(Debug, Clone, Serialize, Deserialize)]
-        pub struct ShareTokenRow {
-            pub token: Uuid,
-            pub session_id: Uuid,
-            pub access_mode: String,
-            pub entity_kind: Option<String>,
-            pub entity_id: Option<Uuid>,
-            pub label: Option<String>,
-            pub created_at: String,
-            pub expires_at: Option<String>,
-        }
-
-        pub async fn create_share_token(pool: &PgPool, session_id: Uuid, access_mode: AccessMode, entity_kind: Option<&str>, entity_id: Option<Uuid>, label: Option<&str>, expires_at: Option<&str>) -> Result<Uuid, SessionError> {
-            let token = Uuid::now_v7();
-            let mode_str = match access_mode {
-                AccessMode::Owner => "owner",
-                AccessMode::Viewer => "viewer",
-            };
-            sqlx_core::query::query(
-                "INSERT INTO runtime.share_token (token, session_id, access_mode, entity_kind, entity_id, label, expires_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7::timestamptz)",
-            )
-            .bind(token)
-            .bind(session_id)
-            .bind(mode_str)
-            .bind(entity_kind)
-            .bind(entity_id)
-            .bind(label)
-            .bind(expires_at)
-            .execute(pool)
-            .await?;
-            Ok(token)
-        }
-
-        #[derive(Debug, Clone, Serialize, Deserialize)]
-        pub struct ResolvedShareToken {
-            pub session_id: Uuid,
-            pub access_mode: AccessMode,
-            pub entity_kind: Option<String>,
-            pub entity_id: Option<Uuid>,
-            pub label: Option<String>,
-        }
-
-        pub async fn resolve_share_token(pool: &PgPool, token: Uuid) -> Result<ResolvedShareToken, SessionError> {
-            let row = sqlx_core::query_as::query_as::<_, (Uuid, String, Option<String>, Option<Uuid>, Option<String>)>(
-                "SELECT session_id, access_mode, entity_kind, entity_id, label FROM runtime.share_token
-         WHERE token = $1 AND (expires_at IS NULL OR expires_at > now())",
-            )
-            .bind(token)
-            .fetch_optional(pool)
-            .await?
-            .ok_or_else(|| SessionError::EntityNotFound { kind: "share_token".into(), id: token.to_string() })?;
-            let access_mode = match row.1.as_str() {
-                "owner" => AccessMode::Owner,
-                _ => AccessMode::Viewer,
-            };
-            Ok(ResolvedShareToken { session_id: row.0, access_mode, entity_kind: row.2, entity_id: row.3, label: row.4 })
-        }
-
-        pub async fn list_share_tokens(pool: &PgPool, session_id: Uuid) -> Result<Vec<ShareTokenRow>, SessionError> {
-            let rows = sqlx_core::query_as::query_as::<_, (Uuid, Uuid, String, Option<String>, Option<Uuid>, Option<String>)>(
-                "SELECT token, session_id, access_mode, entity_kind, entity_id, label FROM runtime.share_token
-         WHERE session_id = $1 AND (expires_at IS NULL OR expires_at > now())
-         ORDER BY created_at DESC",
-            )
-            .bind(session_id)
-            .fetch_all(pool)
-            .await?;
-            Ok(rows.into_iter().map(|r| ShareTokenRow { token: r.0, session_id: r.1, access_mode: r.2, entity_kind: r.3, entity_id: r.4, label: r.5, created_at: String::new(), expires_at: None }).collect())
-        }
-
-        pub async fn delete_share_token(pool: &PgPool, token: Uuid) -> Result<bool, SessionError> {
-            let result = sqlx_core::query::query("DELETE FROM runtime.share_token WHERE token = $1").bind(token).execute(pool).await?;
-            Ok(result.rows_affected() > 0)
-        }
-
-        /// Resolve access mode from an optional bearer token for a given session.
-        /// Returns (AccessMode, Option<SessionId>) - the session id from share token if resolved.
-        pub async fn resolve_access(pool: &PgPool, session_id: Uuid, bearer: Option<&str>) -> Result<AccessMode, SessionError> {
-            match bearer {
-                Some(token_str) => {
-                    let token = Uuid::parse_str(token_str).map_err(|_| SessionError::Unauthorized("invalid token format".into()))?;
-                    // Check if it's the session owner token
-                    let owner_token = load_owner_token(pool, session_id).await?;
-                    if token == owner_token {
-                        return Ok(AccessMode::Owner);
-                    }
-                    // Check if it's a share token
-                    let resolved = resolve_share_token(pool, token).await.map_err(|_| SessionError::Unauthorized("invalid or expired token".into()))?;
-                    if resolved.session_id != session_id {
-                        return Err(SessionError::Unauthorized("token does not match session".into()));
-                    }
-                    Ok(resolved.access_mode)
-                }
-                None => Ok(AccessMode::Viewer),
-            }
-        }
-    } // 🔑Auth
-    pub use auth::*;
-
-    mod history {
-        // 🔩History
-        // Specs: History persistence stores domain commits with timestamps, full kit snapshots at baselines, and
-        // incremental entity change logs. Supports lookback-based kit reconstruction and auto-compaction.
-        // Summary: History storage: domain commits, kit snapshots, entity change logs, lookback reconstruction, compaction.
-
-        use super::*;
-        pub async fn record_domain_commit(pool: &PgPool, session_id: Uuid, domain_version: DomainVersion, command_id: Uuid) -> Result<(), SessionError> {
-            sqlx_core::query::query(
-                "INSERT INTO history.domain_commit (session_id, domain_version, command_id) VALUES ($1, $2, $3)
-         ON CONFLICT (session_id, domain_version) DO NOTHING",
-            )
-            .bind(session_id)
-            .bind(domain_version)
-            .bind(command_id)
-            .execute(pool)
-            .await?;
-            Ok(())
-        }
-
-        pub async fn store_kit_snapshot(pool: &PgPool, session_id: Uuid, domain_version: DomainVersion, kit_json: &serde_json::Value) -> Result<(), SessionError> {
-            sqlx_core::query::query(
-                "INSERT INTO history.kit_snapshot (session_id, domain_version, kit_json) VALUES ($1, $2, $3)
-         ON CONFLICT (session_id, domain_version) DO UPDATE SET kit_json = $3, created_at = now()",
-            )
-            .bind(session_id)
-            .bind(domain_version)
-            .bind(kit_json)
-            .execute(pool)
-            .await?;
-            Ok(())
-        }
-
-        pub async fn store_entity_change_log(pool: &PgPool, session_id: Uuid, domain_version: DomainVersion, changes: &[EntityChange]) -> Result<(), SessionError> {
-            let changes_json = serde_json::to_value(changes).unwrap_or(serde_json::json!([]));
-            sqlx_core::query::query(
-                "INSERT INTO history.entity_change_log (session_id, domain_version, changes_json) VALUES ($1, $2, $3)
-         ON CONFLICT (session_id, domain_version) DO NOTHING",
-            )
-            .bind(session_id)
-            .bind(domain_version)
-            .bind(&changes_json)
-            .execute(pool)
-            .await?;
-            Ok(())
-        }
-
-        pub async fn get_latest_snapshot_before(pool: &PgPool, session_id: Uuid, target_version: DomainVersion) -> Result<Option<(DomainVersion, serde_json::Value)>, SessionError> {
-            let row = sqlx_core::query_as::query_as::<_, (i64, serde_json::Value)>(
-                "SELECT domain_version, kit_json FROM history.kit_snapshot
-         WHERE session_id = $1 AND domain_version <= $2
-         ORDER BY domain_version DESC LIMIT 1",
-            )
-            .bind(session_id)
-            .bind(target_version)
-            .fetch_optional(pool)
-            .await?;
-            Ok(row)
-        }
-
-        pub async fn get_change_logs_in_range(pool: &PgPool, session_id: Uuid, from_version_exclusive: DomainVersion, to_version_inclusive: DomainVersion) -> Result<Vec<(DomainVersion, serde_json::Value)>, SessionError> {
-            let rows = sqlx_core::query_as::query_as::<_, (i64, serde_json::Value)>(
-                "SELECT domain_version, changes_json FROM history.entity_change_log
-         WHERE session_id = $1 AND domain_version > $2 AND domain_version <= $3
-         ORDER BY domain_version ASC",
-            )
-            .bind(session_id)
-            .bind(from_version_exclusive)
-            .bind(to_version_inclusive)
-            .fetch_all(pool)
-            .await?;
-            Ok(rows)
-        }
-
-        pub async fn get_version_at_time(pool: &PgPool, session_id: Uuid, seconds_ago: i64) -> Result<Option<DomainVersion>, SessionError> {
-            let row = sqlx_core::query_as::query_as::<_, (Option<i64>,)>(
-                "SELECT MAX(domain_version) FROM history.domain_commit
-         WHERE session_id = $1 AND committed_at <= now() - make_interval(secs => $2::double precision)",
-            )
-            .bind(session_id)
-            .bind(seconds_ago as f64)
-            .fetch_optional(pool)
-            .await?;
-            Ok(row.and_then(|(v,)| v))
-        }
-
-        pub fn serialize_session_kit(state: &SessionState) -> serde_json::Value {
-            let types: Vec<serde_json::Value> = state
-                .types
-                .values()
-                .filter(|t| t.lifecycle.is_active())
-                .map(|t| {
-                    serde_json::json!({
-                        "id": t.type_id, "name": t.name,
-                        "description": t.description, "icon": t.icon, "image": t.image,
-                        "folder": t.folder, "unit": t.unit, "stock": t.stock,
-                        "isAbstract": t.is_abstract, "virtual": t.virtual_type,
-                        "parent": t.parent_type_id.map(|id| serde_json::json!({ "id": id })),
-                        "location": t.location_id.map(|id| serde_json::json!({ "id": id })),
-                        "connectors": t.connectors.values().filter(|c| c.lifecycle.is_active()).map(|c| serde_json::json!({
-                            "id": c.connector_id,
-                            "name": c.name,
-                            "t": c.t,
-                            "point": { "x": c.point[0], "y": c.point[1], "z": c.point[2] },
-                            "direction": { "x": c.direction[0], "y": c.direction[1], "z": c.direction[2] },
-                            "description": c.description,
-                            "port": c.port_id.map(|id| serde_json::json!({ "id": id })),
-                            "mandatory": c.mandatory,
-                            "maxChildren": c.max_children,
-                        })).collect::<Vec<_>>(),
-                        "representations": t.representations.values().filter(|m| m.lifecycle.is_active()).map(|m| serde_json::json!({
-                            "id": m.representation_id,
-                            "file": { "id": m.file_id },
-                            "name": m.name,
-                            "description": m.description,
-                        })).collect::<Vec<_>>(),
-                    })
-                })
-                .collect();
-            let designs: Vec<serde_json::Value> = state
-                .designs
-                .values()
-                .filter(|d| d.lifecycle.is_active())
-                .map(|d| {
-                    let pieces: Vec<serde_json::Value> = d
-                        .pieces
-                        .values()
-                        .filter(|p| p.lifecycle.is_active())
-                        .map(|p| {
-                            serde_json::json!({
-                                "id": p.piece_id, "name": p.name, "type": p.type_id,
-                                "center": p.center.map(|c| serde_json::json!({"u": c[0], "v": c[1]})),
-                                "isHidden": p.is_hidden, "isLocked": p.is_locked,
-                                "color": p.color, "description": p.description,
-                                "design": { "id": d.design_id },
-                            })
-                        })
-                        .collect();
-                    let connections: Vec<serde_json::Value> = d
-                        .connections
-                        .values()
-                        .filter(|c| c.lifecycle.is_active())
-                        .map(|c| {
-                            serde_json::json!({
-                                "id": c.connection_id,
-                                "parent": {
-                                    "piece": { "id": c.parent_piece_id },
-                                    "designPiece": c.parent_design_piece_id.map(|id| serde_json::json!({ "id": id })),
-                                    "connector": c.parent_connector_id.map(|id| serde_json::json!({ "id": id })),
-                                },
-                                "child": {
-                                    "piece": { "id": c.child_piece_id },
-                                    "designPiece": c.child_design_piece_id.map(|id| serde_json::json!({ "id": id })),
-                                    "connector": c.child_connector_id.map(|id| serde_json::json!({ "id": id })),
-                                },
-                                "gap": c.gap, "shift": c.shift, "rise": c.rise,
-                                "rotation": c.rotation, "turn": c.turn, "tilt": c.tilt,
-                                "u": c.u, "v": c.v, "description": c.description,
-                            })
-                        })
-                        .collect();
-                    serde_json::json!({
-                        "id": d.design_id, "name": d.name,
-                        "description": d.description, "icon": d.icon, "image": d.image,
-                        "folder": d.folder, "unit": d.unit, "isAbstract": d.is_abstract,
-                        "canScale": d.can_scale, "canMirror": d.can_mirror,
-                        "parent": d.parent_design_id.map(|id| serde_json::json!({ "id": id })),
-                        "activeLayer": d.active_layer_id.map(|id| serde_json::json!({ "id": id })),
-                        "location": d.location_id.map(|id| serde_json::json!({ "id": id })),
-                        "pieces": pieces, "connections": connections,
-                    })
-                })
-                .collect();
-            let authors: Vec<serde_json::Value> = state.authors.values().filter(|a| a.lifecycle.is_active()).map(|a| serde_json::json!({"id": a.author_id, "name": a.name, "email": a.email})).collect();
-            let tags: Vec<serde_json::Value> = state.tags.values().filter(|t| t.lifecycle.is_active()).map(|t| serde_json::json!({"id": t.tag_id, "name": t.name, "description": t.description, "icon": t.icon})).collect();
-            let concepts: Vec<serde_json::Value> = state.concepts.values().filter(|c| c.lifecycle.is_active()).map(|c| serde_json::json!({"id": c.concept_id, "name": c.name, "description": c.description, "icon": c.icon})).collect();
-            let ports: Vec<serde_json::Value> = state
-                .ports
-                .values()
-                .filter(|p| p.lifecycle.is_active())
-                .map(|p| {
-                    serde_json::json!({
-                        "id": p.port_id,
-                        "name": p.name,
-                        "description": p.description,
-                        "icon": p.icon,
-                        "maxChildren": p.max_children,
-                        "compatiblePorts": p.compatible_port_ids.iter().map(|id| serde_json::json!({ "id": id })).collect::<Vec<_>>(),
-                    })
-                })
-                .collect();
-            let qualities: Vec<serde_json::Value> = state
-                .qualities
-                .values()
-                .filter(|q| q.lifecycle.is_active())
-                .map(|q| {
-                    serde_json::json!({
-                        "id": q.quality_id,
-                        "key": q.key,
-                        "name": q.name,
-                        "description": q.description,
-                        "icon": q.icon,
-                        "unit": q.unit,
-                    })
-                })
-                .collect();
-            let folders: Vec<serde_json::Value> = state
-                .folders
-                .values()
-                .filter(|f| f.lifecycle.is_active())
-                .map(|f| {
-                    serde_json::json!({
-                        "id": f.folder_id,
-                        "name": f.name,
-                        "parent": f.parent_folder_id.map(|id| serde_json::json!({ "id": id })),
-                        "description": f.description,
-                    })
-                })
-                .collect();
-            let files: Vec<serde_json::Value> = state
-                .files
-                .values()
-                .filter(|f| f.lifecycle.is_active())
-                .map(|f| {
-                    serde_json::json!({
-                        "id": f.file_id,
-                        "name": f.name,
-                        "remote": f.remote,
-                        "folder": f.folder_id.map(|id| serde_json::json!({ "id": id })),
-                        "size": f.size,
-                        "hash": f.hash,
-                        "blob": f.blob,
-                    })
-                })
-                .collect();
-            serde_json::json!({
-                "id": state.kit.kit_id, "name": state.kit.name,
-                "version": state.kit.version, "description": state.kit.description,
-                "icon": state.kit.icon, "image": state.kit.image,
-                "preview": state.kit.preview, "remote": state.kit.remote,
-                "homepage": state.kit.homepage, "license": state.kit.license,
-                "types": types, "designs": designs, "authors": authors, "tags": tags,
-                "concepts": concepts, "ports": ports, "qualities": qualities, "folders": folders, "files": files,
-                "createdAt": chrono_now_iso(), "updatedAt": chrono_now_iso(),
-            })
-        }
-
-        pub fn chrono_now_iso() -> String {
-            let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default();
-            let secs = now.as_secs();
-            let nanos = now.subsec_nanos();
-            format!("{}.{:09}Z", secs, nanos)
-        }
-
-        pub fn apply_change_log_to_kit(kit: &mut serde_json::Value, changes: &serde_json::Value) {
-            let changes_arr = match changes.as_array() {
-                Some(a) => a,
-                None => return,
-            };
-            for change in changes_arr {
-                let operation = change.get("operation").and_then(|v| v.as_str()).unwrap_or("");
-                let entity_kind = change.get("entity_kind").and_then(|v| v.as_str()).unwrap_or("");
-                let entity_id = change.get("entity_id").and_then(|v| v.as_str()).unwrap_or("");
-                match operation {
-                    "Created" => {
-                        let snapshot = change.get("snapshot").cloned().unwrap_or(serde_json::json!({}));
-                        let mut entity = snapshot.clone();
-                        if !entity.get("id").is_some() {
-                            entity["id"] = serde_json::Value::String(entity_id.to_string());
-                        }
-                        match entity_kind {
-                            "type" => push_to_array(kit, "types", entity),
-                            "design" => push_to_array(kit, "designs", entity),
-                            "author" => push_to_array(kit, "authors", entity),
-                            "tag" => push_to_array(kit, "tags", entity),
-                            "piece" => {
-                                if let Some(design_id) = change.get("snapshot").and_then(|s| s.get("design_id")).and_then(|v| v.as_str()) {
-                                    push_to_design_array(kit, design_id, "pieces", entity);
-                                }
-                            }
-                            "connection" => {
-                                if let Some(design_id) = change.get("snapshot").and_then(|s| s.get("design_id")).and_then(|v| v.as_str()) {
-                                    push_to_design_array(kit, design_id, "connections", entity);
-                                }
-                            }
-                            _ => {}
-                        }
-                    }
-                    "Updated" => {
-                        let changed_fields = change.get("changed_fields").cloned().unwrap_or(serde_json::json!({}));
-                        match entity_kind {
-                            "kit" => {
-                                if let Some(obj) = kit.as_object_mut() {
-                                    if let Some(fields) = changed_fields.as_object() {
-                                        for (k, v) in fields {
-                                            obj.insert(k.clone(), v.clone());
-                                        }
-                                    }
-                                }
-                            }
-                            "type" | "design" | "author" | "tag" => {
-                                let collection_key = match entity_kind {
-                                    "type" => "types",
-                                    "design" => "designs",
-                                    "author" => "authors",
-                                    "tag" => "tags",
-                                    _ => "",
-                                };
-                                update_in_array(kit, collection_key, entity_id, &changed_fields);
-                            }
-                            "piece" => {
-                                if let Some(design_id) = changed_fields.get("design_id").and_then(|v| v.as_str()) {
-                                    update_in_design_array(kit, design_id, "pieces", entity_id, &changed_fields);
-                                }
-                            }
-                            "connection" => {
-                                if let Some(design_id) = changed_fields.get("design_id").and_then(|v| v.as_str()) {
-                                    update_in_design_array(kit, design_id, "connections", entity_id, &changed_fields);
-                                }
-                            }
-                            _ => {}
-                        }
-                    }
-                    "Deleted" => match entity_kind {
-                        "type" => remove_from_array(kit, "types", entity_id),
-                        "design" => remove_from_array(kit, "designs", entity_id),
-                        "author" => remove_from_array(kit, "authors", entity_id),
-                        "tag" => remove_from_array(kit, "tags", entity_id),
-                        "piece" => remove_from_design_arrays(kit, "pieces", entity_id),
-                        "connection" => remove_from_design_arrays(kit, "connections", entity_id),
-                        _ => {}
-                    },
-                    _ => {}
-                }
-            }
-        }
-
-        pub fn push_to_array(kit: &mut serde_json::Value, key: &str, item: serde_json::Value) {
-            if let Some(arr) = kit.get_mut(key).and_then(|v| v.as_array_mut()) {
-                arr.push(item);
-            } else {
-                kit[key] = serde_json::json!([item]);
-            }
-        }
-
-        pub fn push_to_design_array(kit: &mut serde_json::Value, design_id: &str, key: &str, item: serde_json::Value) {
-            if let Some(designs) = kit.get_mut("designs").and_then(|v| v.as_array_mut()) {
-                for d in designs.iter_mut() {
-                    if d.get("id").and_then(|g| g.as_str()) == Some(design_id) {
-                        if let Some(arr) = d.get_mut(key).and_then(|v| v.as_array_mut()) {
-                            arr.push(item);
-                        } else {
-                            d[key] = serde_json::json!([item]);
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-
-        pub fn update_in_array(kit: &mut serde_json::Value, key: &str, entity_id: &str, fields: &serde_json::Value) {
-            if let Some(arr) = kit.get_mut(key).and_then(|v| v.as_array_mut()) {
-                for item in arr.iter_mut() {
-                    if item.get("id").and_then(|g| g.as_str()) == Some(entity_id) {
-                        if let Some(obj) = item.as_object_mut() {
-                            if let Some(f) = fields.as_object() {
-                                for (k, v) in f {
-                                    obj.insert(k.clone(), v.clone());
-                                }
-                            }
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-
-        pub fn update_in_design_array(kit: &mut serde_json::Value, design_id: &str, key: &str, entity_id: &str, fields: &serde_json::Value) {
-            if let Some(designs) = kit.get_mut("designs").and_then(|v| v.as_array_mut()) {
-                for design in designs.iter_mut() {
-                    if design.get("id").and_then(|g| g.as_str()) != Some(design_id) {
-                        continue;
-                    }
-                    if let Some(items) = design.get_mut(key).and_then(|v| v.as_array_mut()) {
-                        for item in items.iter_mut() {
-                            if item.get("id").and_then(|g| g.as_str()) == Some(entity_id) {
-                                if let Some(obj) = item.as_object_mut() {
-                                    if let Some(f) = fields.as_object() {
-                                        for (k, v) in f {
-                                            obj.insert(k.clone(), v.clone());
-                                        }
-                                    }
-                                }
-                                return;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        pub fn remove_from_array(kit: &mut serde_json::Value, key: &str, entity_id: &str) {
-            if let Some(arr) = kit.get_mut(key).and_then(|v| v.as_array_mut()) {
-                arr.retain(|item| item.get("id").and_then(|g| g.as_str()) != Some(entity_id));
-            }
-        }
-
-        pub fn remove_from_design_arrays(kit: &mut serde_json::Value, key: &str, entity_id: &str) {
-            if let Some(designs) = kit.get_mut("designs").and_then(|v| v.as_array_mut()) {
-                for design in designs.iter_mut() {
-                    if let Some(items) = design.get_mut(key).and_then(|v| v.as_array_mut()) {
-                        items.retain(|item| item.get("id").and_then(|g| g.as_str()) != Some(entity_id));
-                    }
-                }
-            }
-        }
-
-        pub async fn reconstruct_kit_at_version(pool: &PgPool, session_id: Uuid, target_version: DomainVersion) -> Result<serde_json::Value, SessionError> {
-            let (snap_version, mut kit) = get_latest_snapshot_before(pool, session_id, target_version).await?.ok_or_else(|| SessionError::Internal("no baseline snapshot found".to_string()))?;
-            if snap_version < target_version {
-                let logs = get_change_logs_in_range(pool, session_id, snap_version, target_version).await?;
-                for (_version, changes) in &logs {
-                    apply_change_log_to_kit(&mut kit, changes);
-                }
-            }
-            Ok(kit)
-        }
-
-        pub async fn get_kit_at_lookback(pool: &PgPool, session_id: Uuid, lookback_token: &str) -> Result<serde_json::Value, SessionError> {
-            let seconds = lookback_seconds(lookback_token).ok_or_else(|| SessionError::Validation(format!("unknown lookback token: {}", lookback_token)))?;
-            let target_version = get_version_at_time(pool, session_id, seconds).await?.ok_or_else(|| SessionError::Internal("no version found at lookback time".to_string()))?;
-            reconstruct_kit_at_version(pool, session_id, target_version).await
-        }
-
-        pub async fn compact_history(pool: &PgPool, session_id: Uuid, current_state: &SessionState) -> Result<CompactionResult, SessionError> {
-            let mut snapshots_created = 0u32;
-            let mut logs_deleted = 0u64;
-            let current_version = current_state.domain_version;
-            // Create snapshot at current version (always keep latest)
-            let current_kit = serialize_session_kit(current_state);
-            store_kit_snapshot(pool, session_id, current_version, &current_kit).await?;
-            snapshots_created += 1;
-            // For each lookback boundary, create a snapshot at the boundary version
-            for &(token, seconds) in LOOKBACK_POINTS {
-                let boundary_version = get_version_at_time(pool, session_id, seconds).await?;
-                if let Some(bv) = boundary_version {
-                    if bv > 0 {
-                        let existing = get_latest_snapshot_before(pool, session_id, bv).await?;
-                        match existing {
-                            Some((sv, _)) if sv == bv => {} // already have snapshot at exact version
-                            _ => match reconstruct_kit_at_version(pool, session_id, bv).await {
-                                Ok(kit) => {
-                                    store_kit_snapshot(pool, session_id, bv, &kit).await?;
-                                    snapshots_created += 1;
-                                }
-                                Err(_) => {
-                                    tracing::warn!("compaction: could not reconstruct kit at version {} for lookback {}", bv, token);
-                                }
-                            },
-                        }
-                    }
-                }
-            }
-            // Delete change logs that are fully covered by snapshots
-            // Keep logs newer than the oldest lookback boundary
-            let oldest_seconds = LOOKBACK_POINTS.last().map_or(31536000, |(_, s)| *s);
-            let oldest_version = get_version_at_time(pool, session_id, oldest_seconds).await?;
-            if let Some(ov) = oldest_version {
-                if ov > 0 {
-                    let result = sqlx_core::query::query(
-                        "DELETE FROM history.entity_change_log
-                 WHERE session_id = $1 AND domain_version < $2
-                 AND domain_version IN (
-                     SELECT ecl.domain_version FROM history.entity_change_log ecl
-                     WHERE ecl.session_id = $1 AND ecl.domain_version < $2
-                     AND EXISTS (SELECT 1 FROM history.kit_snapshot ks
-                                 WHERE ks.session_id = $1 AND ks.domain_version >= ecl.domain_version)
-                 )",
-                    )
-                    .bind(session_id)
-                    .bind(ov)
-                    .execute(pool)
-                    .await?;
-                    logs_deleted = result.rows_affected();
-                }
-            }
-            Ok(CompactionResult { snapshots_created, logs_deleted })
-        }
-
-        #[derive(Debug, Clone, Serialize)]
-        pub struct CompactionResult {
-            pub snapshots_created: u32,
-            pub logs_deleted: u64,
-        }
-    } // 🔩History
-    pub use history::*;
-} // 🔮Persistence
-pub use persistence::*;
-
-mod actor {
-    // 🎹Actor
-    // Specs: ActorMessage is the inbox message kind. SessionActor processes commands one at a time in arrival order.
-    // Summary: Session actor: single-writer task processing commands sequentially.
-
-    use super::*;
-    pub enum ActorMessage {
-        DomainCommand { envelope: CommandEnvelope, command: DomainCommand, reply: oneshot::Sender<Result<CommandResult, SessionError>> },
-        ComposeCommand { envelope: ComposeEnvelope, command: ComposeCommand, reply: oneshot::Sender<Result<(), SessionError>> },
-        GetSnapshot { reply: oneshot::Sender<SessionSnapshot> },
-    }
-
-    #[derive(Debug, Clone, Serialize)]
-    pub struct SessionSnapshot {
-        pub session_id: Uuid,
-        pub domain_version: DomainVersion,
-        pub compose_version: ComposeVersion,
-        pub kit: serde_json::Value,
-    }
-
-    pub struct SessionActor {
-        state: SessionState,
-        pool: PgPool,
-        event_tx: broadcast::Sender<SessionEvent>,
-    }
-
-    impl SessionActor {
-        pub fn new(state: SessionState, pool: PgPool, event_tx: broadcast::Sender<SessionEvent>) -> Self {
-            Self { state, pool, event_tx }
-        }
-
-        pub async fn run(&mut self, mut rx: mpsc::Receiver<ActorMessage>) {
-            while let Some(msg) = rx.recv().await {
-                match msg {
-                    ActorMessage::DomainCommand { envelope, command, reply } => {
-                        let result = self.handle_domain_command(envelope, command).await;
-                        let _ = reply.send(result);
-                    }
-                    ActorMessage::ComposeCommand { envelope, command, reply } => {
-                        let result = self.handle_compose_command(envelope, command).await;
-                        let _ = reply.send(result);
-                    }
-                    ActorMessage::GetSnapshot { reply } => {
-                        let _ = reply.send(self.build_snapshot());
-                    }
-                }
-            }
-        }
-
-        async fn handle_domain_command(&mut self, envelope: CommandEnvelope, command: DomainCommand) -> Result<CommandResult, SessionError> {
-            let session_id = self.state.session_id.0;
-            let cmd_id = envelope.command_id.0;
-            let is_new = record_command(
-                &self.pool,
-                &CommandRecord {
-                    session_id,
-                    command_id: cmd_id,
-                    client_id: envelope.client_id.0,
-                    request_id: envelope.request_id.0,
-                    base_version: envelope.base_domain_version,
-                    command_kind: format!("{:?}", command),
-                    actor_person_id: envelope.actor_person_id.0,
-                },
-            )
-            .await?;
-            if !is_new {
-                return Ok(CommandResult::IdempotentDuplicate);
-            }
-            let new_version = self.state.domain_version + 1;
-            let changes = self.apply_domain_command(&command, new_version, cmd_id).await?;
-            bump_domain_version(&self.pool, session_id, new_version).await?;
-            mark_command_accepted(&self.pool, cmd_id, new_version).await?;
-            // Record history: domain commit + entity change log
-            record_domain_commit(&self.pool, session_id, new_version, cmd_id).await?;
-            store_entity_change_log(&self.pool, session_id, new_version, &changes).await?;
-            // Auto-compact every 50 versions
-            if new_version % 50 == 0 {
-                if let Err(e) = compact_history(&self.pool, session_id, &self.state).await {
-                    tracing::warn!("compaction failed at version {}: {}", new_version, e);
-                }
-            }
-            self.state.domain_version = new_version;
-            let event = SessionEvent::DomainCommandAccepted { command_id: envelope.command_id, domain_version: new_version, changes };
-            let _ = self.event_tx.send(event);
-            Ok(CommandResult::Accepted { domain_version: new_version })
-        }
-
-        async fn apply_domain_command(&mut self, command: &DomainCommand, version: DomainVersion, cmd_id: Uuid) -> Result<Vec<EntityChange>, SessionError> {
-            let sid = self.state.session_id.0;
-            let mut changes = Vec::new();
-            match command {
-                DomainCommand::PatchKit(patch) => {
-                    if let Some(name) = patch.fields.get("name").and_then(|v| v.as_str()) {
-                        self.state.kit.name = name.to_string();
-                        sqlx_core::query::query("UPDATE core.kit SET name = $3 WHERE session_id = $1 AND kit_id = $2").bind(sid).bind(self.state.kit.kit_id).bind(name).execute(&self.pool).await?;
-                        upsert_property_clock(&self.pool, sid, "kit", self.state.kit.kit_id, "kit_name", version, cmd_id).await?;
-                    }
-                    changes.push(EntityChange::Updated { entity_kind: EntityKind::Kit, entity_id: self.state.kit.kit_id, changed_fields: patch.fields.clone() });
-                }
-                DomainCommand::CreateType(create) => {
-                    let name = create.fields.get("name").and_then(|v| v.as_str()).unwrap_or("Untitled");
-                    sqlx_core::query::query("INSERT INTO core.type_entity (session_id, type_id, name) VALUES ($1, $2, $3)").bind(sid).bind(create.entity_id).bind(name).execute(&self.pool).await?;
-                    self.state.types.insert(
-                        create.entity_id,
-                        TypeState {
-                            type_id: create.entity_id,
-                            name: name.to_string(),
-                            parent_type_id: None,
-                            description: None,
-                            icon: None,
-                            image: None,
-                            folder: None,
-                            unit: None,
-                            stock: None,
-                            is_abstract: None,
-                            virtual_type: None,
-                            location_id: None,
-                            connectors: BTreeMap::new(),
-                            representations: BTreeMap::new(),
-                            props: BTreeMap::new(),
-                            lifecycle: Lifecycle::Active,
-                        },
-                    );
-                    changes.push(EntityChange::Created { entity_kind: EntityKind::Type, entity_id: create.entity_id, snapshot: create.fields.clone() });
-                }
-                DomainCommand::DeleteType(del) => {
-                    sqlx_core::query::query("UPDATE core.type_entity SET lifecycle = 'tombstoned' WHERE session_id = $1 AND type_id = $2").bind(sid).bind(del.entity_id).execute(&self.pool).await?;
-                    if let Some(t) = self.state.types.get_mut(&del.entity_id) {
-                        t.lifecycle = Lifecycle::Tombstoned { at: version, by: CommandId(cmd_id) };
-                    }
-                    changes.push(EntityChange::Deleted { entity_kind: EntityKind::Type, entity_id: del.entity_id });
-                }
-                DomainCommand::PatchType(patch) => {
-                    if let Some(type_state) = self.state.types.get_mut(&patch.entity_id) {
-                        if let Some(name) = patch.fields.get("name").and_then(|v| v.as_str()) {
-                            type_state.name = name.to_string();
-                            sqlx_core::query::query("UPDATE core.type_entity SET name = $3 WHERE session_id = $1 AND type_id = $2").bind(sid).bind(patch.entity_id).bind(name).execute(&self.pool).await?;
-                        }
-                        if let Some(description) = patch.fields.get("description").and_then(|v| v.as_str()) {
-                            type_state.description = Some(description.to_string());
-                            sqlx_core::query::query("UPDATE core.type_entity SET description = $3 WHERE session_id = $1 AND type_id = $2").bind(sid).bind(patch.entity_id).bind(description).execute(&self.pool).await?;
-                        }
-                    }
-                    changes.push(EntityChange::Updated { entity_kind: EntityKind::Type, entity_id: patch.entity_id, changed_fields: patch.fields.clone() });
-                }
-                DomainCommand::CreateDesign(create) => {
-                    let name = create.fields.get("name").and_then(|v| v.as_str()).unwrap_or("Untitled");
-                    sqlx_core::query::query("INSERT INTO core.design (session_id, design_id, name) VALUES ($1, $2, $3)").bind(sid).bind(create.entity_id).bind(name).execute(&self.pool).await?;
-                    self.state.designs.insert(
-                        create.entity_id,
-                        DesignState {
-                            design_id: create.entity_id,
-                            name: name.to_string(),
-                            parent_design_id: None,
-                            description: None,
-                            icon: None,
-                            image: None,
-                            folder: None,
-                            unit: None,
-                            is_abstract: None,
-                            can_scale: None,
-                            can_mirror: None,
-                            active_layer_id: None,
-                            location_id: None,
-                            pieces: BTreeMap::new(),
-                            connections: BTreeMap::new(),
-                            layers: BTreeMap::new(),
-                            groups: BTreeMap::new(),
-                            stats: BTreeMap::new(),
-                            props: BTreeMap::new(),
-                            lifecycle: Lifecycle::Active,
-                        },
-                    );
-                    changes.push(EntityChange::Created { entity_kind: EntityKind::Design, entity_id: create.entity_id, snapshot: create.fields.clone() });
-                }
-                DomainCommand::DeleteDesign(del) => {
-                    sqlx_core::query::query("UPDATE core.design SET lifecycle = 'tombstoned' WHERE session_id = $1 AND design_id = $2").bind(sid).bind(del.entity_id).execute(&self.pool).await?;
-                    if let Some(d) = self.state.designs.get_mut(&del.entity_id) {
-                        d.lifecycle = Lifecycle::Tombstoned { at: version, by: CommandId(cmd_id) };
-                    }
-                    changes.push(EntityChange::Deleted { entity_kind: EntityKind::Design, entity_id: del.entity_id });
-                }
-                DomainCommand::PatchDesign(patch) => {
-                    if let Some(design_state) = self.state.designs.get_mut(&patch.entity_id) {
-                        if let Some(name) = patch.fields.get("name").and_then(|v| v.as_str()) {
-                            design_state.name = name.to_string();
-                            sqlx_core::query::query("UPDATE core.design SET name = $3 WHERE session_id = $1 AND design_id = $2").bind(sid).bind(patch.entity_id).bind(name).execute(&self.pool).await?;
-                        }
-                        if let Some(description) = patch.fields.get("description").and_then(|v| v.as_str()) {
-                            design_state.description = Some(description.to_string());
-                            sqlx_core::query::query("UPDATE core.design SET description = $3 WHERE session_id = $1 AND design_id = $2").bind(sid).bind(patch.entity_id).bind(description).execute(&self.pool).await?;
-                        }
-                    }
-                    changes.push(EntityChange::Updated { entity_kind: EntityKind::Design, entity_id: patch.entity_id, changed_fields: patch.fields.clone() });
-                }
-                DomainCommand::CreatePiece(create) => {
-                    let name = create.fields.get("name").and_then(|v| v.as_str());
-                    sqlx_core::query::query("INSERT INTO core.piece (session_id, piece_id, design_id, name) VALUES ($1, $2, $3, $4)").bind(sid).bind(create.piece_id).bind(create.design_id).bind(name).execute(&self.pool).await?;
-                    if let Some(design) = self.state.designs.get_mut(&create.design_id) {
-                        design.pieces.insert(
-                            create.piece_id,
-                            PieceState {
-                                piece_id: create.piece_id,
-                                name: name.map(|s| s.to_string()),
-                                type_id: None,
-                                design_ref_id: None,
-                                plane: None,
-                                center: None,
-                                scale: None,
-                                mirror_plane: None,
-                                is_hidden: None,
-                                is_locked: None,
-                                color: None,
-                                description: None,
-                                lifecycle: Lifecycle::Active,
-                            },
-                        );
-                    }
-                    changes.push(EntityChange::Created { entity_kind: EntityKind::Piece, entity_id: create.piece_id, snapshot: create.fields.clone() });
-                }
-                DomainCommand::PatchPiece(patch) => {
-                    let center_u = patch.fields.get("center").and_then(|center| center.get("u")).and_then(|v| v.as_f64());
-                    let center_v = patch.fields.get("center").and_then(|center| center.get("v")).and_then(|v| v.as_f64());
-                    if center_u.is_some() || center_v.is_some() {
-                        sqlx_core::query::query("UPDATE core.piece SET center_u = COALESCE($3, center_u), center_v = COALESCE($4, center_v) WHERE session_id = $1 AND piece_id = $2")
-                            .bind(sid)
-                            .bind(patch.entity_id)
-                            .bind(center_u)
-                            .bind(center_v)
-                            .execute(&self.pool)
-                            .await?;
-                    }
-                    if let Some(name) = patch.fields.get("name").and_then(|v| v.as_str()) {
-                        sqlx_core::query::query("UPDATE core.piece SET name = $3 WHERE session_id = $1 AND piece_id = $2").bind(sid).bind(patch.entity_id).bind(name).execute(&self.pool).await?;
-                    }
-                    for design in self.state.designs.values_mut() {
-                        if let Some(piece) = design.pieces.get_mut(&patch.entity_id) {
-                            if let Some(name) = patch.fields.get("name").and_then(|v| v.as_str()) {
-                                piece.name = Some(name.to_string());
-                            }
-                            if let (Some(u), Some(v)) = (center_u, center_v) {
-                                piece.center = Some([u, v]);
-                            }
-                            if let Some(is_hidden) = patch.fields.get("isHidden").and_then(|v| v.as_bool()) {
-                                piece.is_hidden = Some(is_hidden);
-                            }
-                            if let Some(is_locked) = patch.fields.get("isLocked").and_then(|v| v.as_bool()) {
-                                piece.is_locked = Some(is_locked);
-                            }
-                            if let Some(color) = patch.fields.get("color").and_then(|v| v.as_str()) {
-                                piece.color = Some(color.to_string());
-                            }
-                            if let Some(description) = patch.fields.get("description").and_then(|v| v.as_str()) {
-                                piece.description = Some(description.to_string());
-                            }
-                            break;
-                        }
-                    }
-                    changes.push(EntityChange::Updated { entity_kind: EntityKind::Piece, entity_id: patch.entity_id, changed_fields: patch.fields.clone() });
-                }
-                DomainCommand::DeletePiece(del) => {
-                    sqlx_core::query::query("UPDATE core.piece SET lifecycle = 'tombstoned' WHERE session_id = $1 AND piece_id = $2").bind(sid).bind(del.entity_id).execute(&self.pool).await?;
-                    for design in self.state.designs.values_mut() {
-                        if let Some(piece) = design.pieces.get_mut(&del.entity_id) {
-                            piece.lifecycle = Lifecycle::Tombstoned { at: version, by: CommandId(cmd_id) };
-                            break;
-                        }
-                    }
-                    changes.push(EntityChange::Deleted { entity_kind: EntityKind::Piece, entity_id: del.entity_id });
-                }
-                DomainCommand::CreateConnection(create) => {
-                    let connected_piece = create.fields.get("parent_piece_id").and_then(|v| v.as_str()).and_then(|s| Uuid::parse_str(s).ok()).unwrap_or(Uuid::nil());
-                    let connecting_piece = create.fields.get("child_piece_id").and_then(|v| v.as_str()).and_then(|s| Uuid::parse_str(s).ok()).unwrap_or(Uuid::nil());
-                    sqlx_core::query::query("INSERT INTO core.connection (session_id, connection_id, design_id, parent_piece_id, child_piece_id) VALUES ($1, $2, $3, $4, $5)")
-                        .bind(sid)
-                        .bind(create.connection_id)
-                        .bind(create.design_id)
-                        .bind(connected_piece)
-                        .bind(connecting_piece)
-                        .execute(&self.pool)
-                        .await?;
-                    if let Some(design) = self.state.designs.get_mut(&create.design_id) {
-                        design.connections.insert(
-                            create.connection_id,
-                            ConnectionState {
-                                connection_id: create.connection_id,
-                                parent_piece_id: connected_piece,
-                                parent_design_piece_id: None,
-                                parent_connector_id: None,
-                                child_piece_id: connecting_piece,
-                                child_design_piece_id: None,
-                                child_connector_id: None,
-                                gap: 0.0,
-                                shift: 0.0,
-                                rise: 0.0,
-                                rotation: 0.0,
-                                turn: 0.0,
-                                tilt: 0.0,
-                                u: None,
-                                v: None,
-                                description: None,
-                                lifecycle: Lifecycle::Active,
-                            },
-                        );
-                    }
-                    changes.push(EntityChange::Created { entity_kind: EntityKind::Connection, entity_id: create.connection_id, snapshot: create.fields.clone() });
-                }
-                DomainCommand::PatchConnection(patch) => {
-                    if let Some(description) = patch.fields.get("description").and_then(|v| v.as_str()) {
-                        sqlx_core::query::query("UPDATE core.connection SET description = $3 WHERE session_id = $1 AND connection_id = $2").bind(sid).bind(patch.entity_id).bind(description).execute(&self.pool).await?;
-                    }
-                    if let Some(u) = patch.fields.get("u").and_then(|v| v.as_f64()) {
-                        sqlx_core::query::query("UPDATE core.connection SET u = $3 WHERE session_id = $1 AND connection_id = $2").bind(sid).bind(patch.entity_id).bind(u).execute(&self.pool).await?;
-                    }
-                    if let Some(v) = patch.fields.get("v").and_then(|v| v.as_f64()) {
-                        sqlx_core::query::query("UPDATE core.connection SET v = $3 WHERE session_id = $1 AND connection_id = $2").bind(sid).bind(patch.entity_id).bind(v).execute(&self.pool).await?;
-                    }
-                    for design in self.state.designs.values_mut() {
-                        if let Some(connection) = design.connections.get_mut(&patch.entity_id) {
-                            if let Some(description) = patch.fields.get("description").and_then(|v| v.as_str()) {
-                                connection.description = Some(description.to_string());
-                            }
-                            if let Some(u) = patch.fields.get("u").and_then(|v| v.as_f64()) {
-                                connection.u = Some(u);
-                            }
-                            if let Some(v) = patch.fields.get("v").and_then(|v| v.as_f64()) {
-                                connection.v = Some(v);
-                            }
-                            break;
-                        }
-                    }
-                    changes.push(EntityChange::Updated { entity_kind: EntityKind::Connection, entity_id: patch.entity_id, changed_fields: patch.fields.clone() });
-                }
-                DomainCommand::DeleteConnection(del) => {
-                    sqlx_core::query::query("UPDATE core.connection SET lifecycle = 'tombstoned' WHERE session_id = $1 AND connection_id = $2").bind(sid).bind(del.entity_id).execute(&self.pool).await?;
-                    for design in self.state.designs.values_mut() {
-                        if let Some(connection) = design.connections.get_mut(&del.entity_id) {
-                            connection.lifecycle = Lifecycle::Tombstoned { at: version, by: CommandId(cmd_id) };
-                            break;
-                        }
-                    }
-                    changes.push(EntityChange::Deleted { entity_kind: EntityKind::Connection, entity_id: del.entity_id });
-                }
-                DomainCommand::Batch(batch) => {
-                    for sub in &batch.commands {
-                        let sub_changes = Box::pin(self.apply_domain_command(sub, version, cmd_id)).await?;
-                        changes.extend(sub_changes);
-                    }
-                }
-                _ => {
-                    tracing::warn!("unhandled command variant: {:?}", std::mem::discriminant(command));
-                }
-            }
-            Ok(changes)
-        }
-
-        async fn handle_compose_command(&mut self, envelope: ComposeEnvelope, command: ComposeCommand) -> Result<(), SessionError> {
-            let sid = self.state.session_id.0;
-            let pid = envelope.person_id.0;
-            let fid = &envelope.frontend_id;
-            let new_version = self.state.compose_version + 1;
-            let update = match &command {
-                ComposeCommand::UpsertCursor(c) => {
-                    sqlx_core::query::query("INSERT INTO compose.cursor (session_id, person_id, frontend_id, u, v) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (session_id, person_id, frontend_id) DO UPDATE SET u = $4, v = $5, updated_at = now()")
-                        .bind(sid)
-                        .bind(pid)
-                        .bind(fid)
-                        .bind(c.u)
-                        .bind(c.v)
-                        .execute(&self.pool)
-                        .await?;
-                    ComposeUpdate::CursorMoved { u: c.u, v: c.v }
-                }
-                ComposeCommand::UpsertLook(l) => {
-                    sqlx_core::query::query("INSERT INTO compose.look (session_id, person_id, frontend_id, position_x, position_y, position_z, forward_x, forward_y, forward_z, up_x, up_y, up_z) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) ON CONFLICT (session_id, person_id, frontend_id) DO UPDATE SET position_x=$4, position_y=$5, position_z=$6, forward_x=$7, forward_y=$8, forward_z=$9, up_x=$10, up_y=$11, up_z=$12, updated_at=now()")
-                    .bind(sid).bind(pid).bind(fid).bind(l.position[0]).bind(l.position[1]).bind(l.position[2]).bind(l.forward[0]).bind(l.forward[1]).bind(l.forward[2]).bind(l.up[0]).bind(l.up[1]).bind(l.up[2]).execute(&self.pool).await?;
-                    ComposeUpdate::LookChanged { position: l.position, forward: l.forward, up: l.up }
-                }
-                ComposeCommand::SetSelection(s) => {
-                    sqlx_core::query::query("DELETE FROM compose.selection_piece WHERE session_id=$1 AND person_id=$2 AND frontend_id=$3").bind(sid).bind(pid).bind(fid).execute(&self.pool).await?;
-                    for piece_id in &s.piece_ids {
-                        sqlx_core::query::query("INSERT INTO compose.selection_piece (session_id,person_id,frontend_id,piece_id) VALUES ($1,$2,$3,$4)").bind(sid).bind(pid).bind(fid).bind(piece_id).execute(&self.pool).await?;
-                    }
-                    ComposeUpdate::SelectionChanged { piece_ids: s.piece_ids.clone(), design_ids: s.design_ids.clone() }
-                }
-                ComposeCommand::ClearPresence(_) => {
-                    sqlx_core::query::query("DELETE FROM compose.cursor WHERE session_id=$1 AND person_id=$2 AND frontend_id=$3").bind(sid).bind(pid).bind(fid).execute(&self.pool).await?;
-                    sqlx_core::query::query("DELETE FROM compose.look WHERE session_id=$1 AND person_id=$2 AND frontend_id=$3").bind(sid).bind(pid).bind(fid).execute(&self.pool).await?;
-                    sqlx_core::query::query("DELETE FROM compose.selection_piece WHERE session_id=$1 AND person_id=$2 AND frontend_id=$3").bind(sid).bind(pid).bind(fid).execute(&self.pool).await?;
-                    ComposeUpdate::PresenceCleared
-                }
-            };
-            bump_compose_version(&self.pool, sid, new_version).await?;
-            self.state.compose_version = new_version;
-            let _ = self.event_tx.send(SessionEvent::ComposeUpdated { compose_version: new_version, person_id: envelope.person_id, frontend_id: envelope.frontend_id.clone(), update });
-            Ok(())
-        }
-
-        pub fn build_snapshot(&self) -> SessionSnapshot {
-            let kit_json = serialize_session_kit(&self.state);
-            SessionSnapshot { session_id: self.state.session_id.0, domain_version: self.state.domain_version, compose_version: self.state.compose_version, kit: kit_json }
-        }
-    }
-} // 🎹Actor
-pub use actor::*;
-
-mod directory {
-    // 🎯Directory
-    // Specs: SessionHandle holds the sender to an active session actor. SessionDirectory provides get-or-create semantics.
-    // Summary: Session directory: process-global registry mapping SessionId to actor handles.
-
-    use super::*;
-    #[derive(Clone)]
-    pub struct SessionHandle {
-        pub command_tx: mpsc::Sender<ActorMessage>,
-        pub event_tx: broadcast::Sender<SessionEvent>,
-        pub active_connections: Arc<AtomicUsize>,
-        pub activated_at: Arc<Instant>,
-    }
-
-    //#region 🔖ActiveSessionInfo
-
-    #[derive(Debug, Clone, Serialize)]
-    pub struct ActiveSessionInfo {
-        pub session_id: Uuid,
-        pub active_connections: usize,
-        pub activated_at_secs_ago: u64,
-    }
-
-    //#endregion 🔖ActiveSessionInfo
+    //#endregion 🔖StateRehydration
 
     #[derive(Clone)]
     pub struct SessionDirectory {
         sessions: Arc<DashMap<Uuid, SessionHandle>>,
-        pool: PgPool,
+        db: Arc<db::Database>,
+        history: Arc<HistoryStore>,
+        directory_store: Arc<ComposeDirectoryStore>,
     }
 
     impl SessionDirectory {
-        pub fn new(pool: PgPool) -> Self {
-            Self { sessions: Arc::new(DashMap::new()), pool }
+        pub fn new(db: Arc<db::Database>, history: Arc<HistoryStore>, directory_store: Arc<ComposeDirectoryStore>) -> Self {
+            Self { sessions: Arc::new(DashMap::new()), db, history, directory_store }
+        }
+
+        /// 🗄️🌱 Creates a brand-new session: a `db` document + directory record + genesis commit
+        /// (recorded at domain_version 0, submitted through the SAME `db::DocumentHandle::submit`
+        /// path every later domain command uses, so `db`'s frontier/WAL/conflict machinery covers the
+        /// initial kit too, not just an out-of-band Postgres row as before).
+        pub async fn create_session(&self, fallback_kit_id: Uuid, fallback_kit_name: &str, initial_kit: Option<&serde_json::Value>) -> Result<(Uuid, Uuid, Uuid), SessionError> {
+            let session_id = Uuid::now_v7();
+            let (kit_id, _kit_name, kit_json) = initial_session_kit(fallback_kit_id, fallback_kit_name, initial_kit)?;
+            let handle = self.db.create_document(db::DocumentSpec::new(document_id(session_id)))?;
+            let owner_token = self.directory_store.create_session(session_id, kit_id)?;
+
+            // Validates the kit JSON shape up front (same `session_kit_id`/`session_kit_name`
+            // requirements the pre-CW6b implementation enforced at creation time); the typed
+            // `SessionState` itself is (re)built lazily by `get_or_activate` on first activation.
+            session_state_from_kit_json(session_id, 0, 0, &kit_json)?;
+            let mut payload = serde_json::Map::new();
+            payload.insert(format!("kit/{}", kit_id), kit_json.clone());
+            let payload = serde_json::Value::Object(payload);
+            let genesis = protocol::OperationEnvelope {
+                operation_id: protocol::OperationId(format!("genesis:{session_id}")),
+                document_id: document_id(session_id),
+                actor: protocol::ActorId("system".to_string()),
+                dependencies: Vec::new(),
+                diff: protocol::DocumentDiff { schema: "generic".to_string(), payload },
+                inverse: protocol::InverseOperation { schema: "generic".to_string(), inverse_diff: serde_json::Value::Object(serde_json::Map::new()) },
+                timestamp: now_hlc(Uuid::nil()),
+            };
+            let batch = db::document::CommandBatch::new(vec![genesis])?;
+            handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync }).await??;
+
+            self.history.record_domain_commit(session_id, 0, session_id)?;
+            self.history.store_kit_snapshot(session_id, 0, &kit_json)?;
+            Ok((session_id, kit_id, owner_token))
         }
 
         pub async fn get_or_activate(&self, session_id: SessionId) -> Option<SessionHandle> {
-            // Fast path: session already active
             if let Some(handle) = self.sessions.get(&session_id.0) {
                 return Some(handle.clone());
             }
-            // Slow path: load from DB and activate
-            let state = load_session_state(&self.pool, session_id.0).await.ok()?;
-            // Use entry API to avoid TOCTOU race: only insert if still absent
-            let handle = {
-                let entry = self.sessions.entry(session_id.0);
-                match entry {
-                    dashmap::mapref::entry::Entry::Occupied(o) => o.get().clone(),
-                    dashmap::mapref::entry::Entry::Vacant(v) => {
-                        let (command_tx, command_rx) = mpsc::channel(256);
-                        let (event_tx, _) = broadcast::channel(256);
-                        let handle = SessionHandle { command_tx, event_tx: event_tx.clone(), active_connections: Arc::new(AtomicUsize::new(0)), activated_at: Arc::new(Instant::now()) };
-                        v.insert(handle.clone());
-                        let pool = self.pool.clone();
-                        let sessions = self.sessions.clone();
-                        let sid = session_id.0;
-                        tokio::spawn(async move {
-                            let mut actor = SessionActor::new(state, pool, event_tx);
-                            actor.run(command_rx).await;
-                            sessions.remove(&sid);
-                            tracing::info!("session actor {} passivated", sid);
-                        });
-                        handle
-                    }
+            let db_handle = self.db.document(&document_id(session_id.0)).ok()?;
+            let target_version = db_handle.frontier().ok()?.head_seq as DomainVersion;
+            let kit_json = self.history.reconstruct_kit_at_version(session_id.0, target_version).ok()?;
+            let state = session_state_from_kit_json(session_id.0, target_version, 0, &kit_json).ok()?;
+
+            let entry = self.sessions.entry(session_id.0);
+            let handle = match entry {
+                dashmap::mapref::entry::Entry::Occupied(o) => o.get().clone(),
+                dashmap::mapref::entry::Entry::Vacant(v) => {
+                    let (command_tx, command_rx) = mpsc::channel(256);
+                    let (event_tx, _) = broadcast::channel(256);
+                    let (wire_tx, _) = broadcast::channel(256);
+                    let handle = SessionHandle { command_tx, event_tx: event_tx.clone(), wire_tx: wire_tx.clone(), active_connections: Arc::new(AtomicUsize::new(0)), activated_at: Arc::new(Instant::now()) };
+                    v.insert(handle.clone());
+                    let sessions = self.sessions.clone();
+                    let history = self.history.clone();
+                    let directory_store = self.directory_store.clone();
+                    let sid = session_id.0;
+                    tokio::spawn(async move {
+                        let mut actor = SessionActor::new(sid, state, db_handle, history, directory_store, event_tx, wire_tx);
+                        actor.run(command_rx).await;
+                        sessions.remove(&sid);
+                        tracing::info!("session actor {} passivated", sid);
+                    });
+                    handle
                 }
             };
             Some(handle)
@@ -2919,6 +2356,18 @@ mod directory {
 
         pub fn deactivate(&self, session_id: SessionId) {
             self.sessions.remove(&session_id.0);
+        }
+
+        pub fn db(&self) -> &Arc<db::Database> {
+            &self.db
+        }
+
+        pub fn history(&self) -> &Arc<HistoryStore> {
+            &self.history
+        }
+
+        pub fn directory_store(&self) -> &Arc<ComposeDirectoryStore> {
+            &self.directory_store
         }
 
         //#region 🔖Admin Introspection
@@ -2959,19 +2408,27 @@ mod api {
 
     #[derive(Clone)]
     pub struct AppState {
-        pub pool: PgPool,
         pub directory: SessionDirectory,
     }
 
     impl AppState {
-        pub fn new(pool: PgPool) -> Self {
-            let directory = SessionDirectory::new(pool.clone());
-            Self { pool, directory }
+        pub fn new(directory: SessionDirectory) -> Self {
+            Self { directory }
         }
     }
 
     fn extract_bearer(headers: &HeaderMap) -> Option<String> {
         headers.get("authorization").and_then(|v| v.to_str().ok()).and_then(|v| v.strip_prefix("Bearer ")).map(|s| s.to_string())
+    }
+
+    /// 🗄️ `db::Database::document` translated into `SessionError::SessionNotFound` (a clean 404)
+    /// rather than the generic `SessionError::Database` 500 a bare `?` would produce — every read/
+    /// write handler that needs a live `db::DocumentHandle` for an EXISTING session goes through this.
+    fn open_session_handle(state: &AppState, session_id: Uuid) -> Result<db::DocumentHandle, SessionError> {
+        state.directory.db().document(&document_id(session_id)).map_err(|err| match err {
+            db::DbError::NotFound(_) => SessionError::SessionNotFound(session_id.to_string()),
+            other => SessionError::Database(other),
+        })
     }
 
     pub fn router(state: AppState) -> Router<()> {
@@ -3011,17 +2468,16 @@ mod api {
     }
 
     async fn handler_create_session(State(state): State<AppState>, Json(req): Json<CreateSessionRequest>) -> Result<Json<CreateSessionResponse>, SessionError> {
-        let session_id = Uuid::now_v7();
-        let kit_id = Uuid::now_v7();
-        let owner_token = create_session(&state.pool, session_id, kit_id, &req.kit_name, req.kit.as_ref()).await?;
-        let response_kit_id = req.kit.as_ref().map(session_kit_id).transpose()?.unwrap_or(kit_id);
-        Ok(Json(CreateSessionResponse { session_id, kit_id: response_kit_id, owner_token }))
+        let fallback_kit_id = Uuid::now_v7();
+        let (session_id, kit_id, owner_token) = state.directory.create_session(fallback_kit_id, &req.kit_name, req.kit.as_ref()).await?;
+        Ok(Json(CreateSessionResponse { session_id, kit_id, owner_token }))
     }
 
     async fn handler_get_snapshot(State(state): State<AppState>, Path(session_id): Path<Uuid>) -> Result<Json<SessionSnapshot>, SessionError> {
-        let (domain_version, compose_version) = load_session_meta(&state.pool, session_id).await?;
-        let kit = reconstruct_kit_at_version(&state.pool, session_id, domain_version).await?;
-        Ok(Json(SessionSnapshot { session_id, domain_version, compose_version, kit }))
+        let handle = open_session_handle(&state, session_id)?;
+        let domain_version = handle.frontier()?.head_seq as DomainVersion;
+        let kit = state.directory.history().reconstruct_kit_at_version(session_id, domain_version)?;
+        Ok(Json(SessionSnapshot { session_id, domain_version, compose_version: 0, kit }))
     }
 
     #[derive(Deserialize)]
@@ -3031,13 +2487,30 @@ mod api {
 
     async fn handler_put_snapshot(State(state): State<AppState>, Path(session_id): Path<Uuid>, headers: HeaderMap, Json(req): Json<ReplaceSnapshotRequest>) -> Result<Json<SessionSnapshot>, SessionError> {
         let bearer = extract_bearer(&headers);
-        let access = resolve_access(&state.pool, session_id, bearer.as_deref()).await?;
+        let access = state.directory.directory_store().resolve_access(session_id, bearer.as_deref())?;
         if access != AccessMode::Owner {
             return Err(SessionError::Forbidden("write access requires owner token".into()));
         }
-        let (domain_version, compose_version) = replace_session_snapshot(&state.pool, session_id, &req.kit).await?;
+        let kit_id = session_kit_id(&req.kit)?;
+        let handle = open_session_handle(&state, session_id)?;
+        let mut payload = serde_json::Map::new();
+        payload.insert(format!("kit/{}", kit_id), req.kit.clone());
+        let envelope = protocol::OperationEnvelope {
+            operation_id: protocol::OperationId(format!("replace-snapshot:{}:{}", session_id, Uuid::now_v7())),
+            document_id: document_id(session_id),
+            actor: protocol::ActorId("system".to_string()),
+            dependencies: Vec::new(),
+            diff: protocol::DocumentDiff { schema: "generic".to_string(), payload: serde_json::Value::Object(payload) },
+            inverse: protocol::InverseOperation { schema: "generic".to_string(), inverse_diff: serde_json::Value::Object(serde_json::Map::new()) },
+            timestamp: now_hlc(Uuid::nil()),
+        };
+        let batch = db::document::CommandBatch::new(vec![envelope])?;
+        let receipt = handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync }).await??;
+        let domain_version = receipt.frontier.head_seq as DomainVersion;
+        state.directory.history().store_kit_snapshot(session_id, domain_version, &req.kit)?;
+        state.directory.directory_store().set_session_root_kit(session_id, kit_id)?;
         state.directory.deactivate(SessionId(session_id));
-        Ok(Json(SessionSnapshot { session_id, domain_version, compose_version, kit: req.kit }))
+        Ok(Json(SessionSnapshot { session_id, domain_version, compose_version: 0, kit: req.kit }))
     }
 
     #[derive(Deserialize)]
@@ -3050,7 +2523,7 @@ mod api {
 
     async fn handler_post_domain_command(State(state): State<AppState>, Path(session_id): Path<Uuid>, headers: HeaderMap, Json(req): Json<DomainCommandRequest>) -> Result<Json<CommandResult>, SessionError> {
         let bearer = extract_bearer(&headers);
-        let access = resolve_access(&state.pool, session_id, bearer.as_deref()).await?;
+        let access = state.directory.directory_store().resolve_access(session_id, bearer.as_deref())?;
         if access != AccessMode::Owner {
             return Err(SessionError::Forbidden("write access requires owner token".into()));
         }
@@ -3071,7 +2544,7 @@ mod api {
 
     async fn handler_post_compose_command(State(state): State<AppState>, Path(session_id): Path<Uuid>, headers: HeaderMap, Json(req): Json<ComposeCommandRequest>) -> Result<Json<serde_json::Value>, SessionError> {
         let bearer = extract_bearer(&headers);
-        let access = resolve_access(&state.pool, session_id, bearer.as_deref()).await?;
+        let access = state.directory.directory_store().resolve_access(session_id, bearer.as_deref())?;
         if access != AccessMode::Owner {
             return Err(SessionError::Forbidden("write access requires owner token".into()));
         }
@@ -3083,28 +2556,26 @@ mod api {
     }
 
     async fn handler_get_kit_at_lookback(State(state): State<AppState>, Path((session_id, lookback)): Path<(Uuid, String)>) -> Result<Json<serde_json::Value>, SessionError> {
-        let kit = get_kit_at_lookback(&state.pool, session_id, &lookback).await?;
+        let kit = state.directory.history().get_kit_at_lookback(session_id, &lookback)?;
         Ok(Json(kit))
     }
 
     async fn handler_get_kit_at_version(State(state): State<AppState>, Path((session_id, version)): Path<(Uuid, i64)>) -> Result<Json<serde_json::Value>, SessionError> {
-        let kit = reconstruct_kit_at_version(&state.pool, session_id, version).await?;
+        let kit = state.directory.history().reconstruct_kit_at_version(session_id, version)?;
         Ok(Json(kit))
     }
 
     async fn handler_compact_history(State(state): State<AppState>, Path(session_id): Path<Uuid>, headers: HeaderMap) -> Result<Json<CompactionResult>, SessionError> {
         let bearer = extract_bearer(&headers);
-        let access = resolve_access(&state.pool, session_id, bearer.as_deref()).await?;
+        let access = state.directory.directory_store().resolve_access(session_id, bearer.as_deref())?;
         if access != AccessMode::Owner {
             return Err(SessionError::Forbidden("write access requires owner token".into()));
         }
-        let handle = state.directory.get_or_activate(SessionId(session_id)).await.ok_or_else(|| SessionError::SessionNotFound(session_id.to_string()))?;
-        let (tx, rx) = oneshot::channel();
-        handle.command_tx.send(ActorMessage::GetSnapshot { reply: tx }).await.map_err(|_| SessionError::ActorGone)?;
-        let _snapshot = rx.await.map_err(|_| SessionError::ActorGone)?;
-        // Load full state for compaction
-        let session_state = load_session_state(&state.pool, session_id).await?;
-        let result = compact_history(&state.pool, session_id, &session_state).await?;
+        let handle = open_session_handle(&state, session_id)?;
+        let domain_version = handle.frontier()?.head_seq as DomainVersion;
+        let kit = state.directory.history().reconstruct_kit_at_version(session_id, domain_version)?;
+        let typed_state = session_state_from_kit_json(session_id, domain_version, 0, &kit)?;
+        let result = state.directory.history().compact(session_id, &typed_state)?;
         Ok(Json(result))
     }
 
@@ -3133,7 +2604,7 @@ mod api {
 
     async fn handler_create_share(State(state): State<AppState>, Path(session_id): Path<Uuid>, headers: HeaderMap, Json(req): Json<CreateShareRequest>) -> Result<Json<CreateShareResponse>, SessionError> {
         let bearer = extract_bearer(&headers);
-        let access = resolve_access(&state.pool, session_id, bearer.as_deref()).await?;
+        let access = state.directory.directory_store().resolve_access(session_id, bearer.as_deref())?;
         if access != AccessMode::Owner {
             return Err(SessionError::Forbidden("creating shares requires owner token".into()));
         }
@@ -3141,7 +2612,7 @@ mod api {
             Some("owner") => AccessMode::Owner,
             _ => AccessMode::Viewer,
         };
-        let token = create_share_token(&state.pool, session_id, mode, req.entity_kind.as_deref(), req.entity_id, req.label.as_deref(), req.expires_at.as_deref()).await?;
+        let token = state.directory.directory_store().create_share_token(session_id, mode, req.entity_kind.as_deref(), req.entity_id, req.label.as_deref(), req.expires_at.as_deref())?;
         let mode_str = match mode {
             AccessMode::Owner => "owner",
             AccessMode::Viewer => "viewer",
@@ -3151,26 +2622,26 @@ mod api {
 
     async fn handler_list_shares(State(state): State<AppState>, Path(session_id): Path<Uuid>, headers: HeaderMap) -> Result<Json<Vec<ShareTokenRow>>, SessionError> {
         let bearer = extract_bearer(&headers);
-        let access = resolve_access(&state.pool, session_id, bearer.as_deref()).await?;
+        let access = state.directory.directory_store().resolve_access(session_id, bearer.as_deref())?;
         if access != AccessMode::Owner {
             return Err(SessionError::Forbidden("listing shares requires owner token".into()));
         }
-        let tokens = list_share_tokens(&state.pool, session_id).await?;
+        let tokens = state.directory.directory_store().list_share_tokens(session_id)?;
         Ok(Json(tokens))
     }
 
     async fn handler_delete_share(State(state): State<AppState>, Path((session_id, token)): Path<(Uuid, Uuid)>, headers: HeaderMap) -> Result<Json<serde_json::Value>, SessionError> {
         let bearer = extract_bearer(&headers);
-        let access = resolve_access(&state.pool, session_id, bearer.as_deref()).await?;
+        let access = state.directory.directory_store().resolve_access(session_id, bearer.as_deref())?;
         if access != AccessMode::Owner {
             return Err(SessionError::Forbidden("deleting shares requires owner token".into()));
         }
-        let deleted = delete_share_token(&state.pool, token).await?;
+        let deleted = state.directory.directory_store().delete_share_token(token)?;
         Ok(Json(serde_json::json!({"deleted": deleted})))
     }
 
     async fn handler_resolve_share(State(state): State<AppState>, Path(token): Path<Uuid>) -> Result<Json<ResolvedShareToken>, SessionError> {
-        let resolved = resolve_share_token(&state.pool, token).await?;
+        let resolved = state.directory.directory_store().resolve_share_token(token)?;
         Ok(Json(resolved))
     }
 } // 🛕Api
@@ -3178,10 +2649,14 @@ pub use api::*;
 
 mod ws {
     // 🤖Ws
-    // Specs: WebSocket handler upgrades HTTP to WS and streams session events.
-    // Summary: WebSocket handler for real-time session event streaming.
+    // Specs: WebSocket handler upgrades HTTP to WS and speaks `protocol_wire`'s binary lane-tagged
+    // `ClientFrame`/`ServerFrame` frames — CW6b's "compose client sync moves to wire v2" (the pre-
+    // CW6b handler sent ad hoc JSON text and never actually parsed anything a client sent back).
+    // Summary: WebSocket handler: binary `protocol_wire` frames for real-time session command/preview
+    // streaming.
 
     use super::*;
+
     pub async fn ws_handler(ws: WebSocketUpgrade, State(state): State<AppState>, Path(session_id): Path<Uuid>) -> impl IntoResponse {
         ws.on_upgrade(move |socket| handle_socket(socket, state, session_id))
     }
@@ -3195,7 +2670,6 @@ mod ws {
             }
         };
         //#region 🔖Connection Accounting
-        // Increment active connection counter for admin visibility. Decrement on scope exit via _guard.
         handle.active_connections.fetch_add(1, AtomicOrdering::Relaxed);
         let conn_counter = handle.active_connections.clone();
         struct Decrement(Arc<AtomicUsize>);
@@ -3206,37 +2680,100 @@ mod ws {
         }
         let _guard = Decrement(conn_counter);
         //#endregion 🔖Connection Accounting
-        let mut event_rx = handle.event_tx.subscribe();
+
+        let Ok(db_handle) = state.directory.db().document(&document_id(session_id)) else {
+            tracing::warn!("ws: session {} has no db document", session_id);
+            return;
+        };
+        let server_frontier = match db_handle.frontier() {
+            Ok(f) => frontier_to_wire(&f),
+            Err(e) => {
+                tracing::warn!("ws: frontier lookup failed for {}: {}", session_id, e);
+                return;
+            }
+        };
+
+        let mut wire_rx = handle.wire_tx.subscribe();
         let (mut ws_tx, mut ws_rx) = socket.split();
-        // Send connection acknowledgment so clients know the subscription is active
-        let _ = ws_tx.send(Message::Text(r#"{"kind":"connected"}"#.into())).await;
-        let send_task = tokio::spawn(async move {
-            while let Ok(event) = event_rx.recv().await {
-                let json = match serde_json::to_string(&event) {
-                    Ok(j) => j,
-                    Err(e) => {
-                        tracing::error!("ws serialize error: {}", e);
-                        continue;
+
+        let welcome = protocol::ServerFrame::Welcome { session_id: session_id.to_string(), resume_token: Uuid::now_v7().to_string(), server_frontier, bootstrap: protocol::Bootstrap::Tail };
+        if ws_tx.send(Message::Binary(protocol::encode_server_frame(&welcome, protocol::Lane::Command).into())).await.is_err() {
+            return;
+        }
+
+        loop {
+            tokio::select! {
+                event = wire_rx.recv() => {
+                    let Ok(event) = event else { break };
+                    let (frame, lane) = match event {
+                        WireEvent::Commands { envelope, frontier } => {
+                            let origin = envelope.actor.clone();
+                            (protocol::ServerFrame::Commands { envelopes: vec![envelope], origin, frontier: frontier_to_wire(&frontier) }, protocol::Lane::Command)
+                        }
+                        WireEvent::Preview { actor, key, seq, payload } => (protocol::ServerFrame::Preview { actor, key, seq, payload }, protocol::Lane::Preview),
+                    };
+                    if ws_tx.send(Message::Binary(protocol::encode_server_frame(&frame, lane).into())).await.is_err() {
+                        break;
                     }
-                };
-                if ws_tx.send(Message::Text(json.into())).await.is_err() {
-                    break;
+                }
+                incoming = ws_rx.next() => {
+                    let Some(Ok(msg)) = incoming else { break };
+                    match msg {
+                        Message::Close(_) => break,
+                        Message::Binary(bytes) => {
+                            match protocol::decode_client_frame(&bytes) {
+                                Ok((_lane, frame)) => {
+                                    if handle_client_frame(&db_handle, &handle, session_id, frame, &mut ws_tx).await.is_err() {
+                                        break;
+                                    }
+                                }
+                                Err(e) => tracing::debug!("ws: malformed client frame from {}: {}", session_id, e),
+                            }
+                        }
+                        _ => {}
+                    }
                 }
             }
-        });
-        let recv_task = tokio::spawn(async move {
-            while let Some(Ok(msg)) = ws_rx.next().await {
-                match msg {
-                    Message::Close(_) => break,
-                    Message::Text(text) => {
-                        tracing::debug!("ws received text: {}", text);
-                    }
-                    _ => {}
-                }
-            }
-        });
-        tokio::select! { _ = send_task => {}, _ = recv_task => {} }
+        }
         tracing::debug!("ws connection closed for session {}", session_id);
+    }
+
+    /// 🎞️ Handles one decoded `ClientFrame`. `Commands` submits its envelopes straight through
+    /// `db::DocumentHandle::submit` (this is the wire-native path — raw `db_document` path-value
+    /// diffs, not compose's typed `DomainCommand`s, so unlike the HTTP `/commands/domain` route it
+    /// does not update `SessionActor`'s typed `SessionState`/`EntityChange` history; reconciling wire-
+    /// native diffs back into compose's typed replica is future work for the client-side rewrite this
+    /// wave scoped out — see this ticket's report). `Hello`/`FrontierAdvertise`/`CreditGrant` are
+    /// acknowledged but otherwise inert (no credit-based flow control or resume-token validation
+    /// implemented yet, matching `db_sync`'s own current scope).
+    async fn handle_client_frame(db_handle: &db::DocumentHandle, session: &SessionHandle, session_id: Uuid, frame: protocol::ClientFrame, ws_tx: &mut futures::stream::SplitSink<WebSocket, Message>) -> Result<(), ()> {
+        match frame {
+            protocol::ClientFrame::Hello { .. } | protocol::ClientFrame::FrontierAdvertise { .. } | protocol::ClientFrame::CreditGrant { .. } => Ok(()),
+            protocol::ClientFrame::Commands { batch_id, envelopes } => {
+                if envelopes.is_empty() {
+                    return Ok(());
+                }
+                let stage = match db::document::CommandBatch::new(envelopes) {
+                    Ok(batch) => match db_handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync }).await {
+                        Ok(Ok(_receipt)) => protocol::AckStage::Applied { outcome: Box::new(protocol::ApplyOutcome::Accepted) },
+                        Ok(Err(e)) | Err(e) => protocol::AckStage::Applied { outcome: Box::new(protocol::ApplyOutcome::Rejected { reason: e.to_string() }) },
+                    },
+                    Err(e) => protocol::AckStage::Applied { outcome: Box::new(protocol::ApplyOutcome::Rejected { reason: e.to_string() }) },
+                };
+                let frontier = db_handle.frontier().map(|f| frontier_to_wire(&f)).unwrap_or(protocol::RuntimeFrontierSummary { document_id: document_id(session_id), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0; 32] });
+                let ack = protocol::ServerFrame::Ack { batch_id, stages: vec![protocol::AckStage::Received, protocol::AckStage::Persisted, stage], frontier };
+                ws_tx.send(Message::Binary(protocol::encode_server_frame(&ack, protocol::Lane::Command).into())).await.map_err(|_| ())
+            }
+            protocol::ClientFrame::PreviewPublish { key, seq, payload } => {
+                let _ = session.wire_tx.send(WireEvent::Preview { actor: protocol::ActorId(session_id.to_string()), key, seq, payload });
+                Ok(())
+            }
+            protocol::ClientFrame::Presence { peer } => {
+                let frame = protocol::ServerFrame::Presence { peers: vec![peer] };
+                ws_tx.send(Message::Binary(protocol::encode_server_frame(&frame, protocol::Lane::Preview).into())).await.map_err(|_| ())
+            }
+            protocol::ClientFrame::Bye => Err(()),
+        }
     }
 } // 🤖Ws
 pub use ws::*;
@@ -3370,154 +2907,123 @@ mod admin {
 
     //#endregion 🔖AdminRows
 
-    //#region 🔖AdminQueryRowShapes
-    // Named sqlx_core::query_as row tuples: clippy::type_complexity flags the raw tuples inline.
-    type SessionRow = (Uuid, Uuid, String, i64, i64, OffsetDateTime, OffsetDateTime);
-    type KitDetailRow = (Uuid, String, Option<String>, Option<String>, String);
-    type PersonDetailRow = (Uuid, String, Option<String>, Option<String>, bool, OffsetDateTime);
-    type ShareTokenDetailRow = (Uuid, String, Option<String>, Option<Uuid>, Option<String>, OffsetDateTime, Option<OffsetDateTime>);
-    type KitRow = (Uuid, Uuid, String, Option<String>, Option<String>, String);
-    type PersonRow = (Uuid, Uuid, String, Option<String>, Option<String>, bool, OffsetDateTime);
-    type ShareTokenRow = (Uuid, Uuid, String, Option<String>, Option<Uuid>, Option<String>, OffsetDateTime, Option<OffsetDateTime>);
-    //#endregion 🔖AdminQueryRowShapes
-
     //#region 🔖AdminQueries
+    // 🗄️ Reads through `SessionDirectory` (`db` frontier for kit identity + `ComposeDirectoryStore`
+    // for session/share-token bookkeeping) instead of `sqlx_core::query_as` row tuples against
+    // Postgres — every function here keeps its pre-CW6b name/shape so `AdminHandlers` below barely
+    // changes.
 
-    pub async fn load_admin_overview(pool: &PgPool, directory: &SessionDirectory, started_at: Instant) -> Result<AdminOverview, SessionError> {
-        let (total, active, passivated, closed): (i64, i64, i64, i64) = sqlx_core::query_as::query_as(
-            "SELECT
-            COUNT(*)::bigint,
-            COUNT(*) FILTER (WHERE status = 'active')::bigint,
-            COUNT(*) FILTER (WHERE status = 'passivated')::bigint,
-            COUNT(*) FILTER (WHERE status = 'closed')::bigint
-         FROM runtime.session",
-        )
-        .fetch_one(pool)
-        .await?;
-        let (total_kits,): (i64,) = sqlx_core::query_as::query_as("SELECT COUNT(*)::bigint FROM core.kit WHERE lifecycle = 'active'").fetch_one(pool).await?;
-        let (total_persons,): (i64,) = sqlx_core::query_as::query_as("SELECT COUNT(*)::bigint FROM compose.person").fetch_one(pool).await?;
-        let (total_share_tokens,): (i64,) = sqlx_core::query_as::query_as("SELECT COUNT(*)::bigint FROM runtime.share_token").fetch_one(pool).await?;
+    fn admin_session_row(directory: &SessionDirectory, session_id: Uuid, record: &SessionRecord) -> AdminSessionRow {
+        let active = directory.list_active();
+        let is_activated = active.iter().any(|a| a.session_id == session_id);
+        let active_connections = active.iter().find(|a| a.session_id == session_id).map_or(0, |a| a.active_connections);
+        let domain_version = directory.db().document(&document_id(session_id)).ok().and_then(|h| h.frontier().ok()).map_or(0, |f| f.head_seq as i64);
+        let status = match record.status {
+            SessionStatus::Active => "active",
+            SessionStatus::Passivated => "passivated",
+            SessionStatus::Closed => "closed",
+        };
+        AdminSessionRow { session_id, root_kit_id: record.root_kit_id, status: status.to_string(), domain_version, compose_version: 0, created_at: record.created_at.clone(), updated_at: record.updated_at.clone(), active_connections, is_activated }
+    }
+
+    pub fn load_admin_overview(directory: &SessionDirectory, started_at: Instant) -> Result<AdminOverview, SessionError> {
+        let sessions = directory.directory_store().all_sessions();
+        let active_sessions = sessions.iter().filter(|(_, r)| r.status == SessionStatus::Active).count() as i64;
+        let closed_sessions = sessions.iter().filter(|(_, r)| r.status == SessionStatus::Closed).count() as i64;
+        let passivated_sessions = sessions.iter().filter(|(_, r)| r.status == SessionStatus::Passivated).count() as i64;
         Ok(AdminOverview {
             uptime_secs: started_at.elapsed().as_secs(),
-            total_sessions: total,
-            active_sessions: active,
-            passivated_sessions: passivated,
-            closed_sessions: closed,
-            total_kits,
-            total_persons,
-            total_share_tokens,
+            total_sessions: sessions.len() as i64,
+            active_sessions,
+            passivated_sessions,
+            closed_sessions,
+            total_kits: sessions.len() as i64,
+            total_persons: 0,
+            total_share_tokens: directory.directory_store().all_share_tokens().len() as i64,
             active_actors: directory.active_session_count(),
             active_connections: directory.total_active_connections(),
         })
     }
 
-    pub async fn load_admin_sessions(pool: &PgPool, directory: &SessionDirectory) -> Result<Vec<AdminSessionRow>, SessionError> {
-        let rows: Vec<SessionRow> = sqlx_core::query_as::query_as(
-            "SELECT session_id, root_kit_id, status::text, domain_version, compose_version, created_at, updated_at
-         FROM runtime.session ORDER BY created_at DESC",
-        )
-        .fetch_all(pool)
-        .await?;
-        let active = directory.list_active();
-        Ok(rows
+    pub fn load_admin_sessions(directory: &SessionDirectory) -> Result<Vec<AdminSessionRow>, SessionError> {
+        Ok(directory.directory_store().all_sessions().into_iter().map(|(id, record)| admin_session_row(directory, id, &record)).collect())
+    }
+
+    pub fn load_admin_session_detail(directory: &SessionDirectory, session_id: Uuid) -> Result<AdminSessionDetail, SessionError> {
+        let record = directory.directory_store().session_record(session_id)?;
+        let row = admin_session_row(directory, session_id, &record);
+        let kit_name = directory
+            .db()
+            .document(&document_id(session_id))
+            .ok()
+            .and_then(|h| h.frontier().ok())
+            .and_then(|f| directory.history().reconstruct_kit_at_version(session_id, f.head_seq as DomainVersion).ok())
+            .and_then(|kit| session_kit_name(&kit).ok().map(str::to_string))
+            .unwrap_or_else(|| "Untitled".to_string());
+        let kit = Some(AdminKitRow { session_id, kit_id: record.root_kit_id, name: kit_name, version: None, remote: None, lifecycle: "active".to_string() });
+        let share_tokens = directory.directory_store().list_share_tokens(session_id)?.into_iter().map(|t| AdminShareTokenRow { token: t.token, session_id: t.session_id, access_mode: t.access_mode, entity_kind: t.entity_kind, entity_id: t.entity_id, label: t.label, created_at: t.created_at, expires_at: t.expires_at }).collect();
+        Ok(AdminSessionDetail { row, kit, persons: Vec::new(), share_tokens })
+    }
+
+    pub fn load_admin_kits(directory: &SessionDirectory) -> Result<Vec<AdminKitRow>, SessionError> {
+        let mut kits: Vec<AdminKitRow> = Vec::new();
+        for (session_id, record) in directory.directory_store().all_sessions() {
+            let name = directory
+                .db()
+                .document(&document_id(session_id))
+                .ok()
+                .and_then(|h| h.frontier().ok())
+                .and_then(|f| directory.history().reconstruct_kit_at_version(session_id, f.head_seq as DomainVersion).ok())
+                .and_then(|kit| session_kit_name(&kit).ok().map(str::to_string))
+                .unwrap_or_else(|| "Untitled".to_string());
+            kits.push(AdminKitRow { session_id, kit_id: record.root_kit_id, name, version: None, remote: None, lifecycle: "active".to_string() });
+        }
+        kits.sort_by(|a, b| a.name.cmp(&b.name));
+        Ok(kits)
+    }
+
+    /// 🌫️ Presence is ephemeral, in-actor-only (never persisted — see `actor`'s doc), so listing it
+    /// admin-wide would require polling every active actor's mailbox; deferred (empty for now, still
+    /// returns 200 so dashboard/API consumers don't break — flagged in this ticket's report).
+    pub fn load_admin_persons() -> Vec<AdminPersonRow> {
+        Vec::new()
+    }
+
+    pub fn load_admin_share_tokens(directory: &SessionDirectory) -> Result<Vec<AdminShareTokenRow>, SessionError> {
+        let mut rows: Vec<(String, AdminShareTokenRow)> = directory
+            .directory_store()
+            .all_share_tokens()
             .into_iter()
-            .map(|r| {
-                let is_activated = active.iter().any(|a| a.session_id == r.0);
-                let active_connections = active.iter().find(|a| a.session_id == r.0).map_or(0, |a| a.active_connections);
-                AdminSessionRow { session_id: r.0, root_kit_id: r.1, status: r.2, domain_version: r.3, compose_version: r.4, created_at: r.5.to_string(), updated_at: r.6.to_string(), active_connections, is_activated }
+            .map(|(token, r)| {
+                let mode = match r.access_mode {
+                    AccessMode::Owner => "owner",
+                    AccessMode::Viewer => "viewer",
+                };
+                (r.created_at.clone(), AdminShareTokenRow { token, session_id: r.session_id, access_mode: mode.to_string(), entity_kind: r.entity_kind, entity_id: r.entity_id, label: r.label, created_at: r.created_at, expires_at: r.expires_at })
             })
-            .collect())
+            .collect();
+        rows.sort_by(|a, b| b.0.cmp(&a.0));
+        Ok(rows.into_iter().map(|(_, row)| row).collect())
     }
 
-    pub async fn load_admin_session_detail(pool: &PgPool, directory: &SessionDirectory, session_id: Uuid) -> Result<AdminSessionDetail, SessionError> {
-        let row: Option<SessionRow> = sqlx_core::query_as::query_as(
-            "SELECT session_id, root_kit_id, status::text, domain_version, compose_version, created_at, updated_at
-         FROM runtime.session WHERE session_id = $1",
-        )
-        .bind(session_id)
-        .fetch_optional(pool)
-        .await?;
-        let row = row.ok_or_else(|| SessionError::SessionNotFound(session_id.to_string()))?;
-        let active = directory.list_active();
-        let is_activated = active.iter().any(|a| a.session_id == session_id);
-        let active_connections = active.iter().find(|a| a.session_id == session_id).map_or(0, |a| a.active_connections);
-        let session_row = AdminSessionRow { session_id: row.0, root_kit_id: row.1, status: row.2, domain_version: row.3, compose_version: row.4, created_at: row.5.to_string(), updated_at: row.6.to_string(), active_connections, is_activated };
-        let kit: Option<KitDetailRow> =
-            sqlx_core::query_as::query_as("SELECT kit_id, name, version, remote, lifecycle::text FROM core.kit WHERE session_id = $1 LIMIT 1").bind(session_id).fetch_optional(pool).await?;
-        let kit = kit.map(|k| AdminKitRow { session_id, kit_id: k.0, name: k.1, version: k.2, remote: k.3, lifecycle: k.4 });
-        let person_rows: Vec<PersonDetailRow> = sqlx_core::query_as::query_as(
-            "SELECT person_id, frontend_id, display_name, color, is_present, last_seen_at
-         FROM compose.person WHERE session_id = $1 ORDER BY last_seen_at DESC",
-        )
-        .bind(session_id)
-        .fetch_all(pool)
-        .await?;
-        let persons = person_rows.into_iter().map(|p| AdminPersonRow { session_id, person_id: p.0, frontend_id: p.1, display_name: p.2, color: p.3, is_present: p.4, last_seen_at: p.5.to_string() }).collect();
-        let token_rows: Vec<ShareTokenDetailRow> = sqlx_core::query_as::query_as(
-            "SELECT token, access_mode, entity_kind, entity_id, label, created_at, expires_at
-         FROM runtime.share_token WHERE session_id = $1 ORDER BY created_at DESC",
-        )
-        .bind(session_id)
-        .fetch_all(pool)
-        .await?;
-        let share_tokens = token_rows.into_iter().map(|t| AdminShareTokenRow { token: t.0, session_id, access_mode: t.1, entity_kind: t.2, entity_id: t.3, label: t.4, created_at: t.5.to_string(), expires_at: t.6.map(|d| d.to_string()) }).collect();
-        Ok(AdminSessionDetail { row: session_row, kit, persons, share_tokens })
+    pub fn admin_close_session(directory: &SessionDirectory, session_id: Uuid) -> Result<bool, SessionError> {
+        let closed = directory.directory_store().close_session(session_id)?;
+        if closed {
+            directory.remove(&session_id);
+        }
+        Ok(closed)
     }
 
-    pub async fn load_admin_kits(pool: &PgPool) -> Result<Vec<AdminKitRow>, SessionError> {
-        let rows: Vec<KitRow> = sqlx_core::query_as::query_as("SELECT session_id, kit_id, name, version, remote, lifecycle::text FROM core.kit ORDER BY name").fetch_all(pool).await?;
-        Ok(rows.into_iter().map(|r| AdminKitRow { session_id: r.0, kit_id: r.1, name: r.2, version: r.3, remote: r.4, lifecycle: r.5 }).collect())
+    pub fn admin_load_compaction_config(directory: &SessionDirectory, session_id: Uuid) -> Result<AdminCompactionConfig, SessionError> {
+        directory.directory_store().session_record(session_id)?; // 404 if unknown session
+        let tokens = directory.directory_store().compaction_config(session_id);
+        let last_compacted_at = directory.history().last_compacted_at(session_id);
+        Ok(AdminCompactionConfig { session_id, lookback_tokens: tokens, last_compacted_at })
     }
 
-    pub async fn load_admin_persons(pool: &PgPool) -> Result<Vec<AdminPersonRow>, SessionError> {
-        let rows: Vec<PersonRow> = sqlx_core::query_as::query_as(
-            "SELECT session_id, person_id, frontend_id, display_name, color, is_present, last_seen_at
-         FROM compose.person ORDER BY last_seen_at DESC",
-        )
-        .fetch_all(pool)
-        .await?;
-        Ok(rows.into_iter().map(|r| AdminPersonRow { session_id: r.0, person_id: r.1, frontend_id: r.2, display_name: r.3, color: r.4, is_present: r.5, last_seen_at: r.6.to_string() }).collect())
-    }
-
-    pub async fn load_admin_share_tokens(pool: &PgPool) -> Result<Vec<AdminShareTokenRow>, SessionError> {
-        let rows: Vec<ShareTokenRow> = sqlx_core::query_as::query_as(
-            "SELECT token, session_id, access_mode, entity_kind, entity_id, label, created_at, expires_at
-         FROM runtime.share_token ORDER BY created_at DESC",
-        )
-        .fetch_all(pool)
-        .await?;
-        Ok(rows.into_iter().map(|r| AdminShareTokenRow { token: r.0, session_id: r.1, access_mode: r.2, entity_kind: r.3, entity_id: r.4, label: r.5, created_at: r.6.to_string(), expires_at: r.7.map(|d| d.to_string()) }).collect())
-    }
-
-    pub async fn admin_close_session(pool: &PgPool, session_id: Uuid) -> Result<bool, SessionError> {
-        let res = sqlx_core::query::query("UPDATE runtime.session SET status = 'closed', updated_at = now() WHERE session_id = $1").bind(session_id).execute(pool).await?;
-        Ok(res.rows_affected() > 0)
-    }
-
-    pub async fn admin_load_compaction_config(pool: &PgPool, session_id: Uuid) -> Result<AdminCompactionConfig, SessionError> {
-        let row: Option<(serde_json::Value, Option<OffsetDateTime>)> =
-            sqlx_core::query_as::query_as("SELECT lookback_tokens, last_compacted_at FROM history.compaction_config WHERE session_id = $1").bind(session_id).fetch_optional(pool).await?;
-        let (tokens, last) = match row {
-            Some((json, ts)) => {
-                let tokens: Vec<String> = serde_json::from_value(json).unwrap_or_default();
-                (tokens, ts.map(|d| d.to_string()))
-            }
-            None => (lookback_tokens().iter().map(|s| s.to_string()).collect(), None),
-        };
-        Ok(AdminCompactionConfig { session_id, lookback_tokens: tokens, last_compacted_at: last })
-    }
-
-    pub async fn admin_update_compaction_config(pool: &PgPool, session_id: Uuid, tokens: Vec<String>) -> Result<AdminCompactionConfig, SessionError> {
-        let json = serde_json::to_value(&tokens).unwrap_or(serde_json::json!([]));
-        sqlx_core::query::query(
-            "INSERT INTO history.compaction_config (session_id, lookback_tokens) VALUES ($1, $2)
-         ON CONFLICT (session_id) DO UPDATE SET lookback_tokens = EXCLUDED.lookback_tokens",
-        )
-        .bind(session_id)
-        .bind(&json)
-        .execute(pool)
-        .await?;
-        admin_load_compaction_config(pool, session_id).await
+    pub fn admin_update_compaction_config(directory: &SessionDirectory, session_id: Uuid, tokens: Vec<String>) -> Result<AdminCompactionConfig, SessionError> {
+        directory.directory_store().set_compaction_config(session_id, tokens)?;
+        admin_load_compaction_config(directory, session_id)
     }
 
     //#endregion 🔖AdminQueries
@@ -3526,7 +3032,6 @@ mod admin {
 
     #[derive(Clone)]
     pub struct AdminState {
-        pub pool: PgPool,
         pub directory: SessionDirectory,
         pub config: AdminConfig,
     }
@@ -3556,18 +3061,18 @@ mod admin {
 
     async fn handler_overview(State(s): State<AdminState>, headers: HeaderMap) -> Result<Json<AdminOverview>, SessionError> {
         require_admin(&headers, &s.config)?;
-        let overview = load_admin_overview(&s.pool, &s.directory, *s.config.started_at).await?;
+        let overview = load_admin_overview(&s.directory, *s.config.started_at)?;
         Ok(Json(overview))
     }
 
     async fn handler_list_sessions(State(s): State<AdminState>, headers: HeaderMap) -> Result<Json<Vec<AdminSessionRow>>, SessionError> {
         require_admin(&headers, &s.config)?;
-        Ok(Json(load_admin_sessions(&s.pool, &s.directory).await?))
+        Ok(Json(load_admin_sessions(&s.directory)?))
     }
 
     async fn handler_session_detail(State(s): State<AdminState>, headers: HeaderMap, Path(session_id): Path<Uuid>) -> Result<Json<AdminSessionDetail>, SessionError> {
         require_admin(&headers, &s.config)?;
-        Ok(Json(load_admin_session_detail(&s.pool, &s.directory, session_id).await?))
+        Ok(Json(load_admin_session_detail(&s.directory, session_id)?))
     }
 
     async fn handler_passivate_session(State(s): State<AdminState>, headers: HeaderMap, Path(session_id): Path<Uuid>) -> Result<Json<serde_json::Value>, SessionError> {
@@ -3578,32 +3083,31 @@ mod admin {
 
     async fn handler_close_session(State(s): State<AdminState>, headers: HeaderMap, Path(session_id): Path<Uuid>) -> Result<Json<serde_json::Value>, SessionError> {
         require_admin(&headers, &s.config)?;
-        let ok = admin_close_session(&s.pool, session_id).await?;
+        let ok = admin_close_session(&s.directory, session_id)?;
         if !ok {
             return Err(SessionError::SessionNotFound(session_id.to_string()));
         }
-        s.directory.remove(&session_id);
         Ok(Json(serde_json::json!({"closed": true, "session_id": session_id})))
     }
 
     async fn handler_list_kits(State(s): State<AdminState>, headers: HeaderMap) -> Result<Json<Vec<AdminKitRow>>, SessionError> {
         require_admin(&headers, &s.config)?;
-        Ok(Json(load_admin_kits(&s.pool).await?))
+        Ok(Json(load_admin_kits(&s.directory)?))
     }
 
     async fn handler_list_persons(State(s): State<AdminState>, headers: HeaderMap) -> Result<Json<Vec<AdminPersonRow>>, SessionError> {
         require_admin(&headers, &s.config)?;
-        Ok(Json(load_admin_persons(&s.pool).await?))
+        Ok(Json(load_admin_persons()))
     }
 
     async fn handler_list_share_tokens(State(s): State<AdminState>, headers: HeaderMap) -> Result<Json<Vec<AdminShareTokenRow>>, SessionError> {
         require_admin(&headers, &s.config)?;
-        Ok(Json(load_admin_share_tokens(&s.pool).await?))
+        Ok(Json(load_admin_share_tokens(&s.directory)?))
     }
 
     async fn handler_revoke_share_token(State(s): State<AdminState>, headers: HeaderMap, Path(token): Path<Uuid>) -> Result<Json<serde_json::Value>, SessionError> {
         require_admin(&headers, &s.config)?;
-        let deleted = delete_share_token(&s.pool, token).await?;
+        let deleted = s.directory.directory_store().delete_share_token(token)?;
         Ok(Json(serde_json::json!({"revoked": deleted, "token": token})))
     }
 
@@ -3614,7 +3118,7 @@ mod admin {
 
     async fn handler_get_config(State(s): State<AdminState>, headers: HeaderMap, Path(session_id): Path<Uuid>) -> Result<Json<AdminCompactionConfig>, SessionError> {
         require_admin(&headers, &s.config)?;
-        Ok(Json(admin_load_compaction_config(&s.pool, session_id).await?))
+        Ok(Json(admin_load_compaction_config(&s.directory, session_id)?))
     }
 
     #[derive(Deserialize)]
@@ -3630,7 +3134,7 @@ mod admin {
                 return Err(SessionError::Validation(format!("unknown lookback token: {}", t)));
             }
         }
-        Ok(Json(admin_update_compaction_config(&s.pool, session_id, body.lookback_tokens).await?))
+        Ok(Json(admin_update_compaction_config(&s.directory, session_id, body.lookback_tokens)?))
     }
 
     //#endregion 🔖AdminHandlers
@@ -3885,38 +3389,42 @@ else show('auth');
 </body>
 </html>
 "###;
-
     //#endregion 🔖Dashboard HTML
 } // 🛡️Admin
 pub use admin::*;
 
-// 🔖Main
-// Specs: Main bootstraps tracing, database, admin config, and HTTP server with both session and admin routers merged.
-// Summary: Entry point for the compose session-backend service.
-
 #[tokio::main]
 async fn main() -> std::process::ExitCode {
     tracing_subscriber::fmt().with_env_filter(tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "compose_hub=debug,tower_http=debug".into())).init();
-    let database_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| "postgres://compose:compose@localhost:5432/compose_hub".to_string());
-    let pool = match create_pool(&database_url).await {
-        Ok(pool) => pool,
+    // 🗄️ Zero-touch data root: `db/` (FsStorage-backed `db::Database`), `directory.json` + `history/`
+    // (compose-hub's own file-backed session/share-token/kit-history bookkeeping) — replaces
+    // `DATABASE_URL`/Postgres entirely.
+    let data_dir = std::env::var("COMPOSE_HUB_DATA").map(std::path::PathBuf::from).unwrap_or_else(|_| std::path::PathBuf::from("./.semio/compose-hub"));
+    let database = match open_database(&data_dir) {
+        Ok(database) => database,
         Err(e) => {
-            tracing::error!("failed to connect to PostgreSQL: {e}");
+            tracing::error!("failed to open db database at {}: {e}", data_dir.display());
             return std::process::ExitCode::FAILURE;
         }
     };
-    if let Err(e) = run_migrations(&pool).await {
-        tracing::error!("database migrations failed: {e}");
-        return std::process::ExitCode::FAILURE;
-    }
+    let directory_store = match ComposeDirectoryStore::open(&data_dir) {
+        Ok(store) => store,
+        Err(e) => {
+            tracing::error!("failed to open compose-hub directory store: {e}");
+            return std::process::ExitCode::FAILURE;
+        }
+    };
+    let history_store = HistoryStore::open(&data_dir);
+    let directory = SessionDirectory::new(Arc::new(database), Arc::new(history_store), Arc::new(directory_store));
+
     let admin_config = AdminConfig::from_env();
     if admin_config.admin_token.is_none() {
         tracing::warn!("COMPOSE_ADMIN_TOKEN is not set: /admin/* endpoints will return 403");
     } else {
         tracing::info!("admin dashboard mounted at /admin");
     }
-    let app_state = AppState::new(pool.clone());
-    let admin_state = AdminState { pool, directory: app_state.directory.clone(), config: admin_config };
+    let app_state = AppState::new(directory.clone());
+    let admin_state = AdminState { directory, config: admin_config };
     let app_router = router(app_state).merge(admin_router(admin_state));
     let default_host = if std::env::var("DEVCONTAINER").as_deref() == Ok("true") { "0.0.0.0" } else { "127.0.0.1" };
     let addr: std::net::SocketAddr = match std::env::var("LISTEN_ADDR").unwrap_or_else(|_| format!("{}:8080", default_host)).parse() {
@@ -5248,86 +4756,64 @@ mod tests {
     } // 💊History Unit Tests
 
     mod exhaustive {
-        // 🌊Exhaustive: Postgres testcontainer suite (needs Docker)
+        // 🌊Exhaustive: full db-backed integration suite (no external services — `db::Database` is a
+        // zero-touch `FsStorage` embedded in a tempdir, replacing the Postgres testcontainer suite
+        // this module used to gate behind `docker_available()`).
 
-        /// Check if Docker/testcontainers are available at runtime.
         use super::*;
-        pub fn docker_available() -> bool {
-            std::process::Command::new("docker").arg("info").output().is_ok_and(|o| o.status.success())
+
+        fn test_data_dir(name: &str) -> std::path::PathBuf {
+            let mut dir = std::env::temp_dir();
+            dir.push(format!("compose-hub-test-{name}-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+            dir
         }
 
-        #[tokio::test]
-        async fn e2e_session_lifecycle_with_postgres() {
-            if !docker_available() {
-                eprintln!("[SKIP] Docker not available, skipping E2E test");
-                return;
-            }
-
-            let pg = Postgres::default().start().await.expect("start postgres container");
-            let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
-            let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
-
-            let pool = create_pool(&db_url).await.expect("create pool");
-            run_migrations(&pool).await.expect("run migrations");
-
-            // Create session
-            let session_id = Uuid::now_v7();
-            let kit_id = Uuid::now_v7();
-            create_session(&pool, session_id, kit_id, "E2E Kit", None).await.unwrap();
-
-            // Verify session meta
-            let (dv, sv) = load_session_meta(&pool, session_id).await.unwrap();
-            assert_eq!(dv, 0);
-            assert_eq!(sv, 0);
-
-            // Verify initial baseline snapshot exists
-            let snapshot = get_latest_snapshot_before(&pool, session_id, 0).await.unwrap();
-            assert!(snapshot.is_some());
-            let (snap_version, snap_kit) = snapshot.unwrap();
-            assert_eq!(snap_version, 0);
-            assert_eq!(snap_kit["name"].as_str().unwrap(), "E2E Kit");
-
-            // Load session state
-            let state = load_session_state(&pool, session_id).await.unwrap();
-            assert_eq!(state.kit.name, "E2E Kit");
-            assert_eq!(state.domain_version, 0);
+        fn test_app_state(name: &str) -> AppState {
+            let data_dir = test_data_dir(name);
+            let database = open_database(&data_dir).expect("open test database");
+            let directory_store = ComposeDirectoryStore::open(&data_dir).expect("open directory store");
+            let history_store = HistoryStore::open(&data_dir);
+            let directory = SessionDirectory::new(Arc::new(database), Arc::new(history_store), Arc::new(directory_store));
+            AppState::new(directory)
         }
 
-        #[tokio::test]
-        async fn e2e_domain_commands_and_history() {
-            if !docker_available() {
-                eprintln!("[SKIP] Docker not available, skipping E2E test");
-                return;
-            }
-
-            let pg = Postgres::default().start().await.expect("start postgres container");
-            let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
-            let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
-
-            let pool = create_pool(&db_url).await.expect("create pool");
-            run_migrations(&pool).await.expect("run migrations");
-
-            let session_id = Uuid::now_v7();
-            let kit_id = Uuid::now_v7();
-            create_session(&pool, session_id, kit_id, "History Kit", None).await.unwrap();
-
-            // Start actor
-            let state = load_session_state(&pool, session_id).await.unwrap();
-            let (cmd_tx, cmd_rx) = mpsc::channel(256);
-            let (event_tx, mut event_rx) = broadcast::channel(256);
-            let pool_clone = pool.clone();
+        async fn spawn_router(app: axum::Router) -> String {
+            let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+            let addr = listener.local_addr().unwrap();
             tokio::spawn(async move {
-                let mut actor = SessionActor::new(state, pool_clone, event_tx);
-                actor.run(cmd_rx).await;
+                axum::serve(listener, app).await.unwrap();
             });
+            format!("http://{}", addr)
+        }
 
-            // Send CreateType command
+        #[tokio::test]
+        async fn session_lifecycle() {
+            let state = test_app_state("session-lifecycle");
+            let (session_id, kit_id, _owner_token) = state.directory.create_session(Uuid::now_v7(), "E2E Kit", None).await.unwrap();
+
+            let handle = state.directory.db().document(&document_id(session_id)).unwrap();
+            assert_eq!(handle.frontier().unwrap().head_seq, 0);
+
+            let kit = state.directory.history().reconstruct_kit_at_version(session_id, 0).unwrap();
+            assert_eq!(kit["name"].as_str().unwrap(), "E2E Kit");
+            assert_eq!(session_kit_id(&kit).unwrap(), kit_id);
+        }
+
+        #[tokio::test]
+        async fn domain_commands_and_history() {
+            let state = test_app_state("domain-commands-and-history");
+            let (session_id, _kit_id, _owner_token) = state.directory.create_session(Uuid::now_v7(), "History Kit", None).await.unwrap();
+
+            let handle = state.directory.get_or_activate(SessionId(session_id)).await.unwrap();
+            let mut wire_rx = handle.wire_tx.subscribe();
+            let mut event_rx = handle.event_tx.subscribe();
+
             let type_id = Uuid::now_v7();
-            let cmd_id = Uuid::now_v7();
             let (reply_tx, reply_rx) = oneshot::channel();
-            cmd_tx
+            handle
+                .command_tx
                 .send(ActorMessage::DomainCommand {
-                    envelope: CommandEnvelope { command_id: CommandId(cmd_id), client_id: ClientId(Uuid::now_v7()), request_id: RequestId(Uuid::now_v7()), actor_person_id: PersonId(Uuid::now_v7()), base_domain_version: 0 },
+                    envelope: CommandEnvelope { command_id: CommandId(Uuid::now_v7()), client_id: ClientId(Uuid::now_v7()), request_id: RequestId(Uuid::now_v7()), actor_person_id: PersonId(Uuid::now_v7()), base_domain_version: 0 },
                     command: DomainCommand::CreateType(CreateEntity { entity_id: type_id, fields: serde_json::json!({"name": "Tower"}) }),
                     reply: reply_tx,
                 })
@@ -5336,93 +4822,78 @@ mod tests {
             let result = reply_rx.await.unwrap().unwrap();
             assert!(matches!(result, CommandResult::Accepted { domain_version: 1 }));
 
-            // Verify domain_commit was recorded
-            let commit = sqlx_core::query_as::query_as::<_, (i64, Uuid)>("SELECT domain_version, command_id FROM history.domain_commit WHERE session_id = $1 AND domain_version = 1").bind(session_id).fetch_optional(&pool).await.unwrap();
-            assert!(commit.is_some());
-
-            // Verify entity_change_log was recorded
-            let log =
-                sqlx_core::query_as::query_as::<_, (i64, serde_json::Value)>("SELECT domain_version, changes_json FROM history.entity_change_log WHERE session_id = $1 AND domain_version = 1").bind(session_id).fetch_optional(&pool).await.unwrap();
-            assert!(log.is_some());
-            let (_, changes) = log.unwrap();
-            let changes_arr = changes.as_array().unwrap();
-            assert!(!changes_arr.is_empty());
-            assert_eq!(changes_arr[0]["operation"].as_str().unwrap(), "Created");
-
-            // Reconstruct kit at version 1
-            let kit_v1 = reconstruct_kit_at_version(&pool, session_id, 1).await.unwrap();
+            // Kit at version 1 reflects the new type.
+            let kit_v1 = state.directory.history().reconstruct_kit_at_version(session_id, 1).unwrap();
             let types = kit_v1["types"].as_array().unwrap();
             assert_eq!(types.len(), 1);
             assert_eq!(types[0]["name"].as_str().unwrap(), "Tower");
 
-            // Verify event was broadcast
+            // Both broadcast channels fired.
             let event = event_rx.recv().await.unwrap();
             assert!(matches!(event, SessionEvent::DomainCommandAccepted { .. }));
+            let wire_event = wire_rx.recv().await.unwrap();
+            assert!(matches!(wire_event, WireEvent::Commands { .. }));
 
-            drop(cmd_tx);
+            // db itself is the durable frontier authority.
+            assert_eq!(state.directory.db().document(&document_id(session_id)).unwrap().frontier().unwrap().head_seq, 1);
         }
 
         #[tokio::test]
-        async fn e2e_http_api_with_postgres() {
-            if !docker_available() {
-                eprintln!("[SKIP] Docker not available, skipping E2E test");
-                return;
-            }
+        async fn resubmitting_the_same_client_request_is_idempotent() {
+            let state = test_app_state("idempotent-resubmit");
+            let (session_id, _kit_id, _owner_token) = state.directory.create_session(Uuid::now_v7(), "Idempotency Kit", None).await.unwrap();
+            let handle = state.directory.get_or_activate(SessionId(session_id)).await.unwrap();
 
-            let pg = Postgres::default().start().await.expect("start postgres container");
-            let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
-            let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
+            let client_id = ClientId(Uuid::now_v7());
+            let request_id = RequestId(Uuid::now_v7());
+            let command = DomainCommand::CreateType(CreateEntity { entity_id: Uuid::now_v7(), fields: serde_json::json!({"name": "Once"}) });
 
-            let pool = create_pool(&db_url).await.expect("create pool");
-            run_migrations(&pool).await.expect("run migrations");
+            let (tx1, rx1) = oneshot::channel();
+            handle.command_tx.send(ActorMessage::DomainCommand { envelope: CommandEnvelope { command_id: CommandId(Uuid::now_v7()), client_id, request_id, actor_person_id: PersonId(Uuid::now_v7()), base_domain_version: 0 }, command: command.clone(), reply: tx1 }).await.unwrap();
+            assert!(matches!(rx1.await.unwrap().unwrap(), CommandResult::Accepted { domain_version: 1 }));
 
-            let app_state = AppState::new(pool);
-            let app = router(app_state);
+            // Same (client_id, request_id) resubmitted with a fresh command_id — must dedupe.
+            let (tx2, rx2) = oneshot::channel();
+            handle.command_tx.send(ActorMessage::DomainCommand { envelope: CommandEnvelope { command_id: CommandId(Uuid::now_v7()), client_id, request_id, actor_person_id: PersonId(Uuid::now_v7()), base_domain_version: 0 }, command, reply: tx2 }).await.unwrap();
+            assert!(matches!(rx2.await.unwrap().unwrap(), CommandResult::IdempotentDuplicate));
 
-            // Start server on random port
-            let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-            let addr = listener.local_addr().unwrap();
-            tokio::spawn(async move {
-                axum::serve(listener, app).await.unwrap();
-            });
+            assert_eq!(state.directory.db().document(&document_id(session_id)).unwrap().frontier().unwrap().head_seq, 1);
+        }
 
+        #[tokio::test]
+        async fn http_api_round_trip() {
+            let state = test_app_state("http-api");
+            let app = router(state);
+            let base = spawn_router(app).await;
             let client = reqwest::Client::new();
-            let base = format!("http://{}", addr);
 
-            // Health check
             let resp = client.get(format!("{}/health", base)).send().await.unwrap();
             assert_eq!(resp.status(), 200);
             assert_eq!(resp.text().await.unwrap(), "ok");
 
-            // Create session
             let resp = client.post(format!("{}/sessions", base)).json(&serde_json::json!({"kit_name": "API Test Kit"})).send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let body: serde_json::Value = resp.json().await.unwrap();
             let session_id = body["session_id"].as_str().unwrap();
-            let _kit_id = body["kit_id"].as_str().unwrap();
             let owner_token = body["owner_token"].as_str().unwrap().to_string();
 
-            // Get snapshot (read-only, no auth required)
             let resp = client.get(format!("{}/sessions/{}/snapshot", base, session_id)).send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let snapshot: serde_json::Value = resp.json().await.unwrap();
             assert_eq!(snapshot["domain_version"].as_i64().unwrap(), 0);
 
-            // Get lookback tokens
             let resp = client.get(format!("{}/sessions/{}/history/lookback-tokens", base, session_id)).send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let tokens: Vec<String> = resp.json().await.unwrap();
             assert_eq!(tokens.len(), 12);
             assert_eq!(tokens[0], "1min");
 
-            // Send domain command (requires owner token)
-            let cmd_id = Uuid::now_v7();
             let type_id = Uuid::now_v7();
             let resp = client
                 .post(format!("{}/sessions/{}/commands/domain", base, session_id))
                 .bearer_auth(&owner_token)
                 .json(&serde_json::json!({
-                    "command_id": cmd_id, "client_id": Uuid::now_v7(),
+                    "command_id": Uuid::now_v7(), "client_id": Uuid::now_v7(),
                     "request_id": Uuid::now_v7(), "actor_person_id": Uuid::now_v7(),
                     "base_domain_version": 0,
                     "kind": "CreateType",
@@ -5436,7 +4907,6 @@ mod tests {
             assert_eq!(result["status"].as_str().unwrap(), "Accepted");
             assert_eq!(result["domain_version"].as_i64().unwrap(), 1);
 
-            // Get kit at version 1
             let resp = client.get(format!("{}/sessions/{}/kit/at-version/1", base, session_id)).send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let kit: serde_json::Value = resp.json().await.unwrap();
@@ -5444,40 +4914,18 @@ mod tests {
             assert_eq!(types.len(), 1);
             assert_eq!(types[0]["name"].as_str().unwrap(), "APIType");
 
-            // Compact history (requires owner token)
             let resp = client.post(format!("{}/sessions/{}/history/compact", base, session_id)).bearer_auth(&owner_token).send().await.unwrap();
             assert_eq!(resp.status(), 200);
         }
 
         #[tokio::test]
-        async fn e2e_metabolism_full_kit_history() {
-            if !docker_available() {
-                eprintln!("[SKIP] Docker not available, skipping E2E test");
-                return;
-            }
-
-            let pg = Postgres::default().start().await.expect("start postgres container");
-            let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
-            let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
-
-            let pool = create_pool(&db_url).await.expect("create pool");
-            run_migrations(&pool).await.expect("run migrations");
-
-            let session_id = Uuid::now_v7();
+        async fn metabolism_full_kit_history() {
+            let state = test_app_state("metabolism-full-kit-history");
             let kit_json = load_metabolism_kit_json();
             let kit_id = Uuid::parse_str(kit_json["id"].as_str().unwrap()).unwrap();
-            create_session(&pool, session_id, kit_id, "Metabolism", None).await.unwrap();
+            let (session_id, _kid, _owner_token) = state.directory.create_session(kit_id, "Metabolism", None).await.unwrap();
+            let handle = state.directory.get_or_activate(SessionId(session_id)).await.unwrap();
 
-            let state = load_session_state(&pool, session_id).await.unwrap();
-            let (cmd_tx, cmd_rx) = mpsc::channel(256);
-            let (event_tx, _) = broadcast::channel(256);
-            let pool_clone = pool.clone();
-            tokio::spawn(async move {
-                let mut actor = SessionActor::new(state, pool_clone, event_tx);
-                actor.run(cmd_rx).await;
-            });
-
-            // Create all 50 types via batch
             let types_json = kit_json["types"].as_array().unwrap();
             let mut commands: Vec<DomainCommand> = Vec::new();
             for t in types_json {
@@ -5486,7 +4934,8 @@ mod tests {
             }
             let batch = DomainCommand::Batch(DomainBatch { commands });
             let (reply_tx, reply_rx) = oneshot::channel();
-            cmd_tx
+            handle
+                .command_tx
                 .send(ActorMessage::DomainCommand {
                     envelope: CommandEnvelope { command_id: CommandId(Uuid::now_v7()), client_id: ClientId(Uuid::now_v7()), request_id: RequestId(Uuid::now_v7()), actor_person_id: PersonId(Uuid::now_v7()), base_domain_version: 0 },
                     command: batch,
@@ -5497,72 +4946,48 @@ mod tests {
             let result = reply_rx.await.unwrap().unwrap();
             assert!(matches!(result, CommandResult::Accepted { domain_version: 1 }));
 
-            // Verify kit at version 1 has all 50 types
-            let kit_v1 = reconstruct_kit_at_version(&pool, session_id, 1).await.unwrap();
-            let reconstructed_types = kit_v1["types"].as_array().unwrap();
-            assert_eq!(reconstructed_types.len(), 50, "reconstructed kit at v1 should have 50 types");
+            let kit_v1 = state.directory.history().reconstruct_kit_at_version(session_id, 1).unwrap();
+            assert_eq!(kit_v1["types"].as_array().unwrap().len(), 50, "reconstructed kit at v1 should have 50 types");
 
-            // Verify baseline at version 0 has 0 types
-            let kit_v0 = reconstruct_kit_at_version(&pool, session_id, 0).await.unwrap();
+            let kit_v0 = state.directory.history().reconstruct_kit_at_version(session_id, 0).unwrap();
             let empty_vec = vec![];
             let v0_types = kit_v0["types"].as_array().unwrap_or(&empty_vec);
             assert_eq!(v0_types.len(), 0, "baseline at v0 should have 0 types");
-
-            drop(cmd_tx);
         }
 
         #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-        async fn e2e_multi_frontend_websocket() {
-            if !docker_available() {
-                eprintln!("[SKIP] Docker not available, skipping E2E test");
-                return;
-            }
-
-            let pg = Postgres::default().start().await.expect("start postgres container");
-            let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
-            let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
-
-            let pool = create_pool(&db_url).await.expect("create pool");
-            run_migrations(&pool).await.expect("run migrations");
-
-            let app_state = AppState::new(pool.clone());
-            let app = router(app_state);
-            let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-            let addr = listener.local_addr().unwrap();
-            tokio::spawn(async move {
-                axum::serve(listener, app).await.unwrap();
-            });
-
+        async fn multi_frontend_websocket_wire_v2() {
+            let state = test_app_state("multi-frontend-ws");
+            let app = router(state);
+            let base = spawn_router(app).await;
             let client = reqwest::Client::new();
-            let base = format!("http://{}", addr);
 
-            // Create session
             let resp = client.post(format!("{}/sessions", base)).json(&serde_json::json!({"kit_name": "WS Test Kit"})).send().await.unwrap();
             let body: serde_json::Value = resp.json().await.unwrap();
             let session_id = body["session_id"].as_str().unwrap().to_string();
             let owner_token = body["owner_token"].as_str().unwrap().to_string();
 
-            // Connect two WebSocket frontends
-            let ws_url = format!("ws://{}/sessions/{}/ws", addr, session_id);
+            let ws_url = base.replacen("http://", "ws://", 1) + &format!("/sessions/{}/ws", session_id);
             let (ws1, _) = tokio_tungstenite::connect_async(&ws_url).await.expect("ws1 connect");
             let (ws2, _) = tokio_tungstenite::connect_async(&ws_url).await.expect("ws2 connect");
             let (mut _ws1_write, mut ws1_read) = ws1.split();
             let (mut _ws2_write, mut ws2_read) = ws2.split();
 
-            // Wait for connection acknowledgment from both WebSocket handlers
-            let ack1 = tokio::time::timeout(std::time::Duration::from_secs(5), ws1_read.next()).await;
-            assert!(ack1.is_ok(), "ws1 should receive connection ack");
-            let ack2 = tokio::time::timeout(std::time::Duration::from_secs(5), ws2_read.next()).await;
-            assert!(ack2.is_ok(), "ws2 should receive connection ack");
+            // First frame on each socket is a binary `ServerFrame::Welcome`.
+            let welcome1 = tokio::time::timeout(std::time::Duration::from_secs(5), ws1_read.next()).await.expect("ws1 welcome").unwrap();
+            let welcome2 = tokio::time::timeout(std::time::Duration::from_secs(5), ws2_read.next()).await.expect("ws2 welcome").unwrap();
+            for msg in [welcome1, welcome2] {
+                let bytes = msg.into_data();
+                let (_, frame) = protocol::decode_server_frame(&bytes).expect("decode welcome");
+                assert!(matches!(frame, protocol::ServerFrame::Welcome { .. }));
+            }
 
-            // Send domain command via HTTP (with owner token)
-            let cmd_id = Uuid::now_v7();
             let type_id = Uuid::now_v7();
             let resp = client
                 .post(format!("{}/sessions/{}/commands/domain", base, session_id))
                 .bearer_auth(&owner_token)
                 .json(&serde_json::json!({
-                    "command_id": cmd_id, "client_id": Uuid::now_v7(),
+                    "command_id": Uuid::now_v7(), "client_id": Uuid::now_v7(),
                     "request_id": Uuid::now_v7(), "actor_person_id": Uuid::now_v7(),
                     "base_domain_version": 0,
                     "kind": "CreateType",
@@ -5573,37 +4998,22 @@ mod tests {
                 .unwrap();
             assert_eq!(resp.status(), 200);
 
-            // Both WebSocket frontends should receive the event
-            let msg1 = tokio::time::timeout(std::time::Duration::from_secs(5), ws1_read.next()).await;
-            let msg2 = tokio::time::timeout(std::time::Duration::from_secs(5), ws2_read.next()).await;
-            assert!(msg1.is_ok(), "ws1 should receive event");
-            assert!(msg2.is_ok(), "ws2 should receive event");
+            let msg1 = tokio::time::timeout(std::time::Duration::from_secs(5), ws1_read.next()).await.expect("ws1 commands frame").unwrap();
+            let msg2 = tokio::time::timeout(std::time::Duration::from_secs(5), ws2_read.next()).await.expect("ws2 commands frame").unwrap();
+            for msg in [msg1, msg2] {
+                let bytes = msg.into_data();
+                let (lane, frame) = protocol::decode_server_frame(&bytes).expect("decode commands frame");
+                assert_eq!(lane, protocol::Lane::Command);
+                assert!(matches!(frame, protocol::ServerFrame::Commands { .. }));
+            }
         }
 
         #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-        async fn e2e_snapshot_and_piece_patch_roundtrip() {
-            if !docker_available() {
-                eprintln!("[SKIP] Docker not available, skipping E2E test");
-                return;
-            }
-
-            let pg = Postgres::default().start().await.expect("start postgres container");
-            let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
-            let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
-
-            let pool = create_pool(&db_url).await.expect("create pool");
-            run_migrations(&pool).await.expect("run migrations");
-
-            let app_state = AppState::new(pool.clone());
-            let app = router(app_state);
-            let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-            let addr = listener.local_addr().unwrap();
-            tokio::spawn(async move {
-                axum::serve(listener, app).await.unwrap();
-            });
-
+        async fn snapshot_and_piece_patch_roundtrip() {
+            let state = test_app_state("snapshot-piece-patch-roundtrip");
+            let app = router(state);
+            let base = spawn_router(app).await;
             let client = reqwest::Client::new();
-            let base = format!("http://{}", addr);
 
             let create_resp = client.post(format!("{}/sessions", base)).json(&serde_json::json!({"kit_name": "Roundtrip Kit"})).send().await.unwrap();
             let create_body: serde_json::Value = create_resp.json().await.unwrap();
@@ -5617,12 +5027,8 @@ mod tests {
                 .post(format!("{}/sessions/{}/commands/domain", base, session_id))
                 .bearer_auth(&owner_token)
                 .json(&serde_json::json!({
-                    "command_id": Uuid::now_v7(),
-                    "client_id": Uuid::now_v7(),
-                    "request_id": Uuid::now_v7(),
-                    "actor_person_id": Uuid::now_v7(),
-                    "base_domain_version": 0,
-                    "kind": "CreateDesign",
+                    "command_id": Uuid::now_v7(), "client_id": Uuid::now_v7(), "request_id": Uuid::now_v7(), "actor_person_id": Uuid::now_v7(),
+                    "base_domain_version": 0, "kind": "CreateDesign",
                     "payload": {"entity_id": design_id, "fields": {"id": design_id, "name": "Remote Design"}}
                 }))
                 .send()
@@ -5634,12 +5040,8 @@ mod tests {
                 .post(format!("{}/sessions/{}/commands/domain", base, session_id))
                 .bearer_auth(&owner_token)
                 .json(&serde_json::json!({
-                    "command_id": Uuid::now_v7(),
-                    "client_id": Uuid::now_v7(),
-                    "request_id": Uuid::now_v7(),
-                    "actor_person_id": Uuid::now_v7(),
-                    "base_domain_version": 1,
-                    "kind": "CreatePiece",
+                    "command_id": Uuid::now_v7(), "client_id": Uuid::now_v7(), "request_id": Uuid::now_v7(), "actor_person_id": Uuid::now_v7(),
+                    "base_domain_version": 1, "kind": "CreatePiece",
                     "payload": {"piece_id": piece_id, "design_id": design_id, "fields": {"id": piece_id, "design_id": design_id, "name": "Remote Piece"}}
                 }))
                 .send()
@@ -5651,12 +5053,8 @@ mod tests {
                 .post(format!("{}/sessions/{}/commands/domain", base, session_id))
                 .bearer_auth(&owner_token)
                 .json(&serde_json::json!({
-                    "command_id": Uuid::now_v7(),
-                    "client_id": Uuid::now_v7(),
-                    "request_id": Uuid::now_v7(),
-                    "actor_person_id": Uuid::now_v7(),
-                    "base_domain_version": 2,
-                    "kind": "PatchPiece",
+                    "command_id": Uuid::now_v7(), "client_id": Uuid::now_v7(), "request_id": Uuid::now_v7(), "actor_person_id": Uuid::now_v7(),
+                    "base_domain_version": 2, "kind": "PatchPiece",
                     "payload": {"entity_id": piece_id, "fields": {"design_id": design_id, "center": {"u": 12.5, "v": -4.25}}}
                 }))
                 .send()
@@ -5673,31 +5071,12 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn e2e_auth_forbidden_without_token() {
-            if !docker_available() {
-                eprintln!("[SKIP] Docker not available, skipping E2E test");
-                return;
-            }
-
-            let pg = Postgres::default().start().await.expect("start postgres container");
-            let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
-            let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
-
-            let pool = create_pool(&db_url).await.expect("create pool");
-            run_migrations(&pool).await.expect("run migrations");
-
-            let app_state = AppState::new(pool);
-            let app = router(app_state);
-            let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-            let addr = listener.local_addr().unwrap();
-            tokio::spawn(async move {
-                axum::serve(listener, app).await.unwrap();
-            });
-
+        async fn auth_forbidden_without_token() {
+            let state = test_app_state("auth-forbidden");
+            let app = router(state);
+            let base = spawn_router(app).await;
             let client = reqwest::Client::new();
-            let base = format!("http://{}", addr);
 
-            // Create session — returns owner_token
             let resp = client.post(format!("{}/sessions", base)).json(&serde_json::json!({"kit_name": "Auth Test Kit"})).send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let body: serde_json::Value = resp.json().await.unwrap();
@@ -5705,18 +5084,14 @@ mod tests {
             let owner_token = body["owner_token"].as_str().unwrap().to_string();
             assert!(!owner_token.is_empty());
 
-            // Read endpoints should work without token
             let resp = client.get(format!("{}/sessions/{}/snapshot", base, session_id)).send().await.unwrap();
             assert_eq!(resp.status(), 200);
 
-            // Domain command without token should be forbidden
             let resp = client
                 .post(format!("{}/sessions/{}/commands/domain", base, session_id))
                 .json(&serde_json::json!({
-                    "command_id": Uuid::now_v7(), "client_id": Uuid::now_v7(),
-                    "request_id": Uuid::now_v7(), "actor_person_id": Uuid::now_v7(),
-                    "base_domain_version": 0,
-                    "kind": "CreateType",
+                    "command_id": Uuid::now_v7(), "client_id": Uuid::now_v7(), "request_id": Uuid::now_v7(), "actor_person_id": Uuid::now_v7(),
+                    "base_domain_version": 0, "kind": "CreateType",
                     "payload": {"entity_id": Uuid::now_v7(), "fields": {"name": "NoAuth"}}
                 }))
                 .send()
@@ -5724,15 +5099,12 @@ mod tests {
                 .unwrap();
             assert_eq!(resp.status(), 403);
 
-            // Domain command with wrong token should fail
             let resp = client
                 .post(format!("{}/sessions/{}/commands/domain", base, session_id))
                 .bearer_auth(Uuid::now_v7().to_string())
                 .json(&serde_json::json!({
-                    "command_id": Uuid::now_v7(), "client_id": Uuid::now_v7(),
-                    "request_id": Uuid::now_v7(), "actor_person_id": Uuid::now_v7(),
-                    "base_domain_version": 0,
-                    "kind": "CreateType",
+                    "command_id": Uuid::now_v7(), "client_id": Uuid::now_v7(), "request_id": Uuid::now_v7(), "actor_person_id": Uuid::now_v7(),
+                    "base_domain_version": 0, "kind": "CreateType",
                     "payload": {"entity_id": Uuid::now_v7(), "fields": {"name": "WrongAuth"}}
                 }))
                 .send()
@@ -5740,15 +5112,12 @@ mod tests {
                 .unwrap();
             assert_eq!(resp.status(), 401);
 
-            // Domain command with correct token should succeed
             let resp = client
                 .post(format!("{}/sessions/{}/commands/domain", base, session_id))
                 .bearer_auth(&owner_token)
                 .json(&serde_json::json!({
-                    "command_id": Uuid::now_v7(), "client_id": Uuid::now_v7(),
-                    "request_id": Uuid::now_v7(), "actor_person_id": Uuid::now_v7(),
-                    "base_domain_version": 0,
-                    "kind": "CreateType",
+                    "command_id": Uuid::now_v7(), "client_id": Uuid::now_v7(), "request_id": Uuid::now_v7(), "actor_person_id": Uuid::now_v7(),
+                    "base_domain_version": 0, "kind": "CreateType",
                     "payload": {"entity_id": Uuid::now_v7(), "fields": {"name": "AuthOk"}}
                 }))
                 .send()
@@ -5756,66 +5125,38 @@ mod tests {
                 .unwrap();
             assert_eq!(resp.status(), 200);
 
-            // Compose command without token should be forbidden
             let resp = client
                 .post(format!("{}/sessions/{}/commands/compose", base, session_id))
-                .json(&serde_json::json!({
-                    "client_id": Uuid::now_v7(), "person_id": Uuid::now_v7(),
-                    "frontend_id": "test", "base_compose_version": 0,
-                    "kind": "UpsertCursor", "payload": {"u": 0.5, "v": 0.5}
-                }))
+                .json(&serde_json::json!({"client_id": Uuid::now_v7(), "person_id": Uuid::now_v7(), "frontend_id": "test", "base_compose_version": 0, "kind": "UpsertCursor", "payload": {"u": 0.5, "v": 0.5}}))
                 .send()
                 .await
                 .unwrap();
             assert_eq!(resp.status(), 403);
 
-            // Compact without token should be forbidden
             let resp = client.post(format!("{}/sessions/{}/history/compact", base, session_id)).send().await.unwrap();
             assert_eq!(resp.status(), 403);
         }
 
         #[tokio::test]
-        async fn e2e_share_token_flow() {
-            if !docker_available() {
-                eprintln!("[SKIP] Docker not available, skipping E2E test");
-                return;
-            }
-
-            let pg = Postgres::default().start().await.expect("start postgres container");
-            let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
-            let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
-
-            let pool = create_pool(&db_url).await.expect("create pool");
-            run_migrations(&pool).await.expect("run migrations");
-
-            let app_state = AppState::new(pool);
-            let app = router(app_state);
-            let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-            let addr = listener.local_addr().unwrap();
-            tokio::spawn(async move {
-                axum::serve(listener, app).await.unwrap();
-            });
-
+        async fn share_token_flow() {
+            let state = test_app_state("share-token-flow");
+            let app = router(state);
+            let base = spawn_router(app).await;
             let client = reqwest::Client::new();
-            let base = format!("http://{}", addr);
 
-            // Create session
             let resp = client.post(format!("{}/sessions", base)).json(&serde_json::json!({"kit_name": "Share Test Kit"})).send().await.unwrap();
             let body: serde_json::Value = resp.json().await.unwrap();
             let session_id = body["session_id"].as_str().unwrap().to_string();
             let owner_token = body["owner_token"].as_str().unwrap().to_string();
 
-            // Create a type with owner token first
             let type_id = Uuid::now_v7();
             let design_id = Uuid::now_v7();
             let resp = client
                 .post(format!("{}/sessions/{}/commands/domain", base, session_id))
                 .bearer_auth(&owner_token)
                 .json(&serde_json::json!({
-                    "command_id": Uuid::now_v7(), "client_id": Uuid::now_v7(),
-                    "request_id": Uuid::now_v7(), "actor_person_id": Uuid::now_v7(),
-                    "base_domain_version": 0,
-                    "kind": "CreateType",
+                    "command_id": Uuid::now_v7(), "client_id": Uuid::now_v7(), "request_id": Uuid::now_v7(), "actor_person_id": Uuid::now_v7(),
+                    "base_domain_version": 0, "kind": "CreateType",
                     "payload": {"entity_id": type_id, "fields": {"name": "SharedType"}}
                 }))
                 .send()
@@ -5827,10 +5168,8 @@ mod tests {
                 .post(format!("{}/sessions/{}/commands/domain", base, session_id))
                 .bearer_auth(&owner_token)
                 .json(&serde_json::json!({
-                    "command_id": Uuid::now_v7(), "client_id": Uuid::now_v7(),
-                    "request_id": Uuid::now_v7(), "actor_person_id": Uuid::now_v7(),
-                    "base_domain_version": 1,
-                    "kind": "CreateDesign",
+                    "command_id": Uuid::now_v7(), "client_id": Uuid::now_v7(), "request_id": Uuid::now_v7(), "actor_person_id": Uuid::now_v7(),
+                    "base_domain_version": 1, "kind": "CreateDesign",
                     "payload": {"entity_id": design_id, "fields": {"name": "SharedDesign"}}
                 }))
                 .send()
@@ -5838,11 +5177,9 @@ mod tests {
                 .unwrap();
             assert_eq!(resp.status(), 200);
 
-            // Create share without owner token should fail
             let resp = client.post(format!("{}/sessions/{}/shares", base, session_id)).json(&serde_json::json!({"label": "kit share"})).send().await.unwrap();
             assert_eq!(resp.status(), 403);
 
-            // Create viewer share for kit
             let resp = client.post(format!("{}/sessions/{}/shares", base, session_id)).bearer_auth(&owner_token).json(&serde_json::json!({"access_mode": "viewer", "label": "Kit Read-Only"})).send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let share: serde_json::Value = resp.json().await.unwrap();
@@ -5850,26 +5187,16 @@ mod tests {
             assert_eq!(share["access_mode"].as_str().unwrap(), "viewer");
             assert_eq!(share["label"].as_str().unwrap(), "Kit Read-Only");
 
-            // Create viewer share for specific type
-            let resp =
-                client.post(format!("{}/sessions/{}/shares", base, session_id)).bearer_auth(&owner_token).json(&serde_json::json!({"access_mode": "viewer", "entity_kind": "type", "entity_id": type_id, "label": "Type Share"})).send().await.unwrap();
+            let resp = client.post(format!("{}/sessions/{}/shares", base, session_id)).bearer_auth(&owner_token).json(&serde_json::json!({"access_mode": "viewer", "entity_kind": "type", "entity_id": type_id, "label": "Type Share"})).send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let type_share: serde_json::Value = resp.json().await.unwrap();
             let type_share_token = type_share["token"].as_str().unwrap().to_string();
 
-            // Create viewer share for specific design
-            let resp = client
-                .post(format!("{}/sessions/{}/shares", base, session_id))
-                .bearer_auth(&owner_token)
-                .json(&serde_json::json!({"access_mode": "viewer", "entity_kind": "design", "entity_id": design_id, "label": "Design Share"}))
-                .send()
-                .await
-                .unwrap();
+            let resp = client.post(format!("{}/sessions/{}/shares", base, session_id)).bearer_auth(&owner_token).json(&serde_json::json!({"access_mode": "viewer", "entity_kind": "design", "entity_id": design_id, "label": "Design Share"})).send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let design_share: serde_json::Value = resp.json().await.unwrap();
             let _design_share_token = design_share["token"].as_str().unwrap().to_string();
 
-            // Resolve kit share token
             let resp = client.get(format!("{}/shares/{}", base, kit_share_token)).send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let resolved: serde_json::Value = resp.json().await.unwrap();
@@ -5877,26 +5204,21 @@ mod tests {
             assert_eq!(resolved["access_mode"].as_str().unwrap(), "viewer");
             assert!(resolved["entity_kind"].is_null());
 
-            // Resolve type share token
             let resp = client.get(format!("{}/shares/{}", base, type_share_token)).send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let resolved: serde_json::Value = resp.json().await.unwrap();
             assert_eq!(resolved["entity_kind"].as_str().unwrap(), "type");
             assert_eq!(resolved["entity_id"].as_str().unwrap(), type_id.to_string());
 
-            // Viewer share token should allow reading snapshot
             let resp = client.get(format!("{}/sessions/{}/snapshot", base, session_id)).bearer_auth(&kit_share_token).send().await.unwrap();
             assert_eq!(resp.status(), 200);
 
-            // Viewer share token should NOT allow mutations
             let resp = client
                 .post(format!("{}/sessions/{}/commands/domain", base, session_id))
                 .bearer_auth(&kit_share_token)
                 .json(&serde_json::json!({
-                    "command_id": Uuid::now_v7(), "client_id": Uuid::now_v7(),
-                    "request_id": Uuid::now_v7(), "actor_person_id": Uuid::now_v7(),
-                    "base_domain_version": 2,
-                    "kind": "CreateType",
+                    "command_id": Uuid::now_v7(), "client_id": Uuid::now_v7(), "request_id": Uuid::now_v7(), "actor_person_id": Uuid::now_v7(),
+                    "base_domain_version": 2, "kind": "CreateType",
                     "payload": {"entity_id": Uuid::now_v7(), "fields": {"name": "ShouldFail"}}
                 }))
                 .send()
@@ -5904,23 +5226,19 @@ mod tests {
                 .unwrap();
             assert_eq!(resp.status(), 403);
 
-            // List shares (requires owner)
             let resp = client.get(format!("{}/sessions/{}/shares", base, session_id)).bearer_auth(&owner_token).send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let shares: Vec<serde_json::Value> = resp.json().await.unwrap();
             assert_eq!(shares.len(), 3, "should have 3 share tokens");
 
-            // Delete a share
             let resp = client.delete(format!("{}/sessions/{}/shares/{}", base, session_id, kit_share_token)).bearer_auth(&owner_token).send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let del_body: serde_json::Value = resp.json().await.unwrap();
             assert!(del_body["deleted"].as_bool().unwrap());
 
-            // Deleted share token should no longer resolve
             let resp = client.get(format!("{}/shares/{}", base, kit_share_token)).send().await.unwrap();
             assert_eq!(resp.status(), 404);
 
-            // List shares should now show 2
             let resp = client.get(format!("{}/sessions/{}/shares", base, session_id)).bearer_auth(&owner_token).send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let shares: Vec<serde_json::Value> = resp.json().await.unwrap();
@@ -5964,7 +5282,7 @@ mod tests {
         #[test]
         pub fn session_directory_tracks_active_connections() {
             // Specs: active_connections counter and activated_at are initialized on actor creation and observable through list_active.
-            let handle = SessionHandle { command_tx: mpsc::channel(1).0, event_tx: broadcast::channel(1).0, active_connections: Arc::new(AtomicUsize::new(0)), activated_at: Arc::new(Instant::now()) };
+            let handle = SessionHandle { command_tx: mpsc::channel(1).0, event_tx: broadcast::channel(1).0, wire_tx: broadcast::channel(1).0, active_connections: Arc::new(AtomicUsize::new(0)), activated_at: Arc::new(Instant::now()) };
             handle.active_connections.fetch_add(3, AtomicOrdering::Relaxed);
             assert_eq!(handle.active_connections.load(AtomicOrdering::Relaxed), 3);
             handle.active_connections.fetch_sub(1, AtomicOrdering::Relaxed);
@@ -5972,35 +5290,15 @@ mod tests {
         }
 
         #[tokio::test]
-        async fn e2e_admin_endpoints_with_postgres() {
+        async fn admin_endpoints_round_trip() {
             // Specs: Full round-trip against the embedded admin router: overview, session list, kit list, share-token list, session detail, compaction config read/write, and auth boundary.
-            if !docker_available() {
-                eprintln!("[SKIP] Docker not available, skipping admin E2E test");
-                return;
-            }
-
-            let pg = Postgres::default().start().await.expect("start postgres container");
-            let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
-            let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
-
-            let pool = create_pool(&db_url).await.expect("create pool");
-            run_migrations(&pool).await.expect("run migrations");
-
-            let app_state = AppState::new(pool.clone());
+            let state = test_app_state("admin-endpoints");
             let admin_config = AdminConfig { admin_token: Some("test-admin-token".into()), started_at: Arc::new(Instant::now()) };
-            let admin_state = AdminState { pool: pool.clone(), directory: app_state.directory.clone(), config: admin_config };
-            let app = router(app_state).merge(admin_router(admin_state));
-
-            let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-            let addr = listener.local_addr().unwrap();
-            tokio::spawn(async move {
-                axum::serve(listener, app).await.unwrap();
-            });
-
+            let admin_state = AdminState { directory: state.directory.clone(), config: admin_config };
+            let app = router(state).merge(admin_router(admin_state));
+            let base = spawn_router(app).await;
             let client = reqwest::Client::new();
-            let base = format!("http://{}", addr);
 
-            // Seed: create two sessions via public HTTP API.
             let resp_a = client.post(format!("{}/sessions", base)).json(&serde_json::json!({"kit_name": "Admin Kit A"})).send().await.unwrap();
             assert_eq!(resp_a.status(), 200);
             let body_a: serde_json::Value = resp_a.json().await.unwrap();
@@ -6012,21 +5310,17 @@ mod tests {
             let body_b: serde_json::Value = resp_b.json().await.unwrap();
             let session_b = body_b["session_id"].as_str().unwrap().to_string();
 
-            // Seed a share token for session A so admin share-token endpoints have data.
             let share_resp = client.post(format!("{}/sessions/{}/shares", base, session_a)).bearer_auth(&owner_a).json(&serde_json::json!({"access_mode": "viewer", "label": "demo"})).send().await.unwrap();
             assert_eq!(share_resp.status(), 200);
             let share_body: serde_json::Value = share_resp.json().await.unwrap();
             let share_token = share_body["token"].as_str().unwrap().to_string();
 
-            // Admin without token -> 401
             let resp = client.get(format!("{}/admin/overview", base)).send().await.unwrap();
             assert_eq!(resp.status(), 401);
 
-            // Admin with wrong token -> 401
             let resp = client.get(format!("{}/admin/overview", base)).bearer_auth("wrong").send().await.unwrap();
             assert_eq!(resp.status(), 401);
 
-            // Overview
             let resp = client.get(format!("{}/admin/overview", base)).bearer_auth("test-admin-token").send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let overview: serde_json::Value = resp.json().await.unwrap();
@@ -6034,14 +5328,12 @@ mod tests {
             assert!(overview["total_kits"].as_i64().unwrap() >= 2);
             assert!(overview["total_share_tokens"].as_i64().unwrap() >= 1);
 
-            // List sessions
             let resp = client.get(format!("{}/admin/sessions", base)).bearer_auth("test-admin-token").send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let sessions: Vec<serde_json::Value> = resp.json().await.unwrap();
             assert!(sessions.iter().any(|s| s["session_id"].as_str() == Some(&session_a)));
             assert!(sessions.iter().any(|s| s["session_id"].as_str() == Some(&session_b)));
 
-            // Session detail for A
             let resp = client.get(format!("{}/admin/sessions/{}", base, session_a)).bearer_auth("test-admin-token").send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let detail: serde_json::Value = resp.json().await.unwrap();
@@ -6049,7 +5341,6 @@ mod tests {
             assert_eq!(detail["kit"]["name"].as_str().unwrap(), "Admin Kit A");
             assert_eq!(detail["share_tokens"].as_array().unwrap().len(), 1);
 
-            // List kits
             let resp = client.get(format!("{}/admin/kits", base)).bearer_auth("test-admin-token").send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let kits: Vec<serde_json::Value> = resp.json().await.unwrap();
@@ -6057,29 +5348,24 @@ mod tests {
             assert!(names.contains(&"Admin Kit A"));
             assert!(names.contains(&"Admin Kit B"));
 
-            // List share tokens
             let resp = client.get(format!("{}/admin/share-tokens", base)).bearer_auth("test-admin-token").send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let tokens: Vec<serde_json::Value> = resp.json().await.unwrap();
             assert!(tokens.iter().any(|t| t["token"].as_str() == Some(&share_token)));
 
-            // Revoke share token
             let resp = client.delete(format!("{}/admin/share-tokens/{}", base, share_token)).bearer_auth("test-admin-token").send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let revoke: serde_json::Value = resp.json().await.unwrap();
             assert!(revoke["revoked"].as_bool().unwrap());
 
-            // List persons (empty but should return 200)
             let resp = client.get(format!("{}/admin/persons", base)).bearer_auth("test-admin-token").send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let _persons: Vec<serde_json::Value> = resp.json().await.unwrap();
 
-            // Connections endpoint
             let resp = client.get(format!("{}/admin/connections", base)).bearer_auth("test-admin-token").send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let _connections: Vec<serde_json::Value> = resp.json().await.unwrap();
 
-            // Compaction config: GET returns defaults, PATCH updates, GET reflects update.
             let resp = client.get(format!("{}/admin/config/{}", base, session_a)).bearer_auth("test-admin-token").send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let cfg: serde_json::Value = resp.json().await.unwrap();
@@ -6090,27 +5376,22 @@ mod tests {
             let cfg: serde_json::Value = resp.json().await.unwrap();
             assert_eq!(cfg["lookback_tokens"].as_array().unwrap().len(), 3);
 
-            // Invalid lookback token -> 400
             let resp = client.patch(format!("{}/admin/config/{}", base, session_a)).bearer_auth("test-admin-token").json(&serde_json::json!({"lookback_tokens": ["not-a-real-token"]})).send().await.unwrap();
             assert_eq!(resp.status(), 400);
 
-            // Close session B
             let resp = client.post(format!("{}/admin/sessions/{}/close", base, session_b)).bearer_auth("test-admin-token").send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let close: serde_json::Value = resp.json().await.unwrap();
             assert!(close["closed"].as_bool().unwrap());
 
-            // After close, detail should report status = closed.
             let resp = client.get(format!("{}/admin/sessions/{}", base, session_b)).bearer_auth("test-admin-token").send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let detail: serde_json::Value = resp.json().await.unwrap();
             assert_eq!(detail["row"]["status"].as_str().unwrap(), "closed");
 
-            // Passivate a session that was never activated -> still returns 200 (idempotent).
             let resp = client.post(format!("{}/admin/sessions/{}/passivate", base, session_a)).bearer_auth("test-admin-token").send().await.unwrap();
             assert_eq!(resp.status(), 200);
 
-            // Embedded dashboard is served without auth (static HTML; endpoints behind auth).
             let resp = client.get(format!("{}/admin", base)).send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let ctype = resp.headers().get("content-type").unwrap().to_str().unwrap().to_string();
@@ -6119,5 +5400,5 @@ mod tests {
             assert!(html.contains("compose"));
             assert!(html.contains("overview"));
         }
-    } // 🌊Exhaustive: Postgres testcontainer suite (needs Docker)
+    } // 🌊Exhaustive: full db-backed integration suite (no external services)
 } // 📐Tests

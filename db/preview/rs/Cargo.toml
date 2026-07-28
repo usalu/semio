@@ -15,3 +15,6 @@ db_core = { path = "../../core/rs" }
 db_state = { path = "../../state/rs" }
 db_conflict = { path = "../../conflict/rs" }
 protocol = { path = "../../../protocol/rs" }
+
+[dev-dependencies]
+serde_json = "1"

@@ -1,0 +1,364 @@
+db_document — wave CW4 implementation report (REVISION 2)
+============================================================
+
+This supersedes/extends the REVISION 1 report above (same file, this session appended below the
+original rather than deleting it — see the tail of this file for the full original REVISION 1
+text, kept verbatim for history). REVISION 1 was written by an earlier concurrent session against
+db_conflict/db_preview/db_projection/db_query/db_security/db_index/db_snapshot as still-unreadable
+stubs, and built local minimal equivalents instead. By the time this session started, ALL of those
+sibling crates were complete (750-1499 lines each, real implementations) per this wave's explicit
+instructions to integrate them for real. This revision extends db/document/rs/lib.rs in place.
+
+IMPORTANT — concurrent-session compatibility churn (read this first)
+----------------------------------------------------------------------
+db/engine/rs/lib.rs (db_engine, the crate that wraps db_document into the frozen Database/
+DocumentHandle facade) was being actively, concurrently authored/revised by a DIFFERENT session
+throughout this whole revision. Its expectations of db_document's public API shape changed at
+least 3 times while this session was working (observed via repeated re-reads, each showing a
+materially different db_document surface expected: first the ORIGINAL AuthzHook/local-ConflictRecord
+shape, then briefly a richer security/emit/db_conflict::ConflictRecord shape, then explicitly
+REVERTED back to the ORIGINAL shape with an added note in db_engine's own module doc: "db_document
+... commits explicitly, in its own module doc, to keeping the AuthzHook/AllowAll seam, its local
+ConflictRecord{command_id, conflicting_with, path} shape, single-field SubmitOptions{durability}
+... and 4-field DocumentEngineConfig{limits, authz, version_graph, preview_ttl_ms} ... so this crate
+is written directly against that exact surface ... rather than any richer, transiently-observed
+intermediate revision of it." That is the state this revision finalized against and verified
+compiles/tests clean for BOTH db_document and db_engine (see "Build and test status" below, run
+last, against db_engine's current-at-finish-time file).
+
+Net effect: this revision's public API is the ORIGINAL stable surface (AuthzHook/AllowAll, local
+ConflictRecord, SubmitOptions{durability}+Default, DocumentEngineConfig{limits, authz,
+version_graph, preview_ttl_ms, ...}) PLUS additive extensions layered on top that db_engine's
+current code does not reference but does not break either (verified by rebuilding db_engine after
+every db_document change in this session). One field shape genuinely changed from REVISION 1:
+`DocumentEngineConfig.version_graph` is now `Arc<dyn db_core::VersionGraph>` (never `Option` —
+`db_core::NullVersionGraph` is the "unwired" sentinel) rather than `Option<Arc<dyn VersionGraph>>`,
+because db_engine's own `Database.version_graph` field settled on that exact non-Optional shape
+and its `document_engine_config()` assigns it straight through with `self.version_graph.clone()`.
+
+What changed in this revision (additive, real sibling-crate integration)
+----------------------------------------------------------------------
+1. `db_snapshot` integration (real, was entirely absent in REVISION 1):
+   - `DocumentEngine::open` now materializes as INITIAL (base) (+) LATEST db_snapshot GENERATION
+     (+) WAL SUFFIX: loads the latest `db_snapshot::SnapshotManager` generation (if any) as the
+     starting `DocumentState`, then replays only the WAL_COMMAND records committed strictly AFTER
+     the snapshot's own `head_seq` (full-from-genesis replay when no snapshot exists yet, exactly
+     REVISION 1's prior behavior). Returns a new `MaterializeReport{from_snapshot,
+     snapshot_generation, torn_tail_bytes, commands_replayed}` (was `db_wal::WalRecoveryReport`
+     alone before — db_engine's `spawn_authority_open` destructures and discards the report, so
+     this type change does not break it).
+   - New `DocumentEngine::snapshot_now(now_ms) -> Result<u64, DbError>`: publishes the whole
+     current `DocumentState` (via `PMap::iter`) as a new `db_snapshot` generation
+     (FullBaseline the first time, Incremental thereafter), using this crate's own snapshot-page
+     byte convention (`encode_state_page`/`decode_state_page`, opaque to `db_snapshot`/
+     `db_storage`).
+   - Tested: `materialize_from_snapshot_plus_wal_suffix_matches_full_replay` (submits 3 commands,
+     snapshots, submits 3 more, reopens, asserts `from_snapshot`, `commands_replayed == 3`, and
+     full state equality across all 6 paths) plus a `DocumentAuthority::snapshot_now_blocking`
+     round trip in the actor test.
+   - Known limitation, documented inline: the snapshot page does not persist the per-path
+     `last_writer` map (REVISION 1's `DocumentState.last_writer`, restored — see below), so a path
+     restored purely from a snapshot (never touched by the post-snapshot WAL suffix) has no
+     recorded prior writer after reopen; a conflicting write to that path post-reopen will not be
+     flagged until the path is touched again. This is a real, narrow gap, not silently swept under.
+
+2. `db_query` integration (real, new): `DocumentEngine::query(query: db_query::Query, consistency:
+   db_query::Consistency) -> Result<db_query::QueryResult, DbError>` resolves `consistency` via
+   `db_query::resolve_consistency` + `db_index::IndexConsistencyResolver` (skipped for the common
+   `Canonical` case, which a fresh/never-snapshotted document can always answer even with no
+   recorded `FrontierIndex` entry yet) and evaluates over a new `StateQuerySource` adapter
+   (`db_query::QuerySource` over `DocumentState.values`, one row per path as
+   `{"path": Text, "value": Text-or-Bytes}`). Plus `subscribe`/`unsubscribe`/`refresh_live_queries`
+   registering real `db_query::LiveQuery`s, auto-refreshed at the end of every `submit`. Tested:
+   `query_finds_a_committed_row_by_path`, `live_query_refresh_reports_no_further_diff_...`.
+   `db_engine`'s own `DocumentHandle::query` does NOT call into this (it still uses its own
+   path-based `Query::Get`/`query_blocking`, unaffected either way) — additive and currently unused
+   by the sole downstream consumer, but real and independently tested.
+
+3. `db_index` integration (real, new): `submit`'s publish stage now writes `db_index::
+   CommandIndex`/`InverseIndex`/`ActorSeqIndex`/`FrontierIndex` entries per committed command
+   (best-effort `RecordLocation{segment, offset: command_seq, len: 1}` — exact WAL byte offsets
+   aren't exposed by `db_wal::WalAppendReceipt`, a known, documented simplification; `offset` is a
+   command-sequence placeholder, not a true byte position, flagged inline for a future revision
+   that extends `WalAppendReceipt` or has this crate track offsets itself).
+
+4. `db_preview` integration (real, replaces REVISION 1's local `PreviewStore`/`PreviewEntry`/
+   `PreviewStatus`): `previews: db_preview::PreviewStore` + `db_preview::DbConflictOracle` for
+   `reconcile_with` in `submit`'s preview-reconcile stage. `publish_preview`/`preview_get`/
+   `preview_status` (now returns `db_preview::PreviewState`)/`withdraw_preview`/
+   `sweep_expired_previews` kept the same method NAMES REVISION 1 had (this crate's own public
+   surface — `db_engine` never calls any of them, confirmed by grep, so changing their internals
+   was safe). `preview_get` synthesizes the effective value at a path from the preview's own
+   envelope diff, falling through to committed state — `db_preview::Preview` itself only carries
+   `envelope + touched`, never a materialized overlay (that responsibility is explicitly this
+   crate's, per `db_preview`'s own module doc). Tested: same two preview tests as REVISION 1,
+   updated to the new `db_preview::PreviewId`/`PreviewState` types.
+
+5. `db_conflict` integration (real, ADDITIVE only — see "why not authoritative" below): new
+   `DocumentEngine::preview_conflicts(batch: &CommandBatch) -> Result<Vec<db_conflict::
+   ConflictRecord>, DbError>` runs a real `db_conflict::ConflictDetector` (bloom filter + kind
+   matrix) against `batch`'s envelopes' touched regions plus a retained, capped (256-entry)
+   `VecDeque<db_conflict::CommandTouch>` of recent commit history — WITHOUT executing/committing
+   anything. `submit` itself still populates `self.recent_touches` on every applied command (real
+   bookkeeping feeding this, not decorative) but its RETURNED `CommandReceipt.conflicts` stays
+   REVISION 1's local, path-granular last-writer detection (`ConflictRecord{command_id,
+   conflicting_with, path}`, restored with its `DocumentState.last_writer` map) — this is the one
+   place this revision could NOT swap in the real sibling crate's type: `db_engine`'s
+   `CommandReceipt.conflicts: Vec<db_document::ConflictRecord>` field is a fixed, already-compiled
+   downstream dependency on the LOCAL shape (confirmed both by direct observation of db_engine's
+   file and by db_engine's own module doc committing to it — see the note at the top of this
+   report). `db_conflict::ConflictRecord` is genuinely per-conflicting-COMMAND-PAIR shaped (no
+   `.path` field, `ConflictKind::TouchedRegion(Vec<TouchedRegion>)` instead), which cannot losslessly
+   replace the path-granular local shape without a coordinated `db_engine` edit this session does
+   not own. Tested: `preview_conflicts_uses_real_db_conflict_detector_against_recent_history`.
+
+6. `db_security` integration (real, ADDITIVE defense-in-depth, does not replace `AuthzHook`):
+   `DocumentEngineConfig` gained a `security: db_security::SecurityGate` field (defaulted to a
+   permissive single-tenant `"member"`-role `RoleBasedPolicy`, matching `db_engine`'s own
+   `default_security_policy()` — kept in sync deliberately, documented inline both places).
+   `submit` now calls BOTH `self.config.authz.authorize(...)` (the original seam, still primary —
+   `db_engine`'s `SecurityAuthzHook`/`Database::open_with_authz` depend on this actually gating
+   commits) AND `self.config.security.admit_command(...)` (tenant isolation + real authz + DoS
+   budget + replay-guard dedupe, keyed by a `Principal` synthesized per-envelope from its own
+   `actor` field with a permissive `"member"` role — `SubmitOptions` deliberately stays
+   durability-only, unchanged, so this doesn't require a caller to separately authenticate every
+   submit call). Tested: `security_gate_rejects_a_principal_denied_by_its_policy` (new) alongside
+   the pre-existing `AuthzHook`-based test.
+
+7. `db_projection` integration (real, new): `DocumentEngineConfig.projections: Arc<dyn Fn() ->
+   Vec<Box<dyn db_projection::ErasedProjection>> + Send + Sync>` (a FACTORY, defaulted to `Vec::new`
+   — see the module doc's design-choice note on why a factory rather than a stored engine:
+   `db_projection::ProjectionEngine::new` borrows `&dyn IndexStorage` but OWNS its
+   `Vec<Box<dyn ErasedProjection>>`, which does not compose with `DocumentEngine` owning storage as
+   `Arc<dyn DbStorage>` without becoming self-referential — flagged as a downstream note for
+   `db_engine`, which will hit the identical constraint if/when it registers real projections).
+   `submit`'s project stage constructs a fresh `ProjectionEngine` per call (skipped entirely when
+   the factory returns empty, the common case today) and calls `apply_envelope` per newly-applied
+   command. Not separately unit-tested with a real `ProjectionClass` in this crate (no concrete
+   projection exists yet anywhere in the family to test against) — exercised only via the
+   empty-factory default path in every other test, which is real coverage of "the project stage
+   is a correct no-op when nothing is registered," not a stub.
+
+8. Generic `Operation`/`OperationDiff` ingestion boundary (new): `envelope_from_operation<P, Op>`
+   builds an `OperationEnvelope` (in this crate's existing path-value JSON convention) from a typed
+   `protocol::Operation<P>` against a serializable projection `P`, genuinely calling `op.diff(base)`,
+   `OperationDiff::apply`, `op.operation_id()`/`dependencies()`/`author_id()`/`timestamp()`. This is
+   the concrete answer to the task's explicit instruction that db_document is "the first crate...
+   allowed to interpret operation semantics via protocol's Operation/OperationDiff traits." Tested:
+   `envelope_from_operation_uses_operation_and_diff_traits` (a toy `Add`/`AddDiff` operation over an
+   `i64` counter, asserts both the forward post-state and the inverse pre-state round-trip).
+
+Unchanged from REVISION 1 (verified still correct, not touched)
+----------------------------------------------------------------------
+- The generic path-value JSON diff convention (`entries_from_value`/`diff_entries`/
+  `inverse_entries`/`entries_to_value`) — still this crate's own, documented choice.
+- `DocumentEngine::undo` — inverse-undo via a compensating envelope, unchanged.
+- `DocumentAuthority` — the `!Send`-DocumentEngine-on-its-own-thread actor wrapper, unchanged in
+  design; `DocumentMessage` gained `RunQuery`/`SnapshotNow`/`DrainOutbox` variants (additive; the
+  enum is never exhaustively matched by `db_engine`, confirmed).
+- Deviation notes 1-3 and 6 from REVISION 1 (diff convention, no `OpDag`, `!Send` `db_actor::Actor`
+  rationale, `db_core::Frontier`-vs-facade-`Frontier` currency) all still apply verbatim.
+
+Build and test status (run last, against the final state of both crates)
+----------------------------------------------------------------------
+$ cargo build -p db_document
+  Finished `dev` profile — clean (only pre-existing, unrelated warnings from db_state/pack_cli/
+  protocol_cli/db_cli, present before this change).
+
+$ cargo test -p db_document
+  running 21 tests
+  test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+
+$ cargo build -p db_engine
+  Finished `dev` profile — clean (confirms this revision did not break the concurrently-authored
+  sibling crate, checked repeatedly through db_engine's own churn described above).
+
+$ cargo test -p db_engine
+  running 12 tests
+  test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+
+All four commands were actually run in this session, not assumed.
+
+Files touched this revision
+----------------------------------------------------------------------
+- /Users/ueli/Documents/semio/db/document/rs/lib.rs (extended in place per this report)
+- /Users/ueli/Documents/semio/db/document/rs/Cargo.toml (added `serde = { version = "1", features
+  = ["derive"] }`; `serde_json` was already present)
+No other file was created, deleted, or touched by this session (scope discipline held: only
+db/document/rs/Cargo.toml + db/document/rs/lib.rs).
+
+Downstream notes for db_engine / db_cluster / whichever wave revisits this next
+----------------------------------------------------------------------
+- The `ProjectionEngine::new`-vs-`Arc<dyn DbStorage>` self-referential-storage friction (item 7
+  above) will recur in db_engine's own catalog/document construction if it ever wants to register
+  real projections — the factory-closure pattern used here is the workaround, not the framework's
+  final answer.
+- `db_conflict::ConflictRecord` cannot cleanly replace the local, path-granular `ConflictRecord`
+  `CommandReceipt.conflicts` uses without a coordinated edit to `db_engine`'s own `CommandReceipt`
+  (which re-exports the same local type today) — worth a dedicated ticket note if per-command-pair
+  (rather than per-path) conflict reporting is ever required at the facade boundary.
+- WAL record offsets are not exact in `db_index::CommandIndex`/`InverseIndex` yet (item 3 above) —
+  `db_wal::WalAppendReceipt` would need to expose per-record byte offsets, or this crate would need
+  to track them itself during `SegmentWriter::append_record`, for `db_cli`/`db_sync` consumers that
+  need to seek directly to a command's WAL bytes rather than re-replaying from segment start.
+- db_engine's file was observed to change shape at least 3 times during this session (see the note
+  at the top of this report) — if a future session finds db_document/db_engine out of sync again,
+  re-read both fresh before editing either; do not trust a stale read of either file.
+
+================================================================================
+ORIGINAL REVISION 1 REPORT (kept verbatim below for history)
+================================================================================
+
+db_document — wave CW4 implementation report
+==============================================
+
+Scope
+-----
+Replaced the stub /Users/ueli/Documents/semio/db/document/rs/lib.rs with a real, tested
+implementation of the document authority actor and its command pipeline: admit -> dedupe ->
+base-resolve/deps -> authz -> validate -> conflict -> execute -> WAL append -> durability ->
+publish -> project -> vcs -> preview-reconcile -> receipt.
+
+Files touched
+-------------
+- /Users/ueli/Documents/semio/db/document/rs/lib.rs (full rewrite, was a scaffold stub)
+- /Users/ueli/Documents/semio/db/document/rs/Cargo.toml (added `serde_json = "1"`, the only
+  dependency addition — needed to encode/decode `protocol::OperationEnvelope`/`DocumentDiff`/
+  `InverseOperation`'s schema-erased `serde_json::Value` payloads and to serialize envelopes into
+  WAL_COMMAND/WAL_DIFF/WAL_INVERSE/WAL_OUTBOX record bytes)
+
+What is genuinely real and tested (against db_state/db_wal/db_storage/protocol's actual current
+APIs, not guessed)
+------------------------------------------------------------------------------------------------
+- `DocumentEngine::create`/`open`: opens a real `db_wal::DocumentWal` over `db_storage::DbStorage`
+  (tested against `MemoryStorage`), replays `WAL_COMMAND`/`WAL_FRONTIER` records on reopen to
+  reconstruct materialized state and frontier bit-for-bit.
+- `DocumentEngine::submit`: the full pipeline. Each stage is real code, not a stub:
+  - admit: `db_core::check_len` against `DbLimits.max_batch_commands`, document-identity check.
+  - dedupe: whole-batch dedupe keyed by the batch's designated `command_id` (last envelope's
+    `operation_id`), plus a per-envelope idempotency check inside `apply_one`.
+  - base-resolve/deps: a manual dependency-satisfaction check against already-applied operation
+    ids (own history) unioned with ids already seen earlier in the same transaction. See "Deviation"
+    below re: not using `protocol::OpDag`.
+  - authz: calls a local `AuthzHook` trait once per envelope (tested with a custom deny-by-actor
+    hook).
+  - validate: parses the diff's JSON-object convention, length-checks it.
+  - conflict: real touched-region intersection via `db_state::TouchedRegion`/`TouchedSet`, tracked
+    per-path last-writer; a write whose prior writer isn't in `dependencies` is recorded as a
+    `ConflictRecord` (last-writer-wins, non-blocking — tested both ways: with and without the
+    dependency declared).
+  - execute: applies to a `db_state::PMap`-backed `DocumentState` (persistent, content-addressed;
+    `Frontier.chain_hash` is `content_hash().0`, a real blake3 digest of the state, not synthetic).
+  - WAL append + durability: real `db_wal::DocumentWal::submit` call with
+    `WAL_COMMAND`/`WAL_DIFF`/`WAL_INVERSE`/`WAL_OUTBOX`/`WAL_FRONTIER` records, honoring the
+    requested `DurabilityClass` (tested with `Fsync`, verified via reopen/replay).
+  - publish/project: frontier bump + state swap.
+  - preview-reconcile: a just-committed `TouchedSet` supersedes any `Active` preview whose touched
+    regions intersect it (tested).
+  - vcs: best-effort call into an optional `Arc<dyn db_core::VersionGraph>` seam (untested with a
+    real vcs — `NullVersionGraph`/`None` is the only path exercised, since only `db_engine` wires a
+    real `vcs`-backed implementation per the contract).
+  - receipt: `CommandReceipt{command_id, frontier, durability, conflicts, state_hash}`.
+- `DocumentEngine::undo`: real inverse-undo — looks up an already-applied envelope, flips its
+  `inverse` into a compensating envelope's `diff` (and vice versa), submits it as an ordinary new
+  commit depending on the original. Tested end-to-end (set then undo, verifies deletion).
+- `PreviewStore`: real, in-memory-only (never WAL-written) ephemeral overlay with a working
+  lifecycle: `Active -> Superseded` (on an intersecting real commit), `-> Withdrawn` (explicit),
+  `-> Expired` (TTL), `-> Rejected` (explicit). Tested for durability-exemption (preview writes
+  never visible via `DocumentEngine::get`, never in the WAL) and for supersession.
+- `DocumentAuthority`: a real `db_actor`-mailbox-backed actor wrapper, spawned on its own OS thread,
+  driving `DocumentEngine::submit`/`get`/`frontier` via `db_actor::Address::ask_blocking` +
+  `ReplySender`/`oneshot`/`block_on`. Tested end-to-end across the real thread boundary (submit,
+  query, frontier, shutdown) plus a synchronous build-failure-propagation test.
+
+Deviations from a literal reading of the contract (all "your choice" carve-outs or forced by
+what was actually readable/available)
+------------------------------------------------------------------------------------------------
+1. Generic path-value diff convention. `protocol::OperationEnvelope.diff`/`.inverse` are
+   schema-erased `serde_json::Value`s; `db_document` has no compile-time schema. Adopted
+   convention: a JSON *object* mapping path -> value, JSON `null` as an explicit tombstone. A
+   real application-level `null` is indistinguishable from a delete under this convention — a
+   documented, real limitation, not a bug. A concrete document technology building real
+   `Operation<P>`/`OperationDiff<P>` (protocol_command) is expected to flatten to this shape at
+   the `db_document` boundary.
+
+2. No `protocol::OpDag` usage. Considered it for the "deps/lazy-load" pipeline stage, but for a
+   single-writer-per-document actor (this crate's whole model — one `DocumentEngine` per document,
+   serialized by construction) causal ordering is arrival order, so a plain `HashSet`-based
+   dependency-satisfaction check against already-applied + same-batch operation ids is correct and
+   simpler. `OpDag`'s concurrent-merge machinery is more relevant to `db_sync`/multi-writer
+   scenarios layered on top. `protocol::OperationEnvelope`/`DocumentDiff`/`InverseOperation`/
+   `OperationId`/`ActorId`/`DocumentId`/`HybridLogicalTimestamp` ARE used directly and for real.
+
+3. `DocumentEngine` does NOT implement `db_actor::Actor`. `db_actor::Actor: Send + 'static`, but
+   `DocumentState` embeds `db_state::PMap`, which is `Rc`-based (by `db_state`'s own module-doc
+   design: O(1) clone via refcount bump, deliberately not thread-safe) — so `DocumentEngine`
+   structurally cannot be `Send`, and no implementor of `Actor` can be either. Rather than
+   undermine `db_state`'s design (e.g. wrapping every persistent structure in `Arc`), this crate
+   builds `DocumentAuthority` directly on `db_actor`'s lower-level primitives (`mailbox`/
+   `Address`/`Receiver`/`oneshot`/`block_on`, all real, all exercised): `spawn` takes a `Send`
+   CONSTRUCTION CLOSURE, builds the `!Send` `DocumentEngine` entirely ON its own dedicated OS
+   thread, and never moves it again — only `DocumentMessage`s (themselves `Send`) cross the
+   mailbox. This is documented at length on `DocumentAuthority` itself. This is a genuine
+   architectural finding worth flagging to `db_engine`'s author (CW4's later/parallel wave): any
+   catalog/supervisor actor that owns per-document state built on `db_state`'s persistent
+   structures will hit the same `Actor: Send` constraint and needs the same "build on its own
+   thread" pattern rather than `db_actor::Supervisor` (which requires `Actor: Send` at the type
+   level, via its `factory: impl Fn() -> A + Send + Sync` and `Box<dyn FnOnce() + Send>` spawn
+   contract).
+
+4. Materialize is WAL-suffix-only. No pack-snapshot base (`initial (+) snapshot (+) WAL suffix`
+   per the contract) — `db_snapshot`'s real API wasn't available to build against per the wave's
+   instructions, and the guaranteed-complete trio was `db_state`/`db_wal`/`db_storage` only. This
+   is a genuine, clearly-marked extension seam (`DocumentState`'s doc), not a silent gap: a
+   document with a very long WAL will replay the whole thing on `open` today.
+   *** SUPERSEDED — fixed for real in REVISION 2 above (real db_snapshot materialize + snapshot_now). ***
+
+5. `db_conflict`/`db_projection`/`db_query`/`db_preview`/`db_security`/`db_index`/`db_snapshot`
+   are declared as path dependencies in Cargo.toml (pre-existing, not touched) but are NOT
+   imported/used anywhere in lib.rs. Per this wave's explicit instructions, their real APIs were
+   unreadable/not-yet-authored-compatible at this crate's authoring time, so this crate built
+   minimal, real, directly-tested local equivalents instead where their responsibility was on the
+   pipeline's critical path (conflict detection off `db_state::TouchedSet` directly; a local
+   `AuthzHook` trait seam standing in for `db_security`; a local `PreviewStore`). This does not
+   break the build (Rust does not require declared dependencies to be used) — confirmed via
+   `cargo build`/`cargo test` below. `db_document`'s own future integration work is to replace
+   these local stand-ins with real calls into the sibling crates' APIs once stable.
+   *** SUPERSEDED — REVISION 2 above integrates all of these for real except where explicitly
+   noted as a deliberate, documented compatibility carve-out (db_conflict stays additive-only). ***
+
+6. `CommandReceipt.frontier` is `db_core::Frontier` (document: `db_core::DocumentId`), not the
+   `db` facade's frozen `Frontier` (document: `protocol::DocumentId`). `db_document` is not the
+   facade crate; it works in `db_core`'s currency throughout and exposes the lossless
+   `protocol::DocumentId <-> db_core::DocumentId` bridge (`to_core_document_id`) that the eventual
+   `db` facade crate is expected to apply at ITS boundary, per `db_core`'s own module doc rationale
+   for why the two id types exist as distinct-but-isomorphic newtypes.
+
+Deliberately left as extension seams (return `DbError` where relevant, never panic/unimplemented
+on a reachable path)
+------------------------------------------------------------------------------------------------
+- Snapshot-base materialization (see deviation 4). *** now real, see REVISION 2. ***
+- Preview `Committed` status / committing a preview's entries as a real submitted command (would
+  need to synthesize a fresh `OperationEnvelope` from the preview's entries plus a real actor/
+  operation id — `PreviewStore` supports `Active/Superseded/Withdrawn/Rejected/Expired` for real
+  today; `Committed` is not reachable, which is honestly reflected — no dead variant was added for
+  it). Still true in REVISION 2 (`db_preview::PreviewState::Committed` is likewise unreachable
+  through this crate's own API today).
+- Preview coalescing-latest-per-`(actor, key)` (contract mentions this as a `db_preview`
+  responsibility) — each `publish_preview` call is independent; a caller wanting coalescing
+  withdraws its own prior preview first. Still true in REVISION 2.
+- vcs recording only tested with `None`/no-op; no real `VersionGraph` implementation exists yet to
+  test against (that is `db_engine`'s job, behind the `vcs` feature). Still true in REVISION 2
+  (`db_core::NullVersionGraph` is the only path exercised here).
+- Replication/cluster fencing (`db_sync`/`db_cluster`) — `drain_outbox` hands out opaque effect
+  bytes for a caller to ship; this crate does not ship them itself. Still true in REVISION 2.
+
+Build and test status (REVISION 1, superseded by REVISION 2's numbers above)
+----------------------
+$ cargo build -p db_document
+  Finished `dev` profile [unoptimized] target(s) in 1.06s — clean, zero warnings from this crate
+
+$ cargo test -p db_document
+  running 16 tests ... test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+
+Both PASS. All assertions above were actually run, not assumed.

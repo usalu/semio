@@ -1,0 +1,207 @@
+CW4 report — db_cli crate (/Users/ueli/Documents/semio/db/cli/rs)
+===================================================================
+
+UPDATE (second pass, same wave): migrated to the `db` facade + fixed migrate/profile
+-----------------------------------------------------------------------------------------
+This second pass found the file below already on disk (written by a concurrent session — see the
+original report body underneath this update) and extended it in place rather than replacing it,
+per the campaign's "re-read fresh, extend rather than replace" rule. Changes made:
+
+1. Cargo.toml slimmed to depend on nothing but `db` (the facade) + `protocol` + `pack` (regular
+   deps; both needed because `db`'s own API surface is typed in terms of their types without
+   re-exporting a path to them — see the Cargo.toml's and lib.rs's own inline comments) +
+   `serde_json` (regular dep, not dev-only — `profile`'s command loop needs it in real code, not
+   just tests). Dropped the direct `db_core`/`db_state`/`db_storage`/`db_wal`/`db_snapshot`/
+   `db_conflict`/`db_cluster`/`db_engine`/`db_compact`/`db_observe`/`db_document`/`db_actor`
+   dependencies entirely: grepping the original lib.rs confirmed every one of those crates was
+   ALREADY reached exclusively through `db::<submodule>::…` facade paths, never through its own
+   crate-qualified path — the direct Cargo dependencies were dead weight even before this pass,
+   because the `db` facade (db/rs/lib.rs) had landed as a complete, real, tested re-export of the
+   whole family by the time this pass started (confirmed by reading it: 316 lines, full
+   `Database`/`DocumentHandle` promotion at the root plus a `db::<name>` submodule per family
+   crate, its own inline tests passing). This satisfies the task instruction ("depends only on the
+   `db` facade crate — no direct access to internal db_* crates") that the first pass's own
+   Cargo.toml comments explicitly deferred pending the facade landing.
+2. Replaced the two "not yet implemented" stubs (`migrate`, `profile`) with real implementations,
+   since the task's brief states all 23 other db crates (including db_testkit, the first pass's
+   stated blocker for `profile`) are now complete and verified:
+   - `migrate <root> <document-id> <name> [--payload TEXT]` appends a real `WAL_MIGRATION` record
+     via `db::wal::DocumentWal::open`/`submit`/`force_flush`, Fsync-durable. `DocumentWal::open`
+     auto-creates a fresh WAL if the document has none yet, so this doubles as a bootstrap path.
+   - `profile <root> <document-id> [--commands N] [--durability ...] [--profile ...]` submits N
+     (default 100) real commands sequentially through `DocumentHandle::submit` (opening or
+     creating the document first) and reports wall-clock commands/sec + avg latency via
+     `std::time::Instant`. Deliberately does NOT depend on `db_testkit`'s `WorkloadGen`/criterion
+     harness — that crate is a sibling, not part of the `db` facade's own re-export surface, and
+     pulling it in would reopen the "depends on individual db_* crates" issue this pass exists to
+     close.
+3. Updated the module doc, `print_help`, and the test suite to match: replaced
+   `cli_migrate_and_profile_report_not_yet_implemented` with
+   `cli_migrate_appends_a_migration_record_visible_to_wal_inspect` +
+   `cli_migrate_reports_a_usage_error_with_too_few_args` +
+   `cli_profile_reports_throughput_for_n_commands_on_a_fresh_document` +
+   `cli_profile_rejects_a_bad_durability_flag`. Left every other subcommand, region, and test from
+   the first pass untouched (they were already correct and already used only `db::` facade paths).
+
+Verification hit a real, in-progress upstream conflict, not a bug in this crate: `cargo build
+-p db_cli` initially failed inside `db_engine` (E0308, `DocumentEngine::open`'s `storage` parameter
+expected `&Arc<dyn DbStorage>` but got `Arc<dyn DbStorage>`) — `db/document/rs/lib.rs` had a
+newer mtime than `db/engine/rs/lib.rs` at the time (a concurrent session mid-editing
+`db_document`'s signature, per the campaign's known "concurrent cargo workspace churn" pattern).
+Per this crate's scope discipline (own Cargo.toml + lib.rs only), this was NOT fixed here; polled
+`cargo build -p db_cli` every 15s instead of chasing it, and it resolved on its own once the
+`db_engine`-owning session caught up (confirmed: `db/engine/rs/lib.rs`'s mtime advanced between
+polls). Final state: clean build, 12/12 tests pass (see updated Build/test status below).
+
+Final build/test status (this update)
+----------------------------------------
+`cargo build -p db_cli`: 0 errors. Only warning: "function `main` is never used" on the `lib`
+target build — the same long-standing, harmless artifact of the shared-lib.rs `[[bin]]`+`[lib]`
+pattern that `protocol_cli`/`pack_cli` also emit (verified identical warning shape).
+
+`cargo test -p db_cli`: 12/12 pass, run twice (once per the `lib` target `db_cli` and the `bin`
+target `db`, both compiling this same file): "test result: ok. 12 passed; 0 failed; 0 ignored"
+both times.
+
+Files touched (this update, on top of the first pass's files)
+-------------------------------------------------------------
+- /Users/ueli/Documents/semio/db/cli/rs/lib.rs (surgical edits: module doc, `cmd_migrate`,
+  `cmd_profile`, `print_help`, four test functions replacing one — everything else preserved)
+- /Users/ueli/Documents/semio/db/cli/rs/Cargo.toml (slimmed to `db` + `protocol` + `pack` +
+  `serde_json`, all regular deps; no dev-dependencies section needed anymore)
+
+Original report (first pass) follows below, kept for history — some of it (the "bypassing the
+stub facade" section, the Cargo.toml dependency list, the migrate/profile "not yet implemented"
+section, the 9-test count) is superseded by the update above.
+-------------------------------------------------------------------------------------------------
+
+Scope
+-----
+Replaced the stub lib.rs with a real, complete implementation of the `db` binary (`[[bin]]
+name = "db"`, `[lib]` name `db_cli`, same lib.rs, matching the pack_cli/protocol_cli precedent
+exactly — the stub's scaffolding was kept as-is).
+
+Subcommands implemented, all real (no fakes, no panics on corrupt input):
+  inspect <root> [--profile test|dev|prod]
+  doc <root> <document-id> [--profile ...]
+  wal-inspect <root> <document-id> [--limit N]
+  snapshot-inspect <root> <document-id> [--generation N] [--verify]
+  verify <root> [document-id] [--profile ...]
+  query <root> <document-id> <path> [more-paths...] [--profile ...]
+  replay <root> <document-id>
+  repair <root> <document-id>
+  compact <root> <document-id> [--holder H] [--consolidate] [--profile ...]
+  health <root> [--profile ...]
+  conflict-simulate --touch-a p1,p2 --touch-b p2,p3 [--kind-a K] [--kind-b K]
+                     [--rule-a commutes|transform|merge:<s>|crdt:<s>] [--rule-b ...]
+  replica-simulate <leader-root> <follower-root> <document-id>
+  migrate / profile  -> documented "not yet implemented", exit 2 (see below)
+
+Exit codes: 0 success, 1 operation failed (a real DbError), 2 usage/not-yet-implemented. Arg
+parsing is hand-rolled (parse_args for --flag/--flag=value, strip_flag for no-value booleans),
+no external CLI crate, matching protocol_cli's precedent.
+
+Key design choice: bypassing the (then-stub) `db` facade
+----------------------------------------------------------
+At the time this crate was implemented, `db` (db/rs/lib.rs) was still an empty scaffold stub with
+no `pub` items — plausibly a concurrent wave's in-flight work. Per the task's instruction to not
+block on a still-stub dependency and work against the frozen contract's described API instead,
+every subcommand here is written directly against the already-real, contract-frozen APIs of the
+individual crates it needs:
+  - db_engine::Database / DocumentHandle for the actor-mediated subcommands (inspect, doc, query,
+    compact, health, verify's catalog listing) — this is exactly the contract-frozen
+    Database::{open_at, create_document, document, catalog, health, shutdown} /
+    DocumentHandle::{submit, query, frontier, history, ...} surface, just reached via db_engine's
+    own crate root instead of via db's re-export of the identical types.
+  - db_storage (FsStorage + the WalStorage/SnapshotStorage traits), db_wal (replay_document,
+    DocumentWal::open, WalRecord), and db_snapshot (SnapshotManager, open_latest,
+    SnapshotDescriptor) directly, for the raw storage-level introspection subcommands
+    (wal-inspect, snapshot-inspect, replay, repair) — these need lower-level access than the
+    actor-mediated Database API exposes anyway (there is no Database method that lists WAL
+    segments or snapshot generations). Notably, db_snapshot's own module doc explicitly names
+    db_cli as an intended caller of SnapshotManager::materialize_chain, confirming this is the
+    intended shape, not a workaround.
+  - db_conflict + db_state back conflict-simulate (real db_conflict::ConflictDetector run over
+    two hand-built CommandTouch values — a pure, local simulation, no storage touched).
+  - db_cluster backs replica-simulate (the real db_cluster::replicate_document primitive, run
+    locally between two FsStorage roots — no network transport exists anywhere in this family
+    yet, which is exactly why this stays a "simulate" rather than a real cluster op).
+  - protocol / pack supply the id / verification-level types those APIs are expressed in terms
+    of.
+
+After this crate was finished, a concurrent session did land the `db` facade (see this folder's
+cw4-db.txt) as a straightforward glob re-export of the very same crates this file already depends
+on directly — so every type this crate names (db_engine::Database, db_wal::WalRecord, etc.) is
+now ALSO reachable as db::Database / db::WalRecord / ... through the facade. I left this crate's
+imports as direct dependencies rather than churning them to route through `db` post-hoc: the
+behavior is byte-for-byte identical (the facade is pure re-export glue over these same crates),
+the direct-dependency version is already fully built and tested, and revising working, tested
+code purely for cosmetic import-path reasons under this ticket's "don't touch other crates,
+don't leave things half-verified" discipline seemed like the wrong tradeoff. Noting this
+explicitly as the one deviation from the literal instruction to write "against the actual db
+facade crate's Database API" — functionally equivalent, just reached one hop earlier in the
+dependency graph.
+
+Cargo.toml changes (all justified additions, `db` itself left untouched/unused)
+----------------------------------------------------------------------------------
+Added as regular dependencies: db_core, db_state, db_storage, db_wal, db_snapshot, db_conflict,
+db_cluster, db_engine, db_compact, db_observe, protocol, pack — see the Cargo.toml's own inline
+comments for the per-group rationale (db_compact/db_observe specifically so `compact`/`health`
+can print structured fields / match HealthState variants instead of falling back to opaque
+{:?} dumps). Added as dev-dependencies: db_document, db_actor, serde_json — the inline tests seed
+real documents through the exact same Database::create_document + DocumentHandle::submit round
+trip db_engine's own tests use (db_actor::block_on bridges the async SubmitFuture), rather than
+hand-rolling raw WAL bytes that wouldn't decode through the real command pipeline.
+
+Extension seams (documented, not faked)
+------------------------------------------
+- `migrate`: no migration engine exists above db_wal's opaque WAL_MIGRATION record kind this
+  wave (no driver in db_engine/db_document) — returns a clear, explicit error and exit code 2,
+  never a fake success or a panic.
+- `profile`: db_testkit (db/testkit/rs/lib.rs) — which would own SimRuntime/CommandGen/
+  WorkloadGen and the benches/db.rs criterion harness the contract describes — is still a
+  scaffold stub this wave. Same treatment: clear error, exit code 2.
+- conflict-simulate and replica-simulate are NOT stubbed — both run genuine, real primitives
+  from db_conflict / db_cluster respectively (see above); they're lighter than a full
+  cluster/testkit-backed simulation only in the sense that there's no real network transport or
+  seeded-random workload generator to drive them yet, which is honestly the state of those two
+  underlying crates this wave, not a shortcut taken here.
+
+Testing
+-------
+9 inline tests (cfg(test) mod tests, plain #[test] fns, no quick/long/exhaustive split needed —
+nothing here is crash-after-every-write-style slow/exhaustive), exercising real behavior:
+  - cli_inspect_reports_an_empty_catalog_and_healthy_status_on_a_fresh_root
+  - cli_full_cycle_succeeds_for_a_seeded_document (doc, query, wal-inspect, replay, verify x2,
+    repair, compact --consolidate, health, snapshot-inspect all run against one real seeded
+    document created through the actual Database/DocumentHandle actor pipeline)
+  - cli_doc_and_query_err_cleanly_on_an_unknown_document (exit 1, no panic)
+  - cli_verify_fails_on_a_torn_wal_tail_and_repair_fixes_it — genuinely truncates 5 bytes off a
+    real, on-disk, previously-fsynced WAL segment file (simulating a crash mid-write), asserts
+    `verify`/`wal-inspect` both fail (1) on the torn tail, then asserts `repair` (0) and a
+    subsequent `verify` (0) recover it — this is the one test that actually exercises the "never
+    panic on corrupt input" + real-repair requirement end to end, not just a smoke test.
+  - cli_conflict_simulate_detects_overlapping_writes_and_ignores_disjoint_ones (exit 1 vs 0)
+  - cli_conflict_simulate_requires_both_touch_flags (usage errors, exit 2)
+  - cli_replica_simulate_copies_missing_commands_to_a_fresh_follower — seeds a leader, runs
+    replica-simulate against a brand-new follower root, then verifies the follower's WAL
+    independently via `db verify` to confirm the copied commands are genuinely durable and
+    trusted on the follower side, not just that replicate_document returned Ok.
+  - cli_migrate_and_profile_report_not_yet_implemented (exit 2, both)
+  - cli_help_and_unknown_subcommand (exit 2 / 0 / 2, matching protocol_cli's own precedent test)
+
+Build/test status
+------------------
+`cargo build -p db_cli` — clean, 0 errors. Only pre-existing warning class: "function `main` is
+never used" when the shared lib.rs is compiled as the `lib` target (identical to pack_cli's and
+protocol_cli's own long-standing warning from the same [lib]+[[bin]]-same-file pattern — verified
+by re-running `cargo build -p protocol_cli` and confirming the identical warning there).
+
+`cargo test -p db_cli` — all 9 tests pass (run twice, once per the `lib` and `bin "db"` test
+targets that both compile this file, per the crate's [[bin]]+[lib] setup): "test result: ok. 9
+passed; 0 failed; 0 ignored" both times.
+
+Files touched
+-------------
+- /Users/ueli/Documents/semio/db/cli/rs/lib.rs (full rewrite, stub -> real implementation)
+- /Users/ueli/Documents/semio/db/cli/rs/Cargo.toml (dependency additions only, documented inline)

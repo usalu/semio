@@ -1,0 +1,87 @@
+db_sync (db/sync/rs) — wave CW4 report
+=======================================
+
+Scope implemented (per the contract's "## db crate family" table row for db_sync: "Replica sync:
+frontier exchange, missing-command transfer (zero-copy record slices), snapshot bootstrap, set
+reconciliation, resume tokens" / db_core, db_wal, db_storage, protocol deps):
+
+- //#region Codec: this crate's own byte convention for db_wal::WalRecord::Command payloads —
+  serde_json-encoded protocol::OperationEnvelope (encode_command_envelope / decode_command_envelope).
+  decode validates length against db_core::DbLimits::default().max_command_bytes before allocating.
+- //#region ReplicaState: DocumentSyncState { frontier, commands, floor_head_seq } and
+  replay_sync_state(), which replays a document's whole WAL via db_wal::replay_document and derives:
+  head_seq = count of WAL_COMMAND records, commit_seq = count of WAL_TX_COMMIT records, chain_hash =
+  a replay-derived fold of blake3(command bytes) digests (same shape as protocol::verify_slice's
+  slice_content_chain), epoch = 0 (placeholder, see deviations), floor_head_seq = the head_seq
+  carried by the most recent WAL_SNAPSHOT_PUB record (0 if none — the compaction-floor signal
+  db_wal already defines).
+- //#region Frontier: frontier_delta() (thin re-export of db_core::FrontierDelta::between under
+  this crate's own name), plus bidirectional bridges to/from protocol::RuntimeFrontierSummary
+  (protocol_causal::FrontierSummary via the protocol facade's rename) — to_frontier_summary,
+  from_frontier_summary, state_frontier_summary.
+- //#region MissingCommands: missing_commands() — the missing-command-transfer primitive, an
+  ordinal-indexed slice of DocumentSyncState::commands validated against document match / replica-
+  ahead-of-server / replica-behind-retained-floor. commands_server_frame() wraps the result as a
+  ServerFrame::Commands.
+- //#region Bootstrap: BootstrapPlan enum (None/Tail/Snapshot) and decide_bootstrap(), which serves
+  Tail when the replica's head_seq is at or above floor_head_seq, else pulls the latest snapshot
+  generation from db_storage::SnapshotStorage (Err(Unavailable) if none exists) and computes its
+  blake3 pack_hash.
+- //#region ResumeToken: issue_resume_token() — the send-path half (db_core::ResumeToken::encode).
+- //#region Hello: WelcomeResponse, build_welcome() (lowers BootstrapPlan to protocol::Bootstrap +
+  follow-up frames, chunking a non-inlined snapshot into SnapshotChunk/SnapshotDone), handle_hello()
+  (top-level ClientFrame::Hello handler: replay -> decide_bootstrap -> build_welcome) and
+  handle_frontier_advertise() (mid-session catch-up: relay missing commands or None).
+
+Deviations from the "where applicable" extract_range hint (documented in-file, //#region
+MissingCommands doc): protocol::extract_range/RecordSlice walk a .spr stream for
+protocol_core::REC_EDIT-kind frames (protocol_history's history-log shape). db_wal's WAL segments
+are also .spr containers but frame commands under the family's own WAL_COMMAND (0x44) record kind
+in the 0x40..=0x4F extension range, never REC_EDIT — so extract_range structurally cannot locate
+them; it is therefore not applicable to db_wal segments as currently implemented. missing_commands()
+is this crate's WAL_COMMAND-shaped analog instead: an ordinal-indexed slice, but over
+DocumentSyncState::commands (already fully decoded by replay_sync_state), not a raw zero-copy byte
+span. This trades true zero-copy byte slicing for correctness/testability within this wave's scope;
+a genuine zero-copy path (raw FrameCursor walk over WalStorage segment bytes filtered on
+WAL_COMMAND, spanning possibly-multiple sealed segments) is a real future optimization, left
+unimplemented — no seam needed since missing_commands()'s signature is stable regardless of how its
+body is later optimized.
+
+Other deviations / design choices (all documented inline with rationale where they occur):
+- db_core::ResumeToken has a public encode() but no public constructor from an arbitrary wire
+  string (its inner field is private to db_core, a frozen/un-editable crate this wave) — so this
+  crate cannot decode an incoming ClientFrame::Hello.resume_token via ResumeToken's type-safe API.
+  Worked around by using Hello.frontier: Option<protocol::RuntimeFrontierSummary> — a separate,
+  always-decodable field on the same frame — as the receive-path source of truth. The send path
+  (Welcome.resume_token, via issue_resume_token) is fully real and exercised end to end.
+- Frontier.epoch is always 0 in this crate's replay-derived frontiers: cluster-fencing epochs are
+  db_cluster's concern and unreachable from a WalStorage-only replay; RuntimeFrontierSummary also
+  carries no epoch field at all, so from_frontier_summary similarly always produces epoch: 0. Left
+  as an honest placeholder (not silently wrong — documented at every site it's set).
+- Frontier.chain_hash is a replay-derived content-chain fold (blake3 over per-command digests), not
+  a real segment commit-chain hash, because db_wal does not expose a public accessor for a
+  segment's chain_hash (SegmentWriter::tip_chain_hash is private). Documented as a stand-in db_sync
+  will retire once db_document exists to supply an authoritative Frontier directly.
+
+Dependencies added to Cargo.toml (both genuinely needed, noted per instructions):
+- serde_json = "1" — this crate defines and uses the WAL_COMMAND <-> OperationEnvelope byte codec
+  directly (not just via a re-exported type), matching the version convention used by every other
+  protocol_* crate that depends on it directly.
+- blake3 = "1" — this crate derives its own replay-based Frontier.chain_hash and snapshot pack_hash;
+  same direct dependency db_wal already takes for its own hash-chaining.
+
+No other files touched outside db/sync/rs/{Cargo.toml,lib.rs}.
+
+Build status: cargo build -p db_sync — PASS (clean, no warnings from this crate).
+Test status: cargo test -p db_sync — PASS, 21/21 unit tests green (0 doc-tests, none written).
+Clippy: cargo clippy -p db_sync --all-targets — clean (all findings were in unrelated sibling
+crates pack_value/pack_async, pre-existing, not touched by this wave).
+
+Tests cover (per the wave instructions' explicit ask): frontier delta computation
+(frontier_delta_reports_the_command_gap_and_rejects_backwards) and a simulated missing-command-
+transfer round trip using db_storage::MemoryStorage end to end (seed a WAL via db_wal::DocumentWal,
+replay, transfer to a genesis replica, catch up, add more commands, transfer the new delta only) —
+plus WalRecoveryReport-adjacent replica-state derivation, the WAL_SNAPSHOT_PUB floor mechanism,
+every decide_bootstrap branch (tail/none/snapshot/unavailable), resume-token issuance format, and
+the full ClientFrame::Hello -> WelcomeResponse orchestration including snapshot inlining vs.
+chunking and a mid-session FrontierAdvertise catch-up round trip.

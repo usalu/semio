@@ -1,0 +1,160 @@
+db_projection — wave CW4 implementation report
+================================================
+
+Scope: /Users/ueli/Documents/semio/db/projection/rs/lib.rs (full replacement of the stub) and
+/Users/ueli/Documents/semio/db/projection/rs/Cargo.toml (one dependency addition, see below).
+
+What was implemented
+---------------------
+A projection engine matching the contract's db_projection responsibility line ("Projection
+classes, DAG deps, incremental apply, frontier tracking, rebuild==incremental law, versioning,
+historical + preview-augmented"):
+
+- 🔖State: `ProjectionState` trait (encode/decode to opaque bytes) with ready-made impls for
+  `u64`/`String`/`Vec<u8>`; a version-prefixed checkpoint encoding (`encode_versioned`/
+  `decode_versioned`, 4-byte LE schema version + state bytes) — this is the persisted shape
+  written into `db_index::ProjectionIndex`.
+- 🔖ProjectionClass: `ProjectionClass` trait (id, schema_version, dependencies, initial, apply),
+  `DepView` (a step's already-computed sibling-projection states, backed by `db_state::PMap`), and
+  an object-safe erasure (`ErasedProjection` trait + `erase()` constructor) so a `ProjectionEngine`
+  can hold a heterogeneous set of differently-typed projections in one `Vec<Box<dyn
+  ErasedProjection>>`.
+- 🔖Graph: `ProjectionGraph` — validates unique ids, validates every `dependencies()` entry
+  resolves to a registered projection, detects cycles, and computes one deterministic (ties broken
+  lexicographically) topological order via Kahn's algorithm, built on `db_state::PGraph`.
+- 🔖Engine: `ProjectionEngine` —
+  - `apply_envelope(command_seq, &protocol::OperationEnvelope)`: incremental per-command
+    application in dependency order, checkpoint-resuming from `db_index::ProjectionIndex` and
+    durably persisting each projection's new state before the next (dependent) projection in the
+    order runs.
+  - `rebuild_in_memory(&[(u64, OperationEnvelope)])`: pure, storage-independent full replay from
+    `ProjectionClass::initial()` — the "ground truth" the rebuild==incremental law is checked
+    against.
+  - `rebuild_and_persist(...)`: `rebuild_in_memory` + re-persisting the final states — the recovery
+    path from a stale-schema-version `Conflict`.
+  - `state_at(projection_id, frontier_seq)`: historical query via
+    `ProjectionIndex::latest_at_or_before`.
+  - `preview_augmented(projection_id, base_frontier_seq, &preview_envelope)`: applies a preview
+    envelope on top of canonical state in memory only, never calling `ProjectionIndex::record`
+    (structurally enforces the "previews are never durable" law).
+- 🧪Tests: 12 inline unit tests covering DAG build (order, duplicate id rejection, unknown
+  dependency rejection, cycle rejection), incremental apply + persistence, document-mismatch
+  rejection, a dependent projection reading a same-step dependency value, stale schema-version
+  detection + rebuild recovery, preview never persisting/never affecting canonical state, and the
+  core rebuild==incremental law (checkpoint-resumed incremental application across dropped/rebuilt
+  engine instances vs. one pure in-memory rebuild, compared per-projection).
+
+Dependency addition (deviation from the contract's literal deps list)
+-----------------------------------------------------------------------
+The contract's per-crate deps table lists db_projection as depending on `db_core, db_state,
+db_index, protocol` only. Added `db_storage` (path dependency) to Cargo.toml because
+`db_index::ProjectionIndex` — the exact `(projection_id, frontier_seq) -> state bytes` primitive
+db_index's own doc names as "db_projection's 'this projection's state as of at or before frontier
+X' lookup" — can only be constructed against a `&dyn db_storage::IndexStorage`. Without db_storage
+as a direct dependency, `ProjectionIndex` cannot be named or called at all (Rust requires the
+defining/re-exporting crate as a direct dependency to reference a trait by path, even if it is
+already pulled in transitively via db_index). db_storage itself only depends on `db_core`, `pack`,
+and `blake3`, all already present elsewhere in the db family, so this adds no new external
+dependency to the workspace. Documented inline in lib.rs's module doc as well.
+
+Other design choices (contract left "your choice")
+----------------------------------------------------
+- Checkpoint persistence format: 4-byte little-endian `u32` schema-version prefix + opaque state
+  bytes (not varint/pack_core-based, to avoid a pack_core dependency this crate doesn't otherwise
+  need — hand-rolled fixed-width encode/decode is trivial and sufficient here).
+- Versioning behavior: a schema-version mismatch on checkpoint resume returns `DbError::Conflict`
+  (not a silent auto-rebuild) — the caller (db_document/db_engine) decides when to pay for a full
+  `rebuild_and_persist` rather than this crate doing it implicitly mid-apply.
+- Topological order tie-breaking: lexicographic by projection id, for deterministic,
+  reproducible ordering across runs.
+- Preview scope: `preview_augmented` augments exactly one named projection; its dependency states
+  are read from their own canonical checkpoints at `base_frontier_seq` (not preview-cascaded
+  through the whole DAG) — a preview never causes a write anywhere.
+
+Extension seams left for a higher layer (not stubs — no panics, no TODOs)
+----------------------------------------------------------------------------
+- `ProjectionClass::apply`'s actual domain semantics are entirely the caller's responsibility (by
+  design, per the contract's "no db crate below db_document interprets operation semantics" rule)
+  — this crate only ships the mechanism (DAG ordering, checkpointing, versioning, historical/
+  preview lookup), not any concrete non-test projection class.
+- No cross-projection preview cascading (see above) — a documented, deliberate scope choice, not a
+  missing piece; `db_preview`/`db_query`'s `Consistency::PreviewAugmented` mode can layer cascading
+  on top by calling `preview_augmented` per affected projection if that's ever needed.
+
+Build/test status
+-------------------
+`cargo build -p db_projection` — succeeds, no warnings from this crate (all warnings printed are
+in sibling crates: db_state, pack_async, pack_value, and pre-existing lib/bin target-name
+collision warnings for db_cli/pack_cli/protocol_cli).
+
+`cargo test -p db_projection` — 12/12 tests pass, 0 failed.
+
+`cargo clippy -p db_projection --all-targets` — no warnings attributed to db_projection itself.
+
+Files touched
+--------------
+- /Users/ueli/Documents/semio/db/projection/rs/lib.rs (full implementation, replacing the stub)
+- /Users/ueli/Documents/semio/db/projection/rs/Cargo.toml (added `db_storage` dependency, see
+  above)
+
+================================================================================
+Follow-up pass (same ticket, later session): touched-region-gated incremental apply
+================================================================================
+
+On arrival, lib.rs already held the full implementation described above (report body unchanged
+above this marker) — extended it in place per the "re-read shared files, extend rather than
+replace" rule rather than rewriting from scratch. One requirement from the task brief was not yet
+covered by that implementation: "incremental apply (a diff/touched-region triggers only the
+affected projections)". The prior `apply_envelope`/`rebuild_in_memory` ran EVERY registered
+projection unconditionally on every envelope — no touched-region filtering at all. Added:
+
+- `ProjectionClass::reads(&self) -> &'static [&'static str]` (default `&[]`) and
+  `ProjectionClass::affected_by(&self, touched: &db_state::TouchedSet) -> bool` (default: any
+  `reads()` path intersects any touched region, via `db_state::TouchedRegion::path_intersects`) —
+  mirrored onto the object-safe `ErasedProjection` trait and `ErasedWrapper`.
+  Deliberately NOT "empty reads() means affected by everything" — empty means "never directly
+  triggered, only ever runs via a dependency cascade" (documented in the trait doc as a footgun
+  avoided on purpose); a projection that wants to see every step overrides `affected_by` itself.
+- A free `should_run(projection, touched, changed_this_step) -> bool` in the `🔖Engine` region:
+  `projection.affected_by(touched) || projection.dependencies().iter().any(|d|
+  changed_this_step.contains(d))`. Called identically (same function, not two hand-synced copies)
+  from both `apply_envelope` (persisted path) and `rebuild_in_memory` (pure replay path) — this is
+  what keeps the rebuild==incremental law holding by construction after the change, not by luck.
+- `apply_envelope`/`rebuild_in_memory` signatures gained a `touched: &TouchedSet` /
+  per-event `TouchedSet` parameter (the event tuple is now `(u64, OperationEnvelope, TouchedSet)`).
+  When `should_run` says no for a projection this step: `ErasedProjection::apply_bytes` is not
+  called, `ProjectionIndex::record` is not called (no write, no frontier advance — the ticket's
+  "frontier tracking per projection" now genuinely means "each projection's own frontier only moves
+  when it actually changes", not "every projection is rewritten identically every step"), and its
+  prior/carried-forward state is what downstream dependents' `DepView` and the returned map see.
+- Updated all pre-existing fixtures/tests for the new signatures (`CounterProjection`/
+  `SumWithDependencyProjection` gained a `reads: &'static [&'static str]` field; touched sets are
+  built via a new `touch(paths) -> TouchedSet` test helper) — existing test *assertions* are
+  unchanged in substance (projections that were meant to "always run" now declare `reads: &["doc"]`
+  and every call passes `touch(&["doc"])`).
+- Two new tests: `apply_envelope_skips_a_projection_whose_reads_dont_intersect_the_touched_set`
+  (an untouched projection is neither recomputed nor persisted; its frontier stays absent) and
+  `apply_envelope_cascades_to_a_dependent_with_no_reads_of_its_own` (a projection with empty
+  `reads()` still recomputes because a declared dependency changed this same step, proving the
+  cascade path is independent of direct touched-region matching).
+- Extended `rebuild_equals_incremental_after_checkpoint_resume` with a third, never-touched
+  projection and an alternating per-step touched-path pattern, so the law is now checked across a
+  mix of directly-triggered / cascade-triggered / entirely-skipped projections, not just "always
+  runs every step".
+
+Build/test status after this pass
+------------------------------------
+`cargo build -p db_projection` — succeeds; only pre-existing warnings from sibling crates
+(db_state, pack_async, pack_value) and the pre-existing lib/bin target-name collision warnings for
+db_cli/pack_cli/protocol_cli, none attributable to db_projection.
+
+`cargo test -p db_projection` — 14/14 tests pass, 0 failed (12 prior + 2 new).
+
+`cargo clippy -p db_projection --all-targets` — no warnings attributed to db_projection.
+
+Files touched (this pass)
+----------------------------
+- /Users/ueli/Documents/semio/db/projection/rs/lib.rs only (module doc addendum, trait extensions,
+  `should_run`, `apply_envelope`/`rebuild_in_memory`/`rebuild_and_persist` signature + body
+  changes, test module updates). Cargo.toml untouched this pass (db_storage dependency from the
+  prior pass already covers everything needed).

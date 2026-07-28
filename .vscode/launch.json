@@ -2402,7 +2402,7 @@
       "cwd": "${workspaceFolder}",
       "env": {
         "OS_HUB_PORT": "8787",
-        "OS_HUB_DB": "${workspaceFolder}/.semio/hub-dev.db"
+        "OS_HUB_DATA": "${workspaceFolder}/.semio/hub-dev/"
       },
       "presentation": {
         "group": "3_dev",

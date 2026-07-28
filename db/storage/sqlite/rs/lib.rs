@@ -103,6 +103,9 @@ CREATE TABLE IF NOT EXISTS lease (
     /// produced by an explicit existence check or an SQL `changes()` count before this ever
     /// fires, so by the time a call reaches this mapping the error is a genuine driver/IO
     /// failure, not a modeled outcome.
+    // 🔒 Used as a bare fn-pointer error mapper (`.map_err(sqlite_err)`) throughout this file —
+    // `Result::map_err`'s `FnOnce(E) -> F2` bound always calls the mapper with an owned `E`.
+    #[allow(clippy::needless_pass_by_value)]
     fn sqlite_err(err: rusqlite::Error) -> DbError {
         DbError::Io(err.to_string())
     }
@@ -161,8 +164,8 @@ CREATE TABLE IF NOT EXISTS lease (
         /// @emoji 🩹 Recovers the connection mutex from a poisoned lock instead of panicking — a
         /// single panicking caller must not turn every subsequent storage call into a cascading
         /// panic (mirrors `db_storage::MemoryStorage`'s own `lock` helper).
-        fn lock(&self) -> Result<std::sync::MutexGuard<'_, Connection>, DbError> {
-            Ok(self.conn.lock().unwrap_or_else(std::sync::PoisonError::into_inner))
+        fn lock(&self) -> std::sync::MutexGuard<'_, Connection> {
+            self.conn.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
         }
     }
     //#endregion 🔖Connection
@@ -171,7 +174,7 @@ CREATE TABLE IF NOT EXISTS lease (
     impl WalStorage for SqliteStorage {
         fn create_segment(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
             let index = to_sql_i64(index, "wal_storage::create_segment index")?;
-            let conn = self.lock()?;
+            let conn = self.lock();
             let exists: bool = conn
                 .query_row(
                     "SELECT EXISTS(SELECT 1 FROM wal_segment WHERE document = ?1 AND segment_index = ?2)",
@@ -190,7 +193,7 @@ CREATE TABLE IF NOT EXISTS lease (
         fn append(&self, document: &DocumentId, index: u64, bytes: &[u8]) -> Result<u64, DbError> {
             check_len(bytes.len() as u64, MAX_BLOB_BYTES, "wal_storage::append")?;
             let sql_index = to_sql_i64(index, "wal_storage::append index")?;
-            let conn = self.lock()?;
+            let conn = self.lock();
             let sealed: i64 = conn
                 .query_row("SELECT sealed FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index], |row| row.get(0))
                 .optional()
@@ -225,7 +228,7 @@ CREATE TABLE IF NOT EXISTS lease (
 
         fn seal(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
             let sql_index = to_sql_i64(index, "wal_storage::seal index")?;
-            let conn = self.lock()?;
+            let conn = self.lock();
             // 🎯 `changes()` counts rows matched by the WHERE clause regardless of whether
             // `sealed`'s value actually flips, so this is idempotent-if-already-sealed for free:
             // `0` means no such row (not found), `1` means the row exists (sealed now, or
@@ -242,7 +245,7 @@ CREATE TABLE IF NOT EXISTS lease (
         fn read(&self, document: &DocumentId, index: u64, range: ByteRange) -> Result<Vec<u8>, DbError> {
             check_len(range.len, MAX_BLOB_BYTES, "wal_storage::read")?;
             let sql_index = to_sql_i64(index, "wal_storage::read index")?;
-            let conn = self.lock()?;
+            let conn = self.lock();
             let bytes: Vec<u8> = conn
                 .query_row("SELECT bytes FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index], |row| row.get(0))
                 .optional()
@@ -258,7 +261,7 @@ CREATE TABLE IF NOT EXISTS lease (
 
         fn segment_len(&self, document: &DocumentId, index: u64) -> Result<u64, DbError> {
             let sql_index = to_sql_i64(index, "wal_storage::segment_len index")?;
-            let conn = self.lock()?;
+            let conn = self.lock();
             let len: i64 = conn
                 .query_row("SELECT length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index], |row| {
                     row.get(0)
@@ -270,7 +273,7 @@ CREATE TABLE IF NOT EXISTS lease (
         }
 
         fn list_segments(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
-            let conn = self.lock()?;
+            let conn = self.lock();
             let mut stmt =
                 conn.prepare("SELECT segment_index FROM wal_segment WHERE document = ?1 ORDER BY segment_index ASC").map_err(sqlite_err)?;
             let rows = stmt.query_map(params![document.0], |row| row.get::<_, i64>(0)).map_err(sqlite_err)?;
@@ -283,7 +286,7 @@ CREATE TABLE IF NOT EXISTS lease (
 
         fn truncate_tail(&self, document: &DocumentId, index: u64, new_len: u64) -> Result<(), DbError> {
             let sql_index = to_sql_i64(index, "wal_storage::truncate_tail index")?;
-            let conn = self.lock()?;
+            let conn = self.lock();
             let (sealed, current_len): (i64, i64) = conn
                 .query_row(
                     "SELECT sealed, length(bytes) FROM wal_segment WHERE document = ?1 AND segment_index = ?2",
@@ -310,7 +313,7 @@ CREATE TABLE IF NOT EXISTS lease (
 
         fn delete_segment(&self, document: &DocumentId, index: u64) -> Result<(), DbError> {
             let sql_index = to_sql_i64(index, "wal_storage::delete_segment index")?;
-            let conn = self.lock()?;
+            let conn = self.lock();
             conn.execute("DELETE FROM wal_segment WHERE document = ?1 AND segment_index = ?2", params![document.0, sql_index]).map_err(sqlite_err)?;
             Ok(())
         }
@@ -322,7 +325,7 @@ CREATE TABLE IF NOT EXISTS lease (
         fn write_generation(&self, document: &DocumentId, generation: u64, bytes: &[u8]) -> Result<(), DbError> {
             check_len(bytes.len() as u64, MAX_BLOB_BYTES, "snapshot_storage::write_generation")?;
             let sql_generation = to_sql_i64(generation, "snapshot_storage::write_generation generation")?;
-            let conn = self.lock()?;
+            let conn = self.lock();
             conn.execute(
                 "INSERT INTO snapshot_generation (document, generation, bytes) VALUES (?1, ?2, ?3)
              ON CONFLICT(document, generation) DO UPDATE SET bytes = excluded.bytes",
@@ -334,7 +337,7 @@ CREATE TABLE IF NOT EXISTS lease (
 
         fn read_generation(&self, document: &DocumentId, generation: u64) -> Result<Vec<u8>, DbError> {
             let sql_generation = to_sql_i64(generation, "snapshot_storage::read_generation generation")?;
-            let conn = self.lock()?;
+            let conn = self.lock();
             conn.query_row(
                 "SELECT bytes FROM snapshot_generation WHERE document = ?1 AND generation = ?2",
                 params![document.0, sql_generation],
@@ -346,7 +349,7 @@ CREATE TABLE IF NOT EXISTS lease (
         }
 
         fn latest_generation(&self, document: &DocumentId) -> Result<Option<u64>, DbError> {
-            let conn = self.lock()?;
+            let conn = self.lock();
             let max: Option<i64> = conn
                 .query_row("SELECT MAX(generation) FROM snapshot_generation WHERE document = ?1", params![document.0], |row| row.get(0))
                 .map_err(sqlite_err)?;
@@ -354,7 +357,7 @@ CREATE TABLE IF NOT EXISTS lease (
         }
 
         fn list_generations(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
-            let conn = self.lock()?;
+            let conn = self.lock();
             let mut stmt = conn
                 .prepare("SELECT generation FROM snapshot_generation WHERE document = ?1 ORDER BY generation ASC")
                 .map_err(sqlite_err)?;
@@ -368,7 +371,7 @@ CREATE TABLE IF NOT EXISTS lease (
 
         fn delete_generation(&self, document: &DocumentId, generation: u64) -> Result<(), DbError> {
             let sql_generation = to_sql_i64(generation, "snapshot_storage::delete_generation generation")?;
-            let conn = self.lock()?;
+            let conn = self.lock();
             conn.execute("DELETE FROM snapshot_generation WHERE document = ?1 AND generation = ?2", params![document.0, sql_generation])
                 .map_err(sqlite_err)?;
             Ok(())
@@ -381,7 +384,7 @@ CREATE TABLE IF NOT EXISTS lease (
         fn put(&self, bytes: &[u8]) -> Result<ContentHash, DbError> {
             check_len(bytes.len() as u64, MAX_BLOB_BYTES, "payload_storage::put")?;
             let hash = ContentHash(*blake3::hash(bytes).as_bytes());
-            let conn = self.lock()?;
+            let conn = self.lock();
             conn.execute(
                 "INSERT INTO payload (hash, bytes, len) VALUES (?1, ?2, ?3) ON CONFLICT(hash) DO NOTHING",
                 params![hash.to_string(), bytes, bytes.len() as i64],
@@ -391,7 +394,7 @@ CREATE TABLE IF NOT EXISTS lease (
         }
 
         fn get(&self, hash: &ContentHash) -> Result<Vec<u8>, DbError> {
-            let conn = self.lock()?;
+            let conn = self.lock();
             conn.query_row("SELECT bytes FROM payload WHERE hash = ?1", params![hash.to_string()], |row| row.get(0))
                 .optional()
                 .map_err(sqlite_err)?
@@ -399,18 +402,18 @@ CREATE TABLE IF NOT EXISTS lease (
         }
 
         fn contains(&self, hash: &ContentHash) -> Result<bool, DbError> {
-            let conn = self.lock()?;
+            let conn = self.lock();
             conn.query_row("SELECT EXISTS(SELECT 1 FROM payload WHERE hash = ?1)", params![hash.to_string()], |row| row.get(0)).map_err(sqlite_err)
         }
 
         fn delete(&self, hash: &ContentHash) -> Result<(), DbError> {
-            let conn = self.lock()?;
+            let conn = self.lock();
             conn.execute("DELETE FROM payload WHERE hash = ?1", params![hash.to_string()]).map_err(sqlite_err)?;
             Ok(())
         }
 
         fn len(&self, hash: &ContentHash) -> Result<u64, DbError> {
-            let conn = self.lock()?;
+            let conn = self.lock();
             let len: i64 = conn
                 .query_row("SELECT len FROM payload WHERE hash = ?1", params![hash.to_string()], |row| row.get(0))
                 .optional()
@@ -424,7 +427,7 @@ CREATE TABLE IF NOT EXISTS lease (
     //#region 🔖CatalogStorage
     impl CatalogStorage for SqliteStorage {
         fn read_root(&self) -> Result<Option<(Vec<u8>, EpochFence)>, DbError> {
-            let conn = self.lock()?;
+            let conn = self.lock();
             let row: Option<(Vec<u8>, i64)> = conn
                 .query_row("SELECT bytes, epoch FROM catalog_root WHERE id = 0", [], |row| Ok((row.get(0)?, row.get(1)?)))
                 .optional()
@@ -434,14 +437,14 @@ CREATE TABLE IF NOT EXISTS lease (
 
         fn cas_root(&self, expected: EpochFence, new_bytes: &[u8]) -> Result<EpochFence, DbError> {
             check_len(new_bytes.len() as u64, MAX_BLOB_BYTES, "catalog_storage::cas_root")?;
-            let mut conn = self.lock()?;
+            let mut conn = self.lock();
             // 🎯 `IMMEDIATE` acquires SQLite's write lock before the read, so a concurrent writer
             // (another thread OR another OS process against the same file) can't slip a write in
             // between this read and this write — see module doc's "CAS choice".
             let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
             let current_epoch: Option<i64> =
                 tx.query_row("SELECT epoch FROM catalog_root WHERE id = 0", [], |row| row.get(0)).optional().map_err(sqlite_err)?;
-            let current_fence = current_epoch.map(|epoch| EpochFence { epoch: epoch as u64 }).unwrap_or(EpochFence::INITIAL);
+            let current_fence = current_epoch.map_or(EpochFence::INITIAL, |epoch| EpochFence { epoch: epoch as u64 });
             expected.check(current_fence)?;
             let new_fence = expected.next();
             let sql_epoch = to_sql_i64(new_fence.epoch, "catalog_storage::cas_root epoch")?;
@@ -462,7 +465,7 @@ CREATE TABLE IF NOT EXISTS lease (
         fn write_run(&self, document: &DocumentId, run_id: u64, bytes: &[u8]) -> Result<(), DbError> {
             check_len(bytes.len() as u64, MAX_BLOB_BYTES, "index_storage::write_run")?;
             let sql_run_id = to_sql_i64(run_id, "index_storage::write_run run_id")?;
-            let conn = self.lock()?;
+            let conn = self.lock();
             conn.execute(
                 "INSERT INTO index_run (document, run_id, bytes) VALUES (?1, ?2, ?3)
              ON CONFLICT(document, run_id) DO UPDATE SET bytes = excluded.bytes",
@@ -474,7 +477,7 @@ CREATE TABLE IF NOT EXISTS lease (
 
         fn read_run(&self, document: &DocumentId, run_id: u64) -> Result<Vec<u8>, DbError> {
             let sql_run_id = to_sql_i64(run_id, "index_storage::read_run run_id")?;
-            let conn = self.lock()?;
+            let conn = self.lock();
             conn.query_row("SELECT bytes FROM index_run WHERE document = ?1 AND run_id = ?2", params![document.0, sql_run_id], |row| row.get(0))
                 .optional()
                 .map_err(sqlite_err)?
@@ -482,7 +485,7 @@ CREATE TABLE IF NOT EXISTS lease (
         }
 
         fn list_runs(&self, document: &DocumentId) -> Result<Vec<u64>, DbError> {
-            let conn = self.lock()?;
+            let conn = self.lock();
             let mut stmt = conn.prepare("SELECT run_id FROM index_run WHERE document = ?1 ORDER BY run_id ASC").map_err(sqlite_err)?;
             let rows = stmt.query_map(params![document.0], |row| row.get::<_, i64>(0)).map_err(sqlite_err)?;
             let mut out = Vec::new();
@@ -494,7 +497,7 @@ CREATE TABLE IF NOT EXISTS lease (
 
         fn delete_run(&self, document: &DocumentId, run_id: u64) -> Result<(), DbError> {
             let sql_run_id = to_sql_i64(run_id, "index_storage::delete_run run_id")?;
-            let conn = self.lock()?;
+            let conn = self.lock();
             conn.execute("DELETE FROM index_run WHERE document = ?1 AND run_id = ?2", params![document.0, sql_run_id]).map_err(sqlite_err)?;
             Ok(())
         }
@@ -504,7 +507,7 @@ CREATE TABLE IF NOT EXISTS lease (
     //#region 🔖LeaseStorage
     impl LeaseStorage for SqliteStorage {
         fn acquire(&self, resource: &str, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
-            let mut conn = self.lock()?;
+            let mut conn = self.lock();
             let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
             let existing: Option<(String, i64, i64)> = tx
                 .query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![resource], |row| {
@@ -535,7 +538,7 @@ CREATE TABLE IF NOT EXISTS lease (
         }
 
         fn renew(&self, resource: &str, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
-            let mut conn = self.lock()?;
+            let mut conn = self.lock();
             let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
             let (existing_holder, epoch, expires_at_ms): (String, i64, i64) = tx
                 .query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![resource], |row| {
@@ -558,7 +561,7 @@ CREATE TABLE IF NOT EXISTS lease (
         }
 
         fn release(&self, resource: &str, holder: &str, fence: EpochFence) -> Result<(), DbError> {
-            let mut conn = self.lock()?;
+            let mut conn = self.lock();
             let tx = conn.transaction_with_behavior(TransactionBehavior::Immediate).map_err(sqlite_err)?;
             let (existing_holder, epoch): (String, i64) = tx
                 .query_row("SELECT holder, epoch FROM lease WHERE resource = ?1", params![resource], |row| Ok((row.get(0)?, row.get(1)?)))
@@ -575,7 +578,7 @@ CREATE TABLE IF NOT EXISTS lease (
         }
 
         fn current(&self, resource: &str, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
-            let conn = self.lock()?;
+            let conn = self.lock();
             let existing: Option<(String, i64, i64)> = conn
                 .query_row("SELECT holder, epoch, expires_at_ms FROM lease WHERE resource = ?1", params![resource], |row| {
                     Ok((row.get(0)?, row.get(1)?, row.get(2)?))

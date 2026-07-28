@@ -14,7 +14,12 @@ use dsl::{DslOps, DslRecord};
 use semio_framework_core::{
     ActorId, DocumentDiff, DocumentId, DocumentVersion, HybridLogicalTimestamp, InverseOperation, OperationEnvelope, OperationId, PayloadHash, SchemaId, SchemaVersion, UndoPolicy,
 };
-#[cfg(not(target_arch = "wasm32"))]
+// 🎞️ CW5 fix: unconditional now — `operation_envelope_from_edit` below calls `hash_bytes` on every
+// target (not just native), so gating the import to `not(wasm32)` broke the wasm32 build entirely
+// (`vcs` is a dependency of `framework/sync`'s wasm actor). `semio-framework-hash` itself is an
+// unconditional dependency (pure blake3, no OS dependency) — only the native-only `BlobStore for
+// FolderSqliteStorage` impl further down actually needed the old native-only restriction, and that
+// impl block is already separately `#[cfg(not(target_arch = "wasm32"))]`-gated on its own.
 use semio_framework_hash::hash_bytes;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};

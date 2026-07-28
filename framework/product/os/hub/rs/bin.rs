@@ -1,9 +1,21 @@
 mod header {
     // 🧲Header
-    // OS hub v2 — pluggable-storage VFS + per-document operation-log actors with duplex WebSocket sync.
-    // CQRS split: operation appends are causally ordered (OpDag) and never version-gated; only whole-envelope
-    // snapshot replacement keeps optimistic concurrency (CAS → Conflict). Persistence is behind
-    // {@link HubStorage} (os-hub-storage) — sqlite today, postgres/neo4j are sibling backends.
+    // OS hub v2 — a thin axum shell over two independently swappable backends: `db::Database`
+    // (the document authority: submit/query/frontier/history over a WAL-backed document actor,
+    // plus content-addressed blob storage) and `Arc<dyn HubDirectory>` (identity/tenancy: users,
+    // studios, memberships, auth sessions, share tokens, VFS nodes, sync sessions). Every
+    // OpDag/DocumentActor/DocMsg/JSON-snapshot-CAS internal the pre-CW6 hub owned directly is gone
+    // — that is now `db`'s job end to end (see `db/engine/rs/lib.rs`, `db/document/rs/lib.rs`).
+    // "Studio" is a namespacing convention this crate applies on top of `db`'s flat document
+    // catalog (`{studio_id}:{document_id}`), not hub-internal state.
+    //
+    // The WebSocket endpoint speaks `protocol_wire`'s binary lane-tagged `ClientFrame`/
+    // `ServerFrame` frames directly (see `protocol/wire/rs/lib.rs`) — the server-side counterpart
+    // to `framework/sync`'s client actors (CW5). Command-lane persistence/ordering flows through
+    // `db::Database::hello`/`DocumentHandle::submit`/`db::sync::handle_frontier_advertise`;
+    // preview-lane and presence frames are ephemeral, best-effort fan-out this crate owns directly
+    // via a per-document `tokio::sync::broadcast` registry (never durable, matching the preview
+    // lane's contract).
 }
 
 use axum::body::Bytes;
@@ -14,30 +26,35 @@ use axum::response::IntoResponse;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use dashmap::DashMap;
+use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt};
-use os_hub_storage::model::{BlobRecord, DocumentRecord, NodeRecord, StudioRole};
-use os_hub_storage::HubStorage;
-use os_hub_storage_sqlite::SqliteStorage;
-use semio_framework_core::{HubClientFrame, HubServerFrame, OpDag, OperationEnvelope, PresencePeer};
+use os_hub_directory::model::{NodeRecord, StudioRole};
+use os_hub_directory::HubDirectory;
+use os_hub_directory_sqlite::SqliteDirectory;
+use protocol::{AckStage, ActorId, ApplyOutcome, ClientFrame, DocumentId as ProtocolDocumentId, Lane, OperationEnvelope, RuntimeFrontierSummary, ServerFrame, decode_client_frame, encode_server_frame};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::collections::{HashMap, HashSet};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
-use tokio::sync::{broadcast, mpsc, oneshot};
+use tokio::sync::broadcast;
 
 //#region ⚠️ Errors
-/// @emoji 🧯 Top-level startup error — the only fallible paths outside a per-document actor are
-/// picking/connecting the storage backend and binding the HTTP listener.
+/// @emoji 🧯 Top-level startup error — the only fallible paths outside a document/WS session are
+/// opening `db::Database`'s storage backend, connecting the directory backend, and binding the
+/// HTTP listener.
 #[derive(Debug, thiserror::Error)]
 enum HubError {
     #[error(transparent)]
-    Storage(#[from] os_hub_storage::error::StorageError),
+    Directory(#[from] os_hub_directory::error::DirectoryError),
+    #[error(transparent)]
+    Db(#[from] db::DbError),
     #[error("io error: {0}")]
     Io(#[from] std::io::Error),
     #[error("unknown OS_HUB_STORAGE_BACKEND: {0}")]
     UnknownStorageBackend(String),
+    #[error("unknown OS_HUB_DIRECTORY_BACKEND: {0}")]
+    UnknownDirectoryBackend(String),
 }
 //#endregion ⚠️ Errors
 
@@ -45,327 +62,151 @@ fn now_ms() -> i64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_millis() as i64).unwrap_or(0)
 }
 
-//#region 🔖DocumentActor
-struct AppendedOperation {
-    version: i64,
-    operation_id: String,
-    is_new: bool,
-}
-
-struct SubscribeReply {
-    receiver: broadcast::Receiver<HubServerFrame>,
-    version: i64,
-    envelope: Value,
-    presence: Vec<PresencePeer>,
-    backlog: Vec<OperationEnvelope>,
-}
-
-/// @emoji 📬 Mailbox messages for a {@link DocumentActor}.
-enum DocMsg {
-    Subscribe { since_version: i64, reply: oneshot::Sender<SubscribeReply> },
-    AppendOperations { envelopes: Vec<OperationEnvelope>, origin: String, reply: oneshot::Sender<Vec<AppendedOperation>> },
-    PutEnvelope { version: i64, envelope: Value, reply: oneshot::Sender<Result<i64, i64>> },
-    GetDocument { reply: oneshot::Sender<(Value, i64)> },
-    GetEnvelope { reply: oneshot::Sender<(Value, i64)> },
-    OpsSince { since: i64, reply: oneshot::Sender<Vec<(i64, OperationEnvelope)>> },
-    PresenceUpdate { peer: PresencePeer },
-    PresenceLeave { actor: String },
-}
-
-/// @emoji 🎛️ Cheap clonable handle to a document's actor mailbox.
-#[derive(Clone)]
-struct DocumentHandle {
-    tx: mpsc::Sender<DocMsg>,
-}
-
-impl DocumentHandle {
-    async fn subscribe(&self, since_version: i64) -> Option<SubscribeReply> {
-        let (reply, rx) = oneshot::channel();
-        self.tx.send(DocMsg::Subscribe { since_version, reply }).await.ok()?;
-        rx.await.ok()
-    }
-
-    async fn append_operations(&self, envelopes: Vec<OperationEnvelope>, origin: String) -> Vec<AppendedOperation> {
-        let (reply, rx) = oneshot::channel();
-        if self.tx.send(DocMsg::AppendOperations { envelopes, origin, reply }).await.is_err() {
-            return Vec::new();
-        }
-        rx.await.unwrap_or_default()
-    }
-
-    async fn put_envelope(&self, version: i64, envelope: Value) -> Result<i64, i64> {
-        let (reply, rx) = oneshot::channel();
-        if self.tx.send(DocMsg::PutEnvelope { version, envelope, reply }).await.is_err() {
-            return Err(-1);
-        }
-        rx.await.unwrap_or(Err(-1))
-    }
-
-    async fn get_document(&self) -> Option<(Value, i64)> {
-        let (reply, rx) = oneshot::channel();
-        self.tx.send(DocMsg::GetDocument { reply }).await.ok()?;
-        rx.await.ok()
-    }
-
-    async fn get_envelope(&self) -> Option<(Value, i64)> {
-        let (reply, rx) = oneshot::channel();
-        self.tx.send(DocMsg::GetEnvelope { reply }).await.ok()?;
-        rx.await.ok()
-    }
-
-    async fn ops_since(&self, since: i64) -> Vec<(i64, OperationEnvelope)> {
-        let (reply, rx) = oneshot::channel();
-        if self.tx.send(DocMsg::OpsSince { since, reply }).await.is_err() {
-            return Vec::new();
-        }
-        rx.await.unwrap_or_default()
-    }
-
-    async fn presence_update(&self, peer: PresencePeer) {
-        let _ = self.tx.send(DocMsg::PresenceUpdate { peer }).await;
-    }
-
-    async fn presence_leave(&self, actor: String) {
-        let _ = self.tx.send(DocMsg::PresenceLeave { actor }).await;
-    }
-}
-
-/// @emoji 🎭 One actor per open document: owns the `OpDag`, the log version counter, the in-memory operation
-/// cache, the presence roster, and the per-document broadcast fan-out. All persistence goes through
-/// the injected {@link HubStorage}.
-struct DocumentActor {
-    document_id: String,
-    storage: Arc<dyn HubStorage>,
-    schema: String,
-    snapshot: Value,
-    version: i64,
-    dag: OpDag,
-    operations: Vec<(i64, OperationEnvelope)>,
-    seen: HashSet<String>,
-    presence: HashMap<String, PresencePeer>,
-    broadcast: broadcast::Sender<HubServerFrame>,
-}
-
-impl DocumentActor {
-    async fn load(studio_id: String, document_id: String, storage: Arc<dyn HubStorage>) -> Result<Self, os_hub_storage::error::StorageError> {
-        let record: DocumentRecord = storage.ensure_document(&studio_id, &document_id).await?;
-        let operations = storage.load_operations(&document_id).await?;
-        let mut dag = OpDag::new();
-        let mut seen = HashSet::new();
-        for (_, envelope) in &operations {
-            let _ = dag.insert(envelope.clone());
-            seen.insert(envelope.id.0.clone());
-        }
-        let (broadcast, _) = broadcast::channel(256);
-        Ok(Self { document_id, storage, schema: record.schema, snapshot: record.snapshot, version: record.version, dag, operations, seen, presence: HashMap::new(), broadcast })
-    }
-
-    async fn run(mut self, mut rx: mpsc::Receiver<DocMsg>) {
-        while let Some(msg) = rx.recv().await {
-            match msg {
-                DocMsg::Subscribe { since_version, reply } => {
-                    let backlog = self.operations.iter().filter(|(version, _)| *version > since_version).map(|(_, envelope)| envelope.clone()).collect();
-                    let _ = reply.send(SubscribeReply { receiver: self.broadcast.subscribe(), version: self.version, envelope: self.snapshot.clone(), presence: self.presence.values().cloned().collect(), backlog });
-                }
-                DocMsg::AppendOperations { envelopes, origin, reply } => {
-                    let mut appended = Vec::new();
-                    let mut fresh = Vec::new();
-                    for envelope in envelopes {
-                        let operation_id = envelope.id.0.clone();
-                        if self.seen.contains(&operation_id) {
-                            appended.push(AppendedOperation { version: self.version, operation_id, is_new: false });
-                            continue;
-                        }
-                        let inserted = match self.storage.insert_operation(&self.document_id, self.version + 1, &envelope).await {
-                            Ok(inserted) => inserted,
-                            Err(error) => {
-                                tracing::error!(%error, operation_id = %operation_id, "failed to insert operation; dropping from this batch");
-                                continue;
-                            }
-                        };
-                        if !inserted {
-                            self.seen.insert(operation_id.clone());
-                            appended.push(AppendedOperation { version: self.version, operation_id, is_new: false });
-                            continue;
-                        }
-                        self.version += 1;
-                        let _ = self.dag.insert(envelope.clone());
-                        self.seen.insert(operation_id.clone());
-                        self.operations.push((self.version, envelope.clone()));
-                        appended.push(AppendedOperation { version: self.version, operation_id, is_new: true });
-                        fresh.push(envelope);
-                    }
-                    if !fresh.is_empty() {
-                        if let Err(error) = self.storage.save_document(&self.document_id, &self.schema, &self.snapshot, self.version).await {
-                            tracing::error!(%error, document_id = %self.document_id, "failed to persist document snapshot after append");
-                        }
-                        let _ = self.broadcast.send(HubServerFrame::Operations { version: self.version, envelopes: fresh, origin });
-                    }
-                    let _ = reply.send(appended);
-                }
-                DocMsg::PutEnvelope { version, envelope, reply } => {
-                    if version != self.version {
-                        let _ = reply.send(Err(self.version));
-                        continue;
-                    }
-                    self.version += 1;
-                    self.apply_envelope(&envelope);
-                    if let Err(error) = self.storage.save_document(&self.document_id, &self.schema, &self.snapshot, self.version).await {
-                        tracing::error!(%error, document_id = %self.document_id, "failed to persist document snapshot after put");
-                    }
-                    let _ = self.broadcast.send(HubServerFrame::SnapshotReplaced { version: self.version, envelope: self.snapshot.clone() });
-                    let _ = reply.send(Ok(self.version));
-                }
-                DocMsg::GetDocument { reply } => {
-                    let _ = reply.send((self.snapshot.clone(), self.version));
-                }
-                DocMsg::GetEnvelope { reply } => {
-                    let _ = reply.send((self.envelope_view(), self.version));
-                }
-                DocMsg::OpsSince { since, reply } => {
-                    let rows = self.operations.iter().filter(|(version, _)| *version > since).map(|(version, envelope)| (*version, envelope.clone())).collect();
-                    let _ = reply.send(rows);
-                }
-                DocMsg::PresenceUpdate { peer } => {
-                    self.presence.insert(peer.actor.clone(), peer);
-                    let _ = self.broadcast.send(HubServerFrame::Presence { peers: self.presence.values().cloned().collect() });
-                }
-                DocMsg::PresenceLeave { actor } => {
-                    if self.presence.remove(&actor).is_some() {
-                        let _ = self.broadcast.send(HubServerFrame::Presence { peers: self.presence.values().cloned().collect() });
-                    }
-                }
-            }
-        }
-    }
-
-    /// @emoji 🔁 Merges an incoming envelope's `vcs` block into the durable snapshot (structural replace).
-    fn apply_envelope(&mut self, envelope: &Value) {
-        if let Some(obj) = envelope.as_object() {
-            if obj.get("vcs").is_some() {
-                if let Some(snapshot) = self.snapshot.as_object_mut() {
-                    if let Some(vcs) = obj.get("vcs") {
-                        snapshot.insert("vcs".into(), vcs.clone());
-                    }
-                    if let Some(schema) = obj.get("schema").and_then(|value| value.as_str()) {
-                        self.schema = schema.to_string();
-                        snapshot.insert("schema".into(), Value::String(schema.into()));
-                    }
-                    if let Some(id) = obj.get("id").and_then(|value| value.as_str()) {
-                        snapshot.insert("id".into(), Value::String(id.into()));
-                    }
-                    if let Some(backbone) = obj.get("backbone") {
-                        snapshot.insert("backbone".into(), backbone.clone());
-                    }
-                    return;
-                }
-            }
-        }
-        self.snapshot = envelope.clone();
-    }
-
-    fn envelope_view(&self) -> Value {
-        self.snapshot
-            .get("vcs")
-            .cloned()
-            .map(|vcs| {
-                serde_json::json!({
-                    "schema": self.schema,
-                    "id": self.snapshot.get("id").cloned().unwrap_or_else(|| Value::String(self.document_id.clone())),
-                    "vcs": vcs,
-                    "backbone": self.snapshot.get("backbone").cloned(),
-                })
-            })
-            .unwrap_or_else(|| self.snapshot.clone())
-    }
-}
-
-/// @emoji 🌱 Spawns the actor's async load inside its own task so `HubState::actor` stays a
-/// synchronous `DashMap` lookup — the mailbox channel exists immediately, `DocumentActor::load`'s
-/// storage IO happens before the actor's `run` loop starts draining it.
-fn spawn_document_actor(studio_id: String, document_id: String, storage: Arc<dyn HubStorage>) -> DocumentHandle {
-    let (tx, rx) = mpsc::channel(256);
-    tokio::spawn(async move {
-        match DocumentActor::load(studio_id, document_id, storage).await {
-            Ok(actor) => actor.run(rx).await,
-            // rx is dropped here, closing the mailbox; every DocumentHandle method already
-            // tolerates a closed channel (`.ok()?` / `.is_err()` / `unwrap_or_default()`).
-            Err(error) => tracing::error!(%error, "failed to load document actor"),
-        }
-    });
-    DocumentHandle { tx }
-}
-//#endregion 🔖DocumentActor
-
 //#region 🔖State
+/// @emoji 🎫 `(studio_id, document_id)` -> the single string key both `db::Database`'s flat
+/// document catalog and this crate's own fanout/presence registries key on — studio scoping is a
+/// convention this crate applies on top of `db`'s namespace, not something `db` itself knows about.
+fn scope_key(studio_id: &str, document_id: &str) -> String {
+    format!("{studio_id}:{document_id}")
+}
+
+fn db_document_id(studio_id: &str, document_id: &str) -> ProtocolDocumentId {
+    ProtocolDocumentId(scope_key(studio_id, document_id))
+}
+
+fn db_core_document_id(id: &ProtocolDocumentId) -> db::core::DocumentId {
+    db::core::DocumentId(id.0.clone())
+}
+
 #[derive(Clone)]
 struct HubState {
-    storage: Arc<dyn HubStorage>,
-    /// @emoji 🔑 Keyed by `(studio_id, document_id)` — the same document id in two different studios
-    /// gets two independent actors (own mailbox, own presence roster, own broadcast fan-out).
-    actors: Arc<DashMap<(String, String), DocumentHandle>>,
+    db: Arc<db::Database>,
+    directory: Arc<dyn HubDirectory>,
     admin_token: Option<String>,
+    /// @emoji 📡 Command-lane + preview-lane fan-out, one `broadcast::Sender` per `scope_key` —
+    /// `db::Database`'s own `DocumentHandle` exposes no live-subscription seam yet (see
+    /// `db_engine`'s module doc: `subscribe`/`preview` are honest `Unimplemented` extension seams),
+    /// so relaying newly-committed commands / preview blobs / presence updates to other connected
+    /// sessions on the same document is this crate's own, deliberately thin responsibility — it
+    /// never itself decides ordering or durability, only re-broadcasts what `db` already committed
+    /// or what a preview/presence frame carries verbatim.
+    fanout: Arc<DashMap<String, broadcast::Sender<ServerFrame>>>,
+    /// @emoji 👥 `(scope_key, actor)` -> that actor's last-published presence peer JSON — ephemeral,
+    /// never durable (mirrors the preview lane's own law), rebuilt from nothing on hub restart.
+    presence: Arc<DashMap<(String, String), Value>>,
 }
 
 impl HubState {
-    /// @emoji 🗂️ Returns the (studio, document) actor, spawning it lazily on first access (open-on-demand).
-    fn actor(&self, studio_id: &str, document_id: &str) -> DocumentHandle {
-        let key = (studio_id.to_string(), document_id.to_string());
-        if let Some(existing) = self.actors.get(&key) {
+    fn fanout_for(&self, key: &str) -> broadcast::Sender<ServerFrame> {
+        if let Some(existing) = self.fanout.get(key) {
             return existing.clone();
         }
-        self.actors.entry(key.clone()).or_insert_with(|| spawn_document_actor(key.0.clone(), key.1.clone(), self.storage.clone())).clone()
+        let (tx, _rx) = broadcast::channel(256);
+        self.fanout.entry(key.to_string()).or_insert(tx).clone()
+    }
+
+    fn presence_peers(&self, key: &str) -> Vec<Value> {
+        self.presence.iter().filter(|entry| entry.key().0 == key).map(|entry| entry.value().clone()).collect()
+    }
+
+    /// @emoji 🗂️ Get-or-create: a document is lazily minted in `db`'s catalog on its first Hello,
+    /// tolerating the race of two sessions doing so concurrently (the loser's `AlreadyExists`
+    /// resolves to the same live handle the winner just registered).
+    fn ensure_document(&self, id: &ProtocolDocumentId) -> Result<db::DocumentHandle, db::DbError> {
+        match self.db.document(id) {
+            Ok(handle) => Ok(handle),
+            Err(db::DbError::NotFound(_)) => match self.db.create_document(db::DocumentSpec::new(id.clone())) {
+                Ok(handle) => Ok(handle),
+                Err(db::DbError::AlreadyExists(_)) => self.db.document(id),
+                Err(other) => Err(other),
+            },
+            Err(other) => Err(other),
+        }
     }
 }
 
 fn bearer(headers: &HeaderMap) -> Option<String> {
     headers.get(axum::http::header::AUTHORIZATION).and_then(|value| value.to_str().ok()).and_then(|value| value.strip_prefix("Bearer ")).map(|value| value.to_string())
 }
+
+fn db_error_status(error: db::DbError) -> StatusCode {
+    match error {
+        db::DbError::NotFound(_) => StatusCode::NOT_FOUND,
+        db::DbError::AlreadyExists(_) | db::DbError::Conflict(_) => StatusCode::CONFLICT,
+        db::DbError::Unauthorized(_) => StatusCode::UNAUTHORIZED,
+        db::DbError::InvalidArgument(_) | db::DbError::LimitExceeded(_) => StatusCode::BAD_REQUEST,
+        db::DbError::Unavailable(_) | db::DbError::Timeout(_) => StatusCode::SERVICE_UNAVAILABLE,
+        _ => StatusCode::INTERNAL_SERVER_ERROR,
+    }
+}
+
+/// @emoji #️⃣ Decodes a 64-hex-char blob URL path segment into a `db::ContentHash` — the inverse of
+/// `ContentHash`'s `Display` (see `pack_core::ContentHash`), never trusted as-is (a malformed path
+/// is `BAD_REQUEST`, not a panic).
+fn parse_content_hash(hex: &str) -> Option<db::ContentHash> {
+    if hex.len() != 64 {
+        return None;
+    }
+    let mut bytes = [0u8; 32];
+    let raw = hex.as_bytes();
+    for (index, slot) in bytes.iter_mut().enumerate() {
+        let byte_str = std::str::from_utf8(&raw[index * 2..index * 2 + 2]).ok()?;
+        *slot = u8::from_str_radix(byte_str, 16).ok()?;
+    }
+    Some(db::ContentHash(bytes))
+}
 //#endregion 🔖State
+
+//#region 🔖Auth
+/// @emoji 🔎 What a bearer token resolved to: an authenticated studio member, an anonymous
+/// share-token viewer, or nothing.
+enum AuthOutcome {
+    Session { user_id: String, role: StudioRole },
+    ShareToken,
+    Denied,
+}
+
+/// @emoji 🔐 Tries the bearer as an `AuthSessionRecord` (session id -> user -> studio role) first;
+/// falls back to the existing anonymous share-token scheme when session resolution fails. Tokenless
+/// documents stay open (dev default) until any share token is issued for them.
+async fn resolve_auth(state: &HubState, studio_id: &str, document_id: &str, token: Option<&str>) -> AuthOutcome {
+    if let Some(session_id) = token {
+        if let Ok(Some(session)) = state.directory.get_auth_session(session_id).await {
+            if session.expires_at > now_ms() {
+                if let Ok(Some(role)) = state.directory.get_role(studio_id, &session.user_id).await {
+                    return AuthOutcome::Session { user_id: session.user_id, role };
+                }
+            }
+        }
+    }
+    match state.directory.authorized_by_token(document_id, token).await {
+        Ok(true) => AuthOutcome::ShareToken,
+        _ => AuthOutcome::Denied,
+    }
+}
+
+async fn authorized(state: &HubState, studio_id: &str, document_id: &str, token: Option<&str>) -> bool {
+    !matches!(resolve_auth(state, studio_id, document_id, token).await, AuthOutcome::Denied)
+}
+
+/// @emoji 📦 Studio-scoped blobs have no owning document, so this borrows `resolve_auth`'s
+/// session -> role branch as-is (studio role lookup never touches `document_id`) by passing the
+/// blob hash in the document-id slot; the share-token branch then degrades to `Denied` unless a
+/// document happens to share the blob's hash as its id, which content hashes never do in
+/// practice. A session with any studio role is required — a document's share token intentionally
+/// does not widen into read access over the whole studio's content-addressed blob store.
+async fn authorized_for_blob(state: &HubState, studio_id: &str, hash: &str, token: Option<&str>) -> bool {
+    !matches!(resolve_auth(state, studio_id, hash, token).await, AuthOutcome::Denied)
+}
+//#endregion 🔖Auth
 
 //#region 🔖Rest
 #[derive(Serialize)]
-struct DocumentResponse {
-    snapshot: Value,
-    version: i64,
-}
-
-#[derive(Serialize)]
-struct EnvelopeResponse {
-    envelope: Value,
-    version: i64,
-}
-
-#[derive(Deserialize)]
-struct PutEnvelopeRequest {
-    version: i64,
-    envelope: Value,
-}
-
-#[derive(Serialize)]
-struct PutEnvelopeResponse {
-    version: i64,
-}
-
-#[derive(Deserialize)]
-struct AppendOpRequest {
-    envelope: OperationEnvelope,
-}
-
-#[derive(Serialize)]
-struct AppendOpResponse {
-    version: i64,
-}
-
-#[derive(Serialize)]
-struct OpSinceRow {
-    version: i64,
-    envelope: OperationEnvelope,
-}
-
-#[derive(Deserialize)]
-struct SinceQuery {
-    since: Option<i64>,
+struct DocumentStatusResponse {
+    document_id: String,
+    head_seq: u64,
+    commit_seq: u64,
+    epoch: u64,
 }
 
 #[derive(Deserialize)]
@@ -397,56 +238,32 @@ struct CreateAuthSessionResponse {
     user_id: String,
 }
 
+#[derive(Serialize)]
+struct BlobRecord {
+    hash: String,
+    media_type: String,
+    size: i64,
+}
+
 async fn list_nodes(Path(studio_id): Path<String>, Query(query): Query<NodesQuery>, State(state): State<HubState>) -> Result<Json<Vec<NodeRecord>>, StatusCode> {
-    state.storage.list_nodes(&studio_id, query.parent.as_deref()).await.map(Json).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+    state.directory.list_nodes(&studio_id, query.parent.as_deref()).await.map(Json).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
 
 async fn create_node(Path(studio_id): Path<String>, State(state): State<HubState>, Json(body): Json<CreateNodeRequest>) -> Result<Json<NodeRecord>, StatusCode> {
-    state.storage.create_node(&studio_id, body.parent_id.as_deref(), &body.name, &body.kind).await.map(Json).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+    state.directory.create_node(&studio_id, body.parent_id.as_deref(), &body.name, &body.kind).await.map(Json).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
 
-async fn get_document(Path((studio_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<DocumentResponse>, StatusCode> {
+/// @emoji 🧭 A document's current frontier — the REST surface's only document-shaped route now
+/// that whole-envelope JSON snapshot/operation-log routes are gone (superseded by the WS wire-v2
+/// protocol; see `header`). Lazily mints the document in `db`'s catalog on first access, same as
+/// the WS handshake does.
+async fn get_document_status(Path((studio_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<DocumentStatusResponse>, StatusCode> {
     if !authorized(&state, &studio_id, &document_id, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
-    let (snapshot, version) = state.actor(&studio_id, &document_id).get_document().await.ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(Json(DocumentResponse { snapshot, version }))
-}
-
-async fn get_envelope(Path((studio_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<EnvelopeResponse>, StatusCode> {
-    if !authorized(&state, &studio_id, &document_id, bearer(&headers).as_deref()).await {
-        return Err(StatusCode::UNAUTHORIZED);
-    }
-    let (envelope, version) = state.actor(&studio_id, &document_id).get_envelope().await.ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(Json(EnvelopeResponse { envelope, version }))
-}
-
-async fn put_envelope(Path((studio_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, Json(body): Json<PutEnvelopeRequest>) -> Result<Json<PutEnvelopeResponse>, StatusCode> {
-    if !authorized(&state, &studio_id, &document_id, bearer(&headers).as_deref()).await {
-        return Err(StatusCode::UNAUTHORIZED);
-    }
-    match state.actor(&studio_id, &document_id).put_envelope(body.version, body.envelope).await {
-        Ok(version) => Ok(Json(PutEnvelopeResponse { version })),
-        Err(_) => Err(StatusCode::CONFLICT),
-    }
-}
-
-async fn append_operation(Path((studio_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, Json(body): Json<AppendOpRequest>) -> Result<Json<AppendOpResponse>, StatusCode> {
-    if !authorized(&state, &studio_id, &document_id, bearer(&headers).as_deref()).await {
-        return Err(StatusCode::UNAUTHORIZED);
-    }
-    let origin = body.envelope.actor.0.clone();
-    let appended = state.actor(&studio_id, &document_id).append_operations(vec![body.envelope], origin).await;
-    let version = appended.last().map(|operation| operation.version).unwrap_or(0);
-    Ok(Json(AppendOpResponse { version }))
-}
-
-async fn get_ops_since(Path((studio_id, document_id)): Path<(String, String)>, Query(query): Query<SinceQuery>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<Vec<OpSinceRow>>, StatusCode> {
-    if !authorized(&state, &studio_id, &document_id, bearer(&headers).as_deref()).await {
-        return Err(StatusCode::UNAUTHORIZED);
-    }
-    let rows = state.actor(&studio_id, &document_id).ops_since(query.since.unwrap_or(0)).await.into_iter().map(|(version, envelope)| OpSinceRow { version, envelope }).collect();
-    Ok(Json(rows))
+    let handle = state.ensure_document(&db_document_id(&studio_id, &document_id)).map_err(db_error_status)?;
+    let frontier = handle.frontier().map_err(db_error_status)?;
+    Ok(Json(DocumentStatusResponse { document_id, head_seq: frontier.head_seq, commit_seq: frontier.commit_seq, epoch: frontier.epoch }))
 }
 
 async fn create_share(Path((_studio_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<ShareResponse>, StatusCode> {
@@ -458,7 +275,7 @@ async fn create_share(Path((_studio_id, document_id)): Path<(String, String)>, h
         }
         None => return Err(StatusCode::FORBIDDEN),
     }
-    let token = state.storage.create_share_token(&document_id).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let token = state.directory.create_share_token(&document_id).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     Ok(Json(ShareResponse { token }))
 }
 
@@ -466,82 +283,40 @@ async fn create_share(Path((_studio_id, document_id)): Path<(String, String)>, h
 /// user if it doesn't exist yet. No password/SSO check — real SSO/OAuth is explicitly future scope;
 /// this exists only so `AuthSessionRecord`-backed routes have a caller until that lands.
 async fn create_auth_session(State(state): State<HubState>, Json(body): Json<CreateAuthSessionRequest>) -> Result<Json<CreateAuthSessionResponse>, StatusCode> {
-    let user = match state.storage.get_user_by_email(&body.email).await {
+    let user = match state.directory.get_user_by_email(&body.email).await {
         Ok(Some(user)) => user,
-        Ok(None) => state.storage.create_user(&body.email, &body.email, None, None, None).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+        Ok(None) => state.directory.create_user(&body.email, &body.email, None, None, None).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
         Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
     };
-    let session = state.storage.create_auth_session(&user.id, 60 * 60 * 24 * 30, None).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let session = state.directory.create_auth_session(&user.id, 60 * 60 * 24 * 30, None).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     Ok(Json(CreateAuthSessionResponse { token: session.id, user_id: user.id }))
 }
 
-/// @emoji 🔎 What a bearer token resolved to: an authenticated studio member, an anonymous
-/// share-token viewer, or nothing.
-enum AuthOutcome {
-    Session { user_id: String, role: StudioRole },
-    ShareToken,
-    Denied,
-}
-
-/// @emoji 🔐 Tries the bearer as an `AuthSessionRecord` (session id → user → studio role) first;
-/// falls back to the existing anonymous share-token scheme when session resolution fails. Tokenless
-/// documents stay open (dev default) until any share token is issued for them.
-async fn resolve_auth(state: &HubState, studio_id: &str, document_id: &str, token: Option<&str>) -> AuthOutcome {
-    if let Some(session_id) = token {
-        if let Ok(Some(session)) = state.storage.get_auth_session(session_id).await {
-            if session.expires_at > now_ms() {
-                if let Ok(Some(role)) = state.storage.get_role(studio_id, &session.user_id).await {
-                    return AuthOutcome::Session { user_id: session.user_id, role };
-                }
-            }
-        }
-    }
-    match state.storage.authorized_by_token(document_id, token).await {
-        Ok(true) => AuthOutcome::ShareToken,
-        _ => AuthOutcome::Denied,
-    }
-}
-
-async fn authorized(state: &HubState, studio_id: &str, document_id: &str, token: Option<&str>) -> bool {
-    !matches!(resolve_auth(state, studio_id, document_id, token).await, AuthOutcome::Denied)
-}
-
 //#region Blobs
-/// @emoji 📦 Studio-scoped blobs have no owning document, so this borrows `resolve_auth`'s
-/// session→role branch as-is (studio role lookup never touches `document_id`) by passing the
-/// blob hash in the document-id slot; the share-token branch then degrades to `Denied` unless a
-/// document happens to share the blob's hash as its id, which content hashes never do in
-/// practice. A session with any studio role is required — a document's share token intentionally
-/// does not widen into read access over the whole studio's content-addressed blob store.
-async fn authorized_for_blob(state: &HubState, studio_id: &str, hash: &str, token: Option<&str>) -> bool {
-    !matches!(resolve_auth(state, studio_id, hash, token).await, AuthOutcome::Denied)
-}
-
 async fn put_blob(Path((studio_id, hash)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Result<Json<BlobRecord>, StatusCode> {
     if !authorized_for_blob(&state, &studio_id, &hash, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
-    let media_type = headers.get(axum::http::header::CONTENT_TYPE).and_then(|value| value.to_str().ok()).unwrap_or("application/octet-stream");
-    let record = state.storage.put_blob(&body, media_type).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let media_type = headers.get(axum::http::header::CONTENT_TYPE).and_then(|value| value.to_str().ok()).unwrap_or("application/octet-stream").to_string();
+    let computed = state.db.storage().payload().put(&body).map_err(db_error_status)?;
+    let computed_hex = computed.to_string();
     // The path hash is client-supplied (content-addressed URL); a mismatch against the
     // storage-computed hash means the client sent the wrong bytes for that address — a bad
-    // request, distinct from `put_envelope`'s CONFLICT which signals a version CAS race.
-    if record.hash != hash {
+    // request, distinct from a document CAS conflict.
+    if computed_hex != hash {
         return Err(StatusCode::BAD_REQUEST);
     }
-    Ok(Json(record))
+    Ok(Json(BlobRecord { hash: computed_hex, media_type, size: body.len() as i64 }))
 }
 
-/// @emoji 📭 `HubStorage::get_blob` returns only bytes (media type isn't retrievable on read —
-/// see `HubStorage::put_blob`'s doc comment), so the response always serves as generic binary;
-/// a typed content-type on GET needs a storage-trait change out of this ticket's bin.rs-only scope.
 async fn get_blob(Path((studio_id, hash)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<impl IntoResponse, StatusCode> {
     if !authorized_for_blob(&state, &studio_id, &hash, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
-    match state.storage.get_blob(&hash).await {
-        Ok(Some(bytes)) => Ok(([(axum::http::header::CONTENT_TYPE, "application/octet-stream")], bytes)),
-        Ok(None) => Err(StatusCode::NOT_FOUND),
+    let content_hash = parse_content_hash(&hash).ok_or(StatusCode::BAD_REQUEST)?;
+    match state.db.storage().payload().get(&content_hash) {
+        Ok(bytes) => Ok(([(axum::http::header::CONTENT_TYPE, "application/octet-stream")], bytes)),
+        Err(db::DbError::NotFound(_)) => Err(StatusCode::NOT_FOUND),
         Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
     }
 }
@@ -550,7 +325,8 @@ async fn head_blob(Path((studio_id, hash)): Path<(String, String)>, headers: Hea
     if !authorized_for_blob(&state, &studio_id, &hash, bearer(&headers).as_deref()).await {
         return StatusCode::UNAUTHORIZED;
     }
-    match state.storage.has_blob(&hash).await {
+    let Some(content_hash) = parse_content_hash(&hash) else { return StatusCode::BAD_REQUEST };
+    match state.db.storage().payload().contains(&content_hash) {
         Ok(true) => StatusCode::OK,
         Ok(false) => StatusCode::NOT_FOUND,
         Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
@@ -564,82 +340,182 @@ async fn document_ws(ws: WebSocketUpgrade, Path((studio_id, document_id)): Path<
     ws.on_upgrade(move |socket| handle_ws(socket, studio_id, document_id, state))
 }
 
-fn encode(frame: &HubServerFrame) -> Message {
-    Message::Text(serde_json::to_string(frame).unwrap_or_default().into())
+fn encode(frame: &ServerFrame) -> Message {
+    Message::Binary(encode_server_frame(frame, Lane::Command).into())
+}
+
+fn error_frame(code: &str, message: impl Into<String>) -> Message {
+    encode(&ServerFrame::Error { code: code.to_string(), message: message.into() })
+}
+
+/// @emoji 🧭 Best-effort `RuntimeFrontierSummary` for an `Ack` when the triggering `submit` itself
+/// failed — re-reads the document's current (unaffected) frontier so the client still learns
+/// "where the server actually is", falling back to an all-zero genesis summary only if even that
+/// read fails (a document wedged badly enough that this happens has bigger problems than one Ack).
+fn best_effort_frontier(handle: &db::DocumentHandle) -> RuntimeFrontierSummary {
+    match handle.frontier() {
+        Ok(frontier) => engine_frontier_to_wire(&frontier, String::new()),
+        Err(_) => RuntimeFrontierSummary { document_id: handle.document_id().clone(), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0u8; 32] },
+    }
+}
+
+fn engine_frontier_to_wire(frontier: &db::Frontier, head_edit_id: String) -> RuntimeFrontierSummary {
+    RuntimeFrontierSummary { document_id: frontier.document.clone(), head_edit_ordinal: frontier.head_seq, head_edit_id, last_commit_seq: frontier.commit_seq, chain_hash: frontier.chain_hash }
+}
+
+/// @emoji ✍️ Submits `envelopes` as one `db_document::CommandBatch` through `handle`, returning the
+/// `Ack` to send the submitter plus (on acceptance) the `Commands` frame to fan out to every other
+/// session on the same document. `Fsync` durability: a hub session's `submit` genuinely committing
+/// is the promise `AckStage::Persisted` makes to the client.
+async fn submit_commands(handle: &db::DocumentHandle, actor: &ActorId, batch_id: u64, envelopes: Vec<OperationEnvelope>) -> (ServerFrame, Option<ServerFrame>) {
+    let batch = match db::document::CommandBatch::new(envelopes.clone()) {
+        Ok(batch) => batch,
+        Err(error) => {
+            let frontier = best_effort_frontier(handle);
+            return (ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: error.to_string() }) }], frontier }, None);
+        }
+    };
+    match handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync }).await {
+        Ok(Ok(receipt)) => {
+            let frontier = engine_frontier_to_wire(&receipt.frontier, receipt.command_id.0.clone());
+            let ack = ServerFrame::Ack {
+                batch_id,
+                stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }],
+                frontier: frontier.clone(),
+            };
+            let commands = ServerFrame::Commands { envelopes, origin: actor.clone(), frontier };
+            (ack, Some(commands))
+        }
+        Ok(Err(error)) | Err(error) => {
+            let frontier = best_effort_frontier(handle);
+            (ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: error.to_string() }) }], frontier }, None)
+        }
+    }
+}
+
+/// @emoji 📨 Handles one decoded `ClientFrame` for an already-authenticated, already-`Hello`'d
+/// session. Returns `false` when the session should close (`Bye`, or a send failure).
+#[allow(clippy::too_many_arguments)]
+async fn handle_client_frame(
+    state: &HubState,
+    handle: &db::DocumentHandle,
+    db_id: &ProtocolDocumentId,
+    key: &str,
+    fanout: &broadcast::Sender<ServerFrame>,
+    actor: &ActorId,
+    frame: ClientFrame,
+    sender: &mut SplitSink<WebSocket, Message>,
+) -> bool {
+    match frame {
+        ClientFrame::Commands { batch_id, envelopes } => {
+            let (ack, relay) = submit_commands(handle, actor, batch_id, envelopes).await;
+            if let Some(commands_frame) = relay {
+                let _ = fanout.send(commands_frame);
+            }
+            sender.send(encode(&ack)).await.is_ok()
+        }
+        ClientFrame::FrontierAdvertise { frontier } => {
+            let core_document = db_core_document_id(db_id);
+            match db::sync::handle_frontier_advertise(state.db.storage().wal(), core_document, &frontier, actor.clone()) {
+                Ok(Some(catch_up)) => sender.send(encode(&catch_up)).await.is_ok(),
+                Ok(None) => true,
+                Err(_) => true,
+            }
+        }
+        ClientFrame::PreviewPublish { key: preview_key, seq, payload } => {
+            let _ = fanout.send(ServerFrame::Preview { actor: actor.clone(), key: preview_key, seq, payload });
+            true
+        }
+        ClientFrame::Presence { peer } => {
+            state.presence.insert((key.to_string(), actor.0.clone()), peer);
+            let _ = fanout.send(ServerFrame::Presence { peers: state.presence_peers(key) });
+            true
+        }
+        // 🪙 Command-lane credit-based flow control: no server-side congestion control implemented
+        // this wave (matches `framework/sync`'s client, which also accepts and ignores this frame).
+        ClientFrame::CreditGrant { .. } => true,
+        ClientFrame::Bye => false,
+        // A second `Hello` mid-session has nothing to negotiate beyond the first — ignored rather
+        // than torn down, matching this crate's generally forgiving-of-redundant-frames stance.
+        ClientFrame::Hello { .. } => true,
+    }
 }
 
 async fn handle_ws(socket: WebSocket, studio_id: String, document_id: String, state: HubState) {
     let (mut sender, mut receiver) = socket.split();
 
     let hello = match receiver.next().await {
-        Some(Ok(Message::Text(text))) => serde_json::from_str::<HubClientFrame>(&text).ok(),
+        Some(Ok(Message::Binary(bytes))) => decode_client_frame(&bytes).ok().map(|(_lane, frame)| frame),
         _ => None,
     };
-    let (actor, token, since_version) = match hello {
-        Some(HubClientFrame::Hello { actor, token, since_version }) => (actor, token, since_version),
-        _ => {
-            let _ = sender.send(encode(&HubServerFrame::Error { message: "expected hello frame".into() })).await;
-            return;
-        }
+    let Some(ClientFrame::Hello { actor, token, frontier, .. }) = hello else {
+        let _ = sender.send(error_frame("protocol", "expected hello frame")).await;
+        return;
     };
+
     let auth = resolve_auth(&state, &studio_id, &document_id, token.as_deref()).await;
     let (user_id, role) = match &auth {
-        AuthOutcome::Session { user_id, role } => (Some(user_id.clone()), Some(role.as_str().to_string())),
+        AuthOutcome::Session { user_id, role } => (Some(user_id.clone()), Some(*role)),
         AuthOutcome::ShareToken => (None, None),
         AuthOutcome::Denied => {
-            let _ = sender.send(encode(&HubServerFrame::Error { message: "unauthorized".into() })).await;
+            let _ = sender.send(error_frame("unauthorized", "unauthorized")).await;
             return;
         }
     };
 
-    let handle = state.actor(&studio_id, &document_id);
-    let sub = match handle.subscribe(since_version).await {
-        Some(sub) => sub,
-        None => return,
+    let db_id = db_document_id(&studio_id, &document_id);
+    let handle = match state.ensure_document(&db_id) {
+        Ok(handle) => handle,
+        Err(error) => {
+            let _ = sender.send(error_frame("storage", error.to_string())).await;
+            return;
+        }
     };
-    let mut broadcast_rx = sub.receiver;
-    let welcome = HubServerFrame::Welcome { version: sub.version, envelope: if since_version == 0 { Some(sub.envelope) } else { None }, presence: sub.presence, backlog: sub.backlog };
-    if sender.send(encode(&welcome)).await.is_err() {
+
+    let session_id = uuid::Uuid::now_v7().to_string();
+    // 🔖 64KiB inline-snapshot threshold: this crate's own choice (`db_sync::build_welcome`'s
+    // `snapshot_chunk_bytes` fixes the threshold, not a value) — generous enough that a fresh
+    // replica's typical backlog never needs a follow-up `SnapshotChunk` round trip, small enough
+    // to never balloon a single WS frame unreasonably.
+    let welcome_response = match state.db.hello(&db_id, frontier.as_ref(), session_id, &actor, 64 * 1024) {
+        Ok(response) => response,
+        Err(error) => {
+            let _ = sender.send(error_frame("storage", error.to_string())).await;
+            return;
+        }
+    };
+    if sender.send(encode(&welcome_response.welcome)).await.is_err() {
         return;
     }
+    for frame in &welcome_response.follow_up {
+        if sender.send(encode(frame)).await.is_err() {
+            return;
+        }
+    }
 
-    // Register this connection in the presence roster on connect; richer Presence frames update it later.
-    handle.presence_update(PresencePeer { actor: actor.clone(), label: None, selection_json: None, connected_at_ms: now_ms(), user_id, role, cursor: None, viewport: None, drag_ghost_json: None }).await;
+    let key = scope_key(&studio_id, &document_id);
+    let fanout = state.fanout_for(&key);
+    let mut broadcast_rx = fanout.subscribe();
+
+    let sync_session = state.directory.record_sync_session_open(&document_id, user_id.as_deref(), role, &actor.0).await.ok();
 
     loop {
         tokio::select! {
             incoming = receiver.next() => {
                 match incoming {
-                    Some(Ok(Message::Text(text))) => {
-                        match serde_json::from_str::<HubClientFrame>(&text) {
-                            Ok(HubClientFrame::Operations { envelopes }) => {
-                                let appended = handle.append_operations(envelopes, actor.clone()).await;
-                                for operation in appended {
-                                    if operation.is_new && sender.send(encode(&HubServerFrame::Ack { operation_id: operation.operation_id, version: operation.version })).await.is_err() {
-                                        break;
-                                    }
-                                }
+                    Some(Ok(Message::Binary(bytes))) => {
+                        if let Ok((_lane, frame)) = decode_client_frame(&bytes) {
+                            if !handle_client_frame(&state, &handle, &db_id, &key, &fanout, &actor, frame, &mut sender).await {
+                                break;
                             }
-                            Ok(HubClientFrame::PutEnvelope { version, envelope }) => {
-                                if let Err(current) = handle.put_envelope(version, envelope).await {
-                                    if sender.send(encode(&HubServerFrame::Conflict { message: format!("stale version; current {current}") })).await.is_err() {
-                                        break;
-                                    }
-                                }
-                            }
-                            Ok(HubClientFrame::Presence { peer }) => {
-                                handle.presence_update(peer).await;
-                            }
-                            Ok(HubClientFrame::Bye) => break,
-                            Ok(HubClientFrame::Hello { .. }) | Err(_) => {}
                         }
                     }
-                    Some(Ok(Message::Close(_))) | None => break,
                     Some(Ok(Message::Ping(payload))) => {
                         if sender.send(Message::Pong(payload)).await.is_err() {
                             break;
                         }
                     }
+                    Some(Ok(Message::Close(_))) | None => break,
                     Some(Ok(_)) => {}
                     Some(Err(_)) => break,
                 }
@@ -657,7 +533,12 @@ async fn handle_ws(socket: WebSocket, studio_id: String, document_id: String, st
             }
         }
     }
-    handle.presence_leave(actor).await;
+
+    if let Some(session) = sync_session {
+        let _ = state.directory.record_sync_session_close(&session.id).await;
+    }
+    state.presence.remove(&(key.clone(), actor.0.clone()));
+    let _ = fanout.send(ServerFrame::Presence { peers: state.presence_peers(&key) });
 }
 //#endregion 🔖WebSocket
 
@@ -667,40 +548,82 @@ fn router(state: HubState) -> Router {
         .route("/auth/sessions", post(create_auth_session))
         .route("/studios/{studio_id}/nodes", get(list_nodes).post(create_node))
         .route("/studios/{studio_id}/blobs/{hash}", get(get_blob).head(head_blob).put(put_blob))
-        .route("/studios/{studio_id}/documents/{id}", get(get_document))
-        .route("/studios/{studio_id}/documents/{id}/envelope", get(get_envelope).put(put_envelope))
-        .route("/studios/{studio_id}/documents/{id}/operations", post(append_operation).get(get_ops_since))
+        .route("/studios/{studio_id}/documents/{id}", get(get_document_status))
         .route("/studios/{studio_id}/documents/{id}/share", post(create_share))
         .route("/studios/{studio_id}/documents/{id}/ws", get(document_ws))
         .with_state(state)
 }
 
-/// @emoji 🧬 Resolves and connects the storage backend selected by `OS_HUB_STORAGE_BACKEND`
-/// (`sqlite` default; `postgres` when `OS_HUB_DATABASE_URL` is set).
-async fn connect_storage() -> Result<Arc<dyn HubStorage>, HubError> {
-    let backend = std::env::var("OS_HUB_STORAGE_BACKEND").unwrap_or_else(|_| "sqlite".into());
+/// @emoji 🧬 Resolves and connects `db::Database`'s storage substrate, selected by
+/// `OS_HUB_STORAGE_BACKEND` (`fs` default, zero-touch, rooted at `{data_dir}/db`; `sqlite`,
+/// `postgres` — requires `OS_HUB_DATABASE_URL` — or `neo4j` — requires `OS_HUB_NEO4J_URI` —
+/// otherwise). Independent of `connect_directory`'s own backend choice (the contract's "storage
+/// swappability" requirement applies to `db`'s substrate and the directory's substrate
+/// separately).
+fn connect_db(data_dir: &std::path::Path) -> Result<db::Database, HubError> {
+    let backend = std::env::var("OS_HUB_STORAGE_BACKEND").unwrap_or_else(|_| "fs".into());
+    let profile = db::Profile::Prod;
     match backend.as_str() {
-        "sqlite" | "" => {
-            let db_path = std::env::var("OS_HUB_DB").unwrap_or_else(|_| "./.semio/hub.db".into());
-            if db_path != ":memory:" {
-                if let Some(parent) = std::path::Path::new(&db_path).parent() {
-                    let _ = std::fs::create_dir_all(parent);
-                }
+        "fs" | "" => {
+            let root = data_dir.join("db");
+            std::fs::create_dir_all(&root)?;
+            Ok(db::Database::open_at(&root, profile)?)
+        }
+        "sqlite" => {
+            let path = std::env::var("OS_HUB_DB_SQLITE").unwrap_or_else(|_| data_dir.join("db.sqlite3").to_string_lossy().into_owned());
+            if let Some(parent) = std::path::Path::new(&path).parent() {
+                std::fs::create_dir_all(parent)?;
             }
-            let storage = SqliteStorage::connect(&db_path).await?;
-            storage.seed().await?;
-            Ok(Arc::new(storage))
+            let storage = db::storage_sqlite::SqliteStorage::open(std::path::Path::new(&path))?;
+            Ok(db::Database::open(db::DbConfig::for_profile(profile), Arc::new(storage))?)
         }
         "postgres" => {
-            let database_url = std::env::var("OS_HUB_DATABASE_URL")
-                .map_err(|_| HubError::UnknownStorageBackend("postgres requires OS_HUB_DATABASE_URL".into()))?;
-            let storage = os_hub_storage_postgres::PostgresStorage::connect(&database_url)
-                .await
-                .map_err(|error| HubError::Storage(error))?;
-            storage.seed().await?;
-            Ok(Arc::new(storage))
+            let database_url = std::env::var("OS_HUB_DATABASE_URL").map_err(|_| HubError::UnknownStorageBackend("postgres requires OS_HUB_DATABASE_URL".into()))?;
+            let storage = db::storage_postgres::PostgresStorage::connect(&database_url)?;
+            Ok(db::Database::open(db::DbConfig::for_profile(profile), Arc::new(storage))?)
+        }
+        "neo4j" => {
+            let uri = std::env::var("OS_HUB_NEO4J_URI").map_err(|_| HubError::UnknownStorageBackend("neo4j requires OS_HUB_NEO4J_URI".into()))?;
+            let user = std::env::var("OS_HUB_NEO4J_USER").unwrap_or_else(|_| "neo4j".into());
+            let password = std::env::var("OS_HUB_NEO4J_PASSWORD").unwrap_or_default();
+            let storage = db::storage_neo4j::Neo4jStorage::connect(&uri, &user, &password)?;
+            Ok(db::Database::open(db::DbConfig::for_profile(profile), Arc::new(storage))?)
         }
         other => Err(HubError::UnknownStorageBackend(other.to_string())),
+    }
+}
+
+/// @emoji 🧬 Resolves and connects the identity/tenancy directory backend, selected by
+/// `OS_HUB_DIRECTORY_BACKEND` (`sqlite` default, zero-touch, `{data_dir}/directory.db`; `postgres`
+/// — requires `OS_HUB_DIRECTORY_DATABASE_URL` — or `neo4j` — requires
+/// `OS_HUB_DIRECTORY_NEO4J_URI` — otherwise).
+async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<dyn HubDirectory>, HubError> {
+    let backend = std::env::var("OS_HUB_DIRECTORY_BACKEND").unwrap_or_else(|_| "sqlite".into());
+    match backend.as_str() {
+        "sqlite" | "" => {
+            let path = data_dir.join("directory.db");
+            if let Some(parent) = path.parent() {
+                std::fs::create_dir_all(parent)?;
+            }
+            let directory = SqliteDirectory::connect(&path.to_string_lossy()).await?;
+            directory.seed().await?;
+            Ok(Arc::new(directory))
+        }
+        "postgres" => {
+            let database_url = std::env::var("OS_HUB_DIRECTORY_DATABASE_URL").map_err(|_| HubError::UnknownDirectoryBackend("postgres requires OS_HUB_DIRECTORY_DATABASE_URL".into()))?;
+            let directory = os_hub_directory_postgres::PostgresDirectory::connect(&database_url).await?;
+            directory.seed().await?;
+            Ok(Arc::new(directory))
+        }
+        "neo4j" => {
+            let uri = std::env::var("OS_HUB_DIRECTORY_NEO4J_URI").map_err(|_| HubError::UnknownDirectoryBackend("neo4j requires OS_HUB_DIRECTORY_NEO4J_URI".into()))?;
+            let user = std::env::var("OS_HUB_DIRECTORY_NEO4J_USER").unwrap_or_else(|_| "neo4j".into());
+            let password = std::env::var("OS_HUB_DIRECTORY_NEO4J_PASSWORD").unwrap_or_default();
+            let directory = os_hub_directory_neo4j::Neo4jDirectory::connect(&uri, &user, &password).await?;
+            directory.seed().await?;
+            Ok(Arc::new(directory))
+        }
+        other => Err(HubError::UnknownDirectoryBackend(other.to_string())),
     }
 }
 
@@ -708,9 +631,12 @@ async fn connect_storage() -> Result<Arc<dyn HubStorage>, HubError> {
 async fn main() -> Result<(), HubError> {
     tracing_subscriber::fmt::init();
     let port: u16 = std::env::var("OS_HUB_PORT").ok().and_then(|value| value.parse().ok()).unwrap_or(6070);
-    let storage = connect_storage().await?;
+    let data_dir = std::env::var("OS_HUB_DATA").map(std::path::PathBuf::from).unwrap_or_else(|_| std::path::PathBuf::from("./.semio/hub/"));
+    std::fs::create_dir_all(&data_dir)?;
+    let db = connect_db(&data_dir)?;
+    let directory = connect_directory(&data_dir).await?;
     let admin_token = std::env::var("OS_HUB_ADMIN_TOKEN").ok().filter(|value| !value.is_empty());
-    let state = HubState { storage, actors: Arc::new(DashMap::new()), admin_token };
+    let state = HubState { db: Arc::new(db), directory, admin_token, fanout: Arc::new(DashMap::new()), presence: Arc::new(DashMap::new()) };
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
     tracing::info!("os-hub listening on http://{addr}");
     let listener = tokio::net::TcpListener::bind(addr).await?;
@@ -723,48 +649,40 @@ async fn main() -> Result<(), HubError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    use os_hub_storage_sqlite::SqliteStorage;
-    use semio_framework_core::{ActorId, DocumentDiff, DocumentId, DocumentVersion, InverseOperation, OperationId, PayloadHash, SchemaId, SchemaVersion, UndoPolicy};
+    use protocol::{Bootstrap, DocumentId as WireDocumentId};
     use tokio_tungstenite::connect_async;
     use tokio_tungstenite::tungstenite::Message as WsMessage;
-    use uuid::Uuid;
 
-    /// @emoji 🏛️ The seeded studio id every test routes against (see `SqliteStorage::seed`).
+    /// @emoji 🏛️ The seeded studio id every test routes against (see `SqliteDirectory::seed`).
     const STUDIO: &str = "default";
 
-    fn temp_db_path() -> String {
-        std::env::temp_dir().join(format!("os-hub-test-{}.db", Uuid::now_v7())).to_string_lossy().into_owned()
+    /// @emoji 📁 A fresh, never-reused temp directory per call — `uuid::Uuid::now_v7` rather than
+    /// `now_ms()` alone, since `cargo test` runs this whole module's `#[tokio::test]`s
+    /// concurrently within one process: two tests calling `test_state()` in the same millisecond
+    /// would otherwise collide on the identical `os-hub-test-db-<pid>-<ms>` path and open the SAME
+    /// `db::Database` storage root, corrupting each other's catalog/WAL state.
+    fn tempdir(name: &str) -> std::path::PathBuf {
+        let mut dir = std::env::temp_dir();
+        dir.push(format!("os-hub-test-{name}-{}", uuid::Uuid::now_v7()));
+        dir
     }
 
-    async fn memory_state() -> HubState {
-        let storage = SqliteStorage::connect(":memory:").await.expect("connect");
-        storage.seed().await.expect("seed");
-        HubState { storage: Arc::new(storage), actors: Arc::new(DashMap::new()), admin_token: None }
+    async fn test_state() -> HubState {
+        let database = db::Database::open_at(&tempdir("db"), db::Profile::Test).expect("open db");
+        let directory = SqliteDirectory::connect(":memory:").await.expect("connect directory");
+        directory.seed().await.expect("seed");
+        HubState { db: Arc::new(database), directory: Arc::new(directory), admin_token: None, fanout: Arc::new(DashMap::new()), presence: Arc::new(DashMap::new()) }
     }
 
-    async fn file_state(path: &str) -> HubState {
-        let storage = SqliteStorage::connect(path).await.expect("connect");
-        storage.seed().await.expect("seed");
-        HubState { storage: Arc::new(storage), actors: Arc::new(DashMap::new()), admin_token: None }
-    }
-
-    fn sample_envelope(id: &str) -> OperationEnvelope {
+    fn sample_envelope(id: &str, document: &WireDocumentId) -> OperationEnvelope {
         OperationEnvelope {
-            id: OperationId(id.into()),
-            actor: ActorId("actor-1".into()),
-            document: DocumentId("default".into()),
-            schema_version: SchemaVersion("test.v1".into()),
-            deps: Vec::new(),
-            payload_hash: PayloadHash("hash".into()),
-            diff: DocumentDiff { schema_id: SchemaId("diff.v1".into()), payload: serde_json::json!({ "value": id }) },
-            inverse: InverseOperation {
-                target_operation: OperationId(id.into()),
-                inverse_diff: DocumentDiff { schema_id: SchemaId("diff.v1".into()), payload: serde_json::json!({}) },
-                base_version: DocumentVersion(0),
-                dependencies: Vec::new(),
-                undo_policy: UndoPolicy::ExactBaseOnly,
-            },
+            operation_id: protocol::OperationId(id.to_string()),
+            document_id: document.clone(),
+            actor: ActorId("actor-1".to_string()),
+            dependencies: Vec::new(),
+            diff: protocol::DocumentDiff { schema: "generic".to_string(), payload: serde_json::json!({ "value": id }) },
+            inverse: protocol::InverseOperation { schema: "generic".to_string(), inverse_diff: serde_json::json!({}) },
+            timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }
 
@@ -778,201 +696,199 @@ mod tests {
         addr
     }
 
-    async fn next_server_frame<S>(ws: &mut S) -> HubServerFrame
+    async fn next_server_frame<S>(ws: &mut S) -> ServerFrame
     where
         S: StreamExt<Item = Result<WsMessage, tokio_tungstenite::tungstenite::Error>> + Unpin,
     {
         loop {
             match ws.next().await {
-                Some(Ok(WsMessage::Text(text))) => return serde_json::from_str::<HubServerFrame>(text.as_str()).expect("server frame"),
+                Some(Ok(WsMessage::Binary(bytes))) => return protocol::decode_server_frame(&bytes).expect("server frame").1,
                 Some(Ok(_)) => continue,
-                other => panic!("expected text frame, got {other:?}"),
+                other => panic!("expected binary frame, got {other:?}"),
             }
         }
     }
 
-    fn client_text(frame: &HubClientFrame) -> WsMessage {
-        WsMessage::Text(serde_json::to_string(frame).unwrap().into())
+    fn client_binary(frame: &ClientFrame, lane: Lane) -> WsMessage {
+        WsMessage::Binary(protocol::encode_client_frame(frame, lane).into())
     }
 
-    // 🔬 WS duplex fan-out: A's operation reaches B over its own socket.
+    fn hello(actor: &str) -> ClientFrame {
+        ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "test.v1".to_string(), pack_schema_hash: [0u8; 32], actor: ActorId(actor.to_string()), token: None, resume_token: None, frontier: None }
+    }
+
+    // 🔬 WS duplex fan-out over the real wire-v2 protocol: A's committed command reaches B on its
+    // own socket as a `ServerFrame::Commands`, and B's Ack for A's own submit never round-trips
+    // back to A as a duplicate Commands frame (origin filtering is the caller's job — this test
+    // only asserts B observes it, matching `framework/sync`'s own origin check).
     #[tokio::test]
     async fn ws_duplex_fan_out() {
-        let addr = spawn_server(memory_state().await).await;
+        let addr = spawn_server(test_state().await).await;
         let url = format!("ws://{addr}/studios/{STUDIO}/documents/default/ws");
 
         let (mut a, _) = connect_async(&url).await.unwrap();
-        a.send(client_text(&HubClientFrame::Hello { actor: "A".into(), token: None, since_version: 0 })).await.unwrap();
-        assert!(matches!(next_server_frame(&mut a).await, HubServerFrame::Welcome { .. }));
+        a.send(client_binary(&hello("A"), Lane::Command)).await.unwrap();
+        assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Welcome { .. }));
 
         let (mut b, _) = connect_async(&url).await.unwrap();
-        b.send(client_text(&HubClientFrame::Hello { actor: "B".into(), token: None, since_version: 0 })).await.unwrap();
-        assert!(matches!(next_server_frame(&mut b).await, HubServerFrame::Welcome { .. }));
+        b.send(client_binary(&hello("B"), Lane::Command)).await.unwrap();
+        assert!(matches!(next_server_frame(&mut b).await, ServerFrame::Welcome { .. }));
 
-        a.send(client_text(&HubClientFrame::Operations { envelopes: vec![sample_envelope("operation-1")] })).await.unwrap();
+        let document = WireDocumentId(format!("{STUDIO}:default"));
+        a.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-1", &document)] }, Lane::Command)).await.unwrap();
 
-        // B must observe the operation fanned out with origin "A".
+        assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Ack { batch_id: 1, .. }));
+
         loop {
             match next_server_frame(&mut b).await {
-                HubServerFrame::Operations { version, envelopes, origin } => {
-                    assert_eq!(version, 1);
+                ServerFrame::Commands { envelopes, origin, .. } => {
                     assert_eq!(envelopes.len(), 1);
-                    assert_eq!(envelopes[0].id.0, "operation-1");
-                    assert_eq!(origin, "A");
+                    assert_eq!(envelopes[0].operation_id.0, "op-1");
+                    assert_eq!(origin, ActorId("A".to_string()));
                     break;
                 }
-                HubServerFrame::Presence { .. } => continue,
+                ServerFrame::Presence { .. } => continue,
                 other => panic!("unexpected frame on B: {other:?}"),
             }
         }
     }
 
-    // 🔬 Persistence round-trip: operations survive a full server/state teardown against the same sqlite file.
+    // 🔬 A reconnecting client whose `Hello.frontier` is stale gets the missing commands replayed
+    // via `Welcome`'s `Bootstrap::Tail` follow-up — the `db::Database::hello` integration.
     #[tokio::test]
-    async fn persistence_round_trip_from_file() {
-        let path = temp_db_path();
-        {
-            let state = file_state(&path).await;
-            let handle = state.actor(STUDIO, "default");
-            for id in ["operation-1", "operation-2", "operation-3"] {
-                handle.append_operations(vec![sample_envelope(id)], "actor-1".into()).await;
-            }
+    async fn reconnect_replays_missing_commands_via_bootstrap_tail() {
+        let addr = spawn_server(test_state().await).await;
+        let url = format!("ws://{addr}/studios/{STUDIO}/documents/default/ws");
+        let document = WireDocumentId(format!("{STUDIO}:default"));
+
+        let (mut a, _) = connect_async(&url).await.unwrap();
+        a.send(client_binary(&hello("A"), Lane::Command)).await.unwrap();
+        assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Welcome { .. }));
+        a.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("op-1", &document)] }, Lane::Command)).await.unwrap();
+        assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Ack { .. }));
+
+        // A fresh connection with no prior frontier must see the already-committed op-1 in its
+        // Welcome bootstrap follow-up.
+        let (mut c, _) = connect_async(&url).await.unwrap();
+        c.send(client_binary(&hello("C"), Lane::Command)).await.unwrap();
+        assert!(matches!(next_server_frame(&mut c).await, ServerFrame::Welcome { bootstrap: Bootstrap::Tail, .. }));
+        match next_server_frame(&mut c).await {
+            ServerFrame::Commands { envelopes, .. } => assert_eq!(envelopes[0].operation_id.0, "op-1"),
+            other => panic!("expected the Tail bootstrap's Commands follow-up, got {other:?}"),
         }
-        // Rebuild fresh state + actors against the same db file.
-        let reopened = file_state(&path).await;
-        let operations = reopened.actor(STUDIO, "default").ops_since(0).await;
-        assert_eq!(operations.len(), 3);
-        assert_eq!(operations.iter().map(|(_, e)| e.id.0.clone()).collect::<Vec<_>>(), vec!["operation-1", "operation-2", "operation-3"]);
-        let _ = std::fs::remove_file(&path);
     }
 
-    // 🔬 Operation-id dedupe: the same envelope appended twice yields one row and one new append.
+    // 🔬 Studio-scoped documents: the same document id in two different studios lands in two
+    // independent `db` documents (the `{studio_id}:{document_id}` scope key) — a peer on
+    // studio-b's `shared-doc` never observes studio-a's commands.
     #[tokio::test]
-    async fn op_id_dedupe() {
-        let state = memory_state().await;
-        let handle = state.actor(STUDIO, "default");
-        let first = handle.append_operations(vec![sample_envelope("dup")], "actor-1".into()).await;
-        let second = handle.append_operations(vec![sample_envelope("dup")], "actor-1".into()).await;
-        assert!(first[0].is_new);
-        assert!(!second[0].is_new);
-        assert_eq!(state.storage.load_operations("default").await.unwrap().len(), 1);
-        assert_eq!(handle.ops_since(0).await.len(), 1);
+    async fn studio_scoped_documents_are_isolated() {
+        let state = test_state().await;
+        let addr = spawn_server(state).await;
+
+        let url_a = format!("ws://{addr}/studios/studio-a/documents/shared-doc/ws");
+        let (mut a, _) = connect_async(&url_a).await.unwrap();
+        a.send(client_binary(&hello("A"), Lane::Command)).await.unwrap();
+        assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Welcome { .. }));
+        let document = WireDocumentId("studio-a:shared-doc".to_string());
+        a.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("only-in-a", &document)] }, Lane::Command)).await.unwrap();
+        assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Ack { .. }));
+
+        let url_b = format!("ws://{addr}/studios/studio-b/documents/shared-doc/ws");
+        let (mut b, _) = connect_async(&url_b).await.unwrap();
+        b.send(client_binary(&hello("B"), Lane::Command)).await.unwrap();
+        assert!(matches!(next_server_frame(&mut b).await, ServerFrame::Welcome { bootstrap: Bootstrap::None, .. }), "studio-b's document must not see studio-a's committed op");
     }
 
-    // 🔬 Snapshot CAS: a stale-version envelope replace is rejected without mutating state.
+    // 🔬 Auth-lite: issuing a share token closes an otherwise-open document to a tokenless Hello.
     #[tokio::test]
-    async fn snapshot_cas_conflict() {
-        let state = memory_state().await;
-        let handle = state.actor(STUDIO, "default");
-        let (_, version) = handle.get_document().await.unwrap();
-        assert_eq!(version, 0);
-        let envelope = serde_json::json!({ "schema": "s.studio/v1", "id": "default", "vcs": { "operations": [] } });
-        assert_eq!(handle.put_envelope(0, envelope.clone()).await, Ok(1));
-        // Stale base (0) now conflicts; current is 1.
-        assert_eq!(handle.put_envelope(0, envelope.clone()).await, Err(1));
-        let (_, after) = handle.get_document().await.unwrap();
-        assert_eq!(after, 1, "state not corrupted by rejected CAS");
-    }
+    async fn share_token_gates_ws_access() {
+        let state = test_state().await;
+        let admin_state = HubState { admin_token: Some("admin-secret".to_string()), ..state };
+        let addr = spawn_server(admin_state.clone()).await;
 
-    // 🔬 Operation append never 409s on version mismatch (the bug fix): two "concurrent" appends both succeed.
-    #[tokio::test]
-    async fn op_append_never_version_conflicts() {
-        let state = memory_state().await;
-        let handle = state.actor(STUDIO, "default");
-        // Bump the structural version so a legacy client's base assumption (0) would mismatch.
-        let envelope = serde_json::json!({ "schema": "s.studio/v1", "id": "default", "vcs": { "operations": [] } });
-        assert_eq!(handle.put_envelope(0, envelope).await, Ok(1));
-        // Both appends succeed regardless of any base-version assumption.
-        let a = handle.append_operations(vec![sample_envelope("concurrent-a")], "A".into()).await;
-        let b = handle.append_operations(vec![sample_envelope("concurrent-b")], "B".into()).await;
-        assert!(a[0].is_new && a[0].version == 2);
-        assert!(b[0].is_new && b[0].version == 3);
-        assert_eq!(handle.ops_since(0).await.len(), 2);
-    }
-
-    // 🔬 REST operation append assigns and returns an incrementing version.
-    #[tokio::test]
-    async fn rest_append_increments_version() {
-        let state = memory_state().await;
-        let response = append_operation(Path((STUDIO.to_string(), "default".to_string())), HeaderMap::new(), State(state.clone()), Json(AppendOpRequest { envelope: sample_envelope("operation-1") })).await.expect("append");
-        assert_eq!(response.0.version, 1);
-    }
-
-    // 🔬 GET /operations?since= filters by assigned version.
-    #[tokio::test]
-    async fn rest_ops_since_filters() {
-        let state = memory_state().await;
-        let handle = state.actor(STUDIO, "default");
-        handle.append_operations(vec![sample_envelope("operation-1")], "actor-1".into()).await;
-        handle.append_operations(vec![sample_envelope("operation-2")], "actor-1".into()).await;
-        let all = get_ops_since(Path((STUDIO.to_string(), "default".to_string())), Query(SinceQuery { since: None }), HeaderMap::new(), State(state.clone())).await.unwrap();
-        assert_eq!(all.0.len(), 2);
-        let newer = get_ops_since(Path((STUDIO.to_string(), "default".to_string())), Query(SinceQuery { since: Some(1) }), HeaderMap::new(), State(state.clone())).await.unwrap();
-        assert_eq!(newer.0.len(), 1);
-        assert_eq!(newer.0[0].envelope.id.0, "operation-2");
-    }
-
-    // 🔬 VFS nodes are durable and creatable.
-    #[tokio::test]
-    async fn nodes_create_and_list() {
-        let state = memory_state().await;
-        let created = create_node(Path(STUDIO.to_string()), State(state.clone()), Json(CreateNodeRequest { parent_id: None, name: "Projects".into(), kind: "folder".into() })).await.expect("create");
-        let child = create_node(Path(STUDIO.to_string()), State(state.clone()), Json(CreateNodeRequest { parent_id: Some(created.0.id.clone()), name: "sketch".into(), kind: "document".into() })).await.expect("create child");
-        let children = list_nodes(Path(STUDIO.to_string()), Query(NodesQuery { parent: Some(created.0.id.clone()) }), State(state.clone())).await.expect("list");
-        assert_eq!(children.0.len(), 1);
-        assert_eq!(children.0[0].id, child.0.id);
-    }
-
-    // 🔬 Auth-lite: issuing a share token closes an otherwise-open document.
-    #[tokio::test]
-    async fn share_token_gates_access() {
-        let storage = SqliteStorage::connect(":memory:").await.expect("connect");
-        storage.seed().await.expect("seed");
-        let admin = HubState { storage: Arc::new(storage), actors: Arc::new(DashMap::new()), admin_token: Some("admin-secret".into()) };
-        // Open before any token is issued.
-        assert!(admin.storage.authorized_by_token("guarded", None).await.unwrap());
         let mut headers = HeaderMap::new();
         headers.insert(axum::http::header::AUTHORIZATION, "Bearer admin-secret".parse().unwrap());
-        let share = create_share(Path((STUDIO.to_string(), "guarded".to_string())), headers, State(admin.clone())).await.expect("share");
-        // Now closed to tokenless access, open with the minted token.
-        assert!(!admin.storage.authorized_by_token("guarded", None).await.unwrap());
-        assert!(admin.storage.authorized_by_token("guarded", Some(&share.0.token)).await.unwrap());
-        // Wrong admin bearer is rejected.
-        let mut bad = HeaderMap::new();
-        bad.insert(axum::http::header::AUTHORIZATION, "Bearer nope".parse().unwrap());
-        assert!(create_share(Path((STUDIO.to_string(), "guarded".to_string())), bad, State(admin)).await.is_err());
+        let share = create_share(Path((STUDIO.to_string(), "guarded".to_string())), headers, State(admin_state)).await.expect("share");
+
+        let url = format!("ws://{addr}/studios/{STUDIO}/documents/guarded/ws");
+        let (mut denied, _) = connect_async(&url).await.unwrap();
+        denied.send(client_binary(&hello("intruder"), Lane::Command)).await.unwrap();
+        assert!(matches!(next_server_frame(&mut denied).await, ServerFrame::Error { code, .. } if code == "unauthorized"));
+
+        let (mut allowed, _) = connect_async(&url).await.unwrap();
+        allowed
+            .send(client_binary(&ClientFrame::Hello { wire_version: 1, protocol_version: 1, schema: "test.v1".to_string(), pack_schema_hash: [0u8; 32], actor: ActorId("holder".to_string()), token: Some(share.0.token), resume_token: None, frontier: None }, Lane::Command))
+            .await
+            .unwrap();
+        assert!(matches!(next_server_frame(&mut allowed).await, ServerFrame::Welcome { .. }));
     }
 
-    // 🔬 Studio-scoped actor keys: the same document id in two different studios gets independent
-    // actors — HP-5's whole point (was a single flat DashMap<document_id, _> before this ticket).
+    // 🔬 Blob round-trip: PUT then GET returns identical bytes and HEAD reports found, through
+    // `db::Database`'s own content-addressed payload store; a hash that was never PUT is reported
+    // missing by both GET and HEAD.
     #[tokio::test]
-    async fn studio_scoped_actors_are_isolated() {
-        let state = memory_state().await;
-        let handle_a = state.actor("studio-a", "shared-doc");
-        let handle_b = state.actor("studio-b", "shared-doc");
-        handle_a.append_operations(vec![sample_envelope("only-in-a")], "actor-1".into()).await;
-        assert_eq!(handle_a.ops_since(0).await.len(), 1);
-        assert_eq!(handle_b.ops_since(0).await.len(), 0, "studio-b's actor must not see studio-a's operations");
+    async fn blob_put_get_head_round_trip() {
+        let state = test_state().await;
+        let bytes = Bytes::from_static(b"hello hub blob bytes");
+        let expected_hash = state.db.storage().payload().put(&bytes).unwrap().to_string();
+        // A re-put through the route with the correct address must be idempotent and agree.
+        let mut headers = HeaderMap::new();
+        headers.insert(axum::http::header::CONTENT_TYPE, "text/plain".parse().unwrap());
+        let put = put_blob(Path((STUDIO.to_string(), expected_hash.clone())), headers, State(state.clone()), bytes.clone()).await.expect("put blob");
+        assert_eq!(put.0.hash, expected_hash);
+        assert_eq!(put.0.size, bytes.len() as i64);
+
+        let response = get_blob(Path((STUDIO.to_string(), expected_hash.clone())), HeaderMap::new(), State(state.clone())).await.expect("get blob").into_response();
+        let got = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("read body");
+        assert_eq!(got.as_ref(), bytes.as_ref());
+
+        assert_eq!(head_blob(Path((STUDIO.to_string(), expected_hash.clone())), HeaderMap::new(), State(state.clone())).await, StatusCode::OK);
+
+        let missing = "0".repeat(64);
+        assert_eq!(head_blob(Path((STUDIO.to_string(), missing.clone())), HeaderMap::new(), State(state.clone())).await, StatusCode::NOT_FOUND);
+        assert_eq!(get_blob(Path((STUDIO.to_string(), missing)), HeaderMap::new(), State(state)).await.err(), Some(StatusCode::NOT_FOUND));
+    }
+
+    // 🔬 A client-provided hash that doesn't match the computed content hash is a bad request.
+    #[tokio::test]
+    async fn blob_put_rejects_hash_mismatch() {
+        let state = test_state().await;
+        let bytes = Bytes::from_static(b"mismatched content");
+        let result = put_blob(Path((STUDIO.to_string(), "0".repeat(64))), HeaderMap::new(), State(state), bytes).await;
+        assert_eq!(result.err(), Some(StatusCode::BAD_REQUEST));
+    }
+
+    // 🔬 VFS nodes are durable and creatable through the directory-backed REST routes.
+    #[tokio::test]
+    async fn nodes_create_and_list() {
+        let state = test_state().await;
+        let created = create_node(Path(STUDIO.to_string()), State(state.clone()), Json(CreateNodeRequest { parent_id: None, name: "Projects".into(), kind: "folder".into() })).await.expect("create");
+        let child = create_node(Path(STUDIO.to_string()), State(state.clone()), Json(CreateNodeRequest { parent_id: Some(created.0.id.clone()), name: "sketch".into(), kind: "document".into() })).await.expect("create child");
+        let children = list_nodes(Path(STUDIO.to_string()), Query(NodesQuery { parent: Some(created.0.id.clone()) }), State(state)).await.expect("list");
+        assert_eq!(children.0.len(), 1);
+        assert_eq!(children.0[0].id, child.0.id);
     }
 
     // 🔬 Auth sessions: POST /auth/sessions mints a session that resolves the caller's studio role
     // and grants access even to a document a share token has otherwise closed.
     #[tokio::test]
     async fn auth_session_grants_role_and_bypasses_share_gate() {
-        let state = memory_state().await;
-        let studio = "studio-x";
+        let state = test_state().await;
+        // `hub_studio_membership.studio_id` is FK-bound to `hub_studio(id)` — a real studio, not a
+        // bare string, matching how `create_auth_session`'s minted user must also be a real row.
+        let studio = state.directory.create_studio("Studio X", "seed").await.expect("create studio").id;
         let document = "closed-doc";
-        state.storage.ensure_document(studio, document).await.expect("ensure document");
-        state.storage.create_share_token(document).await.expect("close with share token");
-        assert!(!state.storage.authorized_by_token(document, None).await.unwrap());
+        state.directory.create_share_token(document).await.expect("close with share token");
+        assert!(!state.directory.authorized_by_token(document, None).await.unwrap());
 
         let minted = create_auth_session(State(state.clone()), Json(CreateAuthSessionRequest { email: "dev@example.com".into() })).await.expect("mint session");
-        state.storage.upsert_membership(studio, &minted.0.user_id, StudioRole::Member).await.expect("grant membership");
+        state.directory.upsert_membership(&studio, &minted.0.user_id, StudioRole::Member).await.expect("grant membership");
 
-        assert!(!authorized(&state, studio, document, None).await, "tokenless request still denied");
-        assert!(authorized(&state, studio, document, Some(&minted.0.token)).await, "session token authorized despite no share token");
+        assert!(!authorized(&state, &studio, document, None).await, "tokenless request still denied");
+        assert!(authorized(&state, &studio, document, Some(&minted.0.token)).await, "session token authorized despite no share token");
 
-        match resolve_auth(&state, studio, document, Some(&minted.0.token)).await {
+        match resolve_auth(&state, &studio, document, Some(&minted.0.token)).await {
             AuthOutcome::Session { user_id, role } => {
                 assert_eq!(user_id, minted.0.user_id);
                 assert_eq!(role, StudioRole::Member);
@@ -981,44 +897,20 @@ mod tests {
         }
     }
 
-    // 🔬 Blob round-trip: PUT then GET returns identical bytes and HEAD reports found; a hash
-    // that was never PUT is reported missing by both GET and HEAD.
+    // 🔬 GET .../documents/{id} reports the document's current frontier, lazily minting it in
+    // `db`'s catalog on first access.
     #[tokio::test]
-    async fn blob_put_get_head_round_trip() {
-        let state = memory_state().await;
-        let bytes = Bytes::from_static(b"hello hub blob bytes");
-        let mut headers = HeaderMap::new();
-        headers.insert(axum::http::header::CONTENT_TYPE, "text/plain".parse().unwrap());
+    async fn document_status_reports_frontier_and_lazily_mints() {
+        let state = test_state().await;
+        let status = get_document_status(Path((STUDIO.to_string(), "fresh".to_string())), HeaderMap::new(), State(state.clone())).await.expect("status");
+        assert_eq!(status.0.head_seq, 0);
 
-        // Learn the content hash the storage backend assigns; put_blob is idempotent so this
-        // doesn't change what the HTTP-level put below observes.
-        let expected = state.storage.put_blob(&bytes, "text/plain").await.expect("seed hash");
+        let handle = state.ensure_document(&db_document_id(STUDIO, "fresh")).expect("ensure");
+        let batch = db::document::CommandBatch::new(vec![sample_envelope("op-1", &db_document_id(STUDIO, "fresh"))]).unwrap();
+        handle.submit(batch, db::document::SubmitOptions::default()).await.unwrap().unwrap();
 
-        let put = put_blob(Path((STUDIO.to_string(), expected.hash.clone())), headers.clone(), State(state.clone()), bytes.clone()).await.expect("put blob");
-        assert_eq!(put.0.hash, expected.hash);
-        assert_eq!(put.0.media_type, "text/plain");
-        assert_eq!(put.0.size, bytes.len() as i64);
-
-        let response = get_blob(Path((STUDIO.to_string(), expected.hash.clone())), HeaderMap::new(), State(state.clone())).await.expect("get blob").into_response();
-        let got = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("read body");
-        assert_eq!(got.as_ref(), bytes.as_ref());
-
-        assert_eq!(head_blob(Path((STUDIO.to_string(), expected.hash.clone())), HeaderMap::new(), State(state.clone())).await, StatusCode::OK);
-
-        let missing = "not-a-real-hash".to_string();
-        assert_eq!(head_blob(Path((STUDIO.to_string(), missing.clone())), HeaderMap::new(), State(state.clone())).await, StatusCode::NOT_FOUND);
-        assert_eq!(get_blob(Path((STUDIO.to_string(), missing)), HeaderMap::new(), State(state)).await.err(), Some(StatusCode::NOT_FOUND));
-    }
-
-    // 🔬 A client-provided hash that doesn't match the computed content hash is a bad request,
-    // and the wrong path hash never gets associated with those bytes in storage.
-    #[tokio::test]
-    async fn blob_put_rejects_hash_mismatch() {
-        let state = memory_state().await;
-        let bytes = Bytes::from_static(b"mismatched content");
-        let result = put_blob(Path((STUDIO.to_string(), "not-the-real-hash".to_string())), HeaderMap::new(), State(state.clone()), bytes.clone()).await;
-        assert_eq!(result.err(), Some(StatusCode::BAD_REQUEST));
-        assert!(!state.storage.has_blob("not-the-real-hash").await.unwrap(), "wrong path hash must not be a stored key");
+        let status = get_document_status(Path((STUDIO.to_string(), "fresh".to_string())), HeaderMap::new(), State(state)).await.expect("status after submit");
+        assert_eq!(status.0.head_seq, 1);
     }
 }
 //#endregion 🔖Tests

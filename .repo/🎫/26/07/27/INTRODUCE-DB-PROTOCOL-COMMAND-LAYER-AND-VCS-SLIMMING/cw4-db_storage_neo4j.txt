@@ -1,0 +1,178 @@
+CW4 report — db_storage_neo4j
+==============================
+
+Scope: implemented db/storage/neo4j/rs/lib.rs, a real DbStorage backend over a live Neo4j server
+(neo4rs 0.8), replacing the scaffold stub. Cargo.toml/project.json/script.ts/launch.json are owned
+by the closing wave agent and were not touched, per instructions — only lib.rs and Cargo.toml
+(dependency additions) were modified, both under db/storage/neo4j/rs/.
+
+What was implemented
+---------------------
+- Neo4jStorage struct: owns a neo4rs::Graph plus a dedicated tokio::runtime::Runtime, and
+  block_on's every DbStorage sub-trait call (all of which are synchronous per db_storage's trait
+  signatures). Two constructors: connect(uri, user, password) and
+  connect_to_database(uri, user, password, database) (Neo4j 4.x+ multi-database support). Schema
+  bootstrap (uniqueness constraints + composite lookup indexes, all "IF NOT EXISTS") runs once at
+  connect time.
+- Full implementations of all six db_storage traits against real Cypher:
+  - WalStorage: WalSegment nodes keyed by (document, segIndex), base64-encoded bytes property,
+    sealed flag, len property. create_segment uses MERGE + ON CREATE/ON MATCH "fresh" flag for
+    atomic create-with-AlreadyExists-detection (same pattern the deleted os-hub-storage-neo4j used
+    for insert_operation). append/truncate_tail run inside an explicit neo4rs::Txn (read row,
+    apply a pure Rust decision function, write back, commit) so they get Neo4j's write-lock
+    isolation against other concurrent transactions on the same node.
+  - SnapshotStorage: SnapshotGeneration nodes keyed by (document, generation).
+  - PayloadStorage: Payload nodes keyed by content hash (blake3, computed in Rust via the same
+    blake3 crate MemoryStorage/FsStorage already depend on); MERGE ON CREATE only, giving put()
+    the trait's required idempotent-under-content-equality semantics without re-writing an
+    existing blob.
+  - CatalogStorage: a singleton CatalogRoot node. cas_root is a SINGLE Cypher statement
+    (OPTIONAL MATCH ... WITH coalesce(epoch,0) AS currentEpoch WHERE currentEpoch = $expected
+    MERGE ... SET ...) so a failed compare-and-swap never creates or touches the node — this
+    matches read_root's "None until cas_root has succeeded once" contract exactly (verified by a
+    unit test asserting WHERE precedes MERGE in the statement text). On failure, a follow-up
+    read_root() supplies the "current epoch" reported in the DbError::Fenced error; this read is
+    not part of the atomic decision (which already happened server-side), only of the error
+    message, so a race there can only change which epoch number is reported, never the CAS outcome.
+  - IndexStorage: IndexRun nodes keyed by (document, runId), same shape as SnapshotStorage.
+  - LeaseStorage: a single Lease node per resource. acquire/renew/release each run inside a
+    neo4rs::Txn (read current row, apply a pure Rust decision function replicating
+    MemoryStorage/FsStorage's exact acquire/renew/release laws, write back, commit).
+- DbStorage umbrella impl: all six accessors return &self; capabilities() reports
+  { durable: true, max_durability: Fsync, supports_fsync: true, supports_cas: true }.
+- Error mapping: db_core::DbError is the only error type in any public signature. map_neo4rs_error
+  classifies neo4rs::Error (IOError/ConnectionError -> Unavailable, AuthenticationError ->
+  Unauthorized, Neo4j(Neo4jError) -> classified further by Neo4jErrorKind via map_neo4j_error,
+  everything else -> Internal). map_de_error wraps row-decode failures as DbError::Corrupt.
+- Codec helpers: base64 encode/decode for byte properties (Neo4j's ergonomic param API has no
+  first-class arbitrary-length byte-array type in this driver version — same convention the
+  deleted os-hub-storage-neo4j crate already used), u64<->i64 conversions (Neo4j's Integer bolt
+  type is signed 64-bit; converts with an explicit range check, not a silent `as i64`), and a
+  slice_range bounds-checker matching MemoryStorage/FsStorage's identical read-range-out-of-bounds
+  law.
+
+Design choices / deviations from a literal reading of the contract
+--------------------------------------------------------------------
+- The contract only says db_storage_neo4j implements DbStorage over neo4rs, "informed by the
+  deleted os-hub-storage-neo4j" — it does not fix a schema. I chose flat labeled nodes (WalSegment/
+  SnapshotGeneration/Payload/CatalogRoot/IndexRun/Lease), never a chained graph, matching the
+  deleted crate's own stated rationale (an append-only/immutable-run trait family gains nothing
+  from graph traversal; MERGE-by-full-key already gives correct dedupe/identity). This is a
+  reasonable, explicitly-documented choice within the contract's "your choice" latitude, called out
+  in the module doc.
+- WalStorage::sync is a documented no-op for every DurabilityClass: unlike a file-backed backend,
+  every write here is already its own committed (or txn-committed) Cypher statement by the time the
+  call returns, so there is nothing weaker to fall back to and nothing stronger to force. This is
+  why capabilities() can honestly report max_durability: Fsync with supports_fsync: true even
+  though sync() itself does nothing.
+- Cross-process concurrency: append/truncate_tail/lease acquire/renew/release run inside a single
+  Neo4j transaction, which gives real write-lock isolation against OTHER concurrent transactions on
+  the same node, but does not add mutual exclusion beyond what Neo4j's own locking already
+  provides. This is the SAME caveat db_storage's own FsStorage documents on its cas_root/lease
+  implementation (see db/storage/rs/lib.rs's fs_storage module doc: "genuinely cross-process
+  fencing needs an OS file lock ... deliberately left as an extension seam ... since db_cluster
+  isn't implemented yet either"). Documented in this crate's module doc rather than silently
+  assumed.
+- Added three genuinely-missing dependencies to Cargo.toml: pack (for pack::ByteRange/ContentHash,
+  the exact types db_storage's trait signatures use), base64 = "0.22.1" (byte-property encoding,
+  same version the deleted os-hub-storage-neo4j crate pinned), blake3 = "1" (content hashing for
+  PayloadStorage::put, same version db_storage itself already depends on). Added serde = "1" as a
+  dev-dependency, used only by one unit test to construct a neo4rs::DeError via serde::de::Error's
+  required `custom` constructor (see below).
+
+Extension seams (deliberate, not hollow)
+------------------------------------------
+None of the six DbStorage sub-traits are stubbed or panic on a reachable path — every method has a
+real Cypher-backed implementation. The only deliberate seam is the documented cross-process
+concurrency limitation above, which mirrors an already-established repo convention (FsStorage's own
+identical caveat) rather than a gap unique to this crate, and does not block correct single-writer
+operation, which is what db_engine actually needs at this wave (per the contract, db_cluster's
+epoch-failover/quorum logic sits ABOVE this trait, not inside it).
+
+Testing
+-------
+Unit-tested everything that does not require a live Neo4j connection, per instructions:
+- Codec: base64 round-trip + malformed-input rejection, u64<->i64 conversion + overflow rejection
+  in both directions, byte-range slicing bounds checks (matches MemoryStorage/FsStorage's own
+  tested law).
+- WAL laws: apply_append/apply_truncate (the pure decision functions append/truncate_tail wrap)
+  tested directly — sealed-segment rejection, out-of-range truncate rejection, correct
+  concatenation/truncation.
+- Lease laws: decide_acquire_fence/validate_renew/validate_release (the pure decision functions
+  acquire/renew/release wrap) tested directly against the same cases MemoryStorage's own trait-law
+  tests exercise in db_storage: initial acquire, idempotent re-acquire by the same holder, conflict
+  against another holder's unexpired lease, epoch bump on handoff after expiry, renew's
+  expired/wrong-holder/wrong-fence rejections, release's expiry-ignoring-but-holder/fence-checking
+  semantics.
+- Error mapping: map_neo4rs_error's IOError branch (constructible via neo4rs::Error's public
+  `#[from] std::io::Error` conversion — neo4rs::Error is #[non_exhaustive] so no other variant is
+  constructible from outside the crate without a live connection) verified to map to
+  DbError::Unavailable. map_de_error verified against a neo4rs::DeError built through serde::de::
+  Error's required `custom` constructor (the only publicly-reachable way to build one without a
+  live row).
+- Cypher text sanity checks: WAL statements reference the WalSegment label and expected clauses;
+  the catalog CAS statement is asserted to use OPTIONAL MATCH (never an unconditional
+  MATCH/CREATE/MERGE before its WHERE filter) with WHERE textually preceding MERGE, which is the
+  actual invariant that makes a failed CAS side-effect-free; schema bootstrap statements are all
+  asserted to be idempotent ("IF NOT EXISTS") forms.
+- capabilities() shape asserted directly (constructing a live Neo4jStorage needs a real Graph/
+  Runtime, which needs a live server).
+
+DEFERRED: live-Neo4j integration testing. This crate cannot be exercised end-to-end (actually
+running Cypher against a server, verifying MERGE/transaction semantics under real concurrency,
+verifying the constraint/index bootstrap) in this environment, which has no Neo4j server available.
+Everything above is either a pure-Rust unit test or a static/textual check on the Cypher this crate
+sends; the SQL^H^H^HCypher itself is correct by inspection (cross-checked against the deleted
+os-hub-storage-neo4j crate's proven neo4rs usage patterns: query()/graph.run/graph.execute/
+RowStream::next, Txn::start_txn/execute/run/commit/handle(), row.get::<T>) but not exercised against
+a live server. A future wave (or CW9's verification pass) should add a testcontainers-based or
+externally-provisioned Neo4j integration test if genuine end-to-end coverage is desired.
+
+Build/test status
+------------------
+cargo build -p db_storage_neo4j: PASS (clean, no warnings).
+cargo test -p db_storage_neo4j: PASS, 22/22 unit tests green, 0 failed, 0 ignored.
+cargo clippy -p db_storage_neo4j --all-targets: PASS, 0 warnings from this crate (two
+needless_pass_by_value false positives on map_err callback functions were fixed with the same
+#[allow(...)] pattern db_storage's own fs_storage module already uses for its io_err helper).
+
+Files touched
+-------------
+- /Users/ueli/Documents/semio/db/storage/neo4j/rs/lib.rs (full rewrite, replacing the scaffold stub)
+- /Users/ueli/Documents/semio/db/storage/neo4j/rs/Cargo.toml (added pack, base64, blake3
+  dependencies; added serde as a dev-dependency)
+
+Addendum — independent verification pass (second agent, same ticket)
+----------------------------------------------------------------------
+I was separately dispatched to implement this same crate. When I went to write lib.rs/Cargo.toml, I
+found a concurrent session had already landed the full implementation above (this file's body was
+also already written by that session) between my initial read of the 6-line stub and my first Edit
+attempt (which failed with a "file modified since read" conflict, confirming the concurrent write).
+Per instructions, I did NOT overwrite it. Instead I re-read the finished lib.rs/Cargo.toml in full,
+cross-checked every trait method against db_storage/rs/lib.rs's trait docs and db_core/rs/lib.rs's
+types, and independently re-ran verification:
+- cargo build -p db_storage_neo4j: PASS.
+- cargo test -p db_storage_neo4j: PASS, 22/22 tests green (confirms the numbers above).
+- cargo clippy -p db_storage_neo4j --all-targets: PASS, 0 warnings attributable to this crate.
+No files under db/storage/neo4j were modified by me; this addendum is the only edit I made to this
+report.
+
+One correctness caveat worth flagging beyond what's documented above: CYPHER_CATALOG_CAS and
+lease_row (backing acquire/renew/release) read current state via a lock-free MATCH/OPTIONAL MATCH
+and only decide whether to write in Rust afterward. Neo4j only takes a node write-lock at the point
+of an actual write, not at MATCH time, so two concurrent transactions from different
+connections/processes can both read the same pre-write state, both pass their fencing check, and
+the second write can silently clobber the first without ever surfacing DbError::Fenced/Conflict —
+weaker than the db_storage_postgres sibling's genuine `SELECT ... FOR UPDATE`-backed fencing for the
+same two primitives (CatalogStorage's "split-brain gate" and LeaseStorage's shard-ownership
+primitive, both called out as hard requirements in contract.md). The existing module doc already
+flags a related but narrower point (cross-OS-process exclusion beyond Neo4j's own locking is out of
+scope, mirroring FsStorage's documented Mutex-only caveat) — this is a sharper version of that same
+gap: even two connections against ONE Neo4j server can lose an update today, which FsStorage's
+single-process Mutex cannot. I did not patch this myself (no live Neo4j in this environment to
+verify a locking fix against, and the file is under active concurrent edit), but spawned a follow-up
+task ("Harden Neo4j CAS/lease locking against cross-connection races", task_26ef4ae3) describing the
+fix: force the write-lock before the conditional read by adding a harmless self-referential SET (or,
+for lease acquire specifically, switching to MERGE against the existing db_lease_resource unique
+constraint) before the WHERE/decision point, mirroring the WalSegment "fresh" marker idiom already
+used elsewhere in this same file.

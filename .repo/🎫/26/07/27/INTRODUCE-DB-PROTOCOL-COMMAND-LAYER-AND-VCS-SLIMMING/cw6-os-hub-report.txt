@@ -1,0 +1,222 @@
+CW6a — os-hub rebuild on `db` — report
+========================================
+
+Scope: rebuild `os-hub` as a thin axum shell over `db::Database` (document authority + blobs) and
+a new `HubDirectory` trait (identity/tenancy), and wire the WS layer to speak `protocol_wire`'s
+binary frames server-side (the CW5->CW6 handoff). Per plan Part 3 "Hub rebuild" + contract.md's
+"Hub rebuild surface".
+
+FILES TOUCHED
+-------------
+
+Deleted (whole tree):
+  framework/product/os/hub/storage/rs/{Cargo.toml,lib.rs}
+  framework/product/os/hub/storage/sqlite/rs/{Cargo.toml,lib.rs}
+  framework/product/os/hub/storage/postgres/rs/{Cargo.toml,lib.rs}
+  framework/product/os/hub/storage/postgres/schema.sql
+  framework/product/os/hub/storage/neo4j/rs/{Cargo.toml,lib.rs}
+  (Cargo.lock files under those dirs went with them)
+
+Created (renamed-and-trimmed from the above; identity/tenancy only, document+blob code deleted):
+  framework/product/os/hub/directory/rs/{Cargo.toml,lib.rs}                    — os-hub-directory
+  framework/product/os/hub/directory/sqlite/rs/{Cargo.toml,lib.rs}             — os-hub-directory-sqlite
+  framework/product/os/hub/directory/postgres/rs/{Cargo.toml,lib.rs}           — os-hub-directory-postgres
+  framework/product/os/hub/directory/postgres/schema.sql
+  framework/product/os/hub/directory/neo4j/rs/{Cargo.toml,lib.rs}              — os-hub-directory-neo4j
+
+Rewritten in place:
+  framework/product/os/hub/rs/bin.rs        — full rewrite, thin shell (see below)
+  framework/product/os/hub/rs/Cargo.toml    — new deps (db, protocol, os-hub-directory*), dropped
+                                               dead deps (tower-http, time were unused even in the
+                                               old bin.rs), dropped semio-framework-core/dashmap-as-
+                                               actor-registry (dashmap kept, repurposed for fanout/
+                                               presence registries)
+
+Edited (shared files, minimal targeted diffs, re-read fresh immediately before editing):
+  Cargo.toml (root)        — workspace members: hub/storage/* -> hub/directory/* (4 lines)
+  .vscode/launch.json      — "🛠️dev🗄️os-hub" entry: OS_HUB_DB -> OS_HUB_DATA (zero-touch default
+                              data dir), OS_HUB_PORT unchanged
+
+Additive change to a CW4 crate (small, non-breaking, needed by os-hub's blob routes and
+FrontierAdvertise handling — not otherwise reachable through the frozen Database API):
+  db/engine/rs/lib.rs — added `Database::storage(&self) -> Arc<dyn DbStorage>` (an explicitly-
+    documented escape hatch, not a change to any frozen signature) + one new test
+    (`storage_accessor_reaches_the_same_backend_payload_store`). Re-read the file fresh
+    immediately before editing (it had concurrent in-flight modifications in git status); the
+    edit is a pure addition at the end of the `impl Database` block, unlikely to conflict.
+
+HubState / HubDirectory SHAPE
+------------------------------
+
+  struct HubState {
+      db: Arc<db::Database>,                    // NOT `db::Database` verbatim — see deviation note
+      directory: Arc<dyn HubDirectory>,
+      admin_token: Option<String>,
+      fanout: Arc<DashMap<String, broadcast::Sender<protocol::ServerFrame>>>,
+      presence: Arc<DashMap<(String, String), serde_json::Value>>,
+  }
+
+Deviation from the plan's literal `HubState { db: db::Database, ... }`: `db::Database` has no
+`Clone` impl (owns `Mutex`-guarded catalog/open-document state) and axum's `State<S>` extractor
+requires `S: Clone`, so `db` is `Arc`-wrapped. `fanout`/`presence` are additive fields beyond the
+plan's three — `db::DocumentHandle` currently has no live-subscription seam (`subscribe`/`preview`
+are honest `DbError::Unimplemented` per `db_engine`'s own module doc), so relaying newly-committed
+commands / preview blobs / presence updates to other sessions on the same document has to be this
+crate's own, deliberately thin responsibility (never decides ordering/durability, only re-broadcasts
+what `db` already committed or what a preview/presence frame carries verbatim — never durable).
+
+  trait HubDirectory: Send + Sync + 'static {
+      // Vfs: list_nodes, create_node
+      // ShareTokens: create_share_token, authorized_by_token
+      // Users: create_user, get_user_by_email, get_user_by_sso_subject, list_users
+      // Studios: create_studio, list_studios_for_user, list_studios, upsert_membership,
+      //          remove_membership, get_role
+      // AuthSessions: create_auth_session, get_auth_session, revoke_auth_session
+      // SyncSessions: record_sync_session_open, record_sync_session_close,
+      //               list_sync_sessions_for_document
+  }
+
+Removed from the old `HubStorage` (document persistence + blobs, now `db`'s job):
+  ensure_document, save_document, insert_operation, load_operations, list_documents_for_studio,
+  put_blob, get_blob, has_blob.
+
+Document id scheme: `db::Database`'s catalog is a flat namespace, so this crate applies its own
+studio-scoping convention on top: `protocol::DocumentId(format!("{studio_id}:{document_id}"))`
+(helper `db_document_id`/`scope_key`). Verified isolated by a dedicated test
+(`studio_scoped_documents_are_isolated`).
+
+WS WIRE-V2 INTEGRATION (the CW5->CW6 handoff)
+-----------------------------------------------
+
+`/studios/{studio_id}/documents/{id}/ws` now speaks `protocol_wire`'s binary `ClientFrame`/
+`ServerFrame` directly (axum `Message::Binary`, `protocol::{encode_*,decode_*}_frame`), matching
+the shape `framework/sync`'s `NativeActor`/`WasmActor` already speak since CW5 and the exact
+`MockHub` fixture in `framework/sync/rs/lib.rs` used as the integration reference:
+
+  - `ClientFrame::Hello` -> auth resolve (session or share-token) -> lazily mint the `db` document
+    (get-or-create, tolerant of a create-race) -> `db::Database::hello(...)` (a REAL `db_sync`
+    integration: frontier replay + `BootstrapPlan` decision + `Welcome`/follow-up frames) -> send
+    `Welcome` + any `Bootstrap::Tail` `Commands` / `SnapshotChunk`+`SnapshotDone` follow-up.
+  - `ClientFrame::Commands` -> `db_document::CommandBatch::new` -> `DocumentHandle::submit` with
+    `DurabilityClass::Fsync` -> `ServerFrame::Ack{Received,Persisted,Applied{Accepted|Rejected}}`
+    to the submitter + `ServerFrame::Commands` fanned out to every other session on the same
+    document (submit failures degrade to `Rejected{reason}` with a best-effort current frontier,
+    never a panic).
+  - `ClientFrame::FrontierAdvertise` -> `db::sync::handle_frontier_advertise` against
+    `Database::storage().wal()` -> catch-up `Commands` frame if the replica is behind.
+  - `ClientFrame::PreviewPublish`/`Presence` -> ephemeral fan-out only (never durable, never
+    touches `db`).
+  - `ClientFrame::CreditGrant` -> accepted and ignored (matches `framework/sync`'s client, which
+    also has no congestion control yet this wave).
+  - `ClientFrame::Bye` -> session close; presence entry removed, `record_sync_session_close`.
+
+Blob routes (`GET`/`HEAD`/`PUT` `/studios/{studio}/blobs/{hash}`) now call
+`Database::storage().payload()` (`db_storage::PayloadStorage`, blake3 CAS) instead of a
+directory-owned blob table; `Database::storage()` is the new accessor added to `db_engine` for
+exactly this (see above).
+
+Storage backend selection is independent for `db` and the directory, per the contract:
+  - `OS_HUB_STORAGE_BACKEND` (db's substrate): `fs` (default, zero-touch, `FsStorage` at
+    `{OS_HUB_DATA}/db`) | `sqlite` (`OS_HUB_DB_SQLITE`, default `{OS_HUB_DATA}/db.sqlite3`) |
+    `postgres` (`OS_HUB_DATABASE_URL`) | `neo4j` (`OS_HUB_NEO4J_URI`/`_USER`/`_PASSWORD`).
+  - `OS_HUB_DIRECTORY_BACKEND` (identity/tenancy substrate): `sqlite` (default, zero-touch,
+    `{OS_HUB_DATA}/directory.db`) | `postgres` (`OS_HUB_DIRECTORY_DATABASE_URL`) | `neo4j`
+    (`OS_HUB_DIRECTORY_NEO4J_URI`/`_USER`/`_PASSWORD`).
+  - `OS_HUB_DATA` (default `./.semio/hub/`): root containing the `db/` subdir + `directory.db`.
+  All four `db` backends (`fs`/`sqlite`/`postgres`/`neo4j`) are wired via the `db` crate's own
+  `sqlite`/`postgres`/`neo4j` Cargo features (enabled on os-hub's `db` dependency) — real, not
+  stubbed; `PostgresStorage::connect`/`Neo4jStorage::connect` are synchronous (each builds its own
+  dedicated tokio runtime internally per `db_storage_postgres`/`_neo4j`'s own doc), so no
+  `spawn_blocking` bridge was needed at the call site.
+
+BUILD / TEST RESULTS
+---------------------
+
+  cargo build -p os-hub                                            -> success (1 warning, fixed:
+                                                                       unused `use db::DbStorage;`
+                                                                       removed — trait-object
+                                                                       method calls don't need the
+                                                                       trait imported)
+  cargo test -p os-hub          -> 9/9 pass (re-run 3x, no flakiness after the tempdir fix below)
+      tests::ws_duplex_fan_out
+      tests::reconnect_replays_missing_commands_via_bootstrap_tail   (new: exercises Database::hello's
+                                                                       real Bootstrap::Tail path)
+      tests::studio_scoped_documents_are_isolated                   (new: the scope-key isolation law)
+      tests::share_token_gates_ws_access
+      tests::blob_put_get_head_round_trip
+      tests::blob_put_rejects_hash_mismatch
+      tests::nodes_create_and_list
+      tests::auth_session_grants_role_and_bypasses_share_gate
+      tests::document_status_reports_frontier_and_lazily_mints       (new: the REST frontier route)
+  cargo test -p os-hub-directory -p os-hub-directory-sqlite          -> 4/4 pass (sqlite backend;
+                                                                       directory facade crate has no
+                                                                       tests of its own, matches the
+                                                                       old os-hub-storage facade)
+  cargo test -p db_engine                                            -> 13/13 pass (includes the new
+                                                                       storage() accessor test)
+  cargo build -p db                                                  -> success
+
+Bugs found and fixed during verification (both self-introduced this wave, not pre-existing):
+  1. `auth_session_grants_role_and_bypasses_share_gate` test used a bare "studio-x" string as a
+     studio id without creating the row; `hub_studio_membership.studio_id` is FK-bound to
+     `hub_studio(id)` and this rusqlite/SQLite build enforces the FK (unlike what a naive reading
+     of the old, structurally-identical test might suggest) — fixed by actually calling
+     `directory.create_studio(...)` first.
+  2. Two new WS tests (`reconnect_replays_missing_commands_via_bootstrap_tail`,
+     `studio_scoped_documents_are_isolated`) were flaky under `cargo test`'s default parallel
+     execution: the test `tempdir()` helper suffixed paths with `{pid}-{now_ms()}`, and multiple
+     `#[tokio::test]`s in the same process can call it within the same millisecond, colliding on
+     the identical `FsStorage` root and corrupting each other's catalog/WAL. Fixed by suffixing
+     with `uuid::Uuid::now_v7()` instead; reran the full suite 3x afterward with zero failures.
+
+SMOKE TEST (zero-touch defaults, real `cargo run`)
+----------------------------------------------------
+
+  OS_HUB_DATA=/tmp/os-hub-smoke OS_HUB_PORT=16070 cargo run -p os-hub
+  -> "os-hub listening on http://0.0.0.0:16070"
+  -> created /tmp/os-hub-smoke/directory.db and /tmp/os-hub-smoke/db/catalog/root.bin (confirms the
+     `db/` subdir + `directory.db` zero-touch layout from the contract)
+  -> GET /studios/default/nodes            -> 200, seeded "Documents" folder node
+  -> GET /studios/default/documents/smoke-doc -> 200, {"document_id":"smoke-doc","head_seq":0,...}
+     (lazy-mint through `db::Database::create_document` confirmed working end to end)
+  Process killed and /tmp/os-hub-smoke cleaned up afterward.
+
+DEVIATIONS FROM THE LITERAL PLAN TEXT
+----------------------------------------
+
+  1. `HubState.db: Arc<db::Database>` not `db::Database` (Clone requirement — see above).
+  2. `HubState` carries two additional fields (`fanout`, `presence`) beyond the plan's three-field
+     sketch — necessitated by `db::DocumentHandle` not yet exposing subscribe/preview (documented,
+     honest `Unimplemented` upstream in `db_engine` per its own module doc, not a gap introduced by
+     this wave).
+  3. Legacy REST document routes (`GET .../documents/{id}` returning a whole JSON envelope, PUT
+     .../envelope, POST/GET .../operations) are DELETED rather than adapted — they depended on
+     whole-JSON-snapshot semantics (`semio_framework_core::{HubClientFrame,HubServerFrame,
+     OperationEnvelope}`) that no longer exist anywhere in the new architecture (superseded by the
+     WS wire-v2 protocol per the plan's own Part 3), and greping the repo confirmed zero other
+     consumers of those routes. Replaced with a single `GET .../documents/{id}` returning
+     `{document_id, head_seq, commit_seq, epoch}` (the document's frontier) — a new, small,
+     genuinely useful REST surface for tooling/health checks, not a compatibility shim.
+  4. Studio-scoped VFS "document" nodes (created by `seed()`/`create_node(..., "document")`) are
+     now pure labels — they carry no FK/back-reference to a `db` document row (the old schema had
+     none either; `hub_document`/`hub_document_operation` were the only tables that ever referenced
+     a document id, and both are gone). A VFS node's `id`/`name` and a `db` document's
+     `{studio}:{document}` key are correlated by the caller's convention (same document_id string),
+     not enforced by either store.
+
+HUMAN TODOS / DEFERRED
+-------------------------
+
+  - No AGENTS.md changes needed for this wave (none exist under framework/product/os/hub/).
+  - `DocumentHandle::subscribe`/`preview`/`snapshot_now` remain `Unimplemented` upstream in
+    `db_engine` (CW4, out of this wave's ownership) — os-hub's own fanout/presence registry is a
+    real, working substitute for live command relay today, but a true `db`-native live-query/
+    preview integration (once `db_document`'s mailbox grows those variants) would let this crate
+    delete its own fanout bookkeeping in favor of subscribing through `db` directly. Left as a
+    documented extension seam, not attempted this wave (explicitly out of CW6a's ownership).
+  - `compose-hub`'s rebuild (same pattern, per plan Part 3) is explicitly a separate CW6 stream
+    ("2 agents") — not touched by this report.
+  - Postgres/Neo4j directory and db-storage backends compile but were only integration-tested for
+    sqlite (the zero-touch default) this wave — their own crates' existing `testcontainers`-gated
+    tests (already present from CW4/pre-CW6) were not re-run here (no local postgres/neo4j
+    service); compilation was verified as part of `cargo build -p os-hub`.

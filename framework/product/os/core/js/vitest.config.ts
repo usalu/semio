@@ -18,9 +18,9 @@ export default defineConfig({
     name: "@semio-tech/framework-os-core",
     mode: "test",
     environment: "node",
-    include: ["index.ts"],
-    coverage: { include: ["index.ts"] },
-    includeSource: ["index.ts"],
+    include: ["index.ts", "backbone-worker.ts"],
+    coverage: { include: ["index.ts", "backbone-worker.ts"] },
+    includeSource: ["index.ts", "backbone-worker.ts"],
     passWithNoTests: false,
   },
 });

@@ -2026,6 +2026,9 @@ dependencies = [
  "db_storage_sqlite",
  "db_sync",
  "db_wal",
+ "pack",
+ "protocol",
+ "serde_json",
 ]
 
 [[package]]
@@ -2040,6 +2043,9 @@ name = "db_cli"
 version = "0.1.0"
 dependencies = [
  "db",
+ "pack",
+ "protocol",
+ "serde_json",
 ]
 
 [[package]]
@@ -2051,6 +2057,8 @@ dependencies = [
  "db_storage",
  "db_sync",
  "db_wal",
+ "protocol",
+ "serde_json",
 ]
 
 [[package]]
@@ -2101,6 +2109,8 @@ dependencies = [
  "db_wal",
  "pack",
  "protocol",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -2117,7 +2127,10 @@ dependencies = [
  "db_storage",
  "db_sync",
  "db_wal",
+ "pack_core",
  "protocol",
+ "serde",
+ "serde_json",
  "vcs",
 ]
 
@@ -2146,6 +2159,7 @@ dependencies = [
  "db_core",
  "db_state",
  "protocol",
+ "serde_json",
 ]
 
 [[package]]
@@ -2155,6 +2169,7 @@ dependencies = [
  "db_core",
  "db_index",
  "db_state",
+ "db_storage",
  "protocol",
 ]
 
@@ -2246,10 +2261,12 @@ dependencies = [
 name = "db_sync"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "db_core",
  "db_storage",
  "db_wal",
  "protocol",
+ "serde_json",
 ]
 
 [[package]]
@@ -2258,7 +2275,18 @@ version = "0.1.0"
 dependencies = [
  "criterion",
  "db",
+ "db_actor",
+ "db_core",
+ "db_document",
+ "db_engine",
+ "db_projection",
+ "db_state",
+ "db_storage",
+ "db_sync",
+ "pack",
  "pack_testkit",
+ "protocol",
+ "serde_json",
 ]
 
 [[package]]
@@ -7362,57 +7390,51 @@ version = "0.1.0"
 dependencies = [
  "axum 0.8.9",
  "dashmap",
+ "db",
  "futures",
- "os-hub-storage",
- "os-hub-storage-postgres",
- "os-hub-storage-sqlite",
- "semio-framework-core",
+ "os-hub-directory",
+ "os-hub-directory-neo4j",
+ "os-hub-directory-postgres",
+ "os-hub-directory-sqlite",
+ "protocol",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
- "time",
  "tokio",
  "tokio-tungstenite 0.26.2",
- "tower-http 0.6.11",
  "tracing",
  "tracing-subscriber",
  "uuid",
 ]
 
 [[package]]
-name = "os-hub-storage"
+name = "os-hub-directory"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "semio-framework-core",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
 ]
 
 [[package]]
-name = "os-hub-storage-neo4j"
+name = "os-hub-directory-neo4j"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "base64 0.22.1",
  "neo4rs",
- "os-hub-storage",
- "semio-framework-core",
- "semio-framework-hash",
+ "os-hub-directory",
  "serde_json",
  "tokio",
  "uuid",
 ]
 
 [[package]]
-name = "os-hub-storage-postgres"
+name = "os-hub-directory-postgres"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "os-hub-storage",
- "semio-framework-core",
- "semio-framework-hash",
+ "os-hub-directory",
  "serde_json",
  "sqlx-core",
  "sqlx-postgres",
@@ -7422,14 +7444,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "os-hub-storage-sqlite"
+name = "os-hub-directory-sqlite"
 version = "0.1.0"
 dependencies = [
  "async-trait",
- "os-hub-storage",
+ "os-hub-directory",
  "rusqlite",
- "semio-framework-core",
- "semio-framework-hash",
  "serde_json",
  "tokio",
  "uuid",
@@ -9688,6 +9708,7 @@ dependencies = [
  "futures-util",
  "js-sys",
  "notify",
+ "protocol",
  "semio-framework-core",
  "semio-framework-hash",
  "serde",
@@ -11056,7 +11077,6 @@ dependencies = [
  "tower",
  "tower-layer",
  "tower-service",
- "tracing",
  "url",
 ]
 

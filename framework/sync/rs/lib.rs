@@ -13,7 +13,8 @@
 //! - **WASI-P2 plugins never link this crate** — inside the sandbox a store attaches vcs's pure
 //!   `PortBackbone` (an in-memory queue relayed to the host). This actor is a host-side concern only.
 
-use semio_framework_core::{HubClientFrame, HubServerFrame, OperationEnvelope, PresencePeer};
+use protocol::{AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, ServerFrame, decode_server_frame, encode_client_frame};
+use semio_framework_core::{ActorId, DocumentDiff, DocumentVersion, InverseOperation, OperationEnvelope, OperationId, PayloadHash, PresencePeer, SchemaId, SchemaVersion, UndoPolicy};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::sync::{broadcast, mpsc};
@@ -73,6 +74,10 @@ pub enum DocumentActorMsg {
     LocalSnapshot { envelope_json: String },
     /// @emoji 📡 Broadcasts this peer's presence/selection to the hub.
     PresenceHeartbeat { peer: PresencePeer },
+    /// @emoji 👻 Publishes an ephemeral, best-effort UI-state blob on the hub's uncredited preview
+    /// lane (`protocol_wire::ClientFrame::PreviewPublish`) — e.g. a drag ghost or live cursor;
+    /// `seq` is a per-`key` monotone counter so a receiver can drop stale-arriving previews.
+    PublishPreview { key: String, seq: u64, payload: Vec<u8> },
     /// @emoji 🔄 Forces an immediate re-read + diff of the folder binding (test/manual poke hook).
     ExternalChanged,
     /// @emoji ✂️ Flushes any pending outbound operations, then stops the actor.
@@ -117,16 +122,41 @@ pub enum DocumentEvent {
     Status(DocumentSyncStatus),
     /// @emoji 📡 The presence roster changed.
     Presence { peers: Vec<PresencePeer> },
+    /// @emoji 👻 A peer published an ephemeral preview blob (`protocol_wire::ServerFrame::Preview`)
+    /// on the uncredited, loss-tolerant preview lane — the counterpart of
+    /// {@link DocumentActorMsg::PublishPreview}.
+    Preview { actor: String, key: String, seq: u64, payload: Vec<u8> },
+    /// @emoji 📮 The hub's terminal disposition for one outbound `Commands` batch
+    /// (`protocol_wire::ServerFrame::Ack`'s `Applied` stage) — accepted as-is, transformed against
+    /// concurrent history (the transformed envelope is already delivered as a
+    /// {@link DocumentEvent::RemoteOperations} replacing the speculative local one), or rejected
+    /// (the speculative local head is rolled back via {@link rollback_envelope} before this fires).
+    CommandOutcome { batch_id: u64, outcome: CommandAckOutcome },
     /// @emoji ⚠️ A structural conflict (external divergence with local pending operations / hub CAS reject).
     Conflict(StudioConflict),
+}
+
+/// @emoji ⚖️ The client-side twin of `protocol_wire::ApplyOutcome`, minus the `Transformed`
+/// envelope payload (already delivered separately as {@link DocumentEvent::RemoteOperations} by
+/// the time this fires — see {@link DocumentEvent::CommandOutcome}).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum CommandAckOutcome {
+    Accepted,
+    Transformed,
+    Rejected { reason: String },
 }
 //#endregion 🔖Protocol
 
 //#region 🔖Endpoints
-/// @emoji 🧱 Core wire types used only when reconstructing an {@link OperationEnvelope} from a stored edit,
-/// which happens exclusively on the native folder path.
+// 🧱 Most `semio_framework_core` id/diff/inverse types this region and 🔖WireBridge below build
+// envelopes from are imported once, unconditionally, at the top of the file (both the native
+// folder-reconstruction path here and the cross-target wire bridge need them). `DocumentId` is the
+// one exception: only this native-only region names it explicitly (the wire bridge never spells the
+// type, just moves values through it), so it stays a native-only import to avoid an unused-import
+// warning on the wasm32 build.
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_core::{ActorId, DocumentDiff, DocumentId, DocumentVersion, InverseOperation, OperationId, PayloadHash, SchemaId, SchemaVersion, UndoPolicy};
+use semio_framework_core::DocumentId;
 
 /// @emoji 📇 Edit ids present in an envelope's `vcs.edits` array (schema-agnostic JSON read).
 #[cfg(not(target_arch = "wasm32"))]
@@ -178,6 +208,119 @@ fn hub_ws_url(base_url: &str, studio_id: &str, document_id: &str) -> String {
 }
 //#endregion 🔖Endpoints
 
+//#region 🔖WireBridge
+/// @emoji 🌉 Converts between this actor's local, schema-agnostic {@link OperationEnvelope}
+/// (`semio_framework_core`, the shape `vcs::DocumentVcsStore`/`ChannelBackbone` speak) and
+/// `protocol_causal::OperationEnvelope` (the shape `protocol_wire::ClientFrame::Commands`/
+/// `ServerFrame::Commands` carry on the wire). `ActorId`/`DocumentId`/`OperationId` are literally
+/// the same type on both sides (`semio_framework_core` re-exports them from `protocol_core`
+/// verbatim — see that re-export's doc comment), so only `schema_version`/`payload_hash` (local-
+/// only, recomputed on receipt exactly like {@link operation_envelope_from_stored_edit} already
+/// does) and `inverse.{target_operation,base_version,dependencies,undo_policy}` (no wire
+/// counterpart — `protocol_causal::InverseOperation` is deliberately simpler, see its frozen-
+/// contract doc comment) need real bridging.
+fn to_wire_envelope(envelope: &OperationEnvelope, timestamp: protocol::HybridLogicalTimestamp) -> protocol::OperationEnvelope {
+    protocol::OperationEnvelope {
+        operation_id: envelope.id.clone(),
+        document_id: envelope.document.clone(),
+        actor: envelope.actor.clone(),
+        dependencies: envelope.deps.clone(),
+        diff: protocol::DocumentDiff { schema: envelope.diff.schema_id.0.clone(), payload: envelope.diff.payload.clone() },
+        inverse: protocol::InverseOperation { schema: envelope.inverse.inverse_diff.schema_id.0.clone(), inverse_diff: envelope.inverse.inverse_diff.payload.clone() },
+        timestamp,
+    }
+}
+
+/// @emoji 🌉 The inverse of {@link to_wire_envelope}: rebuilds a full local envelope from one that
+/// crossed the wire, recomputing `payload_hash`/`base_version` the same way
+/// {@link operation_envelope_from_stored_edit} does (this actor's payloads are always edit-shaped
+/// JSON carrying their own `sequenceNumber`/`backwards`), and defaulting `undo_policy` to
+/// `ExactBaseOnly` (the only policy this schema-agnostic actor ever assigns, mirrored from that
+/// same function).
+fn from_wire_envelope(envelope: protocol::OperationEnvelope) -> OperationEnvelope {
+    let schema = envelope.diff.schema;
+    let sequence = envelope.diff.payload.get("sequenceNumber").and_then(|value| value.as_i64()).unwrap_or(0).max(0) as u64;
+    let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(&envelope.diff.payload).unwrap_or_default());
+    OperationEnvelope {
+        id: envelope.operation_id.clone(),
+        actor: envelope.actor,
+        document: envelope.document_id,
+        schema_version: SchemaVersion(schema.clone()),
+        deps: envelope.dependencies,
+        payload_hash: PayloadHash(payload_hash),
+        diff: DocumentDiff { schema_id: SchemaId(schema), payload: envelope.diff.payload },
+        inverse: InverseOperation {
+            target_operation: envelope.operation_id,
+            inverse_diff: DocumentDiff { schema_id: SchemaId(envelope.inverse.schema), payload: envelope.inverse.inverse_diff },
+            base_version: DocumentVersion(sequence),
+            dependencies: Vec::new(),
+            undo_policy: UndoPolicy::ExactBaseOnly,
+        },
+    }
+}
+
+/// @emoji ↩️ Synthesizes a local "undo" envelope from a speculative envelope's own precomputed
+/// `inverse`, so a hub `Ack::Applied::{Rejected,Transformed}` outcome can roll back (or replace)
+/// the local speculative head without a second round trip. This actor stays `serde_json::Value`-
+/// typed end to end (never touches `vcs`/`protocol_command`'s typed `Operation`/`OperationDiff`
+/// trait machinery — see the crate doc), so "the inverse machinery" it uses is simply replaying the
+/// envelope's own already-computed `InverseOperation` diff as a synthetic remote operation, the
+/// same path {@link DocumentActor::deliver_remote_operations} already uses for any other remote edit.
+fn rollback_envelope(envelope: &OperationEnvelope) -> OperationEnvelope {
+    let undo_id = OperationId(format!("{}~undo", envelope.id.0));
+    OperationEnvelope {
+        id: undo_id.clone(),
+        actor: envelope.actor.clone(),
+        document: envelope.document.clone(),
+        schema_version: envelope.schema_version.clone(),
+        deps: vec![envelope.id.clone()],
+        payload_hash: PayloadHash(semio_framework_hash::hash_bytes(&serde_json::to_vec(&envelope.inverse.inverse_diff.payload).unwrap_or_default())),
+        diff: envelope.inverse.inverse_diff.clone(),
+        inverse: InverseOperation { target_operation: undo_id, inverse_diff: envelope.diff.clone(), base_version: envelope.inverse.base_version, dependencies: Vec::new(), undo_policy: envelope.inverse.undo_policy },
+    }
+}
+
+/// @emoji 📡 `PresencePeer` -> the schema-erased JSON `protocol_wire::ClientFrame::Presence` carries.
+fn presence_to_json(peer: &PresencePeer) -> Value {
+    serde_json::to_value(peer).unwrap_or(Value::Null)
+}
+
+/// @emoji 📡 The inverse of {@link presence_to_json}, for `ServerFrame::Presence`'s peer roster.
+fn presence_from_json(value: &Value) -> Option<PresencePeer> {
+    serde_json::from_value(value.clone()).ok()
+}
+
+/// @emoji ⏰ Millisecond wall-clock reads for {@link next_timestamp}: `SystemTime` natively,
+/// `js_sys::Date` in the browser wasm build (no `SystemTime` there).
+#[cfg(not(target_arch = "wasm32"))]
+fn now_ms() -> u64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| duration.as_millis() as u64)
+}
+
+#[cfg(target_arch = "wasm32")]
+fn now_ms() -> u64 {
+    js_sys::Date::now() as u64
+}
+
+/// @emoji 🧮 A stable, deterministic `u64` seed for an actor id string, for
+/// `protocol::HybridLogicalTimestamp::actor` (which is `u64`-shaped; this actor's own id is a
+/// free-form `String`).
+fn actor_seed(actor: &str) -> u64 {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    actor.hash(&mut hasher);
+    hasher.finish()
+}
+
+/// @emoji ⏰ Advances `counter` and stamps a fresh {@link protocol::HybridLogicalTimestamp} for an
+/// outbound wire envelope. Wire-only metadata: `semio_framework_core::OperationEnvelope` carries no
+/// timestamp field, so this never needs to round-trip back through {@link from_wire_envelope}.
+fn next_timestamp(seed: u64, counter: &mut u64) -> protocol::HybridLogicalTimestamp {
+    *counter = counter.wrapping_add(1);
+    protocol::HybridLogicalTimestamp { actor: seed, physical_ms: now_ms(), logical: *counter }
+}
+//#endregion 🔖WireBridge
+
 //#region 🔖SyncSession
 /// @emoji 🔁 Pairs a document's vcs store with the causal DAG that reconciles remote envelopes into
 /// it. Extended into the actor world via {@link SyncSession::attach}: it holds the actor command
@@ -225,6 +368,14 @@ where
     pub fn wake(&self) {
         if let Some(cmd_tx) = &self.cmd_tx {
             let _ = cmd_tx.send(DocumentActorMsg::LocalOperations { envelopes: Vec::new() });
+        }
+    }
+
+    /// @emoji 👻 Publishes an ephemeral preview blob on the hub's preview lane. See
+    /// {@link DocumentActorMsg::PublishPreview}.
+    pub fn publish_preview(&self, key: String, seq: u64, payload: Vec<u8>) {
+        if let Some(cmd_tx) = &self.cmd_tx {
+            let _ = cmd_tx.send(DocumentActorMsg::PublishPreview { key, seq, payload });
         }
     }
 
@@ -455,10 +606,22 @@ mod native_actor {
         hub_studio_id: Option<String>,
         hub_token: Option<String>,
         hub: Option<HubConn>,
-        hub_version: i64,
+        /// @emoji 🏔️ Last frontier the hub reported (`Welcome.server_frontier` / `Commands.frontier` /
+        /// `Ack.frontier`) — the wire-v2 replacement for the old `hub_version: i64` counter.
+        server_frontier: Option<protocol::RuntimeFrontierSummary>,
+        /// @emoji 🎟️ The hub's last `Welcome.resume_token`, echoed back on the next `Hello` after a
+        /// reconnect so the hub can resume rather than replay from scratch.
+        resume_token: Option<String>,
         backoff_ms: u64,
         reconnect_at: Option<Instant>,
-        pending_hub: HashSet<String>,
+        /// @emoji 🧺 Outbound `Commands` batches awaiting an `Ack`, keyed by `batch_id`, so `Rejected`/
+        /// `Transformed` can roll back exactly the envelopes that batch sent.
+        pending_batches: std::collections::HashMap<u64, Vec<OperationEnvelope>>,
+        next_batch_id: u64,
+        /// @emoji ⏰ This actor's `HybridLogicalTimestamp` seed (derived from `actor`) + logical tick
+        /// counter, for {@link next_timestamp} on every outbound wire envelope.
+        hlc_seed: u64,
+        hlc_counter: u64,
         current_envelope: Option<Value>,
         known_edit_ids: HashSet<String>,
         last_written_hash: Option<String>,
@@ -493,6 +656,7 @@ mod native_actor {
                     }
                 }
             }
+            let hlc_seed = actor_seed(&config.actor);
             Self {
                 document_id: config.document_id,
                 schema: config.schema,
@@ -507,10 +671,14 @@ mod native_actor {
                 hub_studio_id,
                 hub_token,
                 hub: None,
-                hub_version: 0,
+                server_frontier: None,
+                resume_token: None,
                 backoff_ms: 500,
                 reconnect_at: None,
-                pending_hub: HashSet::new(),
+                pending_batches: std::collections::HashMap::new(),
+                next_batch_id: 0,
+                hlc_seed,
+                hlc_counter: 0,
                 current_envelope: None,
                 known_edit_ids: HashSet::new(),
                 last_written_hash: None,
@@ -600,12 +768,15 @@ mod native_actor {
                     let drained = self.drain_and_relay().await;
                     if !drained {
                         self.persist_snapshot(&envelope_json);
-                        self.relay_snapshot_to_hub(&envelope_json).await;
                     }
                     false
                 }
                 DocumentActorMsg::PresenceHeartbeat { peer } => {
-                    self.send_client_frame(HubClientFrame::Presence { peer }).await;
+                    self.send_client_frame(ClientFrame::Presence { peer: presence_to_json(&peer) }, Lane::Preview).await;
+                    false
+                }
+                DocumentActorMsg::PublishPreview { key, seq, payload } => {
+                    self.send_client_frame(ClientFrame::PreviewPublish { key, seq, payload }, Lane::Preview).await;
                     false
                 }
                 DocumentActorMsg::ExternalChanged => {
@@ -632,7 +803,13 @@ mod native_actor {
                     }
                     BackboneMessage::Snapshot { envelope_json } => {
                         self.persist_snapshot(&envelope_json);
-                        self.relay_snapshot_to_hub(&envelope_json).await;
+                        // 📸 No client -> hub whole-envelope push exists in wire v2
+                        // (`protocol_wire::ClientFrame` has no snapshot-put variant — only
+                        // causally-ordered `Commands`; the hub -> client snapshot direction is
+                        // `Bootstrap::Snapshot`/`SnapshotChunk`/`SnapshotDone`, download-only). The
+                        // folder binding above still persists this snapshot; relaying a structural
+                        // snapshot to the hub is a CW6+ hub-rebuild concern (documented deferral in
+                        // the CW5 report, not a bug in this actor).
                     }
                     BackboneMessage::Ack { .. } => {}
                 }
@@ -707,7 +884,7 @@ mod native_actor {
                 self.last_written_hash = Some(hash);
                 self.deliver_remote_operations(appended);
             } else if !lost.is_empty() {
-                if !self.pending_hub.is_empty() {
+                if !self.pending_batches.is_empty() {
                     self.emit(DocumentEvent::Conflict(StudioConflict { kind: "externalDivergence".into(), uri: format!("folder://{}", self.document_id), message: "external history diverged while local operations are pending".into() }));
                 } else {
                     self.known_edit_ids = file_ids;
@@ -731,8 +908,20 @@ mod native_actor {
                     let (write, read) = stream.split();
                     self.hub = Some(HubConn { write, read });
                     self.backoff_ms = 500;
-                    let hello = HubClientFrame::Hello { actor: self.actor.clone(), token, since_version: self.hub_version };
-                    self.send_client_frame(hello).await;
+                    let hello = ClientFrame::Hello {
+                        wire_version: 1,
+                        protocol_version: 1,
+                        schema: self.schema.clone(),
+                        // 🔖 No schema pack hashing wired into this client-side actor yet (db/pack
+                        // integration is a CW6+ hub-rebuild concern) — the hub is JSON-only until
+                        // then anyway, so this placeholder is never validated this wave.
+                        pack_schema_hash: [0u8; 32],
+                        actor: ActorId(self.actor.clone()),
+                        token,
+                        resume_token: self.resume_token.clone(),
+                        frontier: self.server_frontier.clone(),
+                    };
+                    self.send_client_frame(hello, Lane::Command).await;
                 }
                 Err(_error) => {
                     self.schedule_reconnect();
@@ -749,8 +938,8 @@ mod native_actor {
 
         async fn on_hub_message(&mut self, message: Option<Result<Message, tokio_tungstenite::tungstenite::Error>>) {
             match message {
-                Some(Ok(Message::Text(text))) => {
-                    if let Ok(frame) = serde_json::from_str::<HubServerFrame>(text.as_str()) {
+                Some(Ok(Message::Binary(bytes))) => {
+                    if let Ok((_lane, frame)) = decode_server_frame(&bytes) {
                         self.on_hub_frame(frame);
                     }
                 }
@@ -765,71 +954,107 @@ mod native_actor {
             }
         }
 
-        fn on_hub_frame(&mut self, frame: HubServerFrame) {
+        fn on_hub_frame(&mut self, frame: ServerFrame) {
             match frame {
-                HubServerFrame::Welcome { version, envelope, presence, backlog } => {
-                    self.hub_version = version;
-                    self.set_remote_state(RemoteState::Live { peer_count: presence.len() });
-                    if let Some(envelope) = envelope {
-                        self.deliver_snapshot(envelope.to_string());
-                    }
-                    if !backlog.is_empty() {
-                        self.persist_operations(&backlog);
-                        self.deliver_remote_operations(backlog);
-                    }
-                    self.emit(DocumentEvent::Presence { peers: presence });
-                }
-                HubServerFrame::Operations { version, envelopes, origin } => {
-                    self.hub_version = version;
-                    if origin != self.actor {
-                        self.persist_operations(&envelopes);
-                        self.deliver_remote_operations(envelopes);
+                ServerFrame::Welcome { session_id: _, resume_token, server_frontier, bootstrap } => {
+                    self.resume_token = Some(resume_token);
+                    self.server_frontier = Some(server_frontier);
+                    // 📡 `Welcome` no longer carries a presence roster (wire v2 splits it into its own
+                    // `ServerFrame::Presence`) — `peer_count` is corrected once that frame arrives.
+                    self.set_remote_state(RemoteState::Live { peer_count: 0 });
+                    match bootstrap {
+                        Bootstrap::None | Bootstrap::Tail => {}
+                        Bootstrap::Snapshot { .. } => {
+                            // 📦 Pack-based snapshot bootstrap: no client-side pack decoder wired into
+                            // this actor this wave (db/pack integration is a CW6+ hub-rebuild concern)
+                            // — accepted and ignored rather than erroring; catch-up instead relies on
+                            // the hub's follow-up `Commands` frame(s) once CW6 lands.
+                        }
                     }
                 }
-                HubServerFrame::SnapshotReplaced { version, envelope } => {
-                    self.hub_version = version;
-                    self.deliver_snapshot(envelope.to_string());
+                ServerFrame::SnapshotChunk { .. } | ServerFrame::SnapshotDone { .. } => {
+                    // 📦 See the `Bootstrap::Snapshot` note above — accepted and ignored.
                 }
-                HubServerFrame::Presence { peers } => {
+                ServerFrame::Commands { envelopes, origin, frontier } => {
+                    self.server_frontier = Some(frontier);
+                    if origin != ActorId(self.actor.clone()) {
+                        let converted: Vec<OperationEnvelope> = envelopes.into_iter().map(from_wire_envelope).collect();
+                        self.persist_operations(&converted);
+                        self.deliver_remote_operations(converted);
+                    }
+                }
+                ServerFrame::Ack { batch_id, stages, frontier } => {
+                    self.server_frontier = Some(frontier);
+                    self.handle_ack(batch_id, stages);
+                }
+                ServerFrame::Preview { actor, key, seq, payload } => {
+                    if actor != ActorId(self.actor.clone()) {
+                        self.emit(DocumentEvent::Preview { actor: actor.0, key, seq, payload });
+                    }
+                }
+                ServerFrame::Presence { peers } => {
+                    let peers: Vec<PresencePeer> = peers.iter().filter_map(presence_from_json).collect();
                     self.set_remote_state(RemoteState::Live { peer_count: peers.len() });
                     self.emit(DocumentEvent::Presence { peers });
                 }
-                HubServerFrame::Ack { operation_id, version } => {
-                    self.hub_version = version;
-                    self.pending_hub.remove(&operation_id);
-                    self.emit_status_if_changed();
+                ServerFrame::CreditGrant { .. } => {
+                    // 🪙 Command-lane credit-based flow control: no client-side backpressure
+                    // implemented this wave (scope is frame plumbing, not congestion control) —
+                    // accepted and ignored.
                 }
-                HubServerFrame::Conflict { message } => {
-                    self.emit(DocumentEvent::Conflict(StudioConflict { kind: "hubCas".into(), uri: self.hub_base_url.clone().unwrap_or_default(), message }));
+                ServerFrame::Error { code, message } => {
+                    self.emit(DocumentEvent::Conflict(StudioConflict { kind: code, uri: self.hub_base_url.clone().unwrap_or_default(), message }));
                 }
-                HubServerFrame::Error { .. } => {}
             }
+        }
+
+        /// @emoji 📮 Resolves one outbound `Commands` batch's terminal `Applied` stage: `Accepted`
+        /// just clears the pending batch; `Transformed`/`Rejected` both roll back the speculative
+        /// local head first (via {@link rollback_envelope}, replayed as remote operations), and
+        /// `Transformed` then delivers the hub's replacement envelope the same way.
+        fn handle_ack(&mut self, batch_id: u64, stages: Vec<AckStage>) {
+            for stage in stages {
+                let AckStage::Applied { outcome } = stage else { continue };
+                let Some(sent) = self.pending_batches.remove(&batch_id) else { continue };
+                match *outcome {
+                    ApplyOutcome::Accepted => {
+                        self.emit(DocumentEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Accepted });
+                    }
+                    ApplyOutcome::Transformed { envelope } => {
+                        let rollbacks: Vec<OperationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
+                        self.persist_operations(&rollbacks);
+                        self.deliver_remote_operations(rollbacks);
+                        let converted = from_wire_envelope(*envelope);
+                        self.persist_operations(std::slice::from_ref(&converted));
+                        self.deliver_remote_operations(vec![converted]);
+                        self.emit(DocumentEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed });
+                    }
+                    ApplyOutcome::Rejected { reason } => {
+                        let rollbacks: Vec<OperationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
+                        self.persist_operations(&rollbacks);
+                        self.deliver_remote_operations(rollbacks);
+                        self.emit(DocumentEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason } });
+                    }
+                }
+            }
+            self.emit_status_if_changed();
         }
 
         async fn relay_operations_to_hub(&mut self, envelopes: &[OperationEnvelope]) {
             if self.hub.is_none() || envelopes.is_empty() {
                 return;
             }
-            for envelope in envelopes {
-                self.pending_hub.insert(envelope.id.0.clone());
-            }
-            self.send_client_frame(HubClientFrame::Operations { envelopes: envelopes.to_vec() }).await;
+            let batch_id = self.next_batch_id;
+            self.next_batch_id = self.next_batch_id.wrapping_add(1);
+            let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| to_wire_envelope(envelope, next_timestamp(self.hlc_seed, &mut self.hlc_counter))).collect();
+            self.pending_batches.insert(batch_id, envelopes.to_vec());
+            self.send_client_frame(ClientFrame::Commands { batch_id, envelopes: wire_envelopes }, Lane::Command).await;
             self.emit_status_if_changed();
         }
 
-        async fn relay_snapshot_to_hub(&mut self, envelope_json: &str) {
-            if self.hub.is_none() {
-                return;
-            }
-            if let Ok(envelope) = serde_json::from_str::<Value>(envelope_json) {
-                let version = self.hub_version;
-                self.send_client_frame(HubClientFrame::PutEnvelope { version, envelope }).await;
-            }
-        }
-
-        async fn send_client_frame(&mut self, frame: HubClientFrame) {
-            let json = serde_json::to_string(&frame).unwrap_or_default();
-            self.send_raw(Message::Text(json.into())).await;
+        async fn send_client_frame(&mut self, frame: ClientFrame, lane: Lane) {
+            let bytes = encode_client_frame(&frame, lane);
+            self.send_raw(Message::Binary(bytes.into())).await;
         }
 
         async fn send_raw(&mut self, message: Message) {
@@ -867,7 +1092,7 @@ mod native_actor {
         }
 
         fn status(&self) -> DocumentSyncStatus {
-            DocumentSyncStatus { persisted: self.last_written_hash.is_some() || self.hub_version > 0, pendingOperations: self.pending_hub.len(), remote: self.remote_state.clone() }
+            DocumentSyncStatus { persisted: self.last_written_hash.is_some() || self.server_frontier.is_some(), pendingOperations: self.pending_batches.values().map(Vec::len).sum(), remote: self.remote_state.clone() }
         }
 
         fn set_remote_state(&mut self, state: RemoteState) {
@@ -975,13 +1200,13 @@ use native_actor::spawn_actor;
 #[cfg(target_arch = "wasm32")]
 mod wasm_actor {
     use super::*;
-    use std::collections::HashSet;
     use wasm_bindgen::prelude::*;
     use wasm_bindgen::JsCast;
-    use web_sys::{MessageEvent, WebSocket};
+    use web_sys::{BinaryType, MessageEvent, WebSocket};
 
     struct WasmActor {
         document_id: String,
+        schema: String,
         actor: String,
         remote: ChannelBackboneRemote,
         events: broadcast::Sender<DocumentEvent>,
@@ -989,9 +1214,13 @@ mod wasm_actor {
         hub_studio_id: Option<String>,
         hub_token: Option<String>,
         ws: Option<WebSocket>,
-        hub_version: i64,
-        pending_hub: HashSet<String>,
-        incoming_tx: mpsc::UnboundedSender<String>,
+        server_frontier: Option<protocol::RuntimeFrontierSummary>,
+        resume_token: Option<String>,
+        pending_batches: std::collections::HashMap<u64, Vec<OperationEnvelope>>,
+        next_batch_id: u64,
+        hlc_seed: u64,
+        hlc_counter: u64,
+        incoming_tx: mpsc::UnboundedSender<Vec<u8>>,
         _closures: Vec<Closure<dyn FnMut(MessageEvent)>>,
         _open_closures: Vec<Closure<dyn FnMut()>>,
     }
@@ -1002,21 +1231,33 @@ mod wasm_actor {
             let studio_id = self.hub_studio_id.clone().unwrap_or_default();
             let url = hub_ws_url(&base_url, &studio_id, &self.document_id);
             let Ok(ws) = WebSocket::new(&url) else { return };
+            ws.set_binary_type(BinaryType::Arraybuffer);
 
             let incoming = self.incoming_tx.clone();
             let onmessage = Closure::wrap(Box::new(move |event: MessageEvent| {
-                if let Some(text) = event.data().as_string() {
-                    let _ = incoming.send(text);
+                if let Some(buffer) = event.data().dyn_ref::<js_sys::ArrayBuffer>() {
+                    let _ = incoming.send(js_sys::Uint8Array::new(buffer).to_vec());
                 }
             }) as Box<dyn FnMut(MessageEvent)>);
             ws.set_onmessage(Some(onmessage.as_ref().unchecked_ref()));
             self._closures.push(onmessage);
 
-            let hello = HubClientFrame::Hello { actor: self.actor.clone(), token: self.hub_token.clone(), since_version: self.hub_version };
-            let hello_json = serde_json::to_string(&hello).unwrap_or_default();
+            let hello = ClientFrame::Hello {
+                wire_version: 1,
+                protocol_version: 1,
+                schema: self.schema.clone(),
+                // 🔖 See the native actor's matching note in `try_connect_hub` — no client-side
+                // schema pack hashing wired this wave, the hub is JSON-only until CW6 anyway.
+                pack_schema_hash: [0u8; 32],
+                actor: ActorId(self.actor.clone()),
+                token: self.hub_token.clone(),
+                resume_token: self.resume_token.clone(),
+                frontier: self.server_frontier.clone(),
+            };
+            let mut hello_bytes = encode_client_frame(&hello, Lane::Command);
             let ws_for_open = ws.clone();
             let onopen = Closure::wrap(Box::new(move || {
-                let _ = ws_for_open.send_with_str(&hello_json);
+                let _ = ws_for_open.send_with_u8_array(&mut hello_bytes);
             }) as Box<dyn FnMut()>);
             ws.set_onopen(Some(onopen.as_ref().unchecked_ref()));
             self._open_closures.push(onopen);
@@ -1024,10 +1265,24 @@ mod wasm_actor {
             self.ws = Some(ws);
         }
 
-        fn send_frame(&self, frame: &HubClientFrame) {
+        fn send_frame(&self, frame: &ClientFrame, lane: Lane) {
             if let Some(ws) = &self.ws {
-                let _ = ws.send_with_str(&serde_json::to_string(frame).unwrap_or_default());
+                let mut bytes = encode_client_frame(frame, lane);
+                let _ = ws.send_with_u8_array(&mut bytes);
             }
+        }
+
+        /// @emoji 🧺 Builds + sends one `Commands` batch, tracking it in `pending_batches` for
+        /// {@link WasmActor::handle_ack}. Mirrors the native actor's `relay_operations_to_hub`.
+        fn relay_operations(&mut self, envelopes: &[OperationEnvelope]) {
+            if envelopes.is_empty() {
+                return;
+            }
+            let batch_id = self.next_batch_id;
+            self.next_batch_id = self.next_batch_id.wrapping_add(1);
+            let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| to_wire_envelope(envelope, next_timestamp(self.hlc_seed, &mut self.hlc_counter))).collect();
+            self.pending_batches.insert(batch_id, envelopes.to_vec());
+            self.send_frame(&ClientFrame::Commands { batch_id, envelopes: wire_envelopes }, Lane::Command);
         }
 
         fn drain_and_relay(&mut self) -> bool {
@@ -1036,15 +1291,11 @@ mod wasm_actor {
             for message in messages {
                 match message {
                     BackboneMessage::Operations { envelopes } => {
-                        for envelope in &envelopes {
-                            self.pending_hub.insert(envelope.id.0.clone());
-                        }
-                        self.send_frame(&HubClientFrame::Operations { envelopes });
+                        self.relay_operations(&envelopes);
                     }
-                    BackboneMessage::Snapshot { envelope_json } => {
-                        if let Ok(envelope) = serde_json::from_str::<Value>(&envelope_json) {
-                            self.send_frame(&HubClientFrame::PutEnvelope { version: self.hub_version, envelope });
-                        }
+                    BackboneMessage::Snapshot { .. } => {
+                        // 📸 No client -> hub whole-envelope push in wire v2 — see the native actor's
+                        // matching note in `drain_and_relay` (native_actor module, above).
                     }
                     BackboneMessage::Ack { .. } => {}
                 }
@@ -1057,60 +1308,85 @@ mod wasm_actor {
                 DocumentActorMsg::LocalOperations { envelopes } => {
                     let drained = self.drain_and_relay();
                     if !drained && !envelopes.is_empty() {
-                        for envelope in &envelopes {
-                            self.pending_hub.insert(envelope.id.0.clone());
-                        }
-                        self.send_frame(&HubClientFrame::Operations { envelopes });
+                        self.relay_operations(&envelopes);
                     }
                 }
-                DocumentActorMsg::LocalSnapshot { envelope_json } => {
-                    if !self.drain_and_relay() {
-                        if let Ok(envelope) = serde_json::from_str::<Value>(&envelope_json) {
-                            self.send_frame(&HubClientFrame::PutEnvelope { version: self.hub_version, envelope });
-                        }
-                    }
+                DocumentActorMsg::LocalSnapshot { .. } => {
+                    self.drain_and_relay();
                 }
                 DocumentActorMsg::PresenceHeartbeat { peer } => {
-                    self.send_frame(&HubClientFrame::Presence { peer });
+                    self.send_frame(&ClientFrame::Presence { peer: presence_to_json(&peer) }, Lane::Preview);
+                }
+                DocumentActorMsg::PublishPreview { key, seq, payload } => {
+                    self.send_frame(&ClientFrame::PreviewPublish { key, seq, payload }, Lane::Preview);
                 }
                 DocumentActorMsg::ExternalChanged | DocumentActorMsg::Detach => {}
             }
         }
 
-        fn on_text(&mut self, text: &str) {
-            let Ok(frame) = serde_json::from_str::<HubServerFrame>(text) else { return };
+        fn on_binary(&mut self, bytes: &[u8]) {
+            let Ok((_lane, frame)) = decode_server_frame(bytes) else { return };
             match frame {
-                HubServerFrame::Welcome { version, envelope, presence, backlog } => {
-                    self.hub_version = version;
-                    if let Some(envelope) = envelope {
-                        self.deliver_snapshot(envelope.to_string());
-                    }
-                    if !backlog.is_empty() {
-                        self.deliver_remote_operations(backlog);
-                    }
-                    let _ = self.events.send(DocumentEvent::Presence { peers: presence });
-                }
-                HubServerFrame::Operations { version, envelopes, origin } => {
-                    self.hub_version = version;
-                    if origin != self.actor {
-                        self.deliver_remote_operations(envelopes);
+                ServerFrame::Welcome { session_id: _, resume_token, server_frontier, bootstrap } => {
+                    self.resume_token = Some(resume_token);
+                    self.server_frontier = Some(server_frontier);
+                    match bootstrap {
+                        Bootstrap::None | Bootstrap::Tail => {}
+                        // 📦 See the native actor's matching `Bootstrap::Snapshot` note — no
+                        // client-side pack decoder wired this wave, accepted and ignored.
+                        Bootstrap::Snapshot { .. } => {}
                     }
                 }
-                HubServerFrame::SnapshotReplaced { version, envelope } => {
-                    self.hub_version = version;
-                    self.deliver_snapshot(envelope.to_string());
+                ServerFrame::SnapshotChunk { .. } | ServerFrame::SnapshotDone { .. } => {}
+                ServerFrame::Commands { envelopes, origin, frontier } => {
+                    self.server_frontier = Some(frontier);
+                    if origin != ActorId(self.actor.clone()) {
+                        let converted: Vec<OperationEnvelope> = envelopes.into_iter().map(from_wire_envelope).collect();
+                        self.deliver_remote_operations(converted);
+                    }
                 }
-                HubServerFrame::Presence { peers } => {
+                ServerFrame::Ack { batch_id, stages, frontier } => {
+                    self.server_frontier = Some(frontier);
+                    self.handle_ack(batch_id, stages);
+                }
+                ServerFrame::Preview { actor, key, seq, payload } => {
+                    if actor != ActorId(self.actor.clone()) {
+                        let _ = self.events.send(DocumentEvent::Preview { actor: actor.0, key, seq, payload });
+                    }
+                }
+                ServerFrame::Presence { peers } => {
+                    let peers: Vec<PresencePeer> = peers.iter().filter_map(presence_from_json).collect();
                     let _ = self.events.send(DocumentEvent::Presence { peers });
                 }
-                HubServerFrame::Ack { operation_id, version } => {
-                    self.hub_version = version;
-                    self.pending_hub.remove(&operation_id);
+                ServerFrame::CreditGrant { .. } => {}
+                ServerFrame::Error { code, message } => {
+                    let _ = self.events.send(DocumentEvent::Conflict(StudioConflict { kind: code, uri: self.hub_base_url.clone().unwrap_or_default(), message }));
                 }
-                HubServerFrame::Conflict { message } => {
-                    let _ = self.events.send(DocumentEvent::Conflict(StudioConflict { kind: "hubCas".into(), uri: self.hub_base_url.clone().unwrap_or_default(), message }));
+            }
+        }
+
+        /// @emoji 📮 Mirrors the native actor's `handle_ack` — see its doc comment.
+        fn handle_ack(&mut self, batch_id: u64, stages: Vec<AckStage>) {
+            for stage in stages {
+                let AckStage::Applied { outcome } = stage else { continue };
+                let Some(sent) = self.pending_batches.remove(&batch_id) else { continue };
+                match *outcome {
+                    ApplyOutcome::Accepted => {
+                        let _ = self.events.send(DocumentEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Accepted });
+                    }
+                    ApplyOutcome::Transformed { envelope } => {
+                        let rollbacks: Vec<OperationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
+                        self.deliver_remote_operations(rollbacks);
+                        let converted = from_wire_envelope(*envelope);
+                        self.deliver_remote_operations(vec![converted]);
+                        let _ = self.events.send(DocumentEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed });
+                    }
+                    ApplyOutcome::Rejected { reason } => {
+                        let rollbacks: Vec<OperationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
+                        self.deliver_remote_operations(rollbacks);
+                        let _ = self.events.send(DocumentEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Rejected { reason } });
+                    }
                 }
-                HubServerFrame::Error { .. } => {}
             }
         }
 
@@ -1121,15 +1397,10 @@ mod wasm_actor {
             let _ = self.remote.push(BackboneMessage::Operations { envelopes: envelopes.clone() });
             let _ = self.events.send(DocumentEvent::RemoteOperations { envelopes });
         }
-
-        fn deliver_snapshot(&self, envelope_json: String) {
-            let _ = self.remote.push(BackboneMessage::Snapshot { envelope_json: envelope_json.clone() });
-            let _ = self.events.send(DocumentEvent::SnapshotReplaced { envelope_json });
-        }
     }
 
     pub(super) fn spawn_actor(config: DocumentActorConfig, remote: ChannelBackboneRemote, mut cmd_rx: mpsc::UnboundedReceiver<DocumentActorMsg>, events: broadcast::Sender<DocumentEvent>) {
-        let (incoming_tx, mut incoming_rx) = mpsc::unbounded_channel::<String>();
+        let (incoming_tx, mut incoming_rx) = mpsc::unbounded_channel::<Vec<u8>>();
         let mut hub_base_url = None;
         let mut hub_studio_id = None;
         let mut hub_token = None;
@@ -1142,8 +1413,10 @@ mod wasm_actor {
                 }
             }
         }
+        let hlc_seed = actor_seed(&config.actor);
         let mut actor = WasmActor {
             document_id: config.document_id,
+            schema: config.schema,
             actor: config.actor,
             remote,
             events,
@@ -1151,8 +1424,12 @@ mod wasm_actor {
             hub_studio_id,
             hub_token,
             ws: None,
-            hub_version: 0,
-            pending_hub: HashSet::new(),
+            server_frontier: None,
+            resume_token: None,
+            pending_batches: std::collections::HashMap::new(),
+            next_batch_id: 0,
+            hlc_seed,
+            hlc_counter: 0,
             incoming_tx,
             _closures: Vec::new(),
             _open_closures: Vec::new(),
@@ -1168,9 +1445,9 @@ mod wasm_actor {
                             Some(message) => actor.handle_cmd(message),
                         }
                     }
-                    text = incoming_rx.recv() => {
-                        match text {
-                            Some(text) => actor.on_text(&text),
+                    bytes = incoming_rx.recv() => {
+                        match bytes {
+                            Some(bytes) => actor.on_binary(&bytes),
                             None => break,
                         }
                     }
@@ -1206,9 +1483,10 @@ pub struct ActorFixture {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum FixtureInbound {
-    /// @emoji 📬 A raw `HubServerFrame` delivered as if received over the hub WebSocket. Driven by
-    /// WS-E's TS twin; the folder-only Rust harness skips these.
-    HubFrame { frame: HubServerFrame },
+    /// @emoji 📬 A raw `protocol_wire::ServerFrame` delivered as if received over the hub
+    /// WebSocket. Driven by `backbone-worker.ts`'s TS fallback vitest harness; the folder-only
+    /// Rust harness skips these.
+    HubFrame { frame: ServerFrame },
     /// @emoji 📁 An external folder edit: append these edit JSON objects to `vcs.edits` out-of-band.
     ExternalEdits { edits: Vec<Value> },
     /// @emoji ♻️ An external whole-envelope rewrite (divergent history): replace the stored envelope.
@@ -1331,6 +1609,98 @@ mod tests {
         assert_eq!(hub_ws_url("https://hub.example.com", "studio-1", "doc-2"), "wss://hub.example.com/studios/studio-1/documents/doc-2/ws");
         assert_eq!(hub_ws_url("ws://127.0.0.1:5000/prefix", "studio-1", "d"), "ws://127.0.0.1:5000/studios/studio-1/documents/d/ws");
     }
+    //#endregion 🧪Helpers
+
+    //#region 🧪WireBridge
+    #[test]
+    fn wire_bridge_round_trips_identity_and_diff_through_protocol_causal() {
+        let envelope = sample_operation_envelope("edit-1", 5);
+        let wire = to_wire_envelope(&envelope, protocol::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 });
+        assert_eq!(wire.operation_id, envelope.id);
+        assert_eq!(wire.actor, envelope.actor);
+        assert_eq!(wire.document_id, envelope.document);
+        assert_eq!(wire.diff.payload, envelope.diff.payload);
+
+        let recovered = from_wire_envelope(wire);
+        assert_eq!(recovered.id, envelope.id);
+        assert_eq!(recovered.actor, envelope.actor);
+        assert_eq!(recovered.document, envelope.document);
+        assert_eq!(recovered.diff.payload, envelope.diff.payload);
+        assert_eq!(recovered.inverse.inverse_diff.payload, envelope.inverse.inverse_diff.payload);
+    }
+
+    #[test]
+    fn rollback_envelope_synthesizes_an_undo_from_the_original_inverse() {
+        let envelope = sample_operation_envelope("edit-1", 5);
+        let rollback = rollback_envelope(&envelope);
+        assert_eq!(rollback.deps, vec![envelope.id.clone()], "the undo depends on the operation it undoes");
+        assert_eq!(rollback.diff.payload, envelope.inverse.inverse_diff.payload, "the undo's forward diff IS the original's inverse");
+        assert_ne!(rollback.id, envelope.id, "the undo gets its own operation id");
+    }
+
+    /// @emoji 🎬 Canonical wire-frame byte fixtures shared with `backbone-worker.ts`'s vitest suite
+    /// (`framework/product/os/core/js/backbone-worker.ts` `WireBridge` region / `index.ts`'s
+    /// `encodeClientFrame`/`decodeServerFrame` twins) — both sides decode the exact same committed
+    /// bytes under `framework/sync/fixtures/wire/`, proving `protocol_wire`'s lane+varint+JSON codec
+    /// round-trips identically across Rust and TS. Regenerated deterministically by this test (every
+    /// value below is a fixed constant, never a clock/random read) rather than hand-authored, so a
+    /// `protocol_wire` field-order/shape change fails loudly here instead of silently diverging from
+    /// the TS twin.
+    #[test]
+    fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
+        let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../fixtures/wire");
+        std::fs::create_dir_all(&fixtures_dir).expect("fixtures dir");
+
+        let hello = ClientFrame::Hello {
+            wire_version: 1,
+            protocol_version: 1,
+            schema: "demo/v1".to_string(),
+            pack_schema_hash: [7u8; 32],
+            actor: protocol::ActorId("actor-1".to_string()),
+            token: Some("token-1".to_string()),
+            resume_token: None,
+            frontier: None,
+        };
+        let hello_bytes = encode_client_frame(&hello, Lane::Command);
+        std::fs::write(fixtures_dir.join("client-hello.bin"), &hello_bytes).expect("write client-hello.bin");
+        let (lane, decoded) = protocol::decode_client_frame(&hello_bytes).expect("decode client-hello.bin");
+        assert_eq!(lane, Lane::Command);
+        assert_eq!(decoded, hello);
+
+        let wire_envelope = protocol::OperationEnvelope {
+            operation_id: protocol::OperationId("op-1".to_string()),
+            document_id: protocol::DocumentId("doc-1".to_string()),
+            actor: protocol::ActorId("actor-1".to_string()),
+            dependencies: Vec::new(),
+            diff: protocol::DocumentDiff { schema: "demo/v1".to_string(), payload: serde_json::json!({"n": 5, "sequenceNumber": 1}) },
+            inverse: protocol::InverseOperation { schema: "demo/v1".to_string(), inverse_diff: serde_json::json!({"n": 0}) },
+            timestamp: protocol::HybridLogicalTimestamp { actor: 42, physical_ms: 1000, logical: 0 },
+        };
+        let commands = ClientFrame::Commands { batch_id: 1, envelopes: vec![wire_envelope] };
+        let commands_bytes = encode_client_frame(&commands, Lane::Command);
+        std::fs::write(fixtures_dir.join("client-commands.bin"), &commands_bytes).expect("write client-commands.bin");
+        let (lane, decoded) = protocol::decode_client_frame(&commands_bytes).expect("decode client-commands.bin");
+        assert_eq!(lane, Lane::Command);
+        assert_eq!(decoded, commands);
+
+        let frontier = protocol::RuntimeFrontierSummary { document_id: protocol::DocumentId("doc-1".to_string()), head_edit_ordinal: 1, head_edit_id: "op-1".to_string(), last_commit_seq: 1, chain_hash: [9u8; 32] };
+        let welcome = ServerFrame::Welcome { session_id: "session-1".to_string(), resume_token: "resume-1".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Tail };
+        let welcome_bytes = protocol::encode_server_frame(&welcome, Lane::Command);
+        std::fs::write(fixtures_dir.join("server-welcome.bin"), &welcome_bytes).expect("write server-welcome.bin");
+        let (lane, decoded) = decode_server_frame(&welcome_bytes).expect("decode server-welcome.bin");
+        assert_eq!(lane, Lane::Command);
+        assert_eq!(decoded, welcome);
+
+        let ack = ServerFrame::Ack { batch_id: 1, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }], frontier };
+        let ack_bytes = protocol::encode_server_frame(&ack, Lane::Command);
+        std::fs::write(fixtures_dir.join("server-ack.bin"), &ack_bytes).expect("write server-ack.bin");
+        let (lane, decoded) = decode_server_frame(&ack_bytes).expect("decode server-ack.bin");
+        assert_eq!(lane, Lane::Command);
+        assert_eq!(decoded, ack);
+    }
+    //#endregion 🧪WireBridge
+
+    //#region 🧪Helpers
 
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
@@ -1355,6 +1725,7 @@ mod tests {
     mod actor_tests {
         use super::*;
         use futures_util::{SinkExt, StreamExt};
+        use protocol::{decode_client_frame, encode_server_frame};
         use std::sync::Arc;
         use std::time::Duration;
         use tokio::sync::{broadcast as tokio_broadcast, Mutex};
@@ -1437,11 +1808,19 @@ mod tests {
         }
 
         //#region 🔖MockHub
-        /// @emoji 🧪 A minimal in-process hub speaking the real `HubClientFrame`/`HubServerFrame`
-        /// protocol, so the hub endpoint is exercised end-to-end without linking WS-C's `os-hub` bin.
+        /// @emoji 🧪 A minimal in-process hub speaking the real, binary `protocol_wire::ClientFrame`/
+        /// `ServerFrame` protocol, so the hub endpoint is exercised end-to-end without linking a real
+        /// `db`-backed hub (that's CW6's job — this mock never touches `db`). Ordinal-indexed log,
+        /// mirroring `db_sync`'s replica-catch-up shape (`Hello.frontier` -> filtered backlog ->
+        /// `Welcome` then a follow-up `Commands`), but with a placeholder `chain_hash`/`resume_token`
+        /// (this mock has no durable log to derive a real chain hash from).
         struct MockHub {
-            log: Arc<Mutex<Vec<(i64, OperationEnvelope)>>>,
-            broadcast: tokio_broadcast::Sender<HubServerFrame>,
+            log: Arc<Mutex<Vec<(u64, protocol::OperationEnvelope)>>>,
+            broadcast: tokio_broadcast::Sender<ServerFrame>,
+        }
+
+        fn mock_frontier(ordinal: u64) -> protocol::RuntimeFrontierSummary {
+            protocol::RuntimeFrontierSummary { document_id: DocumentId("mock".to_string()), head_edit_ordinal: ordinal, head_edit_id: format!("edit-{ordinal}"), last_commit_seq: ordinal, chain_hash: [0u8; 32] }
         }
 
         async fn spawn_mock_hub() -> (std::net::SocketAddr, Arc<MockHub>) {
@@ -1467,48 +1846,59 @@ mod tests {
         async fn mock_hub_connection(ws: tokio_tungstenite::WebSocketStream<tokio::net::TcpStream>, hub: Arc<MockHub>) {
             let (mut write, mut read) = ws.split();
             // Expect Hello first.
-            let since_version = match read.next().await {
-                Some(Ok(WsMessage::Text(text))) => match serde_json::from_str::<HubClientFrame>(text.as_str()) {
-                    Ok(HubClientFrame::Hello { since_version, .. }) => since_version,
+            let requested_ordinal = match read.next().await {
+                Some(Ok(WsMessage::Binary(bytes))) => match decode_client_frame(&bytes) {
+                    Ok((_, ClientFrame::Hello { frontier, .. })) => frontier.map_or(0, |frontier| frontier.head_edit_ordinal),
                     _ => return,
                 },
                 _ => return,
             };
-            let (version, backlog) = {
+            let (frontier, backlog) = {
                 let log = hub.log.lock().await;
-                let version = log.last().map(|(v, _)| *v).unwrap_or(0);
-                let backlog: Vec<OperationEnvelope> = log.iter().filter(|(v, _)| *v > since_version).map(|(_, envelope)| envelope.clone()).collect();
-                (version, backlog)
+                let ordinal = log.last().map_or(0, |(ordinal, _)| *ordinal);
+                let backlog: Vec<protocol::OperationEnvelope> = log.iter().filter(|(ordinal, _)| *ordinal > requested_ordinal).map(|(_, envelope)| envelope.clone()).collect();
+                (mock_frontier(ordinal), backlog)
             };
-            let welcome = HubServerFrame::Welcome { version, envelope: None, presence: Vec::new(), backlog };
-            if write.send(WsMessage::Text(serde_json::to_string(&welcome).unwrap().into())).await.is_err() {
+            let welcome = ServerFrame::Welcome { session_id: "mock-session".to_string(), resume_token: "mock-resume".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Tail };
+            if write.send(WsMessage::Binary(encode_server_frame(&welcome, Lane::Command).into())).await.is_err() {
                 return;
+            }
+            if !backlog.is_empty() {
+                let commands = ServerFrame::Commands { envelopes: backlog, origin: ActorId("hub-backlog".to_string()), frontier: frontier.clone() };
+                if write.send(WsMessage::Binary(encode_server_frame(&commands, Lane::Command).into())).await.is_err() {
+                    return;
+                }
             }
             let mut broadcast_rx = hub.broadcast.subscribe();
             loop {
                 tokio::select! {
                     incoming = read.next() => {
                         match incoming {
-                            Some(Ok(WsMessage::Text(text))) => {
-                                match serde_json::from_str::<HubClientFrame>(text.as_str()) {
-                                    Ok(HubClientFrame::Operations { envelopes }) => {
+                            Some(Ok(WsMessage::Binary(bytes))) => {
+                                match decode_client_frame(&bytes) {
+                                    Ok((_, ClientFrame::Commands { batch_id, envelopes })) => {
+                                        let mut assigned_frontier = frontier.clone();
                                         for envelope in envelopes {
-                                            let (assigned, origin) = {
+                                            let (ordinal, origin) = {
                                                 let mut log = hub.log.lock().await;
-                                                let next = log.last().map(|(v, _)| *v).unwrap_or(0) + 1;
+                                                let next = log.last().map_or(0, |(ordinal, _)| *ordinal) + 1;
                                                 log.push((next, envelope.clone()));
-                                                (next, envelope.actor.0.clone())
+                                                (next, envelope.actor.clone())
                                             };
-                                            let ack = HubServerFrame::Ack { operation_id: envelope_id(&envelope), version: assigned };
-                                            let _ = write.send(WsMessage::Text(serde_json::to_string(&ack).unwrap().into())).await;
-                                            let _ = hub.broadcast.send(HubServerFrame::Operations {
-                                                version: assigned,
-                                                envelopes: vec![envelope],
-                                                origin,
-                                            });
+                                            assigned_frontier = mock_frontier(ordinal);
+                                            let _ = hub.broadcast.send(ServerFrame::Commands { envelopes: vec![envelope], origin, frontier: assigned_frontier.clone() });
                                         }
+                                        let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }], frontier: assigned_frontier };
+                                        let _ = write.send(WsMessage::Binary(encode_server_frame(&ack, Lane::Command).into())).await;
                                     }
-                                    Ok(HubClientFrame::Bye) | Err(_) => {}
+                                    Ok((_, ClientFrame::PreviewPublish { key, seq, payload })) => {
+                                        // 👻 Best-effort fan-out on the uncredited preview lane — this mock
+                                        // hub doesn't track per-connection actor identity beyond `Hello`, so
+                                        // it stamps a fixed sentinel origin (fine for the round-trip test
+                                        // this drives, which only asserts the *other* peer receives it).
+                                        let _ = hub.broadcast.send(ServerFrame::Preview { actor: ActorId("mock-hub-peer".to_string()), key, seq, payload });
+                                    }
+                                    Ok((_, ClientFrame::Bye)) | Err(_) => {}
                                     Ok(_) => {}
                                 }
                             }
@@ -1519,7 +1909,7 @@ mod tests {
                     frame = broadcast_rx.recv() => {
                         match frame {
                             Ok(frame) => {
-                                if write.send(WsMessage::Text(serde_json::to_string(&frame).unwrap().into())).await.is_err() {
+                                if write.send(WsMessage::Binary(encode_server_frame(&frame, Lane::Command).into())).await.is_err() {
                                     break;
                                 }
                             }
@@ -1529,10 +1919,6 @@ mod tests {
                     }
                 }
             }
-        }
-
-        fn envelope_id(envelope: &OperationEnvelope) -> String {
-            envelope.id.0.clone()
         }
         //#endregion 🔖MockHub
 
@@ -1668,6 +2054,62 @@ mod tests {
             host_b.close("drain");
         }
 
+        // 🔬 The mock hub always Acks `Accepted` — confirms the new `ServerFrame::Ack` ->
+        // `DocumentEvent::CommandOutcome` wiring actually fires (not just that it compiles).
+        #[tokio::test]
+        async fn command_outcome_accepted_fires_after_hub_ack() {
+            let (addr, _hub) = spawn_mock_hub().await;
+            let base_url = format!("ws://{addr}");
+            let host = DocumentHost::new();
+            let channels =
+                host.open(DocumentActorConfig { document_id: "outcome".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, studio_id: "studio-1".into(), token: None }], watch_external: false, actor: "A".into() });
+            let mut events = host.subscribe("outcome");
+            let mut store = DocumentVcsStore::new(demo_envelope("outcome"));
+            store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
+            tokio::time::sleep(Duration::from_millis(300)).await;
+
+            store.dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply");
+            channels.cmd_tx.send(DocumentActorMsg::LocalOperations { envelopes: Vec::new() }).expect("wake");
+
+            let event = wait_for_event(&mut events, |event| matches!(event, DocumentEvent::CommandOutcome { .. })).await;
+            match event {
+                DocumentEvent::CommandOutcome { outcome, .. } => assert_eq!(outcome, CommandAckOutcome::Accepted),
+                other => panic!("expected CommandOutcome, got {other:?}"),
+            }
+            host.close("outcome");
+        }
+
+        // 🔬 `SyncSession::publish_preview` -> `ClientFrame::PreviewPublish` -> the mock hub's
+        // preview-lane fan-out -> `ServerFrame::Preview` -> `DocumentEvent::Preview` on another peer.
+        #[tokio::test]
+        async fn publish_preview_round_trips_through_hub() {
+            let (addr, _hub) = spawn_mock_hub().await;
+            let base_url = format!("ws://{addr}");
+
+            let host_a = DocumentHost::new();
+            let channels_a =
+                host_a.open(DocumentActorConfig { document_id: "preview".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), studio_id: "studio-1".into(), token: None }], watch_external: false, actor: "A".into() });
+
+            let host_b = DocumentHost::new();
+            host_b.open(DocumentActorConfig { document_id: "preview".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, studio_id: "studio-1".into(), token: None }], watch_external: false, actor: "B".into() });
+            let mut events_b = host_b.subscribe("preview");
+            tokio::time::sleep(Duration::from_millis(300)).await;
+
+            channels_a.cmd_tx.send(DocumentActorMsg::PublishPreview { key: "cursor".into(), seq: 1, payload: vec![1, 2, 3] }).expect("publish preview");
+
+            let event = wait_for_event(&mut events_b, |event| matches!(event, DocumentEvent::Preview { .. })).await;
+            match event {
+                DocumentEvent::Preview { key, seq, payload, .. } => {
+                    assert_eq!(key, "cursor");
+                    assert_eq!(seq, 1);
+                    assert_eq!(payload, vec![1, 2, 3]);
+                }
+                other => panic!("expected Preview, got {other:?}"),
+            }
+            host_a.close("preview");
+            host_b.close("preview");
+        }
+
         // 🔬 Shared fixtures replay: each fixture's inbound stimuli produce the expected DocumentEvent
         // sequence and final timeline. The same fixtures drive WS-E's vitest harness against the TS twin.
         #[tokio::test]
@@ -1739,6 +2181,8 @@ mod tests {
                 DocumentEvent::SnapshotReplaced { .. } => "snapshotReplaced",
                 DocumentEvent::Status(_) => "status",
                 DocumentEvent::Presence { .. } => "presence",
+                DocumentEvent::Preview { .. } => "preview",
+                DocumentEvent::CommandOutcome { .. } => "commandOutcome",
                 DocumentEvent::Conflict(_) => "conflict",
             }
         }

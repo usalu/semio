@@ -17837,6 +17837,15 @@ impl ShellState {
                     self.sync_card_kind = Some("conflict".into());
                     changed = true;
                 }
+                DocumentEvent::Preview { .. } => {
+                    // 👻 Ephemeral peer previews (wire v2's uncredited preview lane) have no native
+                    // wgpu shell UI yet — same documented-follow-up status as `Presence` above.
+                }
+                DocumentEvent::CommandOutcome { .. } => {
+                    // 📮 Terminal batch dispositions (accepted/transformed/rejected) have no native
+                    // wgpu shell surfacing yet — `RemoteOperations`/rollback already keep document
+                    // state correct; this event is purely informational until a UI is built for it.
+                }
             }
         }
         if changed {

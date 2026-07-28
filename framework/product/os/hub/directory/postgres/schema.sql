@@ -1,8 +1,10 @@
 -- #region 🔖Header
 -- 2026 Ueli Saluz
 -- AGPL-3.0
--- os-hub Postgres schema — idempotent bootstrap (CREATE ... IF NOT EXISTS), no migration framework
--- (greenfield: there are no users yet, so schema changes are edited in place, not migrated).
+-- os-hub directory Postgres schema (identity/tenancy only) — idempotent bootstrap
+-- (CREATE ... IF NOT EXISTS), no migration framework (greenfield: there are no users yet, so
+-- schema changes are edited in place, not migrated). Document persistence and blobs are
+-- `db::Database`'s tables, not this schema's.
 -- #endregion 🔖Header
 
 CREATE TABLE IF NOT EXISTS hub_user (
@@ -56,37 +58,12 @@ CREATE TABLE IF NOT EXISTS hub_node (
     kind TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS hub_document (
-    id TEXT PRIMARY KEY,
-    studio_id TEXT NOT NULL REFERENCES hub_studio(id) ON DELETE CASCADE,
-    schema TEXT NOT NULL,
-    snapshot JSONB NOT NULL,
-    version BIGINT NOT NULL DEFAULT 0
-);
-
-CREATE TABLE IF NOT EXISTS hub_document_operation (
-    id TEXT PRIMARY KEY,
-    document_id TEXT NOT NULL REFERENCES hub_document(id) ON DELETE CASCADE,
-    version BIGINT NOT NULL,
-    actor TEXT,
-    envelope JSONB NOT NULL,
-    created_at BIGINT NOT NULL
-);
-
 CREATE TABLE IF NOT EXISTS hub_share_token (
     token TEXT PRIMARY KEY,
-    document_id TEXT NOT NULL REFERENCES hub_document(id) ON DELETE CASCADE,
+    document_id TEXT NOT NULL,
     created_at BIGINT NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS hub_blob (
-    hash TEXT PRIMARY KEY,
-    media_type TEXT NOT NULL,
-    size BIGINT NOT NULL,
-    bytes BYTEA NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_membership_user ON hub_studio_membership (user_id);
 CREATE INDEX IF NOT EXISTS idx_node_studio_parent ON hub_node (studio_id, parent_id);
-CREATE INDEX IF NOT EXISTS idx_op_document_version ON hub_document_operation (document_id, version);
 CREATE INDEX IF NOT EXISTS idx_sync_session_document ON hub_sync_session (document_id, disconnected_at);

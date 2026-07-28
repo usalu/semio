@@ -315,6 +315,38 @@ impl WalRecord {
 }
 //#endregion 🔖Records
 
+//#region 🔖PayloadTransform
+/// @emoji 🔐 The encryption hook for `WAL_PAYLOAD` bytes: a caller building a `WalPayloadRef`
+/// applies `encrypt` to the plaintext BEFORE wrapping it as `WalPayloadRef::Inline` or handing it to
+/// `db_storage::PayloadStorage::put` for a `WalPayloadRef::CasRef`, and applies `decrypt` after
+/// reading either form back — this crate itself never calls `PayloadStorage` (see `WalPayloadRef`'s
+/// doc: the inline-vs-CAS choice is deliberately the caller's, keeping `db_wal` decoupled from that
+/// trait), so it cannot invoke the hook itself either; it only defines the seam. Per the contract:
+/// a trait only, no real implementation here — external crypto libraries stay behind it (the
+/// family's "external libs behind an interface" rule).
+pub trait PayloadTransform: Send + Sync {
+    /// @emoji 🔒 Transforms `plaintext` before it is embedded inline or stored via `PayloadStorage`.
+    fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, db_core::DbError>;
+    /// @emoji 🔓 Inverts `encrypt` — must exactly reconstruct the original bytes.
+    fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, db_core::DbError>;
+}
+
+/// @emoji 🪟 A `PayloadTransform` that passes bytes through unchanged — the default for a
+/// deployment with no encryption configured.
+#[derive(Clone, Copy, Default, Debug)]
+pub struct IdentityPayloadTransform;
+
+impl PayloadTransform for IdentityPayloadTransform {
+    fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, db_core::DbError> {
+        Ok(plaintext.to_vec())
+    }
+
+    fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, db_core::DbError> {
+        Ok(ciphertext.to_vec())
+    }
+}
+//#endregion 🔖PayloadTransform
+
 //#region 🔖GroupCommit
 /// @emoji ⏱️ Bounds a segment's group-commit batching: whichever of delay/bytes/records is hit
 /// first triggers the next physical `SprWriter::commit()` + `WalStorage::sync`. This crate's own
@@ -828,6 +860,49 @@ mod tests {
         assert!(WalRecord::decode(WAL_TX_BEGIN, b"").is_err());
     }
     //#endregion 🔖Records
+
+    //#region 🔖PayloadTransform
+    #[test]
+    fn identity_payload_transform_round_trips_without_changing_bytes() {
+        let transform = IdentityPayloadTransform;
+        let plaintext = b"hello wal";
+        let encrypted = transform.encrypt(plaintext).unwrap();
+        assert_eq!(encrypted, plaintext);
+        assert_eq!(transform.decrypt(&encrypted).unwrap(), plaintext);
+    }
+
+    /// @emoji 🔐 A reversing "cipher" — enough to prove a caller can thread a non-identity
+    /// `PayloadTransform` through `WalPayloadRef::Inline` end-to-end via this crate's own
+    /// encode/decode, without `db_wal` itself needing to know encryption happened.
+    struct ReversingTransform;
+    impl PayloadTransform for ReversingTransform {
+        fn encrypt(&self, plaintext: &[u8]) -> Result<Vec<u8>, db_core::DbError> {
+            Ok(plaintext.iter().rev().copied().collect())
+        }
+        fn decrypt(&self, ciphertext: &[u8]) -> Result<Vec<u8>, db_core::DbError> {
+            Ok(ciphertext.iter().rev().copied().collect())
+        }
+    }
+
+    #[test]
+    fn non_identity_payload_transform_round_trips_through_an_inline_wal_payload_record() {
+        let transform = ReversingTransform;
+        let plaintext = b"round trip me through the wal".to_vec();
+
+        let ciphertext = transform.encrypt(&plaintext).unwrap();
+        assert_ne!(ciphertext, plaintext, "the transform must actually have changed the bytes");
+
+        let record = WalRecord::Payload(WalPayloadRef::Inline(ciphertext));
+        let (kind, _critical, payload) = record.encode();
+        let decoded = WalRecord::decode(kind, &payload).unwrap();
+        let WalRecord::Payload(WalPayloadRef::Inline(stored_ciphertext)) = decoded else {
+            panic!("expected an inline payload record");
+        };
+
+        let recovered = transform.decrypt(&stored_ciphertext).unwrap();
+        assert_eq!(recovered, plaintext);
+    }
+    //#endregion 🔖PayloadTransform
 
     //#region 🔖GroupCommit
     #[test]

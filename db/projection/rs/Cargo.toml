@@ -14,4 +14,5 @@ path = "lib.rs"
 db_core = { path = "../../core/rs" }
 db_state = { path = "../../state/rs" }
 db_index = { path = "../../index/rs" }
+db_storage = { path = "../../storage/rs" }
 protocol = { path = "../../../protocol/rs" }

@@ -20,6 +20,10 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
 
+// 🔒 `Emit::emit` method-call syntax is only exercised by this crate's own tests (production
+// callers hold a `dyn Emit` object or call through `db_core`'s own trait path) — gate the import
+// accordingly rather than leaving an always-unused warning on non-test builds.
+#[cfg(test)]
 use db_core::Emit as _;
 
 //#region 🔖Util
@@ -299,7 +303,7 @@ impl<S: EventSink> db_core::Emit for AuditSink<S> {
         }
         let seq = self.next_seq.fetch_add(1, Ordering::Relaxed);
         let mut state = lock(&self.state);
-        let prev_checksum = state.links.back().map(|link| link.checksum).unwrap_or(state.base_checksum);
+        let prev_checksum = state.links.back().map_or(state.base_checksum, |link| link.checksum);
         let checksum = fold_checksum(prev_checksum, &line);
         state.links.push_back(AuditLink { seq, checksum });
         while state.links.len() > self.max_retained {
@@ -375,7 +379,7 @@ impl CardinalityLimiter {
     }
 
     pub fn series_count(&self, metric: &'static str) -> usize {
-        lock(&self.seen).get(metric).map(HashSet::len).unwrap_or(0)
+        lock(&self.seen).get(metric).map_or(0, HashSet::len)
     }
 }
 //#endregion 🔖Cardinality
@@ -502,8 +506,7 @@ impl Clock for SystemClock {
     fn now_ms(&self) -> u64 {
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
-            .map(|d| d.as_millis() as u64)
-            .unwrap_or(0)
+            .map_or(0, |d| d.as_millis() as u64)
     }
 }
 

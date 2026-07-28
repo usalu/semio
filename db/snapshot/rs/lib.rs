@@ -40,9 +40,9 @@
 //! to `db_compact`'s "online compaction with manifest CAS + fencing" — `retain_from` here is the
 //! safe, mechanical pruning primitive that caller is expected to call after fencing itself.
 
-use db_core::{DbError, DocumentId, check_len};
+use db_core::{DbError, DocumentId, EpochFence, check_len};
 use db_state::Page;
-use db_storage::SnapshotStorage;
+use db_storage::{LeaseInfo, LeaseStorage, SnapshotStorage};
 
 //#region 🔖Descriptor
 /// @emoji 🔢 Wire format tag for `SnapshotDescriptor::encode`/`decode` — bumped on any
@@ -588,7 +588,7 @@ impl<'storage> SnapshotManager<'storage> {
             let bytes = self.storage.read_generation(document, generation)?;
             let handle = open_latest(&bytes)?;
             if handle.descriptor.head_seq <= at_most_head_seq {
-                let better = best.map_or(true, |(_, best_head_seq)| handle.descriptor.head_seq > best_head_seq);
+                let better = best.is_none_or(|(_, best_head_seq)| handle.descriptor.head_seq > best_head_seq);
                 if better {
                     best = Some((generation, handle.descriptor.head_seq));
                 }
@@ -632,6 +632,47 @@ impl<'storage> SnapshotManager<'storage> {
     }
 }
 //#endregion 🔖Manager
+
+//#region 🔖Lease
+/// @emoji ⏳ The fencing primitive the module doc's "Scope boundary" note references: this crate
+/// deliberately keeps `SnapshotManager::publish`/`retain_from` as mechanical, lease-agnostic
+/// operations (concurrency coordination is `db_compact`'s "online compaction with manifest CAS +
+/// fencing" responsibility) — `SnapshotLease` is the thin `db_storage::LeaseStorage` wrapper a
+/// caller (a document actor, or `db_compact`) uses to serialize concurrent `publish`/`retain_from`
+/// calls for one document before invoking them, keyed by a resource name derived from the document
+/// id alone (so two different documents' snapshot builders never contend on the same lease).
+pub struct SnapshotLease;
+
+impl SnapshotLease {
+    /// @emoji 🏷️ The `LeaseStorage` resource name guarding `document`'s snapshot builder.
+    pub fn resource(document: &DocumentId) -> String {
+        format!("snapshot:{document}")
+    }
+
+    /// @emoji 🤝 Acquires (or idempotently re-acquires) the snapshot-builder lease for `document`.
+    pub fn acquire(storage: &dyn LeaseStorage, document: &DocumentId, holder: &str, ttl_ms: u64, now_ms: u64) -> Result<EpochFence, DbError> {
+        storage.acquire(&Self::resource(document), holder, ttl_ms, now_ms)
+    }
+
+    /// @emoji ♻️ Extends `holder`'s existing lease for `document` — e.g. around a long
+    /// `materialize_chain` + `publish` sequence for a deep incremental chain.
+    pub fn renew(storage: &dyn LeaseStorage, document: &DocumentId, holder: &str, fence: EpochFence, ttl_ms: u64, now_ms: u64) -> Result<(), DbError> {
+        storage.renew(&Self::resource(document), holder, fence, ttl_ms, now_ms)
+    }
+
+    /// @emoji 🕊️ Releases `holder`'s lease for `document` once its `publish`/`retain_from` call
+    /// has completed.
+    pub fn release(storage: &dyn LeaseStorage, document: &DocumentId, holder: &str, fence: EpochFence) -> Result<(), DbError> {
+        storage.release(&Self::resource(document), holder, fence)
+    }
+
+    /// @emoji 👀 The lease's current holder/fence for `document`, or `None` if unheld — lets a
+    /// caller check whether it's safe to `retain_from` without blindly racing another builder.
+    pub fn current(storage: &dyn LeaseStorage, document: &DocumentId, now_ms: u64) -> Result<Option<LeaseInfo>, DbError> {
+        storage.current(&Self::resource(document), now_ms)
+    }
+}
+//#endregion 🔖Lease
 
 //#region 🧪Tests
 #[cfg(test)]
@@ -941,5 +982,42 @@ mod tests {
         assert!(policy.should_snapshot(0, 0, 60_000));
     }
     //#endregion 🔖Policy
+
+    //#region 🔖Lease
+    #[test]
+    fn snapshot_lease_round_trips_acquire_renew_release_via_memory_storage() {
+        let storage = MemoryStorage::new();
+        let document: DocumentId = "doc-1".into();
+
+        let fence = SnapshotLease::acquire(&storage, &document, "actor-a", 1_000, 0).unwrap();
+        assert_eq!(fence, EpochFence::INITIAL);
+        assert!(SnapshotLease::current(&storage, &document, 0).unwrap().is_some());
+
+        SnapshotLease::renew(&storage, &document, "actor-a", fence, 1_000, 500).unwrap();
+
+        // ❌ A second holder can't acquire while actor-a's lease is still unexpired.
+        assert!(matches!(SnapshotLease::acquire(&storage, &document, "actor-b", 1_000, 500), Err(DbError::Conflict(_))));
+
+        SnapshotLease::release(&storage, &document, "actor-a", fence).unwrap();
+        assert!(SnapshotLease::current(&storage, &document, 500).unwrap().is_none());
+
+        // ✅ Now free, actor-b can acquire fresh (an explicit release clears the record entirely,
+        // per `LeaseStorage::acquire`'s own doc — only a hand-off from an EXPIRED-but-still-present
+        // lease bumps the epoch fence, exercised next).
+        let after_release = SnapshotLease::acquire(&storage, &document, "actor-b", 1_000, 500).unwrap();
+        assert_eq!(after_release, EpochFence::INITIAL);
+
+        // ✅ A hand-off from an unreleased but time-expired lease DOES bump the fence.
+        let expired_handoff = SnapshotLease::acquire(&storage, &document, "actor-c", 1_000, 1_600).unwrap();
+        assert_eq!(expired_handoff, after_release.next());
+    }
+
+    #[test]
+    fn snapshot_lease_resource_name_is_scoped_per_document() {
+        let a: DocumentId = "doc-a".into();
+        let b: DocumentId = "doc-b".into();
+        assert_ne!(SnapshotLease::resource(&a), SnapshotLease::resource(&b));
+    }
+    //#endregion 🔖Lease
 }
 //#endregion 🧪Tests

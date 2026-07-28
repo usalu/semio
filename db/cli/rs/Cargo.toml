@@ -3,7 +3,7 @@ name = "db_cli"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "Db CLI — inspect, doc, wal-inspect, snapshot-inspect, verify, query, replay, repair, compact, health, simulate, migrate, profile"
+description = "Db CLI — inspect, doc, wal-inspect, snapshot-inspect, verify, query, replay, repair, compact, health, conflict-simulate, replica-simulate, migrate, profile"
 
 [[bin]]
 name = "db"
@@ -16,3 +16,27 @@ path = "lib.rs"
 
 [dependencies]
 db = { path = "../../rs" }
+# 🎯 Design note (supersedes an earlier draft of this file): the `db` facade at `db/rs/lib.rs` was
+# still an empty scaffold stub when an earlier pass at this crate was drafted, so that draft
+# reached past it into a dozen individual `db_*` crates directly. The facade is now the real,
+# complete re-export of the whole family (`Database`/`DocumentHandle` plus every `db::<name>`
+# submodule) — this crate depends on it alone, per this wave's instructions ("depends only on the
+# `db` facade crate — no direct access to internal db_* crates"). The two siblings below are NOT
+# `db_*` crates: `protocol` is needed because every one of `db`'s frozen entry points
+# (`Database::create_document`/`document`, `DocumentHandle::submit`/`query`) is typed directly
+# against `protocol::DocumentId`/`OperationEnvelope`/`ActorId`/`OperationId`/
+# `HybridLogicalTimestamp` — public types the facade's own API surface exposes without itself
+# re-exporting a path to them (see `db/rs/lib.rs`'s module doc: it depends on `protocol` only as a
+# dev-dependency for its own tests) — exactly the same "depend on protocol for the types db's API
+# is expressed in terms of" pattern `db_engine`/`db_document` themselves use. `serde_json` is
+# needed because `db_document`'s schema-erased path/value document convention (its module doc) is
+# JSON: building a `doc set`'s diff payload and decoding a `query`/`doc get` result both need it,
+# exactly as the facade's own tests do (`db/rs/lib.rs`'s `//#region 🧪Tests`).
+protocol = { path = "../../../protocol/rs" }
+serde_json = "1"
+# 🎯 Genuinely missing addition (found by `cargo build` after the facade-path migration below):
+# `db::snapshot::SnapshotManager::verify` takes `pack::VerificationLevel` (snapshots ARE pack
+# files, so their verification level is pack's own type, not protocol's same-named enum) — this
+# crate names that path directly (`wal-inspect`/`verify`/tests), so `pack` must be a real
+# dependency, not just reachable transitively through `db`.
+pack = { path = "../../../pack/rs" }

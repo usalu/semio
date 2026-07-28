@@ -130,7 +130,7 @@ impl PageStore {
 /// @emoji 🔀 Internal, deterministic (unseeded) hash used only to route keys to HAMT buckets —
 /// see the module doc's design-choice note on why this is not blake3.
 fn hash_key<K: std::hash::Hash>(key: &K) -> u64 {
-    use std::hash::{Hash, Hasher};
+    use std::hash::Hasher;
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     key.hash(&mut hasher);
     hasher.finish()
@@ -432,7 +432,7 @@ enum VecNode<T> {
     Branch(Vec<Rc<VecNode<T>>>),
 }
 
-fn pvec_get<'a, T>(node: &'a VecNode<T>, shift: u32, index: usize) -> &'a T {
+fn pvec_get<T>(node: &VecNode<T>, shift: u32, index: usize) -> &T {
     match node {
         VecNode::Leaf(items) => &items[index & 0x1F],
         VecNode::Branch(children) => {
@@ -651,7 +651,7 @@ impl PText {
         PText(Rc::new(RopeNode::Leaf { text: Rc::from(""), chars: 0 }))
     }
 
-    pub fn from_str(s: &str) -> Self {
+    pub fn from_text(s: &str) -> Self {
         PText(Rc::new(RopeNode::Leaf { text: Rc::from(s), chars: s.chars().count() }))
     }
 
@@ -684,7 +684,7 @@ impl PText {
             return Err(DbError::InvalidArgument(format!("PText::insert at {at} out of bounds (len {})", self.len())));
         }
         let (left, right) = rope_split(&self.0, at);
-        Ok(PText(left).concat(&PText::from_str(s)).concat(&PText(right)))
+        Ok(PText(left).concat(&PText::from_text(s)).concat(&PText(right)))
     }
 
     pub fn delete(&self, start: usize, end: usize) -> Result<PText, DbError> {
@@ -730,7 +730,7 @@ struct TreeNode<K, V> {
 }
 
 fn tree_height<K, V>(node: Option<&Rc<TreeNode<K, V>>>) -> u32 {
-    node.map(|n| n.height).unwrap_or(0)
+    node.map_or(0, |n| n.height)
 }
 
 fn tree_make<K: Clone, V: Clone>(
@@ -1347,7 +1347,7 @@ mod tests {
     //#region 🔖PText
     #[test]
     fn ptext_insert_delete_roundtrip() {
-        let text = PText::from_str("hello world");
+        let text = PText::from_text("hello world");
         let inserted = text.insert(5, ",").expect("in bounds");
         assert_eq!(inserted.to_string(), "hello, world");
         let deleted = inserted.delete(5, 6).expect("in bounds");
@@ -1356,17 +1356,17 @@ mod tests {
 
     #[test]
     fn ptext_slice_and_concat() {
-        let text = PText::from_str("hello world");
+        let text = PText::from_text("hello world");
         let slice = text.slice(6, 11).expect("in bounds");
         assert_eq!(slice.to_string(), "world");
-        let rejoined = PText::from_str("hello ").concat(&slice);
+        let rejoined = PText::from_text("hello ").concat(&slice);
         assert_eq!(rejoined.to_string(), "hello world");
         assert_eq!(rejoined.len(), text.len());
     }
 
     #[test]
     fn ptext_handles_multibyte_unicode_by_char_index() {
-        let text = PText::from_str("héllo→wörld");
+        let text = PText::from_text("héllo→wörld");
         let char_len = "héllo→wörld".chars().count();
         assert_eq!(text.len(), char_len);
         let inserted = text.insert(6, "🎉").expect("in bounds");
@@ -1375,7 +1375,7 @@ mod tests {
 
     #[test]
     fn ptext_out_of_bounds_operations_error_instead_of_panicking() {
-        let text = PText::from_str("abc");
+        let text = PText::from_text("abc");
         assert!(text.insert(10, "x").is_err());
         assert!(text.slice(0, 10).is_err());
         assert!(text.delete(2, 1).is_err());
@@ -1383,7 +1383,7 @@ mod tests {
 
     #[test]
     fn ptext_edits_are_persistent() {
-        let original = PText::from_str("abc");
+        let original = PText::from_text("abc");
         let edited = original.insert(1, "X").expect("in bounds");
         assert_eq!(original.to_string(), "abc");
         assert_eq!(edited.to_string(), "aXbc");

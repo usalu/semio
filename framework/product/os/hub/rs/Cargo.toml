@@ -1,7 +1,9 @@
 # #region 🔖Header
 # 2026 Ueli Saluz
 # AGPL-3.0
-# OS hub backend — VFS nodes, document snapshots, operation log, sessions, WebSocket streaming.
+# OS hub backend — thin axum shell over `db::Database` (document authority + content-addressed
+# blobs) and `HubDirectory` (identity/tenancy), speaking `protocol_wire`'s binary frames over
+# WebSocket.
 # #endregion 🔖Header
 
 [package]
@@ -23,16 +25,16 @@ serde_json = "1.0"
 thiserror = "2.0"
 uuid = { version = "1.20", features = ["v7", "serde"] }
 tokio = { version = "1", features = ["full"] }
-tower-http = { version = "0.6", features = ["cors", "trace"] }
-time = { version = "0.3", features = ["serde", "formatting", "parsing"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 futures = "0.3"
 dashmap = "6"
-semio-framework-core = { path = "../../../../core/rs" }
-os-hub-storage = { path = "../storage/rs" }
-os-hub-storage-sqlite = { path = "../storage/sqlite/rs" }
-os-hub-storage-postgres = { path = "../storage/postgres/rs" }
+protocol = { path = "../../../../../protocol/rs" }
+db = { path = "../../../../../db/rs", features = ["sqlite", "postgres", "neo4j"] }
+os-hub-directory = { path = "../directory/rs" }
+os-hub-directory-sqlite = { path = "../directory/sqlite/rs" }
+os-hub-directory-postgres = { path = "../directory/postgres/rs" }
+os-hub-directory-neo4j = { path = "../directory/neo4j/rs" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full", "test-util"] }

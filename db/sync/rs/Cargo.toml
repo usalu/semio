@@ -15,3 +15,11 @@ db_core = { path = "../../core/rs" }
 db_wal = { path = "../../wal/rs" }
 db_storage = { path = "../../storage/rs" }
 protocol = { path = "../../../protocol/rs" }
+# 🎯 Genuinely missing additions (not in the stub's dependency list), noted per the wave's
+# instructions: `serde_json` because this crate defines the WAL_COMMAND <-> `protocol::
+# OperationEnvelope` byte convention (see `//#region 🔖Codec`) and needs the codec directly, not
+# just via a re-exported type; `blake3` because this crate derives its own replay-based frontier
+# `chain_hash` and snapshot `pack_hash` (see `//#region 🔖ReplicaState`/`🔖Bootstrap`), the same
+# direct dependency `db_wal` already takes for its own hash-chaining.
+serde_json = "1"
+blake3 = "1"

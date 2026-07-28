@@ -23,6 +23,15 @@ db_observe = { path = "../../observe/rs" }
 db_cluster = { path = "../../cluster/rs" }
 protocol = { path = "../../../protocol/rs" }
 vcs = { path = "../../../vcs/rs", optional = true }
+# 🎯 Genuinely missing additions (not in the stub's dependency list), noted per the wave's
+# instructions: `pack_core` because the frozen `CommandReceipt.state_hash` field is typed
+# `pack_core::ContentHash` verbatim in the contract, and this crate names that path directly
+# (not just via `db_document`/`db_wal`'s own re-exports); `serde`+`serde_json` because this crate's
+# catalog root encoding and its `vcs` feature's schema-erased `HashProjection`/`HashOperation`
+# (see `//#region 🔖VersionGraph`) need `derive(Serialize, Deserialize)` directly.
+pack_core = { path = "../../../pack/core/rs" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 
 [features]
 default = ["vcs"]

@@ -293,23 +293,161 @@ export type DocumentPresencePeer = {
   readonly dragGhostJson?: string;
 };
 
-/** 📨 Client→server hub wire frames — mirrors Rust `HubClientFrame` byte-for-byte. */
-export type HubClientFrame =
-  | { readonly kind: "hello"; readonly actor: string; readonly token?: string; readonly sinceVersion: number }
-  | { readonly kind: "operations"; readonly envelopes: readonly OperationEnvelope[] }
-  | { readonly kind: "putEnvelope"; readonly version: number; readonly envelope: unknown }
-  | { readonly kind: "presence"; readonly peer: DocumentPresencePeer }
-  | { readonly kind: "bye" };
+/** 🌐 One causally-ordered operation crossing the wire — mirrors Rust `protocol_causal::
+ * OperationEnvelope` byte-for-byte. Wire-only shape, distinct from {@link OperationEnvelope} (this
+ * file's postMessage/actor-protocol shape, camelCase-tagged): this type crosses `protocol_wire`'s
+ * binary codec (see `encodeClientFrame`/`decodeClientFrame` below), where Rust field names are
+ * plain (not renamed), so it stays snake_case like the Rust source. */
+export type WireOperationEnvelope = {
+  readonly operation_id: string;
+  readonly document_id: string;
+  readonly actor: string;
+  readonly dependencies: readonly string[];
+  readonly diff: { readonly schema: string; readonly payload: unknown };
+  readonly inverse: { readonly schema: string; readonly inverse_diff: unknown };
+  readonly timestamp: { readonly actor: number; readonly physical_ms: number; readonly logical: number };
+};
 
-/** 📬 Server→client hub wire frames — mirrors Rust `HubServerFrame` byte-for-byte. */
-export type HubServerFrame =
-  | { readonly kind: "welcome"; readonly version: number; readonly envelope?: unknown; readonly presence: readonly DocumentPresencePeer[]; readonly backlog: readonly OperationEnvelope[] }
-  | { readonly kind: "operations"; readonly version: number; readonly envelopes: readonly OperationEnvelope[]; readonly origin: string }
-  | { readonly kind: "snapshotReplaced"; readonly version: number; readonly envelope: unknown }
-  | { readonly kind: "presence"; readonly peers: readonly DocumentPresencePeer[] }
-  | { readonly kind: "ack"; readonly operationId: string; readonly version: number }
-  | { readonly kind: "conflict"; readonly message: string }
-  | { readonly kind: "error"; readonly message: string };
+/** 🏔️ Runtime/wire frontier summary — mirrors Rust `protocol_causal::FrontierSummary`
+ * (`protocol::RuntimeFrontierSummary`). */
+export type WireFrontierSummary = {
+  readonly document_id: string;
+  readonly head_edit_ordinal: number;
+  readonly head_edit_id: string;
+  readonly last_commit_seq: number;
+  readonly chain_hash: readonly number[];
+};
+
+/** 🛣️ Which logical channel a wire frame travels on — mirrors Rust `protocol_wire::Lane`. */
+export type WireLane = "command" | "preview";
+
+/** 🚀 How a `ServerFrame.Welcome` seeds a client — mirrors Rust `protocol_wire::Bootstrap`. */
+export type WireBootstrap = "None" | { readonly Snapshot: { readonly pack_hash: readonly number[]; readonly inline: readonly number[] | null } } | "Tail";
+
+/** ⚖️ How the hub resolved one submitted batch against concurrent history — mirrors Rust
+ * `protocol_wire::ApplyOutcome`. */
+export type WireApplyOutcome = "Accepted" | { readonly Transformed: { readonly envelope: WireOperationEnvelope } } | { readonly Rejected: { readonly reason: string } };
+
+/** 🪜 One stage of a submitted batch's lifecycle — mirrors Rust `protocol_wire::AckStage`. */
+export type WireAckStage = "Received" | "Persisted" | { readonly Applied: { readonly outcome: WireApplyOutcome } };
+
+/** 📨 Client→server hub wire frames — mirrors Rust `protocol_wire::ClientFrame` byte-for-byte.
+ * Externally-tagged plain enum (serde's default representation, no `#[serde(tag = ...)]` on the
+ * Rust side): a struct variant serializes as `{ VariantName: { ...fields } }`, a unit variant as
+ * the bare string `"VariantName"`. Encode/decode with {@link encodeClientFrame}/
+ * {@link decodeClientFrame} below — never hand-construct the JSON. */
+export type ClientFrame =
+  | {
+      readonly Hello: {
+        readonly wire_version: number;
+        readonly protocol_version: number;
+        readonly schema: string;
+        readonly pack_schema_hash: readonly number[];
+        readonly actor: string;
+        readonly token: string | null;
+        readonly resume_token: string | null;
+        readonly frontier: WireFrontierSummary | null;
+      };
+    }
+  | { readonly Commands: { readonly batch_id: number; readonly envelopes: readonly WireOperationEnvelope[] } }
+  | { readonly FrontierAdvertise: { readonly frontier: WireFrontierSummary } }
+  | { readonly PreviewPublish: { readonly key: string; readonly seq: number; readonly payload: readonly number[] } }
+  | { readonly Presence: { readonly peer: unknown } }
+  | { readonly CreditGrant: { readonly n: number } }
+  | "Bye";
+
+/** 📬 Server→client hub wire frames — mirrors Rust `protocol_wire::ServerFrame` byte-for-byte. See
+ * {@link ClientFrame}'s doc comment for the externally-tagged encoding this shares. */
+export type ServerFrame =
+  | { readonly Welcome: { readonly session_id: string; readonly resume_token: string; readonly server_frontier: WireFrontierSummary; readonly bootstrap: WireBootstrap } }
+  | { readonly SnapshotChunk: { readonly seq: number; readonly bytes: readonly number[] } }
+  | { readonly SnapshotDone: { readonly seq_count: number } }
+  | { readonly Commands: { readonly envelopes: readonly WireOperationEnvelope[]; readonly origin: string; readonly frontier: WireFrontierSummary } }
+  | { readonly Ack: { readonly batch_id: number; readonly stages: readonly WireAckStage[]; readonly frontier: WireFrontierSummary } }
+  | { readonly Preview: { readonly actor: string; readonly key: string; readonly seq: number; readonly payload: readonly number[] } }
+  | { readonly Presence: { readonly peers: readonly unknown[] } }
+  | { readonly CreditGrant: { readonly n: number } }
+  | { readonly Error: { readonly code: string; readonly message: string } };
+
+/** 🎞️ Writes an unsigned LEB128 varint (minimal length) — a byte-for-byte TS twin of
+ * `protocol_wire`'s `write_varint_u64` (`protocol/wire/rs/lib.rs` `🔖Codec`). */
+function writeVarintU64(out: number[], value: number): void {
+  let remaining = value;
+  for (;;) {
+    const byte = remaining & 0x7f;
+    remaining = Math.floor(remaining / 128);
+    if (remaining === 0) {
+      out.push(byte);
+      return;
+    }
+    out.push(byte | 0x80);
+  }
+}
+
+/** 🎞️ Reads an unsigned LEB128 varint starting at `pos[0]`, advancing it past it — the TS twin of
+ * `protocol_wire`'s `read_varint_u64`. */
+function readVarintU64(bytes: Uint8Array, pos: [number]): number {
+  let result = 0;
+  let shift = 1;
+  for (let i = 0; i < 10; i++) {
+    const byte = bytes[pos[0]];
+    if (byte === undefined) throw new Error("wire frame varint: truncated");
+    pos[0] += 1;
+    result += (byte & 0x7f) * shift;
+    if ((byte & 0x80) === 0) return result;
+    shift *= 128;
+  }
+  throw new Error("wire frame varint: overlong varint (exceeds 10 bytes)");
+}
+
+const WIRE_LANE_BYTES: Record<WireLane, number> = { command: 0, preview: 1 };
+const WIRE_BYTE_LANES: readonly WireLane[] = ["command", "preview"];
+
+/** 🎞️ `lane: u8` + varint-u64 body length + `JSON.stringify` bytes — the TS twin of
+ * `protocol_wire::encode_frame` (see that function's doc comment for why the wire format is JSON-
+ * bodied rather than a hand-rolled binary layout: the frame types carry deeply nested, schema-erased
+ * payloads a hand-rolled layout would gain nothing from). */
+function encodeWireFrame(frame: ClientFrame | ServerFrame, lane: WireLane): Uint8Array {
+  const json = new TextEncoder().encode(JSON.stringify(frame));
+  const out: number[] = [WIRE_LANE_BYTES[lane]];
+  writeVarintU64(out, json.length);
+  return new Uint8Array([...out, ...json]);
+}
+
+/** 🎞️ The inverse of {@link encodeWireFrame} — the TS twin of `protocol_wire::decode_frame`. */
+function decodeWireFrame<T>(bytes: Uint8Array): { readonly lane: WireLane; readonly frame: T } {
+  if (bytes.length === 0) throw new Error("wire frame: empty frame");
+  const lane = WIRE_BYTE_LANES[bytes[0]];
+  if (lane === undefined) throw new Error(`wire frame lane byte: unknown lane ${bytes[0]}`);
+  const pos: [number] = [1];
+  const length = readVarintU64(bytes, pos);
+  const body = bytes.subarray(pos[0], pos[0] + length);
+  if (body.length !== length) throw new Error("wire frame body: declared length exceeds available bytes");
+  const frame = JSON.parse(new TextDecoder().decode(body)) as T;
+  return { lane, frame };
+}
+
+/** 📤 Encodes one `ClientFrame` on the given lane — the TS twin of `protocol_wire::
+ * encode_client_frame`. */
+export function encodeClientFrame(frame: ClientFrame, lane: WireLane): Uint8Array {
+  return encodeWireFrame(frame, lane);
+}
+
+/** 📥 Decodes one `ClientFrame` — the TS twin of `protocol_wire::decode_client_frame`. */
+export function decodeClientFrame(bytes: Uint8Array): { readonly lane: WireLane; readonly frame: ClientFrame } {
+  return decodeWireFrame<ClientFrame>(bytes);
+}
+
+/** 📤 Encodes one `ServerFrame` on the given lane — the TS twin of `protocol_wire::
+ * encode_server_frame`. */
+export function encodeServerFrame(frame: ServerFrame, lane: WireLane): Uint8Array {
+  return encodeWireFrame(frame, lane);
+}
+
+/** 📥 Decodes one `ServerFrame` — the TS twin of `protocol_wire::decode_server_frame`. */
+export function decodeServerFrame(bytes: Uint8Array): { readonly lane: WireLane; readonly frame: ServerFrame } {
+  return decodeWireFrame<ServerFrame>(bytes);
+}
 
 /** 🗃️ A durable place a document synchronizes with — mirrors Rust `PersistenceBinding`. */
 export type PersistenceBinding = { readonly kind: "folder"; readonly path: string } | { readonly kind: "hub"; readonly baseUrl: string; readonly studioId: string; readonly token?: string };
@@ -328,6 +466,7 @@ export type DocumentActorMsg =
   | { readonly kind: "localOperations"; readonly envelopes: readonly OperationEnvelope[] }
   | { readonly kind: "localSnapshot"; readonly envelopeJson: string }
   | { readonly kind: "presenceHeartbeat"; readonly peer: DocumentPresencePeer }
+  | { readonly kind: "publishPreview"; readonly key: string; readonly seq: number; readonly payload: readonly number[] }
   | { readonly kind: "externalChanged" }
   | { readonly kind: "detach" };
 
@@ -345,12 +484,19 @@ export type DocumentSyncStatus = {
  * shell only needs enough to render a conflict card / offer "fork alternative" vs "take theirs". */
 export type SyncConflict = { readonly message?: string } & Record<string, unknown>;
 
+/** 📮 The client-side twin of `protocol_wire::ApplyOutcome`, minus the `Transformed` envelope
+ * payload (already delivered separately as a `remoteOperations` event by the time this fires) —
+ * mirrors Rust `CommandAckOutcome`. */
+export type CommandAckOutcome = { readonly kind: "accepted" } | { readonly kind: "transformed" } | { readonly kind: "rejected"; readonly reason: string };
+
 /** 📬 Actor→subscriber events — mirrors Rust `DocumentEvent`. */
 export type DocumentEvent =
   | { readonly kind: "remoteOperations"; readonly envelopes: readonly OperationEnvelope[] }
   | { readonly kind: "snapshotReplaced"; readonly envelopeJson: string }
   | ({ readonly kind: "status" } & DocumentSyncStatus)
   | { readonly kind: "presence"; readonly peers: readonly DocumentPresencePeer[] }
+  | { readonly kind: "preview"; readonly actor: string; readonly key: string; readonly seq: number; readonly payload: readonly number[] }
+  | { readonly kind: "commandOutcome"; readonly batchId: number; readonly outcome: CommandAckOutcome }
   | ({ readonly kind: "conflict" } & SyncConflict);
 
 /** 📤 Main thread → `backbone-worker.ts` messages. */
