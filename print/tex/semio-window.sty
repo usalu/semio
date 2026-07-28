@@ -23,7 +23,12 @@
 \providecommand{\semio@chrome@navbar@height}{1.8em}
 \providecommand{\semio@chrome@footer@height}{1.8em}
 \providecommand{\semio@chrome@font@chip}{7.2pt}
-\providecommand{\semio@chrome@font@body}{9.6pt}
+% LR-consistency: body/window/table text unified to the 7.2pt chip size. The
+% canonical token lives in semio-tokens.sty (kept at 9.6pt by a design-token
+% guard), so override it here — window.sty loads after tokens, so this wins.
+% Define-then-force so it is safe whether or not tokens.sty ran first.
+\providecommand{\semio@chrome@font@body}{7.2pt}%
+\renewcommand{\semio@chrome@font@body}{7.2pt}
 \providecommand{\semio@chrome@icon@scale}{1}
 \providecommand{\semio@chrome@icon@scale@footer}{1}
 % Layout spacing (defined here, not in the generated semio-tokens.sty):
@@ -2275,7 +2280,7 @@
 % 🔠 Section/appendix heading bars use a larger font than the small chrome
 % chip font (navbar, footer, table captions keep the 7.2pt chip size). The
 % title-bar height is em-based, so it scales with this font automatically.
-\providecommand{\semio@chrome@font@heading}{14pt}
+\providecommand{\semio@chrome@font@heading}{11pt}
 \newcommand{\semio@heading@bar@font}{%
   \SemioSans\fontsize{\semio@chrome@font@heading}{\semio@chrome@font@heading}\selectfont
 }
