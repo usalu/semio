@@ -40,6 +40,18 @@
 % Define-then-force so it is safe whether or not tokens.sty ran first.
 \providecommand{\semio@chrome@font@body}{7.2pt}%
 \renewcommand{\semio@chrome@font@body}{7.2pt}
+% LR-table-header-bold: Anta ships only a Regular weight, so the \bfseries inside
+% \semio@table@header@cell is a no-op — header cells (Schlüssel, Titel, …) render
+% identical to the body cells, set apart only by the shaded background. Give the
+% header row a genuine SYNTHETIC bold (fontspec FakeBold) at the unchanged 7.2pt
+% size. Overridden here (window.sty loads after semio-table.sty) so the table
+% file stays untouched. \semio@text@emphasized only sets the text colour.
+\newfontfamily\SemioSansBold[Path=\semio@font@root anta/,FakeBold=2.5]{Anta-Regular.ttf}
+\renewcommand{\semio@table@header@cell}[1]{%
+  \cellcolor{semio-chrome-canvas}%
+  \SemioSansBold\semio@table@fontsize@apply
+  \semio@text@emphasized{#1}%
+}
 \providecommand{\semio@chrome@icon@scale}{1}
 \providecommand{\semio@chrome@icon@scale@footer}{1}
 % Layout spacing (defined here, not in the generated semio-tokens.sty):
