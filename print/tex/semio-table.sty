@@ -660,3 +660,122 @@
 }{%
   \SemioTableEnd
 }
+
+%region ProjectCatalogue
+% 🏗️ Unified project-profile card — used ONLY by anhang/projekte.tex. Collapses
+% the former quadruple (\subsection heading + Photo[Bild] + Table[Allgemein] +
+% \SemioTableLong[Bauteile]) into ONE bordered longtable per project:
+%   • title-chrome row  : project name (left) + P.K.x key (right)
+%   • overview band row : photo spanning cols 1–2, metadata spanning cols 3–6
+%   • component section : the six Bauteile columns + rows
+% Reuses the shared \semio@table@long@render underneath (one continuous border,
+% page-break header repeat). The title chrome is driven from the *section* key
+% (\thesubsection → P.K.x), NOT from \begin{Table}'s `semiotable` counter, so no
+% "Tabelle: P.K.x.b/c" number tabs are emitted. This region calls the shared
+% primitives and defines only \semio@project@… / \SemioProject… names; it
+% redefines nothing, so every other table in the report is untouched.
+
+\newlength{\semio@project@bandheight}
+\setlength{\semio@project@bandheight}{28mm}
+% Photo cell inner width = cols 1+2 (0.28·inner) minus the outer chrome inset and
+% the photo↔Spender boundary cell-pad, so the image's right edge lands exactly on
+% the Spender column's left edge — alignment via the table grid, no coordinates.
+\newcommand{\semio@project@photow}{\dimexpr0.28\semio@table@long@inner@w-\semio@chrome@padding-\semio@table@long@cellpad\relax}
+\newcommand{\semio@project@metaw}{\dimexpr0.72\semio@table@long@inner@w-\semio@chrome@padding-\semio@table@long@cellpad\relax}
+
+% Cover-crop a project photo into an exact width×height box (no frame), reusing
+% the window package's CSS object-fit:cover primitive.
+\ExplSyntaxOn
+\cs_new_protected:Npn \semio_project_photo:nnn #1#2#3 {
+  \group_begin:
+    \dim_set:Nn \l_semio_image_target_w_dim {#2}
+    \dim_set:Nn \l_semio_image_target_h_dim {#3}
+    \tl_set:Nn \l_semio_image_fit_tl { cover }
+    \tl_gset:cn { semio@window@halign } { center }
+    \tl_gset:cn { semio@window@valign } { center }
+    \semio_image_typeset_cover:n {#1}
+  \group_end:
+}
+\cs_new_eq:NN \SemioProjectPhoto \semio_project_photo:nnn
+\ExplSyntaxOff
+
+% Silent-but-registered project heading: steps the subsection counter (→ P.K.x),
+% writes the TOC/running-header/register entries and the \label, but draws no
+% visible heading bar (the name is shown once, in the table's title-chrome row).
+% Only the two visual chip renderers are blanked (inside a group); the hierarchy
+% path — consumed by the register — is re-established explicitly afterwards.
+\newcommand{\SemioProjectHeadingSilent}[2]{%
+  \begingroup
+    \long\def\semio@heading@pair@outline##1##2##3##4##5{}%
+    \long\def\semio@heading@title@end@outline##1##2##3{}%
+    \long\def\semio@heading@pair##1##2##3##4##5{}%
+    \long\def\semio@heading@title@end##1##2##3{}%
+    \subsection{#1}\label{#2}%
+  \endgroup
+  \@ifundefined{semio@hierarchy@path@set}{}{\semio@hierarchy@path@set{\thesubsection}}%
+}
+
+% Split the packed "ort & land & jahr & typ & status & quelle" metadata arg.
+\def\semio@project@splitmeta#1&#2&#3&#4&#5&#6\relax{%
+  \def\semio@project@ort{#1}\def\semio@project@land{#2}\def\semio@project@jahr{#3}%
+  \def\semio@project@typ{#4}\def\semio@project@status{#5}\def\semio@project@quelle{#6}%
+}
+
+% Metadata subgrid (right of the photo): labelled fields, muted label / normal
+% value. Ort/Stadt and Land are separate rows.
+\newcommand{\semio@project@meta}[6]{%
+  \begingroup
+  \setlength{\extrarowheight}{0pt}%
+  \renewcommand{\arraystretch}{1.2}%
+  \begin{tabular}{@{}>{\color{semio-chrome-foreground}}l@{\hspace{1.2em}}>{\color{semio-chrome-text-normal}}l@{}}
+    Ort/Stadt & #1\tabularnewline
+    Land & #2\tabularnewline
+    Jahr & #3\tabularnewline
+    Typ & #4\tabularnewline
+    Status & #5\tabularnewline
+    Quelle & #6\tabularnewline
+  \end{tabular}%
+  \endgroup
+}
+
+% Overview band row: photo multicolumn (cols 1–2) + metadata multicolumn (cols
+% 3–6). The two multicolumns re-supply the outer border and mirror the base
+% colspec's edge padding, so the shared boundary falls on the Spender edge.
+\newcommand{\semio@project@overview@band}[7]{%
+  \multicolumn{2}{|@{\hspace{\semio@chrome@padding}}p{\semio@project@photow}@{\hspace{\semio@table@long@cellpad}}}{%
+    \cellcolor{semio-chrome-canvas}%
+    \SemioProjectPhoto{#1}{\semio@project@photow}{\semio@project@bandheight}%
+  }%
+  &
+  \multicolumn{4}{@{\hspace{\semio@table@long@cellpad}}>{\raggedright\arraybackslash}p{\semio@project@metaw}@{\hspace{\semio@chrome@padding}}|}{%
+    \cellcolor{semio-chrome-canvas}%
+    \parbox[t][\semio@project@bandheight][t]{\linewidth}{%
+      \semio@project@meta{#2}{#3}{#4}{#5}{#6}{#7}%
+    }%
+  }%
+  \\\hline
+}
+
+\newcommand{\semio@project@long@render@call}[2]{%
+  \semio@table@long@render{#1}{\semio@project@firsthead}{\semio@project@head}{#2}{6}%
+}
+
+% \SemioProject{name}{label}{image}{ort & land & jahr & typ & status & quelle}{rows}
+\newcommand{\SemioProject}[5]{%
+  \SemioCardKeep
+  \SemioProjectHeadingSilent{#1}{#2}%
+  \protected@edef\semio@project@key{\thesubsection}%
+  \gdef\semio@window@header@title{#1}%
+  \global\let\semio@window@header@number\semio@project@key
+  \semio@table@long@prepare{0.18,0.10,0.26,0.12,0.17,0.17}{Bauteil / Menge & Material & Spender & ReUse-Ort & Schicht & Prozess}%
+  \semio@project@splitmeta#4\relax
+  \long\def\semio@project@firsthead{%
+    \semio@project@overview@band{#3}%
+      {\semio@project@ort}{\semio@project@land}{\semio@project@jahr}%
+      {\semio@project@typ}{\semio@project@status}{\semio@project@quelle}%
+    \semio@table@long@head@current
+  }%
+  \long\def\semio@project@head{\semio@table@long@head@continuation@current}%
+  \expandafter\semio@project@long@render@call\expandafter{\semio@table@long@colspec@current}{#5}%
+}
+%endregion ProjectCatalogue
