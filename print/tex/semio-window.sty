@@ -432,12 +432,21 @@
   \group_end:
 }
 
+% LR-winsep: external space BEFORE a window's title tab. The generic 0.2em
+% block separation is too small when the preceding element is a heading (a
+% paragraph brings ~5pt of intrinsic leading, a window brings none), which left
+% a table/figure tab flush against the heading bar. Use a dedicated window
+% before-space so heading->window matches heading->paragraph (~5pt). Merges with
+% the previous window's after-skip (0.85em still wins between two windows) and
+% vanishes at the top of a page.
+\providecommand{\semio@window@sep@before}{7pt}
 \cs_new_protected:Npn \semio_block_sep_before: {
   \bool_if:NF \l_semio_window_in_item_bool {
     \bool_if:NF \l_semio_register_list_bool {
       \group_begin:
       \ExplSyntaxOff
-      \semio@block@before
+      \ifhmode\par\fi
+      \ifnum\lastnodetype=-1 \else\addvspace{\semio@window@sep@before}\fi
       \group_end:
     }
   }
@@ -2424,6 +2433,11 @@
 % (no double gap) and is dropped at the top of a page (leading headings aren't
 % pushed down). Adjust this one length to taste.
 \providecommand{\semio@heading@topskip}{2em}
+% LR-bottomskip: dedicated space BELOW every heading bar, before the body text
+% (KOMA's afterskip is pinned to 1sp, so without this there is no knob). Used by
+% \semio@koma@heading@lines and the nested-paragraph renderer below; may be
+% negative to tighten below the natural minimum.
+\providecommand{\semio@heading@bottomskip}{-1.7pt}
 \newcommand{\semio@koma@heading@lines}[5]{%
   \semio@block@before
   \addvspace{\semio@heading@topskip}% LR-topspace: a bit more air above headings
