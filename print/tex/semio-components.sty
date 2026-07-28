@@ -128,7 +128,7 @@
     \tl_if_empty:NF \l_semio_kooperationspartner_tl { \bool_set_true:N \l_semio_cover@institution@row_bool }
     \tl_set:Nn \l_semio_cover_institution_weight_tl { 3.3 }
     \tl_set:Nn \l_semio_cover_logo_weight_tl { 5.2 }
-    \begin{WindowArrangement}[height=\textheight]
+    \begin{WindowArrangement}[height=\dimexpr\textheight-2cm\relax]
       \begin{WindowColumn}
         \cs_if_exist:cTF { zukunftbau@type } {
           \str_if_eq:eeTF { \use:c { zukunftbau@type } } { zwischenbericht } {
