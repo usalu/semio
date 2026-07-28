@@ -12,6 +12,11 @@
 % \providecommand is idempotent if semio-window.sty already defined them.
 \providecommand{\semio@spacing@table@outer}{0.85em}
 \providecommand{\semio@spacing@par}{0.5em}
+% LR-cellpad: horizontal inset between cell content and every column boundary
+% (outer borders and internal separators alike). ~1.5–2x the former values
+% (short 0.4em / long 0.2em). Column widths are reduced to absorb it, so the
+% table's total width is unchanged. One token drives short and long tables.
+\providecommand{\semio@table@hpad}{0.55em}
 
 \ExplSyntaxOn
 \seq_new:N \l_semio_table_row_seq
@@ -148,15 +153,18 @@
   % \tabcolsep, so table width is preserved), vertical via \extrarowheight
   % (top air) + \arraystretch (bottom air). \parskip is neutralised so a
   % multi-line cell doesn't inherit the body paragraph gap.
-  \setlength{\tabcolsep}{\semio@spacing@double}%
+  \setlength{\tabcolsep}{\semio@table@hpad}%
   \setlength{\extrarowheight}{\semio@spacing@double}%
   \renewcommand{\arraystretch}{1.3}%
   \setlength{\parskip}{\z@}%
 }
 
-\newcommand{\semio@table@colspec@two}{@{}T{\dimexpr0.5\linewidth-\tabcolsep\relax}T{\dimexpr0.5\linewidth-\tabcolsep\relax}@{}}
+% LR-cellpad: outer edges get \tabcolsep of inset (was @{} = none) so the first
+% and last columns are inset from the outer border like the internal ones; column
+% widths drop from -\tabcolsep to -2\tabcolsep to absorb it (total width kept).
+\newcommand{\semio@table@colspec@two}{@{\hspace{\tabcolsep}}T{\dimexpr0.5\linewidth-2\tabcolsep\relax}T{\dimexpr0.5\linewidth-2\tabcolsep\relax}@{\hspace{\tabcolsep}}}
 
-\newcommand{\semio@table@colspec@three}{@{}T{\dimexpr0.34\linewidth-\tabcolsep\relax}T{\dimexpr0.33\linewidth-\tabcolsep\relax}T{\dimexpr0.33\linewidth-2\tabcolsep\relax}@{}}
+\newcommand{\semio@table@colspec@three}{@{\hspace{\tabcolsep}}T{\dimexpr0.34\linewidth-2\tabcolsep\relax}T{\dimexpr0.33\linewidth-2\tabcolsep\relax}T{\dimexpr0.33\linewidth-2\tabcolsep\relax}@{\hspace{\tabcolsep}}}
 
 \newlength{\semio@table@long@inner@w}
 \newbox\semio@table@long@pad@box
@@ -170,7 +178,7 @@
   \setlength{\semio@table@long@inner@w}{%
     \dimexpr\linewidth-2\wd\semio@table@long@pad@box-2\arrayrulewidth\relax
   }%
-  \setlength{\semio@table@long@cellpad}{\semio@chrome@padding}%
+  \setlength{\semio@table@long@cellpad}{\semio@table@hpad}%
 }
 
 \newcommand{\semio@table@setup@long}{%
@@ -183,9 +191,9 @@
 
 \newcommand{\semio@table@colspec@glossary@long}{|@{\hspace{\semio@chrome@padding}}@{}@{\hspace{\semio@table@long@cellpad}}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@table@long@cellpad}}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.56\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@table@long@cellpad}}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@chrome@padding}}|}
 
-\newcommand{\semio@table@colspec@register}{@{}T{\dimexpr0.12\linewidth-\tabcolsep\relax}T{\dimexpr0.78\linewidth-\tabcolsep\relax}U{\dimexpr0.10\linewidth-2\tabcolsep\relax}@{}}
+\newcommand{\semio@table@colspec@register}{@{\hspace{\tabcolsep}}T{\dimexpr0.12\linewidth-2\tabcolsep\relax}T{\dimexpr0.78\linewidth-2\tabcolsep\relax}U{\dimexpr0.10\linewidth-2\tabcolsep\relax}@{\hspace{\tabcolsep}}}
 
-\newcommand{\semio@table@colspec@glossary}{@{}T{\dimexpr0.22\linewidth-\tabcolsep\relax}T{\dimexpr0.56\linewidth-\tabcolsep\relax}U{\dimexpr0.22\linewidth-2\tabcolsep\relax}@{}}
+\newcommand{\semio@table@colspec@glossary}{@{\hspace{\tabcolsep}}T{\dimexpr0.22\linewidth-2\tabcolsep\relax}T{\dimexpr0.56\linewidth-2\tabcolsep\relax}U{\dimexpr0.22\linewidth-2\tabcolsep\relax}@{\hspace{\tabcolsep}}}
 
 \newcolumntype{T}[1]{%
   >{\raggedright\arraybackslash\hspace{0pt}}%
@@ -630,7 +638,9 @@
       \ifx\semio@table@spec\semio@table@spec@nrp
         \expandafter\semio@table@begin@tabular\expandafter{\semio@table@colspec@register}%
       \else
-        \begin{tabular}{@{}#1@{}}%
+        % LR-cellpad: arbitrary specs (e.g. Allgemein `lllll`) get \tabcolsep of
+        % outer inset too, so their first/last columns are not attached to the border.
+        \begin{tabular}{@{\hspace{\tabcolsep}}#1@{\hspace{\tabcolsep}}}%
       \fi
     \fi
   \fi
