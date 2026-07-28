@@ -47,6 +47,22 @@ pub fn document_backbone_ref(uri: &str) -> DocumentBackboneRef {
     DocumentBackboneRef { uri: uri.to_string() }
 }
 
+/// @emoji 🎯 Undo/redo/checkout position — the store-facing twin of `protocol::HistoryCursor`.
+/// Carries the FULL applied-edit list (not just the tail edit id): an edit undone mid-history
+/// precedes later-applied edits in file order, and the redo stack can contain edits in any order
+/// relative to `applied_edit_ids` — a single marker id cannot represent that. `checkpoint_id`
+/// mirrors `DocumentStore::current_checkpoint_id`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DocumentCursor {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub applied_edit_ids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub redo_edit_ids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub checkpoint_id: Option<String>,
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DocumentEnvelope<P, Operation> {
@@ -57,6 +73,12 @@ pub struct DocumentEnvelope<P, Operation> {
     pub backbone: Option<DocumentBackboneRef>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub active_alternative_id: Option<String>,
+    /// @emoji 🎯 Undo/redo/checkout position, present only once a store has synced it (see
+    /// `DocumentStore::sync_cursor`) — absent for a freshly-constructed envelope or one loaded
+    /// from a source that predates this field, in which case position stays runtime-only exactly
+    /// as before.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub cursor: Option<DocumentCursor>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -205,12 +227,14 @@ pub trait DocumentPack: Sized {
     }
 }
 
-/// @emoji 📦 Binary counterpart to `DocumentTextFiles`: `pack` is the encoded initial projection
-/// (whole `.spk` container bytes), `ops` stays the op-log TEXT — the op grammar is format-invariant,
-/// only the initial-projection encoding differs between the text and pack file pairs.
+/// @emoji 📦 Binary counterpart to `DocumentTextFiles`. `pack` (whole `.spk` container bytes) and
+/// `spr` (whole `.spr` op-log bytes, carrying real `backwards`/binary op payloads/cursor — see
+/// `print_document_spr`) are AUTHORITATIVE; `ops` stays the op-log TEXT as a human-readable mirror
+/// only (format-invariant across text/pack/spr, but forwards-only — see `print_ops_log`'s doc).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct DocumentPackFiles {
     pub pack: Vec<u8>,
+    pub spr: Vec<u8>,
     pub ops: String,
 }
 
@@ -254,15 +278,17 @@ pub use dsl::op_rt;
 pub struct DocumentCodec {
     pub schema: String,
     pub extension: &'static str,
-    /// @emoji 📤 `envelope_json -> (pack files, dsl mirror text)` — the write path: `pack` is what
-    /// `FolderTextStorage::write_pack`/`FolderSqliteStorage::write_pack` persist as authoritative,
-    /// the returned `String` is the always-written DSL mirror (`print_dsl` on the initial
-    /// projection).
+    /// @emoji 📤 `envelope_json -> (pack files, dsl mirror text)` — the write path: `pack`+`spr`
+    /// are what `FolderTextStorage::write_pack`/`FolderSqliteStorage::write_pack` persist as
+    /// authoritative, the returned `String` is the always-written DSL mirror (`print_dsl` on the
+    /// initial projection).
     pub print: fn(&str) -> Result<(DocumentPackFiles, String), VcsError>,
-    /// @emoji 📥 `(pack bytes, ops text) -> envelope_json` — the pack-first read path.
-    pub parse: fn(&[u8], &str) -> Result<String, VcsError>,
+    /// @emoji 📥 `(pack bytes, spr bytes) -> envelope_json` — the pack+spr-first read path (both
+    /// are authoritative; recovers real `backwards`/`operation_meta`/`cursor`, never replay-recomputed).
+    pub parse: fn(&[u8], &[u8]) -> Result<String, VcsError>,
     /// @emoji 📥 `(dsl text, ops text) -> envelope_json` — the DSL-mirror fallback read path (no
-    /// `.pack` file yet: hand-authored or freshly imported documents).
+    /// `.pack`/`.spr` yet: hand-authored or freshly imported documents; backwards/meta/cursor are
+    /// replay-recomputed, matching pre-W4 behavior).
     pub parse_dsl: fn(&str, &str) -> Result<String, VcsError>,
 }
 
@@ -273,12 +299,12 @@ impl DocumentCodec {
     pub fn of<P, Operation>(schema: impl Into<String>) -> Self
     where
         P: Clone + PartialEq + Serialize + DeserializeOwned + DocumentDsl + DocumentPack + Send + 'static,
-        Operation: crate::Operation<P> + PartialEq + Serialize + DeserializeOwned + OpText + Send + 'static,
+        Operation: crate::Operation<P> + PartialEq + Serialize + DeserializeOwned + OpText + protocol::OpBinary + Send + 'static,
     {
         fn print_impl<P, Operation>(envelope_json: &str) -> Result<(DocumentPackFiles, String), VcsError>
         where
             P: DocumentDsl + DocumentPack + Serialize + DeserializeOwned,
-            Operation: OpText + Serialize + DeserializeOwned,
+            Operation: OpText + protocol::OpBinary + Serialize + DeserializeOwned,
         {
             let envelope: DocumentEnvelope<P, Operation> =
                 serde_json::from_str(envelope_json).map_err(|error| VcsError::Deserialize(error.to_string()))?;
@@ -287,12 +313,12 @@ impl DocumentCodec {
             Ok((pack_files, dsl_mirror))
         }
 
-        fn parse_impl<P, Operation>(pack: &[u8], ops: &str) -> Result<String, VcsError>
+        fn parse_impl<P, Operation>(pack: &[u8], spr: &[u8]) -> Result<String, VcsError>
         where
             P: Clone + DocumentPack + Serialize + DeserializeOwned,
-            Operation: OpText + crate::Operation<P> + Serialize + DeserializeOwned,
+            Operation: OpText + protocol::OpBinary + crate::Operation<P> + Serialize + DeserializeOwned,
         {
-            let parsed: ParsedDocumentText<P, Operation> = parse_document_pack(pack, ops).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+            let parsed: ParsedDocumentText<P, Operation> = parse_document_pack(pack, spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
             serde_json::to_string(&parsed.envelope).map_err(|error| VcsError::Serialize(error.to_string()))
         }
 
@@ -441,6 +467,7 @@ where
         },
         backbone,
         active_alternative_id: None,
+        cursor: None,
     }
 }
 
@@ -655,6 +682,13 @@ enum OpsHeaderLine {
         #[dsl(positional)]
         id: String,
     },
+    /// @emoji 🎯 Undo/redo/checkout position — the FULL applied/redo edit-id lists, not a tail
+    /// marker (see `DocumentCursor`'s doc for why). Mirrors `protocol::HistoryCursor`'s grammar.
+    Cursor {
+        applied: Vec<String>,
+        redo: Vec<String>,
+        checkpoint: Option<String>,
+    },
 }
 //#endregion 🔖OpsHeaderGrammar
 
@@ -735,6 +769,11 @@ where
         ops.push_str(&OpsHeaderLine::Active { id: active_id.clone() }.print_op());
         ops.push('\n');
     }
+    if let Some(cursor) = &envelope.cursor {
+        let header = OpsHeaderLine::Cursor { applied: cursor.applied_edit_ids.clone(), redo: cursor.redo_edit_ids.clone(), checkpoint: cursor.checkpoint_id.clone() };
+        ops.push_str(&header.print_op());
+        ops.push('\n');
+    }
     Ok(ops)
 }
 
@@ -751,25 +790,277 @@ where
     Ok(DocumentTextFiles { dsl, ops })
 }
 
-/// @emoji 📤 Pack counterpart of `print_document_text`: identical op-log body (`print_ops_log`), but
-/// the initial projection is encoded to pack bytes (`DocumentPack::encode_pack`) instead of printed
-/// to DSL text.
+/// @emoji 🎞️ `protocol::UndoPolicy` ordinal, matching `HistoryOpMeta.undo_policy`'s wire shape —
+/// distinct from `undo_policy_ordinal` above, which maps THIS crate's `DocumentCommand`-facing
+/// `UndoPolicy` (currently `semio_framework_core::UndoPolicy`; the two enums have identical
+/// variants and will merge in the kernel-unification wave, see `protocol_core`'s own doc note).
+fn protocol_undo_policy_ordinal(policy: protocol::UndoPolicy) -> u8 {
+    match policy {
+        protocol::UndoPolicy::ExactBaseOnly => 0,
+        protocol::UndoPolicy::TransformAgainstConcurrent => 1,
+        protocol::UndoPolicy::SemanticUndo => 2,
+        protocol::UndoPolicy::CompensatingAction => 3,
+    }
+}
+
+fn protocol_undo_policy_from_ordinal(ordinal: u8) -> protocol::UndoPolicy {
+    match ordinal {
+        1 => protocol::UndoPolicy::TransformAgainstConcurrent,
+        2 => protocol::UndoPolicy::SemanticUndo,
+        3 => protocol::UndoPolicy::CompensatingAction,
+        _ => protocol::UndoPolicy::ExactBaseOnly,
+    }
+}
+
+fn history_op_meta_from_operation_meta(meta: &OperationMeta) -> protocol::HistoryOpMeta {
+    protocol::HistoryOpMeta {
+        op_id: meta.operation_id.as_ref().map(|id| id.0.clone()),
+        dependencies: meta.dependencies.iter().map(|id| id.0.clone()).collect(),
+        base_version: meta.base_version,
+        author_id: meta.author_id.as_ref().map(|id| id.0.clone()),
+        hlt: Some((meta.timestamp.actor, meta.timestamp.physical_ms as i64, meta.timestamp.logical)),
+        undo_policy: protocol_undo_policy_ordinal(meta.undo_policy),
+        payload_hash: meta.payload_hash.as_ref().map(|hash| hash.0),
+    }
+}
+
+fn operation_meta_from_history_op_meta(meta: protocol::HistoryOpMeta) -> OperationMeta {
+    let (actor, physical_ms, logical) = meta.hlt.unwrap_or((0, 0, 0));
+    OperationMeta {
+        operation_id: meta.op_id.map(OperationId),
+        dependencies: meta.dependencies.into_iter().map(OperationId).collect(),
+        base_version: meta.base_version,
+        author_id: meta.author_id.map(ActorId),
+        timestamp: protocol::HybridLogicalTimestamp { actor, physical_ms: physical_ms as u64, logical },
+        undo_policy: protocol_undo_policy_from_ordinal(meta.undo_policy),
+        payload_hash: meta.payload_hash.map(protocol::PayloadHash),
+    }
+}
+
+/// @emoji 🎯 Builds the binary op-log twin of `print_ops_log` — a `protocol::HistoryLog` carrying
+/// REAL `backwards`/binary op payloads/explicit meta/cursor, encoded via `protocol::encode_history`
+/// with `write_backwards_section: true`. Unlike the `.ops` text mirror (forwards-only, see
+/// `print_ops_log`'s doc), this is the AUTHORITATIVE persisted form: `parse_document_spr` recovers
+/// backwards/meta byte-for-byte instead of recomputing them via replay.
+fn history_op_payloads<Operation: OpText + protocol::OpBinary>(operations: &[Operation]) -> Result<Vec<protocol::OpPayload>, VcsError> {
+    operations
+        .iter()
+        .map(|op| Ok(protocol::OpPayload { text: op.print_op(), binary: Some(op.encode_op().map_err(|error| VcsError::Serialize(error.to_string()))?) }))
+        .collect()
+}
+
+fn history_edit_from_edit<Operation: OpText + protocol::OpBinary>(edit: &Edit<Operation>) -> Result<protocol::HistoryEdit, VcsError> {
+    Ok(protocol::HistoryEdit {
+        id: edit.id.clone(),
+        actor: edit.actor.clone(),
+        started_at: edit.started_at.clone(),
+        finished_at: edit.finished_at.clone(),
+        coalesce_key: edit.coalesce_key.clone(),
+        description: edit.description.clone(),
+        ops: history_op_payloads(&edit.forwards)?,
+        backwards: history_op_payloads(&edit.backwards)?,
+        // 🎯 An empty `operation_meta` (e.g. a hand-authored/externally-injected edit with no
+        // explicit meta, distinct from a real dispatch which always populates one entry per
+        // forward op) is treated as ABSENT, not as `Some(vec![])` — `encode_edit` requires
+        // `metas.len() == ops.len()` when meta is present at all, and an empty-but-`Some` vec
+        // would spuriously fail that check for a non-empty `ops`.
+        meta: if edit.operation_meta.is_empty() { None } else { Some(edit.operation_meta.iter().map(history_op_meta_from_operation_meta).collect()) },
+    })
+}
+
+/// @emoji 🎯 Encodes a bare, edit-free `.spr` op log for `schema` — the counterpart to a `.pack`
+/// file carrying only an initial projection with no history yet (e.g. a single dropped `.pack`
+/// file with no accompanying `.spr` sidecar). `doc_id` may be empty when the caller mints a fresh
+/// id downstream (as `parse_document_spr` never cross-checks it against the pack). LAW:
+/// `parse_document_spr(pack, &empty_document_spr(id, schema))` recovers exactly `P::decode_pack(pack)`
+/// as both the initial and live projection, with zero edits.
+pub fn empty_document_spr(doc_id: &str, schema: &str) -> Vec<u8> {
+    let log = protocol::HistoryLog { doc_id: doc_id.to_string(), schema: schema.to_string(), ..protocol::HistoryLog::default() };
+    protocol::encode_history(&log, &protocol::EncodeOptions::default()).expect("encoding an edit-free HistoryLog is infallible")
+}
+
+pub fn print_document_spr<P, Operation>(envelope: &DocumentEnvelope<P, Operation>) -> Result<Vec<u8>, VcsError>
+where
+    Operation: OpText + protocol::OpBinary,
+{
+    let mut edits = Vec::with_capacity(envelope.vcs.edits.len());
+    for edit in &envelope.vcs.edits {
+        edits.push(history_edit_from_edit::<Operation>(edit)?);
+    }
+    let log = protocol::HistoryLog {
+        doc_id: envelope.id.clone(),
+        schema: envelope.schema.clone(),
+        edits,
+        changes: envelope
+            .vcs
+            .changes
+            .iter()
+            .map(|change| protocol::HistoryChange { id: change.id.clone(), saved_at: change.saved_at.clone(), edit_ids: change.edit_ids.clone(), description: change.description.clone() })
+            .collect(),
+        checkpoints: envelope
+            .vcs
+            .checkpoints
+            .iter()
+            .map(|checkpoint| protocol::HistoryCheckpoint {
+                id: checkpoint.id.clone(),
+                timestamp: checkpoint.timestamp.clone(),
+                change_ids: checkpoint.change_ids.clone(),
+                parent_id: checkpoint.parent_id.clone(),
+                authors: checkpoint.authors.iter().map(|author| protocol::HistoryAuthor { id: author.id.clone(), name: author.name.clone() }).collect(),
+                message: checkpoint.message.clone(),
+            })
+            .collect(),
+        alternatives: envelope
+            .vcs
+            .alternatives
+            .iter()
+            .map(|alternative| protocol::HistoryAlternative { id: alternative.id.clone(), name: alternative.name.clone(), checkpoint_ids: alternative.checkpoint_ids.clone() })
+            .collect(),
+        active_alternative_id: envelope.active_alternative_id.clone(),
+        cursor: envelope.cursor.as_ref().map(|cursor| protocol::HistoryCursor {
+            applied_edit_ids: cursor.applied_edit_ids.clone(),
+            redo_edit_ids: cursor.redo_edit_ids.clone(),
+            checkpoint_id: cursor.checkpoint_id.clone(),
+        }),
+    };
+    let options = protocol::EncodeOptions { write_backwards_section: true, ..protocol::EncodeOptions::default() };
+    protocol::encode_history(&log, &options).map_err(|error| VcsError::Serialize(error.to_string()))
+}
+
+/// @emoji 🎯 Inverse of [`print_document_spr`]: rebuilds an envelope's `edits`/`changes`/
+/// `checkpoints`/`alternatives`/`cursor` from a decoded `HistoryLog`, recovering `backwards` and
+/// `operation_meta` from the persisted data (never replay-recomputed, unlike the text path) — the
+/// initial projection comes from `pack` via `DocumentPack::decode_pack`, matching
+/// `parse_document_pack`'s contract.
+pub fn parse_document_spr<P, Operation>(pack: &[u8], spr: &[u8]) -> Result<ParsedDocumentText<P, Operation>, TextError>
+where
+    P: Clone + DocumentPack,
+    Operation: OpText + protocol::OpBinary + crate::Operation<P>,
+{
+    let initial_projection = P::decode_pack(pack).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
+    let log = protocol::decode_history(spr, &protocol::DecodeOptions::default()).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
+
+    let decode_op = |payload: &protocol::OpPayload| -> Result<Operation, TextError> {
+        match &payload.binary {
+            Some(bytes) => Operation::decode_op(bytes).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1))),
+            None => Operation::parse_op(&payload.text),
+        }
+    };
+
+    let mut projection = initial_projection.clone();
+    let mut edits: Vec<Edit<Operation>> = Vec::with_capacity(log.edits.len());
+    for (index, history_edit) in log.edits.into_iter().enumerate() {
+        let forwards = history_edit.ops.iter().map(decode_op).collect::<Result<Vec<_>, _>>()?;
+        let (backwards, operation_meta) = if !history_edit.backwards.is_empty() || history_edit.meta.is_some() {
+            let backwards = history_edit.backwards.iter().map(decode_op).collect::<Result<Vec<_>, _>>()?;
+            let operation_meta = history_edit.meta.map(|metas| metas.into_iter().map(operation_meta_from_history_op_meta).collect()).unwrap_or_default();
+            (backwards, operation_meta)
+        } else {
+            let mut backwards = Vec::with_capacity(forwards.len());
+            let mut operation_meta = Vec::with_capacity(forwards.len());
+            for operation in &forwards {
+                let mut back = operation.backwards(&projection);
+                back.reverse();
+                backwards.extend(back);
+                operation_meta.push(OperationMeta {
+                    operation_id: Some(operation.operation_id().unwrap_or_else(|| OperationId(create_document_vcs_id("operation")))),
+                    dependencies: operation.dependencies(),
+                    base_version: operation.base_version().map(|version| version.0).unwrap_or(0),
+                    author_id: Some(operation.author_id().unwrap_or_else(|| ActorId("local".into()))),
+                    timestamp: operation.timestamp().unwrap_or_else(|| protocol::HybridLogicalTimestamp::new(0, now_ms())),
+                    undo_policy: operation.undo_policy(),
+                    payload_hash: None,
+                });
+            }
+            (backwards, operation_meta)
+        };
+        for operation in &forwards {
+            projection = apply_operation(&projection, operation);
+        }
+        edits.push(Edit {
+            id: history_edit.id,
+            actor: history_edit.actor,
+            forwards,
+            backwards,
+            operation_meta,
+            description: history_edit.description,
+            coalesce_key: history_edit.coalesce_key,
+            sequence_number: index as i32 + 1,
+            started_at: history_edit.started_at,
+            finished_at: history_edit.finished_at,
+        });
+    }
+
+    let cursor = log.cursor.map(|cursor| DocumentCursor { applied_edit_ids: cursor.applied_edit_ids, redo_edit_ids: cursor.redo_edit_ids, checkpoint_id: cursor.checkpoint_id });
+    let envelope = DocumentEnvelope {
+        schema: log.schema,
+        id: log.doc_id,
+        vcs: DocumentVcs {
+            initial_projection,
+            edits,
+            changes: log.changes.into_iter().map(|change| Change { id: change.id, edit_ids: change.edit_ids, description: change.description, saved_at: change.saved_at }).collect(),
+            checkpoints: log
+                .checkpoints
+                .into_iter()
+                .map(|checkpoint| Checkpoint {
+                    id: checkpoint.id,
+                    change_ids: checkpoint.change_ids,
+                    parent_id: checkpoint.parent_id,
+                    authors: checkpoint.authors.into_iter().map(|author| Author { id: author.id, name: author.name, avatar: None }).collect(),
+                    message: checkpoint.message,
+                    timestamp: checkpoint.timestamp,
+                })
+                .collect(),
+            alternatives: log.alternatives.into_iter().map(|alternative| Alternative { id: alternative.id, name: alternative.name, checkpoint_ids: alternative.checkpoint_ids }).collect(),
+        },
+        backbone: None,
+        active_alternative_id: log.active_alternative_id,
+        cursor: cursor.clone(),
+    };
+
+    let projection = if let Some(cursor) = &cursor {
+        let mut folded = envelope.vcs.initial_projection.clone();
+        let mut last_operation = None;
+        for edit_id in &cursor.applied_edit_ids {
+            if let Some(edit) = envelope.vcs.edits.iter().find(|edit| &edit.id == edit_id) {
+                for operation in &edit.forwards {
+                    folded = apply_operation(&folded, operation);
+                    last_operation = Some(operation);
+                }
+            }
+        }
+        let (reconciled, _conflicts) = reconcile_with_last(last_operation, folded);
+        reconciled
+    } else {
+        let last_operation = envelope.vcs.edits.last().and_then(|edit| edit.forwards.last());
+        let (reconciled, _conflicts) = reconcile_with_last(last_operation, projection);
+        reconciled
+    };
+    Ok(ParsedDocumentText { envelope, projection })
+}
+
+/// @emoji 📤 Pack counterpart of `print_document_text`: identical op-log TEXT body (`print_ops_log`)
+/// for the human-readable mirror, but the initial projection is encoded to pack bytes
+/// (`DocumentPack::encode_pack`) instead of printed to DSL text — plus the AUTHORITATIVE `.spr`
+/// binary op log (`print_document_spr`), which carries real backwards/binary payloads/cursor.
 pub fn print_document_pack<P, Operation>(envelope: &DocumentEnvelope<P, Operation>) -> Result<DocumentPackFiles, VcsError>
 where
     P: DocumentPack,
-    Operation: OpText,
+    Operation: OpText + protocol::OpBinary,
 {
     let pack = envelope.vcs.initial_projection.encode_pack();
+    let spr = print_document_spr(envelope)?;
     let ops = print_ops_log(envelope)?;
-    Ok(DocumentPackFiles { pack, ops })
+    Ok(DocumentPackFiles { pack, spr, ops })
 }
 
 /// @emoji 📥 Replays `ops` against an already-obtained `initial_projection` — the parse-independent
 /// tail shared by `parse_document_text` (which obtains the projection via `P::parse_dsl`) and
-/// `parse_document_pack` (via `P::decode_pack`). Every `edit` in the log is treated as applied, in
-/// file order — mirroring the existing JSON `load_document` semantics (undo/redo position and
-/// checkout-alternative state are runtime-only and are not restored across a save/load cycle either
-/// way).
+/// `parse_document_pack` (via `P::decode_pack`). When the log carries a `cursor` line, the
+/// returned live projection reflects exactly `cursor.applied_edit_ids`, restoring the exact
+/// undo/redo position across a save/load cycle. Absent a cursor (logs predating this field, or a
+/// caller that never persisted one), every `edit` is treated as applied, in file order — the
+/// original JSON `load_document`-compatible behavior.
 fn replay_ops<P, Operation>(initial_projection: P, ops: &str) -> Result<ParsedDocumentText<P, Operation>, TextError>
 where
     P: Clone,
@@ -782,6 +1073,7 @@ where
     let mut checkpoints: Vec<Checkpoint> = Vec::new();
     let mut alternatives: Vec<Alternative> = Vec::new();
     let mut active_alternative_id: Option<String> = None;
+    let mut cursor: Option<DocumentCursor> = None;
     let mut projection = initial_projection.clone();
 
     /// @emoji 🕰️ An `edit` header line's fields, held until its trailing indented op-lines are all
@@ -880,6 +1172,9 @@ where
             OpsHeaderLine::Active { id: active_id } => {
                 active_alternative_id = Some(active_id);
             }
+            OpsHeaderLine::Cursor { applied, redo, checkpoint } => {
+                cursor = Some(DocumentCursor { applied_edit_ids: applied, redo_edit_ids: redo, checkpoint_id: checkpoint });
+            }
         }
     }
     flush_pending_edit(&mut pending_edit, &mut pending_forwards, &mut edits, &mut projection)?;
@@ -896,9 +1191,32 @@ where
         },
         backbone: None,
         active_alternative_id,
+        cursor: cursor.clone(),
     };
-    let last_operation = envelope.vcs.edits.last().and_then(|edit| edit.forwards.last());
-    let (projection, _conflicts) = reconcile_with_last(last_operation, projection);
+    // 🎯 W4: every edit is still folded above in file order (needed for correct backwards/meta —
+    // an edit's inverse depends on the projection state at the time it was made, which requires
+    // walking the FULL sequence regardless of undo/redo position). Only the RETURNED live
+    // projection differs: when a cursor is present, it reflects only `cursor.applied_edit_ids`
+    // (the store's actual undo/redo position); absent a cursor, every edit is still treated as
+    // applied, preserving the pre-W4 behavior for logs that predate this field.
+    let projection = if let Some(cursor) = &cursor {
+        let mut folded = envelope.vcs.initial_projection.clone();
+        let mut last_operation = None;
+        for edit_id in &cursor.applied_edit_ids {
+            if let Some(edit) = envelope.vcs.edits.iter().find(|edit| &edit.id == edit_id) {
+                for operation in &edit.forwards {
+                    folded = apply_operation(&folded, operation);
+                    last_operation = Some(operation);
+                }
+            }
+        }
+        let (reconciled, _conflicts) = reconcile_with_last(last_operation, folded);
+        reconciled
+    } else {
+        let last_operation = envelope.vcs.edits.last().and_then(|edit| edit.forwards.last());
+        let (reconciled, _conflicts) = reconcile_with_last(last_operation, projection);
+        reconciled
+    };
     Ok(ParsedDocumentText { envelope, projection })
 }
 
@@ -913,16 +1231,15 @@ where
     replay_ops(initial_projection, ops)
 }
 
-/// @emoji 📥 Pack counterpart of `parse_document_text`: obtains the initial projection via
-/// `DocumentPack::decode_pack` instead of `DocumentDsl::parse_dsl`, then shares the same
-/// `replay_ops` tail.
-pub fn parse_document_pack<P, Operation>(pack: &[u8], ops: &str) -> Result<ParsedDocumentText<P, Operation>, TextError>
+/// @emoji 📥 spr-first pack counterpart of `parse_document_text`: pack+spr are the AUTHORITATIVE
+/// pair (see `DocumentPackFiles`'s doc) — this is a thin forward onto `parse_document_spr`, which
+/// recovers real `backwards`/`operation_meta`/`cursor` instead of recomputing them via replay.
+pub fn parse_document_pack<P, Operation>(pack: &[u8], spr: &[u8]) -> Result<ParsedDocumentText<P, Operation>, TextError>
 where
     P: Clone + DocumentPack,
-    Operation: OpText + crate::Operation<P>,
+    Operation: OpText + protocol::OpBinary + crate::Operation<P>,
 {
-    let initial_projection = P::decode_pack(pack).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
-    replay_ops(initial_projection, ops)
+    parse_document_spr(pack, spr)
 }
 //#endregion 🔖TextFormat
 
@@ -1494,19 +1811,45 @@ where
     /// @emoji 🚫 A store is always constructed with no backbone attached — the envelope's
     /// `backbone` field is a descriptor of the last attachment, never an instruction to
     /// reconnect. Callers attach explicitly via {@link attach_backbone}/{@link attach_backbone_uri}.
+    ///
+    /// @emoji 🎯 When `envelope.cursor` is present (a `.pack`+`.spr` load, see
+    /// `parse_document_spr`), `applied_edit_ids`/`redo_edit_ids`/`current_checkpoint_id`/`current`
+    /// are seeded from it — restoring the exact undo/redo position across a save/load cycle.
+    /// `local_actor_id` is seeded from the tail applied edit's actor so `UndoPolicy::ExactBaseOnly`'s
+    /// foreign-edit check keeps working immediately after reload (a real `VcsDocumentApp` overrides
+    /// it anyway via `set_local_actor_id` on every dispatch). Absent a cursor, every edit is
+    /// treated as applied and `local_actor_id` stays `None` (pre-W4 behavior).
     pub fn new(envelope: DocumentEnvelope<P, Operation>) -> Self {
-        let current_checkpoint_id = envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
-        let current = envelope.vcs.initial_projection.clone();
+        let (applied_edit_ids, redo_edit_ids, current_checkpoint_id, current, local_actor_id) = match &envelope.cursor {
+            Some(cursor) => {
+                let mut folded = envelope.vcs.initial_projection.clone();
+                let mut last_actor: Option<String> = None;
+                for edit_id in &cursor.applied_edit_ids {
+                    if let Some(edit) = envelope.vcs.edits.iter().find(|edit| &edit.id == edit_id) {
+                        for operation in &edit.forwards {
+                            folded = apply_operation(&folded, operation);
+                        }
+                        last_actor = edit.actor.clone();
+                    }
+                }
+                let checkpoint_id = cursor.checkpoint_id.clone().or_else(|| envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone()));
+                (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone(), checkpoint_id, folded, last_actor)
+            }
+            None => {
+                let checkpoint_id = envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
+                (Vec::new(), Vec::new(), checkpoint_id, envelope.vcs.initial_projection.clone(), None)
+            }
+        };
         Self {
             envelope,
             backbone: None,
             dag: semio_framework_core::OpDag::new(),
-            applied_edit_ids: Vec::new(),
-            redo_edit_ids: Vec::new(),
+            applied_edit_ids,
+            redo_edit_ids,
             edit_sequence: 0,
             generation: 0,
             current_checkpoint_id,
-            local_actor_id: None,
+            local_actor_id,
             conflicts: Vec::new(),
             current,
             tail_undo_cache: None,
@@ -2242,8 +2585,20 @@ where
             .unwrap_or(false)
     }
 
+    /// @emoji 🎯 Mirrors `applied_edit_ids`/`redo_edit_ids`/`current_checkpoint_id` into
+    /// `envelope.cursor` — the single choke point that keeps the persisted cursor in sync with
+    /// live undo/redo state. Called from every `bump()`, so every mutating command re-syncs it.
+    fn sync_cursor(&mut self) {
+        self.envelope.cursor = Some(DocumentCursor {
+            applied_edit_ids: self.applied_edit_ids.clone(),
+            redo_edit_ids: self.redo_edit_ids.clone(),
+            checkpoint_id: self.current_checkpoint_id.clone(),
+        });
+    }
+
     fn bump(&mut self) {
         self.generation += 1;
+        self.sync_cursor();
     }
 }
 
@@ -3371,12 +3726,12 @@ pub mod test_support {
     pub fn assert_document_pack_round_trip<P, Operation>(store: &DocumentStore<P, Operation>)
     where
         P: Clone + DocumentDsl + DocumentPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
-        Operation: Clone + OpText + crate::Operation<P> + PartialEq + Serialize + DeserializeOwned,
+        Operation: Clone + OpText + protocol::OpBinary + crate::Operation<P> + PartialEq + Serialize + DeserializeOwned,
     {
         let live = store.projection().expect("store projection");
         let pack_files = print_document_pack(store.envelope()).expect("print document pack");
         let parsed_pack: ParsedDocumentText<P, Operation> =
-            parse_document_pack(&pack_files.pack, &pack_files.ops).unwrap_or_else(|error| panic!("parse document pack failed: {error}"));
+            parse_document_pack(&pack_files.pack, &pack_files.spr).unwrap_or_else(|error| panic!("parse document pack failed: {error}"));
         assert_eq!(parsed_pack.projection, live, "document-pack round trip diverged from store projection");
 
         let text_files = print_document_text(store.envelope()).expect("print document text");
@@ -3408,12 +3763,13 @@ pub mod test_support {
     /// so would just re-run `operation_envelope_from_edit`'s own logic against itself and always
     /// agree — see this function's `🧪Tests` sibling for a deliberately lossy `Operation` impl that
     /// trips law (2).
-    pub fn assert_command_envelope_round_trip<P, Operation>(edit: &Edit<Operation>, document_id: &DocumentId)
+    pub fn assert_command_envelope_round_trip<P, Operation>(edit: &Edit<Operation>, document_id: &DocumentId, schema: &SchemaId)
     where
         P: Clone + PartialEq + std::fmt::Debug,
-        Operation: crate::Operation<P> + PartialEq + std::fmt::Debug,
+        Operation: crate::Operation<P> + PartialEq + std::fmt::Debug + protocol::OpBinary,
     {
-        let envelopes = protocol::operation_envelope_from_edit::<P, Operation>(edit, document_id);
+        let envelopes = protocol::operation_envelope_from_edit::<P, Operation>(edit, document_id, schema)
+            .unwrap_or_else(|error| panic!("operation_envelope_from_edit must succeed for a well-formed edit: {error}"));
         assert_eq!(envelopes.len(), edit.forwards.len(), "one envelope must be produced per forward operation");
         for (index, envelope) in envelopes.iter().enumerate() {
             assert_eq!(envelope.document_id, *document_id, "document id did not survive the envelope conversion");
@@ -3427,16 +3783,16 @@ pub mod test_support {
                 }
                 assert_eq!(envelope.timestamp, meta.timestamp, "explicit timestamp did not survive the envelope conversion");
             }
-            let recovered_forward: Operation = serde_json::from_value(envelope.diff.payload.clone())
+            let recovered_forward = Operation::decode_op(&envelope.diff.payload)
                 .unwrap_or_else(|error| panic!("envelope diff payload must decode back into an equal operation: {error}"));
             assert_eq!(&recovered_forward, &edit.forwards[index], "envelope diff payload did not decode back into an equal forward operation");
             match edit.backwards.get(index) {
                 Some(backward) => {
-                    let recovered_backward: Operation = serde_json::from_value(envelope.inverse.inverse_diff.clone())
+                    let recovered_backward = Operation::decode_op(&envelope.inverse.payload)
                         .unwrap_or_else(|error| panic!("envelope inverse payload must decode back into an equal operation: {error}"));
                     assert_eq!(&recovered_backward, backward, "envelope inverse payload did not decode back into an equal backward operation");
                 }
-                None => assert_eq!(envelope.inverse.inverse_diff, serde_json::Value::Null, "inverse payload must be Null when the edit has no corresponding backwards op"),
+                None => assert!(envelope.inverse.payload.is_empty(), "inverse payload must be empty when the edit has no corresponding backwards op"),
             }
         }
     }
@@ -3993,7 +4349,7 @@ mod tests {
         let (pack_files, dsl_mirror) = (codec.print)(&envelope_json).expect("codec print");
         assert_eq!(dsl_mirror, DemoProjection { n: 4 }.print_dsl(), "dsl mirror matches the initial projection's print_dsl");
 
-        let parsed_json = (codec.parse)(&pack_files.pack, &pack_files.ops).expect("codec parse");
+        let parsed_json = (codec.parse)(&pack_files.pack, &pack_files.spr).expect("codec parse");
         let parsed: DocumentEnvelope<DemoProjection, DemoOperation> = serde_json::from_str(&parsed_json).expect("parse envelope json");
         assert_eq!(parsed.vcs.initial_projection.n, 4, "codec.parse round trips through pack bytes");
 
@@ -4364,7 +4720,7 @@ mod tests {
             started_at: "2026-07-27T00:00:00Z".into(),
             finished_at: None,
         };
-        test_support::assert_command_envelope_round_trip::<DemoProjection, DemoOperation>(&edit, &DocumentId("doc-command-envelope".into()));
+        test_support::assert_command_envelope_round_trip::<DemoProjection, DemoOperation>(&edit, &DocumentId("doc-command-envelope".into()), &SchemaId("demo/v1".into()));
     }
 
     /// @emoji 🪤 Proves `assert_command_envelope_round_trip` is not a trivially-true check: a hand-rolled
@@ -4412,6 +4768,15 @@ mod tests {
             }
         }
 
+        impl protocol::OpBinary for LossyOperation {
+            fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+                Ok(self.n.to_le_bytes().to_vec())
+            }
+            fn decode_op(_bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+                Ok(LossyOperation { n: 0 })
+            }
+        }
+
         let edit = Edit::<LossyOperation> {
             id: "edit-lossy".into(),
             actor: None,
@@ -4424,7 +4789,7 @@ mod tests {
             started_at: "2026-07-27T00:00:00Z".into(),
             finished_at: None,
         };
-        test_support::assert_command_envelope_round_trip::<DemoProjection, LossyOperation>(&edit, &DocumentId("doc-lossy".into()));
+        test_support::assert_command_envelope_round_trip::<DemoProjection, LossyOperation>(&edit, &DocumentId("doc-lossy".into()), &SchemaId("lossy/v1".into()));
     }
 
     // `DemoProjection`'s `store::DocumentDsl` impl and `DemoOperation`'s `store::OpText` impl are now
@@ -5017,6 +5382,15 @@ mod tests {
     }
 
     #[test]
+    fn ops_header_line_cursor_round_trips_the_full_applied_and_redo_lists() {
+        let header = OpsHeaderLine::Cursor { applied: vec!["e1".to_string(), "e3".to_string()], redo: vec!["e2".to_string()], checkpoint: Some("ck-1".to_string()) };
+        let printed = header.print_op();
+        assert!(!printed.contains('\n'), "print_op must be one line: {printed:?}");
+        let parsed = OpsHeaderLine::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op failed for {printed:?}: {e}"));
+        assert_eq!(parsed, header, "OpsHeaderLine::Cursor round trip diverged for {printed:?}");
+    }
+
+    #[test]
     fn ops_header_line_parse_op_rejects_a_line_with_no_known_keyword() {
         let error = OpsHeaderLine::parse_op("not a structural line").unwrap_err();
         assert!(error.message.contains("unknown operation line"), "got {error:?}");
@@ -5062,6 +5436,63 @@ mod tests {
         assert!(files.ops.lines().any(|line| line.starts_with("active ")), "an active alternative must print an `active` header line: {}", files.ops);
         test_support::assert_document_text_round_trip(&store);
         test_support::assert_document_pack_round_trip(&store);
+    }
+
+    #[test]
+    fn document_text_round_trips_a_cursor_after_undo_then_apply_interleaving() {
+        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
+        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply e1");
+        store.dispatch(DocumentCommand::Undo).expect("undo e1");
+        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None }).expect("apply e2");
+        // e1 (undone, in redo) precedes e2 (applied) in file order — exactly the interleaving a
+        // single tail-edit marker cannot represent (see HistoryCursor's doc).
+        assert_eq!(store.applied_edit_ids().len(), 1, "only e2 is applied");
+        let files = print_document_text(store.envelope()).expect("print document text");
+        assert!(files.ops.lines().any(|line| line.starts_with("cursor ")), "a synced cursor must print a `cursor` header line: {}", files.ops);
+        let parsed = parse_document_text::<DemoProjection, DemoOperation>(&files.dsl, &files.ops).unwrap_or_else(|error| panic!("parse document text failed: {error}"));
+        assert_eq!(parsed.envelope.cursor, store.envelope().cursor.clone(), "cursor diverged across a print/parse round trip");
+        assert_eq!(parsed.projection.n, 2, "restored projection must reflect only the applied edit (e2), not both");
+    }
+
+    /// @emoji 🔐 The save→load→undo proof (contract's runtime-behavior requirement): a store's
+    /// undo/redo position survives a full pack+spr save/load cycle, not just its projection value.
+    #[test]
+    fn save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position() {
+        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
+        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply e1");
+        let post_e1 = store.projection().expect("post-e1 projection");
+        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None }).expect("apply e2");
+        let post_e2 = store.projection().expect("post-e2 projection");
+        store.dispatch(DocumentCommand::Undo).expect("undo e2");
+        assert_eq!(store.projection().expect("live projection"), post_e1, "precondition: live store is back at post-e1");
+        test_support::assert_live_equals_replay(&store);
+
+        // Save: print_document_pack persists pack (initial projection) + spr (real backwards/meta,
+        // AND the cursor reflecting exactly "e1 applied, e2 in redo").
+        let pack_files = print_document_pack(store.envelope()).expect("print document pack");
+        assert!(!pack_files.spr.is_empty(), "spr bytes must be non-empty once an edit exists");
+
+        // Load: a FRESH store built only from persisted bytes — no access to the original `store`.
+        let parsed: ParsedDocumentText<DemoProjection, DemoOperation> =
+            parse_document_pack(&pack_files.pack, &pack_files.spr).unwrap_or_else(|error| panic!("parse document pack failed: {error}"));
+        assert_eq!(parsed.projection, post_e1, "loaded projection must equal post-e1, proving undo position survived the save");
+        let mut reloaded = DocumentStore::new(parsed.envelope);
+        assert_eq!(reloaded.projection().expect("reloaded projection"), post_e1, "DocumentStore::new must seed live state from the persisted cursor");
+        assert_eq!(reloaded.applied_edit_ids(), store.applied_edit_ids(), "applied_edit_ids must survive the round trip");
+        test_support::assert_live_equals_replay(&reloaded);
+
+        // Redo restores e2 — proving the redo stack (not just applied_edit_ids) survived.
+        reloaded.dispatch(DocumentCommand::Redo).expect("redo e2 after reload");
+        assert_eq!(reloaded.projection().expect("post-redo projection"), post_e2);
+        test_support::assert_live_equals_replay(&reloaded);
+
+        // Undo twice from here reaches the true initial state.
+        reloaded.dispatch(DocumentCommand::Undo).expect("undo e2 again");
+        reloaded.dispatch(DocumentCommand::Undo).expect("undo e1");
+        assert_eq!(reloaded.projection().expect("final projection"), DemoProjection { n: 0 });
+        test_support::assert_live_equals_replay(&reloaded);
     }
 
     //#endregion 🔖TextFormatHelpers

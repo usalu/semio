@@ -151,7 +151,7 @@ impl HistoryLogGen {
             for _ in 0..op_count {
                 ops.push(protocol::OpPayload { text: next_text(&mut rng, profile.adversarial), binary: None });
             }
-            edits.push(protocol::HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, ops, meta: None });
+            edits.push(protocol::HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, ops, backwards: Vec::new(), meta: None });
         }
 
         let mut changes: Vec<protocol::HistoryChange> = Vec::new();
@@ -214,7 +214,7 @@ impl HistoryLogGen {
         };
 
         self.state = rng.0;
-        protocol::HistoryLog { doc_id, schema, edits, changes, checkpoints, alternatives, active_alternative_id }
+        protocol::HistoryLog { doc_id, schema, edits, changes, checkpoints, alternatives, active_alternative_id, cursor: None }
     }
 }
 
@@ -252,8 +252,8 @@ impl OpDagGen {
                 document_id: protocol::DocumentId("doc-1".to_string()),
                 actor: protocol::ActorId(format!("actor-{}", rng.next_range(4))),
                 dependencies,
-                diff: protocol::DocumentDiff { schema: "testkit.op".to_string(), payload: serde_json::json!({ "index": i }) },
-                inverse: protocol::InverseOperation { schema: "testkit.op".to_string(), inverse_diff: serde_json::json!({}) },
+                diff: protocol::DocumentDiff { schema: protocol::SchemaId("testkit.op".to_string()), payload: format!("index:{i}").into_bytes() },
+                inverse: protocol::InverseOperation { schema: protocol::SchemaId("testkit.op".to_string()), payload: Vec::new() },
                 timestamp: protocol::HybridLogicalTimestamp::new(i as u64, i as u64 * 10),
             });
         }

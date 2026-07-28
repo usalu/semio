@@ -1982,6 +1982,18 @@ mod dsl {
             <LayoutOperationDsl as OpText>::print_op(&layout_operation_to_dsl(self))
         }
     }
+
+    /// ⚡ Binary mirror of the `OpText` impl above — `LayoutOperationDsl` already derives
+    /// `OpBinary` via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+    impl protocol::OpBinary for LayoutOperation {
+        fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+            layout_operation_to_dsl(self).encode_op()
+        }
+
+        fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+            Ok(layout_operation_from_dsl(LayoutOperationDsl::decode_op(bytes)?))
+        }
+    }
     //#endregion 🔖OpText
 
     #[cfg(test)]

@@ -759,6 +759,78 @@ pub enum StateClass {
 }
 //#endregion 🔖StateClass
 
+//#region 🔖WireCodec
+/// @emoji 🎞️ Shared primitive codec for `protocol_causal`'s envelope records and `protocol_wire`'s
+/// frame bodies (W5) — hand-rolled, not `pack_value::encode_record_body`, because the TS twin on
+/// the other end of the wire must reproduce these bytes exactly and has no pack engine to port;
+/// these primitives are simple enough to hand-implement identically in both languages. All
+/// integers are varint (documents stay `< 2^53`, safe for JS numbers); `Vec<u8>` and `[u8; 32]`
+/// are the only fixed-width forms. Field order within a record is always declaration order — no
+/// tags, mirroring `dsl::op_rt`'s "position is the format" convention one level down.
+pub fn write_varint_u64(out: &mut Vec<u8>, value: u64) {
+    pack_core::write_varint_u64(out, value);
+}
+
+pub fn read_varint_u64(bytes: &[u8], pos: &mut usize) -> Result<u64, ProtocolError> {
+    Ok(pack_core::read_varint_u64(bytes, pos)?)
+}
+
+/// @emoji 🔤 `varint len + utf8 bytes`.
+pub fn write_str(out: &mut Vec<u8>, s: &str) {
+    write_varint_u64(out, s.len() as u64);
+    out.extend_from_slice(s.as_bytes());
+}
+
+pub fn read_str(bytes: &[u8], pos: &mut usize) -> Result<String, ProtocolError> {
+    let len = read_varint_u64(bytes, pos)? as usize;
+    let end = pos.checked_add(len).ok_or(ProtocolError::Malformed { what: "wire str", offset: *pos as u64, detail: "length overflow".to_string() })?;
+    let slice = bytes.get(*pos..end).ok_or(ProtocolError::Malformed { what: "wire str", offset: *pos as u64, detail: "truncated".to_string() })?;
+    let s = std::str::from_utf8(slice).map_err(|_| ProtocolError::Malformed { what: "wire str", offset: *pos as u64, detail: "invalid utf8".to_string() })?.to_string();
+    *pos = end;
+    Ok(s)
+}
+
+/// @emoji 📦 `varint len + raw bytes`.
+pub fn write_bytes(out: &mut Vec<u8>, b: &[u8]) {
+    write_varint_u64(out, b.len() as u64);
+    out.extend_from_slice(b);
+}
+
+pub fn read_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<u8>, ProtocolError> {
+    let len = read_varint_u64(bytes, pos)? as usize;
+    let end = pos.checked_add(len).ok_or(ProtocolError::Malformed { what: "wire bytes", offset: *pos as u64, detail: "length overflow".to_string() })?;
+    let slice = bytes.get(*pos..end).ok_or(ProtocolError::Malformed { what: "wire bytes", offset: *pos as u64, detail: "truncated".to_string() })?;
+    *pos = end;
+    Ok(slice.to_vec())
+}
+
+/// @emoji #️⃣ 32 raw bytes, no length prefix (fixed width).
+pub fn write_hash32(out: &mut Vec<u8>, h: &[u8; 32]) {
+    out.extend_from_slice(h);
+}
+
+pub fn read_hash32(bytes: &[u8], pos: &mut usize) -> Result<[u8; 32], ProtocolError> {
+    let end = pos.checked_add(32).ok_or(ProtocolError::Malformed { what: "wire hash32", offset: *pos as u64, detail: "length overflow".to_string() })?;
+    let slice = bytes.get(*pos..end).ok_or(ProtocolError::Malformed { what: "wire hash32", offset: *pos as u64, detail: "truncated".to_string() })?;
+    let mut out = [0u8; 32];
+    out.copy_from_slice(slice);
+    *pos = end;
+    Ok(out)
+}
+
+/// @emoji ✅❌ `bool` as one byte (0/1) — never a varint, to keep single-byte fields self-evident
+/// when eyeballing a hex dump.
+pub fn write_bool(out: &mut Vec<u8>, value: bool) {
+    out.push(if value { 1 } else { 0 });
+}
+
+pub fn read_bool(bytes: &[u8], pos: &mut usize) -> Result<bool, ProtocolError> {
+    let byte = *bytes.get(*pos).ok_or(ProtocolError::Malformed { what: "wire bool", offset: *pos as u64, detail: "truncated".to_string() })?;
+    *pos += 1;
+    Ok(byte != 0)
+}
+//#endregion 🔖WireCodec
+
 //#region 🧪Tests
 #[cfg(test)]
 mod tests {
@@ -1141,5 +1213,91 @@ mod tests {
         }
     }
     //#endregion 🔖Policies
+
+    //#region 🔖WireCodec
+    #[test]
+    fn wire_str_round_trips_including_multibyte_utf8() {
+        let mut out = Vec::new();
+        write_str(&mut out, "héllo wörld 🎞️");
+        let mut pos = 0;
+        assert_eq!(read_str(&out, &mut pos).unwrap(), "héllo wörld 🎞️");
+        assert_eq!(pos, out.len());
+    }
+
+    #[test]
+    fn wire_str_empty_round_trips() {
+        let mut out = Vec::new();
+        write_str(&mut out, "");
+        let mut pos = 0;
+        assert_eq!(read_str(&out, &mut pos).unwrap(), "");
+        assert_eq!(pos, out.len());
+    }
+
+    #[test]
+    fn wire_bytes_round_trips_and_consumes_exact_length() {
+        let mut out = Vec::new();
+        write_bytes(&mut out, &[1, 2, 3, 4, 5]);
+        write_bytes(&mut out, &[9]);
+        let mut pos = 0;
+        assert_eq!(read_bytes(&out, &mut pos).unwrap(), vec![1, 2, 3, 4, 5]);
+        assert_eq!(read_bytes(&out, &mut pos).unwrap(), vec![9]);
+        assert_eq!(pos, out.len());
+    }
+
+    #[test]
+    fn wire_hash32_round_trips_fixed_width_no_length_prefix() {
+        let hash = [7u8; 32];
+        let mut out = Vec::new();
+        write_hash32(&mut out, &hash);
+        assert_eq!(out.len(), 32, "hash32 must be fixed-width with no length prefix");
+        let mut pos = 0;
+        assert_eq!(read_hash32(&out, &mut pos).unwrap(), hash);
+        assert_eq!(pos, 32);
+    }
+
+    #[test]
+    fn wire_bool_round_trips_as_a_single_byte() {
+        let mut out = Vec::new();
+        write_bool(&mut out, true);
+        write_bool(&mut out, false);
+        assert_eq!(out, vec![1, 0]);
+        let mut pos = 0;
+        assert!(read_bool(&out, &mut pos).unwrap());
+        assert!(!read_bool(&out, &mut pos).unwrap());
+    }
+
+    #[test]
+    fn wire_varint_u64_round_trips_via_pack_core() {
+        let mut out = Vec::new();
+        write_varint_u64(&mut out, 300);
+        let mut pos = 0;
+        assert_eq!(read_varint_u64(&out, &mut pos).unwrap(), 300);
+    }
+
+    #[test]
+    fn wire_str_rejects_truncated_input() {
+        let mut out = Vec::new();
+        write_str(&mut out, "hello");
+        out.truncate(out.len() - 1);
+        let mut pos = 0;
+        assert!(matches!(read_str(&out, &mut pos), Err(ProtocolError::Malformed { .. })));
+    }
+
+    #[test]
+    fn wire_bytes_rejects_truncated_input() {
+        let mut out = Vec::new();
+        write_bytes(&mut out, &[1, 2, 3]);
+        out.truncate(out.len() - 1);
+        let mut pos = 0;
+        assert!(matches!(read_bytes(&out, &mut pos), Err(ProtocolError::Malformed { .. })));
+    }
+
+    #[test]
+    fn wire_hash32_rejects_truncated_input() {
+        let bytes = [0u8; 10];
+        let mut pos = 0;
+        assert!(matches!(read_hash32(&bytes, &mut pos), Err(ProtocolError::Malformed { .. })));
+    }
+    //#endregion 🔖WireCodec
 }
 //#endregion 🧪Tests

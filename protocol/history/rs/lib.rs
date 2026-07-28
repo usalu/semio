@@ -27,6 +27,10 @@ pub struct HistoryLog {
     pub checkpoints: Vec<HistoryCheckpoint>,
     pub alternatives: Vec<HistoryAlternative>,
     pub active_alternative_id: Option<String>,
+    /// @emoji 🎯 Undo/redo/checkout position, present only when the caller explicitly persisted
+    /// it (`REC_CURSOR`) — absent for text-compiled/imported logs and for any log predating this
+    /// field, in which case undo/redo position is runtime-only, exactly as before.
+    pub cursor: Option<HistoryCursor>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -38,18 +42,38 @@ pub struct HistoryEdit {
     pub coalesce_key: Option<String>,
     pub description: Option<String>,
     pub ops: Vec<OpPayload>,
+    /// @emoji 🔙 The edit's inverse operations, in apply order (mirrors `protocol_command::Edit
+    /// ::backwards`). Empty for text-compiled/imported logs — a decoder recomputing them from a
+    /// fresh replay never touches this field; when non-empty, `write_backwards_section` persisted
+    /// them explicitly (only the `.spr` binary path ever sets this — the `.ops` text mirror stays
+    /// forwards-only, see `store::print_document_spr`/`parse_document_spr`).
+    pub backwards: Vec<OpPayload>,
     /// @emoji 🧮 Present iff the caller supplied it; absent for text-compiled/imported logs. Not
     /// required for round-trip — a decoder recomputing backwards/meta from a fresh replay never
     /// touches this field.
     pub meta: Option<Vec<HistoryOpMeta>>,
 }
 
-/// @emoji 🧾 `binary` is a reserved seam — v1 always writes/reads it as `None`; see the
-/// `//#region 🔖Payloads` module note on the `op_tag` byte.
+/// @emoji 🧾 `binary` carries the `protocol_command::OpBinary` encoding of this op when the
+/// caller has one (the `.spr` binary path always sets it); `None` for text-only logs, where the
+/// op is recoverable only via `OpText::parse_op(&text)`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct OpPayload {
     pub text: String,
     pub binary: Option<Vec<u8>>,
+}
+
+/// @emoji 🎯 Undo/redo/checkout position. Carries the FULL applied-edit list (not just the tail
+/// edit id) because undo-then-apply interleavings are not representable by a single marker: an
+/// edit undone mid-history precedes later-applied edits in file order, and the redo stack can
+/// contain edits in any order relative to `applied`. `checkpoint_id` mirrors
+/// `DocumentStore::current_checkpoint_id`; the active alternative stays on the existing
+/// `HistoryLog::active_alternative_id` (unrelated lifecycle — churns far less often).
+#[derive(Clone, Debug, PartialEq, Default)]
+pub struct HistoryCursor {
+    pub applied_edit_ids: Vec<String>,
+    pub redo_edit_ids: Vec<String>,
+    pub checkpoint_id: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -126,6 +150,9 @@ const F_ALTERNATIVE_CHECKPOINTS: u16 = 2;
 const F_ACTIVE_ID: u16 = 0;
 const F_AUTHOR_ID: u16 = 0;
 const F_AUTHOR_NAME: u16 = 1;
+const F_CURSOR_APPLIED: u16 = 0;
+const F_CURSOR_REDO: u16 = 1;
+const F_CURSOR_CHECKPOINT: u16 = 2;
 
 /// @emoji 🖋️ `by=[...]` list entry twin of vcs's `OpsAuthor`: two positional fields, no keyword.
 fn author_spec() -> RecordSpec {
@@ -195,6 +222,20 @@ fn active_spec() -> RecordSpec {
     RecordSpec::new(Some("active"), RecordLayout::Inline, vec![FieldSpec::new(F_ACTIVE_ID, "", Shape::Text).positional(0)])
 }
 
+/// @emoji 🎯 `cursor applied=[...] redo=[...] checkpoint=<id>` — carries the FULL applied/redo
+/// edit-id lists (see `HistoryCursor`'s doc for why a single marker id is insufficient).
+fn cursor_spec() -> RecordSpec {
+    RecordSpec::new(
+        Some("cursor"),
+        RecordLayout::Inline,
+        vec![
+            FieldSpec::new(F_CURSOR_APPLIED, "applied", Shape::List(Box::new(Shape::Text))),
+            FieldSpec::new(F_CURSOR_REDO, "redo", Shape::List(Box::new(Shape::Text))),
+            FieldSpec::new(F_CURSOR_CHECKPOINT, "checkpoint", Shape::Text).optional(),
+        ],
+    )
+}
+
 fn record_with(fields: Vec<(u16, FieldValue)>) -> RecordValue {
     RecordValue { fields: fields.into_iter().collect() }
 }
@@ -262,6 +303,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
                 coalesce_key: header.coalesce_key,
                 description: header.description,
                 ops: std::mem::take(forwards),
+                backwards: Vec::new(),
                 meta: None,
             });
         }
@@ -329,6 +371,14 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
             "active" => {
                 let record = dsl_schema::parse(trimmed, &active_spec(), &opts).map_err(text_error_to_protocol)?;
                 log.active_alternative_id = Some(required_text(&record, F_ACTIVE_ID, "active id")?);
+            }
+            "cursor" => {
+                let record = dsl_schema::parse(trimmed, &cursor_spec(), &opts).map_err(text_error_to_protocol)?;
+                log.cursor = Some(HistoryCursor {
+                    applied_edit_ids: field_text_list(&record, F_CURSOR_APPLIED),
+                    redo_edit_ids: field_text_list(&record, F_CURSOR_REDO),
+                    checkpoint_id: field_text(&record, F_CURSOR_CHECKPOINT),
+                });
             }
             other => return Err(ProtocolError::Malformed { what: "ops text line", offset: 0, detail: format!("unknown line keyword '{other}'") }),
         }
@@ -424,6 +474,18 @@ pub fn print_ops_text(log: &HistoryLog) -> String {
         out.push('\n');
     }
 
+    if let Some(cursor) = &log.cursor {
+        let mut fields = vec![
+            (F_CURSOR_APPLIED, FieldValue::List(cursor.applied_edit_ids.iter().map(|s| FieldValue::Text(s.clone())).collect())),
+            (F_CURSOR_REDO, FieldValue::List(cursor.redo_edit_ids.iter().map(|s| FieldValue::Text(s.clone())).collect())),
+        ];
+        if let Some(checkpoint_id) = &cursor.checkpoint_id {
+            fields.push((F_CURSOR_CHECKPOINT, FieldValue::Text(checkpoint_id.clone())));
+        }
+        out.push_str(&dsl_schema::print(&record_with(fields), &cursor_spec(), JoinMode::Inline));
+        out.push('\n');
+    }
+
     out
 }
 //#endregion 🔖TextGrammar
@@ -442,10 +504,16 @@ pub fn print_ops_text(log: &HistoryLog) -> String {
 // - `encode_change`'s `edit_ordinal_of` is the only place besides `encode_edit` that genuinely
 //   references edit ids (`HistoryChange::edit_ids`); `encode_checkpoint`/`encode_alternative`/
 //   `encode_active` take no `edit_ordinal_of` since they never reference an edit.
-// - `EncodeOptions::write_backwards_section` is accepted but has no effect: `HistoryEdit` (per
-//   the Model region) carries no backward-op field to serialize (backwards is derived data,
-//   explicitly excluded), so presence bit5 is never set by this crate's writer. Readers still
-//   tolerate bit5 being set by a foreign writer (the trailing bytes are simply left unconsumed).
+// - `encode_edit` itself is data-driven: it writes presence bit5 + the backwards section iff
+//   `edit.backwards` is non-empty — real op payloads, using the same op-payload wire shape as
+//   `edit.ops` (op_tag bit1 flags a binary payload; both tags are per-payload, not per-edit, so
+//   text-only and binary-carrying ops may mix freely within one edit). `EncodeOptions::
+//   write_backwards_section` is the batch-level policy switch `encode_history` applies on top
+//   (stripping `edit.backwards` before encoding when false, even if the caller's `HistoryLog`
+//   has it populated) — `encode_edit`/`HistoryAppender::append_edit` have no such switch; a
+//   streaming caller controls persistence per edit via the data it hands in. A decoder never
+//   assumes backwards are present and always recomputes them via replay when the section (or the
+//   whole `HistoryLog`) is absent.
 // - Every `Option<T>` field not already covered by a record-level presence bitmask (i.e. every
 //   field inside one `HistoryOpMeta` entry) gets its own bitmask byte, described per-function.
 
@@ -500,10 +568,42 @@ pub fn decode_doc(payload: &[u8], dict: &DictReader) -> Result<(String, String),
 
 //#region 🔖Edit
 // REC_EDIT layout: format u8, presence u8 (bit0 actor, bit1 finished, bit2 key, bit3 description,
-// bit4 explicit_meta, bit5 has_backwards_section — always 0 on write, see module note), id,
-// started(ts), [actor(dictref)], [finished(ts)], [key(str)], [description(str)], op_count varint,
-// op_count x (op_tag u8 [bit0 has_text=1 required in v1, bit1 has_binary reserved] + text_len
-// varint + utf8), [explicit_meta iff bit4: op_count x op-meta entry (see write_op_meta)].
+// bit4 explicit_meta, bit5 has_backwards_section), id, started(ts), [actor(dictref)],
+// [finished(ts)], [key(str)], [description(str)], op_count varint, op_count x op-payload (see
+// write_op_payload: op_tag u8 [bit0 has_text=1 required in v1, bit1 has_binary] + text_len varint
+// + utf8 + [binary_len varint + bytes iff bit1]), [iff bit5: back_count varint + back_count x
+// op-payload (backwards, in apply order)], [explicit_meta iff bit4: op_count x op-meta entry (see
+// write_op_meta) — always keyed by op_count, never back_count, since meta describes the forward
+// ops only].
+
+/// @emoji 🎯 Writes one op payload: `op_tag u8 [bit0 has_text=1 required in v1, bit1 has_binary]
+/// + text_len varint + utf8 + [binary_len varint + bytes iff bit1]`. Used for both `edit.ops`
+/// and `edit.backwards` — the two sections share this exact wire shape.
+fn write_op_payload(out: &mut ByteWriter, op: &OpPayload) {
+    let tag = 0b01 | if op.binary.is_some() { 0b10 } else { 0 };
+    out.write_u8(tag);
+    write_str_field(out, &op.text);
+    if let Some(binary) = &op.binary {
+        out.write_varint_u64(binary.len() as u64);
+        out.write_bytes(binary);
+    }
+}
+
+/// @emoji 🎯 Inverse of [`write_op_payload`].
+fn read_op_payload(input: &mut ByteReader<'_>) -> Result<OpPayload, ProtocolError> {
+    let op_tag = input.read_u8()?;
+    if op_tag & 0b01 == 0 {
+        return Err(ProtocolError::Malformed { what: "op payload", offset: 0, detail: "v1 requires has_text bit set".to_string() });
+    }
+    let text = read_str_field(input)?;
+    let binary = if op_tag & 0b10 != 0 {
+        let len = input.read_varint_u64()? as usize;
+        Some(input.read_bytes(len)?.to_vec())
+    } else {
+        None
+    };
+    Ok(OpPayload { text, binary })
+}
 
 fn write_op_meta(out: &mut ByteWriter, meta: &HistoryOpMeta, dict: &mut DictBuilder, edit_ordinal_of: &dyn Fn(&str) -> Option<u64>) -> Result<(), ProtocolError> {
     let mut presence = 0u8;
@@ -586,6 +686,9 @@ pub fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordinal_of: 
     if edit.meta.is_some() {
         presence |= 1 << 4;
     }
+    if !edit.backwards.is_empty() {
+        presence |= 1 << 5;
+    }
     out.write_u8(presence);
     write_id_field(&mut out, &edit.id, dict, &|_: &str| None)?;
     let mut prev_epoch_ms = protocol_core::scalar::write_timestamp(&mut out, &edit.started_at, None);
@@ -607,8 +710,13 @@ pub fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordinal_of: 
     }
     out.write_varint_u64(edit.ops.len() as u64);
     for op in &edit.ops {
-        out.write_u8(0b01); // has_text set, has_binary reserved (v1 always None) — see module note
-        write_str_field(&mut out, &op.text);
+        write_op_payload(&mut out, op);
+    }
+    if !edit.backwards.is_empty() {
+        out.write_varint_u64(edit.backwards.len() as u64);
+        for op in &edit.backwards {
+            write_op_payload(&mut out, op);
+        }
     }
     if let Some(metas) = &edit.meta {
         if metas.len() != edit.ops.len() {
@@ -649,15 +757,21 @@ pub fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl
     }
     let mut ops = Vec::with_capacity(op_count as usize);
     for _ in 0..op_count {
-        let op_tag = input.read_u8()?;
-        if op_tag & 0b01 == 0 {
-            return Err(ProtocolError::Malformed { what: "op payload", offset: 0, detail: "v1 requires has_text bit set".to_string() });
-        }
-        if op_tag & 0b10 != 0 {
-            return Err(ProtocolError::Malformed { what: "op payload", offset: 0, detail: "binary op payloads are reserved and not yet supported".to_string() });
-        }
-        ops.push(OpPayload { text: read_str_field(&mut input)?, binary: None });
+        ops.push(read_op_payload(&mut input)?);
     }
+    let backwards = if presence & (1 << 5) != 0 {
+        let back_count = input.read_varint_u64()?;
+        if back_count > max_ops {
+            return Err(ProtocolError::LimitExceeded("edit backwards op count exceeds ProtocolLimits::max_op_count_per_edit"));
+        }
+        let mut backs = Vec::with_capacity(back_count as usize);
+        for _ in 0..back_count {
+            backs.push(read_op_payload(&mut input)?);
+        }
+        backs
+    } else {
+        Vec::new()
+    };
     let meta = if presence & (1 << 4) != 0 {
         let mut metas = Vec::with_capacity(op_count as usize);
         for _ in 0..op_count {
@@ -667,7 +781,7 @@ pub fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl
     } else {
         None
     };
-    Ok(HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, ops, meta })
+    Ok(HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, ops, backwards, meta })
 }
 //#endregion 🔖Edit
 
@@ -826,6 +940,60 @@ pub fn decode_active(payload: &[u8], dict: &DictReader) -> Result<Option<String>
     if presence & 1 != 0 { Ok(Some(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?)) } else { Ok(None) }
 }
 //#endregion 🔖Active
+
+//#region 🔖Cursor
+// Extension-range record (protocol_core's frozen kind table stays 0x00..0x12 + 0x7F; the
+// 0x40..=0x7E range is caller-defined per its `is_critical_kind` doc). Written with the critical
+// bit UNSET — a foreign/older reader skips it via the standard skip-unknown rule, exactly like
+// `REC_ACTOR_DICT` today. Last-wins: a later REC_CURSOR frame in the same file supersedes an
+// earlier one, mirroring REC_ACTIVE.
+pub const REC_CURSOR: u8 = 0x40;
+
+/// @emoji 🎯 `format u8 (=1) | presence u8 (bit0 checkpoint) | applied_count varint + id* |
+/// redo_count varint + id* | [checkpoint id]`. Edit ids go through `write_id_field` (dict +
+/// edit-ordinal refs), same as every other edit-id reference in this crate.
+pub fn encode_cursor(cursor: &HistoryCursor, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64>) -> Result<Vec<u8>, ProtocolError> {
+    let edit_ordinal_of: &dyn Fn(&str) -> Option<u64> = &edit_ordinal_of;
+    let mut out = ByteWriter::new();
+    out.write_u8(1);
+    out.write_u8(if cursor.checkpoint_id.is_some() { 1 } else { 0 });
+    out.write_varint_u64(cursor.applied_edit_ids.len() as u64);
+    for id in &cursor.applied_edit_ids {
+        write_id_field(&mut out, id, dict, edit_ordinal_of)?;
+    }
+    out.write_varint_u64(cursor.redo_edit_ids.len() as u64);
+    for id in &cursor.redo_edit_ids {
+        write_id_field(&mut out, id, dict, edit_ordinal_of)?;
+    }
+    if let Some(checkpoint_id) = &cursor.checkpoint_id {
+        write_id_field(&mut out, checkpoint_id, dict, &|_: &str| None)?;
+    }
+    Ok(out.into_bytes())
+}
+
+/// @emoji 🎯 Inverse of [`encode_cursor`].
+pub fn decode_cursor<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id: impl Fn(u64) -> Result<&'d str, ProtocolError>) -> Result<HistoryCursor, ProtocolError> {
+    let ordinal_to_id: &dyn Fn(u64) -> Result<&'d str, ProtocolError> = &ordinal_to_id;
+    let mut input = ByteReader::new(payload);
+    let format = input.read_u8()?;
+    if format > 1 {
+        return Err(malformed_fmt("cursor", format));
+    }
+    let presence = input.read_u8()?;
+    let applied_count = input.read_varint_u64()?;
+    let mut applied_edit_ids = Vec::with_capacity(applied_count as usize);
+    for _ in 0..applied_count {
+        applied_edit_ids.push(read_id_field(&mut input, dict, ordinal_to_id)?);
+    }
+    let redo_count = input.read_varint_u64()?;
+    let mut redo_edit_ids = Vec::with_capacity(redo_count as usize);
+    for _ in 0..redo_count {
+        redo_edit_ids.push(read_id_field(&mut input, dict, ordinal_to_id)?);
+    }
+    let checkpoint_id = if presence & 1 != 0 { Some(read_id_field(&mut input, dict, &|ord: u64| Err(ProtocolError::DictMiss(ord as u32)))?) } else { None };
+    Ok(HistoryCursor { applied_edit_ids, redo_edit_ids, checkpoint_id })
+}
+//#endregion 🔖Cursor
 //#endregion 🔖Payloads
 
 //#region 🔖Codec
@@ -912,7 +1080,16 @@ pub fn encode_history(log: &HistoryLog, options: &EncodeOptions) -> Result<Vec<u
 
     let ordinals: HashMap<&str, u64> = log.edits.iter().enumerate().map(|(i, e)| (e.id.as_str(), i as u64)).collect();
     for edit in &log.edits {
-        let payload = encode_edit(edit, &mut dict, |id| ordinals.get(id).copied())?;
+        // 🎯 `write_backwards_section` is a batch-level policy switch: even when `edit.backwards`
+        // is populated (e.g. by a live store that always computes it), a caller can opt out of
+        // persisting it here. `HistoryAppender::append_edit` has no such switch — its streaming,
+        // one-edit-at-a-time API gives the caller direct per-edit control via the data itself.
+        let payload = if options.write_backwards_section {
+            encode_edit(edit, &mut dict, |id| ordinals.get(id).copied())?
+        } else {
+            let stripped = HistoryEdit { backwards: Vec::new(), ..edit.clone() };
+            encode_edit(&stripped, &mut dict, |id| ordinals.get(id).copied())?
+        };
         flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
         writer.write_record(protocol_core::REC_EDIT, true, &payload, CodecId(0))?;
     }
@@ -934,6 +1111,12 @@ pub fn encode_history(log: &HistoryLog, options: &EncodeOptions) -> Result<Vec<u
     let active_payload = encode_active(log.active_alternative_id.as_deref(), &mut dict);
     flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
     writer.write_record(protocol_core::REC_ACTIVE, true, &active_payload, CodecId(0))?;
+
+    if let Some(cursor) = &log.cursor {
+        let cursor_payload = encode_cursor(cursor, &mut dict, |id| ordinals.get(id).copied())?;
+        flush_dict_delta(&mut writer, &dict, &mut dict_base)?;
+        writer.write_record(REC_CURSOR, false, &cursor_payload, CodecId(0))?;
+    }
 
     writer.commit()?;
     Ok(writer.into_sink())
@@ -976,6 +1159,10 @@ fn decode_history_from(trusted: &[u8], options: &DecodeOptions) -> Result<Histor
             protocol_core::REC_CHECKPOINT => log.checkpoints.push(decode_checkpoint(frame.payload(), &dict)?),
             protocol_core::REC_ALTERNATIVE => log.alternatives.push(decode_alternative(frame.payload(), &dict)?),
             protocol_core::REC_ACTIVE => log.active_alternative_id = decode_active(frame.payload(), &dict)?,
+            REC_CURSOR => {
+                let edit_ids_ref = &edit_ids;
+                log.cursor = Some(decode_cursor(frame.payload(), &dict, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32)))?);
+            }
             protocol_core::REC_COMMIT if full => {
                 let (commit_seq, chain_hash) = parse_commit_fields(frame.payload())?;
                 let mut concat = running_chain.to_vec();
@@ -1058,6 +1245,13 @@ impl<S: PackSink> HistoryAppender<S> {
         let payload = encode_active(alternative_id, &mut self.dict);
         flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base)?;
         self.writer.write_record(protocol_core::REC_ACTIVE, true, &payload, CodecId(0))
+    }
+
+    pub fn append_cursor(&mut self, cursor: &HistoryCursor) -> Result<u64, ProtocolError> {
+        let ordinals = &self.edit_ordinals;
+        let payload = encode_cursor(cursor, &mut self.dict, |id| ordinals.get(id).copied())?;
+        flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base)?;
+        self.writer.write_record(REC_CURSOR, false, &payload, CodecId(0))
     }
 
     pub fn commit(&mut self) -> Result<u64, ProtocolError> {
@@ -1428,6 +1622,7 @@ mod tests {
                     coalesce_key: Some("typing".to_string()),
                     description: Some("first edit".to_string()),
                     ops: vec![OpPayload { text: "set foo=1".to_string(), binary: None }, OpPayload { text: "set bar=2".to_string(), binary: None }],
+                    backwards: Vec::new(),
                     meta: None,
                 },
                 HistoryEdit {
@@ -1438,6 +1633,7 @@ mod tests {
                     coalesce_key: None,
                     description: None,
                     ops: vec![OpPayload { text: "set baz=3".to_string(), binary: None }],
+                    backwards: Vec::new(),
                     meta: Some(vec![HistoryOpMeta {
                         op_id: Some("op-1".to_string()),
                         dependencies: vec!["edit-1".to_string()],
@@ -1460,6 +1656,7 @@ mod tests {
             }],
             alternatives: vec![HistoryAlternative { id: "alt-1".to_string(), name: "main".to_string(), checkpoint_ids: vec!["ck-1".to_string()] }],
             active_alternative_id: Some("alt-1".to_string()),
+            cursor: None,
         }
     }
 
@@ -1507,6 +1704,29 @@ mod tests {
         assert!(!text.contains("active"));
         assert_eq!(parse_ops_text(&text).unwrap().active_alternative_id, None);
     }
+
+    #[test]
+    fn ops_text_round_trips_a_cursor_line_with_undo_then_apply_interleaving() {
+        let mut log = sample_log();
+        for edit in &mut log.edits {
+            edit.meta = None;
+        }
+        // A single tail-edit marker cannot represent this: edit-1 undone (moved to redo), then a
+        // later apply produced edit-2 — edit-1 precedes edit-2 in file order but is NOT applied.
+        log.cursor = Some(HistoryCursor { applied_edit_ids: vec!["edit-2".to_string()], redo_edit_ids: vec!["edit-1".to_string()], checkpoint_id: Some("ck-1".to_string()) });
+        let text = print_ops_text(&log);
+        assert!(text.contains("cursor"));
+        let parsed = parse_ops_text(&text).unwrap();
+        assert_eq!(parsed, log);
+    }
+
+    #[test]
+    fn ops_text_without_a_cursor_line_leaves_cursor_none() {
+        let log = HistoryLog { doc_id: "d".into(), schema: "s".into(), ..Default::default() };
+        let text = print_ops_text(&log);
+        assert!(!text.contains("cursor"));
+        assert_eq!(parse_ops_text(&text).unwrap().cursor, None);
+    }
     //#endregion 🔖TextGrammar
 
     //#region 🔖Payloads
@@ -1545,6 +1765,7 @@ mod tests {
             coalesce_key: None,
             description: None,
             ops: Vec::new(),
+            backwards: Vec::new(),
             meta: None,
         };
         let mut dict = DictBuilder::new();
@@ -1602,6 +1823,76 @@ mod tests {
     }
 
     #[test]
+    fn edit_payload_round_trips_a_backwards_section_mixing_text_and_binary_payloads() {
+        let edit = HistoryEdit {
+            id: "edit-y".to_string(),
+            actor: Some("bob".to_string()),
+            started_at: "2024-02-01T00:00:00Z".to_string(),
+            finished_at: Some("2024-02-01T00:00:01Z".to_string()),
+            coalesce_key: None,
+            description: None,
+            ops: vec![OpPayload { text: "set n=1".to_string(), binary: Some(vec![1, 2, 3]) }, OpPayload { text: "set n=2".to_string(), binary: None }],
+            backwards: vec![OpPayload { text: "set n=0".to_string(), binary: Some(vec![0]) }, OpPayload { text: "set n=1".to_string(), binary: None }],
+            meta: None,
+        };
+        let mut dict = DictBuilder::new();
+        let payload = encode_edit(&edit, &mut dict, |_| None).unwrap();
+        let mut reader = DictReader::new();
+        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
+        let decoded = decode_edit(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).unwrap();
+        assert_eq!(decoded, edit);
+        assert_eq!(decoded.ops[0].binary, Some(vec![1, 2, 3]));
+        assert_eq!(decoded.backwards[0].binary, Some(vec![0]));
+    }
+
+    #[test]
+    fn edit_payload_with_empty_backwards_omits_the_section_and_decodes_empty() {
+        let edit = HistoryEdit {
+            id: "edit-z".to_string(),
+            actor: None,
+            started_at: "2024-02-01T00:00:00Z".to_string(),
+            finished_at: None,
+            coalesce_key: None,
+            description: None,
+            ops: vec![OpPayload { text: "noop".to_string(), binary: None }],
+            backwards: Vec::new(),
+            meta: None,
+        };
+        let mut dict = DictBuilder::new();
+        let payload = encode_edit(&edit, &mut dict, |_| None).unwrap();
+        // presence byte is the 2nd byte (offset 1); bit5 (0x20) must be unset when backwards is empty.
+        assert_eq!(payload[1] & 0b0010_0000, 0, "bit5 must be unset for empty backwards");
+        let mut reader = DictReader::new();
+        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
+        let decoded = decode_edit(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).unwrap();
+        assert_eq!(decoded.backwards, Vec::new());
+    }
+
+    #[test]
+    fn cursor_payload_round_trips_with_dict_and_ordinal_refs() {
+        let cursor = HistoryCursor { applied_edit_ids: vec!["edit-1".to_string(), "edit-2".to_string()], redo_edit_ids: vec!["edit-3".to_string()], checkpoint_id: Some("ck-1".to_string()) };
+        let mut dict = DictBuilder::new();
+        let ordinals: HashMap<&str, u64> = [("edit-1", 0u64), ("edit-2", 1u64)].into_iter().collect();
+        let payload = encode_cursor(&cursor, &mut dict, |id| ordinals.get(id).copied()).unwrap();
+        let mut reader = DictReader::new();
+        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
+        let edit_ids = ["edit-1".to_string(), "edit-2".to_string()];
+        let decoded = decode_cursor(&payload, &reader, |ord| edit_ids.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).unwrap();
+        assert_eq!(decoded, cursor);
+    }
+
+    #[test]
+    fn cursor_payload_round_trips_without_a_checkpoint() {
+        let cursor = HistoryCursor { applied_edit_ids: Vec::new(), redo_edit_ids: Vec::new(), checkpoint_id: None };
+        let mut dict = DictBuilder::new();
+        let payload = encode_cursor(&cursor, &mut dict, |_| None).unwrap();
+        let mut reader = DictReader::new();
+        reader.extend(0, dict.entries_since(0).to_vec()).unwrap();
+        let decoded = decode_cursor(&payload, &reader, |ord| Err(ProtocolError::DictMiss(ord as u32))).unwrap();
+        assert_eq!(decoded, cursor);
+    }
+
+    #[test]
     fn decode_rejects_unsupported_format() {
         let payload = vec![2u8, 0, 0];
         let dict = DictReader::new();
@@ -1651,6 +1942,30 @@ mod tests {
         let result = decode_history(&bytes, &options);
         assert!(result.is_err() || result.unwrap() != log);
     }
+
+    #[test]
+    fn history_round_trips_backwards_and_binary_payloads_and_cursor_when_write_backwards_section_is_set() {
+        let mut log = sample_log();
+        log.edits[0].backwards = vec![OpPayload { text: "unset foo".to_string(), binary: Some(vec![9, 9]) }, OpPayload { text: "unset bar".to_string(), binary: None }];
+        log.edits[1].ops[0].binary = Some(vec![7]);
+        log.cursor = Some(HistoryCursor { applied_edit_ids: vec!["edit-1".to_string(), "edit-2".to_string()], redo_edit_ids: Vec::new(), checkpoint_id: Some("ck-1".to_string()) });
+        let options = EncodeOptions { write_backwards_section: true, ..EncodeOptions::default() };
+        let bytes = encode_history(&log, &options).unwrap();
+        let decoded = decode_history(&bytes, &DecodeOptions::default()).unwrap();
+        assert_eq!(decoded, log);
+        assert_eq!(decoded.edits[0].backwards[0].binary, Some(vec![9, 9]));
+        assert_eq!(decoded.edits[1].ops[0].binary, Some(vec![7]));
+        assert_eq!(decoded.cursor, log.cursor);
+    }
+
+    #[test]
+    fn history_strips_backwards_when_write_backwards_section_is_unset_even_if_populated() {
+        let mut log = sample_log();
+        log.edits[0].backwards = vec![OpPayload { text: "unset foo".to_string(), binary: None }];
+        let bytes = encode_history(&log, &EncodeOptions::default()).unwrap();
+        let decoded = decode_history(&bytes, &DecodeOptions::default()).unwrap();
+        assert_eq!(decoded.edits[0].backwards, Vec::new(), "write_backwards_section defaults false and must strip populated backwards");
+    }
     //#endregion 🔖Codec
 
     //#region 🔖Append
@@ -1677,6 +1992,26 @@ mod tests {
 
         let decoded = decode_history(&streamed_bytes, &DecodeOptions::default()).unwrap();
         assert_eq!(decoded, log);
+    }
+
+    #[test]
+    fn append_cursor_then_decode_recovers_it() {
+        let mut log = sample_log();
+        for edit in &mut log.edits {
+            edit.meta = None;
+        }
+        let cursor = HistoryCursor { applied_edit_ids: vec!["edit-1".to_string()], redo_edit_ids: vec!["edit-2".to_string()], checkpoint_id: Some("ck-1".to_string()) };
+        let options = WriteOptions { required_flags: protocol_core::REQUIRED_HASH_CHAIN, optional_flags: protocol_core::OPTIONAL_CANONICAL };
+        let mut appender = HistoryAppender::begin(Vec::<u8>::new(), &log.doc_id, &log.schema, &options).unwrap();
+        for edit in &log.edits {
+            appender.append_edit(edit).unwrap();
+        }
+        appender.append_cursor(&cursor).unwrap();
+        appender.commit().unwrap();
+        let bytes = appender.into_sink();
+
+        let decoded = decode_history(&bytes, &DecodeOptions::default()).unwrap();
+        assert_eq!(decoded.cursor, Some(cursor));
     }
     //#endregion 🔖Append
 

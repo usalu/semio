@@ -295,7 +295,7 @@ impl Operation<SStudioProjection> for StudioOperation {
 }
 
 pub fn materialize_studio_projection(document: &SStudioDocument, applied_edit_ids: &[String]) -> Result<SStudioProjection, VcsError> {
-    let envelope = SStudioEnvelope { schema: document.schema.clone(), id: document.id.clone(), vcs: document.vcs.clone(), backbone: document.backbone.clone(), active_alternative_id: None };
+    let envelope = SStudioEnvelope { schema: document.schema.clone(), id: document.id.clone(), vcs: document.vcs.clone(), backbone: document.backbone.clone(), active_alternative_id: None, cursor: None };
     materialize_document_projection(&envelope, applied_edit_ids)
 }
 //#endregion 🔖Projection
@@ -321,7 +321,7 @@ pub struct StudioStore {
 
 impl StudioStore {
     pub fn new(document: SStudioDocument) -> Self {
-        let envelope = SStudioEnvelope { schema: document.schema, id: document.id, vcs: document.vcs, backbone: document.backbone, active_alternative_id: None };
+        let envelope = SStudioEnvelope { schema: document.schema, id: document.id, vcs: document.vcs, backbone: document.backbone, active_alternative_id: None, cursor: None };
         Self { inner: DocumentStore::new(envelope), name: document.name }
     }
 

@@ -33,7 +33,6 @@ use os_hub_directory::HubDirectory;
 use os_hub_directory_sqlite::SqliteDirectory;
 use protocol::{AckStage, ActorId, ApplyOutcome, ClientFrame, DocumentId as ProtocolDocumentId, Lane, OperationEnvelope, RuntimeFrontierSummary, ServerFrame, decode_client_frame, encode_server_frame};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -93,7 +92,7 @@ struct HubState {
     fanout: Arc<DashMap<String, broadcast::Sender<ServerFrame>>>,
     /// @emoji 👥 `(scope_key, actor)` -> that actor's last-published presence peer JSON — ephemeral,
     /// never durable (mirrors the preview lane's own law), rebuilt from nothing on hub restart.
-    presence: Arc<DashMap<(String, String), Value>>,
+    presence: Arc<DashMap<(String, String), String>>,
 }
 
 impl HubState {
@@ -105,7 +104,7 @@ impl HubState {
         self.fanout.entry(key.to_string()).or_insert(tx).clone()
     }
 
-    fn presence_peers(&self, key: &str) -> Vec<Value> {
+    fn presence_peers(&self, key: &str) -> Vec<String> {
         self.presence.iter().filter(|entry| entry.key().0 == key).map(|entry| entry.value().clone()).collect()
     }
 
@@ -426,9 +425,9 @@ async fn handle_client_frame(
             let _ = fanout.send(ServerFrame::Preview { actor: actor.clone(), key: preview_key, seq, payload });
             true
         }
-        ClientFrame::Presence { peer } => {
-            state.presence.insert((key.to_string(), actor.0.clone()), peer);
-            let _ = fanout.send(ServerFrame::Presence { peers: state.presence_peers(key) });
+        ClientFrame::Presence { peer_json } => {
+            state.presence.insert((key.to_string(), actor.0.clone()), peer_json);
+            let _ = fanout.send(ServerFrame::Presence { peers_json: state.presence_peers(key) });
             true
         }
         // 🪙 Command-lane credit-based flow control: no server-side congestion control implemented
@@ -538,7 +537,7 @@ async fn handle_ws(socket: WebSocket, studio_id: String, document_id: String, st
         let _ = state.directory.record_sync_session_close(&session.id).await;
     }
     state.presence.remove(&(key.clone(), actor.0.clone()));
-    let _ = fanout.send(ServerFrame::Presence { peers: state.presence_peers(&key) });
+    let _ = fanout.send(ServerFrame::Presence { peers_json: state.presence_peers(&key) });
 }
 //#endregion 🔖WebSocket
 
@@ -680,8 +679,14 @@ mod tests {
             document_id: document.clone(),
             actor: ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff { schema: "generic".to_string(), payload: serde_json::json!({ "value": id }) },
-            inverse: protocol::InverseOperation { schema: "generic".to_string(), inverse_diff: serde_json::json!({}) },
+            diff: protocol::DocumentDiff {
+                schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()),
+                payload: serde_json::to_vec(&serde_json::json!({ "value": id })).unwrap(),
+            },
+            inverse: protocol::InverseOperation {
+                schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()),
+                payload: serde_json::to_vec(&serde_json::json!({})).unwrap(),
+            },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }

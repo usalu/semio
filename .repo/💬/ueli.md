@@ -345,9 +345,23 @@ Update tree to not have sections but every section should have a tree. A tab sho
 
 TODO: Add roomie to discord for verification
 
-TODO: Start new project `elements` that offers domain-agnostic primitives (such as multi-lingual ui and cross-plattform desktop with App for multi-device, multi-window ui where sketchpad/coda can use all primitive functionality. Introduce sidebar (no need for mobile support) for system trays, companions and side panels e.g. rhino plugin)
+TODO: Start new project `elements` that offers domain-agnostic primitives (such as multi-lingual ui and cross-plattform desktop with App for multi-device, multi-window ui where sketchpad/coda can use all primitive functionality. Introduce sidebar (no need for mobile support) for system trays, companions and side panels e.g. rhino plugin)t
 
 ##
+
+---
+
+The final goal for s is to capture design knowledge.
+This involves two parts:
+- library 
+  - collection (static knowledge through a tree of puzzles, meshes, breps, layouts, flows, files, etc)
+    - Exportable and importable as zip file
+  - workflows (dynamic knowledge through editable non-destructive media pipelines of connected apps)
+  - Input is a collection and flow parameters and output is a collection
+A studio is a shared library.
+All apps are accessible over a node in the workflow.
+All apps are nondestructive.
+All apps have a core library that computes headlessly and a ui to visualize and edit configuration of the app node.
 
 ---
 
@@ -393,7 +407,13 @@ Create a general fullblown feature-complete rust crate and exhaustively refactor
 Plan clean mechanisms and refactor all technologies. Then use a workforce of parallel agents to implement it everywhere /workflows.
 Everything end to end.
 
---- 
+---
+
+Every app must define its own handcrafted protocol for all commands. Implement programatic command builders that build the correct bytes.
+The bytes MUST NOT be a banal structured representation such as json but a highely app-specific protoctol with bidirectional communication, streaming support, optimized layouts, etc
+Plan clean mechanisms and refactor all technologies. Then use a workforce of parallel agents to implement it everywhere /workflows.
+
+---
 
 Introduce a new layer into every app along with the mechanisms around it: protocol
 Currently every app uses text-based ops (handcrafted representations for a commands with custom syntax, etc) to interact with the document. Instead use a heavily optimized binary format (streaming support, optimized layouts, etc). Every app defines its own handcrafted protocol format. Integrate it with vcs history-based materalization with pack.
@@ -660,6 +680,10 @@ This MUST NOT happen.
 ## ui
 
 ###
+
+---
+
+The ui state must be encoded in a single shared byte buffer between the framework and the renderer.
 
 ---
 

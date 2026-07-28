@@ -8882,7 +8882,13 @@ function windowSilhouetteRectOnDock(stackRect: DOMRect, rect: DOMRect, dock: "to
   return dock === "top" ? rect.top - stackRect.top <= WINDOW_SILHOUETTE_CHIP_EPSILON : stackRect.bottom - rect.bottom <= WINDOW_SILHOUETTE_CHIP_EPSILON;
 }
 
-/** @emoji 🪟 Reads live silhouette metrics from painted chip spans grouped by `data-dock` (works for RTL caps and bottom-docked panels). */
+/** @emoji 🪟 Whether `element` belongs to `stack`'s own chrome — nested pane/panel `[data-window-silhouette]` hosts (e.g. projection) keep their chips out of the enclosing window outline so the window bottom stays rectangular while those panes overlay like window options. */
+function windowSilhouetteOwnsElement(stack: HTMLElement, element: Element): boolean {
+  const owner = element.closest("[data-window-silhouette]");
+  return owner === null || owner === stack;
+}
+
+/** @emoji 🪟 Reads live silhouette metrics from painted chip spans grouped by `data-dock` (works for RTL caps and bottom-docked panels). Nested silhouette chips are ignored — see {@link windowSilhouetteOwnsElement}. */
 export function measureWindowSilhouetteMetrics(stack: HTMLElement): WindowSilhouetteMetrics | null {
   const stackRect = stack.getBoundingClientRect();
   const width = stackRect.width;
@@ -8892,18 +8898,22 @@ export function measureWindowSilhouetteMetrics(stack: HTMLElement): WindowSilhou
     const chips: WindowSilhouetteChip[] = [];
     let depth = 0;
     for (const chip of stack.querySelectorAll<HTMLElement>(`[data-window-silhouette-chip][data-dock="${dock}"]`)) {
+      if (!windowSilhouetteOwnsElement(stack, chip)) continue;
       const rect = chip.getBoundingClientRect();
       if (rect.width <= WINDOW_SILHOUETTE_CHIP_EPSILON || rect.height <= WINDOW_SILHOUETTE_CHIP_EPSILON) continue;
       chips.push({ left: rect.left - stackRect.left, right: rect.right - stackRect.left });
       depth = Math.max(depth, rect.height);
     }
     for (const gap of stack.querySelectorAll<HTMLElement>(WINDOW_CHROME_GAP_SELECTOR)) {
+      if (!windowSilhouetteOwnsElement(stack, gap)) continue;
       const gapRect = gap.getBoundingClientRect();
       if (gapRect.height > WINDOW_SILHOUETTE_CHIP_EPSILON && windowSilhouetteRectOnDock(stackRect, gapRect, dock)) depth = Math.max(depth, gapRect.height);
     }
-    const cap = stack.querySelector<HTMLElement>(WINDOW_CHROME_CAP_SELECTOR);
-    const capRect = cap?.getBoundingClientRect();
-    if (capRect && capRect.height > WINDOW_SILHOUETTE_CHIP_EPSILON && windowSilhouetteRectOnDock(stackRect, capRect, dock)) depth = Math.max(depth, capRect.height);
+    for (const cap of stack.querySelectorAll<HTMLElement>(WINDOW_CHROME_CAP_SELECTOR)) {
+      if (!windowSilhouetteOwnsElement(stack, cap)) continue;
+      const capRect = cap.getBoundingClientRect();
+      if (capRect.height > WINDOW_SILHOUETTE_CHIP_EPSILON && windowSilhouetteRectOnDock(stackRect, capRect, dock)) depth = Math.max(depth, capRect.height);
+    }
     return { depth, chips: normalizeWindowSilhouetteChips(chips, 0, width) };
   };
   return { width, height, top: measureEdge("top"), bottom: measureEdge("bottom") };
@@ -37154,6 +37164,55 @@ if (treeVitest) {
           bottom: { depth: 24, chips: [{ left: 0, right: 60 }, { left: 160, right: 200 }] },
         }),
       );
+    });
+
+    it("measureWindowSilhouetteMetrics ignores nested pane silhouette chips so the window bottom stays rectangular", () => {
+      const stack = document.createElement("div");
+      stack.setAttribute("data-window-silhouette", "");
+      stack.setAttribute("data-slot", "mode-dock-stack");
+      stack.innerHTML = `
+        <div data-slot="mode-dock-tabbar">
+          <div data-slot="mode-dock-tab-cap" data-window-silhouette-chip data-dock="top"></div>
+          <div data-slot="mode-dock-tab-gap"></div>
+          <div data-slot="mode-dock-controls-cap" data-window-silhouette-chip data-dock="top"></div>
+        </div>
+        <div data-slot="mode-dock-stack-body">
+          <div data-window-silhouette data-slot="window-chrome-stack">
+            <div data-slot="window-chrome-chip-cap" data-window-silhouette-chip data-dock="bottom"></div>
+            <div data-slot="window-chrome-gap"></div>
+            <div data-slot="window-chrome-controls" data-window-silhouette-chip data-dock="bottom"></div>
+          </div>
+        </div>
+      `;
+      const mockRect = (el: Element | null, rect: Partial<DOMRect>) => {
+        if (!(el instanceof HTMLElement)) return;
+        vi.spyOn(el, "getBoundingClientRect").mockReturnValue({
+          x: rect.left ?? 0,
+          y: rect.top ?? 0,
+          top: rect.top ?? 0,
+          left: rect.left ?? 0,
+          bottom: rect.bottom ?? 0,
+          right: rect.right ?? 0,
+          width: rect.width ?? 0,
+          height: rect.height ?? 0,
+          toJSON: () => ({}),
+          ...rect,
+        } as DOMRect);
+      };
+      mockRect(stack, { width: 200, height: 100, right: 200, bottom: 100 });
+      mockRect(stack.querySelector('[data-slot="mode-dock-tab-cap"]'), { left: 0, right: 60, width: 60, height: 24, top: 0, bottom: 24 });
+      mockRect(stack.querySelector('[data-slot="mode-dock-tab-gap"]'), { left: 60, right: 160, width: 100, height: 24, top: 0, bottom: 24 });
+      mockRect(stack.querySelector('[data-slot="mode-dock-controls-cap"]'), { left: 160, right: 200, width: 40, height: 24, top: 0, bottom: 24 });
+      mockRect(stack.querySelector('[data-slot="mode-dock-tabbar"]'), { left: 0, right: 200, width: 200, height: 24, top: 0, bottom: 24 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-chip-cap"]'), { left: 140, right: 200, width: 60, height: 24, top: 76, bottom: 100 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-gap"]'), { left: 0, right: 140, width: 140, height: 24, top: 76, bottom: 100 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-controls"]'), { left: 0, right: 0, width: 0, height: 24, top: 76, bottom: 100 });
+      expect(measureWindowSilhouetteMetrics(stack)).toEqual({
+        width: 200,
+        height: 100,
+        top: { depth: 24, chips: [{ left: 0, right: 60 }, { left: 160, right: 200 }] },
+        bottom: { depth: 0, chips: [] },
+      });
     });
 
     it("bottom-anchored panels stamp capDock=bottom on WindowChrome and keep rtl on the panel root for top-right", () => {

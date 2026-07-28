@@ -27,26 +27,30 @@
 //! is fully real: `db_core::ResumeToken::encode` is public and exercised end to end.
 
 //#region 🔖Codec
-/// @emoji ✉️ This crate's own convention for `db_wal::WalRecord::Command`'s payload bytes: a
-/// `serde_json`-encoded `protocol::OperationEnvelope` (matching `protocol_wire`'s own body
-/// encoding, since `OperationEnvelope` only derives `serde` traits — no bincode-shaped layout
-/// exists elsewhere in the family for it). `db_wal` itself never interprets these bytes (per the
-/// contract, no crate below `db_document` does); this crate is the first one that needs to read a
-/// command's bytes back out semantically (to relay it as a typed `protocol::OperationEnvelope` in
-/// a `ServerFrame::Commands`), so it is the natural place to fix this convention. Once
-/// `db_document` lands it becomes the writer of these bytes; this codec is the seam it should
-/// reuse rather than inventing a second one.
+/// @emoji ✉️ This crate's own convention for `db_wal::WalRecord::Command`'s payload bytes:
+/// `protocol_causal::encode_envelope`'s binary record — the same primitive codec `protocol_wire`
+/// uses for `ClientFrame::Commands`/`ServerFrame::Commands`, so a WAL command's bytes are
+/// byte-identical to its on-wire form (M-C's "communication AND storage both binary"). `db_wal`
+/// itself never interprets these bytes (per the contract, no crate below `db_document` does);
+/// this crate is the first one that needs to read a command's bytes back out semantically (to
+/// relay it as a typed `protocol::OperationEnvelope` in a `ServerFrame::Commands`), so it is the
+/// natural place to fix this convention. Once `db_document` lands it becomes the writer of these
+/// bytes; this codec is the seam it should reuse rather than inventing a second one.
 pub fn encode_command_envelope(envelope: &protocol::OperationEnvelope) -> Vec<u8> {
-    serde_json::to_vec(envelope).expect("OperationEnvelope is always json-serializable")
+    let mut out = Vec::new();
+    protocol::encode_envelope(envelope, &mut out);
+    out
 }
 
 /// @emoji 📖 Inverse of `encode_command_envelope`. Validates the byte length against
-/// `db_core::DbLimits::default().max_command_bytes` BEFORE `serde_json` allocates anything sized
-/// by it (mirrors `pack_core`'s stated invariant), then maps a decode failure to
-/// `DbError::Corrupt` rather than leaking `serde_json::Error`.
+/// `db_core::DbLimits::default().max_command_bytes` BEFORE decoding anything sized by it (mirrors
+/// `pack_core`'s stated invariant), then maps a decode failure to `DbError::Corrupt` rather than
+/// leaking `protocol::ProtocolError`.
 pub fn decode_command_envelope(bytes: &[u8]) -> Result<protocol::OperationEnvelope, db_core::DbError> {
     db_core::check_len(bytes.len() as u64, db_core::DbLimits::default().max_command_bytes, "wal_command_envelope")?;
-    serde_json::from_slice(bytes).map_err(|error| db_core::DbError::Corrupt(format!("malformed wal command envelope: {error}")))
+    let mut pos = 0usize;
+    let envelope = protocol::decode_envelope(bytes, &mut pos).map_err(|error| db_core::DbError::Corrupt(format!("malformed wal command envelope: {error}")))?;
+    Ok(envelope)
 }
 //#endregion 🔖Codec
 
@@ -362,8 +366,8 @@ mod tests {
             document_id: protocol::DocumentId("doc-1".to_string()),
             actor: protocol::ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff { schema: "diff.v1".to_string(), payload: serde_json::json!({"seq": seq}) },
-            inverse: protocol::InverseOperation { schema: "diff.v1".to_string(), inverse_diff: serde_json::json!({}) },
+            diff: protocol::DocumentDiff { schema: protocol::SchemaId("diff.v1".to_string()), payload: seq.to_le_bytes().to_vec() },
+            inverse: protocol::InverseOperation { schema: protocol::SchemaId("diff.v1".to_string()), payload: Vec::new() },
             timestamp: protocol::HybridLogicalTimestamp::new(1, seq),
         }
     }

@@ -468,6 +468,18 @@ impl OpText for Process3dOperation {
         <Process3dOperationDsl as OpText>::print_op(&process3d_operation_to_dsl(self))
     }
 }
+
+/// ⚡ Binary mirror of the `OpText` bridge above — `Process3dOperationDsl` already derives
+/// `OpBinary` via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+impl protocol::OpBinary for Process3dOperation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        process3d_operation_to_dsl(self).encode_op()
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        Ok(process3d_operation_from_dsl(Process3dOperationDsl::decode_op(bytes)?))
+    }
+}
 //#endregion 🔖OpText
 
 //#region 🔖WasmBridge

@@ -935,6 +935,18 @@ impl protocol::OpText for ShootingOperation {
         <ShootingOperationDsl as protocol::OpText>::print_op(&shooting_operation_to_dsl(self))
     }
 }
+
+/// @emoji 🎞️ Binary mirror of the `OpText` bridge above — `ShootingOperationDsl` already derives
+/// `OpBinary` via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+impl protocol::OpBinary for ShootingOperation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        shooting_operation_to_dsl(self).encode_op()
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        Ok(shooting_operation_from_dsl(ShootingOperationDsl::decode_op(bytes)?))
+    }
+}
 //#endregion 🔖OpText
 
 //#region 🔖WasmBridge

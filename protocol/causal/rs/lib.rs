@@ -14,7 +14,18 @@
 // (InverseOperation). The frozen contract's field shapes are simpler than the framework-core
 // originals (no `schema_version`/`payload_hash` on the envelope, no `target_operation`/
 // `base_version`/`dependencies`/`undo_policy` on the inverse) — implemented exactly as specified
-// below; diff/inverse stay schema-erased (`serde_json::Value` payload).
+// below.
+//
+// 🎯 W5: `payload`/`inverse_diff` flip from `serde_json::Value` to opaque `Vec<u8>` — the binary
+// twin of an operation crossing the wire, matching M-C's "communication AND storage both binary"
+// requirement. `payload` is the `protocol_command::OpBinary` encoding of the op (or a
+// producer-defined encoding named by `schema` for a non-typed-op payload, e.g. `db`'s pathmap
+// convention); `schema` is a real `protocol_core::SchemaId`, no longer a `std::any::type_name`
+// placeholder (see `🔖Bridge` below). `InverseOperation.inverse_diff` is renamed to `payload` for
+// the same reason `DocumentDiff.payload` is named `payload`, not `diff` — both now hold the same
+// kind of thing (an encoded op), not a structural diff. Both fields still carry
+// `serde::Serialize`/`Deserialize` for the WIT/backbone JSON seam (a `Vec<u8>` serializes as a
+// JSON number array there — acceptable by design, that seam stays JSON per M-C).
 
 /// @emoji ✉️ A causally-ordered operation crossing the wire: identity, actor, dependency set, the
 /// forward diff, its precomputed inverse, and the HLC tick it was authored at.
@@ -29,18 +40,18 @@ pub struct OperationEnvelope {
     pub timestamp: protocol_core::HybridLogicalTimestamp,
 }
 
-/// @emoji 🧮 A schema-tagged, opaque forward diff payload.
+/// @emoji 🧮 A schema-tagged, opaque binary forward-op payload.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct DocumentDiff {
-    pub schema: String,
-    pub payload: serde_json::Value,
+    pub schema: protocol_core::SchemaId,
+    pub payload: Vec<u8>,
 }
 
-/// @emoji ↩️ A schema-tagged, opaque inverse diff payload.
+/// @emoji ↩️ A schema-tagged, opaque binary inverse-op payload.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct InverseOperation {
-    pub schema: String,
-    pub inverse_diff: serde_json::Value,
+    pub schema: protocol_core::SchemaId,
+    pub payload: Vec<u8>,
 }
 //#endregion 🔖Envelope
 
@@ -250,20 +261,29 @@ pub trait OperationTransform<P>: protocol_command::Operation<P> {
 // only works because `Op: protocol_command::Operation<P>` supplies each op's own
 // `operation_id`/`dependencies`/`author_id`/`timestamp` via trait methods, no base `P` needed.
 //
-// 🎯 Design choices (genuine ambiguity the contract leaves to the implementer): (1) `edit.forwards`
-// is zipped index-wise with `edit.operation_meta` (the richer, already-computed per-op metadata a
-// live appender fills in) with a documented fallback chain: `operation_meta[i]` field, else the
-// `Op` trait method, else a structural default (`{edit.id}#{i}` for the id, `edit.actor` or
-// `"unknown"` for the actor, `HybridLogicalTimestamp::new(0, 0)` for the timestamp) so this
-// function is total even for a bare-bones `Edit` with no explicit meta. (2) `edit.backwards[i]` is
-// this op's per-index inverse (absent if the backwards vec is shorter, mirroring
-// `protocol_history::HistoryEdit`'s note that "backward op count may differ from forward"), so
-// `inverse_diff` is `Value::Null` past the end of `backwards` rather than an error. (3) `diff.schema`
-// / `inverse.schema` use `std::any::type_name::<Op>()` — the only stable per-`Op`-type tag
-// available in a fully generic bridge fn with no `OperationDescriptor` lookup in scope; a caller
-// wanting a real `SchemaId` should overwrite the field after the call.
-pub fn operation_envelope_from_edit<P, Op: protocol_command::Operation<P>>(edit: &protocol_command::Edit<Op>, document_id: &protocol_core::DocumentId) -> Vec<OperationEnvelope> {
-    let schema = std::any::type_name::<Op>().to_string();
+// 🎯 W5: payloads flip from `serde_json::to_value` to `OpBinary::encode_op` (new `Op: OpBinary`
+// bound — every real op type has had this since W2's derive flip), so the function becomes
+// fallible (`Result<Vec<OperationEnvelope>, ProtocolError>`, one encode failure aborts the whole
+// batch — an op that can't encode is a hard error, not a partial envelope). `schema` is now a
+// caller-supplied real `protocol_core::SchemaId` (new parameter) instead of
+// `std::any::type_name::<Op>()` — the type-name placeholder was never a stable/meaningful tag
+// across a process boundary; callers already know their document's schema string (it's what they
+// register a `DocumentCodec` under). `inverse.payload` is an empty `Vec<u8>` past the end of
+// `edit.backwards` (was `Value::Null`) — still the same "shorter backwards vec is not an error"
+// contract, just spelled in the new payload type.
+//
+// 🎯 Design choices (genuine ambiguity the contract leaves to the implementer, unchanged from the
+// original wave): `edit.forwards` is zipped index-wise with `edit.operation_meta` (the richer,
+// already-computed per-op metadata a live appender fills in) with a documented fallback chain:
+// `operation_meta[i]` field, else the `Op` trait method, else a structural default
+// (`{edit.id}#{i}` for the id, `edit.actor` or `"unknown"` for the actor,
+// `HybridLogicalTimestamp::new(0, 0)` for the timestamp) so this function is total (modulo encode
+// failure) even for a bare-bones `Edit` with no explicit meta.
+pub fn operation_envelope_from_edit<P, Op: protocol_command::Operation<P> + protocol_command::OpBinary>(
+    edit: &protocol_command::Edit<Op>,
+    document_id: &protocol_core::DocumentId,
+    schema: &protocol_core::SchemaId,
+) -> Result<Vec<OperationEnvelope>, protocol_core::ProtocolError> {
     edit.forwards
         .iter()
         .enumerate()
@@ -279,21 +299,104 @@ pub fn operation_envelope_from_edit<P, Op: protocol_command::Operation<P>>(edit:
                 .or_else(|| op.author_id())
                 .unwrap_or_else(|| protocol_core::ActorId(edit.actor.clone().unwrap_or_else(|| "unknown".to_string())));
             let timestamp = meta.map(|m| m.timestamp).or_else(|| op.timestamp()).unwrap_or_else(|| protocol_core::HybridLogicalTimestamp::new(0, 0));
-            let payload = serde_json::to_value(op).unwrap_or(serde_json::Value::Null);
-            let inverse_payload = edit.backwards.get(index).map_or(serde_json::Value::Null, |inverse_op| serde_json::to_value(inverse_op).unwrap_or(serde_json::Value::Null));
-            OperationEnvelope {
+            let payload = op.encode_op()?;
+            let inverse_payload = edit.backwards.get(index).map(protocol_command::OpBinary::encode_op).transpose()?.unwrap_or_default();
+            Ok(OperationEnvelope {
                 operation_id,
                 document_id: document_id.clone(),
                 actor,
                 dependencies,
                 diff: DocumentDiff { schema: schema.clone(), payload },
-                inverse: InverseOperation { schema: schema.clone(), inverse_diff: inverse_payload },
+                inverse: InverseOperation { schema: schema.clone(), payload: inverse_payload },
                 timestamp,
-            }
+            })
         })
         .collect()
 }
 //#endregion 🔖Bridge
+
+//#region 🔖EnvelopeCodec
+/// @emoji 🎞️ Binary record codec for `OperationEnvelope`/`FrontierSummary`, built on
+/// `protocol_core::🔖WireCodec`'s primitives — the storage/wire form `protocol_wire`'s frames
+/// embed and `db_sync`'s WAL uses directly (see the amendment's "storage AND communication both
+/// binary" requirement). Field declaration order, no tags — the same convention `dsl::op_rt` and
+/// `protocol_core::WireCodec` both use.
+fn encode_hlc(out: &mut Vec<u8>, hlt: &protocol_core::HybridLogicalTimestamp) {
+    protocol_core::write_varint_u64(out, hlt.actor);
+    protocol_core::write_varint_u64(out, hlt.physical_ms);
+    protocol_core::write_varint_u64(out, hlt.logical);
+}
+
+fn decode_hlc(bytes: &[u8], pos: &mut usize) -> Result<protocol_core::HybridLogicalTimestamp, protocol_core::ProtocolError> {
+    let actor = protocol_core::read_varint_u64(bytes, pos)?;
+    let physical_ms = protocol_core::read_varint_u64(bytes, pos)?;
+    let logical = protocol_core::read_varint_u64(bytes, pos)?;
+    Ok(protocol_core::HybridLogicalTimestamp { actor, physical_ms, logical })
+}
+
+/// @emoji 🎯 `operation_id str | document_id str | actor str | dependencies vec<str> |
+/// diff.schema str | diff.payload bytes | inverse.schema str | inverse.payload bytes | hlc`.
+pub fn encode_envelope(envelope: &OperationEnvelope, out: &mut Vec<u8>) {
+    protocol_core::write_str(out, &envelope.operation_id.0);
+    protocol_core::write_str(out, &envelope.document_id.0);
+    protocol_core::write_str(out, &envelope.actor.0);
+    protocol_core::write_varint_u64(out, envelope.dependencies.len() as u64);
+    for dependency in &envelope.dependencies {
+        protocol_core::write_str(out, &dependency.0);
+    }
+    protocol_core::write_str(out, &envelope.diff.schema.0);
+    protocol_core::write_bytes(out, &envelope.diff.payload);
+    protocol_core::write_str(out, &envelope.inverse.schema.0);
+    protocol_core::write_bytes(out, &envelope.inverse.payload);
+    encode_hlc(out, &envelope.timestamp);
+}
+
+/// @emoji 🎯 Inverse of [`encode_envelope`].
+pub fn decode_envelope(bytes: &[u8], pos: &mut usize) -> Result<OperationEnvelope, protocol_core::ProtocolError> {
+    let operation_id = protocol_core::OperationId(protocol_core::read_str(bytes, pos)?);
+    let document_id = protocol_core::DocumentId(protocol_core::read_str(bytes, pos)?);
+    let actor = protocol_core::ActorId(protocol_core::read_str(bytes, pos)?);
+    let dependency_count = protocol_core::read_varint_u64(bytes, pos)?;
+    let mut dependencies = Vec::with_capacity(dependency_count as usize);
+    for _ in 0..dependency_count {
+        dependencies.push(protocol_core::OperationId(protocol_core::read_str(bytes, pos)?));
+    }
+    let diff_schema = protocol_core::SchemaId(protocol_core::read_str(bytes, pos)?);
+    let diff_payload = protocol_core::read_bytes(bytes, pos)?;
+    let inverse_schema = protocol_core::SchemaId(protocol_core::read_str(bytes, pos)?);
+    let inverse_payload = protocol_core::read_bytes(bytes, pos)?;
+    let timestamp = decode_hlc(bytes, pos)?;
+    Ok(OperationEnvelope {
+        operation_id,
+        document_id,
+        actor,
+        dependencies,
+        diff: DocumentDiff { schema: diff_schema, payload: diff_payload },
+        inverse: InverseOperation { schema: inverse_schema, payload: inverse_payload },
+        timestamp,
+    })
+}
+
+/// @emoji 🎯 `document_id str | head_edit_ordinal varint | head_edit_id str | last_commit_seq
+/// varint | chain_hash 32`.
+pub fn encode_frontier(f: &FrontierSummary, out: &mut Vec<u8>) {
+    protocol_core::write_str(out, &f.document_id.0);
+    protocol_core::write_varint_u64(out, f.head_edit_ordinal);
+    protocol_core::write_str(out, &f.head_edit_id);
+    protocol_core::write_varint_u64(out, f.last_commit_seq);
+    protocol_core::write_hash32(out, &f.chain_hash);
+}
+
+/// @emoji 🎯 Inverse of [`encode_frontier`].
+pub fn decode_frontier(bytes: &[u8], pos: &mut usize) -> Result<FrontierSummary, protocol_core::ProtocolError> {
+    let document_id = protocol_core::DocumentId(protocol_core::read_str(bytes, pos)?);
+    let head_edit_ordinal = protocol_core::read_varint_u64(bytes, pos)?;
+    let head_edit_id = protocol_core::read_str(bytes, pos)?;
+    let last_commit_seq = protocol_core::read_varint_u64(bytes, pos)?;
+    let chain_hash = protocol_core::read_hash32(bytes, pos)?;
+    Ok(FrontierSummary { document_id, head_edit_ordinal, head_edit_id, last_commit_seq, chain_hash })
+}
+//#endregion 🔖EnvelopeCodec
 
 //#region 🧪Tests
 #[cfg(test)]
@@ -329,6 +432,23 @@ mod tests {
             vec![CausalAddOp { delta: -self.delta }]
         }
     }
+    /// @emoji 🎯 Hand-written (no `dsl::DslOps` derive in this dependency-free fixture): `format
+    /// u8 (=1) | delta i64 LE`.
+    impl protocol_command::OpBinary for CausalAddOp {
+        fn encode_op(&self) -> Result<Vec<u8>, protocol_core::ProtocolError> {
+            let mut out = vec![1u8];
+            out.extend_from_slice(&self.delta.to_le_bytes());
+            Ok(out)
+        }
+        fn decode_op(bytes: &[u8]) -> Result<Self, protocol_core::ProtocolError> {
+            if bytes.len() != 9 || bytes[0] != 1 {
+                return Err(protocol_core::ProtocolError::Malformed { what: "causal add op", offset: 0, detail: "expected 9 bytes, format 1".to_string() });
+            }
+            let mut delta_bytes = [0u8; 8];
+            delta_bytes.copy_from_slice(&bytes[1..9]);
+            Ok(CausalAddOp { delta: i64::from_le_bytes(delta_bytes) })
+        }
+    }
     impl OperationTransform<i64> for CausalAddOp {
         fn transform(&self, against: &Self) -> TransformOutcome<Self> {
             if self.delta == against.delta {
@@ -347,8 +467,8 @@ mod tests {
             document_id: protocol_core::DocumentId("document-1".into()),
             actor: protocol_core::ActorId("actor-1".into()),
             dependencies: deps.into_iter().map(|dep| protocol_core::OperationId(dep.into())).collect(),
-            diff: DocumentDiff { schema: "diff.v1".into(), payload: serde_json::json!({"value": id}) },
-            inverse: InverseOperation { schema: "diff.v1".into(), inverse_diff: serde_json::json!({}) },
+            diff: DocumentDiff { schema: protocol_core::SchemaId("diff.v1".into()), payload: id.as_bytes().to_vec() },
+            inverse: InverseOperation { schema: protocol_core::SchemaId("diff.v1".into()), payload: Vec::new() },
             timestamp: protocol_core::HybridLogicalTimestamp::new(1, 0),
         }
     }
@@ -593,8 +713,9 @@ mod tests {
             finished_at: None,
         };
         let document_id = protocol_core::DocumentId("doc-1".into());
+        let schema = protocol_core::SchemaId("causal-add.v1".into());
 
-        let envelopes = operation_envelope_from_edit(&edit, &document_id);
+        let envelopes = operation_envelope_from_edit(&edit, &document_id, &schema).expect("encode succeeds");
         assert_eq!(envelopes.len(), 2);
 
         assert_eq!(envelopes[0].operation_id, protocol_core::OperationId("op-a".into()));
@@ -602,8 +723,9 @@ mod tests {
         assert_eq!(envelopes[0].dependencies, vec![protocol_core::OperationId("op-0".into())]);
         assert_eq!(envelopes[0].document_id, document_id);
         assert_eq!(envelopes[0].timestamp, protocol_core::HybridLogicalTimestamp::new(1, 1000));
-        assert_eq!(envelopes[0].diff.payload, serde_json::json!({"delta": 1}));
-        assert_eq!(envelopes[0].inverse.inverse_diff, serde_json::json!({"delta": -1}));
+        assert_eq!(envelopes[0].diff.schema, schema);
+        assert_eq!(envelopes[0].diff.payload, protocol_command::OpBinary::encode_op(&CausalAddOp { delta: 1 }).unwrap());
+        assert_eq!(envelopes[0].inverse.payload, protocol_command::OpBinary::encode_op(&CausalAddOp { delta: -1 }).unwrap());
 
         // Second op's meta has no author_id -> falls back to `edit.actor`, not "unknown".
         assert_eq!(envelopes[1].operation_id, protocol_core::OperationId("op-b".into()));
@@ -625,15 +747,88 @@ mod tests {
             finished_at: None,
         };
         let document_id = protocol_core::DocumentId("doc-2".into());
+        let schema = protocol_core::SchemaId("causal-add.v1".into());
 
-        let envelopes = operation_envelope_from_edit(&edit, &document_id);
+        let envelopes = operation_envelope_from_edit(&edit, &document_id, &schema).expect("encode succeeds");
         assert_eq!(envelopes.len(), 1);
         assert_eq!(envelopes[0].operation_id, protocol_core::OperationId("edit-2#0".into()));
         assert_eq!(envelopes[0].actor, protocol_core::ActorId("unknown".into()));
         assert!(envelopes[0].dependencies.is_empty());
         assert_eq!(envelopes[0].timestamp, protocol_core::HybridLogicalTimestamp::new(0, 0));
-        assert_eq!(envelopes[0].inverse.inverse_diff, serde_json::Value::Null, "backwards vec shorter than forwards -> Null inverse");
+        assert_eq!(envelopes[0].inverse.payload, Vec::<u8>::new(), "backwards vec shorter than forwards -> empty inverse payload");
+    }
+
+    #[test]
+    fn operation_envelope_from_edit_propagates_an_encode_failure() {
+        let edit = protocol_command::Edit::<CausalAddOp> {
+            id: "edit-3".into(),
+            actor: None,
+            forwards: vec![CausalAddOp { delta: 1 }],
+            backwards: vec![],
+            operation_meta: vec![],
+            description: None,
+            coalesce_key: None,
+            sequence_number: 0,
+            started_at: "2026-07-27T00:00:00Z".into(),
+            finished_at: None,
+        };
+        // CausalAddOp::encode_op is infallible by construction, so this test instead documents
+        // the law via the Result signature: a real Op whose encode_op can fail (e.g. exceeding a
+        // size limit) aborts the whole batch rather than returning a partial Vec.
+        let document_id = protocol_core::DocumentId("doc-3".into());
+        let schema = protocol_core::SchemaId("causal-add.v1".into());
+        assert!(operation_envelope_from_edit(&edit, &document_id, &schema).is_ok());
     }
     //#endregion 🔖Bridge
+
+    //#region 🔖EnvelopeCodec
+    #[test]
+    fn envelope_binary_round_trips() {
+        let envelope = sample_envelope("operation-1", vec!["operation-0", "operation-x"]);
+        let mut out = Vec::new();
+        encode_envelope(&envelope, &mut out);
+        let mut pos = 0;
+        let decoded = decode_envelope(&out, &mut pos).expect("decode");
+        assert_eq!(decoded, envelope);
+        assert_eq!(pos, out.len(), "decode must consume exactly the encoded bytes");
+    }
+
+    #[test]
+    fn envelope_binary_encoding_is_deterministic() {
+        let envelope = sample_envelope("operation-1", vec!["operation-0"]);
+        let mut a = Vec::new();
+        let mut b = Vec::new();
+        encode_envelope(&envelope, &mut a);
+        encode_envelope(&envelope, &mut b);
+        assert_eq!(a, b);
+    }
+
+    #[test]
+    fn envelope_binary_round_trips_with_empty_dependencies_and_payloads() {
+        let envelope = OperationEnvelope {
+            operation_id: protocol_core::OperationId("op-empty".into()),
+            document_id: protocol_core::DocumentId("doc-empty".into()),
+            actor: protocol_core::ActorId("actor-empty".into()),
+            dependencies: Vec::new(),
+            diff: DocumentDiff { schema: protocol_core::SchemaId("s".into()), payload: Vec::new() },
+            inverse: InverseOperation { schema: protocol_core::SchemaId("s".into()), payload: Vec::new() },
+            timestamp: protocol_core::HybridLogicalTimestamp::new(0, 0),
+        };
+        let mut out = Vec::new();
+        encode_envelope(&envelope, &mut out);
+        let mut pos = 0;
+        assert_eq!(decode_envelope(&out, &mut pos).unwrap(), envelope);
+    }
+
+    #[test]
+    fn frontier_binary_round_trips() {
+        let f = frontier("doc-1", 7, "edit-7", 3, 9);
+        let mut out = Vec::new();
+        encode_frontier(&f, &mut out);
+        let mut pos = 0;
+        assert_eq!(decode_frontier(&out, &mut pos).unwrap(), f);
+        assert_eq!(pos, out.len());
+    }
+    //#endregion 🔖EnvelopeCodec
 }
 //#endregion 🧪Tests

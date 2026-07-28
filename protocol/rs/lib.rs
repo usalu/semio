@@ -10,7 +10,10 @@
 //#region 🔖Reexports
 pub use protocol_core::{ProtocolError, ProtocolLimits, RecordHasher, Signer, SignatureVerifier};
 pub use protocol_format::{FrameCursor, RecordFrame, RecoveryMode, RecoveryReport, ReverseFrameCursor, SprWriter, VerificationLevel, WriteOptions};
-pub use protocol_history::{AlternativeHead, DecodeOptions, EncodeOptions, FrontierComparison, FrontierSummary, HistoryAlternative, HistoryAppender, HistoryAuthor, HistoryChange, HistoryCheckpoint, HistoryEdit, HistoryLog, HistoryOpMeta, HistoryReader, OpPayload, frontier_delta};
+pub use protocol_history::{
+    AlternativeHead, DecodeOptions, EncodeOptions, FrontierComparison, FrontierSummary, HistoryAlternative, HistoryAppender, HistoryAuthor, HistoryChange, HistoryCheckpoint, HistoryCursor, HistoryEdit,
+    HistoryLog, HistoryOpMeta, HistoryReader, OpPayload, REC_CURSOR, decode_history, encode_history, frontier_delta, parse_ops_text, print_ops_text,
+};
 pub use protocol_materialize::{BaseBytes, BaseProjection, CheckpointPolicy, MaterializePlan, MaterializeReport, MaterializeTarget, ProjectionBodyKind, ProjectionRecord, materialize_with, resolve_plan};
 #[cfg(not(target_arch = "wasm32"))]
 pub use protocol_io::{CompactOptions, HistoryFile, KeepSnapshots, ResumeState, TailFollower, compact, recover_file};
@@ -22,7 +25,7 @@ pub use protocol_command::{
 };
 pub use protocol_causal::{
     FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult, InverseOperation, OpDag, OpDagError, DocumentDiff, OperationEnvelope, OperationTransform,
-    TransformOutcome, frontier_delta as runtime_frontier_delta, operation_envelope_from_edit,
+    TransformOutcome, decode_envelope, decode_frontier, encode_envelope, encode_frontier, frontier_delta as runtime_frontier_delta, operation_envelope_from_edit,
 };
 pub use protocol_crdt::merge_concurrent_diffs;
 pub use protocol_wire::{AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, ServerFrame, decode_client_frame, decode_server_frame, encode_client_frame, encode_server_frame};
@@ -31,12 +34,12 @@ pub use protocol_wire::{AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, Se
 //#region 🔖Compile
 /// 🎬 Ops text -> `.spr` binary, the bidirectional law `protocol_cli compile`/`decompile` exercise.
 pub fn compile_ops(ops: &str, options: &EncodeOptions) -> Result<Vec<u8>, ProtocolError> {
-    protocol_history::encode_history(&protocol_history::parse_ops_text(ops)?, options)
+    encode_history(&parse_ops_text(ops)?, options)
 }
 
 /// 🎬 `.spr` binary -> ops text, the inverse of `compile_ops`.
 pub fn decompile_ops(bytes: &[u8], options: &DecodeOptions) -> Result<String, ProtocolError> {
-    Ok(protocol_history::print_ops_text(&protocol_history::decode_history(bytes, options)?))
+    Ok(print_ops_text(&decode_history(bytes, options)?))
 }
 //#endregion 🔖Compile
 
@@ -134,7 +137,7 @@ fn slice_content_chain(slice: &[u8]) -> Result<[u8; 32], ProtocolError> {
 /// default (matching a fresh `HistoryAppender::begin` which has written zero edits).
 pub fn content_frontier(protocol_bytes: &[u8]) -> Result<FrontierSummary, ProtocolError> {
     let decode_options = DecodeOptions::default();
-    let log = protocol_history::decode_history(protocol_bytes, &decode_options)?;
+    let log = decode_history(protocol_bytes, &decode_options)?;
     let recovery = protocol_format::recover(&protocol_bytes, &decode_options.limits, RecoveryMode::LastCommit)?;
 
     let (head_edit_ordinal, head_edit_id) = match log.edits.last() {
@@ -195,6 +198,7 @@ mod tests {
                 coalesce_key: None,
                 description: None,
                 ops: vec![OpPayload { text: format!("op-{i}"), binary: None }],
+                backwards: Vec::new(),
                 meta: None,
             };
             appender.append_edit(&edit).unwrap();
@@ -229,12 +233,17 @@ mod tests {
                 coalesce_key: None,
                 description: Some("first edit".to_string()),
                 ops: vec![OpPayload { text: "set foo = 1".to_string(), binary: None }],
+                backwards: Vec::new(),
                 meta: None,
             }],
             changes: Vec::new(),
             checkpoints: Vec::new(),
             alternatives: Vec::new(),
             active_alternative_id: None,
+            // 🎯 W4: cursor is text-representable (unlike backwards, which is `.spr`-only) —
+            // include one here to prove the compile_ops/decompile_ops text-tooling path preserves
+            // it byte-for-byte, same as every other structural line.
+            cursor: Some(HistoryCursor { applied_edit_ids: vec!["e0".to_string()], redo_edit_ids: Vec::new(), checkpoint_id: None }),
         };
         let ops_text = protocol_history::print_ops_text(&log);
 
@@ -242,6 +251,7 @@ mod tests {
         let decompiled = decompile_ops(&compiled, &DecodeOptions::default()).unwrap();
 
         assert_eq!(protocol_history::parse_ops_text(&decompiled).unwrap(), protocol_history::parse_ops_text(&ops_text).unwrap());
+        assert_eq!(protocol_history::parse_ops_text(&decompiled).unwrap().cursor, log.cursor);
     }
 
     #[test]

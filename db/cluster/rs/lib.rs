@@ -525,8 +525,8 @@ mod tests {
             document_id: protocol::DocumentId("doc-1".to_string()),
             actor: protocol::ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff { schema: "diff.v1".to_string(), payload: serde_json::json!({"seq": seq}) },
-            inverse: protocol::InverseOperation { schema: "diff.v1".to_string(), inverse_diff: serde_json::json!({}) },
+            diff: protocol::DocumentDiff { schema: protocol::SchemaId("diff.v1".to_string()), payload: seq.to_le_bytes().to_vec() },
+            inverse: protocol::InverseOperation { schema: protocol::SchemaId("diff.v1".to_string()), payload: Vec::new() },
             timestamp: protocol::HybridLogicalTimestamp::new(1, seq),
         }
     }

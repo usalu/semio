@@ -1217,6 +1217,18 @@ impl OpText for TrinityGraphOperation {
         <TrinityGraphOperationDsl as OpText>::print_op(&trinity_graph_operation_to_dsl(self))
     }
 }
+
+/// ⚡ Binary mirror of the `OpText` impl above — `TrinityGraphOperationDsl` already derives
+/// `OpBinary` via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+impl protocol::OpBinary for TrinityGraphOperation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        trinity_graph_operation_to_dsl(self).encode_op()
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        TrinityGraphOperationDsl::decode_op(bytes).map(trinity_graph_operation_from_dsl)
+    }
+}
 //#endregion 🔖OpText
 
 pub fn empty_trinity_graph_fixture() -> GraphFixture {

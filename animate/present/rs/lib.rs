@@ -768,6 +768,18 @@ impl protocol::OpText for PresentOperation {
         PresentOperationDsl::from(self).print_op()
     }
 }
+
+/// ⚡ Binary mirror of the `OpText` bridge above — `PresentOperationDsl` already derives `OpBinary`
+/// via `#[derive(dsl::DslOps)]`, so this is a pure `From`/`Into` forward.
+impl protocol::OpBinary for PresentOperation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        PresentOperationDsl::from(self).encode_op()
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        PresentOperationDsl::decode_op(bytes).map(PresentOperationDsl::into)
+    }
+}
 //#endregion 🔖OpText
 
 //#region 🔖VcsEnvelope

@@ -651,6 +651,19 @@ impl protocol::OpText for Procedural3dOperation {
         <Procedural3dOperationDsl as protocol::OpText>::print_op(&procedural3d_operation_to_dsl(self))
     }
 }
+
+/// ⚡ Binary mirror of the `OpText` bridge above — `Procedural3dOperationDsl` already derives
+/// `OpBinary` via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+impl protocol::OpBinary for Procedural3dOperation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        procedural3d_operation_to_dsl(self).encode_op()
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let parsed = Procedural3dOperationDsl::decode_op(bytes)?;
+        procedural3d_operation_from_dsl(parsed).map_err(|error| protocol::ProtocolError::Malformed { what: "procedural3d operation", offset: 0, detail: error.to_string() })
+    }
+}
 //#endregion 🔖OpText
 
 pub type Procedural3dEnvelope = DocumentEnvelope<Procedural3dDocument, Procedural3dOperation>;

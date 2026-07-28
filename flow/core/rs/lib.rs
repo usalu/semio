@@ -4812,6 +4812,19 @@ impl protocol::OpText for FlowOperation {
         <FlowOperationDsl as protocol::OpText>::print_op(&flow_operation_to_dsl(self))
     }
 }
+
+/// ⚡ Binary mirror of the `OpText` impl above — `FlowOperationDsl` already derives `OpBinary`
+/// via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+impl protocol::OpBinary for FlowOperation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        flow_operation_to_dsl(self).encode_op()
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let dsl_operation = FlowOperationDsl::decode_op(bytes)?;
+        flow_operation_from_dsl(dsl_operation).map_err(|message| protocol::ProtocolError::Malformed { what: "flow operation", offset: 0, detail: message })
+    }
+}
 //#endregion 🔖OpText
 
 pub type FlowEnvelope = DocumentEnvelope<FlowFixture, FlowOperation>;

@@ -370,6 +370,18 @@ impl protocol::OpText for ImperativeOperation {
         <ImperativeOperationDsl as protocol::OpText>::print_op(&imperative_operation_to_dsl(self))
     }
 }
+
+/// ⚡ Binary mirror of the `OpText` impl above — `ImperativeOperationDsl` already derives
+/// `OpBinary` via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+impl protocol::OpBinary for ImperativeOperation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        imperative_operation_to_dsl(self).encode_op()
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        Ok(imperative_operation_from_dsl(ImperativeOperationDsl::decode_op(bytes)?))
+    }
+}
 //#endregion 🔖OpText
 
 

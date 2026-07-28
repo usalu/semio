@@ -36,8 +36,10 @@ tolerated (skipped) while matching the expected tag.
   `vcs.edits` out-of-band (append-only → `remoteOperations`).
 - `replaceEnvelope { envelope: DocumentEnvelope }` — rewrite the whole stored envelope (divergent
   history → `snapshotReplaced`, or `conflict` when local operations are pending).
-- `hubFrame { frame: HubServerFrame }` — a raw hub server frame. Driven by the TS twin; the folder-only
-  Rust harness rejects these, so keep them out of Rust-replayed fixtures for now.
+- `hubFrame { frameBytes: number[] }` — a raw hub server frame's encoded bytes (`protocol_wire`'s
+  binary `ServerFrame` codec output, lane byte included — see `store/sync/fixtures/wire/`'s own
+  fixtures for the codec itself). Driven by the TS twin; the folder-only Rust harness rejects
+  these, so keep them out of Rust-replayed fixtures for now.
 
 ### `DocumentEvent` tags
 

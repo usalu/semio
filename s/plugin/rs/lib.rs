@@ -2606,11 +2606,14 @@ pub mod app_studio {
                         use base64::Engine;
                         let base64_part = payload.split_once(',').map(|(_, data)| data).unwrap_or(payload);
                         if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(base64_part) {
-                            // 🌱 A single `.pack` file carries no separate ops sidecar (unlike
-                            // `exportStudioPack`'s two-file output) — an empty ops log decodes to a
-                            // document with no replayed edit history, i.e. its bare initial projection,
-                            // exactly like `importStudio`'s JSON-envelope counterpart.
-                            let _ = import_os_studio_from_pack(&bytes, "", super::app_home::catalog_port());
+                            // 🌱 A single `.pack` file carries no separate `.spr` sidecar (unlike
+                            // `exportStudioPack`'s two-file output) — `store::empty_document_spr`
+                            // builds a bare, edit-free op log so the pack+spr-first codec path still
+                            // decodes to a document with no replayed edit history, i.e. its bare
+                            // initial projection, exactly like `importStudio`'s JSON-envelope
+                            // counterpart.
+                            let empty_spr = store::empty_document_spr("", OS_STUDIO_SCHEMA);
+                            let _ = import_os_studio_from_pack(&bytes, &empty_spr, super::app_home::catalog_port());
                         }
                     }
                     return ActionEmit::default();

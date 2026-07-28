@@ -935,8 +935,14 @@ mod tests {
             document_id: document.clone(),
             actor: protocol::ActorId(actor.to_string()),
             dependencies: deps.iter().map(|dep| protocol::OperationId((*dep).to_string())).collect(),
-            diff: protocol::DocumentDiff { schema: "generic".to_string(), payload: serde_json::Value::Object(payload) },
-            inverse: protocol::InverseOperation { schema: "generic".to_string(), inverse_diff: serde_json::Value::Object(serde_json::Map::new()) },
+            diff: protocol::DocumentDiff {
+                schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()),
+                payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap(),
+            },
+            inverse: protocol::InverseOperation {
+                schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()),
+                payload: serde_json::to_vec(&serde_json::Value::Object(serde_json::Map::new())).unwrap(),
+            },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }

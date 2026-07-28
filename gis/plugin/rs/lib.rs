@@ -418,6 +418,18 @@ pub(crate) mod domain {
             <GisMapOperationDsl as protocol::OpText>::print_op(&gis_map_operation_to_dsl(self))
         }
     }
+
+    /// ⚡ Binary mirror of the `OpText` impl above — `GisMapOperationDsl` already derives
+    /// `OpBinary` via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+    impl protocol::OpBinary for GisMapOperation {
+        fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+            gis_map_operation_to_dsl(self).encode_op()
+        }
+
+        fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+            Ok(gis_map_operation_from_dsl(GisMapOperationDsl::decode_op(bytes)?))
+        }
+    }
     //#endregion 🔖OpText
 
     //#region 🔖DocumentVcs

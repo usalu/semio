@@ -3,8 +3,8 @@
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use protocol::{Operation, OperationDiff, OpText};
-use store::{DocumentDsl, TextError, TextSpan};
+use protocol::{Operation, OperationDiff, OpBinary, OpText, ProtocolError};
+use store::{DocumentDsl, DocumentPack, TextError, TextSpan};
 
 // #region 🔖Quantity
 /// 📐 Physical quantity kind for SI-normalized norm computations.
@@ -645,6 +645,36 @@ where
                 format!("set-document \"{}\"", escape_op_text_field(&document.print_dsl()))
             }
         }
+    }
+}
+
+/// ⚡ Binary twin of the `OpText` impl above, shared the same way: `format u8 (=1) | pack bytes`
+/// (no length prefix needed — the single field consumes every remaining byte), using
+/// `D::encode_pack`/`decode_pack` instead of the DSL-text quoting trick (unnecessary for binary,
+/// which has no line-boundary to protect). Bounded on `store::DocumentPack` in addition to the
+/// `OpText` impl's bounds — every family `Document` type gets both for free from the same
+/// `#[derive(dsl::DslDocument)]` that already granted `DocumentDsl`.
+impl<D> OpBinary for SetDocumentOperation<D>
+where
+    D: DocumentPack + Clone + Default + PartialEq + Serialize + DeserializeOwned,
+{
+    fn encode_op(&self) -> Result<Vec<u8>, ProtocolError> {
+        match self {
+            SetDocumentOperation::SetDocument { document } => {
+                let mut out = vec![1u8];
+                out.extend(document.encode_pack());
+                Ok(out)
+            }
+        }
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, ProtocolError> {
+        let format = *bytes.first().ok_or(ProtocolError::Malformed { what: "set-document operation", offset: 0, detail: "empty payload".to_string() })?;
+        if format != 1 {
+            return Err(ProtocolError::Malformed { what: "set-document operation", offset: 0, detail: format!("unsupported format {format}") });
+        }
+        let document = D::decode_pack(&bytes[1..]).map_err(|error| ProtocolError::Malformed { what: "set-document operation", offset: 1, detail: error.to_string() })?;
+        Ok(SetDocumentOperation::SetDocument { document })
     }
 }
 // #endregion 🔖OpText

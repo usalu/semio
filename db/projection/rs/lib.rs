@@ -637,8 +637,8 @@ mod tests {
             document_id: protocol::DocumentId(document.to_string()),
             actor: protocol::ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff { schema: "test".to_string(), payload: Default::default() },
-            inverse: protocol::InverseOperation { schema: "test".to_string(), inverse_diff: Default::default() },
+            diff: protocol::DocumentDiff { schema: protocol::SchemaId("test".to_string()), payload: Default::default() },
+            inverse: protocol::InverseOperation { schema: protocol::SchemaId("test".to_string()), payload: Default::default() },
             timestamp: protocol::HybridLogicalTimestamp::new(1, seq),
         }
     }

@@ -1608,6 +1608,19 @@ mod operations {
             serde_json::to_string(self).expect("ProgramOperation always serializes")
         }
     }
+
+    /// @emoji 🌱 Binary twin of the `OpText` escape hatch above — same rationale, plain JSON bytes
+    /// (mirrors `store::pack_rt`'s JSON-bridge treatment of `DocumentPack for serde_json::Value`,
+    /// one level down at the op-payload granularity instead of a whole doc).
+    impl protocol::OpBinary for ProgramOperation {
+        fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+            serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Malformed { what: "program operation", offset: 0, detail: error.to_string() })
+        }
+
+        fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+            serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "program operation", offset: 0, detail: error.to_string() })
+        }
+    }
     //#endregion 🔖OpText
 
     /// @emoji 🩹 Inverse patch carrier for trace link collection operations.

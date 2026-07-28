@@ -225,8 +225,14 @@ fn to_wire_envelope(envelope: &OperationEnvelope, timestamp: protocol::HybridLog
         document_id: envelope.document.clone(),
         actor: envelope.actor.clone(),
         dependencies: envelope.deps.clone(),
-        diff: protocol::DocumentDiff { schema: envelope.diff.schema_id.0.clone(), payload: envelope.diff.payload.clone() },
-        inverse: protocol::InverseOperation { schema: envelope.inverse.inverse_diff.schema_id.0.clone(), inverse_diff: envelope.inverse.inverse_diff.payload.clone() },
+        diff: protocol::DocumentDiff {
+            schema: protocol::SchemaId(envelope.diff.schema_id.0.clone()),
+            payload: serde_json::to_vec(&envelope.diff.payload).unwrap_or_default(),
+        },
+        inverse: protocol::InverseOperation {
+            schema: protocol::SchemaId(envelope.inverse.inverse_diff.schema_id.0.clone()),
+            payload: serde_json::to_vec(&envelope.inverse.inverse_diff.payload).unwrap_or_default(),
+        },
         timestamp,
     }
 }
@@ -236,11 +242,17 @@ fn to_wire_envelope(envelope: &OperationEnvelope, timestamp: protocol::HybridLog
 /// {@link operation_envelope_from_stored_edit} does (this actor's payloads are always edit-shaped
 /// JSON carrying their own `sequenceNumber`/`backwards`), and defaulting `undo_policy` to
 /// `ExactBaseOnly` (the only policy this schema-agnostic actor ever assigns, mirrored from that
-/// same function).
+/// same function). 🎯 W5: `diff`/`inverse` payloads are opaque bytes on the wire now — this actor's
+/// own convention is still JSON underneath, so it decodes the bytes back into a `Value` here (the
+/// wire/storage boundary is binary; this local envelope shape stays JSON, per this crate's own
+/// schema-agnostic design).
 fn from_wire_envelope(envelope: protocol::OperationEnvelope) -> OperationEnvelope {
-    let schema = envelope.diff.schema;
-    let sequence = envelope.diff.payload.get("sequenceNumber").and_then(|value| value.as_i64()).unwrap_or(0).max(0) as u64;
-    let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(&envelope.diff.payload).unwrap_or_default());
+    let schema = envelope.diff.schema.0.clone();
+    let diff_payload: Value = serde_json::from_slice(&envelope.diff.payload).unwrap_or(Value::Null);
+    let sequence = diff_payload.get("sequenceNumber").and_then(|value| value.as_i64()).unwrap_or(0).max(0) as u64;
+    let payload_hash = semio_framework_hash::hash_bytes(&envelope.diff.payload);
+    let inverse_schema = envelope.inverse.schema.0.clone();
+    let inverse_payload: Value = serde_json::from_slice(&envelope.inverse.payload).unwrap_or(Value::Null);
     OperationEnvelope {
         id: envelope.operation_id.clone(),
         actor: envelope.actor,
@@ -248,10 +260,10 @@ fn from_wire_envelope(envelope: protocol::OperationEnvelope) -> OperationEnvelop
         schema_version: SchemaVersion(schema.clone()),
         deps: envelope.dependencies,
         payload_hash: PayloadHash(payload_hash),
-        diff: DocumentDiff { schema_id: SchemaId(schema), payload: envelope.diff.payload },
+        diff: DocumentDiff { schema_id: SchemaId(schema), payload: diff_payload },
         inverse: InverseOperation {
             target_operation: envelope.operation_id,
-            inverse_diff: DocumentDiff { schema_id: SchemaId(envelope.inverse.schema), payload: envelope.inverse.inverse_diff },
+            inverse_diff: DocumentDiff { schema_id: SchemaId(inverse_schema), payload: inverse_payload },
             base_version: DocumentVersion(sequence),
             dependencies: Vec::new(),
             undo_policy: UndoPolicy::ExactBaseOnly,
@@ -280,14 +292,15 @@ fn rollback_envelope(envelope: &OperationEnvelope) -> OperationEnvelope {
     }
 }
 
-/// @emoji 📡 `PresencePeer` -> the schema-erased JSON `protocol_wire::ClientFrame::Presence` carries.
-fn presence_to_json(peer: &PresencePeer) -> Value {
-    serde_json::to_value(peer).unwrap_or(Value::Null)
+/// @emoji 📡 `PresencePeer` -> the pre-serialized JSON string `protocol_wire::ClientFrame::Presence`
+/// carries (🎯 W5: `String`, not `serde_json::Value` — see `protocol_wire`'s module doc).
+fn presence_to_json(peer: &PresencePeer) -> String {
+    serde_json::to_string(peer).unwrap_or_else(|_| "null".to_string())
 }
 
 /// @emoji 📡 The inverse of {@link presence_to_json}, for `ServerFrame::Presence`'s peer roster.
-fn presence_from_json(value: &Value) -> Option<PresencePeer> {
-    serde_json::from_value(value.clone()).ok()
+fn presence_from_json(json: &str) -> Option<PresencePeer> {
+    serde_json::from_str(json).ok()
 }
 
 /// @emoji ⏰ Millisecond wall-clock reads for {@link next_timestamp}: `SystemTime` natively,
@@ -553,18 +566,27 @@ mod native_actor {
 
     impl FolderEndpoint {
         /// @emoji 📖 `Ok(None)` = nothing persisted yet; `Ok(Some(json))` = the envelope, resolved
-        /// pack-first (falling back to the DSL mirror for hand-authored/imported documents with no
-        /// `.pack` file yet); `Err` = a real failure (missing codec registration for `schema`, or a
-        /// pack/dsl decode error) — never silently degrades to a raw dump.
+        /// pack+spr-first (falling back to the DSL mirror for hand-authored/imported documents with
+        /// no `.pack` file yet — `Sqlite` has no such fallback, a row is always written pack+spr
+        /// together); `Err` = a real failure (missing codec registration for `schema`, or a
+        /// pack/spr/dsl decode error) — never silently degrades to a raw dump.
         fn read(&self) -> Result<Option<String>, String> {
             match self {
-                FolderEndpoint::Sqlite { storage, document_id, .. } => storage.read(document_id).map_err(|error| error.to_string()),
+                FolderEndpoint::Sqlite { storage, document_id, schema } => {
+                    let Some(codec) = store::document_codec(schema) else {
+                        return Err(format!("no document codec registered for schema {schema:?}"));
+                    };
+                    match storage.read(document_id).map_err(|error| error.to_string())? {
+                        Some((pack, spr)) => (codec.parse)(&pack, &spr).map(Some).map_err(|error| error.to_string()),
+                        None => Ok(None),
+                    }
+                }
                 FolderEndpoint::Pack { storage, document_id, extension, schema } => {
                     let Some(codec) = store::document_codec(schema) else {
                         return Err(format!("no document codec registered for schema {schema:?}"));
                     };
                     if let Some(pack_files) = storage.read_pack(document_id, extension).map_err(|error| error.to_string())? {
-                        return (codec.parse)(&pack_files.pack, &pack_files.ops).map(Some).map_err(|error| error.to_string());
+                        return (codec.parse)(&pack_files.pack, &pack_files.spr).map(Some).map_err(|error| error.to_string());
                     }
                     match storage.read(document_id, extension).map_err(|error| error.to_string())? {
                         Some(text_files) => (codec.parse_dsl)(&text_files.dsl, &text_files.ops).map(Some).map_err(|error| error.to_string()),
@@ -574,11 +596,17 @@ mod native_actor {
             }
         }
 
-        /// @emoji ✍️ Persists `json` (the whole envelope). `Err` on a missing codec, same hard-error
-        /// rule as `read`.
+        /// @emoji ✍️ Persists `json` (the whole envelope), pack+spr for both variants. `Err` on a
+        /// missing codec, same hard-error rule as `read`.
         fn write(&self, json: &str) -> Result<(), String> {
             match self {
-                FolderEndpoint::Sqlite { storage, document_id, schema } => storage.write(document_id, schema, json).map_err(|error| error.to_string()),
+                FolderEndpoint::Sqlite { storage, document_id, schema } => {
+                    let Some(codec) = store::document_codec(schema) else {
+                        return Err(format!("no document codec registered for schema {schema:?}"));
+                    };
+                    let (pack_files, _dsl_mirror) = (codec.print)(json).map_err(|error| error.to_string())?;
+                    storage.write(document_id, schema, &pack_files.pack, &pack_files.spr).map_err(|error| error.to_string())
+                }
                 FolderEndpoint::Pack { storage, document_id, extension, schema } => {
                     let Some(codec) = store::document_codec(schema) else {
                         return Err(format!("no document codec registered for schema {schema:?}"));
@@ -772,7 +800,7 @@ mod native_actor {
                     false
                 }
                 DocumentActorMsg::PresenceHeartbeat { peer } => {
-                    self.send_client_frame(ClientFrame::Presence { peer: presence_to_json(&peer) }, Lane::Preview).await;
+                    self.send_client_frame(ClientFrame::Presence { peer_json: presence_to_json(&peer) }, Lane::Preview).await;
                     false
                 }
                 DocumentActorMsg::PublishPreview { key, seq, payload } => {
@@ -992,8 +1020,8 @@ mod native_actor {
                         self.emit(DocumentEvent::Preview { actor: actor.0, key, seq, payload });
                     }
                 }
-                ServerFrame::Presence { peers } => {
-                    let peers: Vec<PresencePeer> = peers.iter().filter_map(presence_from_json).collect();
+                ServerFrame::Presence { peers_json } => {
+                    let peers: Vec<PresencePeer> = peers_json.iter().filter_map(|p| presence_from_json(p)).collect();
                     self.set_remote_state(RemoteState::Live { peer_count: peers.len() });
                     self.emit(DocumentEvent::Presence { peers });
                 }
@@ -1315,7 +1343,7 @@ mod wasm_actor {
                     self.drain_and_relay();
                 }
                 DocumentActorMsg::PresenceHeartbeat { peer } => {
-                    self.send_frame(&ClientFrame::Presence { peer: presence_to_json(&peer) }, Lane::Preview);
+                    self.send_frame(&ClientFrame::Presence { peer_json: presence_to_json(&peer) }, Lane::Preview);
                 }
                 DocumentActorMsg::PublishPreview { key, seq, payload } => {
                     self.send_frame(&ClientFrame::PreviewPublish { key, seq, payload }, Lane::Preview);
@@ -1354,8 +1382,8 @@ mod wasm_actor {
                         let _ = self.events.send(DocumentEvent::Preview { actor: actor.0, key, seq, payload });
                     }
                 }
-                ServerFrame::Presence { peers } => {
-                    let peers: Vec<PresencePeer> = peers.iter().filter_map(presence_from_json).collect();
+                ServerFrame::Presence { peers_json } => {
+                    let peers: Vec<PresencePeer> = peers_json.iter().filter_map(|p| presence_from_json(p)).collect();
                     let _ = self.events.send(DocumentEvent::Presence { peers });
                 }
                 ServerFrame::CreditGrant { .. } => {}
@@ -1483,10 +1511,14 @@ pub struct ActorFixture {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum FixtureInbound {
-    /// @emoji 📬 A raw `protocol_wire::ServerFrame` delivered as if received over the hub
-    /// WebSocket. Driven by `backbone-worker.ts`'s TS fallback vitest harness; the folder-only
-    /// Rust harness skips these.
-    HubFrame { frame: ServerFrame },
+    /// @emoji 📬 A raw `protocol_wire::ServerFrame`'s encoded bytes (`protocol::encode_server_frame`
+    /// output, `lane` byte included), delivered as if received over the hub WebSocket. 🎯 W5:
+    /// `ServerFrame` no longer derives `serde` (fully binary now, no JSON body) — the fixture
+    /// carries the already-encoded frame bytes (a JSON number array, same convention this crate's
+    /// module doc documents for `OperationEnvelope.diff.payload`) instead of a JSON-shaped frame.
+    /// Driven by `backbone-worker.ts`'s TS fallback vitest harness (which decodes these bytes with
+    /// its own binary decoder); the folder-only Rust harness skips these.
+    HubFrame { frame_bytes: Vec<u8> },
     /// @emoji 📁 An external folder edit: append these edit JSON objects to `vcs.edits` out-of-band.
     ExternalEdits { edits: Vec<Value> },
     /// @emoji ♻️ An external whole-envelope rewrite (divergent history): replace the stored envelope.
@@ -1514,9 +1546,11 @@ pub fn load_fixtures(dir: &std::path::Path) -> Vec<ActorFixture> {
 
 //#region 🔖FolderStorage
 /// @emoji 🗄️ Pure multi-document sqlite persistence (`folder://`), the canonical local store. Rows
-/// are keyed by document id: `document(id, schema, json, updated_at)` — a single folder holds every
-/// open document's envelope. No `Backbone` impl: the `framework/sync` actor layer drives this from
-/// its own thread; this crate only owns the sqlite schema.
+/// are keyed by document id: `document(id, schema, pack, spr, updated_at)` — `pack` (initial
+/// projection) + `spr` (real backwards/binary op payloads/cursor, see `store::print_document_spr`)
+/// are the AUTHORITATIVE pair, both `NOT NULL`; there is no JSON column (a greenfield rule — every
+/// row is written pack+spr together, never one without the other). No `Backbone` impl: the actor
+/// layer drives this from its own thread; this crate only owns the sqlite schema.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct FolderSqliteStorage {
     folder: std::path::PathBuf,
@@ -1545,8 +1579,8 @@ impl FolderSqliteStorage {
             "CREATE TABLE IF NOT EXISTS document (\
                  id TEXT PRIMARY KEY,\
                  schema TEXT,\
-                 json TEXT NOT NULL,\
-                 pack BLOB,\
+                 pack BLOB NOT NULL,\
+                 spr BLOB NOT NULL,\
                  updated_at INTEGER NOT NULL\
              );\
              CREATE TABLE IF NOT EXISTS blobs (\
@@ -1559,46 +1593,23 @@ impl FolderSqliteStorage {
         .map_err(|e| vcs::VcsError::Backbone(e.to_string()))
     }
 
-    /// @emoji 📖 Reads the stored envelope JSON for `document_id`, or `None` if absent.
-    pub fn read(&self, document_id: &str) -> Result<Option<String>, vcs::VcsError> {
+    /// @emoji 📖 Reads the stored `(pack, spr)` bytes for `document_id`, or `None` if no row exists.
+    pub fn read(&self, document_id: &str) -> Result<Option<(Vec<u8>, Vec<u8>)>, vcs::VcsError> {
         use rusqlite::OptionalExtension;
         let conn = self.connection()?;
-        conn.query_row("SELECT json FROM document WHERE id = ?1", [document_id], |row| row.get(0))
+        conn.query_row("SELECT pack, spr FROM document WHERE id = ?1", [document_id], |row| Ok((row.get::<_, Vec<u8>>(0)?, row.get::<_, Vec<u8>>(1)?)))
             .optional()
             .map_err(|e| vcs::VcsError::Backbone(e.to_string()))
     }
 
-    /// @emoji ✍️ Upserts `document_id`'s envelope JSON (with its schema id and an `updated_at` stamp).
-    pub fn write(&self, document_id: &str, schema: &str, envelope_json: &str) -> Result<(), vcs::VcsError> {
+    /// @emoji ✍️ Upserts `document_id`'s `(pack, spr)` bytes together (schema id, `updated_at` stamp)
+    /// — both are written in the same statement, never independently.
+    pub fn write(&self, document_id: &str, schema: &str, pack: &[u8], spr: &[u8]) -> Result<(), vcs::VcsError> {
         let conn = self.connection()?;
         conn.execute(
-            "INSERT INTO document (id, schema, json, updated_at) VALUES (?1, ?2, ?3, ?4) \
-             ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, json = excluded.json, updated_at = excluded.updated_at",
-            rusqlite::params![document_id, schema, envelope_json, now_ms() as i64],
-        )
-        .map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
-        Ok(())
-    }
-
-    /// @emoji 📖 Reads the stored pack bytes for `document_id`, or `None` if absent — no row, or a
-    /// row written before the `pack` column existed (SQL `NULL`, surfaced as `None` the same way).
-    pub fn read_pack(&self, document_id: &str) -> Result<Option<Vec<u8>>, vcs::VcsError> {
-        use rusqlite::OptionalExtension;
-        let conn = self.connection()?;
-        conn.query_row("SELECT pack FROM document WHERE id = ?1", [document_id], |row| row.get::<_, Option<Vec<u8>>>(0))
-            .optional()
-            .map(|row| row.flatten())
-            .map_err(|e| vcs::VcsError::Backbone(e.to_string()))
-    }
-
-    /// @emoji ✍️ Upserts `document_id`'s envelope JSON + pack bytes together (schema id, `updated_at`
-    /// stamp) — the pack-aware sibling of `write`.
-    pub fn write_pack(&self, document_id: &str, schema: &str, envelope_json: &str, pack: &[u8]) -> Result<(), vcs::VcsError> {
-        let conn = self.connection()?;
-        conn.execute(
-            "INSERT INTO document (id, schema, json, pack, updated_at) VALUES (?1, ?2, ?3, ?4, ?5) \
-             ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, json = excluded.json, pack = excluded.pack, updated_at = excluded.updated_at",
-            rusqlite::params![document_id, schema, envelope_json, pack, now_ms() as i64],
+            "INSERT INTO document (id, schema, pack, spr, updated_at) VALUES (?1, ?2, ?3, ?4, ?5) \
+             ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, pack = excluded.pack, spr = excluded.spr, updated_at = excluded.updated_at",
+            rusqlite::params![document_id, schema, pack, spr, now_ms() as i64],
         )
         .map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         Ok(())
@@ -1650,6 +1661,11 @@ impl FolderTextStorage {
         self.folder.join(format!("{document_id}.{extension}.pack"))
     }
 
+    /// @emoji 🏷️ Path of the authoritative binary op-log file — `dsl_path` with a `.spr` suffix.
+    pub fn spr_path(&self, document_id: &str, extension: &str) -> std::path::PathBuf {
+        self.folder.join(format!("{document_id}.{extension}.spr"))
+    }
+
     /// @emoji 📖 Reads both files for `document_id`, or `None` if the DSL file does not exist yet.
     pub fn read(&self, document_id: &str, extension: &str) -> Result<Option<DocumentTextFiles>, vcs::VcsError> {
         let dsl = match std::fs::read_to_string(self.dsl_path(document_id, extension)) {
@@ -1673,29 +1689,40 @@ impl FolderTextStorage {
         std::fs::write(self.ops_path(document_id, extension), &files.ops).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
     }
 
-    /// @emoji 📖 Pack-first read: reads the pack bytes + op log for `document_id`, or `None` if the
-    /// `.pack` file itself doesn't exist (unlike `read`, the DSL mirror's existence alone doesn't
-    /// count — pack is authoritative per the disk-layout LAW, the DSL file is import-only).
+    /// @emoji 📖 pack+spr-first read: reads the AUTHORITATIVE pair for `document_id`, or `None` if
+    /// the `.pack` file itself doesn't exist (unlike `read`, the DSL mirror's existence alone
+    /// doesn't count — pack+spr are authoritative per the disk-layout LAW, the DSL file is
+    /// import-only). A present `.pack` with a missing `.spr` is a hard error — no legacy: they are
+    /// always written together (see `write_pack`), so a missing `.spr` means corruption or a
+    /// manual edit, never a valid state to silently recover from.
     pub fn read_pack(&self, document_id: &str, extension: &str) -> Result<Option<DocumentPackFiles>, vcs::VcsError> {
         let pack = match std::fs::read(self.pack_path(document_id, extension)) {
             Ok(bytes) => bytes,
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(None),
             Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
         };
+        let spr = std::fs::read(self.spr_path(document_id, extension)).map_err(|err| {
+            if err.kind() == std::io::ErrorKind::NotFound {
+                vcs::VcsError::Backbone(format!("{document_id}.{extension}.pack exists but {document_id}.{extension}.spr is missing — pack and spr are always written together"))
+            } else {
+                vcs::VcsError::Backbone(err.to_string())
+            }
+        })?;
         let ops = match std::fs::read_to_string(self.ops_path(document_id, extension)) {
             Ok(text) => text,
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => String::new(),
             Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
         };
-        Ok(Some(DocumentPackFiles { pack, ops }))
+        Ok(Some(DocumentPackFiles { pack, spr, ops }))
     }
 
-    /// @emoji ✍️ Overwrites all three files: the authoritative `.pack`, the shared `.ops` log, and the
-    /// always-written DSL mirror `dsl_mirror` (`print_dsl` on the initial projection) — the pack-aware
-    /// sibling of `write`.
+    /// @emoji ✍️ Overwrites all four files: the AUTHORITATIVE `.pack` + `.spr` pair, the shared
+    /// `.ops` text mirror, and the always-written DSL mirror `dsl_mirror` (`print_dsl` on the
+    /// initial projection) — the pack-aware sibling of `write`.
     pub fn write_pack(&self, document_id: &str, extension: &str, files: &DocumentPackFiles, dsl_mirror: &str) -> Result<(), vcs::VcsError> {
         std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         std::fs::write(self.pack_path(document_id, extension), &files.pack).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        std::fs::write(self.spr_path(document_id, extension), &files.spr).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         std::fs::write(self.ops_path(document_id, extension), &files.ops).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
         std::fs::write(self.dsl_path(document_id, extension), dsl_mirror).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
     }
@@ -1833,6 +1860,17 @@ mod tests {
         }
     }
 
+    /// @emoji 🎯 Idempotently registers the `demo/v1` codec (process-global `OnceLock` registry,
+    /// shared across every test in this binary) — needed by any test exercising `FolderEndpoint`
+    /// end-to-end (both `Sqlite` and `Pack` now go through `document_codec` per the pack+spr flip),
+    /// mirroring a real app's plugin-init-time `register_document_codec_for_app` call.
+    fn ensure_demo_codec_registered() {
+        static ONCE: std::sync::Once = std::sync::Once::new();
+        ONCE.call_once(|| {
+            register_document_codec(DocumentCodec::of::<DemoProjection, DemoOperation>("demo/v1"));
+        });
+    }
+
     fn sample_operation_envelope(edit_id: &str, n: i32) -> semio_framework_core::OperationEnvelope {
         let edit = Edit {
             id: edit_id.into(),
@@ -1893,7 +1931,8 @@ mod tests {
         assert_eq!(wire.operation_id, envelope.id);
         assert_eq!(wire.actor, envelope.actor);
         assert_eq!(wire.document_id, envelope.document);
-        assert_eq!(wire.diff.payload, envelope.diff.payload);
+        let decoded_wire_payload: Value = serde_json::from_slice(&wire.diff.payload).expect("wire diff payload decodes as json");
+        assert_eq!(decoded_wire_payload, envelope.diff.payload);
 
         let recovered = from_wire_envelope(wire);
         assert_eq!(recovered.id, envelope.id);
@@ -1915,62 +1954,142 @@ mod tests {
     /// @emoji 🎬 Canonical wire-frame byte fixtures shared with `backbone-worker.ts`'s vitest suite
     /// (`framework/product/os/core/js/backbone-worker.ts` `WireBridge` region / `index.ts`'s
     /// `encodeClientFrame`/`decodeServerFrame` twins) — both sides decode the exact same committed
-    /// bytes under `framework/sync/fixtures/wire/`, proving `protocol_wire`'s lane+varint+JSON codec
+    /// bytes under `store/sync/fixtures/wire/`, proving `protocol_wire`'s binary lane+tag codec
     /// round-trips identically across Rust and TS. Regenerated deterministically by this test (every
     /// value below is a fixed constant, never a clock/random read) rather than hand-authored, so a
     /// `protocol_wire` field-order/shape change fails loudly here instead of silently diverging from
-    /// the TS twin.
+    /// the TS twin. 🎯 W5: extended to cover every `ClientFrame`/`ServerFrame` variant (19 fixtures
+    /// total, one per variant plus one extra each for `Welcome`'s `Bootstrap` and `Ack`'s
+    /// `ApplyOutcome` sub-variants) — the previous 4-fixture set (`client-hello`, `client-commands`,
+    /// `server-welcome`, `server-ack`) is superseded; the first two names are reused (byte-identical
+    /// role), the latter two are replaced by the more specific names below and deleted here.
     #[test]
     fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
         let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../fixtures/wire");
         std::fs::create_dir_all(&fixtures_dir).expect("fixtures dir");
+        for stale in ["server-welcome.bin", "server-ack.bin"] {
+            let _ = std::fs::remove_file(fixtures_dir.join(stale));
+        }
 
-        let hello = ClientFrame::Hello {
-            wire_version: 1,
-            protocol_version: 1,
-            schema: "demo/v1".to_string(),
-            pack_schema_hash: [7u8; 32],
-            actor: protocol::ActorId("actor-1".to_string()),
-            token: Some("token-1".to_string()),
-            resume_token: None,
-            frontier: None,
-        };
-        let hello_bytes = encode_client_frame(&hello, Lane::Command);
-        std::fs::write(fixtures_dir.join("client-hello.bin"), &hello_bytes).expect("write client-hello.bin");
-        let (lane, decoded) = protocol::decode_client_frame(&hello_bytes).expect("decode client-hello.bin");
-        assert_eq!(lane, Lane::Command);
-        assert_eq!(decoded, hello);
+        fn write_client(dir: &std::path::Path, name: &str, frame: &ClientFrame, lane: Lane) {
+            let bytes = encode_client_frame(frame, lane);
+            std::fs::write(dir.join(name), &bytes).unwrap_or_else(|error| panic!("write {name}: {error}"));
+            let (decoded_lane, decoded) = protocol::decode_client_frame(&bytes).unwrap_or_else(|error| panic!("decode {name}: {error}"));
+            assert_eq!(decoded_lane, lane, "{name} lane round trip");
+            assert_eq!(&decoded, frame, "{name} frame round trip");
+        }
 
+        fn write_server(dir: &std::path::Path, name: &str, frame: &ServerFrame, lane: Lane) {
+            let bytes = protocol::encode_server_frame(frame, lane);
+            std::fs::write(dir.join(name), &bytes).unwrap_or_else(|error| panic!("write {name}: {error}"));
+            let (decoded_lane, decoded) = decode_server_frame(&bytes).unwrap_or_else(|error| panic!("decode {name}: {error}"));
+            assert_eq!(decoded_lane, lane, "{name} lane round trip");
+            assert_eq!(&decoded, frame, "{name} frame round trip");
+        }
+
+        let frontier = protocol::RuntimeFrontierSummary { document_id: protocol::DocumentId("doc-1".to_string()), head_edit_ordinal: 1, head_edit_id: "op-1".to_string(), last_commit_seq: 1, chain_hash: [9u8; 32] };
         let wire_envelope = protocol::OperationEnvelope {
             operation_id: protocol::OperationId("op-1".to_string()),
             document_id: protocol::DocumentId("doc-1".to_string()),
             actor: protocol::ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff { schema: "demo/v1".to_string(), payload: serde_json::json!({"n": 5, "sequenceNumber": 1}) },
-            inverse: protocol::InverseOperation { schema: "demo/v1".to_string(), inverse_diff: serde_json::json!({"n": 0}) },
+            diff: protocol::DocumentDiff { schema: protocol::SchemaId("demo/v1".to_string()), payload: protocol::OpBinary::encode_op(&DemoOperation::SetN { n: 5 }).expect("encode demo op") },
+            inverse: protocol::InverseOperation { schema: protocol::SchemaId("demo/v1".to_string()), payload: protocol::OpBinary::encode_op(&DemoOperation::SetN { n: 0 }).expect("encode demo op") },
             timestamp: protocol::HybridLogicalTimestamp { actor: 42, physical_ms: 1000, logical: 0 },
         };
-        let commands = ClientFrame::Commands { batch_id: 1, envelopes: vec![wire_envelope] };
-        let commands_bytes = encode_client_frame(&commands, Lane::Command);
-        std::fs::write(fixtures_dir.join("client-commands.bin"), &commands_bytes).expect("write client-commands.bin");
-        let (lane, decoded) = protocol::decode_client_frame(&commands_bytes).expect("decode client-commands.bin");
-        assert_eq!(lane, Lane::Command);
-        assert_eq!(decoded, commands);
 
-        let frontier = protocol::RuntimeFrontierSummary { document_id: protocol::DocumentId("doc-1".to_string()), head_edit_ordinal: 1, head_edit_id: "op-1".to_string(), last_commit_seq: 1, chain_hash: [9u8; 32] };
-        let welcome = ServerFrame::Welcome { session_id: "session-1".to_string(), resume_token: "resume-1".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Tail };
-        let welcome_bytes = protocol::encode_server_frame(&welcome, Lane::Command);
-        std::fs::write(fixtures_dir.join("server-welcome.bin"), &welcome_bytes).expect("write server-welcome.bin");
-        let (lane, decoded) = decode_server_frame(&welcome_bytes).expect("decode server-welcome.bin");
-        assert_eq!(lane, Lane::Command);
-        assert_eq!(decoded, welcome);
+        //#region 🔖ClientFrame
+        write_client(
+            &fixtures_dir,
+            "client-hello.bin",
+            &ClientFrame::Hello {
+                wire_version: 1,
+                protocol_version: 1,
+                schema: "demo/v1".to_string(),
+                pack_schema_hash: [7u8; 32],
+                actor: protocol::ActorId("actor-1".to_string()),
+                token: Some("token-1".to_string()),
+                resume_token: None,
+                frontier: None,
+            },
+            Lane::Command,
+        );
+        write_client(&fixtures_dir, "client-commands.bin", &ClientFrame::Commands { batch_id: 1, envelopes: vec![wire_envelope.clone()] }, Lane::Command);
+        write_client(&fixtures_dir, "client-frontier-advertise.bin", &ClientFrame::FrontierAdvertise { frontier: frontier.clone() }, Lane::Command);
+        write_client(&fixtures_dir, "client-preview-publish.bin", &ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, Lane::Preview);
+        write_client(&fixtures_dir, "client-presence.bin", &ClientFrame::Presence { peer_json: "{\"cursor\":[1,2]}".to_string() }, Lane::Preview);
+        write_client(&fixtures_dir, "client-credit-grant.bin", &ClientFrame::CreditGrant { n: 16 }, Lane::Command);
+        write_client(&fixtures_dir, "client-bye.bin", &ClientFrame::Bye, Lane::Command);
+        //#endregion 🔖ClientFrame
 
-        let ack = ServerFrame::Ack { batch_id: 1, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }], frontier };
-        let ack_bytes = protocol::encode_server_frame(&ack, Lane::Command);
-        std::fs::write(fixtures_dir.join("server-ack.bin"), &ack_bytes).expect("write server-ack.bin");
-        let (lane, decoded) = decode_server_frame(&ack_bytes).expect("decode server-ack.bin");
-        assert_eq!(lane, Lane::Command);
-        assert_eq!(decoded, ack);
+        //#region 🔖ServerFrame
+        write_server(
+            &fixtures_dir,
+            "server-welcome-tail.bin",
+            &ServerFrame::Welcome { session_id: "session-1".to_string(), resume_token: "resume-1".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Tail },
+            Lane::Command,
+        );
+        write_server(
+            &fixtures_dir,
+            "server-welcome-snapshot-inline.bin",
+            &ServerFrame::Welcome {
+                session_id: "session-2".to_string(),
+                resume_token: "resume-2".to_string(),
+                server_frontier: frontier.clone(),
+                bootstrap: Bootstrap::Snapshot { pack_hash: [3u8; 32], inline: Some(vec![9, 9, 9]) },
+            },
+            Lane::Command,
+        );
+        write_server(&fixtures_dir, "server-snapshot-chunk.bin", &ServerFrame::SnapshotChunk { seq: 0, bytes: vec![1, 2, 3, 4] }, Lane::Command);
+        write_server(&fixtures_dir, "server-snapshot-done.bin", &ServerFrame::SnapshotDone { seq_count: 4 }, Lane::Command);
+        write_server(
+            &fixtures_dir,
+            "server-commands.bin",
+            &ServerFrame::Commands { envelopes: vec![wire_envelope], origin: protocol::ActorId("actor-1".to_string()), frontier: frontier.clone() },
+            Lane::Command,
+        );
+        write_server(
+            &fixtures_dir,
+            "server-ack-accepted.bin",
+            &ServerFrame::Ack { batch_id: 1, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }], frontier: frontier.clone() },
+            Lane::Command,
+        );
+        write_server(
+            &fixtures_dir,
+            "server-ack-transformed.bin",
+            &ServerFrame::Ack {
+                batch_id: 2,
+                stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Transformed { envelope: Box::new(sample_wire_envelope_for_fixtures()) }) }],
+                frontier: frontier.clone(),
+            },
+            Lane::Command,
+        );
+        write_server(
+            &fixtures_dir,
+            "server-ack-rejected.bin",
+            &ServerFrame::Ack { batch_id: 3, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "conflict".to_string() }) }], frontier: frontier.clone() },
+            Lane::Command,
+        );
+        write_server(&fixtures_dir, "server-preview.bin", &ServerFrame::Preview { actor: protocol::ActorId("actor-1".to_string()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview);
+        write_server(&fixtures_dir, "server-presence.bin", &ServerFrame::Presence { peers_json: vec!["{\"id\":\"a\"}".to_string(), "{\"id\":\"b\"}".to_string()] }, Lane::Preview);
+        write_server(&fixtures_dir, "server-credit-grant.bin", &ServerFrame::CreditGrant { n: 32 }, Lane::Command);
+        write_server(&fixtures_dir, "server-error.bin", &ServerFrame::Error { code: "rejected".to_string(), message: "bad batch".to_string() }, Lane::Command);
+        //#endregion 🔖ServerFrame
+    }
+
+    /// @emoji 🧸 A second, distinct `OperationEnvelope` for `server-ack-transformed.bin`'s
+    /// `ApplyOutcome::Transformed` payload — must differ from the primary `wire_envelope` fixture so
+    /// the vitest canary can assert it decodes as its own value, not an accidental copy.
+    fn sample_wire_envelope_for_fixtures() -> protocol::OperationEnvelope {
+        protocol::OperationEnvelope {
+            operation_id: protocol::OperationId("op-2".to_string()),
+            document_id: protocol::DocumentId("doc-1".to_string()),
+            actor: protocol::ActorId("actor-2".to_string()),
+            dependencies: vec![protocol::OperationId("op-1".to_string())],
+            diff: protocol::DocumentDiff { schema: protocol::SchemaId("demo/v1".to_string()), payload: protocol::OpBinary::encode_op(&DemoOperation::SetN { n: 6 }).expect("encode demo op") },
+            inverse: protocol::InverseOperation { schema: protocol::SchemaId("demo/v1".to_string()), payload: protocol::OpBinary::encode_op(&DemoOperation::SetN { n: 5 }).expect("encode demo op") },
+            timestamp: protocol::HybridLogicalTimestamp { actor: 42, physical_ms: 1001, logical: 0 },
+        }
     }
     //#endregion 🧪WireBridge
 
@@ -2027,6 +2146,8 @@ mod tests {
         // 🔬 External folder edit → RemoteOperations event + the store timeline grows on tick().
         #[tokio::test]
         async fn folder_external_edit_delivers_remote_operations() {
+            ensure_demo_codec_registered();
+            let codec = store::document_codec("demo/v1").expect("demo/v1 codec registered");
             let dir = tempfile::tempdir().expect("tempdir");
             let host = DocumentHost::new();
             let channels = host.open(DocumentActorConfig { document_id: "doc-a".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() });
@@ -2038,10 +2159,12 @@ mod tests {
             store.dispatch(store::DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply");
             channels.cmd_tx.send(DocumentActorMsg::LocalOperations { envelopes: Vec::new() }).expect("wake");
 
-            // Wait until the actor has persisted the local edit to the folder db.
+            // Wait until the actor has persisted the local edit to the folder db (pack+spr bytes,
+            // decoded back to envelope JSON through the same codec `FolderEndpoint` uses).
             let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
             let stored = loop {
-                if let Some(json) = storage.read("doc-a").expect("read") {
+                if let Some((pack, spr)) = storage.read("doc-a").expect("read") {
+                    let json = (codec.parse)(&pack, &spr).expect("codec parse");
                     if json.contains("\"edits\":[{") {
                         break json;
                     }
@@ -2049,7 +2172,9 @@ mod tests {
                 tokio::time::sleep(Duration::from_millis(20)).await;
             };
 
-            // Out-of-band: append a foreign edit directly to the stored envelope.
+            // Out-of-band: append a foreign edit directly to the stored envelope, then re-encode
+            // through the codec (mirroring exactly what `FolderEndpoint::write` does internally)
+            // before writing the pack+spr bytes back.
             let mut value: serde_json::Value = serde_json::from_str(&stored).expect("parse");
             let external_edit = serde_json::json!({
                 "id": "external-1",
@@ -2060,7 +2185,8 @@ mod tests {
                 "startedAt": "0"
             });
             value["vcs"]["edits"].as_array_mut().unwrap().push(external_edit);
-            storage.write("doc-a", "demo/v1", &serde_json::to_string(&value).unwrap()).expect("out-of-band write");
+            let (pack_files, _dsl_mirror) = (codec.print)(&serde_json::to_string(&value).unwrap()).expect("codec print");
+            storage.write("doc-a", "demo/v1", &pack_files.pack, &pack_files.spr).expect("out-of-band write");
 
             // Deterministically poke the actor to re-read (notify also wired, but timing-independent here).
             channels.cmd_tx.send(DocumentActorMsg::ExternalChanged).expect("poke");
@@ -2397,6 +2523,8 @@ mod tests {
         }
 
         async fn replay_fixture(fixture: &ActorFixture) {
+            ensure_demo_codec_registered();
+            let codec = store::document_codec(&fixture.schema).unwrap_or_else(|| panic!("no codec registered for fixture schema {:?}", fixture.schema));
             let dir = tempfile::tempdir().expect("tempdir");
             let host = DocumentHost::new();
             let channels =
@@ -2420,17 +2548,20 @@ mod tests {
             for (inbound, expected) in fixture.inbound.iter().zip(fixture.expected_events.iter()) {
                 match inbound {
                     FixtureInbound::ExternalEdits { edits } => {
-                        let stored = storage.read(&fixture.document_id).expect("read").expect("some");
+                        let (pack, spr) = storage.read(&fixture.document_id).expect("read").expect("some");
+                        let stored = (codec.parse)(&pack, &spr).expect("codec parse");
                         let mut value: Value = serde_json::from_str(&stored).expect("parse");
                         let array = value["vcs"]["edits"].as_array_mut().expect("edits array");
                         for edit in edits {
                             array.push(edit.clone());
                         }
-                        storage.write(&fixture.document_id, &fixture.schema, &serde_json::to_string(&value).unwrap()).expect("write");
+                        let (pack_files, _dsl_mirror) = (codec.print)(&serde_json::to_string(&value).unwrap()).expect("codec print");
+                        storage.write(&fixture.document_id, &fixture.schema, &pack_files.pack, &pack_files.spr).expect("write");
                         channels.cmd_tx.send(DocumentActorMsg::ExternalChanged).expect("poke");
                     }
                     FixtureInbound::ReplaceEnvelope { envelope } => {
-                        storage.write(&fixture.document_id, &fixture.schema, &serde_json::to_string(envelope).unwrap()).expect("replace write");
+                        let (pack_files, _dsl_mirror) = (codec.print)(&serde_json::to_string(envelope).unwrap()).expect("codec print");
+                        storage.write(&fixture.document_id, &fixture.schema, &pack_files.pack, &pack_files.spr).expect("replace write");
                         channels.cmd_tx.send(DocumentActorMsg::ExternalChanged).expect("poke");
                     }
                     FixtureInbound::HubFrame { .. } => {
@@ -2463,69 +2594,82 @@ mod tests {
     }
     //#endregion 🧪Actor
 
+    /// @emoji 🎯 `FolderSqliteStorage` is now a pure `(pack, spr)` byte-blob store — schema-agnostic,
+    /// no JSON/codec involvement at this layer (that lives one level up, in `FolderEndpoint`, tested
+    /// via `folder_external_edit_delivers_remote_operations`). This test exercises exactly the
+    /// storage mechanics: per-id keying, upsert-in-place, and the folder-wide index.
     #[test]
     fn folder_sqlite_storage_round_trips_by_document_id() {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
         assert_eq!(storage.read("doc-a").expect("read empty"), None, "absent document reads as None");
-        let env_a: DocumentEnvelope<DemoProjection, DemoOperation> =
-            create_document_envelope("demo/v1", "doc-a", DemoProjection { n: 3 }, None);
-        let env_b: DocumentEnvelope<DemoProjection, DemoOperation> =
-            create_document_envelope("demo/v1", "doc-b", DemoProjection { n: 7 }, None);
-        storage
-            .write("doc-a", "demo/v1", &serde_json::to_string(&env_a).expect("json a"))
-            .expect("write a");
-        storage
-            .write("doc-b", "demo/v1", &serde_json::to_string(&env_b).expect("json b"))
-            .expect("write b");
-        let loaded_a: DocumentEnvelope<DemoProjection, DemoOperation> =
-            serde_json::from_str(&storage.read("doc-a").expect("read a").expect("some a")).expect("parse a");
-        let loaded_b: DocumentEnvelope<DemoProjection, DemoOperation> =
-            serde_json::from_str(&storage.read("doc-b").expect("read b").expect("some b")).expect("parse b");
-        assert_eq!(loaded_a.vcs.initial_projection.n, 3, "documents are keyed independently");
-        assert_eq!(loaded_b.vcs.initial_projection.n, 7);
 
-        let env_a2: DocumentEnvelope<DemoProjection, DemoOperation> =
-            create_document_envelope("demo/v1", "doc-a", DemoProjection { n: 5 }, None);
-        storage
-            .write("doc-a", "demo/v1", &serde_json::to_string(&env_a2).expect("json a2"))
-            .expect("upsert a");
-        let reloaded_a: DocumentEnvelope<DemoProjection, DemoOperation> =
-            serde_json::from_str(&storage.read("doc-a").expect("reread a").expect("some a2")).expect("parse a2");
-        assert_eq!(reloaded_a.vcs.initial_projection.n, 5, "writing the same id upserts in place");
+        storage.write("doc-a", "demo/v1", b"pack-a", b"spr-a").expect("write a");
+        storage.write("doc-b", "demo/v1", b"pack-b", b"spr-b").expect("write b");
+        assert_eq!(storage.read("doc-a").expect("read a").expect("some a"), (b"pack-a".to_vec(), b"spr-a".to_vec()), "documents are keyed independently");
+        assert_eq!(storage.read("doc-b").expect("read b").expect("some b"), (b"pack-b".to_vec(), b"spr-b".to_vec()));
+
+        storage.write("doc-a", "demo/v1", b"pack-a2", b"spr-a2").expect("upsert a");
+        assert_eq!(storage.read("doc-a").expect("reread a").expect("some a2"), (b"pack-a2".to_vec(), b"spr-a2".to_vec()), "writing the same id upserts pack+spr together in place");
 
         let mut ids = storage.document_ids().expect("document ids");
         ids.sort();
         assert_eq!(ids, vec!["doc-a".to_string(), "doc-b".to_string()], "folder indexes every document");
     }
 
+    /// @emoji 🔐 The endpoint-level save→load→undo proof: a store's undo/redo position survives a
+    /// full write/read cycle through the ACTUAL `FolderSqliteStorage` byte storage (`store`'s own
+    /// `save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position` proves the pure
+    /// in-memory pack/spr encoding; this proves the folder persistence layer built on top of it).
+    #[test]
+    fn folder_sqlite_storage_round_trips_undo_position_through_pack_spr() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
+
+        let mut store = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>("demo/v1", "doc-a", DemoProjection { n: 0 }, None));
+        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply e1");
+        let post_e1 = store.projection().expect("post-e1");
+        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None }).expect("apply e2");
+        store.dispatch(DocumentCommand::Undo).expect("undo e2");
+        assert_eq!(store.projection().expect("live"), post_e1, "precondition: live store is back at post-e1");
+
+        let files = print_document_pack(store.envelope()).expect("print document pack");
+        storage.write("doc-a", "demo/v1", &files.pack, &files.spr).expect("write");
+
+        let (pack, spr) = storage.read("doc-a").expect("read").expect("some");
+        let parsed: ParsedDocumentText<DemoProjection, DemoOperation> = parse_document_pack(&pack, &spr).unwrap_or_else(|error| panic!("parse: {error}"));
+        assert_eq!(parsed.projection, post_e1, "loaded projection must equal post-e1 through the folder storage layer");
+        let mut reloaded = DocumentStore::new(parsed.envelope);
+        assert_eq!(reloaded.projection().expect("reloaded"), post_e1);
+
+        reloaded.dispatch(DocumentCommand::Redo).expect("redo e2 after folder reload");
+        assert_eq!(reloaded.projection().expect("post-redo"), DemoProjection { n: 2 });
+    }
+
+    /// @emoji 🎯 Seeds the write from a ZERO-edit envelope (no cursor line — a cursor is only
+    /// synced once an edit is dispatched, see `DocumentStore::sync_cursor`) so both edits are then
+    /// added purely via the raw `append_ops` hot path with no cursor line ever written; a cursor
+    /// pinned to an earlier edit count would otherwise cap the reconstructed projection at that
+    /// edit (see `document_text_round_trips_a_cursor_after_undo_then_apply_interleaving` in
+    /// `store`'s own test suite for that law, exercised correctly there).
     #[test]
     fn folder_text_storage_round_trips_dsl_and_appends_ops() {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FolderTextStorage::new(dir.path().to_path_buf());
         assert_eq!(storage.read("demo", "demo").expect("read empty"), None, "absent document reads as None");
 
-        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store
-            .dispatch(DocumentCommand::Apply {
-                operations: vec![DemoOperation::SetN { n: 1 }],
-                description: None,
-            })
-            .expect("apply");
-        let files = print_document_text(store.envelope()).expect("print document text");
+        let seed = DocumentStore::<DemoProjection, DemoOperation>::new(create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None));
+        let files = print_document_text(seed.envelope()).expect("print document text");
         storage.write("demo", "demo", &files).expect("write");
 
-        store
-            .dispatch(DocumentCommand::Apply {
-                operations: vec![DemoOperation::SetN { n: 2 }],
-                description: None,
-            })
-            .expect("apply 2");
+        let mut store = DocumentStore::new(create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None));
+        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply 1");
+        let first_edit = store.envelope().vcs.edits.last().expect("first edit");
+        storage.append_ops("demo", "demo", &print_edit_lines(first_edit).expect("print edit lines")).expect("append ops 1");
+
+        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None }).expect("apply 2");
         let second_edit = store.envelope().vcs.edits.last().expect("second edit");
-        storage
-            .append_ops("demo", "demo", &print_edit_lines(second_edit).expect("print edit lines"))
-            .expect("append ops");
+        storage.append_ops("demo", "demo", &print_edit_lines(second_edit).expect("print edit lines")).expect("append ops 2");
 
         let reloaded = storage.read("demo", "demo").expect("read").expect("some");
         let parsed: ParsedDocumentText<DemoProjection, DemoOperation> =
@@ -2535,70 +2679,61 @@ mod tests {
         assert_eq!(storage.document_ids("demo").expect("document ids"), vec!["demo".to_string()]);
     }
 
+    /// @emoji 🎯 Unlike the `.ops`-text hot path (`append_ops`, tested above), `.pack`+`.spr` have
+    /// no incremental-append primitive wired up yet (that's `protocol::HistoryAppender`, a future
+    /// wave's job to thread through this storage layer) — `write_pack` is the whole-file cold path
+    /// for the AUTHORITATIVE pair, called again after every edit. `append_ops` still keeps the
+    /// `.ops` TEXT MIRROR current independently (it is never read by the pack+spr-first
+    /// `parse_document_pack`/`read_pack` path — see `DocumentPackFiles`'s doc — only by
+    /// `parse_document_text`), which this test verifies explicitly: appending ops text alone,
+    /// without an accompanying `write_pack`, does NOT change what `read_pack`/`parse_document_pack`
+    /// reconstructs, because pack+spr (not ops text) are authoritative for that path.
     #[test]
     fn folder_text_storage_round_trips_pack() {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FolderTextStorage::new(dir.path().to_path_buf());
         assert_eq!(storage.read_pack("demo", "demo").expect("read empty"), None, "absent pack reads as None");
 
-        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentStore::new(envelope);
-        store
-            .dispatch(DocumentCommand::Apply {
-                operations: vec![DemoOperation::SetN { n: 1 }],
-                description: None,
-            })
-            .expect("apply");
-        let files = print_document_pack(store.envelope()).expect("print document pack");
-        let dsl_mirror = store.envelope().vcs.initial_projection.print_dsl();
+        let seed = DocumentStore::<DemoProjection, DemoOperation>::new(create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None));
+        let files = print_document_pack(seed.envelope()).expect("print document pack");
+        let dsl_mirror = seed.envelope().vcs.initial_projection.print_dsl();
         storage.write_pack("demo", "demo", &files, &dsl_mirror).expect("write pack");
 
-        store
-            .dispatch(DocumentCommand::Apply {
-                operations: vec![DemoOperation::SetN { n: 2 }],
-                description: None,
-            })
-            .expect("apply 2");
+        let mut store = DocumentStore::new(create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None));
+        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply 1");
+        let first_edit = store.envelope().vcs.edits.last().expect("first edit");
+        storage.append_ops("demo", "demo", &print_edit_lines(first_edit).expect("print edit lines")).expect("append ops 1");
+
+        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None }).expect("apply 2");
         let second_edit = store.envelope().vcs.edits.last().expect("second edit");
-        storage
-            .append_ops("demo", "demo", &print_edit_lines(second_edit).expect("print edit lines"))
-            .expect("append ops");
+        storage.append_ops("demo", "demo", &print_edit_lines(second_edit).expect("print edit lines")).expect("append ops 2");
 
-        let reloaded = storage.read_pack("demo", "demo").expect("read pack").expect("some");
-        let parsed: ParsedDocumentText<DemoProjection, DemoOperation> =
-            parse_document_pack(&reloaded.pack, &reloaded.ops).unwrap_or_else(|error| panic!("parse: {error}"));
-        assert_eq!(parsed.projection.n, 2, "pack write + append reconstructs every edit in order");
+        // Text mirror is current (both edits landed via append_ops).
+        let reloaded_text = storage.read("demo", "demo").expect("read text").expect("some text");
+        let parsed_text: ParsedDocumentText<DemoProjection, DemoOperation> =
+            parse_document_text(&reloaded_text.dsl, &reloaded_text.ops).unwrap_or_else(|error| panic!("parse text: {error}"));
+        assert_eq!(parsed_text.projection.n, 2, "the .ops text mirror reflects every appended edit");
 
-        // The always-written DSL mirror must also be on disk and agree with the pack path.
+        // pack+spr are unaffected by ops-text-only appends — still the zero-edit snapshot from
+        // the initial write_pack, proving read_pack/parse_document_pack never reads .ops.
+        let reloaded_pack = storage.read_pack("demo", "demo").expect("read pack").expect("some pack");
+        let parsed_pack: ParsedDocumentText<DemoProjection, DemoOperation> =
+            parse_document_pack(&reloaded_pack.pack, &reloaded_pack.spr).unwrap_or_else(|error| panic!("parse pack: {error}"));
+        assert_eq!(parsed_pack.projection.n, 0, "pack+spr are authoritative and independent of ops-text-only appends");
+
+        // A fresh whole-file write_pack (the actual cold-path persistence flow) brings pack+spr
+        // current with the live store.
+        let files2 = print_document_pack(store.envelope()).expect("print document pack 2");
+        let dsl_mirror2 = store.envelope().vcs.initial_projection.print_dsl();
+        storage.write_pack("demo", "demo", &files2, &dsl_mirror2).expect("write pack 2");
+        let reloaded_pack2 = storage.read_pack("demo", "demo").expect("read pack 2").expect("some pack 2");
+        let parsed_pack2: ParsedDocumentText<DemoProjection, DemoOperation> =
+            parse_document_pack(&reloaded_pack2.pack, &reloaded_pack2.spr).unwrap_or_else(|error| panic!("parse pack 2: {error}"));
+        assert_eq!(parsed_pack2.projection.n, 2, "a fresh write_pack brings pack+spr current with the live store");
+
+        // The always-written DSL mirror must also be on disk and agree with the initial-projection.
         let mirror = std::fs::read_to_string(storage.pack_path("demo", "demo").with_extension("")).expect("dsl mirror on disk");
         assert_eq!(DemoProjection::parse_dsl(&mirror).expect("parse mirror").n, 0, "mirror captures the initial projection, not later edits");
-    }
-
-    #[test]
-    fn folder_sqlite_storage_round_trips_pack() {
-        let dir = tempfile::tempdir().expect("tempdir");
-        let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
-        assert_eq!(storage.read_pack("doc-a").expect("read empty"), None, "absent pack reads as None");
-
-        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
-            create_document_envelope("demo/v1", "doc-a", DemoProjection { n: 3 }, None);
-        let pack_bytes = envelope.vcs.initial_projection.encode_pack();
-        storage
-            .write_pack("doc-a", "demo/v1", &serde_json::to_string(&envelope).expect("json"), &pack_bytes)
-            .expect("write pack");
-
-        let reloaded = storage.read_pack("doc-a").expect("read pack").expect("some");
-        assert_eq!(reloaded, pack_bytes, "sqlite pack column round trips exact bytes");
-
-        // `write` (JSON-only, no pack argument) must not clobber a previously-written pack.
-        storage
-            .write("doc-a", "demo/v1", &serde_json::to_string(&envelope).expect("json again"))
-            .expect("plain write");
-        assert_eq!(
-            storage.read_pack("doc-a").expect("read pack after plain write"),
-            Some(pack_bytes),
-            "plain write preserves the existing pack column (upsert only touches schema/json/updated_at)"
-        );
     }
 
     #[test]

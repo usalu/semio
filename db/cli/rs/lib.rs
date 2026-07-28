@@ -946,8 +946,14 @@ fn cmd_profile(rest: &[String]) -> i32 {
             document_id: document_id.clone(),
             actor: protocol::ActorId("profiler".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff { schema: "db_cli.profile".to_string(), payload: serde_json::Value::Object(forward) },
-            inverse: protocol::InverseOperation { schema: "db_cli.profile".to_string(), inverse_diff: serde_json::Value::Object(backward) },
+            diff: protocol::DocumentDiff {
+                schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()),
+                payload: serde_json::to_vec(&serde_json::Value::Object(forward)).unwrap_or_default(),
+            },
+            inverse: protocol::InverseOperation {
+                schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()),
+                payload: serde_json::to_vec(&serde_json::Value::Object(backward)).unwrap_or_default(),
+            },
             timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms()),
         };
         let batch = match db::document::CommandBatch::new(vec![envelope]) {

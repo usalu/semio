@@ -1902,6 +1902,19 @@ impl protocol::OpText for SequenceOperation {
         <SequenceOperationDsl as protocol::OpText>::print_op(&sequence_operation_to_dsl(self))
     }
 }
+
+/// ⚡ Binary mirror of the `OpText` impl above — `SequenceOperationDsl` already derives `OpBinary`
+/// via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+impl protocol::OpBinary for SequenceOperation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        sequence_operation_to_dsl(self).encode_op()
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let dsl_operation = SequenceOperationDsl::decode_op(bytes)?;
+        sequence_operation_from_dsl(dsl_operation).map_err(|message| protocol::ProtocolError::Malformed { what: "sequence operation", offset: 0, detail: message })
+    }
+}
 // #endregion 🔖OpText
 
 // #region 🧪OpsTests

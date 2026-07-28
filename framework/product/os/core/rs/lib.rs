@@ -1056,7 +1056,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
     //#endregion 🔖OpText
 
     pub fn materialize_os_projection(document: &OsDocument, applied_edit_ids: &[String]) -> Result<OsProjection, VcsError> {
-        let envelope = OsEnvelope { schema: document.schema.clone(), id: document.id.clone(), vcs: document.vcs.clone(), backbone: document.backbone.clone(), active_alternative_id: document.vcs.initial_projection.active_alternative_id.clone() };
+        let envelope = OsEnvelope { schema: document.schema.clone(), id: document.id.clone(), vcs: document.vcs.clone(), backbone: document.backbone.clone(), active_alternative_id: document.vcs.initial_projection.active_alternative_id.clone(), cursor: None };
         materialize_document_projection(&envelope, applied_edit_ids)
     }
 
@@ -1072,6 +1072,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             vcs: document.vcs.clone(),
             backbone: document.backbone.clone(),
             active_alternative_id: document.vcs.initial_projection.active_alternative_id.clone(),
+            cursor: None,
         };
         serde_json::to_string(&envelope).map_err(|error| VcsError::Serialize(error.to_string()))
     }
@@ -1094,7 +1095,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
     impl OsStore {
         pub fn new(document: OsDocument) -> Self {
             let applied_edit_ids = document.applied_edit_ids.clone();
-            let envelope = OsEnvelope { schema: document.schema, id: document.id, vcs: document.vcs, backbone: document.backbone, active_alternative_id: None };
+            let envelope = OsEnvelope { schema: document.schema, id: document.id, vcs: document.vcs, backbone: document.backbone, active_alternative_id: None, cursor: None };
             let mut inner = DocumentStore::new(envelope);
             if !applied_edit_ids.is_empty() {
                 let snapshot = inner.envelope().clone();
@@ -1331,13 +1332,13 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         os_studio_catalog_entry_from_document(&backbone_uri, &document)
     }
 
-    /// @emoji 📦 Pack counterpart of `import_os_studio_from_json`: decodes `pack`+`ops` through the
+    /// @emoji 📦 Pack counterpart of `import_os_studio_from_json`: decodes `pack`+`spr` through the
     /// `OS_STUDIO_SCHEMA` codec (`store::document_codec`, registered by `s/plugin`'s
     /// `register_document_codec_for_app::<StudioApp>` — wave 2) into the same envelope JSON shape,
     /// then follows the identical admission flow.
-    pub fn import_os_studio_from_pack(pack: &[u8], ops: &str, port: Arc<dyn OsBackbonePort>) -> Result<OsStudioCatalogEntry, VcsError> {
+    pub fn import_os_studio_from_pack(pack: &[u8], spr: &[u8], port: Arc<dyn OsBackbonePort>) -> Result<OsStudioCatalogEntry, VcsError> {
         let codec = store::document_codec(OS_STUDIO_SCHEMA).ok_or_else(|| VcsError::Deserialize(format!("no document codec registered for schema {OS_STUDIO_SCHEMA}")))?;
-        let json = (codec.parse)(pack, ops)?;
+        let json = (codec.parse)(pack, spr)?;
         import_os_studio_from_json(&json, port)
     }
 
@@ -2169,7 +2170,7 @@ pub mod backbone {
                             return Err(VcsError::Backbone(format!("no document codec registered for schema {OS_STUDIO_SCHEMA:?}")));
                         };
                         if let Some(pack_files) = storage.read_pack(document_id, extension)? {
-                            return (codec.parse)(&pack_files.pack, &pack_files.ops);
+                            return (codec.parse)(&pack_files.pack, &pack_files.spr);
                         }
                         return match storage.read(document_id, extension)? {
                             Some(text_files) => (codec.parse_dsl)(&text_files.dsl, &text_files.ops),
@@ -2178,7 +2179,11 @@ pub mod backbone {
                     }
                     #[cfg(not(target_arch = "wasm32"))]
                     StudioPortKind::Folder(folder_uri, storage) if uri == folder_uri => {
-                        return storage.read(STUDIO_FOLDER_DOCUMENT_ID)?.ok_or_else(|| VcsError::Backbone(format!("missing backbone file {uri}")));
+                        let Some(codec) = store::document_codec(OS_STUDIO_SCHEMA) else {
+                            return Err(VcsError::Backbone(format!("no document codec registered for schema {OS_STUDIO_SCHEMA:?}")));
+                        };
+                        let (pack, spr) = storage.read(STUDIO_FOLDER_DOCUMENT_ID)?.ok_or_else(|| VcsError::Backbone(format!("missing backbone file {uri}")))?;
+                        return (codec.parse)(&pack, &spr);
                     }
                     _ => {}
                 }
@@ -2199,7 +2204,11 @@ pub mod backbone {
                     }
                     #[cfg(not(target_arch = "wasm32"))]
                     StudioPortKind::Folder(folder_uri, storage) if uri == folder_uri => {
-                        return storage.write(STUDIO_FOLDER_DOCUMENT_ID, OS_STUDIO_SCHEMA, payload);
+                        let Some(codec) = store::document_codec(OS_STUDIO_SCHEMA) else {
+                            return Err(VcsError::Backbone(format!("no document codec registered for schema {OS_STUDIO_SCHEMA:?}")));
+                        };
+                        let (pack_files, _dsl_mirror) = (codec.print)(payload)?;
+                        return storage.write(STUDIO_FOLDER_DOCUMENT_ID, OS_STUDIO_SCHEMA, &pack_files.pack, &pack_files.spr);
                     }
                     _ => {}
                 }

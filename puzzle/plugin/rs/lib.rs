@@ -3103,11 +3103,13 @@ pub mod d3 {
         vortex_direction: String,
         #[serde(default)]
         sun: WorldSunConfig,
-        /// 🪟 Per-window-instance snapshot of every option field above, keyed by window INSTANCE id (never
-        /// by window kind) — see [`Puzzle3dWindowOptions`]. The flat fields above are a scratch,
-        /// currently-materialized-window working copy: `load_window`/`save_window` swap them in/out around
-        /// every `render`/`window_measures`/`window_engagements`/`handle_action` call so two window
-        /// instances of the same kind (e.g. split top/perspective panes) never share a value.
+        /// 🪟 Per-window-instance snapshot of view-local chrome options, keyed by window INSTANCE id (never
+        /// by window kind) — see [`Puzzle3dWindowOptions`]. The flat fields that mirror those options are a
+        /// scratch, currently-materialized-window working copy: `load_window`/`save_window` swap them in/out
+        /// around every `render`/`window_measures`/`window_engagements`/`handle_action` call so two window
+        /// instances of the same kind (e.g. split top/perspective panes) never share a grid/LOD/selection
+        /// preference. Fill count, distribution weights, and overlap budget stay on the flat runtime —
+        /// they mutate the shared document/precompute plan and must agree across every pane.
         #[serde(default)]
         window_options: BTreeMap<String, Puzzle3dWindowOptions>,
     }
@@ -3178,18 +3180,15 @@ pub mod d3 {
         [1, 1, 1]
     }
 
-    /// 🪟 Every option a puzzle3d window's chrome exposes (grid, LOD, selection method/mode, vortex
-    /// display, sun, and the fill/voxel tool's displayed parameters) — stored per window INSTANCE in
-    /// [`Puzzle3dRuntime::window_options`]. Field set mirrors exactly the flat fields on
-    /// [`Puzzle3dRuntime`] that back a window measure/engagement; see `load_window`/`save_window`.
+    /// 🪟 View-local chrome options a puzzle3d window exposes (grid, LOD, selection method/mode, vortex
+    /// display, sun, voxel steppers) — stored per window INSTANCE in [`Puzzle3dRuntime::window_options`].
+    /// Fill count, distribution weights, and overlap budget are intentionally absent: they drive the shared
+    /// document/precompute plan and live only on the flat [`Puzzle3dRuntime`] fields so split panes can never
+    /// disagree about which fill objects are shown. See `load_window`/`save_window`.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     struct Puzzle3dWindowOptions {
         selection_method: String,
-        overlap_budget: f64,
-        fill_count: u32,
-        object_kind_weights: HashMap<String, f64>,
-        vortex_kind_weights: HashMap<String, f64>,
         lod_automatic: bool,
         lod_depth_variable: bool,
         grid_visible: bool,
@@ -3213,10 +3212,6 @@ pub mod d3 {
         fn default() -> Self {
             Self {
                 selection_method: default_selection_method(),
-                overlap_budget: default_overlap_budget(),
-                fill_count: 0,
-                object_kind_weights: HashMap::new(),
-                vortex_kind_weights: HashMap::new(),
                 lod_automatic: default_true(),
                 lod_depth_variable: false,
                 grid_visible: default_true(),
@@ -3240,14 +3235,11 @@ pub mod d3 {
 
     impl Puzzle3dRuntime {
         /// 🪟 Snapshots this runtime's currently-materialized flat window-option fields into a
-        /// [`Puzzle3dWindowOptions`] — the counterpart to `apply_window_options`.
+        /// [`Puzzle3dWindowOptions`] — the counterpart to `apply_window_options`. Does not snapshot fill
+        /// count / distribution / overlap: those stay app-global on the flat runtime.
         fn snapshot_window_options(&self) -> Puzzle3dWindowOptions {
             Puzzle3dWindowOptions {
                 selection_method: self.selection_method.clone(),
-                overlap_budget: self.overlap_budget,
-                fill_count: self.fill_count,
-                object_kind_weights: self.object_kind_weights.clone(),
-                vortex_kind_weights: self.vortex_kind_weights.clone(),
                 lod_automatic: self.lod_automatic,
                 lod_depth_variable: self.lod_depth_variable,
                 grid_visible: self.grid_visible,
@@ -3269,13 +3261,10 @@ pub mod d3 {
         }
 
         /// 🪟 Materializes `options` onto this runtime's flat window-option fields — the counterpart to
-        /// `snapshot_window_options`.
+        /// `snapshot_window_options`. Leaves fill count / distribution / overlap untouched so a pane
+        /// switch cannot rewrite the shared fill scene.
         fn apply_window_options(&mut self, options: &Puzzle3dWindowOptions) {
             self.selection_method = options.selection_method.clone();
-            self.overlap_budget = options.overlap_budget;
-            self.fill_count = options.fill_count;
-            self.object_kind_weights = options.object_kind_weights.clone();
-            self.vortex_kind_weights = options.vortex_kind_weights.clone();
             self.lod_automatic = options.lod_automatic;
             self.lod_depth_variable = options.lod_depth_variable;
             self.grid_visible = options.grid_visible;
@@ -3303,9 +3292,10 @@ pub mod d3 {
             self.apply_window_options(&options);
         }
 
-        /// 🪟 Snapshots this runtime's current flat window-option fields (as left by whatever action just
-        /// ran) back into `window_id`'s stored entry. Other windows' entries in `window_options` are
-        /// untouched, so a `setGridVisible` in one window instance never affects another's.
+        /// 🪟 Snapshots this runtime's current flat view-local option fields (as left by whatever action
+        /// just ran) back into `window_id`'s stored entry. Other windows' entries in `window_options` are
+        /// untouched, so a `setGridVisible` in one window instance never affects another's. Shared fill
+        /// fields are not part of the snapshot.
         fn save_window(&mut self, window_id: &str) {
             let options = self.snapshot_window_options();
             self.window_options.insert(window_id.to_string(), options);
@@ -6475,9 +6465,10 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             }
             let before = doc.projection.0.clone();
             let active_utility_initial = puzzle3d_scene_active_utility(view_state, view_state.window_id.as_deref());
-            // 🪟 This action targets exactly one window instance — materialize ITS options onto the scene
-            // runtime before handling, and snapshot them back out (via `save_window`, at every exit below)
-            // so a grid/LOD/selection/vortex/sun mutation never leaks into another window's options.
+            // 🪟 This action targets exactly one window instance — materialize ITS view-local options onto
+            // the scene runtime before handling, and snapshot them back out (via `save_window`, at every
+            // exit below) so a grid/LOD/selection/vortex/sun mutation never leaks into another window's
+            // options. Fill count / distribution / overlap stay on the flat runtime and are shared.
             let wid = view_state.window_id.clone().unwrap_or_else(|| PUZZLE3D_PLAY_WINDOW_MAIN.into());
             let mut runtime_for_window = self.runtime.clone();
             runtime_for_window.load_window(&wid);
@@ -8527,6 +8518,95 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             let second_composite = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &second_window_view).expect("render second window");
             let second_lod = lod_of(&serde_json::to_value(&second_composite).unwrap());
             assert_eq!(second_lod.get("showLodGrid").and_then(Value::as_bool), Some(false));
+        }
+
+        /// 🪣 Fill count drives the shared document + reveal cutoff — split top/perspective panes must never
+        /// disagree about which planned objects are visible after a slider commit on either pane.
+        #[test]
+        fn fill_count_is_shared_across_split_panes_reveal_cutoffs_and_instances() {
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let top = PUZZLE3D_PLAY_WINDOW_TOP;
+            let perspective = PUZZLE3D_PLAY_WINDOW_PERSPECTIVE;
+            let instances = vec![
+                ViewWindowInstance { id: top.to_string(), window_kind_id: PUZZLE3D_PLAY_WINDOW_MAIN.to_string() },
+                ViewWindowInstance { id: perspective.to_string(), window_kind_id: PUZZLE3D_PLAY_WINDOW_MAIN.to_string() },
+            ];
+            let top_view = ViewState {
+                window_id: Some(top.to_string()),
+                window_instances: instances.clone(),
+                active_tool_id: Some("fill".into()),
+                ..ViewState::default()
+            };
+            let perspective_view = ViewState {
+                window_id: Some(perspective.to_string()),
+                window_instances: instances.clone(),
+                active_tool_id: Some("fill".into()),
+                ..ViewState::default()
+            };
+
+            app.handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "fill" })), &top_view, &testkit::meta("local")).expect("select fill tool");
+            for _ in 0..64 {
+                app.handle_action("fillBuildTick", None, &top_view, &testkit::meta("local")).expect("fillBuildTick");
+                let ready = app
+                    .tool_measures(&top_view)
+                    .get("fill")
+                    .and_then(|tool_measures| find_measure_slider_ready(tool_measures, "puzzle3d-fill-count"))
+                    .unwrap_or(0.0);
+                if ready >= 3.0 {
+                    break;
+                }
+            }
+            let ready = app
+                .tool_measures(&top_view)
+                .get("fill")
+                .and_then(|tool_measures| find_measure_slider_ready(tool_measures, "puzzle3d-fill-count"))
+                .unwrap_or(0.0) as u32;
+            assert!(ready >= 3, "need a planned fill prefix to assert cross-pane sync");
+
+            // Commit from the top pane only — the perspective pane must still track the same cutoff.
+            let committed = ready.min(3);
+            app.handle_action("setFillCount", Some(&json!({ "value": committed })), &top_view, &testkit::meta("local")).expect("setFillCount on top");
+
+            let top_render = serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &top_view).expect("render top")).unwrap();
+            let perspective_render = serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &perspective_view).expect("render perspective")).unwrap();
+            assert_eq!(
+                interaction_of(&top_render).pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64),
+                Some(committed as u64),
+                "top pane reveal cutoff must track the committed fill count",
+            );
+            assert_eq!(
+                interaction_of(&perspective_render).pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64),
+                Some(committed as u64),
+                "perspective pane must share the same reveal cutoff — fill is document-global, not per-window",
+            );
+            assert_eq!(instance_count(&top_render), instance_count(&perspective_render), "both panes must emit the same instance list for the shared fill plan");
+
+            let top_ids: Vec<String> = top_render
+                .pointer("/world3d/instancesJson")
+                .and_then(Value::as_str)
+                .and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok())
+                .into_iter()
+                .flatten()
+                .filter_map(|instance| instance.get("id").and_then(Value::as_str).map(str::to_string))
+                .collect();
+            let perspective_ids: Vec<String> = perspective_render
+                .pointer("/world3d/instancesJson")
+                .and_then(Value::as_str)
+                .and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok())
+                .into_iter()
+                .flatten()
+                .filter_map(|instance| instance.get("id").and_then(Value::as_str).map(str::to_string))
+                .collect();
+            assert_eq!(top_ids, perspective_ids, "top and perspective must show the exact same object ids after a fill slider commit");
+
+            // Sliding from the other pane must keep both panes in lockstep.
+            let reduced = committed.saturating_sub(1);
+            app.handle_action("setFillCount", Some(&json!({ "value": reduced })), &perspective_view, &testkit::meta("local")).expect("setFillCount on perspective");
+            let top_after = serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &top_view).expect("render top after reduce")).unwrap();
+            let perspective_after = serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &perspective_view).expect("render perspective after reduce")).unwrap();
+            assert_eq!(interaction_of(&top_after).pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(reduced as u64));
+            assert_eq!(interaction_of(&perspective_after).pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(reduced as u64));
+            assert_eq!(instance_count(&top_after), instance_count(&perspective_after));
         }
 
         #[test]

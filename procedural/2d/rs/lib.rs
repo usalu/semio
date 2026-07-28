@@ -651,6 +651,19 @@ impl protocol::OpText for Procedural2dOperation {
         <Procedural2dOperationDsl as protocol::OpText>::print_op(&procedural2d_operation_to_dsl(self))
     }
 }
+
+/// ⚡ Binary mirror of the `OpText` bridge above — `Procedural2dOperationDsl` already derives
+/// `OpBinary` via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+impl protocol::OpBinary for Procedural2dOperation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        procedural2d_operation_to_dsl(self).encode_op()
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let parsed = Procedural2dOperationDsl::decode_op(bytes)?;
+        procedural2d_operation_from_dsl(parsed).map_err(|error| protocol::ProtocolError::Malformed { what: "procedural2d operation", offset: 0, detail: error.to_string() })
+    }
+}
 //#endregion 🔖OpText
 
 pub type Procedural2dEnvelope = DocumentEnvelope<Procedural2dDocument, Procedural2dOperation>;

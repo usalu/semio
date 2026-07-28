@@ -2279,7 +2279,6 @@ dependencies = [
  "db_storage",
  "db_wal",
  "protocol",
- "serde_json",
 ]
 
 [[package]]
@@ -8407,8 +8406,6 @@ dependencies = [
  "protocol_causal",
  "protocol_command",
  "protocol_core",
- "serde",
- "serde_json",
 ]
 
 [[package]]

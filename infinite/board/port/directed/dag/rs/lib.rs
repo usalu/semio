@@ -7435,6 +7435,18 @@ impl OpText for DagOperation {
         <DagOperationDsl as OpText>::print_op(&dag_operation_to_dsl(self))
     }
 }
+
+/// ⚡ Binary mirror of the `OpText` bridge above — `DagOperationDsl` already derives `OpBinary`
+/// via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+impl protocol::OpBinary for DagOperation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        dag_operation_to_dsl(self).encode_op()
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        Ok(dag_operation_from_dsl(DagOperationDsl::decode_op(bytes)?))
+    }
+}
 //#endregion 🔖OpTextMirror
 //#endregion 🔖OpText
 

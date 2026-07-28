@@ -1,0 +1,21 @@
+$ bun ./script.ts nx run @semio-tech/ui-react:test -- --testNamePattern "silhouette|Mode dock|PaneHost|projection pane|gizmo in the bottom"
+
+> nx run @semio-tech/ui-react:test --testNamePattern silhouette|Mode dock|PaneHost|projection pane|gizmo in the bottom
+
+> bun ./script.ts test --testNamePattern "silhouette|Mode dock|PaneHost|projection pane|gizmo in the bottom"
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+
+ Test Files  1 passed (1)
+      Tests  15 passed | 465 skipped (480)
+   Start at  18:30:07
+   Duration  3.84s (transform 1.83s, setup 83ms, import 2.98s, tests 396ms, environment 240ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/ui-react
+
+

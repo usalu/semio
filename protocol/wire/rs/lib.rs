@@ -3,19 +3,18 @@
 //! contract: `.repo/🎫/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` `## Amendment`
 //! §`protocol_wire`.
 //!
-//! **Deviation** (explicitly permitted by the contract's `🔖Codec` note): the byte encoding is
-//! `lane: u8` followed by a varint-u64 length prefix and a `serde_json` body, not a fully
-//! hand-rolled bincode-shaped binary layout. The frame *types* below are the frozen contract; only
-//! this crate's byte encoding exercises the contract's declared "one degree of freedom". Rationale:
-//! `ClientFrame`/`ServerFrame` carry deeply nested, schema-erased `serde_json::Value` payloads
-//! (inside `protocol_causal::DocumentDiff`/`InverseOperation`, `ClientFrame::Presence`,
-//! `ServerFrame::Error`, …) alongside `Vec<OperationEnvelope>` batches — a hand-rolled binary layout
-//! for this shape would duplicate `serde`'s derive machinery field-by-field for no round-trip
-//! benefit, since the payloads are opaque JSON already. `protocol_core`/`protocol_causal` are not
-//! depended on for the varint primitive itself (this crate has no `pack_core` path dependency per
-//! the frozen `Deps:` line), so the tiny LEB128 helpers below are a deliberate, self-contained
-//! duplication of `pack_core::{write_varint_u64, read_varint_u64}`'s algorithm — not a reimplemented
-//! *format*, just the same well-known encoding used everywhere else in this repo.
+//! 🎯 W5: the byte encoding is now a fully hand-rolled binary layout — `lane: u8` followed by
+//! `frame tag: u8` (the frame enum's variant declaration order) and its fields in declaration
+//! order, with no body-length prefix (one frame per WS message) and no per-field tags. This
+//! matches `protocol_core::🔖WireCodec`'s convention (also used by `protocol_causal::🔖EnvelopeCodec`
+//! and `dsl::op_rt`). The previous `serde_json`-body deviation is gone: `DocumentDiff`/
+//! `InverseOperation` payloads are opaque `Vec<u8>` now (not `serde_json::Value`), and
+//! `ClientFrame::Presence`/`ServerFrame::Presence` carry pre-serialized JSON `String`s instead of
+//! `serde_json::Value` so a peer's presence blob round-trips byte-for-byte without a JSON
+//! re-encode (needed for the Rust/TS fixture byte-identity canary). `protocol_core` supplies the
+//! primitive codec (`write_varint_u64`/`write_str`/`write_bytes`/`write_hash32`/`write_bool` and
+//! their `read_*` twins); this crate adds only the option/vec combinators and the frame/nested-enum
+//! tag dispatch below.
 
 //#region 🔖Lane
 /// @emoji 🛣️ Which logical channel a wire frame travels on: `Command` for causally-ordered,
@@ -43,7 +42,7 @@ impl Lane {
 
 //#region 🔖ClientFrame
 /// @emoji 📨 One frame a client sends to the hub.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum ClientFrame {
     Hello {
         wire_version: u32,
@@ -68,7 +67,7 @@ pub enum ClientFrame {
         payload: Vec<u8>,
     },
     Presence {
-        peer: serde_json::Value,
+        peer_json: String,
     },
     CreditGrant {
         n: u32,
@@ -79,7 +78,7 @@ pub enum ClientFrame {
 
 //#region 🔖ServerFrame
 /// @emoji 🚀 How a `ServerFrame::Welcome` seeds a freshly (re)connected client's local state.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Bootstrap {
     None,
     Snapshot { pack_hash: [u8; 32], inline: Option<Vec<u8>> },
@@ -87,7 +86,7 @@ pub enum Bootstrap {
 }
 
 /// @emoji ⚖️ How the hub resolved one submitted operation against concurrent history.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum ApplyOutcome {
     Accepted,
     // 🔒 Boxed: OperationEnvelope is far larger than the other variants, and clippy's
@@ -97,7 +96,7 @@ pub enum ApplyOutcome {
 }
 
 /// @emoji 🪜 One stage of a submitted batch's lifecycle, from `Received` to `Applied`.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum AckStage {
     Received,
     Persisted,
@@ -106,7 +105,7 @@ pub enum AckStage {
 }
 
 /// @emoji 📬 One frame the hub sends to a client.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum ServerFrame {
     Welcome {
         session_id: String,
@@ -138,7 +137,7 @@ pub enum ServerFrame {
         payload: Vec<u8>,
     },
     Presence {
-        peers: Vec<serde_json::Value>,
+        peers_json: Vec<String>,
     },
     CreditGrant {
         n: u32,
@@ -151,91 +150,316 @@ pub enum ServerFrame {
 //#endregion 🔖ServerFrame
 
 //#region 🔖Codec
-// Binary frame encode/decode: `lane: u8` + varint-u64 body length + serde_json bytes — see the
-// module-level docstring for why this crate takes the contract's permitted deviation instead of a
-// fully hand-rolled binary layout.
-
-/// @emoji ✏️ Writes `value` as an unsigned LEB128 varint (minimal length) — a self-contained twin
-/// of `pack_core::write_varint_u64`'s algorithm (see module docstring for why it's duplicated here
-/// rather than path-depended on).
-fn write_varint_u64(out: &mut Vec<u8>, value: u64) {
-    let mut remaining = value;
-    loop {
-        let byte = (remaining & 0x7F) as u8;
-        remaining >>= 7;
-        if remaining == 0 {
-            out.push(byte);
-            break;
-        }
-        out.push(byte | 0x80);
-    }
-}
-
-/// @emoji 📖 Reads an unsigned LEB128 varint starting at `*pos`, advancing `*pos` past it.
-fn read_varint_u64(bytes: &[u8], pos: &mut usize) -> Result<u64, protocol_core::ProtocolError> {
-    let start = *pos;
-    let mut result: u64 = 0;
-    for i in 0..10usize {
-        let byte = *bytes
-            .get(*pos)
-            .ok_or_else(|| malformed("wire frame varint", *pos as u64, "truncated"))?;
-        *pos += 1;
-        let more = byte & 0x80 != 0;
-        let payload = (byte & 0x7F) as u64;
-        if i == 9 && (more || payload > 1) {
-            return Err(malformed("wire frame varint", start as u64, "overlong varint (exceeds 10 bytes / 64 bits)"));
-        }
-        result |= payload << (i as u32 * 7);
-        if !more {
-            return Ok(result);
-        }
-    }
-    Err(malformed("wire frame varint", start as u64, "overlong varint (exceeds 10 bytes)"))
-}
+// Hand-rolled binary frame encode/decode: `lane: u8 | frame tag: u8 | fields...` — see the
+// module-level docstring. `protocol_core::🔖WireCodec` supplies the primitives; this region adds
+// the option/vec combinators the frame shapes need plus the tag-dispatch match arms.
 
 fn malformed(what: &'static str, offset: u64, detail: &str) -> protocol_core::ProtocolError {
     protocol_core::ProtocolError::Malformed { what, offset, detail: detail.to_string() }
 }
 
-fn encode_frame<T: serde::Serialize>(frame: &T, lane: Lane) -> Vec<u8> {
-    let json = serde_json::to_vec(frame).expect("wire frame types are always JSON-serializable");
-    let mut out = Vec::with_capacity(1 + 5 + json.len());
-    out.push(lane.to_byte());
-    write_varint_u64(&mut out, json.len() as u64);
-    out.extend_from_slice(&json);
-    out
+//#region 🔖Combinators
+fn write_opt_str(out: &mut Vec<u8>, value: &Option<String>) {
+    protocol_core::write_bool(out, value.is_some());
+    if let Some(s) = value {
+        protocol_core::write_str(out, s);
+    }
 }
 
-fn decode_frame<T: serde::de::DeserializeOwned>(bytes: &[u8]) -> Result<(Lane, T), protocol_core::ProtocolError> {
-    let lane_byte = *bytes.first().ok_or_else(|| malformed("wire frame", 0, "empty frame"))?;
-    let lane = Lane::from_byte(lane_byte).ok_or_else(|| malformed("wire frame lane byte", 0, &format!("unknown lane {lane_byte:#x}")))?;
-    let mut pos = 1usize;
-    let len = read_varint_u64(bytes, &mut pos)? as usize;
-    let body = bytes
-        .get(pos..pos + len)
-        .ok_or_else(|| malformed("wire frame body", pos as u64, "declared length exceeds available bytes"))?;
-    let frame: T = serde_json::from_slice(body).map_err(|error| malformed("wire frame json", pos as u64, &error.to_string()))?;
-    Ok((lane, frame))
+fn read_opt_str(bytes: &[u8], pos: &mut usize) -> Result<Option<String>, protocol_core::ProtocolError> {
+    if protocol_core::read_bool(bytes, pos)? { Ok(Some(protocol_core::read_str(bytes, pos)?)) } else { Ok(None) }
 }
 
-/// @emoji 📤 Encodes one `ClientFrame` on the given `Lane`.
+fn write_opt_bytes(out: &mut Vec<u8>, value: &Option<Vec<u8>>) {
+    protocol_core::write_bool(out, value.is_some());
+    if let Some(b) = value {
+        protocol_core::write_bytes(out, b);
+    }
+}
+
+fn read_opt_bytes(bytes: &[u8], pos: &mut usize) -> Result<Option<Vec<u8>>, protocol_core::ProtocolError> {
+    if protocol_core::read_bool(bytes, pos)? { Ok(Some(protocol_core::read_bytes(bytes, pos)?)) } else { Ok(None) }
+}
+
+fn write_opt_frontier(out: &mut Vec<u8>, value: &Option<protocol_causal::FrontierSummary>) {
+    protocol_core::write_bool(out, value.is_some());
+    if let Some(f) = value {
+        protocol_causal::encode_frontier(f, out);
+    }
+}
+
+fn read_opt_frontier(bytes: &[u8], pos: &mut usize) -> Result<Option<protocol_causal::FrontierSummary>, protocol_core::ProtocolError> {
+    if protocol_core::read_bool(bytes, pos)? { Ok(Some(protocol_causal::decode_frontier(bytes, pos)?)) } else { Ok(None) }
+}
+
+fn write_vec_str(out: &mut Vec<u8>, values: &[String]) {
+    protocol_core::write_varint_u64(out, values.len() as u64);
+    for value in values {
+        protocol_core::write_str(out, value);
+    }
+}
+
+fn read_vec_str(bytes: &[u8], pos: &mut usize) -> Result<Vec<String>, protocol_core::ProtocolError> {
+    let count = protocol_core::read_varint_u64(bytes, pos)?;
+    (0..count).map(|_| protocol_core::read_str(bytes, pos)).collect()
+}
+
+fn write_vec_envelope(out: &mut Vec<u8>, values: &[protocol_causal::OperationEnvelope]) {
+    protocol_core::write_varint_u64(out, values.len() as u64);
+    for value in values {
+        protocol_causal::encode_envelope(value, out);
+    }
+}
+
+fn read_vec_envelope(bytes: &[u8], pos: &mut usize) -> Result<Vec<protocol_causal::OperationEnvelope>, protocol_core::ProtocolError> {
+    let count = protocol_core::read_varint_u64(bytes, pos)?;
+    (0..count).map(|_| protocol_causal::decode_envelope(bytes, pos)).collect()
+}
+//#endregion 🔖Combinators
+
+//#region 🔖NestedEnums
+fn encode_bootstrap(bootstrap: &Bootstrap, out: &mut Vec<u8>) {
+    match bootstrap {
+        Bootstrap::None => out.push(0),
+        Bootstrap::Snapshot { pack_hash, inline } => {
+            out.push(1);
+            protocol_core::write_hash32(out, pack_hash);
+            write_opt_bytes(out, inline);
+        }
+        Bootstrap::Tail => out.push(2),
+    }
+}
+
+fn decode_bootstrap(bytes: &[u8], pos: &mut usize) -> Result<Bootstrap, protocol_core::ProtocolError> {
+    let tag = *bytes.get(*pos).ok_or_else(|| malformed("wire bootstrap tag", *pos as u64, "truncated"))?;
+    *pos += 1;
+    match tag {
+        0 => Ok(Bootstrap::None),
+        1 => {
+            let pack_hash = protocol_core::read_hash32(bytes, pos)?;
+            let inline = read_opt_bytes(bytes, pos)?;
+            Ok(Bootstrap::Snapshot { pack_hash, inline })
+        }
+        2 => Ok(Bootstrap::Tail),
+        other => Err(malformed("wire bootstrap tag", *pos as u64, &format!("unknown tag {other:#x}"))),
+    }
+}
+
+fn encode_apply_outcome(outcome: &ApplyOutcome, out: &mut Vec<u8>) {
+    match outcome {
+        ApplyOutcome::Accepted => out.push(0),
+        ApplyOutcome::Transformed { envelope } => {
+            out.push(1);
+            protocol_causal::encode_envelope(envelope, out);
+        }
+        ApplyOutcome::Rejected { reason } => {
+            out.push(2);
+            protocol_core::write_str(out, reason);
+        }
+    }
+}
+
+fn decode_apply_outcome(bytes: &[u8], pos: &mut usize) -> Result<ApplyOutcome, protocol_core::ProtocolError> {
+    let tag = *bytes.get(*pos).ok_or_else(|| malformed("wire apply-outcome tag", *pos as u64, "truncated"))?;
+    *pos += 1;
+    match tag {
+        0 => Ok(ApplyOutcome::Accepted),
+        1 => Ok(ApplyOutcome::Transformed { envelope: Box::new(protocol_causal::decode_envelope(bytes, pos)?) }),
+        2 => Ok(ApplyOutcome::Rejected { reason: protocol_core::read_str(bytes, pos)? }),
+        other => Err(malformed("wire apply-outcome tag", *pos as u64, &format!("unknown tag {other:#x}"))),
+    }
+}
+
+fn encode_ack_stage(stage: &AckStage, out: &mut Vec<u8>) {
+    match stage {
+        AckStage::Received => out.push(0),
+        AckStage::Persisted => out.push(1),
+        AckStage::Applied { outcome } => {
+            out.push(2);
+            encode_apply_outcome(outcome, out);
+        }
+    }
+}
+
+fn decode_ack_stage(bytes: &[u8], pos: &mut usize) -> Result<AckStage, protocol_core::ProtocolError> {
+    let tag = *bytes.get(*pos).ok_or_else(|| malformed("wire ack-stage tag", *pos as u64, "truncated"))?;
+    *pos += 1;
+    match tag {
+        0 => Ok(AckStage::Received),
+        1 => Ok(AckStage::Persisted),
+        2 => Ok(AckStage::Applied { outcome: Box::new(decode_apply_outcome(bytes, pos)?) }),
+        other => Err(malformed("wire ack-stage tag", *pos as u64, &format!("unknown tag {other:#x}"))),
+    }
+}
+
+fn write_vec_ack_stage(out: &mut Vec<u8>, values: &[AckStage]) {
+    protocol_core::write_varint_u64(out, values.len() as u64);
+    for value in values {
+        encode_ack_stage(value, out);
+    }
+}
+
+fn read_vec_ack_stage(bytes: &[u8], pos: &mut usize) -> Result<Vec<AckStage>, protocol_core::ProtocolError> {
+    let count = protocol_core::read_varint_u64(bytes, pos)?;
+    (0..count).map(|_| decode_ack_stage(bytes, pos)).collect()
+}
+//#endregion 🔖NestedEnums
+
+/// @emoji 📤 Encodes one `ClientFrame` on the given `Lane`: `lane u8 | tag u8 | fields`.
 pub fn encode_client_frame(frame: &ClientFrame, lane: Lane) -> Vec<u8> {
-    encode_frame(frame, lane)
+    let mut out = Vec::new();
+    out.push(lane.to_byte());
+    match frame {
+        ClientFrame::Hello { wire_version, protocol_version, schema, pack_schema_hash, actor, token, resume_token, frontier } => {
+            out.push(0);
+            protocol_core::write_varint_u64(&mut out, *wire_version as u64);
+            protocol_core::write_varint_u64(&mut out, *protocol_version as u64);
+            protocol_core::write_str(&mut out, schema);
+            protocol_core::write_hash32(&mut out, pack_schema_hash);
+            protocol_core::write_str(&mut out, &actor.0);
+            write_opt_str(&mut out, token);
+            write_opt_str(&mut out, resume_token);
+            write_opt_frontier(&mut out, frontier);
+        }
+        ClientFrame::Commands { batch_id, envelopes } => {
+            out.push(1);
+            protocol_core::write_varint_u64(&mut out, *batch_id);
+            write_vec_envelope(&mut out, envelopes);
+        }
+        ClientFrame::FrontierAdvertise { frontier } => {
+            out.push(2);
+            protocol_causal::encode_frontier(frontier, &mut out);
+        }
+        ClientFrame::PreviewPublish { key, seq, payload } => {
+            out.push(3);
+            protocol_core::write_str(&mut out, key);
+            protocol_core::write_varint_u64(&mut out, *seq);
+            protocol_core::write_bytes(&mut out, payload);
+        }
+        ClientFrame::Presence { peer_json } => {
+            out.push(4);
+            protocol_core::write_str(&mut out, peer_json);
+        }
+        ClientFrame::CreditGrant { n } => {
+            out.push(5);
+            protocol_core::write_varint_u64(&mut out, *n as u64);
+        }
+        ClientFrame::Bye => out.push(6),
+    }
+    out
 }
 
 /// @emoji 📥 Decodes one `ClientFrame`, returning the `Lane` it was tagged with.
 pub fn decode_client_frame(bytes: &[u8]) -> Result<(Lane, ClientFrame), protocol_core::ProtocolError> {
-    decode_frame(bytes)
+    let lane_byte = *bytes.first().ok_or_else(|| malformed("wire frame", 0, "empty frame"))?;
+    let lane = Lane::from_byte(lane_byte).ok_or_else(|| malformed("wire frame lane byte", 0, &format!("unknown lane {lane_byte:#x}")))?;
+    let mut pos = 1usize;
+    let tag = *bytes.get(pos).ok_or_else(|| malformed("wire client-frame tag", pos as u64, "truncated"))?;
+    pos += 1;
+    let frame = match tag {
+        0 => ClientFrame::Hello {
+            wire_version: protocol_core::read_varint_u64(bytes, &mut pos)? as u32,
+            protocol_version: protocol_core::read_varint_u64(bytes, &mut pos)? as u32,
+            schema: protocol_core::read_str(bytes, &mut pos)?,
+            pack_schema_hash: protocol_core::read_hash32(bytes, &mut pos)?,
+            actor: protocol_core::ActorId(protocol_core::read_str(bytes, &mut pos)?),
+            token: read_opt_str(bytes, &mut pos)?,
+            resume_token: read_opt_str(bytes, &mut pos)?,
+            frontier: read_opt_frontier(bytes, &mut pos)?,
+        },
+        1 => ClientFrame::Commands { batch_id: protocol_core::read_varint_u64(bytes, &mut pos)?, envelopes: read_vec_envelope(bytes, &mut pos)? },
+        2 => ClientFrame::FrontierAdvertise { frontier: protocol_causal::decode_frontier(bytes, &mut pos)? },
+        3 => ClientFrame::PreviewPublish { key: protocol_core::read_str(bytes, &mut pos)?, seq: protocol_core::read_varint_u64(bytes, &mut pos)?, payload: protocol_core::read_bytes(bytes, &mut pos)? },
+        4 => ClientFrame::Presence { peer_json: protocol_core::read_str(bytes, &mut pos)? },
+        5 => ClientFrame::CreditGrant { n: protocol_core::read_varint_u64(bytes, &mut pos)? as u32 },
+        6 => ClientFrame::Bye,
+        other => return Err(malformed("wire client-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
+    };
+    Ok((lane, frame))
 }
 
-/// @emoji 📤 Encodes one `ServerFrame` on the given `Lane`.
+/// @emoji 📤 Encodes one `ServerFrame` on the given `Lane`: `lane u8 | tag u8 | fields`.
 pub fn encode_server_frame(frame: &ServerFrame, lane: Lane) -> Vec<u8> {
-    encode_frame(frame, lane)
+    let mut out = Vec::new();
+    out.push(lane.to_byte());
+    match frame {
+        ServerFrame::Welcome { session_id, resume_token, server_frontier, bootstrap } => {
+            out.push(0);
+            protocol_core::write_str(&mut out, session_id);
+            protocol_core::write_str(&mut out, resume_token);
+            protocol_causal::encode_frontier(server_frontier, &mut out);
+            encode_bootstrap(bootstrap, &mut out);
+        }
+        ServerFrame::SnapshotChunk { seq, bytes } => {
+            out.push(1);
+            protocol_core::write_varint_u64(&mut out, *seq as u64);
+            protocol_core::write_bytes(&mut out, bytes);
+        }
+        ServerFrame::SnapshotDone { seq_count } => {
+            out.push(2);
+            protocol_core::write_varint_u64(&mut out, *seq_count as u64);
+        }
+        ServerFrame::Commands { envelopes, origin, frontier } => {
+            out.push(3);
+            write_vec_envelope(&mut out, envelopes);
+            protocol_core::write_str(&mut out, &origin.0);
+            protocol_causal::encode_frontier(frontier, &mut out);
+        }
+        ServerFrame::Ack { batch_id, stages, frontier } => {
+            out.push(4);
+            protocol_core::write_varint_u64(&mut out, *batch_id);
+            write_vec_ack_stage(&mut out, stages);
+            protocol_causal::encode_frontier(frontier, &mut out);
+        }
+        ServerFrame::Preview { actor, key, seq, payload } => {
+            out.push(5);
+            protocol_core::write_str(&mut out, &actor.0);
+            protocol_core::write_str(&mut out, key);
+            protocol_core::write_varint_u64(&mut out, *seq);
+            protocol_core::write_bytes(&mut out, payload);
+        }
+        ServerFrame::Presence { peers_json } => {
+            out.push(6);
+            write_vec_str(&mut out, peers_json);
+        }
+        ServerFrame::CreditGrant { n } => {
+            out.push(7);
+            protocol_core::write_varint_u64(&mut out, *n as u64);
+        }
+        ServerFrame::Error { code, message } => {
+            out.push(8);
+            protocol_core::write_str(&mut out, code);
+            protocol_core::write_str(&mut out, message);
+        }
+    }
+    out
 }
 
 /// @emoji 📥 Decodes one `ServerFrame`, returning the `Lane` it was tagged with.
 pub fn decode_server_frame(bytes: &[u8]) -> Result<(Lane, ServerFrame), protocol_core::ProtocolError> {
-    decode_frame(bytes)
+    let lane_byte = *bytes.first().ok_or_else(|| malformed("wire frame", 0, "empty frame"))?;
+    let lane = Lane::from_byte(lane_byte).ok_or_else(|| malformed("wire frame lane byte", 0, &format!("unknown lane {lane_byte:#x}")))?;
+    let mut pos = 1usize;
+    let tag = *bytes.get(pos).ok_or_else(|| malformed("wire server-frame tag", pos as u64, "truncated"))?;
+    pos += 1;
+    let frame = match tag {
+        0 => ServerFrame::Welcome {
+            session_id: protocol_core::read_str(bytes, &mut pos)?,
+            resume_token: protocol_core::read_str(bytes, &mut pos)?,
+            server_frontier: protocol_causal::decode_frontier(bytes, &mut pos)?,
+            bootstrap: decode_bootstrap(bytes, &mut pos)?,
+        },
+        1 => ServerFrame::SnapshotChunk { seq: protocol_core::read_varint_u64(bytes, &mut pos)? as u32, bytes: protocol_core::read_bytes(bytes, &mut pos)? },
+        2 => ServerFrame::SnapshotDone { seq_count: protocol_core::read_varint_u64(bytes, &mut pos)? as u32 },
+        3 => ServerFrame::Commands { envelopes: read_vec_envelope(bytes, &mut pos)?, origin: protocol_core::ActorId(protocol_core::read_str(bytes, &mut pos)?), frontier: protocol_causal::decode_frontier(bytes, &mut pos)? },
+        4 => ServerFrame::Ack { batch_id: protocol_core::read_varint_u64(bytes, &mut pos)?, stages: read_vec_ack_stage(bytes, &mut pos)?, frontier: protocol_causal::decode_frontier(bytes, &mut pos)? },
+        5 => ServerFrame::Preview { actor: protocol_core::ActorId(protocol_core::read_str(bytes, &mut pos)?), key: protocol_core::read_str(bytes, &mut pos)?, seq: protocol_core::read_varint_u64(bytes, &mut pos)?, payload: protocol_core::read_bytes(bytes, &mut pos)? },
+        6 => ServerFrame::Presence { peers_json: read_vec_str(bytes, &mut pos)? },
+        7 => ServerFrame::CreditGrant { n: protocol_core::read_varint_u64(bytes, &mut pos)? as u32 },
+        8 => ServerFrame::Error { code: protocol_core::read_str(bytes, &mut pos)?, message: protocol_core::read_str(bytes, &mut pos)? },
+        other => return Err(malformed("wire server-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
+    };
+    Ok((lane, frame))
 }
 //#endregion 🔖Codec
 
@@ -251,8 +475,8 @@ mod tests {
             document_id: protocol_core::DocumentId("document-1".to_string()),
             actor: protocol_core::ActorId("actor-1".to_string()),
             dependencies: Vec::new(),
-            diff: protocol_causal::DocumentDiff { schema: "diff.v1".to_string(), payload: serde_json::json!({"value": id}) },
-            inverse: protocol_causal::InverseOperation { schema: "diff.v1".to_string(), inverse_diff: serde_json::json!({}) },
+            diff: protocol_causal::DocumentDiff { schema: protocol_core::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
+            inverse: protocol_causal::InverseOperation { schema: protocol_core::SchemaId("diff.v1".to_string()), payload: Vec::new() },
             timestamp: protocol_core::HybridLogicalTimestamp::new(1, 0),
         }
     }
@@ -336,7 +560,7 @@ mod tests {
 
     #[test]
     fn client_frame_presence_round_trips() {
-        assert_client_round_trips(&ClientFrame::Presence { peer: serde_json::json!({"cursor": [1, 2]}) }, Lane::Preview);
+        assert_client_round_trips(&ClientFrame::Presence { peer_json: "{\"cursor\":[1,2]}".to_string() }, Lane::Preview);
     }
 
     #[test]
@@ -403,7 +627,7 @@ mod tests {
 
     #[test]
     fn server_frame_presence_round_trips() {
-        assert_server_round_trips(&ServerFrame::Presence { peers: vec![serde_json::json!({"id": "a"}), serde_json::json!({"id": "b"})] }, Lane::Preview);
+        assert_server_round_trips(&ServerFrame::Presence { peers_json: vec!["{\"id\":\"a\"}".to_string(), "{\"id\":\"b\"}".to_string()] }, Lane::Preview);
     }
 
     #[test]
@@ -431,28 +655,37 @@ mod tests {
     }
 
     #[test]
-    fn decode_client_frame_rejects_truncated_body() {
-        let mut bytes = encode_client_frame(&ClientFrame::Bye, Lane::Command);
-        bytes.push(0xFF); // grow the declared length beyond what actually follows
-        let extended_len_bytes = {
-            let mut out = Vec::new();
-            out.push(Lane::Command.to_byte());
-            write_varint_u64(&mut out, 999);
-            out
-        };
-        assert!(decode_client_frame(&extended_len_bytes).is_err());
-        let _ = bytes; // original well-formed encoding stays valid; only the crafted one is truncated
+    fn decode_client_frame_rejects_unknown_tag() {
+        let bytes = vec![Lane::Command.to_byte(), 0xFF];
+        let err = decode_client_frame(&bytes).unwrap_err();
+        assert!(matches!(err, protocol_core::ProtocolError::Malformed { what: "wire client-frame tag", .. }));
     }
 
     #[test]
-    fn decode_server_frame_rejects_malformed_json_body() {
-        let mut out = Vec::new();
-        out.push(Lane::Command.to_byte());
-        let json = b"{not valid json";
-        write_varint_u64(&mut out, json.len() as u64);
-        out.extend_from_slice(json);
-        let err = decode_server_frame(&out).unwrap_err();
-        assert!(matches!(err, protocol_core::ProtocolError::Malformed { what: "wire frame json", .. }));
+    fn decode_server_frame_rejects_unknown_tag() {
+        let bytes = vec![Lane::Command.to_byte(), 0xFF];
+        let err = decode_server_frame(&bytes).unwrap_err();
+        assert!(matches!(err, protocol_core::ProtocolError::Malformed { what: "wire server-frame tag", .. }));
+    }
+
+    #[test]
+    fn decode_client_frame_rejects_truncated_field() {
+        let bytes = encode_client_frame(&ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, Lane::Preview);
+        let truncated = &bytes[..bytes.len() - 2];
+        assert!(decode_client_frame(truncated).is_err());
+    }
+
+    #[test]
+    fn decode_server_frame_rejects_truncated_field() {
+        let bytes = encode_server_frame(&ServerFrame::Error { code: "rejected".to_string(), message: "bad batch".to_string() }, Lane::Command);
+        let truncated = &bytes[..bytes.len() - 3];
+        assert!(decode_server_frame(truncated).is_err());
+    }
+
+    #[test]
+    fn decode_client_frame_rejects_empty_body_after_lane() {
+        let err = decode_client_frame(&[Lane::Command.to_byte()]).unwrap_err();
+        assert!(matches!(err, protocol_core::ProtocolError::Malformed { what: "wire client-frame tag", .. }));
     }
 
     #[test]

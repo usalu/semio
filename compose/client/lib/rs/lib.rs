@@ -7915,6 +7915,20 @@ pub mod vcs {
                 crate::external_adapters::serde_json::to_string(self).unwrap_or_default()
             }
         }
+
+        /// @emoji 🌱 Binary twin of the `OpText` impl above — same schema-less rationale: `{kind,
+        /// input: Value}` has no fixed per-kind shape to hand to `dsl::op_rt`, so this is plain JSON
+        /// bytes (mirrors `store::pack_rt`'s JSON-bridge treatment of `DocumentPack for
+        /// serde_json::Value`, one level down at the op-payload granularity instead of a whole doc).
+        impl protocol::OpBinary for ComposeWireOperation {
+            fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+                crate::external_adapters::serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Malformed { what: "compose wire operation", offset: 0, detail: error.to_string() })
+            }
+
+            fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+                crate::external_adapters::serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "compose wire operation", offset: 0, detail: error.to_string() })
+            }
+        }
         //#endregion 🔖OpText
 
         impl VcsOperation<KitSnapshot> for ComposeWireOperation {

@@ -3144,7 +3144,11 @@ pub trait DocumentApp: Send + 'static {
     // (the new canonical home — see `vcs/rs/lib.rs`'s `🚧TEMPORARY protocol shim`) rather than
     // through vcs's temporary re-export, since this file is small/contained and fully owned this
     // wave. `VcsDocumentApp` keeps its name and behavior; only this bound's source module changed.
-    type Operation: ::protocol::Operation<Self::Projection> + PartialEq + Send + ::protocol::OpText;
+    // 🎯 W4: `OpBinary` added — `store::print_document_pack`/`parse_document_pack`/`DocumentCodec::of`
+    // (the pack+spr authoritative storage seam) all require it. Purely additive: every op enum
+    // already derives it via `#[derive(dsl::DslOps)]` since the W2 derive flip, so no app's
+    // `impl DocumentApp` needs to change.
+    type Operation: ::protocol::Operation<Self::Projection> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary;
 
     fn app_id(&self) -> &str;
     fn document_schema(&self) -> &str;
@@ -3887,9 +3891,15 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
 
     fn load_document_pack(&mut self, files: &store::DocumentPackFiles) -> Result<(), String> {
         let parsed: store::ParsedDocumentText<A::Projection, A::Operation> =
-            store::parse_document_pack(&files.pack, &files.ops).map_err(|error| error.to_string())?;
-        let applied: Vec<String> = parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
-        self.store.set_envelope(parsed.envelope, applied);
+            store::parse_document_pack(&files.pack, &files.spr).map_err(|error| error.to_string())?;
+        // 🎯 W4: honor a persisted cursor (undo/redo position) when present — falling back to
+        // "every edit applied" for a pack predating this field, matching `DocumentStore::new`'s
+        // own cursor-aware seeding.
+        let (applied, redo) = match &parsed.envelope.cursor {
+            Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
+            None => (parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
+        };
+        self.store.set_state(parsed.envelope, applied, redo);
         self.cache = None;
         Ok(())
     }

@@ -108,6 +108,27 @@ impl Default for SubmitOptions {
 //#endregion 🔖Command
 
 //#region 🔖Diff
+/// @emoji 🧬 The schema tag `db_document` reserves for its own generic path-value diff
+/// convention (see module doc) — the only `DocumentDiff`/`InverseOperation` shape this crate
+/// knows how to interpret. 🎯 W5: `diff`/`inverse` payloads are opaque `Vec<u8>` on the wire now;
+/// `db_document` still only understands ITS OWN JSON-object-of-paths convention, tagged with this
+/// schema so `diff_entries`/`inverse_entries` can distinguish "our own pathmap bytes" from a
+/// typed op's binary payload it has no business decoding (foreign schema -> empty `TouchedSet`,
+/// not an error — the envelope is still persisted/relayed, just not interpreted at this layer;
+/// that's `db_document`-and-above's future typed path).
+pub const DB_PATHMAP_SCHEMA: &str = "db.pathmap.v1";
+
+/// @emoji 🎯 `serde_json::Value` -> deterministic bytes (`Value::Object` serializes with
+/// BTreeMap-sorted keys, so this is stable across runs/processes).
+fn encode_pathmap(value: &serde_json::Value) -> Vec<u8> {
+    serde_json::to_vec(value).unwrap_or_default()
+}
+
+/// @emoji 🎯 Inverse of `encode_pathmap`.
+fn decode_pathmap(bytes: &[u8]) -> Result<serde_json::Value, DbError> {
+    serde_json::from_slice(bytes).map_err(json_err)
+}
+
 /// @emoji 🧮 Flattens a diff/inverse JSON object into `(path, Some(value) | None)` pairs per this
 /// module's generic path-value convention (see module doc). Errors if `value` is not a JSON
 /// object — this crate's own schema-erased documents have no other shape it can interpret.
@@ -118,14 +139,22 @@ fn entries_from_value(value: &serde_json::Value) -> Result<Vec<(String, Option<s
     Ok(object.iter().map(|(path, entry)| (path.clone(), if entry.is_null() { None } else { Some(entry.clone()) })).collect())
 }
 
-/// @emoji ➡️ Entries for an envelope's forward diff.
+/// @emoji ➡️ Entries for an envelope's forward diff — empty (not an error) for any schema other
+/// than `DB_PATHMAP_SCHEMA`, see its doc.
 fn diff_entries(diff: &protocol::DocumentDiff) -> Result<Vec<(String, Option<serde_json::Value>)>, DbError> {
-    entries_from_value(&diff.payload)
+    if diff.schema.0 != DB_PATHMAP_SCHEMA {
+        return Ok(Vec::new());
+    }
+    entries_from_value(&decode_pathmap(&diff.payload)?)
 }
 
-/// @emoji ↩️ Entries for an envelope's inverse diff (the `undo` pipeline's source).
+/// @emoji ↩️ Entries for an envelope's inverse diff (the `undo` pipeline's source) — same
+/// foreign-schema handling as `diff_entries`.
 fn inverse_entries(inverse: &protocol::InverseOperation) -> Result<Vec<(String, Option<serde_json::Value>)>, DbError> {
-    entries_from_value(&inverse.inverse_diff)
+    if inverse.schema.0 != DB_PATHMAP_SCHEMA {
+        return Ok(Vec::new());
+    }
+    entries_from_value(&decode_pathmap(&inverse.payload)?)
 }
 
 /// @emoji 🧮 The inverse of `entries_from_value` — rebuilds a JSON object from path-value pairs,
@@ -177,14 +206,14 @@ where
     forward.insert(path.to_string(), serde_json::to_value(&post).map_err(json_err)?);
     let mut backward = serde_json::Map::with_capacity(1);
     backward.insert(path.to_string(), serde_json::to_value(base).map_err(json_err)?);
-    let schema = std::any::type_name::<Op>().to_string();
+    let schema = protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string());
     Ok(protocol::OperationEnvelope {
         operation_id: op.operation_id().unwrap_or(default_operation_id),
         document_id: document,
         actor: op.author_id().unwrap_or(default_actor),
         dependencies: op.dependencies(),
-        diff: protocol::DocumentDiff { schema: schema.clone(), payload: serde_json::Value::Object(forward) },
-        inverse: protocol::InverseOperation { schema, inverse_diff: serde_json::Value::Object(backward) },
+        diff: protocol::DocumentDiff { schema: schema.clone(), payload: encode_pathmap(&serde_json::Value::Object(forward)) },
+        inverse: protocol::InverseOperation { schema, payload: encode_pathmap(&serde_json::Value::Object(backward)) },
         timestamp: op.timestamp().unwrap_or(default_timestamp),
     })
 }
@@ -216,7 +245,7 @@ fn command_touch(envelope: &protocol::OperationEnvelope, touched: &db_state::Tou
     let touch = db_conflict::CommandTouch::new(
         envelope.operation_id.clone(),
         envelope.actor.clone(),
-        db_conflict::CommandKind::from(envelope.diff.schema.as_str()),
+        db_conflict::CommandKind::from(envelope.diff.schema.0.as_str()),
         protocol::ConflictRule::Merge(protocol::MergeStrategyKind::LwwRegister),
         envelope.timestamp,
     );
@@ -624,7 +653,7 @@ impl DocumentEngine {
                 &principal,
                 &db_security::TenantId::from("default"),
                 &envelope.document_id,
-                &envelope.diff.schema,
+                &envelope.diff.schema.0,
                 &envelope.actor,
                 &envelope.operation_id,
                 now_ms,
@@ -767,8 +796,8 @@ impl DocumentEngine {
             document_id: self.protocol_document.clone(),
             actor,
             dependencies: vec![target.clone()],
-            diff: protocol::DocumentDiff { schema: original.inverse.schema.clone(), payload: entries_to_value(&undo_diff_entries) },
-            inverse: protocol::InverseOperation { schema: original.diff.schema, inverse_diff: entries_to_value(&redo_inverse_entries) },
+            diff: protocol::DocumentDiff { schema: original.inverse.schema.clone(), payload: encode_pathmap(&entries_to_value(&undo_diff_entries)) },
+            inverse: protocol::InverseOperation { schema: original.diff.schema, payload: encode_pathmap(&entries_to_value(&redo_inverse_entries)) },
             timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms),
         };
         self.submit(CommandBatch::new(vec![compensating])?, SubmitOptions::default(), now_ms)
@@ -898,8 +927,8 @@ impl DocumentEngine {
             document_id: self.protocol_document.clone(),
             actor: protocol::ActorId("preview".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff { schema: "db_document.preview".to_string(), payload: entries_to_value(entries) },
-            inverse: protocol::InverseOperation { schema: "db_document.preview".to_string(), inverse_diff: serde_json::Value::Object(serde_json::Map::new()) },
+            diff: protocol::DocumentDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&entries_to_value(entries)) },
+            inverse: protocol::InverseOperation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&serde_json::Value::Object(serde_json::Map::new())) },
             timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms),
         };
         self.previews.publish(db_preview::PublishPreviewRequest {
@@ -1166,8 +1195,8 @@ mod tests {
             document_id: document_id(),
             actor: protocol::ActorId(actor.to_string()),
             dependencies: deps.iter().map(|dep| protocol::OperationId((*dep).to_string())).collect(),
-            diff: protocol::DocumentDiff { schema: "generic".to_string(), payload: serde_json::Value::Object(payload) },
-            inverse: protocol::InverseOperation { schema: "generic".to_string(), inverse_diff: serde_json::Value::Object(serde_json::Map::new()) },
+            diff: protocol::DocumentDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&serde_json::Value::Object(payload)) },
+            inverse: protocol::InverseOperation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&serde_json::Value::Object(serde_json::Map::new())) },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         }
     }
@@ -1402,8 +1431,8 @@ mod tests {
             document_id: document_id(),
             actor: protocol::ActorId("alice".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff { schema: "generic".to_string(), payload: serde_json::json!({ "x": 1 }) },
-            inverse: protocol::InverseOperation { schema: "generic".to_string(), inverse_diff: serde_json::json!({ "x": null }) },
+            diff: protocol::DocumentDiff { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&serde_json::json!({ "x": 1 })) },
+            inverse: protocol::InverseOperation { schema: protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string()), payload: encode_pathmap(&serde_json::json!({ "x": null })) },
             timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
         };
         engine.submit(CommandBatch::new(vec![original]).unwrap(), SubmitOptions::default(), 0).unwrap();

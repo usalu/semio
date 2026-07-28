@@ -1,0 +1,21 @@
+$ bun ./script.ts nx run @semio-tech/ui-react:test -- --testNamePattern "measureWindowSilhouetteMetrics|nested pane silhouette"
+
+> nx run @semio-tech/ui-react:test --testNamePattern measureWindowSilhouetteMetrics|nested pane silhouette
+
+> bun ./script.ts test --testNamePattern "measureWindowSilhouetteMetrics|nested pane silhouette"
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+
+ Test Files  1 passed (1)
+      Tests  3 passed | 477 skipped (480)
+   Start at  18:29:52
+   Duration  3.22s (transform 1.33s, setup 180ms, import 2.30s, tests 24ms, environment 605ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/ui-react
+
+

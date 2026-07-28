@@ -346,6 +346,19 @@ impl protocol::OpText for MathOperation {
         <MathOperationDsl as protocol::OpText>::print_op(&math_operation_to_dsl(self))
     }
 }
+
+/// ⚡ Binary mirror of the `OpText` impl above — `MathOperationDsl` already derives `OpBinary`
+/// via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+impl protocol::OpBinary for MathOperation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        math_operation_to_dsl(self).encode_op()
+    }
+
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let dsl_operation = MathOperationDsl::decode_op(bytes)?;
+        math_operation_from_dsl(dsl_operation).map_err(|message| protocol::ProtocolError::Malformed { what: "math operation", offset: 0, detail: message })
+    }
+}
 //#endregion 🔖OpText
 
 //#region 🔖GraphAlgorithms

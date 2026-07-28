@@ -394,6 +394,7 @@ mod native {
                 coalesce_key: None,
                 description: Some("a sample edit".to_string()),
                 ops: vec![protocol_history::OpPayload { text: "set x 1".to_string(), binary: None }],
+                backwards: Vec::new(),
                 meta: None,
             }
         }
