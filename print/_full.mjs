@@ -1,0 +1,13 @@
+import { readFileSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
+const [, , pdf, out, pg, sc] = process.argv;
+const scale = Number(sc||2);
+const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+const { createCanvas } = createRequire(import.meta.url)("@napi-rs/canvas");
+const doc = await pdfjs.getDocument({ data: new Uint8Array(readFileSync(pdf)), useSystemFonts: true }).promise;
+console.log("numPages", doc.numPages);
+const page = await doc.getPage(Number(pg)); const vp = page.getViewport({ scale });
+const c = createCanvas(Math.ceil(vp.width), Math.ceil(vp.height));
+await page.render({ canvas:c, canvasContext:c.getContext("2d"), viewport:vp }).promise;
+writeFileSync(out, c.toBuffer("image/png"));
+console.log("wrote", out, vp.width, vp.height);
