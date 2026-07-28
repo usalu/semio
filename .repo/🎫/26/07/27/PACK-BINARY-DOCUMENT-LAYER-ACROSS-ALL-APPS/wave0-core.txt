@@ -1,0 +1,73 @@
+wave0-core — pack_core implementation summary
+================================================
+
+Crate: pack_core (pack/core/rs/lib.rs)
+Package name: pack_core
+Deps: thiserror = "2.0.12" (already present in scaffolded Cargo.toml, matches dsl_core's version — no change needed)
+
+Implemented per contract.md "## pack_core" section, single-file lib.rs, //#region blocks named
+exactly: 🔖Ids, 🔖SegmentKinds, 🔖Errors, 🔖Limits, 🔖Varint, 🔖Bytes, 🔖Crc, 🔖Source, 🔖Codec,
+🧪Tests.
+
+- 🔖Ids: ContentHash([u8;32]) with hand-written Display (lowercase hex) + Debug ("ContentHash(<hex>)"),
+  Clone/Copy/PartialEq/Eq/Hash. ChunkId(u32), SegmentKind(u8), CodecId(u8), ByteRange{offset,len}
+  all with the derives the contract specifies.
+- 🔖SegmentKinds: implemented as top-level `pub const KIND_*: u8` constants (not wrapped in
+  SegmentKind) since pack_format's PackWriter::write_segment/Manifest usage takes/refers to a
+  bare u8 kind — this matches how KIND_MANIFEST etc. are used in the pack_format section of the
+  contract. All 10 constants present with contract values (0x00..0x08, 0x7F).
+- 🔖Errors: PackError enum, all 12 variants verbatim (BadMagic, UnsupportedVersion,
+  UnknownRequiredFlags, Truncated, ChecksumMismatch, ContentHashMismatch, LimitExceeded,
+  Malformed, NonCanonical, UnsupportedCodec, Schema, Io) via thiserror::Error, Debug, Clone,
+  PartialEq.
+- 🔖Limits: PackLimits with the 6 fields and contract-specified Default values.
+- 🔖Varint: LEB128 unsigned varint (write_varint_u64/read_varint_u64, max 10 bytes for u64),
+  zigzag signed varint (write_varint_i64/read_varint_i64 via internal zigzag_encode/decode
+  helpers), is_minimal_varint (decode-then-reencode-and-compare). read_varint_u64 rejects
+  >10-byte sequences and a malformed 10th byte (only bit 0 may be set, matching u64's 64-bit
+  budget = 9*7+1) with PackError::Malformed; truncated input returns PackError::Truncated at
+  the exact failing offset. Never panics.
+- 🔖Bytes: ByteReader<'a> (bounds-checked cursor over &[u8]; read_u8/u16_le/u32_le/u64_le/
+  f64_le/varint_u64/varint_i64/bytes(len)/array32, remaining()/position()) and ByteWriter
+  (Vec<u8>-backed; matching write_* methods + into_bytes()). All reader methods bounds-check
+  before slicing — verified never-panics-on-truncated-input in tests.
+- 🔖Crc: crc32c(bytes) -> u32, CRC-32C (Castagnoli, poly 0x82F63B78 reflected), in-crate 256-entry
+  table built by a const fn at compile time (no runtime init, no external crate). Verified
+  against the standard test vector crc32c("123456789") == 0xE3069283.
+- 🔖Source: PackSource trait (len/is_empty/read_at/read_exact_at with a default read_exact_at
+  looping over read_at) implemented for &[u8] and Vec<u8> (delegates to &[u8]), both fully
+  bounds-checked (short reads return the actual byte count, out-of-range offset returns
+  PackError::Truncated, never panics/never reads OOB). PackSink trait (write_all/position/flush)
+  implemented for Vec<u8>.
+- 🔖Codec: CompressionCodec trait (id/compress/decompress) and NoCompression (CodecId(0),
+  identity compress, decompress validates raw_len > limit BEFORE allocating/copying and validates
+  stored.len() == raw_len).
+
+Tests: 26 inline #[test] fns under `mod tests` (flat, no quick/long/exhaustive submodules — no
+slow/exhaustive cases needed for this crate), organized into //#region blocks mirroring the
+implementation regions. Coverage: ContentHash Display hex formatting; all 10 KIND_* constants;
+PackLimits::default() values; varint u64/i64 round-trip across boundary values (0, 0x7F/0x80,
+0x3FFF/0x4000, 0x1FFFFF/0x200000, u32::MAX boundary, u64::MAX, i64::MIN/MAX) plus a dedicated
+"u64::MAX encodes to exactly 10 bytes" check; multi-varint sequential read; truncated-input
+error cases (empty, single continuation byte, all-continuation); overlong 11-byte and
+malformed-10th-byte rejection; is_minimal_varint accepting canonical and rejecting a
+non-canonical 2-byte zero encoding and trailing garbage; ByteReader/ByteWriter full round-trip
+across every type plus a bounds-checked-never-panics case; crc32c known vector + empty input +
+differing inputs; PackSource over &[u8] and Vec<u8> (offset read, short read at EOF,
+offset-past-end error, read_exact_at truncation error); PackSink over Vec<u8> (position
+tracking, flush); NoCompression identity round-trip + limit-exceeded-before-allocation +
+stored-length-mismatch rejection.
+
+Verification run from /Users/ueli/Documents/semio:
+- `cargo check -p pack_core` — clean (only a pre-existing unrelated pack_cli multi-target
+  warning from the workspace, not from this crate).
+- `cargo test -p pack_core` — 26 passed; 0 failed.
+- `cargo check -p pack_core --target wasm32-unknown-unknown` — clean (contract requires
+  pack_core compile for wasm32; confirmed, no unsafe, no std::io in any signature).
+- `cargo clippy -p pack_core --all-targets` — clean, zero warnings.
+
+No files touched outside pack/core/rs/ (lib.rs edited; Cargo.toml, project.json, script.ts
+untouched — thiserror = "2.0.12" was already present, matching dsl_core/Cargo.toml). No git
+commands run. This crate has no dependents yet in wave 0; public signatures match contract.md's
+pack_core section verbatim (names, field names, method signatures) for downstream crates
+(pack_format et al.) to path-dep against.

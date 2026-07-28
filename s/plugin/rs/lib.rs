@@ -1,12 +1,15 @@
 //! 🎛️ S Studio plugin — designer OS shell bundled as a hot-swappable WASM component.
 
-use semio_framework_os::{register_os_fixture_json, OsDocument, OsProjection};
-use serde::Deserialize;
+use semio_framework_os::{register_os_fixture_json, OsDocument, OsProjection, OS_STUDIO_SCHEMA};
 use std::sync::LazyLock;
-use vcs::{create_document_vcs_envelope, DocumentBackboneRef};
+use vcs::create_document_vcs_envelope;
 
 //#region 🔖Constants
-const DEMO_STUDIO_JSON: &str = include_str!("../../example/demo.s.json");
+const DEMO_STUDIO_ID: &str = "demo-studio";
+const DEMO_STUDIO_NAME: &str = "Demo Studio";
+/// 📜 the demo studio is handcrafted `.s` DSL text (an `OsProjection`, see `🔖DocumentHelpers`), not
+/// JSON — it is compiled into the binary, so a parse failure here is a bug in the bundled fixture.
+const DEMO_STUDIO_DSL: &str = include_str!("../../example/demo.s");
 //#endregion 🔖Constants
 
 //#region 🔖DocumentHelpers
@@ -29,37 +32,19 @@ fn ensure_studio_fixtures_registered() {
 
 /// 🌱 Parses the packaged demo studio fixture into a full `OsDocument` envelope — shared by the Home
 /// launcher's catalog seed ({@link app_home}) and the Studio app's `initial_projection` ({@link
-/// app_studio}).
+/// app_studio}). The fixture holds only the `OsProjection` payload (`DEMO_STUDIO_DSL`); the envelope
+/// metadata (schema/id/name, freshly-minted history) is built the same way `create_empty_os_document`
+/// builds a blank one.
 fn parse_demo_studio_document() -> OsDocument {
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    struct DemoVcs {
-        initial_projection: OsProjection,
-    }
-    #[derive(Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    struct DemoFile {
-        schema: String,
-        id: String,
-        name: String,
-        vcs: DemoVcs,
-        #[serde(default)]
-        backbone: Option<DocumentBackboneRef>,
-    }
-    let demo: DemoFile = serde_json::from_str(DEMO_STUDIO_JSON).expect("demo studio json");
-    let envelope = create_document_vcs_envelope(
-        &demo.schema,
-        &demo.id,
-        demo.vcs.initial_projection,
-        demo.backbone.as_ref().cloned(),
-    );
+    let initial_projection = <OsProjection as vcs::DocumentDsl>::parse_dsl(DEMO_STUDIO_DSL).expect("bundled example/demo.s is valid OsProjection DSL text");
+    let envelope = create_document_vcs_envelope(OS_STUDIO_SCHEMA, DEMO_STUDIO_ID, initial_projection, None);
     OsDocument {
-        schema: demo.schema,
-        id: demo.id,
-        name: demo.name,
+        schema: OS_STUDIO_SCHEMA.into(),
+        id: DEMO_STUDIO_ID.into(),
+        name: DEMO_STUDIO_NAME.into(),
         vcs: envelope.vcs,
         applied_edit_ids: Vec::new(),
-        backbone: demo.backbone,
+        backbone: None,
     }
 }
 
@@ -124,9 +109,7 @@ pub mod app_home {
     pub enum SHomeOperation {
         /// 🫙 The identity operation — an `OperationDiff` needs `Default`; never emitted by `handle_action`.
         #[default]
-        #[dsl(key = "noOperation")]
         NoOperation,
-        #[dsl(key = "setCatalogGeneration")]
         SetCatalogGeneration { value: u64 },
     }
 
@@ -821,7 +804,7 @@ pub mod app_studio {
         apply_flow_fixture_to_os_media_graph, build_os_media_flow_operator_infos, create_default_os_parameter,
         create_empty_os_document, create_os_document_id, create_os_id, default_os_projection, list_os_media_graph_vfs_children, list_os_programs,
         materialize_os_app_instance_document_json, materialize_os_projection, media_port_spec_id, negotiate_media_contract, os_app_primary_output_kind,
-        os_app_registration, os_media_graph_to_flow_fixture, os_media_graph_to_node_graph_payload,
+        os_app_registration, os_document_to_json, os_media_graph_to_flow_fixture, os_media_graph_to_node_graph_payload,
         os_media_graph_vfs_schema, os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id,
         patch_os_parameter, MediaGraphPosition, OsAppInstance, OsDocumentRef, OsMediaGraphCamera,
         OsMediaGraphVfsNodeRecord, OsMediaPort, OsOperation, OsParameter, OsParameterFieldBinding, OsParameterType, OsProjection,
@@ -867,7 +850,7 @@ pub mod app_studio {
     const S_PLAY_INSPECTOR_BODY_KEY: &str = "s.play.inspector";
     const S_PLAY_CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
 
-    const S_STUDIO_EXAMPLES: &[(&str, &str, &str)] = &[("demo", "Demo Studio", super::DEMO_STUDIO_JSON)];
+    const S_STUDIO_EXAMPLES: &[(&str, &str)] = &[("demo", "Demo Studio")];
     //#endregion 🔖Constants
 
     //#region 🔖Types
@@ -3249,8 +3232,9 @@ pub mod app_studio {
         };
         app.definition.controller_id = S_PLAY_CONTROLLER_ID.into();
         let mut app = app.program("s", "S Studio", "studio");
-        for (id, label, json) in S_STUDIO_EXAMPLES {
-            app = app.example(*id, *label, (*json).to_string());
+        for (id, label) in S_STUDIO_EXAMPLES {
+            let json = os_document_to_json(&parse_demo_studio_document()).expect("serialize demo studio document");
+            app = app.example(*id, *label, json);
         }
         app
     }
@@ -3424,6 +3408,12 @@ pub mod app_studio {
             assert!(projection.media_graph.nodes.len() >= 2);
             assert!(projection.media_graph.edges.len() >= 1);
             assert!(validate_media_graph(&projection.media_graph).ok);
+        }
+
+        #[test]
+        fn demo_document_dsl_text_round_trips() {
+            let projection = demo_studio_projection();
+            vcs::test_support::assert_dsl_round_trip(&projection);
         }
 
         #[test]

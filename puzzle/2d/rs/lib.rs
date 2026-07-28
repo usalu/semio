@@ -5127,6 +5127,26 @@ mod force_graph_tests {
             vcs::test_support::assert_dsl_round_trip(&projection);
         }
     }
+
+    // TEMP DEBUG PROBE — delete before finishing.
+    #[test]
+    fn zzz_probe_minimal() {
+        use crate::Puzzle2dProjection;
+        use vcs::DocumentDsl;
+        let text = r#"schema="puzzle.2d.fixture"
+camera {
+  x=0 y=0 zoom=1
+}
+nodes= [ id="n1" node-kind="Kind A" x=1 y=2 handles= [ id="n1@v0" handle-kind="b-l" angle=1 radius=1 id="n1@v1" handle-kind="b-l" angle=2 radius=1 ] ] edges= [ ]
+meta {
+  kind-compatibility= [ ]
+}
+"#;
+        match Puzzle2dProjection::parse_dsl(text) {
+            Ok(p) => eprintln!("[DEBUG] minimal OK: {} nodes, {} edges, node0.handles={}", p.nodes.len(), p.edges.len(), p.nodes.first().map(|n| n.handles.len()).unwrap_or(0)),
+            Err(e) => eprintln!("[DEBUG] minimal ERR: {:?}", e),
+        }
+    }
 }
 
 // #endregion 🔖Tests

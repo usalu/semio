@@ -84,31 +84,18 @@ impl LocalizedText {
 /// `VdiUnit` boundary via `From`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, dsl::DslScalar)]
 pub enum VdiQuantityKind {
-    #[dsl(key = "dimensionless")]
     Dimensionless,
-    #[dsl(key = "length")]
     Length,
-    #[dsl(key = "area")]
     Area,
-    #[dsl(key = "volume")]
     Volume,
-    #[dsl(key = "mass")]
     Mass,
-    #[dsl(key = "time")]
     Time,
-    #[dsl(key = "temperature")]
     Temperature,
-    #[dsl(key = "force")]
     Force,
-    #[dsl(key = "pressure")]
     Pressure,
-    #[dsl(key = "stress")]
     Stress,
-    #[dsl(key = "moment")]
     Moment,
-    #[dsl(key = "energy")]
     Energy,
-    #[dsl(key = "power")]
     Power,
     #[dsl(key = "thermalConductivity")]
     ThermalConductivity,
@@ -120,7 +107,6 @@ pub enum VdiQuantityKind {
     AirPermeability,
     #[dsl(key = "ventilationRate")]
     VentilationRate,
-    #[dsl(key = "acceleration")]
     Acceleration,
 }
 
@@ -1835,6 +1821,11 @@ pub struct CatalogueProduct {
     pub identity: ProductIdentity,
     pub title: LocalizedText,
     pub sheet: SheetId,
+    // Not `#[dsl(table)]`: `CatalogueProduct` is itself a table ROW type (via
+    // `ManufacturerCatalog.products`), and `dsl_schema`'s `Shape::Table` printer/parser does not
+    // yet support a table nested inside another table's row (the printer drops the nested field's
+    // own keyword, and the parser then runs away past `max_nodes` trying to re-read it) — plain
+    // `Shape::List` here instead, `#[dsl(table)]` stays reserved for non-row-nested contexts.
     pub records: Vec<NativeRecord>,
     pub configuration: Configuration,
     pub accessories: Vec<AccessoryLink>,
@@ -1846,6 +1837,7 @@ pub struct CatalogueProduct {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct ManufacturerCatalog {
     pub file: ManufacturerFile,
+    #[dsl(table)]
     pub products: Vec<CatalogueProduct>,
     pub extensions: ExtensionBag,
 }
@@ -2035,6 +2027,7 @@ pub struct ConnectionPoint {
 pub struct ParametricGeometry {
     pub id: String,
     pub bbox: BoundingBox,
+    #[dsl(table)]
     pub connections: Vec<ConnectionPoint>,
     pub parameters: BTreeMap<String, f64>,
 }
@@ -2072,6 +2065,7 @@ pub struct CharacteristicCurve {
     pub id: String,
     pub x_unit: VdiUnit,
     pub y_unit: VdiUnit,
+    #[dsl(table)]
     pub points: Vec<CurvePoint>,
 }
 
@@ -2123,6 +2117,7 @@ pub struct CatalogIndexEntry {
 /// 📚 Searchable catalogue index.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct CatalogIndex {
+    #[dsl(table)]
     pub entries: Vec<CatalogIndexEntry>,
 }
 
@@ -2450,9 +2445,7 @@ define_vdi_part!(part_100, 100, multi_profile);
 /// 📅 Edition profile selection for multi-profile sheets.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 pub enum EditionProfileChoice {
-    #[dsl(key = "legacy")]
     Legacy,
-    #[dsl(key = "current")]
     Current,
 }
 

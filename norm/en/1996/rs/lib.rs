@@ -34,15 +34,10 @@ impl MasonryUnit {
 /// 🧱 Masonry manufacturing-control class underlying the EN-recommended γ_M table (EN 1996-1-1 Table 2.1-style).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 pub enum MasonryClass {
-    #[dsl(key = "class1")]
     Class1,
-    #[dsl(key = "class2")]
     Class2,
-    #[dsl(key = "class3")]
     Class3,
-    #[dsl(key = "class4")]
     Class4,
-    #[dsl(key = "class5")]
     Class5,
 }
 
@@ -165,30 +160,23 @@ pub mod part_2 {
     /// 🌦️ Masonry durability exposure class (EN 1996-1-1 Annex B-style categorisation MX1–MX5).
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
     pub enum ExposureClass {
-        #[dsl(key = "mx1")]
         Mx1,
-        #[dsl(key = "mx2")]
         Mx2,
-        #[dsl(key = "mx3")]
         Mx3,
-        #[dsl(key = "mx4")]
         Mx4,
-        #[dsl(key = "mx5")]
         Mx5,
     }
 
     /// 🧪 General-purpose mortar compressive-strength class per EN 998-2.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
     pub enum MortarClass {
-        #[dsl(key = "m1")]
         M1,
+        /// 🔡 `M2_5` auto-kebabs to `m2-5` (digit-underscore-digit), but the standard's own class
+        /// label is `M2.5`/`M2_5` with no internal dash — kept as a genuine rename.
         #[dsl(key = "m2_5")]
         M2_5,
-        #[dsl(key = "m5")]
         M5,
-        #[dsl(key = "m10")]
         M10,
-        #[dsl(key = "m20")]
         M20,
     }
 

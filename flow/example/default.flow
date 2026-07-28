@@ -1,11 +1,15 @@
-schema="flow.fixture"
+schema=flow.fixture
 camera {
   x=0 y=0 zoom=1
 }
 widgets {
-  inputSlider id="slider" value=3 min=0 max=10 step=0.1
-  neuron id="add" neuronKind="math.add" inputPorts= [ ] outputPorts= [ ] preview=true
-  outputPreview id="preview" expanded= [ ]
+  input-slider id=slider value=3 min=0 max=10 step=0.1
+  neuron id=add neuron-kind=math.add preview=true input-ports=[ ] output-ports=[ ]
+  output-preview id=preview expanded=[ ]
 }
-synapses= [ id="s1" from="slider" to="add" fromPort="number" toPort="a" id="s2" from="add" to="preview" fromPort="sum" toPort="" ] layout= {
+layout={
+}
+synapses [id:TEXT link:WIRE] {
+  s1 slider@number->add@a
+  s2 add@sum->preview
 }

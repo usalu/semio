@@ -1,0 +1,17 @@
+[package]
+name = "pack_index"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Pack binary document format field index — path-to-byte-range segment for sub-document random access"
+
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+pack_core = { path = "../../core/rs" }
+pack_format = { path = "../../format/rs" }
+pack_value = { path = "../../value/rs" }

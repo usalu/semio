@@ -1,23 +1,29 @@
-schema="trinity.graph" name="Branch Chain" manifest_id="nakagin"
+schema=trinity.graph name="Branch Chain" manifest-id=nakagin root-node-id=branch-root
 camera {
   x=0 y=0 zoom=1
 }
-nodes= [ id="branch-root" kind="Piece" name="root" x=-120 y=0 width=88 height=40 properties= {
+nodes [id:TEXT kind:TEXT name:TEXT x:NUM y:NUM width:NUM height:NUM properties:MAP ports:LIST] {
+  branch-root Piece root -120 0 88 40 {
+  }
+  [ id=out-a kind=Connector direction=out properties={
+  }
+  ]
+  branch-mid Piece mid 0 0 88 40 {
+  }
+  [ id=in-a kind=Connector direction=in properties={
+  }
+  id=out-b kind=Connector direction=out properties={
+  }
+  ]
+  branch-leaf Piece leaf 120 0 88 40 {
+  }
+  [ id=in-b kind=Connector direction=in properties={
+  }
+  ]
 }
-ports= [ id="out-a" kind="Connector" direction=out properties= {
+edges [id:TEXT kind:TEXT source:TEXT target:TEXT properties:MAP] {
+  e-root-mid Connection "branch-root@out-a" "branch-mid@in-a" {
+  }
+  e-mid-leaf Connection "branch-mid@out-b" "branch-leaf@in-b" {
+  }
 }
-] id="branch-mid" kind="Piece" name="mid" x=0 y=0 width=88 height=40 properties= {
-}
-ports= [ id="in-a" kind="Connector" direction=in properties= {
-}
-id="out-b" kind="Connector" direction=out properties= {
-}
-] id="branch-leaf" kind="Piece" name="leaf" x=120 y=0 width=88 height=40 properties= {
-}
-ports= [ id="in-b" kind="Connector" direction=in properties= {
-}
-] ] edges= [ id="e-root-mid" kind="Connection" source="branch-root:out-a" target="branch-mid:in-a" properties= {
-}
-id="e-mid-leaf" kind="Connection" source="branch-mid:out-b" target="branch-leaf:in-b" properties= {
-}
-] root_node_id="branch-root"

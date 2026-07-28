@@ -1,0 +1,45 @@
+schema=forms.form id=building-component version="1" title="Building Component" steps=[ id=identity title=Identity description="Basic component metadata and material selection." blocks=[ id=name label="Component Name" kind=text required=true placeholder="Column A" default="Column A"
+condition {
+}
+id=description label=Description kind=longText placeholder="Describe the component role" default="Primary structural column"
+condition {
+}
+id=material label=Material kind=single required=true default="concrete" options=[ value=concrete label=Concrete value=steel label=Steel value=timber label=Timber ]
+condition {
+}
+id=tags label=Tags kind=multi default=[ "structural" ] options=[ value=structural label=Structural value=facade label=Facade value=prefab label=Prefab ]
+condition {
+}
+id=prefab label=Prefab kind=boolean default=true
+condition {
+}
+id=install-date label="Install Date" kind=date default="2026-06-30"
+condition {
+}
+id=accent-color label="Accent Color" kind=color default="#336699"
+condition {
+}
+] id=geometry title=Geometry description="Parametric geometry and dimensional controls." blocks=[ id=info-note label=Note kind=note text="Adjust the procedural column parameters below. Values persist in the form spec and seed Try mode."
+condition {
+}
+id=count label="Instance Count" kind=number min=1 max=20 step=1 default=4
+condition {
+}
+id=height-factor label="Height Factor" kind=slider min=0 max=10 step=0.5 unit=m default=6
+condition {
+}
+id=offset label=Offset kind=vector step=0.1 schema=vec3 fields=[ key=x label=X value=0 key=y label=Y value=0 key=z label=Z value=0 ]
+condition {
+}
+id=geometry label="Hexagonal Column" kind=buildingComponent description="Parametric column geometry from procedural flow." required=true fixture-slug=hexagonal-mushroom-column params={
+  height=6 radius=0.5 sides=6
+}
+condition {
+}
+id=reference-image label=Reference kind=image src=""
+condition {
+}
+id=spec-file label="Spec Sheet" kind=file accept=".pdf,.dwg"
+condition {
+}
+] ]

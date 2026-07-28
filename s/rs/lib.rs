@@ -62,7 +62,9 @@ pub struct SMediaGraphEdge {
 #[serde(rename_all = "camelCase")]
 pub struct SMediaGraph {
     pub schema: String,
+    #[dsl(table)]
     pub nodes: Vec<SMediaGraphNode>,
+    #[dsl(table)]
     pub edges: Vec<SMediaGraphEdge>,
 }
 
@@ -90,37 +92,30 @@ pub struct MediaGraphPosition {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum StudioOperation {
-    #[dsl(key = "setActiveProgram")]
     SetActiveProgram {
         #[serde(skip_serializing_if = "Option::is_none")]
         program_id: Option<String>,
     },
-    #[dsl(key = "setActiveAlternative")]
     SetActiveAlternative {
         #[serde(skip_serializing_if = "Option::is_none")]
         alternative_id: Option<String>,
     },
-    #[dsl(key = "spawnAppInstance")]
     SpawnAppInstance {
         #[dsl(block)]
         instance: SAppInstance,
         #[dsl(block)]
         position: MediaGraphPosition,
     },
-    #[dsl(key = "removeAppInstance")]
     RemoveAppInstance {
         instance_id: String,
     },
-    #[dsl(key = "connectMediaPorts")]
     ConnectMediaPorts {
         #[dsl(block)]
         edge: SMediaGraphEdge,
     },
-    #[dsl(key = "disconnectMediaEdge")]
     DisconnectMediaEdge {
         edge_id: String,
     },
-    #[dsl(key = "moveMediaNode")]
     MoveMediaNode {
         node_id: String,
         x: f64,

@@ -10,11 +10,8 @@ use serde::{Deserialize, Serialize};
 /// 🏢 Building use class for energy reference area factors.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 pub enum UseClass {
-    #[dsl(key = "residential")]
     Residential,
-    #[dsl(key = "office")]
     Office,
-    #[dsl(key = "school")]
     School,
 }
 

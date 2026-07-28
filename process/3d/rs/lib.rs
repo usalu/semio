@@ -31,30 +31,25 @@ pub struct Pose {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum SolidSpec {
-    #[dsl(key = "box")]
     Box {
         width: f64,
         depth: f64,
         height: f64,
     },
-    #[dsl(key = "cylinder")]
     Cylinder {
         radius: f64,
         height: f64,
     },
-    #[dsl(key = "sphere")]
     Sphere {
         radius: f64,
     },
     /// 🖼️ Non-parametric GLB-imported reference mesh — tessellation-only, no real B-Rep topology
     /// (mirrors `cad`'s `meshUrl` pattern); cannot serve as a Cut/Drill/Attach tool.
-    #[dsl(key = "importedMesh")]
     ImportedMesh {
         mesh_url: String,
     },
     /// 🧊 STEP/OBJ/STL-imported solid with real B-Rep topology, resolved through the app's kernel
     /// session by handle id (mirrors `cad`'s `solidHandle` pattern); ephemeral to that session.
-    #[dsl(key = "importedSolid")]
     ImportedSolid {
         solid_handle: String,
     },
@@ -107,13 +102,10 @@ impl Default for Stock {
 #[serde(tag = "measure", rename_all = "camelCase")]
 pub enum ProcessMeasure {
     /// ✂️ Subtractive: subtracts an arbitrary tool solid (e.g. a thin box as a saw blade).
-    #[dsl(key = "cut")]
     Cut { tool: SolidSpec, #[dsl(block)] pose: Pose },
     /// 🕳️ Subtractive: a cylinder of `radius`×`depth` subtracted at `pose` (axis = drill direction).
-    #[dsl(key = "drill")]
     Drill { radius: f64, depth: f64, #[dsl(block)] pose: Pose },
     /// 🔩 Additive: fuses another component solid at `pose`.
-    #[dsl(key = "attach")]
     Attach { component: SolidSpec, #[dsl(block)] pose: Pose },
 }
 
@@ -350,9 +342,7 @@ pub type Process3dStore = DocumentVcsStore<Process3dDocument, Process3dOperation
 /// `Some(Set { .. })` carries the new value.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum StepOriginPatch {
-    #[dsl(key = "clear")]
     Clear,
-    #[dsl(key = "set")]
     Set {
         #[dsl(block)]
         origin: StepOrigin,
@@ -409,21 +399,17 @@ fn process_step_patch_from_dsl(patch: ProcessStepPatchDsl) -> ProcessStepPatch {
 /// consumer matching on it, is completely untouched.
 #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
 enum Process3dOperationDsl {
-    #[dsl(key = "steps-add")]
     StepsAdd {
         index: usize,
         #[dsl(block)]
         item: ProcessStep,
     },
-    #[dsl(key = "steps-remove")]
     StepsRemove { id: String },
-    #[dsl(key = "steps-move")]
     StepsMove {
         id: String,
         #[dsl(key = "to")]
         to_index: usize,
     },
-    #[dsl(key = "steps-patch")]
     StepsPatch {
         id: String,
         #[dsl(block)]

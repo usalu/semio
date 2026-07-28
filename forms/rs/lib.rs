@@ -23,7 +23,7 @@ pub fn empty_forms_projection() -> FormSpec {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vcs::create_document_vcs_envelope;
+    use vcs::{create_document_vcs_envelope, test_support::assert_dsl_round_trip};
 
     #[test]
     fn forms_document_vcs_materializes() {
@@ -65,6 +65,15 @@ mod tests {
         assert_eq!(question.min, Some(1.0));
         assert_eq!(question.unit.as_deref(), Some("people"));
         assert!(question.required.unwrap_or(false));
+    }
+
+    #[test]
+    fn building_component_fixture_dsl_round_trips() {
+        let text = include_str!("../example/building-component.forms");
+        let spec = <FormSpec as vcs::DocumentDsl>::parse_dsl(text).expect("building-component.forms parses");
+        assert_eq!(spec.id, "building-component");
+        assert_eq!(spec.steps.len(), 2);
+        assert_dsl_round_trip(&spec);
     }
 }
 //#endregion 🧪Tests

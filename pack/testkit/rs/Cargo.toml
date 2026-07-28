@@ -1,0 +1,17 @@
+[package]
+name = "pack_testkit"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Pack binary document format test kit — seeded generators, round-trip laws, corruption fuzzing, golden hashes"
+
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+pack = { path = "../../rs" }
+dsl_schema = { path = "../../../dsl/schema/rs" }
+dsl_core = { path = "../../../dsl/core/rs" }

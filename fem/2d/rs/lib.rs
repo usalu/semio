@@ -70,10 +70,8 @@ impl From<Dof> for FemDof {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum FemElement {
-    #[dsl(key = "bar")]
     #[serde(rename_all = "camelCase")]
     Bar { id: String, start: String, end: String, material_id: String, section_id: String },
-    #[dsl(key = "beam")]
     #[serde(rename_all = "camelCase")]
     Beam { id: String, start: String, end: String, material_id: String, section_id: String },
 }
@@ -121,13 +119,10 @@ pub struct FemSupport {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum FemLoad {
-    #[dsl(key = "nodal")]
     #[serde(rename_all = "camelCase")]
     Nodal { id: String, node_id: String, dof: FemDof, value: f64 },
-    #[dsl(key = "memberUdl")]
     #[serde(rename_all = "camelCase")]
     MemberUdl { id: String, element_id: String, wx: f64, wy: f64 },
-    #[dsl(key = "area")]
     #[serde(rename_all = "camelCase")]
     Area { id: String, region_id: String, pressure: f64 },
 }
@@ -222,14 +217,21 @@ impl Default for FemCamera {
 #[serde(rename_all = "camelCase")]
 #[dsl(extension = "fem2d", layout = "lines")]
 pub struct Fem2dDocument {
+    #[dsl(table)]
     pub nodes: Vec<FemNode>,
     #[dsl(statements, block)]
     pub elements: Vec<FemElement>,
+    #[dsl(table)]
     pub regions: Vec<FemRegion>,
+    #[dsl(table)]
     pub materials: Vec<FemMaterial>,
+    #[dsl(table)]
     pub sections: Vec<FemSection>,
+    #[dsl(table)]
     pub supports: Vec<FemSupport>,
+    #[dsl(table)]
     pub load_cases: Vec<FemLoadCase>,
+    #[dsl(table)]
     pub combinations: Vec<FemCombination>,
     #[dsl(block)]
     pub analysis: FemAnalysisSettings,
@@ -440,44 +442,25 @@ impl OperationDiff<Fem2dDocument> for Fem2dDiff {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum Fem2dOperation {
-    #[dsl(key = "setNode")]
     SetNode { index: usize, #[dsl(block)] node: FemNode },
-    #[dsl(key = "removeNode")]
     RemoveNode { id: String },
-    #[dsl(key = "setElement")]
     SetElement { index: usize, #[dsl(statements)] element: Box<FemElement> },
-    #[dsl(key = "removeElement")]
     RemoveElement { id: String },
-    #[dsl(key = "setMaterial")]
     SetMaterial { index: usize, #[dsl(block)] material: FemMaterial },
-    #[dsl(key = "removeMaterial")]
     RemoveMaterial { id: String },
-    #[dsl(key = "setSection")]
     SetSection { index: usize, #[dsl(block)] section: FemSection },
-    #[dsl(key = "removeSection")]
     RemoveSection { id: String },
-    #[dsl(key = "setSupport")]
     SetSupport { index: usize, #[dsl(block)] support: FemSupport },
-    #[dsl(key = "removeSupport")]
     RemoveSupport { id: String },
-    #[dsl(key = "setLoadCase")]
     SetLoadCase { index: usize, #[dsl(block)] load_case: FemLoadCase },
-    #[dsl(key = "removeLoadCase")]
     RemoveLoadCase { id: String },
-    #[dsl(key = "setRegion")]
     SetRegion { index: usize, #[dsl(block)] region: FemRegion },
-    #[dsl(key = "removeRegion")]
     RemoveRegion { id: String },
-    #[dsl(key = "setCombination")]
     SetCombination { index: usize, #[dsl(block)] combination: FemCombination },
-    #[dsl(key = "removeCombination")]
     RemoveCombination { id: String },
-    #[dsl(key = "setAnalysisSettings")]
     SetAnalysisSettings { #[dsl(block)] settings: FemAnalysisSettings },
-    #[dsl(key = "setCamera")]
     SetCamera { #[dsl(block)] camera: FemCamera },
     /// 🌍 Replaces the whole document (example import / reset).
-    #[dsl(key = "setDocument")]
     SetDocument { #[dsl(block)] document: Fem2dDocument },
 }
 

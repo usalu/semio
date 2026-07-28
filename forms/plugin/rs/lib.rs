@@ -34,7 +34,7 @@ const FORMS_PLAY_BODY_INSPECTION: &str = "forms.play.inspection";
 const FORMS_PLAY_WINDOW_BLUEPRINT: &str = "forms-blueprint";
 const FORMS_PLAY_WINDOW_TRY: &str = "forms-try";
 const FORMS_QUESTION_DRAG_MIME: &str = "application/x-semio-forms-question-kind";
-const BUILDING_COMPONENT_EXAMPLE_JSON: &str = include_str!("../../example/building-component.forms.json");
+const BUILDING_COMPONENT_EXAMPLE_TEXT: &str = include_str!("../../example/building-component.forms");
 const DEFAULT_EXAMPLE_JSON: &str = r##"{
   "schema": "forms.form",
   "id": "default",
@@ -166,10 +166,11 @@ struct FormsPlayRuntime {
 //#endregion 🔖Types
 
 //#region 🔖DocumentHelpers
-/// 🌱 The forms app's default document — the building-component fixture. Used as
+/// 🌱 The forms app's default document — the building-component fixture, seeded from its derive-
+/// generated `.forms` DSL text (see `protocol::ProtocolSpec`'s `dsl::DslDocument` derive). Used as
 /// `DocumentApp::initial_projection`.
 fn building_component_spec() -> FormSpec {
-    serde_json::from_str(BUILDING_COMPONENT_EXAMPLE_JSON).unwrap_or_else(|_| empty_forms_projection())
+    <FormSpec as vcs::DocumentDsl>::parse_dsl(BUILDING_COMPONENT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_projection())
 }
 
 fn forms_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -1966,14 +1967,13 @@ impl DocumentApp for FormsPlayApp {
             }
             "setActiveExample" => {
                 let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
-                let json_text = match example_id {
+                let Some(next) = (match example_id {
                     "" => return ActionEmit::operations(replace_spec_operations(spec, &empty_forms_projection())),
-                    "building-component" => BUILDING_COMPONENT_EXAMPLE_JSON,
-                    "default" => DEFAULT_EXAMPLE_JSON,
-                    "onboarding" => ONBOARDING_EXAMPLE_JSON,
+                    "building-component" => <FormSpec as vcs::DocumentDsl>::parse_dsl(BUILDING_COMPONENT_EXAMPLE_TEXT).ok(),
+                    "default" => serde_json::from_str::<FormSpec>(DEFAULT_EXAMPLE_JSON).ok(),
+                    "onboarding" => serde_json::from_str::<FormSpec>(ONBOARDING_EXAMPLE_JSON).ok(),
                     _ => return ActionEmit::default(),
-                };
-                let Ok(next) = serde_json::from_str::<FormSpec>(json_text) else {
+                }) else {
                     return ActionEmit::default();
                 };
                 reset_try_runtime(&mut self.runtime);
@@ -2111,7 +2111,7 @@ fn create_forms_app() -> App {
     )
     .example("default", "Contact", DEFAULT_EXAMPLE_JSON)
     .example("onboarding", "Onboarding", ONBOARDING_EXAMPLE_JSON)
-    .example("building-component", "Building Component", BUILDING_COMPONENT_EXAMPLE_JSON)
+    .example("building-component", "Building Component", BUILDING_COMPONENT_EXAMPLE_TEXT)
     .program("forms", "Forms", "data")
 }
 

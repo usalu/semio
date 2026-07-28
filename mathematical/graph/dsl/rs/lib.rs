@@ -7,22 +7,23 @@ pub enum GraphDslError {
     /// 🧾 Fixture or query-result JSON failed to parse or serialize.
     #[error("invalid json: {0}")]
     Json(#[from] serde_json::Error),
-    /// 🔤 A string literal was never closed.
+    /// 🔤 A string literal was never closed (Jack's own dual-quote pre-scan, `dsl_core` only
+    /// natively lexes `"..."`).
     #[error("unterminated string literal")]
     UnterminatedString,
-    /// ❓ A byte outside the token grammar was found.
+    /// ❓ A byte outside the token grammar was found (Jack's own pre-scan for `'`/`"`/`!=`, ahead
+    /// of delegating the rest of the alphabet to `dsl_core::lex`).
     #[error("unexpected character '{0}'")]
     UnexpectedChar(char),
-    /// 🔢 A numeric literal's bytes were not valid utf-8.
-    #[error("invalid number literal: {0}")]
-    NumberUtf8(#[from] std::str::Utf8Error),
-    /// 🔢 A numeric literal did not parse as a float.
+    /// 🔢 A numeric literal did not parse as a float (defensive — `dsl_core::lex` only ever
+    /// accumulates well-formed digit runs, so this should be unreachable in practice).
     #[error("invalid number literal: {0}")]
     NumberFormat(#[from] std::num::ParseFloatError),
     /// ➡️ Parser expected one token shape and found another.
     #[error("expected {expected}, got {found}")]
     UnexpectedToken { expected: String, found: String },
-    /// 🪝 A wire-literal edge's target endpoint was missing its `@port`.
+    /// 🪝 A wire-literal edge was missing a mandatory `@port` on one of its endpoints (this
+    /// module's own DAG domain rule, enforced on top of the unified wire grammar).
     #[error("edge target requires @port")]
     EdgeTargetMissingPort,
     /// 🕸️ A jack pattern had no nodes.
@@ -31,6 +32,16 @@ pub enum GraphDslError {
     /// 🚫 CREATE/DELETE/SET/MERGE are not supported on read-only queryable graphs.
     #[error("mutating jack clauses are not supported on this graph domain")]
     UnsupportedMutation,
+    /// 🚧 WITH/UNWIND/CALL parse into the AST but aren't wired into the executor yet — prep work
+    /// for unifying compose's Architect query language onto Jack (see the repo-wide unified-DSL
+    /// plan, Wave 2 / P9).
+    #[error("WITH/UNWIND/CALL clauses are not yet executable")]
+    UnsupportedClause,
+    /// 🔡 A lexical/grammar error surfaced verbatim by the unified `dsl_core`/`dsl_schema` engine —
+    /// used by both the wire-literal delegate (`dsl_schema::parse_wire_text`) and Jack's
+    /// `dsl_core`-backed lexer.
+    #[error("{0}")]
+    Lex(#[from] dsl_core::TextError),
 }
 // #endregion ⚠️ Errors
 
@@ -302,7 +313,12 @@ pub mod queryable {
 
 pub mod wire {
     // #region wire
-    //! 🔌 Wire-literal compiled DAG text notation.
+    //! 🔌 Wire-literal compiled DAG text notation — delegates all lexing/parsing/printing to
+    //! `dsl_schema`'s unified `Shape::Wire` grammar (`->`/`<-`/`--`, `{k=v}` double-quoted
+    //! properties), keeping only this module's own public row types (`WireNode`/`WireEdge`) and
+    //! its domain-specific rule that an edge's ports are mandatory on both ends — a validation
+    //! layer on top of the shared parse, not a syntax difference. ~8 downstream crates depend on
+    //! these exact type/function signatures, unchanged by this unification.
 
     use crate::GraphDslError;
     use mathematical_graph_manifest::{PropertyBag, PropertyValue};
@@ -329,292 +345,112 @@ pub mod wire {
     }
     // #endregion 🔖WireTypes
 
-    // #region 🔖WireLiteral
-    fn format_properties(properties: &PropertyBag) -> String {
-        if properties.is_empty() {
-            return String::new();
-        }
-        let mut parts = Vec::new();
-        for (key, value) in properties.iter() {
-            parts.push(format!("{key}: {}", property_value_literal(value)));
-        }
-        format!("{{{}}}", parts.join(", "))
-    }
-
-    fn property_value_literal(value: &PropertyValue) -> String {
+    // #region 🔖PropertyBridge
+    /// 🌉 `mathematical_graph_manifest::PropertyValue` <-> `dsl_schema::DslValue` — the two crates'
+    /// dynamic-JSON-equivalent literal types are structurally identical, so this is a pure reshape.
+    fn dsl_value_from_property_value(value: &PropertyValue) -> dsl_schema::DslValue {
         match value {
-            PropertyValue::String(s) => format!("'{s}'"),
-            PropertyValue::Number(n) => n.to_string(),
-            PropertyValue::Bool(b) => b.to_string(),
-            PropertyValue::Null => "null".into(),
-            PropertyValue::Object(map) => {
-                let inner = map.iter().map(|(k, v)| format!("{k}: {}", property_value_literal(v))).collect::<Vec<_>>().join(", ");
-                format!("{{{inner}}}")
-            }
-            PropertyValue::Array(items) => {
-                let inner = items.iter().map(property_value_literal).collect::<Vec<_>>().join(", ");
-                format!("[{inner}]")
-            }
+            PropertyValue::Null => dsl_schema::DslValue::Null,
+            PropertyValue::Bool(b) => dsl_schema::DslValue::Bool(*b),
+            PropertyValue::Number(n) => dsl_schema::DslValue::Number(*n),
+            PropertyValue::String(s) => dsl_schema::DslValue::String(s.clone()),
+            PropertyValue::Array(items) => dsl_schema::DslValue::Array(items.iter().map(dsl_value_from_property_value).collect()),
+            PropertyValue::Object(map) => dsl_schema::DslValue::Object(map.iter().map(|(k, v)| (k.clone(), dsl_value_from_property_value(v))).collect()),
         }
     }
 
-    fn format_node_ref(id: &str, kind: &str, port: Option<&str>) -> String {
-        match port {
-            Some(port) => format!("{id}:{kind}@{port}"),
-            None => format!("{id}:{kind}"),
+    fn property_value_from_dsl_value(value: &dsl_schema::DslValue) -> PropertyValue {
+        match value {
+            dsl_schema::DslValue::Null => PropertyValue::Null,
+            dsl_schema::DslValue::Bool(b) => PropertyValue::Bool(*b),
+            dsl_schema::DslValue::Number(n) => PropertyValue::Number(*n),
+            dsl_schema::DslValue::String(s) => PropertyValue::String(s.clone()),
+            dsl_schema::DslValue::Array(items) => PropertyValue::Array(items.iter().map(property_value_from_dsl_value).collect()),
+            dsl_schema::DslValue::Object(entries) => PropertyValue::Object(entries.iter().map(|(k, v)| (k.clone(), property_value_from_dsl_value(v))).collect()),
         }
     }
 
-    /// 📝 Render wire-literal text from neutral node/edge rows.
+    fn properties_to_dsl_object(properties: &PropertyBag) -> dsl_schema::DslValue {
+        dsl_schema::DslValue::Object(properties.iter().map(|(k, v)| (k.clone(), dsl_value_from_property_value(v))).collect())
+    }
+
+    fn properties_from_dsl_value(value: &dsl_schema::DslValue) -> PropertyBag {
+        match value {
+            dsl_schema::DslValue::Object(entries) => entries.iter().map(|(k, v)| (k.clone(), property_value_from_dsl_value(v))).collect(),
+            _ => PropertyBag::new(),
+        }
+    }
+    // #endregion 🔖PropertyBridge
+
+    // #region 🔖WireLiteral
+    fn render_wire_line(value: &dsl_schema::WireValue) -> String {
+        let mut writer = dsl_schema::Writer::new();
+        dsl_schema::print_shape(&dsl_schema::FieldValue::Wire(value.clone()), &dsl_schema::Shape::Wire, &mut writer);
+        writer.render(dsl_schema::JoinMode::Inline)
+    }
+
+    /// 📝 Render wire-literal text from neutral node/edge rows, one unified `dsl_schema::Wire`
+    /// statement per line.
     pub fn wire_literal_from_dag(nodes: &[WireNode], edges: &[WireEdge]) -> String {
         let mut lines = Vec::new();
         for node in nodes {
-            let props = format_properties(&node.properties);
-            if props.is_empty() {
-                lines.push(format_node_ref(&node.id, &node.kind, node.port.as_deref()));
-            } else {
-                lines.push(format!("{}{}", format_node_ref(&node.id, &node.kind, node.port.as_deref()), props));
-            }
+            let value = dsl_schema::WireValue {
+                from: dsl_schema::WireNode { id: node.id.clone(), kind: Some(node.kind.clone()), port: node.port.clone() },
+                edge: None,
+                properties: properties_to_dsl_object(&node.properties),
+            };
+            lines.push(render_wire_line(&value));
         }
         for edge in edges {
             let from_kind = nodes.iter().find(|n| n.id == edge.from).map_or("node", |n| n.kind.as_str());
             let to_kind = nodes.iter().find(|n| n.id == edge.to).map_or("node", |n| n.kind.as_str());
-            let connector = if edge.directed { "->" } else { "-" };
-            let props = format_properties(&edge.properties);
-            lines.push(format!("{}:{}@{}{}{}:{}@{}{}", edge.from, from_kind, edge.from_port, connector, edge.to, to_kind, edge.to_port, props));
+            let value = dsl_schema::WireValue {
+                from: dsl_schema::WireNode { id: edge.from.clone(), kind: Some(from_kind.to_string()), port: Some(edge.from_port.clone()) },
+                edge: Some((edge.directed, dsl_schema::WireNode { id: edge.to.clone(), kind: Some(to_kind.to_string()), port: Some(edge.to_port.clone()) })),
+                properties: properties_to_dsl_object(&edge.properties),
+            };
+            lines.push(render_wire_line(&value));
         }
         lines.join("\n")
     }
 
-    #[derive(Clone, Debug, PartialEq)]
-    enum WireTok {
-        Ident(String),
-        Colon,
-        At,
-        Arrow,
-        Dash,
-        LBrace,
-        RBrace,
-        Comma,
-        StringLit(String),
-        Number(f64),
-        Eof,
-    }
-
-    fn lex_wire(input: &str) -> Result<Vec<WireTok>, GraphDslError> {
-        let mut out = Vec::new();
-        let bytes = input.as_bytes();
-        let mut i = 0;
-        while i < bytes.len() {
-            let c = bytes[i];
-            if c.is_ascii_whitespace() {
-                i += 1;
+    /// 🔍 Parse wire-literal text into neutral node/edge rows. Delegates lexing+parsing to
+    /// `dsl_schema::parse_wire_text` (the one unified wire grammar — `->`/`<-` sugar/`--`,
+    /// `{k=v}` double-quoted properties) one statement (line) at a time, then enforces this
+    /// module's own DAG domain rule on top: an edge's ports are mandatory on BOTH ends (the
+    /// shared grammar itself leaves ports optional on every endpoint — that's the engine's
+    /// business, not a syntax difference this module should encode into the lexer/parser).
+    pub fn dag_from_wire_literal(text: &str) -> Result<(Vec<WireNode>, Vec<WireEdge>), GraphDslError> {
+        let mut nodes = Vec::new();
+        let mut edges = Vec::new();
+        for line in text.lines() {
+            let line = line.trim();
+            if line.is_empty() {
                 continue;
             }
-            match c {
-                b':' => {
-                    out.push(WireTok::Colon);
-                    i += 1;
-                }
-                b'@' => {
-                    out.push(WireTok::At);
-                    i += 1;
-                }
-                b'-' if i + 1 < bytes.len() && bytes[i + 1] == b'>' => {
-                    out.push(WireTok::Arrow);
-                    i += 2;
-                }
-                b'-' => {
-                    out.push(WireTok::Dash);
-                    i += 1;
-                }
-                b'{' => {
-                    out.push(WireTok::LBrace);
-                    i += 1;
-                }
-                b'}' => {
-                    out.push(WireTok::RBrace);
-                    i += 1;
-                }
-                b',' => {
-                    out.push(WireTok::Comma);
-                    i += 1;
-                }
-                b'\'' | b'"' => {
-                    let quote = c;
-                    i += 1;
-                    let start = i;
-                    while i < bytes.len() && bytes[i] != quote {
-                        i += 1;
-                    }
-                    if i >= bytes.len() {
-                        return Err(GraphDslError::UnterminatedString);
-                    }
-                    let s = String::from_utf8_lossy(&bytes[start..i]).into_owned();
-                    i += 1;
-                    out.push(WireTok::StringLit(s));
-                }
-                b'0'..=b'9' => {
-                    let start = i;
-                    while i < bytes.len() && (bytes[i].is_ascii_digit() || bytes[i] == b'.') {
-                        i += 1;
-                    }
-                    let n: f64 = std::str::from_utf8(&bytes[start..i])?.parse::<f64>()?;
-                    out.push(WireTok::Number(n));
-                }
-                b'a'..=b'z' | b'A'..=b'Z' | b'_' => {
-                    let start = i;
-                    while i < bytes.len() && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_' || bytes[i] == b'.') {
-                        i += 1;
-                    }
-                    // 🔒 ascii-only alphanumerics were matched byte-by-byte above, so utf-8 decoding is infallible here
-                    out.push(WireTok::Ident(std::str::from_utf8(&bytes[start..i]).expect("scanned bytes are ascii alphanumerics/underscore/dot").to_string()));
-                }
-                _ => return Err(GraphDslError::UnexpectedChar(c as char)),
-            }
-        }
-        out.push(WireTok::Eof);
-        Ok(out)
-    }
-
-    struct WireParser {
-        tokens: Vec<WireTok>,
-        pos: usize,
-    }
-
-    impl WireParser {
-        fn new(tokens: Vec<WireTok>) -> Self {
-            Self { tokens, pos: 0 }
-        }
-
-        fn peek(&self) -> &WireTok {
-            self.tokens.get(self.pos).unwrap_or(&WireTok::Eof)
-        }
-
-        fn bump(&mut self) -> WireTok {
-            let t = self.peek().clone();
-            if !matches!(t, WireTok::Eof) {
-                self.pos += 1;
-            }
-            t
-        }
-
-        fn expect_ident(&mut self) -> Result<String, GraphDslError> {
-            match self.bump() {
-                WireTok::Ident(s) => Ok(s),
-                other => Err(GraphDslError::UnexpectedToken { expected: "ident".into(), found: format!("{other:?}") }),
-            }
-        }
-
-        fn parse_properties(&mut self) -> Result<PropertyBag, GraphDslError> {
-            let mut bag = PropertyBag::new();
-            if !matches!(self.peek(), WireTok::LBrace) {
-                return Ok(bag);
-            }
-            self.bump();
-            while !matches!(self.peek(), WireTok::RBrace | WireTok::Eof) {
-                let key = self.expect_ident()?;
-                let tok = self.bump();
-                if !matches!(tok, WireTok::Colon) {
-                    return Err(GraphDslError::UnexpectedToken { expected: ":".into(), found: format!("{tok:?}") });
-                }
-                let value = self.parse_value()?;
-                bag.insert(key, value);
-                if matches!(self.peek(), WireTok::Comma) {
-                    self.bump();
+            let value = dsl_schema::parse_wire_text(line)?;
+            match value.edge {
+                None => nodes.push(WireNode {
+                    id: value.from.id,
+                    kind: value.from.kind.unwrap_or_else(|| "node".to_string()),
+                    port: value.from.port,
+                    properties: properties_from_dsl_value(&value.properties),
+                }),
+                Some((directed, to)) => {
+                    let from_port = value.from.port.ok_or(GraphDslError::EdgeTargetMissingPort)?;
+                    let to_port = to.port.ok_or(GraphDslError::EdgeTargetMissingPort)?;
+                    edges.push(WireEdge {
+                        from: value.from.id,
+                        from_port,
+                        to: to.id,
+                        to_port,
+                        directed,
+                        properties: properties_from_dsl_value(&value.properties),
+                    });
                 }
             }
-            let tok = self.bump();
-            if !matches!(tok, WireTok::RBrace) {
-                return Err(GraphDslError::UnexpectedToken { expected: "}".into(), found: format!("{tok:?}") });
-            }
-            Ok(bag)
         }
-
-        fn parse_value(&mut self) -> Result<PropertyValue, GraphDslError> {
-            match self.bump() {
-                WireTok::StringLit(s) => Ok(PropertyValue::String(s)),
-                WireTok::Number(n) => Ok(PropertyValue::Number(n)),
-                WireTok::Ident(s) if s == "true" => Ok(PropertyValue::Bool(true)),
-                WireTok::Ident(s) if s == "false" => Ok(PropertyValue::Bool(false)),
-                WireTok::Ident(s) if s == "null" => Ok(PropertyValue::Null),
-                other => Err(GraphDslError::UnexpectedToken { expected: "value".into(), found: format!("{other:?}") }),
-            }
-        }
-
-        fn expect_port(&mut self) -> Result<String, GraphDslError> {
-            match self.bump() {
-                WireTok::Ident(s) => Ok(s),
-                WireTok::Number(n) => {
-                    let mut port = if (n - n.round()).abs() < 1e-9 { format!("{}", n.round() as i64) } else { n.to_string() };
-                    if let WireTok::Ident(suffix) = self.peek() {
-                        port.push_str(suffix);
-                        self.bump();
-                    }
-                    Ok(port)
-                }
-                other => Err(GraphDslError::UnexpectedToken { expected: "port".into(), found: format!("{other:?}") }),
-            }
-        }
-
-        fn parse_node_ref(&mut self) -> Result<(String, String, Option<String>), GraphDslError> {
-            let id = self.expect_ident()?;
-            let tok = self.bump();
-            if !matches!(tok, WireTok::Colon) {
-                return Err(GraphDslError::UnexpectedToken { expected: ":".into(), found: format!("{tok:?}") });
-            }
-            let kind = self.expect_ident()?;
-            let port = if matches!(self.peek(), WireTok::At) {
-                self.bump();
-                Some(self.expect_port()?)
-            } else {
-                None
-            };
-            Ok((id, kind, port))
-        }
-
-        fn parse_statement(&mut self) -> Result<(Option<WireNode>, Option<WireEdge>), GraphDslError> {
-            let (id, kind, port) = self.parse_node_ref()?;
-            if let Some(from_port) = port {
-                let directed = if matches!(self.peek(), WireTok::Arrow) {
-                    self.bump();
-                    true
-                } else if matches!(self.peek(), WireTok::Dash) {
-                    self.bump();
-                    false
-                } else {
-                    return Ok((Some(WireNode { id, kind, port: Some(from_port), properties: self.parse_properties()? }), None));
-                };
-                let (to, _to_kind, to_port) = self.parse_node_ref()?;
-                let to_port = to_port.ok_or(GraphDslError::EdgeTargetMissingPort)?;
-                let properties = self.parse_properties()?;
-                Ok((None, Some(WireEdge { from: id, from_port, to, to_port, directed, properties })))
-            } else {
-                let properties = self.parse_properties()?;
-                Ok((Some(WireNode { id, kind, port: None, properties }), None))
-            }
-        }
-
-        fn parse_document(&mut self) -> Result<(Vec<WireNode>, Vec<WireEdge>), GraphDslError> {
-            let mut nodes = Vec::new();
-            let mut edges = Vec::new();
-            while !matches!(self.peek(), WireTok::Eof) {
-                let (node, edge) = self.parse_statement()?;
-                if let Some(node) = node {
-                    nodes.push(node);
-                }
-                if let Some(edge) = edge {
-                    edges.push(edge);
-                }
-            }
-            Ok((nodes, edges))
-        }
-    }
-
-    /// 🔍 Parse wire-literal text into neutral node/edge rows.
-    pub fn dag_from_wire_literal(text: &str) -> Result<(Vec<WireNode>, Vec<WireEdge>), GraphDslError> {
-        let tokens = lex_wire(text)?;
-        WireParser::new(tokens).parse_document()
+        Ok((nodes, edges))
     }
     // #endregion 🔖WireLiteral
 
@@ -625,11 +461,13 @@ pub mod wire {
 
         #[test]
         fn wire_literal_roundtrip_simple() {
+            // 🩹 unified grammar: port names are `dsl_core` idents (must start with a letter or
+            // `_`, never a digit) — the old port name `"3d"` is no longer lexable, renamed `"d3"`.
             let nodes = vec![WireNode { id: "p".into(), kind: "Puzzle3d".into(), port: None, properties: PropertyBag::new() }];
-            let edges = vec![WireEdge { from: "p".into(), from_port: "3d".into(), to: "s".into(), to_port: "3d".into(), directed: true, properties: PropertyBag::new() }];
+            let edges = vec![WireEdge { from: "p".into(), from_port: "d3".into(), to: "s".into(), to_port: "d3".into(), directed: true, properties: PropertyBag::new() }];
             let text = wire_literal_from_dag(&nodes, &edges);
             assert!(text.contains("p:Puzzle3d"));
-            assert!(text.contains("p:Puzzle3d@3d->s:node@3d"));
+            assert!(text.contains("p:Puzzle3d@d3->s:node@d3"));
             let parsed = dag_from_wire_literal(&text).unwrap();
             assert_eq!(parsed.1.len(), 1);
         }
@@ -648,7 +486,9 @@ pub mod wire {
             props.insert("value".into(), PropertyValue::Number(3.0));
             let nodes = vec![WireNode { id: "n".into(), kind: "slider".into(), port: None, properties: props }];
             let text = wire_literal_from_dag(&nodes, &[]);
-            assert!(text.contains("{value: 3"));
+            // 🩹 unified syntax: `key=value` (never `key: value`), space-padded braces when glued
+            // onto a preceding atom, per `dsl_schema::Writer`'s canonical spacing law.
+            assert!(text.contains("{ value=3 }"), "expected unified {{ value=3 }} properties, got: {text}");
         }
 
         #[test]
@@ -660,8 +500,8 @@ pub mod wire {
             props.insert("arr".into(), PropertyValue::Array(vec![PropertyValue::Number(1.0), PropertyValue::Null]));
             let nodes = vec![WireNode { id: "n".into(), kind: "slider".into(), port: None, properties: props }];
             let text = wire_literal_from_dag(&nodes, &[]);
-            assert!(text.contains("obj: {y: true}"));
-            assert!(text.contains("arr: [1, null]"));
+            assert!(text.contains("obj={ y=true }"), "expected unified obj={{ y=true }}, got: {text}");
+            assert!(text.contains("arr=[ 1 null ]"), "expected unified arr=[ 1 null ], got: {text}");
         }
 
         #[test]
@@ -673,14 +513,20 @@ pub mod wire {
 
         #[test]
         fn dag_from_wire_literal_rejects_unterminated_string() {
-            let err = dag_from_wire_literal("n:kind{prop: 'unterminated").unwrap_err();
-            assert!(matches!(err, GraphDslError::UnterminatedString));
+            // 🩹 unified syntax: double-quoted properties, `key="value"` (never `key: 'value'`).
+            let err = dag_from_wire_literal("n:kind{prop=\"unterminated").unwrap_err();
+            assert!(matches!(err, GraphDslError::Lex(_)));
+            assert!(err.to_string().contains("unterminated string literal"), "got: {err}");
         }
 
         #[test]
         fn dag_from_wire_literal_rejects_unexpected_char() {
-            let err = dag_from_wire_literal("n:kind#bad").unwrap_err();
-            assert!(matches!(err, GraphDslError::UnexpectedChar('#')));
+            // 🩹 `#` is now a legitimate comment starter (unified with the rest of the DSL engine),
+            // so the "genuinely unrecognized character" trigger moved to `$`, which is outside
+            // `dsl_core`'s alphabet in every mode.
+            let err = dag_from_wire_literal("n:kind$bad").unwrap_err();
+            assert!(matches!(err, GraphDslError::Lex(_)));
+            assert!(err.to_string().contains("unexpected character '$'"), "got: {err}");
         }
 
         #[test]
@@ -690,8 +536,18 @@ pub mod wire {
         }
 
         #[test]
+        fn dag_from_wire_literal_rejects_edge_missing_source_port() {
+            // 🆕 the unified grammar itself leaves the source port optional (unlike the old
+            // hand-rolled parser, which could never even reach an edge without one) — this
+            // module's own DAG domain rule must now catch it explicitly.
+            let err = dag_from_wire_literal("a:kind->b:kind@in").unwrap_err();
+            assert!(matches!(err, GraphDslError::EdgeTargetMissingPort));
+        }
+
+        #[test]
         fn dag_from_wire_literal_parses_bool_and_null_properties() {
-            let (nodes, _) = dag_from_wire_literal("n:kind{on: true, off: false, empty: null}").unwrap();
+            // 🩹 unified syntax: space-separated `key=value` pairs, no commas, no colons.
+            let (nodes, _) = dag_from_wire_literal("n:kind{on=true off=false empty=null}").unwrap();
             let props = &nodes[0].properties;
             assert_eq!(props.get("on"), Some(&PropertyValue::Bool(true)));
             assert_eq!(props.get("off"), Some(&PropertyValue::Bool(false)));
@@ -699,9 +555,50 @@ pub mod wire {
         }
 
         #[test]
+        fn dag_from_wire_literal_parses_double_quoted_string_properties() {
+            let (nodes, _) = dag_from_wire_literal("n:kind{label=\"hello world\"}").unwrap();
+            assert_eq!(nodes[0].properties.get("label"), Some(&PropertyValue::String("hello world".to_string())));
+        }
+
+        #[test]
         fn dag_from_wire_literal_rejects_malformed_properties() {
             let err = dag_from_wire_literal("n:kind{prop 1}").unwrap_err();
-            assert!(matches!(err, GraphDslError::UnexpectedToken { .. }));
+            assert!(matches!(err, GraphDslError::Lex(_)));
+        }
+
+        #[test]
+        fn dag_from_wire_literal_accepts_back_arrow_sugar_and_normalizes_direction() {
+            // 🆕 `<-` is accepted sugar, normalized to the same stored/parsed shape as `->` with
+            // endpoints swapped — `dsl_schema::parse_wire`'s law, inherited for free.
+            let (_, edges) = dag_from_wire_literal("b:kind@in<-a:kind@out").unwrap();
+            assert_eq!(edges.len(), 1);
+            let edge = &edges[0];
+            assert_eq!(edge.from, "a");
+            assert_eq!(edge.from_port, "out");
+            assert_eq!(edge.to, "b");
+            assert_eq!(edge.to_port, "in");
+            assert!(edge.directed);
+        }
+
+        #[test]
+        fn dag_from_wire_literal_parses_undirected_dash_dash_edge() {
+            // 🆕 unified undirected sigil is `--`, not the old single `-`.
+            let (_, edges) = dag_from_wire_literal("a:x@out--b:y@in").unwrap();
+            assert_eq!(edges.len(), 1);
+            assert!(!edges[0].directed);
+            assert_eq!(edges[0].from, "a");
+            assert_eq!(edges[0].to, "b");
+        }
+
+        #[test]
+        fn wire_literal_from_dag_round_trips_through_unified_double_quoted_syntax() {
+            let mut props = PropertyBag::new();
+            props.insert("label".into(), PropertyValue::String("hi".into()));
+            let nodes = vec![WireNode { id: "n".into(), kind: "slider".into(), port: None, properties: props }];
+            let text = wire_literal_from_dag(&nodes, &[]);
+            assert!(text.contains("\"hi\""), "properties must print double-quoted: {text}");
+            let (parsed_nodes, _) = dag_from_wire_literal(&text).unwrap();
+            assert_eq!(parsed_nodes[0].properties.get("label"), Some(&PropertyValue::String("hi".into())));
         }
     }
     // #endregion 🔖Tests
@@ -728,11 +625,34 @@ pub struct Query {
 pub enum Clause {
     Match(Vec<Pattern>),
     Where(Expr),
+    /// 🚧 Parses; not yet executed (see [`GraphDslError::UnsupportedClause`]) — prep for unifying
+    /// compose's Architect query language onto Jack.
+    With(Vec<ReturnItem>),
+    /// 🚧 Parses; not yet executed (see [`GraphDslError::UnsupportedClause`]) — prep for unifying
+    /// compose's Architect query language onto Jack.
+    Unwind(UnwindClause),
+    /// 🚧 Parses; not yet executed (see [`GraphDslError::UnsupportedClause`]) — prep for unifying
+    /// compose's Architect query language onto Jack.
+    Call(CallClause),
     Return(Vec<ReturnItem>),
     Create(Pattern),
     Delete(Vec<String>),
     Set(Vec<Assignment>),
     Merge(Pattern),
+}
+
+/// 🌀 `UNWIND <source> AS <var>` — flattens a list-valued source into per-row bindings of `var`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct UnwindClause {
+    pub source: ReturnItem,
+    pub var: String,
+}
+
+/// 📞 `CALL <name>(<args>...)` — a named procedure invocation with positional scalar arguments.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CallClause {
+    pub name: String,
+    pub args: Vec<PropertyValue>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -837,6 +757,10 @@ enum Token {
     KwDelete,
     KwSet,
     KwMerge,
+    KwWith,
+    KwUnwind,
+    KwCall,
+    KwAs,
     Ident(String),
     Number(f64),
     StringLit(String),
@@ -849,8 +773,9 @@ enum Token {
     Dot,
     Eq,
     Ne,
-    Dash,
     Arrow,
+    DashArrow,
+    BackArrow,
     At,
     And,
     Or,
@@ -866,11 +791,23 @@ struct SpannedToken {
 
 fn token_class(token: &Token) -> TokenClass {
     match token {
-        Token::KwMatch | Token::KwWhere | Token::KwReturn | Token::KwCreate | Token::KwDelete | Token::KwSet | Token::KwMerge | Token::And | Token::Or => TokenClass::Keyword,
+        Token::KwMatch
+        | Token::KwWhere
+        | Token::KwReturn
+        | Token::KwCreate
+        | Token::KwDelete
+        | Token::KwSet
+        | Token::KwMerge
+        | Token::KwWith
+        | Token::KwUnwind
+        | Token::KwCall
+        | Token::KwAs
+        | Token::And
+        | Token::Or => TokenClass::Keyword,
         Token::Ident(_) => TokenClass::Ident,
         Token::Number(_) => TokenClass::Number,
         Token::StringLit(_) => TokenClass::String,
-        Token::Eq | Token::Ne | Token::Dash | Token::Arrow | Token::At => TokenClass::Operator,
+        Token::Eq | Token::Ne | Token::Arrow | Token::DashArrow | Token::BackArrow | Token::At => TokenClass::Operator,
         Token::LParen | Token::RParen | Token::LBracket | Token::RBracket | Token::Colon | Token::Comma | Token::Dot => TokenClass::Punctuation,
         Token::Eof => TokenClass::Punctuation,
     }
@@ -880,139 +817,161 @@ fn push_spanned(tokens: &mut Vec<SpannedToken>, token: Token, start: usize, end:
     tokens.push(SpannedToken { token, start, end });
 }
 
-fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, GraphDslError> {
-    let mut tokens = Vec::new();
-    let bytes = input.as_bytes();
-    let mut i = 0;
-    while i < bytes.len() {
-        let start = i;
-        let c = bytes[i];
-        if c.is_ascii_whitespace() {
-            i += 1;
+/// 🔑 Uppercases and matches against Jack's clause/logic keyword table; anything else stays a
+/// plain variable/property/kind identifier. Case-insensitive (Cypher heritage — `match`, `Match`,
+/// `MATCH` are all the same token), unlike `dsl_core`'s own grammars which are case-sensitive.
+fn keyword_or_ident(text: String) -> Token {
+    match text.to_ascii_uppercase().as_str() {
+        "MATCH" => Token::KwMatch,
+        "WHERE" => Token::KwWhere,
+        "RETURN" => Token::KwReturn,
+        "CREATE" => Token::KwCreate,
+        "DELETE" => Token::KwDelete,
+        "SET" => Token::KwSet,
+        "MERGE" => Token::KwMerge,
+        "WITH" => Token::KwWith,
+        "UNWIND" => Token::KwUnwind,
+        "CALL" => Token::KwCall,
+        "AS" => Token::KwAs,
+        "AND" => Token::And,
+        "OR" => Token::Or,
+        _ => Token::Ident(text),
+    }
+}
+
+/// 🪚 `dsl_core` treats `.` as ident-continue (so `a.name` lexes as ONE ident there), but Jack's
+/// `var.prop` property-access grammar needs `.` as its own token — splits it back apart here,
+/// checking each piece against the keyword table too (defensive; keywords never legitimately
+/// contain a dot, but this keeps the one keyword-recognition path authoritative).
+fn push_ident_or_keyword_with_dots(text: &str, start: usize, out: &mut Vec<SpannedToken>) {
+    let mut offset = 0usize;
+    for (idx, part) in text.split('.').enumerate() {
+        if idx > 0 {
+            push_spanned(out, Token::Dot, start + offset, start + offset + 1);
+            offset += 1;
+        }
+        if !part.is_empty() {
+            let end = start + offset + part.len();
+            push_spanned(out, keyword_or_ident(part.to_string()), start + offset, end);
+        }
+        offset += part.len();
+    }
+}
+
+/// 🔬 Converts one already-lexed `dsl_core` segment (containing no quotes or `!=` — those are
+/// scanned by [`lex_spanned`] itself, ahead of delegating everything else) into Jack's own
+/// richer, grammar-aware token stream.
+fn push_dsl_core_segment(segment: &str, base_offset: usize, forgiving: bool, out: &mut Vec<SpannedToken>) -> Result<(), GraphDslError> {
+    if segment.is_empty() {
+        return Ok(());
+    }
+    let raw = dsl_core::lex(segment, &dsl_core::Limits::default(), forgiving).map_err(GraphDslError::Lex)?;
+    for token in raw {
+        if token.kind.is_trivia() || token.kind == dsl_core::TokenKind::Eof {
             continue;
         }
-        match c {
-            b'(' => {
-                push_spanned(&mut tokens, Token::LParen, start, start + 1);
-                i += 1;
+        let start = base_offset + token.byte_range.0 as usize;
+        let end = base_offset + token.byte_range.1 as usize;
+        let text = token.text.as_str().to_string();
+        match token.kind {
+            dsl_core::TokenKind::Ident => push_ident_or_keyword_with_dots(&text, start, out),
+            // A lone `_` is `dsl_core`'s placeholder sigil; Jack has no placeholder concept of its
+            // own, so it round-trips as an ordinary one-character identifier.
+            dsl_core::TokenKind::Placeholder => push_spanned(out, Token::Ident(text), start, end),
+            dsl_core::TokenKind::Int | dsl_core::TokenKind::Float => {
+                let n: f64 = text.parse().map_err(GraphDslError::NumberFormat)?;
+                push_spanned(out, Token::Number(n), start, end);
             }
-            b')' => {
-                push_spanned(&mut tokens, Token::RParen, start, start + 1);
-                i += 1;
-            }
-            b'[' => {
-                push_spanned(&mut tokens, Token::LBracket, start, start + 1);
-                i += 1;
-            }
-            b']' => {
-                push_spanned(&mut tokens, Token::RBracket, start, start + 1);
-                i += 1;
-            }
-            b':' => {
-                push_spanned(&mut tokens, Token::Colon, start, start + 1);
-                i += 1;
-            }
-            b'@' => {
-                push_spanned(&mut tokens, Token::At, start, start + 1);
-                i += 1;
-            }
-            b',' => {
-                push_spanned(&mut tokens, Token::Comma, start, start + 1);
-                i += 1;
-            }
-            b'.' => {
-                push_spanned(&mut tokens, Token::Dot, start, start + 1);
-                i += 1;
-            }
-            b'!' if i + 1 < bytes.len() && bytes[i + 1] == b'=' => {
-                push_spanned(&mut tokens, Token::Ne, start, start + 2);
-                i += 2;
-            }
-            b'=' => {
-                push_spanned(&mut tokens, Token::Eq, start, start + 1);
-                i += 1;
-            }
-            b'\'' | b'"' => {
-                let quote = c;
-                i += 1;
-                let lit_start = i;
-                while i < bytes.len() && bytes[i] != quote {
-                    i += 1;
+            dsl_core::TokenKind::LParen => push_spanned(out, Token::LParen, start, end),
+            dsl_core::TokenKind::RParen => push_spanned(out, Token::RParen, start, end),
+            dsl_core::TokenKind::LBracket => push_spanned(out, Token::LBracket, start, end),
+            dsl_core::TokenKind::RBracket => push_spanned(out, Token::RBracket, start, end),
+            dsl_core::TokenKind::Colon => push_spanned(out, Token::Colon, start, end),
+            dsl_core::TokenKind::Comma => push_spanned(out, Token::Comma, start, end),
+            dsl_core::TokenKind::Equals => push_spanned(out, Token::Eq, start, end),
+            dsl_core::TokenKind::At => push_spanned(out, Token::At, start, end),
+            dsl_core::TokenKind::Arrow => push_spanned(out, Token::Arrow, start, end),
+            dsl_core::TokenKind::DashArrow => push_spanned(out, Token::DashArrow, start, end),
+            dsl_core::TokenKind::BackArrow => push_spanned(out, Token::BackArrow, start, end),
+            // Double-quoted text delegated straight through `dsl_core` — unreachable in practice
+            // since `lex_spanned` pre-scans and consumes every quote itself before ever
+            // delegating a segment, kept only for defensive completeness.
+            dsl_core::TokenKind::Text => push_spanned(out, Token::StringLit(text), start, end),
+            // `{`/`}` aren't part of Jack's grammar (no map/object literals) — same "stray
+            // character" treatment as an outright `dsl_core::TokenKind::Error` below.
+            dsl_core::TokenKind::LBrace | dsl_core::TokenKind::RBrace | dsl_core::TokenKind::Error => {
+                if forgiving {
+                    push_spanned(out, Token::Ident(text), start, end);
+                } else {
+                    return Err(GraphDslError::UnexpectedChar(text.chars().next().unwrap_or('?')));
                 }
-                if i >= bytes.len() {
-                    if forgiving {
-                        let s = String::from_utf8_lossy(&bytes[lit_start..i]).into_owned();
-                        push_spanned(&mut tokens, Token::StringLit(s), start, i);
-                        break;
-                    }
-                    return Err(GraphDslError::UnterminatedString);
-                }
-                let s = String::from_utf8_lossy(&bytes[lit_start..i]).into_owned();
-                i += 1;
-                push_spanned(&mut tokens, Token::StringLit(s), start, i);
             }
-            b'-' if i + 1 < bytes.len() && bytes[i + 1] == b'>' => {
-                push_spanned(&mut tokens, Token::Arrow, start, start + 2);
-                i += 2;
+            dsl_core::TokenKind::Whitespace | dsl_core::TokenKind::Newline | dsl_core::TokenKind::Comment | dsl_core::TokenKind::Eof => {
+                unreachable!("trivia/Eof filtered above")
             }
-            // 🩹 the guard only needs to disambiguate a leading `-` (negative number vs. dash token);
-            // plain digits must always start a number, even a lone single-digit literal like `1`.
-            b'0'..=b'9' | b'-' if c != b'-' || (i + 1 < bytes.len() && bytes[i + 1].is_ascii_digit()) => {
-                let num_start = i;
-                if bytes[i] == b'-' {
-                    i += 1;
-                }
-                while i < bytes.len() && (bytes[i].is_ascii_digit() || bytes[i] == b'.') {
-                    i += 1;
-                }
-                let num: f64 = match std::str::from_utf8(&bytes[num_start..i]) {
-                    Ok(s) => match s.parse() {
-                        Ok(n) => n,
-                        Err(_e) if forgiving => {
-                            push_spanned(&mut tokens, Token::Ident(s.to_string()), num_start, i);
-                            continue;
-                        }
-                        Err(e) => return Err(e.into()),
-                    },
-                    Err(_e) if forgiving => {
-                        push_spanned(&mut tokens, Token::Ident(String::new()), num_start, i);
-                        continue;
-                    }
-                    Err(e) => return Err(e.into()),
-                };
-                push_spanned(&mut tokens, Token::Number(num), num_start, i);
-            }
-            b'-' => {
-                push_spanned(&mut tokens, Token::Dash, start, start + 1);
-                i += 1;
-            }
-            b'a'..=b'z' | b'A'..=b'Z' | b'_' => {
-                while i < bytes.len() && (bytes[i].is_ascii_alphanumeric() || bytes[i] == b'_') {
-                    i += 1;
-                }
-                // 🔒 ascii-only alphanumerics/underscore were matched byte-by-byte above, so utf-8 decoding is infallible here
-                let word = std::str::from_utf8(&bytes[start..i]).expect("scanned bytes are ascii alphanumerics/underscore").to_ascii_uppercase();
-                let tok = match word.as_str() {
-                    "MATCH" => Token::KwMatch,
-                    "WHERE" => Token::KwWhere,
-                    "RETURN" => Token::KwReturn,
-                    "CREATE" => Token::KwCreate,
-                    "DELETE" => Token::KwDelete,
-                    "SET" => Token::KwSet,
-                    "MERGE" => Token::KwMerge,
-                    "AND" => Token::And,
-                    "OR" => Token::Or,
-                    _ => Token::Ident(std::str::from_utf8(&bytes[start..i]).expect("scanned bytes are ascii alphanumerics/underscore").to_string()),
-                };
-                push_spanned(&mut tokens, tok, start, i);
-            }
-            _ if forgiving => {
-                push_spanned(&mut tokens, Token::Ident(String::from(c as char)), start, start + 1);
-                i += 1;
-            }
-            _ => return Err(GraphDslError::UnexpectedChar(c as char)),
         }
     }
+    Ok(())
+}
+
+/// 🔬 Jack's own lexer: unifies on `dsl_core::lex` for the shared token alphabet (idents,
+/// numbers, punctuation, `(`/`)`/`[`/`]`, `->`/`--`/`<-`) but keeps two genuinely Cypher-specific
+/// pieces local, since neither fits `dsl_core`'s grammar-independent alphabet: dual-quote strings
+/// (`'x'`/`"x"` — Cypher heritage; `dsl_core` only ever lexes `"..."`) and the `!=` comparison
+/// operator (`dsl_core` has no relational operators at all — it's a structural DSL alphabet, not
+/// an expression language). Both are pre-scanned as their own tokens; every remaining run of
+/// characters is delegated whole to `dsl_core::lex` and converted via [`push_dsl_core_segment`].
+fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, GraphDslError> {
+    let bytes = input.as_bytes();
+    let mut tokens = Vec::new();
+    let mut i = 0usize;
+    let mut seg_start = 0usize;
+
+    while i < bytes.len() {
+        let c = bytes[i];
+        if c == b'\'' || c == b'"' {
+            push_dsl_core_segment(&input[seg_start..i], seg_start, forgiving, &mut tokens)?;
+            let quote = c;
+            let start = i;
+            i += 1;
+            let content_start = i;
+            let mut closed = false;
+            while i < bytes.len() {
+                if bytes[i] == b'\\' && i + 1 < bytes.len() {
+                    i += 2;
+                    continue;
+                }
+                if bytes[i] == quote {
+                    closed = true;
+                    break;
+                }
+                i += 1;
+            }
+            let raw = String::from_utf8_lossy(&bytes[content_start..i]).into_owned();
+            if !closed {
+                if forgiving {
+                    push_spanned(&mut tokens, Token::StringLit(raw), start, i);
+                    seg_start = i;
+                    break;
+                }
+                return Err(GraphDslError::UnterminatedString);
+            }
+            i += 1;
+            let text = dsl_core::unescape_text(&raw, forgiving).unwrap_or(raw);
+            push_spanned(&mut tokens, Token::StringLit(text), start, i);
+            seg_start = i;
+            continue;
+        }
+        if c == b'!' && i + 1 < bytes.len() && bytes[i + 1] == b'=' {
+            push_dsl_core_segment(&input[seg_start..i], seg_start, forgiving, &mut tokens)?;
+            push_spanned(&mut tokens, Token::Ne, i, i + 2);
+            i += 2;
+            seg_start = i;
+            continue;
+        }
+        i += 1;
+    }
+    push_dsl_core_segment(&input[seg_start..bytes.len()], seg_start, forgiving, &mut tokens)?;
     push_spanned(&mut tokens, Token::Eof, input.len(), input.len());
     Ok(tokens)
 }
@@ -1055,7 +1014,7 @@ pub struct Completion {
     pub insert: String,
 }
 
-const CLAUSE_KEYWORDS: &[&str] = &["MATCH", "WHERE", "RETURN", "CREATE", "DELETE", "SET", "MERGE"];
+const CLAUSE_KEYWORDS: &[&str] = &["MATCH", "WHERE", "RETURN", "CREATE", "DELETE", "SET", "MERGE", "WITH", "UNWIND", "CALL"];
 const LOGIC_KEYWORDS: &[&str] = &["AND", "OR"];
 
 fn completion_prefix(source: &str, cursor: usize) -> String {
@@ -1462,6 +1421,10 @@ fn format_token(tok: &Token) -> String {
         Token::KwDelete => "DELETE".into(),
         Token::KwSet => "SET".into(),
         Token::KwMerge => "MERGE".into(),
+        Token::KwWith => "WITH".into(),
+        Token::KwUnwind => "UNWIND".into(),
+        Token::KwCall => "CALL".into(),
+        Token::KwAs => "AS".into(),
         Token::And => "AND".into(),
         Token::Or => "OR".into(),
         Token::Ident(s) => s.clone(),
@@ -1472,7 +1435,9 @@ fn format_token(tok: &Token) -> String {
                 n.to_string()
             }
         }
-        Token::StringLit(s) => format!("'{s}'"),
+        // 🩹 unified syntax law: strings always PRINT double-quoted with `dsl_core`'s canonical
+        // escape, regardless of which quote style the source used.
+        Token::StringLit(s) => format!("\"{}\"", dsl_core::escape_text(s)),
         Token::LParen => "(".into(),
         Token::RParen => ")".into(),
         Token::LBracket => "[".into(),
@@ -1482,8 +1447,9 @@ fn format_token(tok: &Token) -> String {
         Token::Dot => ".".into(),
         Token::Eq => "=".into(),
         Token::Ne => "!=".into(),
-        Token::Dash => "-".into(),
         Token::Arrow => "->".into(),
+        Token::DashArrow => "--".into(),
+        Token::BackArrow => "<-".into(),
         Token::At => "@".into(),
         Token::Eof => String::new(),
     }
@@ -1501,7 +1467,7 @@ pub fn format(source: &str) -> Result<String, GraphDslError> {
             break;
         }
         match &row.token {
-            Token::KwMatch | Token::KwWhere | Token::KwReturn | Token::KwCreate | Token::KwDelete | Token::KwSet | Token::KwMerge => {
+            Token::KwMatch | Token::KwWhere | Token::KwReturn | Token::KwCreate | Token::KwDelete | Token::KwSet | Token::KwMerge | Token::KwWith | Token::KwUnwind | Token::KwCall => {
                 if !out.is_empty() {
                     out.push('\n');
                 }
@@ -1515,7 +1481,13 @@ pub fn format(source: &str) -> Result<String, GraphDslError> {
             Token::Arrow => {
                 out.push_str("->");
             }
-            Token::And | Token::Or => {
+            Token::DashArrow => {
+                out.push_str("--");
+            }
+            Token::BackArrow => {
+                out.push_str("<-");
+            }
+            Token::And | Token::Or | Token::KwAs => {
                 out.push(' ');
                 out.push_str(&format_token(&row.token));
                 out.push(' ');
@@ -1528,7 +1500,7 @@ pub fn format(source: &str) -> Result<String, GraphDslError> {
             _ => {
                 if line_open && !out.ends_with(' ') && !out.ends_with('\n') && !matches!(row.token, Token::RParen | Token::RBracket | Token::Comma | Token::Dot) {
                     let prev = tokens.get(i.saturating_sub(1)).map(|t| &t.token);
-                    if !matches!(prev, Some(Token::LParen | Token::LBracket | Token::Colon | Token::Dot | Token::Dash)) {
+                    if !matches!(prev, Some(Token::LParen | Token::LBracket | Token::Colon | Token::Dot | Token::Arrow | Token::DashArrow | Token::BackArrow)) {
                         out.push(' ');
                     }
                 }
@@ -1702,43 +1674,113 @@ impl Parser {
                 self.bump();
                 Ok(Clause::Merge(self.parse_pattern()?))
             }
-            other => Err(GraphDslError::UnexpectedToken { expected: "clause start (MATCH/WHERE/RETURN/CREATE/DELETE/SET/MERGE)".into(), found: format!("{other:?}") }),
+            Token::KwWith => {
+                self.bump();
+                let mut items = vec![self.parse_return_item()?];
+                while matches!(self.peek(), Token::Comma) {
+                    self.bump();
+                    items.push(self.parse_return_item()?);
+                }
+                Ok(Clause::With(items))
+            }
+            Token::KwUnwind => {
+                self.bump();
+                let source = self.parse_return_item()?;
+                self.expect(&Token::KwAs)?;
+                let var = self.expect_ident()?;
+                Ok(Clause::Unwind(UnwindClause { source, var }))
+            }
+            Token::KwCall => {
+                self.bump();
+                let name = self.expect_ident()?;
+                self.expect(&Token::LParen)?;
+                let mut args = Vec::new();
+                if !matches!(self.peek(), Token::RParen) {
+                    args.push(self.parse_value()?);
+                    while matches!(self.peek(), Token::Comma) {
+                        self.bump();
+                        args.push(self.parse_value()?);
+                    }
+                }
+                self.expect(&Token::RParen)?;
+                Ok(Clause::Call(CallClause { name, args }))
+            }
+            other => Err(GraphDslError::UnexpectedToken { expected: "clause start (MATCH/WHERE/RETURN/CREATE/DELETE/SET/MERGE/WITH/UNWIND/CALL)".into(), found: format!("{other:?}") }),
         }
     }
 
+    /// 🕸️ Pattern grammar over the unified token alphabet — `dsl_core` has no standalone `-`
+    /// token (only `->`/`--`/`<-`), so the leading connector before a bracketed edge label is
+    /// always `--` or `<-`, never a bare dash (real Cypher's `-[r]->`/`<-[r]-` shape, adapted to
+    /// this repo's alphabet). `<-` at the front means the edge points INTO `left`; represented by
+    /// swapping which parsed node plays "left" so the stored `PatternEdge.right` is always the
+    /// forward-direction target, mirroring `dsl_schema`'s own wire `<-` normalization.
     fn parse_pattern(&mut self) -> Result<Pattern, GraphDslError> {
         self.expect(&Token::LParen)?;
         let left = self.parse_pattern_node()?;
         self.expect(&Token::RParen)?;
-        if matches!(self.peek(), Token::Dash) {
-            self.bump();
-            let (edge_var, edge_kind) = if matches!(self.peek(), Token::LBracket) {
+        match self.peek().clone() {
+            Token::Arrow => {
                 self.bump();
-                let edge_var = if matches!(self.peek(), Token::Ident(_)) { Some(self.expect_ident()?) } else { None };
-                let edge_kind = if matches!(self.peek(), Token::Colon) {
-                    self.bump();
-                    Some(self.expect_ident()?)
+                let right = self.parse_bracketed_pattern_node()?;
+                Ok(Pattern { nodes: vec![left], edge: Some(PatternEdge { var: None, kind: None, directed: true, right }) })
+            }
+            Token::DashArrow => {
+                self.bump();
+                if matches!(self.peek(), Token::LBracket) {
+                    let (edge_var, edge_kind) = self.parse_edge_label()?;
+                    let directed = match self.peek() {
+                        Token::Arrow => {
+                            self.bump();
+                            true
+                        }
+                        Token::DashArrow => {
+                            self.bump();
+                            false
+                        }
+                        other => return Err(GraphDslError::UnexpectedToken { expected: "-> or --".into(), found: format!("{other:?}") }),
+                    };
+                    let right = self.parse_bracketed_pattern_node()?;
+                    Ok(Pattern { nodes: vec![left], edge: Some(PatternEdge { var: edge_var, kind: edge_kind, directed, right }) })
                 } else {
-                    None
-                };
-                self.expect(&Token::RBracket)?;
-                (edge_var, edge_kind)
-            } else {
-                (None, None)
-            };
-            let directed = if matches!(self.peek(), Token::Arrow) {
+                    let right = self.parse_bracketed_pattern_node()?;
+                    Ok(Pattern { nodes: vec![left], edge: Some(PatternEdge { var: None, kind: None, directed: false, right }) })
+                }
+            }
+            Token::BackArrow => {
                 self.bump();
-                true
-            } else {
-                false
-            };
-            self.expect(&Token::LParen)?;
-            let right = self.parse_pattern_node()?;
-            self.expect(&Token::RParen)?;
-            Ok(Pattern { nodes: vec![left], edge: Some(PatternEdge { var: edge_var, kind: edge_kind, directed, right }) })
-        } else {
-            Ok(Pattern { nodes: vec![left], edge: None })
+                if matches!(self.peek(), Token::LBracket) {
+                    let (edge_var, edge_kind) = self.parse_edge_label()?;
+                    self.expect(&Token::DashArrow)?;
+                    let right = self.parse_bracketed_pattern_node()?;
+                    Ok(Pattern { nodes: vec![right], edge: Some(PatternEdge { var: edge_var, kind: edge_kind, directed: true, right: left }) })
+                } else {
+                    let right = self.parse_bracketed_pattern_node()?;
+                    Ok(Pattern { nodes: vec![right], edge: Some(PatternEdge { var: None, kind: None, directed: true, right: left }) })
+                }
+            }
+            _ => Ok(Pattern { nodes: vec![left], edge: None }),
         }
+    }
+
+    fn parse_bracketed_pattern_node(&mut self) -> Result<PatternNode, GraphDslError> {
+        self.expect(&Token::LParen)?;
+        let node = self.parse_pattern_node()?;
+        self.expect(&Token::RParen)?;
+        Ok(node)
+    }
+
+    fn parse_edge_label(&mut self) -> Result<(Option<String>, Option<String>), GraphDslError> {
+        self.expect(&Token::LBracket)?;
+        let edge_var = if matches!(self.peek(), Token::Ident(_)) { Some(self.expect_ident()?) } else { None };
+        let edge_kind = if matches!(self.peek(), Token::Colon) {
+            self.bump();
+            Some(self.expect_ident()?)
+        } else {
+            None
+        };
+        self.expect(&Token::RBracket)?;
+        Ok((edge_var, edge_kind))
     }
 
     fn parse_pattern_node(&mut self) -> Result<PatternNode, GraphDslError> {
@@ -1856,6 +1898,12 @@ pub fn execute(graph: &dyn QueryableGraph, query: &Query) -> Result<QueryResult,
             Clause::Return(items) => return_items = Some(items.clone()),
             Clause::Create(_) | Clause::Delete(_) | Clause::Set(_) | Clause::Merge(_) => {
                 return Err(GraphDslError::UnsupportedMutation);
+            }
+            // TODO(unify-architect): wire up WITH/UNWIND/CALL execution once compose's Architect
+            // query language unifies onto Jack (see plans/every-dsl-must-be-crispy-shell.md,
+            // Wave 2 / P9). They already parse into the AST — this is prep work only.
+            Clause::With(_) | Clause::Unwind(_) | Clause::Call(_) => {
+                return Err(GraphDslError::UnsupportedClause);
             }
         }
     }
@@ -2148,8 +2196,37 @@ mod tests {
 
     #[test]
     fn parse_undirected_edge() {
-        let q = parse("MATCH (a:computation)-(b:slider) RETURN a.name").unwrap();
+        // 🩹 unified undirected sigil is `--`, not the old bare `-` (not even lexable in the
+        // shared `dsl_core` alphabet, which has no standalone dash token).
+        let q = parse("MATCH (a:computation)--(b:slider) RETURN a.name").unwrap();
         let Clause::Match(patterns) = &q.clauses[0] else { panic!("expected match") };
+        let edge = patterns[0].edge.as_ref().expect("edge");
+        assert!(!edge.directed);
+    }
+
+    #[test]
+    fn parse_back_arrow_edge_swaps_left_and_right() {
+        let q = parse("MATCH (a:computation)<-(b:slider) RETURN a.name").unwrap();
+        let Clause::Match(patterns) = &q.clauses[0] else { panic!("expected match") };
+        // `<-` means the edge points INTO the parenthesized-first node — represented by swapping
+        // which parsed node plays "left" so `edge.right` is always the forward-direction target.
+        assert_eq!(patterns[0].nodes[0].kind, "slider");
+        let edge = patterns[0].edge.as_ref().expect("edge");
+        assert!(edge.directed);
+        assert_eq!(edge.right.kind, "computation");
+    }
+
+    #[test]
+    fn parse_labeled_directed_and_undirected_edges_use_double_dash_connector() {
+        let forward = parse("MATCH (a:computation)--[r:wire]->(b:slider) RETURN a.name").unwrap();
+        let Clause::Match(patterns) = &forward.clauses[0] else { panic!("expected match") };
+        let edge = patterns[0].edge.as_ref().expect("edge");
+        assert!(edge.directed);
+        assert_eq!(edge.var.as_deref(), Some("r"));
+        assert_eq!(edge.kind.as_deref(), Some("wire"));
+
+        let undirected = parse("MATCH (a:computation)--[:wire]--(b:slider) RETURN a.name").unwrap();
+        let Clause::Match(patterns) = &undirected.clauses[0] else { panic!("expected match") };
         let edge = patterns[0].edge.as_ref().expect("edge");
         assert!(!edge.directed);
     }
@@ -2248,7 +2325,7 @@ mod tests {
 }
 "#;
         let graph = BoardQueryableGraph::from_dag_fixture_json(fixture).unwrap();
-        let result = run_query(&graph, "MATCH (n:computation@out)-[:wire]->(m:slider) RETURN n.name, m.name");
+        let result = run_query(&graph, "MATCH (n:computation@out)--[:wire]->(m:slider) RETURN n.name, m.name");
         assert!(result.is_ok());
     }
 
@@ -2402,14 +2479,35 @@ mod tests {
         assert_eq!(GraphDslError::EdgeTargetMissingPort.to_string(), "edge target requires @port");
         assert_eq!(GraphDslError::EmptyPattern.to_string(), "empty pattern");
         assert_eq!(GraphDslError::UnsupportedMutation.to_string(), "mutating jack clauses are not supported on this graph domain");
+        assert_eq!(GraphDslError::UnsupportedClause.to_string(), "WITH/UNWIND/CALL clauses are not yet executable");
         let unexpected = GraphDslError::UnexpectedToken { expected: "ident".into(), found: "Eof".into() };
         assert_eq!(unexpected.to_string(), "expected ident, got Eof");
     }
 
     #[test]
     fn parse_error_on_unexpected_char() {
-        let err = parse("MATCH (a:x) # WHERE").unwrap_err();
-        assert!(matches!(err, GraphDslError::UnexpectedChar('#')));
+        // `{`/`}` are valid tokens in `dsl_core`'s shared alphabet (map/object-literal braces)
+        // but aren't part of Jack's own grammar (no map literals) — Jack rejects them itself,
+        // hence `UnexpectedChar` rather than a `dsl_core`-surfaced `Lex` error.
+        let err = parse("MATCH (a:x) { WHERE").unwrap_err();
+        assert!(matches!(err, GraphDslError::UnexpectedChar('{')));
+    }
+
+    #[test]
+    fn parse_error_on_char_outside_dsl_core_alphabet_reports_lex_error() {
+        // `$` isn't lexable by `dsl_core` at all (unlike `{`/`}` above, which lex fine but aren't
+        // valid Jack syntax) — `dsl_core::lex` itself fails, surfaced verbatim as `Lex`.
+        let err = parse("MATCH (a:x) $ WHERE").unwrap_err();
+        assert!(matches!(err, GraphDslError::Lex(_)));
+        assert!(err.to_string().contains("unexpected character '$'"), "got: {err}");
+    }
+
+    #[test]
+    fn parse_error_on_lone_bang_reports_lex_error() {
+        // A stray `!` not followed by `=` isn't a token in Jack's grammar at all (`dsl_core` has
+        // no relational operators, and Jack only special-cases `!=`).
+        let err = parse("MATCH (a:x) WHERE a.p ! 1").unwrap_err();
+        assert!(matches!(err, GraphDslError::Lex(_)));
     }
 
     #[test]
@@ -2422,7 +2520,7 @@ mod tests {
     // #region 🔖LexerAndLanguageServiceTests
     #[test]
     fn tokenize_classifies_clause_and_operator_tokens() {
-        let spans = tokenize("MATCH (a:x)-[:wire]->(b:y) WHERE a.p = 1 AND b.q != 'v' RETURN a.p");
+        let spans = tokenize("MATCH (a:x)--[:wire]->(b:y) WHERE a.p = 1 AND b.q != 'v' RETURN a.p");
         assert!(spans.iter().any(|s| s.class == TokenClass::Keyword));
         assert!(spans.iter().any(|s| s.class == TokenClass::Ident));
         assert!(spans.iter().any(|s| s.class == TokenClass::Number));
@@ -2439,13 +2537,25 @@ mod tests {
 
     #[test]
     fn tokenize_never_panics_on_stray_symbols() {
-        let spans = tokenize("MATCH (a:x) # ~ ^ RETURN a");
+        // 🩹 `#` is now a legitimate comment starter (unified with the rest of the DSL engine, so
+        // it swallows the remainder of the line) — the stray-symbol probes moved off it.
+        let spans = tokenize("MATCH (a:x) ~ ^ RETURN a");
         assert!(spans.iter().any(|s| s.class == TokenClass::Ident && s.end - s.start == 1));
     }
 
     #[test]
+    fn tokenize_treats_hash_as_a_comment_to_end_of_line() {
+        let source = "MATCH (a:x) # a trailing comment\nRETURN a";
+        let comment_start = source.find('#').unwrap();
+        let line_end = source.find('\n').unwrap();
+        let spans = tokenize(source);
+        assert!(!spans.iter().any(|s| s.start >= comment_start && s.start < line_end), "no token should start inside the comment body: {spans:?}");
+        assert!(spans.iter().any(|s| s.class == TokenClass::Keyword));
+    }
+
+    #[test]
     fn format_query_is_idempotent_and_normalizes_whitespace() {
-        let once = format("match(a:x)-[:wire]->(b:y) where a.p=1 and b.q!='v' return a.p,b.q").unwrap();
+        let once = format("match(a:x)--[:wire]->(b:y) where a.p=1 and b.q!='v' return a.p,b.q").unwrap();
         assert!(once.contains("MATCH"));
         assert!(once.contains(" AND "));
         assert!(once.contains(" = "));
@@ -2465,7 +2575,7 @@ mod tests {
         let node_source = "MATCH (a:c";
         let node_completions = complete(&graph, node_source, node_source.len());
         assert!(node_completions.iter().any(|c| c.label == "computation"));
-        let edge_source = "MATCH (a:computation)-[:w";
+        let edge_source = "MATCH (a:computation)--[:w";
         let edge_completions = complete(&graph, edge_source, edge_source.len());
         assert!(edge_completions.iter().any(|c| c.label == "wire"));
     }
@@ -2592,6 +2702,55 @@ mod tests {
         assert!(matches!(expr, Expr::Or(_, _)));
     }
 
+    // #region 🔖WithUnwindCallTests
+    // 🚧 prep work for unifying compose's Architect query language onto Jack — these clauses
+    // parse into the AST (this region) but aren't wired into `execute()` yet, see
+    // `GraphDslError::UnsupportedClause`.
+    #[test]
+    fn parse_with_clause() {
+        let q = parse("MATCH (a:x) WITH a, a.name RETURN a").unwrap();
+        let Clause::With(items) = &q.clauses[1] else { panic!("expected with") };
+        assert_eq!(items.len(), 2);
+        assert!(matches!(&items[0], ReturnItem::Var(v) if v == "a"));
+        assert!(matches!(&items[1], ReturnItem::Property { var, prop } if var == "a" && prop == "name"));
+    }
+
+    #[test]
+    fn parse_unwind_clause() {
+        let q = parse("MATCH (a:x) UNWIND a.items AS item RETURN item").unwrap();
+        let Clause::Unwind(clause) = &q.clauses[1] else { panic!("expected unwind") };
+        assert!(matches!(&clause.source, ReturnItem::Property { var, prop } if var == "a" && prop == "items"));
+        assert_eq!(clause.var, "item");
+    }
+
+    #[test]
+    fn parse_call_clause_with_positional_args() {
+        let q = parse("CALL myProc(1, \"two\", true)").unwrap();
+        let Clause::Call(clause) = &q.clauses[0] else { panic!("expected call") };
+        assert_eq!(clause.name, "myProc");
+        assert_eq!(clause.args, vec![PropertyValue::Number(1.0), PropertyValue::String("two".to_string()), PropertyValue::Bool(true)]);
+    }
+
+    #[test]
+    fn execute_rejects_with_unwind_call_pending_wiring() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        for query in ["MATCH (a:x) WITH a RETURN a", "MATCH (a:x) UNWIND a.items AS i RETURN i", "CALL proc()"] {
+            let err = run_query(&graph, query).unwrap_err();
+            assert!(matches!(err, GraphDslError::UnsupportedClause), "query {query} should report UnsupportedClause, got {err:?}");
+        }
+    }
+    // #endregion 🔖WithUnwindCallTests
+
+    #[test]
+    fn lexer_accepts_both_single_and_double_quoted_strings_and_always_prints_double_quoted() {
+        let single = parse("MATCH (a:x) WHERE a.name = 'alpha' RETURN a").unwrap();
+        let double = parse("MATCH (a:x) WHERE a.name = \"alpha\" RETURN a").unwrap();
+        assert_eq!(single, double, "single- and double-quoted string literals must parse identically");
+        let printed = format("MATCH (a:x) WHERE a.name = 'alpha' RETURN a").unwrap();
+        assert!(printed.contains("\"alpha\""), "must always print double-quoted: {printed}");
+        assert!(!printed.contains('\''), "must never print single-quoted: {printed}");
+    }
+
     #[test]
     fn parse_unexpected_token_error_has_expected_and_found() {
         let err = parse("MATCH a:x)").unwrap_err();
@@ -2628,8 +2787,8 @@ mod tests {
     #[test]
     fn execute_undirected_edge_matches_both_directions() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
-        let forward = run_query(&graph, "MATCH (a:computation)-[:wire](b:slider) RETURN a.name, b.name").unwrap();
-        let reverse = run_query(&graph, "MATCH (b:slider)-[:wire](a:computation) RETURN a.name, b.name").unwrap();
+        let forward = run_query(&graph, "MATCH (a:computation)--[:wire]--(b:slider) RETURN a.name, b.name").unwrap();
+        let reverse = run_query(&graph, "MATCH (b:slider)--[:wire]--(a:computation) RETURN a.name, b.name").unwrap();
         assert!(!forward.rows.is_empty());
         assert!(!reverse.rows.is_empty());
     }
@@ -2644,7 +2803,7 @@ mod tests {
     #[test]
     fn execute_returns_graph_kind_when_returning_bound_entities() {
         let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
-        let result = run_query(&graph, "MATCH (a:computation)-[e:wire](b:slider) RETURN a, e, b").unwrap();
+        let result = run_query(&graph, "MATCH (a:computation)--[e:wire]--(b:slider) RETURN a, e, b").unwrap();
         assert_eq!(result.kind, QueryResultKind::Graph);
         assert!(result.graph_fixture_json.is_some());
     }

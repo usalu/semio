@@ -838,9 +838,7 @@ use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOperation};
 #[dsl(extension = "din16798", layout = "lines")]
 pub struct Document {
     pub annex: AnnexChoice,
-    #[dsl(ident)]
     pub occupancy: String,
-    #[dsl(ident)]
     pub comfort_category: String,
     pub t_op_c: f64,
     pub rh_percent: f64,
@@ -865,7 +863,6 @@ pub struct Document {
     pub sfp_required_class: u8,
     pub heat_recovery_eta: f64,
     pub heat_recovery_eta_min: f64,
-    #[dsl(ident)]
     pub system_type: String,
     pub years_since_inspection: u32,
     pub humidification_required_kg_h: f64,
@@ -897,7 +894,6 @@ pub struct Document {
     pub cooling_utilization_factor: f64,
     pub cooling_reference_kwh: f64,
 
-    #[dsl(ident)]
     pub chiller_type: String,
     pub eer_actual: f64,
     pub q_c_kwh: f64,
@@ -911,7 +907,6 @@ pub struct Document {
     pub storage_allowance_kwh: f64,
     pub dhw_delivery_c: f64,
 
-    #[dsl(ident)]
     pub duct_class: String,
     pub duct_test_pressure_pa: f64,
     pub duct_leakage_m3_s_m2: f64,

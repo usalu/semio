@@ -197,13 +197,17 @@ fn resolve_parameter_value(rule: &Rule, bindings: &BTreeMap<String, PropertyValu
     value.clone()
 }
 
+/// 🩹 unified syntax law: string literals PRINT double-quoted (never single-quoted) — matches
+/// `mathematical_graph_dsl`'s Jack lexer/wire-literal printer, which accepts either quote style on
+/// parse but always emits `"..."`; `trinity_jack`'s own lexer (`trinity/jack/core`) also accepts
+/// both quote characters identically, so this only needed to change on the PRINT side.
 fn assignment_value_jack(rule: &Rule, bindings: &BTreeMap<String, PropertyValue>, value: &PropertyValue) -> String {
     let resolved = resolve_parameter_value(rule, bindings, value);
     match resolved {
         PropertyValue::Null => "null".into(),
         PropertyValue::Bool(b) => b.to_string(),
         PropertyValue::Number(n) => n.to_string(),
-        PropertyValue::String(s) => format!("'{s}'"),
+        PropertyValue::String(s) => format!("\"{s}\""),
         PropertyValue::Array(_) | PropertyValue::Object(_) => serde_json::to_string(&resolved).unwrap_or_else(|_| "null".into()),
     }
 }
@@ -344,7 +348,6 @@ impl OperationDiff<RewriteRuleState> for RewriteRuleDiff {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum RewriteRuleOperation {
-    #[dsl(key = "setState")]
     SetState { state: RewriteRuleState },
 }
 
@@ -1008,8 +1011,10 @@ impl TrinityHost {
     }
 }
 
+/// 🩹 Delegates to `trinity_ram::parse_port_key` (the one place the `nodeId@portId` convention is
+/// owned) instead of hand-rolling a second splitter here.
 fn trinity_port_endpoint_parts(endpoint: &str) -> (String, String) {
-    endpoint.split_once(':').map(|(n, p)| (n.to_string(), p.to_string())).unwrap_or_else(|| (endpoint.to_string(), String::new()))
+    trinity_ram::parse_port_key(endpoint).map_or_else(|| (endpoint.to_string(), String::new()), |(n, p)| (n.to_string(), p.to_string()))
 }
 
 fn trinity_port_handle_key(node_id: &str, port_id: &str, input: bool) -> String {
@@ -1383,7 +1388,7 @@ mod tests {
         assert_eq!(core2.properties.get("label"), Some(&PropertyValue::String("override-core".into())));
 
         let query = build_rule_query(&rule, &bindings);
-        assert!(query.contains("SET a.label = 'override-core'"));
+        assert!(query.contains("SET a.label = \"override-core\""));
     }
 
     #[test]
@@ -1522,7 +1527,7 @@ mod tests {
         let query = build_rule_query(&rule, &BTreeMap::new());
         assert!(query.starts_with("MATCH (a:Piece)-[e:Connection]->(b:Piece) WHERE a.name = 'b'"));
         assert!(query.contains("DELETE e"));
-        assert!(query.contains("SET a.label = 'x'"));
+        assert!(query.contains("SET a.label = \"x\""));
         assert!(query.contains("CREATE (c:Piece)"));
         assert!(query.contains("MERGE (a:Piece)-[m]->(c:Piece)"));
     }
@@ -1549,7 +1554,7 @@ mod tests {
         assert_eq!(assignment_value_jack(&rule, &bindings, &PropertyValue::Null), "null");
         assert_eq!(assignment_value_jack(&rule, &bindings, &PropertyValue::Bool(true)), "true");
         assert_eq!(assignment_value_jack(&rule, &bindings, &PropertyValue::Number(4.5)), "4.5");
-        assert_eq!(assignment_value_jack(&rule, &bindings, &PropertyValue::String("hi".into())), "'hi'");
+        assert_eq!(assignment_value_jack(&rule, &bindings, &PropertyValue::String("hi".into())), "\"hi\"");
         let arr = PropertyValue::Array(vec![PropertyValue::Number(1.0)]);
         assert_eq!(assignment_value_jack(&rule, &bindings, &arr), serde_json::to_string(&arr).unwrap());
     }
@@ -1695,9 +1700,9 @@ mod tests {
     }
 
     #[test]
-    fn trinity_port_endpoint_parts_splits_on_colon() {
-        assert_eq!(trinity_port_endpoint_parts("node1:portA"), ("node1".to_string(), "portA".to_string()));
-        assert_eq!(trinity_port_endpoint_parts("no-colon"), ("no-colon".to_string(), String::new()));
+    fn trinity_port_endpoint_parts_splits_on_at() {
+        assert_eq!(trinity_port_endpoint_parts("node1@portA"), ("node1".to_string(), "portA".to_string()));
+        assert_eq!(trinity_port_endpoint_parts("no-at"), ("no-at".to_string(), String::new()));
     }
 
     #[test]

@@ -22825,7 +22825,7 @@ fn element_rect_is_fallback(id: &str) -> bool {
 }
 
 /// 🎓 Punches `hole` out of `band`, returning up to four remaining rectangles (or the original band when
-/// they don't overlap). The React shell now renders one fullscreen `ui-glass-veil` div and raises the
+/// they don't overlap). The React shell now renders one fullscreen `ui-veil` div and raises the
 /// introduced/shown element's chrome unit above it via z-index instead of doing this subtraction itself —
 /// wgpu keeps the geometric subtraction because it's the only way to realize the *same visual result*
 /// here: `push_solid` quads tile with no seam (no per-quad backdrop-filter to discontinue), a real glass
@@ -22852,7 +22852,7 @@ fn punch_introduction_cutout(band: Rect, hole: Rect) -> Vec<Rect> {
 
 /// 🎓 Splits the viewport into bands tiling the space around every cutout, painted as this renderer's
 /// internal realization of "one fullscreen veil beneath elevated elements" — an empty cutout list returns
-/// one full-viewport band. A *real* glass veil (matching React's `ui-glass-veil`) is infeasible here: the
+/// one full-viewport band. A *real* glass veil (matching React's `ui-veil`) is infeasible here: the
 /// blur chain (`run_blur_chain`, ui/wgpu/rs/lib.rs) only mips the main draw-list's scene texture, but
 /// panels/navbar/footer paint into the *overlay* DrawList (`with_chrome_sink`), so a glass veil would show
 /// blurred canvas where it overlaps chrome rather than frosting it; and in `composite_to_swapchain`,
@@ -25651,7 +25651,7 @@ impl ShellState {
         };
         // 🌫️ `Theme` has no dedicated veil/scrim color (`overlay_shadow` is actually the disabled-control
         // tint, always alpha 0 in the one constructor that sets it) — a fixed dark translucency matches
-        // `ui-glass-veil`'s own theme-agnostic dimming in `ui/js/react/index.tsx`.
+        // `ui-veil`'s own theme-agnostic dimming in `ui/js/react/index.tsx`.
         overlay.push_solid([0.0, 0.0, width, height], Rgba::new(0.0, 0.0, 0.0, 0.35));
         let dialog_w = 360.0_f32;
         let dialog_h = 168.0_f32;

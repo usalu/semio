@@ -66,7 +66,6 @@ fn default_zoom() -> f64 {
 #[serde(tag = "kind", rename_all = "camelCase")]
 enum NoteBlockNode {
     #[serde(rename = "text", rename_all = "camelCase")]
-    #[dsl(key = "text")]
     Text {
         id: String,
         name: String,
@@ -86,7 +85,6 @@ enum NoteBlockNode {
         align: String,
     },
     #[serde(rename = "image", rename_all = "camelCase")]
-    #[dsl(key = "image")]
     Image {
         id: String,
         name: String,
@@ -103,7 +101,6 @@ enum NoteBlockNode {
         image_key: String,
     },
     #[serde(rename = "table", rename_all = "camelCase")]
-    #[dsl(key = "table")]
     Table {
         id: String,
         name: String,
@@ -121,7 +118,6 @@ enum NoteBlockNode {
         rows: Vec<Vec<NoteTableCell>>,
     },
     #[serde(rename = "math", rename_all = "camelCase")]
-    #[dsl(key = "math")]
     Math {
         id: String,
         name: String,
@@ -158,7 +154,6 @@ enum NoteBlockNode {
         color: [f64; 4],
     },
     #[serde(rename = "group", rename_all = "camelCase")]
-    #[dsl(key = "group")]
     Group {
         id: String,
         name: String,
@@ -273,39 +268,27 @@ fn default_camera() -> NoteCamera {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 enum NoteOperation {
-    #[dsl(key = "setCamera")]
     SetCamera {
         #[dsl(block)]
         camera: NoteCamera,
     },
-    #[dsl(key = "setGridVisible")]
     SetGridVisible { visible: Option<bool> },
-    #[dsl(key = "setGridSpacing")]
     SetGridSpacing { spacing: Option<f64> },
-    #[dsl(key = "setGridSubdivisions")]
     SetGridSubdivisions { value: Option<f64> },
-    #[dsl(key = "setGridOpacity")]
     SetGridOpacity { opacity: Option<f64> },
-    #[dsl(key = "setSnapEnabled")]
     SetSnapEnabled { enabled: Option<bool> },
-    #[dsl(key = "setSnapGridSpacing")]
     SetSnapGridSpacing { spacing: Option<f64> },
-    #[dsl(key = "setPencilWidth")]
     SetPencilWidth { width: Option<f64> },
-    #[dsl(key = "setEraserRadius")]
     SetEraserRadius { radius: Option<f64> },
-    #[dsl(key = "setBlocks")]
     SetBlocks {
         #[dsl(statements, block)]
         blocks: Vec<NoteBlockNode>,
     },
-    #[dsl(key = "putAsset")]
     PutAsset {
         key: String,
         #[dsl(block)]
         asset: NoteImageAsset,
     },
-    #[dsl(key = "setDocument")]
     SetDocument {
         #[dsl(block)]
         document: NoteDocument,

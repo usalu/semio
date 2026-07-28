@@ -99,10 +99,8 @@
     --spacing-compact: 0.2rem;
     --spacing-touch: 0.275rem;
     --base: var(--color-light);
-    --canvas: var(--color-light-8-9);
     --window: var(--color-light-6-7);
     --panel: var(--color-light-5-7);
-    --overlay: transparent;
     --temporary: var(--color-light-4-7);
     --foreground: var(--color-dark);
     --muted: var(--color-light-8-9);
@@ -112,17 +110,11 @@
     --accent-tertiary: var(--color-tertiary);
     --accent-foreground: var(--color-dark);
     --hover-base: var(--color-gray-700);
-    --hover-canvas: var(--color-light-7-9);
     --hover-window: var(--color-light-gray);
     --hover-panel: var(--color-gray-600);
-    --hover-overlay: var(--color-gray-600);
-    --hover-temporary: var(--color-light-gray-gray);
     --element-base: var(--color-gray);
-    --element-canvas: var(--color-gray);
     --element-window: var(--color-gray);
     --element-panel: var(--color-dark-5-9);
-    --element-overlay: var(--color-gray);
-    --element-temporary: var(--color-gray);
     --active-base: var(--color-primary);
     --active-foreground: var(--color-dark);
     --border-normal-color: var(--color-gray);
@@ -592,10 +584,8 @@
 
 .dark {
   --base: var(--color-dark);
-  --canvas: var(--color-dark-6-7);
   --window: var(--color-dark-8-9);
   --panel: var(--color-dark-7-9);
-  --overlay: transparent;
   --temporary: var(--color-dark-gray);
   --foreground: var(--color-light);
   --active-base: var(--color-primary);
@@ -607,17 +597,11 @@
   --accent-tertiary: var(--color-tertiary);
   --accent-foreground: var(--color-light);
   --hover-base: var(--color-gray-300);
-  --hover-canvas: var(--color-dark-5-7);
   --hover-window: var(--color-dark-gray);
   --hover-panel: var(--color-gray-400);
-  --hover-overlay: var(--color-gray-400);
-  --hover-temporary: var(--color-dark-dark-gray-2);
   --element-base: var(--color-gray);
-  --element-canvas: var(--color-gray);
   --element-window: var(--color-gray);
   --element-panel: var(--color-gray-600);
-  --element-overlay: var(--color-gray);
-  --element-temporary: var(--color-gray);
   --cursor-default: url("../../../asset/cursor/cursor_dark.svg") 0 0, default;
   --cursor-pointer: url("../../../asset/cursor/cursor_pointer_dark_inkscape.svg") 0 0, pointer;
   --cursor-grab: url("../../../asset/cursor/cursor_grab_dark.svg") 0 0, grab;
@@ -849,17 +833,8 @@
   --text-8xl--line-height: 1;
   --text-9xl: 7.2rem;
   --text-9xl--line-height: 1;
-  --z-base: 0;
-  --z-canvas: 3;
-  --z-window: 5;
-  --z-panel: 10;
-  --z-overlay: 20;
-  --z-temporary: 30;
   /* #region 🪜LevelZScale — formula z(k) = k * --z-step (zStep=10), k=0..5 for base..menu (see
-     contract at .repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt). --z-base/
-     -window/-panel are shared names with the OLD level scale above and are superseded here to the
-     new formula-derived values; --z-canvas/-overlay/-temporary keep their old values untouched
-     until the Cleanup phase removes their last consumers. */
+     contract at .repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt). */
   --z-base: 0;
   --z-window: 10;
   --z-pane: 20;
@@ -870,18 +845,7 @@
   --z-navbar: 100;
   --z-modal: 1000;
   --z-tutorial: 10000;
-  --glass-blur: 1.5rem;
-  --glass-panel-blur: 2.5rem;
-  --glass-window-options-blur: 0.875rem;
-  --glass-veil-blur: 0.5rem;
   --glass-saturate: 1.45;
-  --glass-panel-alpha: 0.72;
-  --glass-window-options-alpha: 0.22;
-  --glass-ribbon-alpha: 0.3;
-  --glass-menu-alpha: 0.36;
-  /* 🎓 Deliberately more transparent than --glass-panel-alpha so an introduction's info box reads as
-     less see-through than the veil it sits on. */
-  --glass-veil-alpha: 0.38;
   /* #region 🎚️LevelKnobs — formula knobs for the unified 6-level surface system (base=0 window=1
      pane=2 panel=3 dialog=4 menu=5); ui.css and ui/styling/tokens.json's "levels" block must stay
      in lockstep (see contract at .repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt).
@@ -898,22 +862,16 @@
   --scrollbar-size: var(--spacing-double);
   --color-background: var(--base);
   --color-base: var(--base);
-  --color-canvas: var(--canvas);
   --color-window: var(--window);
   --color-panel: var(--panel);
-  --color-overlay: var(--overlay);
-  --color-temporary: var(--temporary);
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-hover-base: var(--hover-base);
-  --color-hover-canvas: var(--hover-canvas);
   --color-hover-window: var(--hover-window);
   --color-hover-panel: var(--hover-panel);
-  --color-hover-overlay: var(--hover-overlay);
-  --color-hover-temporary: var(--hover-temporary);
   --color-active-base: var(--active-base);
   --color-active-foreground: var(--active-foreground);
   --color-changed-base: var(--color-warning);
@@ -935,10 +893,6 @@
   --border-element-color: var(--element-base);
 }
 
-[data-level="canvas"] {
-  --border-element-color: var(--element-canvas);
-}
-
 [data-level="window"] {
   --border-element-color: var(--element-window);
 }
@@ -947,27 +901,19 @@
   --border-element-color: var(--element-panel);
 }
 
-[data-level="overlay"] {
-  --border-element-color: var(--element-overlay);
-}
-
-[data-level="temporary"] {
-  --border-element-color: var(--element-temporary);
-}
-
 /* #region 🎚️LevelSurfaces — new 6-level surface system (base=0 window=1 pane=2 panel=3 dialog=4
    menu=5). Each block redeclares the same formula with its literal k baked in, since CSS custom
    properties cannot be recomputed per-descendant (see contract CSS MECHANISM section); this is
    still 100% formula-derived off --level-shade-step/--glass-alpha-step/--glass-blur-step/
    --element-shade-step/--hover-shade-step above, just unrolled six times. base is combined with
-   `:root` so undecorated content defaults to base level. The old base/canvas/window/panel/overlay/
-   temporary blocks above stay until the Cleanup phase confirms --border-element-color is unused. */
+   `:root` so undecorated content defaults to base level. --border-element-color here supersedes
+   the old window/panel-only blocks above and is the only source of it for pane/dialog/menu. */
 :root,
 [data-level="base"] {
   --surface-bg: color-mix(in oklab, var(--base), var(--foreground) calc(0 * var(--level-shade-step)));
   --surface-alpha: calc(1 - 0 * var(--glass-alpha-step));
   --surface-blur: calc(0 * var(--glass-blur-step));
-  --element-color: color-mix(in oklab, var(--color-gray), var(--foreground) calc(0 * var(--element-shade-step)));
+  --border-element-color: color-mix(in oklab, var(--color-gray), var(--foreground) calc(0 * var(--element-shade-step)));
   --surface-hover: color-mix(in oklab, var(--surface-bg), var(--foreground) var(--hover-shade-step));
 }
 
@@ -975,7 +921,7 @@
   --surface-bg: color-mix(in oklab, var(--base), var(--foreground) calc(1 * var(--level-shade-step)));
   --surface-alpha: calc(1 - 1 * var(--glass-alpha-step));
   --surface-blur: calc(1 * var(--glass-blur-step));
-  --element-color: color-mix(in oklab, var(--color-gray), var(--foreground) calc(1 * var(--element-shade-step)));
+  --border-element-color: color-mix(in oklab, var(--color-gray), var(--foreground) calc(1 * var(--element-shade-step)));
   --surface-hover: color-mix(in oklab, var(--surface-bg), var(--foreground) var(--hover-shade-step));
 }
 
@@ -983,7 +929,7 @@
   --surface-bg: color-mix(in oklab, var(--base), var(--foreground) calc(2 * var(--level-shade-step)));
   --surface-alpha: calc(1 - 2 * var(--glass-alpha-step));
   --surface-blur: calc(2 * var(--glass-blur-step));
-  --element-color: color-mix(in oklab, var(--color-gray), var(--foreground) calc(2 * var(--element-shade-step)));
+  --border-element-color: color-mix(in oklab, var(--color-gray), var(--foreground) calc(2 * var(--element-shade-step)));
   --surface-hover: color-mix(in oklab, var(--surface-bg), var(--foreground) var(--hover-shade-step));
 }
 
@@ -991,7 +937,7 @@
   --surface-bg: color-mix(in oklab, var(--base), var(--foreground) calc(3 * var(--level-shade-step)));
   --surface-alpha: calc(1 - 3 * var(--glass-alpha-step));
   --surface-blur: calc(3 * var(--glass-blur-step));
-  --element-color: color-mix(in oklab, var(--color-gray), var(--foreground) calc(3 * var(--element-shade-step)));
+  --border-element-color: color-mix(in oklab, var(--color-gray), var(--foreground) calc(3 * var(--element-shade-step)));
   --surface-hover: color-mix(in oklab, var(--surface-bg), var(--foreground) var(--hover-shade-step));
 }
 
@@ -999,7 +945,7 @@
   --surface-bg: color-mix(in oklab, var(--base), var(--foreground) calc(4 * var(--level-shade-step)));
   --surface-alpha: calc(1 - 4 * var(--glass-alpha-step));
   --surface-blur: calc(4 * var(--glass-blur-step));
-  --element-color: color-mix(in oklab, var(--color-gray), var(--foreground) calc(4 * var(--element-shade-step)));
+  --border-element-color: color-mix(in oklab, var(--color-gray), var(--foreground) calc(4 * var(--element-shade-step)));
   --surface-hover: color-mix(in oklab, var(--surface-bg), var(--foreground) var(--hover-shade-step));
 }
 
@@ -1007,7 +953,7 @@
   --surface-bg: color-mix(in oklab, var(--base), var(--foreground) calc(5 * var(--level-shade-step)));
   --surface-alpha: calc(1 - 5 * var(--glass-alpha-step));
   --surface-blur: calc(5 * var(--glass-blur-step));
-  --element-color: color-mix(in oklab, var(--color-gray), var(--foreground) calc(5 * var(--element-shade-step)));
+  --border-element-color: color-mix(in oklab, var(--color-gray), var(--foreground) calc(5 * var(--element-shade-step)));
   --surface-hover: color-mix(in oklab, var(--surface-bg), var(--foreground) var(--hover-shade-step));
 }
 /* #endregion 🎚️LevelSurfaces */
@@ -1441,7 +1387,7 @@
 }
 
 /* 🎓 Portaled floating UI (Select / Popover / …) leaves the elevated chrome subtree and would otherwise
-   paint under the fullscreen introduction veil (`z-temporary` ≪ `z-tutorial`). Raise both the content
+   paint under the fullscreen introduction veil (`z-menu` ≪ `z-tutorial`). Raise both the content
    (so Radix copies the used z-index onto its fixed wrapper) and the Popper wrapper itself. */
 [data-introduction-active] [data-slot="select-content"],
 [data-introduction-active] [data-slot="popover-content"],
@@ -6328,44 +6274,17 @@
   color: var(--border-emphasized-color);
 }
 
-[data-slot="navbar"] [data-level="base"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
-[data-slot="footer"] [data-level="base"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
+/* 🪜 One generic [data-level] selector covers all 6 levels (base/window/pane/panel/dialog/menu) —
+   the per-level bodies were identical no-ops (see contract cleanup step), so no enumeration is
+   needed; this also means new levels (pane/dialog/menu) are covered automatically. */
+[data-slot="navbar"] [data-level]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-level]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
 [data-slot="navbar"] [data-slot="toggle-group-item"]:hover:not([data-state="on"]):not(:disabled),
 [data-slot="navbar"] [data-slot="button-group-item"]:hover:not([data-state="on"]):not(:disabled),
 [data-slot="navbar"] [data-slot="action-group-item"]:hover:not([data-state="on"]):not(:disabled),
 [data-slot="footer"] [data-slot="toggle-group-item"]:hover:not([data-state="on"]):not(:disabled),
 [data-slot="footer"] [data-slot="button-group-item"]:hover:not([data-state="on"]):not(:disabled),
 [data-slot="footer"] [data-slot="action-group-item"]:hover:not([data-state="on"]):not(:disabled) {
-  background-color: var(--hover-interactive-fill);
-  color: var(--border-emphasized-color);
-}
-
-[data-slot="navbar"] [data-level="canvas"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
-[data-slot="footer"] [data-level="canvas"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled) {
-  background-color: var(--hover-interactive-fill);
-  color: var(--border-emphasized-color);
-}
-
-[data-slot="navbar"] [data-level="window"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
-[data-slot="footer"] [data-level="window"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled) {
-  background-color: var(--hover-interactive-fill);
-  color: var(--border-emphasized-color);
-}
-
-[data-slot="navbar"] [data-level="panel"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
-[data-slot="footer"] [data-level="panel"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled) {
-  background-color: var(--hover-interactive-fill);
-  color: var(--border-emphasized-color);
-}
-
-[data-slot="navbar"] [data-level="overlay"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
-[data-slot="footer"] [data-level="overlay"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled) {
-  background-color: var(--hover-interactive-fill);
-  color: var(--border-emphasized-color);
-}
-
-[data-slot="navbar"] [data-level="temporary"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled),
-[data-slot="footer"] [data-level="temporary"]:not([data-slot$="-group"]):hover:not([data-state="on"]):not(:disabled) {
   background-color: var(--hover-interactive-fill);
   color: var(--border-emphasized-color);
 }
@@ -6796,10 +6715,6 @@
   z-index: var(--z-base);
 }
 
-@utility z-canvas {
-  z-index: var(--z-canvas);
-}
-
 @utility z-window {
   z-index: var(--z-window);
 }
@@ -6808,16 +6723,8 @@
   z-index: var(--z-panel);
 }
 
-@utility z-overlay {
-  z-index: var(--z-overlay);
-}
-
-@utility z-temporary {
-  z-index: var(--z-temporary);
-}
-
 /* #region 🪜LevelZUtilities — z-pane/z-dialog/z-menu are new; z-base/z-window/z-panel above
-   already read var(--z-base/-window/-panel), which now resolve to the new formula values declared
+   already read var(--z-base/-window/-panel), which resolve to the new formula values declared
    in the 🪜LevelZScale region, so no duplicate @utility is needed for those three. */
 @utility z-pane {
   z-index: var(--z-pane);
@@ -6849,8 +6756,7 @@
    consumer switches to `[data-level]` + one of these (see contract). ui-surface is an opaque
    per-level fill; ui-glass/ui-glass-chrome are per-level glass fills (chrome = half-alpha glass
    for attached chrome like ribbons/rails); ui-veil is the fullscreen scrim whose host must carry
-   data-level="dialog" for correct tint. The old ui-glass-panel/-veil/-ribbon/-menu/-window-options
-   utilities stay until the Cleanup phase confirms nothing references them anymore. */
+   data-level="dialog" for correct tint. */
 @utility ui-surface {
   background-color: var(--surface-bg);
 }
@@ -6877,20 +6783,6 @@
   background-color: color-mix(in srgb, var(--surface-bg) calc(var(--veil-alpha) * 100%), transparent);
 }
 /* #endregion 🪟LevelGlassUtilities */
-
-@utility ui-glass-panel {
-  -webkit-backdrop-filter: blur(var(--glass-panel-blur)) saturate(var(--glass-saturate));
-  backdrop-filter: blur(var(--glass-panel-blur)) saturate(var(--glass-saturate));
-  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-panel-alpha) * 100%), transparent);
-}
-
-/* 🎓 The introduction glass veil — one fullscreen panel; the step's introduce/show elements elevate
-   above it via [data-introduction-elevated] rather than punching a cutout hole in the veil itself. */
-@utility ui-glass-veil {
-  -webkit-backdrop-filter: blur(var(--glass-veil-blur)) saturate(var(--glass-saturate));
-  backdrop-filter: blur(var(--glass-veil-blur)) saturate(var(--glass-saturate));
-  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-veil-alpha) * 100%), transparent);
-}
 
 /* Shell frame stroke is on [data-slot="chrome-frame"]; inset scroll hosts so scrollbars stay inside. */
 [data-slot="panel"] [data-slot="scroll-area"],
@@ -7195,42 +7087,6 @@
 table tbody tr,
 table thead.border-b {
   border-bottom-color: var(--border-normal-color);
-}
-
-@utility ui-glass-ribbon {
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-ribbon-alpha) * 100%), transparent);
-}
-
-@utility ui-glass-menu {
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  background-color: color-mix(in srgb, var(--temporary) calc(var(--glass-menu-alpha) * 100%), transparent);
-}
-
-@utility ui-glass-window-options {
-  -webkit-backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
-  backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
-  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-window-options-alpha) * 100%), transparent);
-}
-
-[data-slot="window-measures-stack"] {
-  -webkit-backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
-  backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
-  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-window-options-alpha) * 100%), transparent);
-}
-
-[data-slot="window-engagement-zone"] {
-  -webkit-backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
-  backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
-  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-window-options-alpha) * 100%), transparent);
-}
-
-[data-slot="utility-bar"] {
-  -webkit-backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
-  backdrop-filter: blur(var(--glass-window-options-blur)) saturate(var(--glass-saturate));
-  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-window-options-alpha) * 100%), transparent);
 }
 
 @utility text-tiny {

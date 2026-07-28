@@ -1,0 +1,103 @@
+wave0-format.txt — pack_format implementation summary
+=======================================================
+
+Crate: pack_format (/Users/ueli/Documents/semio/pack/format/rs/lib.rs)
+Status: complete, `cargo check -p pack_format` and `cargo test -p pack_format` both green
+(24/24 tests passing), `cargo clippy -p pack_format --all-targets` clean, also compiles with
+`--no-default-features` (deflate feature off).
+
+What was implemented (single-file lib.rs, //#region/🔖 blocks, emoji docstrings):
+- 🔖Header: MAGIC, HEADER_SIZE=32, FORMAT_VERSION_MAJOR/MINOR, REQUIRED_*/OPTIONAL_* flag
+  consts, Header struct + write_bytes/parse (magic check, header_crc32 over bytes 0..20,
+  UnknownRequiredFlags for bits outside 0..=3, UnsupportedVersion for major != 1).
+- 🔖Footer: FOOTER_MAGIC, FOOTER_SIZE, Footer struct + write_bytes/parse. Footer, ChunkTable
+  (kind KIND_CHUNK_TABLE), Manifest (kind KIND_MANIFEST), Symbols (kind KIND_SYMBOLS) all byte
+  layouts implemented exactly per contract field order.
+- 🔖Segment: generic segment framing (encode_segment/decode_segment_at) shared by every segment
+  kind: kind u8, flags u8 (bit0=compressed, bits1..3=codec id), seg_len varint, [raw_len varint],
+  payload, crc32 LE over kind..payload. Lengths validated against PackLimits::max_segment_len
+  BEFORE allocating the payload buffer. Unknown kind values decode without error (never treated
+  as invalid) — verified by segment_skip_unknown_kind_decodes_without_error and
+  recover_accumulates_unknown_kind_segments_without_erroring.
+- 🔖Symbols / 🔖ChunkTable / 🔖Manifest: encode/decode helpers matching the contract's exact
+  field order and varint/fixed-size layout. Manifest.schema_name round-trips through the symbol
+  table as a symref on the wire (PackWriter::finish resolves it against the last
+  write_segment(KIND_SYMBOLS, ...) call; PackFile::open_manifest resolves it back after loading
+  symbols) but is exposed as a plain String on the Rust-side Manifest struct per contract.
+- 🔖Verify: VerificationLevel{Trusted,Standard,Full}, Default=Standard. Trusted skips all CRC
+  checks; Standard (default) verifies every segment/chunk CRC-32C as it's read; Full additionally
+  re-hashes chunk content (blake3) against the chunk table and the document body against the
+  footer's content_hash.
+- 🔖Writer: WriteOptions{required_flags,optional_flags,codec}, PackWriter<S: PackSink> with
+  begin/write_segment/write_chunk/finish exactly per contract signatures, plus one bonus method
+  `position(&self) -> u64` (mirrors the sink's position) so callers (pack_value) can compute
+  doc_span/field_index_span themselves around their own write_segment calls — PackWriter has no
+  visibility into segment semantics beyond KIND_SYMBOLS/KIND_DOCUMENT/KIND_CHUNK/
+  KIND_CHUNK_TABLE/KIND_MANIFEST/KIND_END, which it does track/handle specially. finish()
+  authoritatively overwrites manifest.symbols_span / chunk_table_span / chunk_count /
+  symbol_count from what was actually written (caller-supplied values in those fields are
+  ignored) since only the writer knows those offsets at flush time; other manifest fields
+  (schema_hash, doc_span, doc_frame_count, field_index_span, uncompressed_body_len, field_count)
+  are taken from the caller's Manifest as-is. REQUIRED_COMPRESSED is auto-set in the written
+  header whenever options.codec is non-identity (this is what lets PackFile::read_chunk infer
+  the codec from the header alone, since the chunk table has no per-entry codec field per
+  contract).
+- 🔖Reader: Superblock, PackFile<S: PackSource> with open_superblock (level 1: header+footer,
+  cross-checks footer.file_len against the actual source length), open_manifest (level 2:
+  +manifest+symbols+chunk table), superblock/manifest/symbol/chunk_count/chunk_range/read_chunk/
+  body_bytes/content_hash exactly per contract signatures. read_footer_only reads only the last
+  FOOTER_SIZE bytes, standalone.
+- 🔖Recover: RecoveryReport, recover() forward-scans from byte HEADER_SIZE, CRC-validating one
+  segment at a time (unknown kinds accumulated, never rejected) until the first invalid/
+  truncated segment, a KIND_END segment, or EOF; resolves a Manifest from whatever
+  KIND_MANIFEST/KIND_SYMBOLS segments were recovered, best-effort.
+- 🔖Deflate: DeflateCodec (feature "deflate", default-on) using miniz_oxide::deflate::
+  compress_to_vec / inflate::decompress_to_vec_with_limit; decompress checks raw_len > limit
+  BEFORE calling into miniz_oxide (defense in depth on top of miniz_oxide's own limit param).
+
+IMPORTANT — one deliberate deviation from the contract's prose, documented at the top of
+lib.rs and in the 🔖Footer region:
+  The contract states "Footer (80 bytes, ...)" and computes footer_crc32 "over the preceding 76
+  bytes", with the itemized field sum "8+2+2+4+8+8+8+32+8 = 80 bytes exactly" — but that sum only
+  has 9 terms (magic, ver_major, ver_minor, required_flags, manifest_offset, manifest_len,
+  file_len, content_hash, prev_footer_offset) and omits the footer_crc32 field's own 4 bytes,
+  which the same sentence lists as the 10th field. The Rust struct's explicit field types (u16,
+  u16, u32, u64×4, [u8;32]) are only self-consistent with a TOTAL footer size of 84 bytes (crc
+  over the preceding 80 bytes), not 80/76. I implemented the mathematically consistent 84-byte
+  footer and exported `pack_format::FOOTER_SIZE = 84` (and there is no bare numeric literal "80"
+  or "84" anywhere else in the byte-layout code — everything derives from this one constant) so
+  every downstream crate (pack_io, pack, pack_testkit, pack_cli, and especially the closing
+  integration agent) can/should reference `pack_format::FOOTER_SIZE` instead of hardcoding a
+  number. Flagging this loudly here because pack_io::recover_file, pack::content_hash, and any
+  test fixtures elsewhere in the wave-0/wave-1 rollout that assume "last 80 bytes" verbatim from
+  the contract prose will be off by 4 bytes relative to what this crate actually writes/reads.
+
+Tests (24, all passing), organized under //#region 🧪Tests > mod tests with 🔖-tagged
+sub-regions mirroring the implementation regions:
+- Hand-built byte-literal parse tests for Header and Footer (constructed field-by-field, not via
+  this crate's own write_bytes, so they validate the byte layout independently) plus bad-magic/
+  bad-crc/unknown-flags/unsupported-version negative cases.
+- Truncation-at-every-byte-boundary tests: header 0..HEADER_SIZE(32) via Header::parse AND
+  PackFile::open_superblock; footer 0..FOOTER_SIZE(84) via Footer::parse; plus a whole-file
+  truncation test walking every length in the last FOOTER_SIZE bytes of a real written pack via
+  PackFile::open_superblock, asserting Err (never panic) at every boundary and Ok at full length.
+- Full write-then-read round trip through PackWriter -> PackFile::open_manifest, twice (codec
+  none and codec deflate/CodecId(1)), each including a KIND_SYMBOLS segment, a KIND_DOCUMENT
+  segment, and a chunk (write_chunk/read_chunk), verifying manifest fields, chunk content,
+  body_bytes content, and content_hash, all at VerificationLevel::Full.
+- Skip-unknown-segment-kind behavior: decode_segment_at on a hand-framed segment with kind
+  0x50 decodes fine; recover() over a file containing an unknown-kind (0x60) segment plus
+  KIND_END accumulates it without erroring.
+- Corruption-hardening: flipped CRC on a segment is rejected at verify_crc=true and ignored at
+  verify_crc=false (Trusted level); a bit-flipped chunk payload byte is rejected by read_chunk's
+  CRC check at Standard level; a manifest_offset patched to point at the wrong segment kind is
+  rejected by open_manifest.
+- Deflate codec round-trip + limit rejection (feature-gated, deflate is default-on so this runs
+  in the default `cargo test -p pack_format`).
+
+Files touched: only /Users/ueli/Documents/semio/pack/format/rs/lib.rs (Cargo.toml/project.json/
+script.ts were already scaffolded and untouched by this session). Nothing outside the
+pack/format/rs directory and this ticket folder was touched.
+
+No other pack_* crates were touched. pack_core was read (not modified) for its exact
+PackError/PackSource/PackSink/ByteReader/ByteWriter/CompressionCodec/varint/crc32c signatures.

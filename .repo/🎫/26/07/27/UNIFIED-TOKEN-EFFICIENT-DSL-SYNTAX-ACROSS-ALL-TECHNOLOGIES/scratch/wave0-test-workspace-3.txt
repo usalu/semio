@@ -21817,3 +21817,605 @@ test export_concrete_forest_mesh_tests::export_concrete_forest_left_lowpoly_mesh
 test tests::composite_layer_pixels_blends_partial_opacity_over_transparent_base ... ok
 test tests::composite_layer_pixels_blends_stacked_opaque_and_translucent_layers ... ok
 test tests::composite_layer_pixels_skips_invisible_layers ... ok
+test tests::apply_set_projection_replaces_entire_projection ... FAILED
+test tests::active_mesh_tessellates ... FAILED
+test tests::active_mesh_errors_when_active_object_id_is_unknown ... FAILED
+test tests::add_primitive_unknown_kind_errors ... FAILED
+test tests::add_primitive_box ... FAILED
+test tests::apply_operations_on_missing_object_are_no_ops ... FAILED
+test tests::default_concrete_forest_mesh_has_no_spanning_support_gap_faces ... FAILED
+test tests::dsl_parse_rejects_malformed_value_inside_a_nested_block ... ok
+test tests::dsl_parse_rejects_object_missing_required_field ... ok
+test tests::dsl_parse_rejects_text_missing_required_schema_field ... ok
+test tests::dsl_parse_rejects_unterminated_string_literal ... ok
+test tests::dsl_parse_skips_comment_lines ... ok
+test tests::apply_selection_normalizes_mode_and_stores_ids ... FAILED
+test tests::apply_remove_and_patch_and_stroke_out_of_range_are_no_ops ... FAILED
+test tests::add_primitive_supports_every_known_kind ... FAILED
+test tests::ensure_all_paint_buffers_adds_missing_layer_and_fixes_wrong_size ... FAILED
+test tests::default_projection_mesh_has_unwrapped_uvs ... FAILED
+test tests::dsl_round_trips_the_default_concrete_forest_projection ... FAILED
+test tests::flood_fill_only_affects_contiguous_matching_region ... ok
+test tests::ensure_paint_layer_errors_for_unknown_object_and_out_of_range_index ... FAILED
+test tests::dsl_parse_handles_escaped_characters_in_quoted_strings ... FAILED
+test tests::default_projection_has_concrete_forest_left_object ... FAILED
+test tests::document_loads_meshes ... FAILED
+test tests::dsl_round_trips_a_projection_with_a_painted_layer ... FAILED
+test tests::lowpoly_selection_defaults_target_whole_mesh ... ok
+test tests::document_text_round_trip_after_applying_an_operation ... FAILED
+test tests::normalize_selection_mode_maps_object_to_mesh_and_passes_through_others ... ok
+test tests::dsl_parse_rejects_invalid_bool_value ... ok
+test tests::object_patch_apply_mutates_and_inverse_restores_all_fields ... ok
+test tests::invert_remove_paint_layer_on_missing_layer_falls_back_to_default_layer ... FAILED
+test tests::op_text_parse_rejects_unknown_objects_suboperation ... ok
+test tests::op_text_parse_rejects_unknown_operation_kind ... ok
+test tests::fill_bucket_and_sample_pixel_reflect_new_color ... FAILED
+test tests::invert_patch_paint_layer_round_trips_through_apply ... FAILED
+test tests::invert_add_paint_layer_produces_remove_at_same_index ... FAILED
+test tests::op_text_round_trip_objects_move ... ok
+test tests::op_text_round_trip_objects_patch_without_mesh ... ok
+test tests::op_text_round_trip_objects_patch_with_mesh ... ok
+test tests::op_text_round_trip_objects_remove ... ok
+test tests::op_text_round_trip_patch_paint_layer ... ok
+test tests::op_text_round_trip_paint_stroke ... ok
+test tests::op_text_round_trip_remove_paint_layer ... ok
+test tests::paint_layer_patch_apply_mutates_and_inverse_restores_all_fields ... ok
+test tests::invert_remove_paint_layer_restores_the_removed_layer_by_content ... FAILED
+test tests::layer_pixels_errors_for_out_of_range_index ... FAILED
+test tests::pixel_runs_from_diff_captures_only_changed_bytes ... ok
+test tests::print_default_projection_json_for_example_asset ... ok
+test tests::projection_from_mesh_json_builds_single_object_with_base_layer ... ok
+test tests::mesh_at_returns_none_past_object_count ... FAILED
+test tests::invert_set_projection_captures_pre_state ... FAILED
+test tests::object_index_errors_for_unknown_id ... FAILED
+test tests::objects_patch_op_backwards_restores_prior_mesh_and_name ... FAILED
+test tests::op_text_round_trip_add_paint_layer ... ok
+test tests::op_text_round_trip_objects_add ... ok
+test tests::op_text_round_trip_set_projection ... FAILED
+test tests::paint_stroke_op_backwards_restores_prior_pixels ... FAILED
+test tests::projection_json_embeds_paint_pixels_as_base64 ... FAILED
+test tests::stamp_brush_eraser_reduces_alpha_at_center ... ok
+test tests::selection_transform_pivot_empty_vertex_selection_is_origin ... FAILED
+test tests::paint_stroke_writes_pixels ... FAILED
+test tests::selected_ids_are_empty_when_selection_mode_mismatches ... FAILED
+test tests::selection_transform_pivot_mesh_mode_averages_all_vertices ... FAILED
+test tests::projection_round_trips_paint_pixels_through_base64_json ... FAILED
+test tests::selection_transform_pivot_vertex_mode_averages_selected_vertices ... FAILED
+test tests::selection_vertex_ids_edge_mode_returns_endpoints ... FAILED
+test tests::selection_vertex_ids_mesh_mode_is_empty ... FAILED
+test tests::sync_meshes_to_projection_writes_back_mesh_json ... FAILED
+test tests::tessellate_all_returns_every_object ... FAILED
+test tests::selection_vertex_ids_face_mode_dedupes_shared_vertices ... FAILED
+
+failures:
+
+---- tests::apply_set_projection_replaces_entire_projection stdout ----
+
+thread 'tests::apply_set_projection_replaces_entire_projection' (40186221) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- tests::active_mesh_tessellates stdout ----
+
+thread 'tests::active_mesh_tessellates' (40186214) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::active_mesh_errors_when_active_object_id_is_unknown stdout ----
+
+thread 'tests::active_mesh_errors_when_active_object_id_is_unknown' (40186213) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::add_primitive_unknown_kind_errors stdout ----
+
+thread 'tests::add_primitive_unknown_kind_errors' (40186217) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::add_primitive_box stdout ----
+
+thread 'tests::add_primitive_box' (40186215) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::apply_operations_on_missing_object_are_no_ops stdout ----
+
+thread 'tests::apply_operations_on_missing_object_are_no_ops' (40186218) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::default_concrete_forest_mesh_has_no_spanning_support_gap_faces stdout ----
+
+thread 'tests::default_concrete_forest_mesh_has_no_spanning_support_gap_faces' (40186225) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::apply_selection_normalizes_mode_and_stores_ids stdout ----
+
+thread 'tests::apply_selection_normalizes_mode_and_stores_ids' (40186220) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::apply_remove_and_patch_and_stroke_out_of_range_are_no_ops stdout ----
+
+thread 'tests::apply_remove_and_patch_and_stroke_out_of_range_are_no_ops' (40186219) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::add_primitive_supports_every_known_kind stdout ----
+
+thread 'tests::add_primitive_supports_every_known_kind' (40186216) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::ensure_all_paint_buffers_adds_missing_layer_and_fixes_wrong_size stdout ----
+
+thread 'tests::ensure_all_paint_buffers_adds_missing_layer_and_fixes_wrong_size' (40188071) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::default_projection_mesh_has_unwrapped_uvs stdout ----
+
+thread 'tests::default_projection_mesh_has_unwrapped_uvs' (40188052) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::dsl_round_trips_the_default_concrete_forest_projection stdout ----
+
+thread 'tests::dsl_round_trips_the_default_concrete_forest_projection' (40188070) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::ensure_paint_layer_errors_for_unknown_object_and_out_of_range_index stdout ----
+
+thread 'tests::ensure_paint_layer_errors_for_unknown_object_and_out_of_range_index' (40188089) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::dsl_parse_handles_escaped_characters_in_quoted_strings stdout ----
+
+thread 'tests::dsl_parse_handles_escaped_characters_in_quoted_strings' (40188058) panicked at lowpoly/core/rs/lib.rs:1600:83:
+escapes must decode: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 1, column: 142, length: 14 }, expected: None }
+
+---- tests::default_projection_has_concrete_forest_left_object stdout ----
+
+thread 'tests::default_projection_has_concrete_forest_left_object' (40188048) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::document_loads_meshes stdout ----
+
+thread 'tests::document_loads_meshes' (40188053) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::dsl_round_trips_a_projection_with_a_painted_layer stdout ----
+
+thread 'tests::dsl_round_trips_a_projection_with_a_painted_layer' (40188067) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::document_text_round_trip_after_applying_an_operation stdout ----
+
+thread 'tests::document_text_round_trip_after_applying_an_operation' (40188057) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::invert_remove_paint_layer_on_missing_layer_falls_back_to_default_layer stdout ----
+
+thread 'tests::invert_remove_paint_layer_on_missing_layer_falls_back_to_default_layer' (40190216) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::fill_bucket_and_sample_pixel_reflect_new_color stdout ----
+
+thread 'tests::fill_bucket_and_sample_pixel_reflect_new_color' (40190201) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::invert_patch_paint_layer_round_trips_through_apply stdout ----
+
+thread 'tests::invert_patch_paint_layer_round_trips_through_apply' (40190214) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::invert_add_paint_layer_produces_remove_at_same_index stdout ----
+
+thread 'tests::invert_add_paint_layer_produces_remove_at_same_index' (40190210) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::invert_remove_paint_layer_restores_the_removed_layer_by_content stdout ----
+
+thread 'tests::invert_remove_paint_layer_restores_the_removed_layer_by_content' (40190263) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::layer_pixels_errors_for_out_of_range_index stdout ----
+
+thread 'tests::layer_pixels_errors_for_out_of_range_index' (40190267) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::mesh_at_returns_none_past_object_count stdout ----
+
+thread 'tests::mesh_at_returns_none_past_object_count' (40190270) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::invert_set_projection_captures_pre_state stdout ----
+
+thread 'tests::invert_set_projection_captures_pre_state' (40190265) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::object_index_errors_for_unknown_id stdout ----
+
+thread 'tests::object_index_errors_for_unknown_id' (40190273) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::objects_patch_op_backwards_restores_prior_mesh_and_name stdout ----
+
+thread 'tests::objects_patch_op_backwards_restores_prior_mesh_and_name' (40190279) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::op_text_round_trip_set_projection stdout ----
+
+thread 'tests::op_text_round_trip_set_projection' (40192538) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::paint_stroke_op_backwards_restores_prior_pixels stdout ----
+
+thread 'tests::paint_stroke_op_backwards_restores_prior_pixels' (40192541) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::projection_json_embeds_paint_pixels_as_base64 stdout ----
+
+thread 'tests::projection_json_embeds_paint_pixels_as_base64' (40192557) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::selection_transform_pivot_empty_vertex_selection_is_origin stdout ----
+
+thread 'tests::selection_transform_pivot_empty_vertex_selection_is_origin' (40192587) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::paint_stroke_writes_pixels stdout ----
+
+thread 'tests::paint_stroke_writes_pixels' (40192545) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::selected_ids_are_empty_when_selection_mode_mismatches stdout ----
+
+thread 'tests::selected_ids_are_empty_when_selection_mode_mismatches' (40192572) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::selection_transform_pivot_mesh_mode_averages_all_vertices stdout ----
+
+thread 'tests::selection_transform_pivot_mesh_mode_averages_all_vertices' (40192593) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::projection_round_trips_paint_pixels_through_base64_json stdout ----
+
+thread 'tests::projection_round_trips_paint_pixels_through_base64_json' (40192564) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::selection_transform_pivot_vertex_mode_averages_selected_vertices stdout ----
+
+thread 'tests::selection_transform_pivot_vertex_mode_averages_selected_vertices' (40192634) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::selection_vertex_ids_edge_mode_returns_endpoints stdout ----
+
+thread 'tests::selection_vertex_ids_edge_mode_returns_endpoints' (40192639) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::selection_vertex_ids_mesh_mode_is_empty stdout ----
+
+thread 'tests::selection_vertex_ids_mesh_mode_is_empty' (40194811) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::sync_meshes_to_projection_writes_back_mesh_json stdout ----
+
+thread 'tests::sync_meshes_to_projection_writes_back_mesh_json' (40194814) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::tessellate_all_returns_every_object stdout ----
+
+thread 'tests::tessellate_all_returns_every_object' (40194816) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+---- tests::selection_vertex_ids_face_mode_dedupes_shared_vertices stdout ----
+
+thread 'tests::selection_vertex_ids_face_mode_dedupes_shared_vertices' (40194808) panicked at lowpoly/core/rs/lib.rs:122:80:
+default projection DSL parses: TextError { message: "node count exceeds max_nodes limit (1000001 > 1000000)", span: TextSpan { line: 5, column: 1, length: 14 }, expected: None }
+
+
+failures:
+    tests::active_mesh_errors_when_active_object_id_is_unknown
+    tests::active_mesh_tessellates
+    tests::add_primitive_box
+    tests::add_primitive_supports_every_known_kind
+    tests::add_primitive_unknown_kind_errors
+    tests::apply_operations_on_missing_object_are_no_ops
+    tests::apply_remove_and_patch_and_stroke_out_of_range_are_no_ops
+    tests::apply_selection_normalizes_mode_and_stores_ids
+    tests::apply_set_projection_replaces_entire_projection
+    tests::default_concrete_forest_mesh_has_no_spanning_support_gap_faces
+    tests::default_projection_has_concrete_forest_left_object
+    tests::default_projection_mesh_has_unwrapped_uvs
+    tests::document_loads_meshes
+    tests::document_text_round_trip_after_applying_an_operation
+    tests::dsl_parse_handles_escaped_characters_in_quoted_strings
+    tests::dsl_round_trips_a_projection_with_a_painted_layer
+    tests::dsl_round_trips_the_default_concrete_forest_projection
+    tests::ensure_all_paint_buffers_adds_missing_layer_and_fixes_wrong_size
+    tests::ensure_paint_layer_errors_for_unknown_object_and_out_of_range_index
+    tests::fill_bucket_and_sample_pixel_reflect_new_color
+    tests::invert_add_paint_layer_produces_remove_at_same_index
+    tests::invert_patch_paint_layer_round_trips_through_apply
+    tests::invert_remove_paint_layer_on_missing_layer_falls_back_to_default_layer
+    tests::invert_remove_paint_layer_restores_the_removed_layer_by_content
+    tests::invert_set_projection_captures_pre_state
+    tests::layer_pixels_errors_for_out_of_range_index
+    tests::mesh_at_returns_none_past_object_count
+    tests::object_index_errors_for_unknown_id
+    tests::objects_patch_op_backwards_restores_prior_mesh_and_name
+    tests::op_text_round_trip_set_projection
+    tests::paint_stroke_op_backwards_restores_prior_pixels
+    tests::paint_stroke_writes_pixels
+    tests::projection_json_embeds_paint_pixels_as_base64
+    tests::projection_round_trips_paint_pixels_through_base64_json
+    tests::selected_ids_are_empty_when_selection_mode_mismatches
+    tests::selection_transform_pivot_empty_vertex_selection_is_origin
+    tests::selection_transform_pivot_mesh_mode_averages_all_vertices
+    tests::selection_transform_pivot_vertex_mode_averages_selected_vertices
+    tests::selection_vertex_ids_edge_mode_returns_endpoints
+    tests::selection_vertex_ids_face_mode_dedupes_shared_vertices
+    tests::selection_vertex_ids_mesh_mode_is_empty
+    tests::sync_meshes_to_projection_writes_back_mesh_json
+    tests::tessellate_all_returns_every_object
+
+test result: FAILED. 30 passed; 43 failed; 0 ignored; 0 measured; 0 filtered out; finished in 85.98s
+
+error: test failed, to rerun pass `-p lowpoly_core --lib`
+     Running unittests lib.rs (target/debug/deps/mathematical_plugin-e303e1bb3370d979)
+
+running 13 tests
+test tests::bfs_algorithm_overlay_reports_hop_distance ... ok
+test tests::components_algorithm_overlay_groups_disconnected_node ... ok
+test tests::geometry_layers_include_hull_and_centroid ... ok
+test tests::media_graph_json_round_trips_node_count ... ok
+test tests::topo_algorithm_overlay_orders_dag_nodes ... ok
+test tests::renders_canvas_2d_scene ... ok
+test tests::renders_node_graph_scene ... ok
+test tests::math_set_geometry_op_round_trips ... ok
+test tests::math_projection_dsl_round_trips_with_seed_and_empty_collections ... ok
+test __semio_plugin_sanity_declared_apps_appear_in_bundle_manifest ... ok
+test tests::math_set_graph_op_round_trips ... ok
+test tests::math_projection_dsl_round_trips_default ... ok
+test tests::math_document_text_round_trips_through_store ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests lib.rs (target/debug/deps/mathematical_algebra-ea1ee0c4e13268e1)
+
+running 99 tests
+test exact_tests::berkowitz_over_modint_matches_brute_force_2x2 ... ok
+test exact_tests::bareiss_det_over_integer_matches_hand_case ... ok
+test exact_tests::inverse_of_singular_matrix_is_none ... ok
+test exact_tests::det_of_singular_matrix_is_zero ... ok
+test exact_tests::det_matches_cofactor_hand_case ... ok
+test exact_tests::bareiss_det_matches_field_det ... ok
+test exact_tests::inverse_round_trips_to_identity ... ok
+test exact_tests::nullspace_vectors_are_in_kernel ... ok
+test exact_tests::lll_recovers_a_short_relation ... ok
+test exact_tests::rank_bareiss_hand_cases_full_and_deficient_rank ... ok
+test exact_tests::rref_and_rank_hand_case ... ok
+test exact_tests::smith_normal_form_divisibility_chain ... ok
+test exact_tests::solve_of_singular_system_is_none ... ok
+test exact_tests::solve_matches_hand_solved_system ... ok
+test tests::algebra_error_display_is_human_readable ... ok
+test tests::cholesky_matches_hand_solved_spd_system ... ok
+test tests::algebra_error_display_covers_remaining_variants ... ok
+test tests::cholesky_rejects_non_positive_definite ... ok
+test exact_tests::vecg_basic_ops_match_hand_computation ... ok
+test tests::conjugate_gradient_matches_hand_solved_system ... ok
+test tests::conjugate_gradient_reports_non_convergence_with_zero_iterations ... ok
+test tests::csr_from_triplets_dedupes_and_sorts ... ok
+test tests::csr_spmv_matches_dense_mul_vec ... ok
+test tests::csr_transpose_swaps_rows_and_cols ... ok
+test tests::expm_pade_of_diagonal_matrix_is_elementwise_exp ... ok
+test exact_tests::cayley_hamilton_holds_for_3x3 ... ok
+test tests::expm_pade_of_zero_matrix_is_identity ... ok
+test tests::hessenberg_skips_already_zero_subdiagonal_column ... ok
+test tests::jacobi_eigen_diagonal_matrix_returns_sorted_diagonal ... ok
+test tests::hessenberg_similarity_orthogonality_and_shape ... ok
+test tests::jacobi_eigen_matches_characteristic_polynomial_roots ... ok
+test tests::jacobi_eigen_rejects_asymmetric_matrix ... ok
+test tests::jacobi_eigen_reports_non_convergence_with_zero_sweeps ... ok
+test tests::lanczos_extreme_eigen_finds_largest_on_diagonal_matrix ... ok
+test tests::lanczos_extreme_eigen_finds_smallest_on_diagonal_matrix ... ok
+test tests::lanczos_extreme_eigen_rejects_non_square ... ok
+test tests::hessenberg_rejects_non_square - should panic ... ok
+test tests::mat2_det_of_scale_matrix ... ok
+test tests::mat2_apply_matches_matrix_vector_multiply ... ok
+test tests::mat2_eigenvalues_of_diagonal_matrix_are_the_diagonal ... ok
+test tests::mat2_identity_apply_is_noop ... ok
+test tests::mat2_inverse_round_trips ... ok
+test exact_tests::quick::bareiss_matches_field_det_on_random_integer_matrices ... ok
+test tests::mat2_rotation_like_matrix_has_complex_eigenvalues ... ok
+test tests::mat2_singular_matrix_has_no_inverse ... ok
+test tests::mat2_transpose_swaps_off_diagonal ... ok
+test tests::mat3d_identity_axes_is_identity ... ok
+test tests::mat3d_mul_vec3_transforms_basis_vector ... ok
+test exact_tests::quick::rank_bareiss_matches_field_rank_on_random_integer_matrices ... ok
+test tests::mat3d_transpose_is_inverse_for_orthonormal_basis ... ok
+test tests::long::conjugate_gradient_converges_on_tridiagonal_system ... ok
+test tests::mat4_from_quat_90_degrees_about_z_rotates_x_to_y ... ok
+test tests::mat4_from_quat_identity_is_identity ... ok
+test tests::mat4_identity_transforms_point_unchanged ... ok
+test tests::mat4_inverse_of_singular_matrix_returns_identity ... ok
+test tests::mat4_inverse_round_trips_translation ... ok
+test tests::mat4_look_at_places_target_along_negative_z ... ok
+test tests::mat4_mul_composes_transforms_in_matrix_order ... ok
+test tests::mat4_perspective_maps_near_and_far_planes_to_depth_zero_and_one ... ok
+test tests::mat4_scale_vec_scales_each_axis ... ok
+test tests::mat4_to_cols_array_matches_column_major_layout ... ok
+test tests::mat4_transform_direction_ignores_translation_and_normalizes ... ok
+test tests::matd_add_triple_product_matches_btdb ... ok
+test tests::matd_lu_solve_detects_singular_matrix ... ok
+test tests::matd_lu_solve_matches_hand_solved_system ... ok
+test tests::matd_matmul_identity_is_noop ... ok
+test tests::matd_matmul_skips_zero_entries_and_still_correct ... ok
+test tests::matd_mul_vec_matches_matrix_vector_multiply ... ok
+test tests::matd_transpose_round_trips ... ok
+test tests::poly_roots_companion_rejects_too_short_input ... ok
+test tests::poly_roots_companion_matches_known_complex_conjugate_pairs ... ok
+test tests::poly_roots_companion_rejects_zero_leading_coefficient ... ok
+test tests::power_iteration_rejects_non_square ... ok
+test tests::poly_roots_companion_matches_known_real_quartic_roots ... ok
+test tests::power_iteration_finds_dominant_eigenpair ... ok
+test tests::pseudo_inverse_satisfies_penrose_identity ... ok
+test tests::qr_householder_reconstructs_and_is_orthogonal ... ok
+test tests::qr_householder_skips_already_zero_column_segment ... ok
+test tests::real_schur_recovers_planted_complex_conjugate_pairs ... ok
+test tests::real_schur_rejects_non_square ... ok
+test tests::real_schur_recovers_planted_real_spectrum ... ok
+test tests::solve_llsq_detects_rank_deficient_system ... ok
+test tests::solve_llsq_matches_normal_equations ... ok
+test tests::svd_nullvector_finds_planted_kernel ... ok
+test tests::svd_nullvector_rejects_matrix_with_zero_columns ... ok
+test tests::svd_reconstructs_tall_random_matrix ... ok
+test tests::vec3_add_sub_scale_dot_length_match_hand_computation ... ok
+test tests::svd_reconstructs_wide_random_matrix ... ok
+test tests::vec3_array_round_trip ... ok
+test tests::vec3_cross_is_perpendicular ... ok
+test tests::vec3_normalize_zero_stays_zero ... ok
+test tests::vec3d_cross_is_perpendicular_to_inputs ... ok
+test tests::vec3d_sub_and_length_match_hand_computation ... ok
+test tests::vecd_add_sub_scale_round_trip ... ok
+test tests::vecd_dot_and_norm ... ok
+test tests::weighted_normal_equations_match_hand_assembly ... ok
+test tests::weighted_normal_equations_skips_zero_entries_in_a ... ok
+test tests::long::lanczos_matches_dense_jacobi_on_tridiagonal ... ok
+test exact_tests::quick::random_rational_matrix_inverse_round_trips ... ok
+
+test result: ok. 99 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running unittests lib.rs (target/debug/deps/mathematical_cas-62c2a22e9b578377)
+
+running 138 tests
+test assume::tests::close_propagates_even_to_integer_rational_real ... ok
+test assume::tests::close_propagates_positive_to_real_nonnegative_nonzero ... ok
+test canon::tests::i_power_cycles_with_period_four ... ok
+test canon::tests::func_special_values_fold ... ok
+test canon::tests::add_folds_numeric_literals ... ok
+test canon::tests::mul_by_zero_absorbs ... ok
+test canon::tests::mul_folds_numeric_literals ... ok
+test assume::tests::bound_for_deduces_sign_from_assumption_store ... ok
+test canon::tests::mul_nonzero_times_complex_infinity_is_complex_infinity ... ok
+test canon::tests::mul_zero_times_complex_infinity_is_undefined ... ok
+test canon::tests::nested_pow_combines_exponents_for_integer_outer_exponent ... ok
+test canon::tests::pow_identities ... ok
+test canon::tests::pow_integer_folds_exactly ... ok
+test canon::tests::pow_negative_integer_exponent_gives_rational ... ok
+test canon::tests::radical_exact_perfect_power_folds_fully ... ok
+test canon::tests::radical_of_prime_stays_symbolic ... ok
+test canon::tests::add_drops_zero ... ok
+test canon::tests::mul_combines_like_bases ... ok
+test canon::tests::add_collects_like_terms ... ok
+test canon::tests::radical_partial_extraction_matches_plan_example ... ok
+test canon::tests::canonicalization_is_idempotent_on_a_small_corpus ... ok
+test diff::tests::diff_of_constant_is_zero ... ok
+test diff::tests::bessel_j_recurrence_derivative ... ok
+test diff::tests::diff_of_other_symbol_is_zero ... ok
+test diff::tests::chain_rule_sin_of_square ... ok
+test diff::tests::diff_of_x_is_one ... ok
+test diff::tests::exp_of_x_is_itself ... ok
+test diff::tests::general_power_logarithmic_differentiation ... ok
+test diff::tests::gradient_computes_all_partials ... ok
+test diff::tests::ln_derivative ... ok
+test diff::tests::power_rule ... ok
+test assume::tests::close_rejects_positive_and_negative - should panic ... ok
+test assume::tests::close_rejects_even_and_odd - should panic ... ok
+test diff::tests::unknown_function_derivative_is_none ... ok
+test diff::tests::product_rule ... ok
+test expr::tests::hash_is_deterministic ... ok
+test expr::tests::ord_is_consistent_and_total ... ok
+test expr::tests::structural_equality_ignores_sharing ... ok
+test expr::tests::symbols_with_different_assumptions_are_distinct ... ok
+test fmt::tests::display_division ... ok
+test fmt::tests::display_negative_term ... ok
+test fmt::tests::display_simple_polynomial ... ok
+test fmt::tests::latex_constant_pi ... ok
+test fmt::tests::latex_fraction_and_power ... ok
+test fnkind::tests::arity_hand_cases ... ok
+test fnkind::tests::name_hand_cases ... ok
+test fnkind::tests::parity_hand_cases ... ok
+test integrate::tests::definite_integral_of_power ... ok
+test integrate::tests::integrate_reciprocal_gives_ln ... ok
+test integrate::tests::integrate_ln_by_parts ... ok
+test integrate::tests::integrate_power_rule ... ok
+test integrate::tests::residue_at_simple_pole ... ok
+test integrate::tests::integrate_by_parts_x_times_exp ... ok
+test integrate::tests::integrate_sin_and_cos ... ok
+test limits::tests::direct_substitution_when_defined ... ok
+test integrate::tests::integrate_u_substitution ... ok
+test limits::tests::limit_at_infinity_of_rational_function ... FAILED
+test limits::tests::classic_sin_x_over_x_at_zero ... ok
+test integrate::tests::integrate_polynomial_sum ... ok
+test matrix::tests::det_2x2_hand_case ... ok
+test matrix::tests::rank_of_numeric_matrix ... ok
+test matrix::tests::cayley_hamilton_holds_for_a_3x3_matrix ... ok
+test limits::tests::polynomial_ratio_at_removable_singularity ... ok
+test matrix::tests::inverse_times_original_is_identity ... ok
+test matrix::tests::det_symbolic_2x2 ... ok
+test matrix::tests::singular_matrix_has_no_inverse ... ok
+test matrix::tests::rref_of_numeric_matrix ... ok
+test matrix::tests::solve_numeric_linear_system ... ok
+test limits::tests::one_plus_one_over_n_to_the_n_via_lhopital_on_log_form ... ok
+test matrix::tests::charpoly_and_eigenvalues_of_diagonal_matrix ... ok
+test ode::tests::separable_ode_y_prime_equals_x_over_y ... ok
+test pattern::tests::ac_match_finds_permuted_assignment ... ok
+test pattern::tests::free_of_constraint_rejects_expressions_containing_the_symbol ... ok
+test pattern::tests::pow_exponent_mismatch_fails ... ok
+test pattern::tests::rule_rewrites_matching_expression ... ok
+test pattern::tests::seq_wildcard_absorbs_remaining_terms ... ok
+test ode::tests::linear_constant_coefficient_repeated_root ... ok
+test pattern::tests::structural_match_on_pow ... ok
+test pattern::tests::ruleset_bottom_up_rewrites_nested_occurrence ... ok
+test ode::tests::linear_first_order_ode ... FAILED
+test ode::tests::bernoulli_ode ... FAILED
+test ode::tests::linear_constant_coefficient_second_order_distinct_real_roots ... FAILED
+test pattern::tests::wildcard_any_matches_anything ... ok
+test pattern::tests::wildcard_number_rejects_symbols ... ok
+test polybridge::tests::as_poly_uni_extracts_univariate_polynomial ... ok
+test polybridge::tests::as_poly_uni_fails_for_other_generators ... ok
+test polybridge::tests::as_poly_roundtrips_through_from_poly ... ok
+test polybridge::tests::as_ratfunc_auto_recovers_together_form ... ok
+test polybridge::tests::build_ratio_folds_constant_denominator ... ok
+test polybridge::tests::detect_gens_finds_symbols_and_functions ... ok
+test series::tests::taylor_series_fails_at_a_pole ... ok
+test series::tests::series_to_expr_round_trips_a_polynomial ... ok
+test series::tests::taylor_series_of_exp_matches_known_coefficients ... ok
+test series::tests::leading_term_skips_zero_coefficients ... ok
+test series::tests::taylor_series_of_sin_around_zero_has_no_even_terms ... ok
+test polybridge::tests::factor_poly_u_recombines_to_the_original ... ok
+test simplify::tests::collect_groups_like_powers ... ok
+test simplify::tests::denest_sqrt_classic_example ... ok
+test simplify::tests::expand_binomial_square ... ok
+test simplify::tests::expand_distributes_over_function_argument_unchanged ... ok
+test simplify::tests::cancel_removes_common_univariate_factor ... ok
+test simplify::tests::factor_recovers_linear_factors ... FAILED
+test simplify::tests::simplify_picks_the_smallest_candidate ... ok
+test simplify::tests::apart_splits_simple_rational_function ... ok
+test simplify::tests::together_combines_fractions ... ok
+test solve::tests::solve_linear_equation ... ok
+test solve::tests::solve_2x2_linear_system ... ok
+test solve::tests::solve_exp_equation ... ok
+test solve::tests::solve_inequality_simple_quadratic ... ok
+test integrate::tests::integrate_simple_partial_fraction ... FAILED
+test solve::tests::solve_sin_equation_gives_parametric_family ... ok
+test solve::tests::solve_quadratic_with_real_roots ... ok
+test sums::tests::sum_geometric_series_hand_case ... ok
+test transforms::tests::laplace_and_inverse_round_trip_for_exp ... ok
+test sums::tests::fourier_coefficients_of_a_polynomial_smoke_test ... FAILED
+test sums::tests::sum_of_k_squared_matches_known_hand_values ... FAILED
+test transforms::tests::laplace_linearity ... ok
+test transforms::tests::laplace_of_exp ... ok
+test transforms::tests::laplace_of_t_to_the_n ... ok
+test sums::tests::sum_of_k_from_1_to_n_is_gauss_formula ... FAILED
+test trig::tests::logcombine_merges_positive_logs ... ok
+test trig::tests::logcombine_skips_unknown_sign_arguments ... ok
+test trig::tests::expand_trig_sin_of_sum ... ok
+test trig::tests::expand_log_of_product_and_power ... ok
+test trig::tests::powsimp_combines_same_exponent_factors ... ok
+test trig::tests::trig_canon_pythagorean_with_extra_terms ... ok
+test trig::tests::trig_canon_rewrites_tan_to_sin_over_cos ... ok
+test trig::tests::trig_canon_applies_pythagorean_identity ... ok
+test visit::tests::contains_symbol_detects_nested_occurrence ... ok
+test visit::tests::free_symbols_deduplicates_and_sorts ... ok
+test visit::tests::node_count_hand_case ... ok
+test visit::tests::subs_replaces_matching_subtree ... ok
+test integrate::tests::integrate_irreducible_quadratic_denominator has been running for over 60 seconds
+test ode::tests::linear_constant_coefficient_complex_roots has been running for over 60 seconds
+test rootof::tests::real_roots_of_quadratic_gives_two_rootofs has been running for over 60 seconds
+test rootof::tests::root_of_sign_matches_isolation_interval has been running for over 60 seconds
+test solve::tests::solve_high_degree_gives_rootof has been running for over 60 seconds
+test solve::tests::solve_quadratic_with_complex_roots has been running for over 60 seconds

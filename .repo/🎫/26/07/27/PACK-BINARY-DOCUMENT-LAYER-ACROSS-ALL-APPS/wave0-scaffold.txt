@@ -1,0 +1,73 @@
+Wave 0 — Foundation agent scaffold summary
+============================================
+
+Created 10 crate directories, each with Cargo.toml + placeholder lib.rs + project.json + script.ts:
+
+1. pack/core/rs        (pack_core)         — deps: thiserror
+2. pack/format/rs       (pack_format)       — deps: pack_core, blake3, miniz_oxide (feature "deflate", default-on)
+3. pack/value/rs        (pack_value)        — deps: pack_core, pack_format, dsl_schema
+4. pack/io/rs           (pack_io)           — deps: pack_core, pack_format
+5. pack/async/rs        (pack_async)        — deps: pack_core, pack_format, async-trait
+6. pack/http/rs         (pack_http)         — deps: pack_core, pack_format, pack_async, async-trait, ureq (feature "ureq")
+7. pack/index/rs        (pack_index)        — deps: pack_core, pack_format, pack_value
+8. pack/rs              (pack, facade)      — deps: pack_core, pack_format, pack_value, pack_io, pack_async, pack_http, pack_index, dsl_schema
+9. pack/testkit/rs      (pack_testkit)      — deps: pack, dsl_schema, dsl_core
+10. pack/cli/rs         (pack_cli)          — deps: pack; [[bin]] name = "pack" path = "lib.rs" alongside [lib]
+
+Files created (30 total, one dir with 4 files each x 10 - project.json/script.ts):
+- pack/core/rs/{Cargo.toml,lib.rs,project.json,script.ts}
+- pack/format/rs/{Cargo.toml,lib.rs,project.json,script.ts}
+- pack/value/rs/{Cargo.toml,lib.rs,project.json,script.ts}
+- pack/io/rs/{Cargo.toml,lib.rs,project.json,script.ts}
+- pack/async/rs/{Cargo.toml,lib.rs,project.json,script.ts}
+- pack/http/rs/{Cargo.toml,lib.rs,project.json,script.ts}
+- pack/index/rs/{Cargo.toml,lib.rs,project.json,script.ts}
+- pack/rs/{Cargo.toml,lib.rs,project.json,script.ts}
+- pack/testkit/rs/{Cargo.toml,lib.rs,project.json,script.ts}
+- pack/cli/rs/{Cargo.toml,lib.rs,project.json,script.ts}
+
+Files edited:
+- /Users/ueli/Documents/semio/Cargo.toml
+  Added 10 new workspace members right after "dsl/rs" and before "framework/core/rs":
+  pack/core/rs, pack/format/rs, pack/value/rs, pack/io/rs, pack/async/rs, pack/http/rs,
+  pack/index/rs, pack/rs, pack/testkit/rs, pack/cli/rs.
+
+- /Users/ueli/Documents/semio/.vscode/launch.json
+  Inserted 10 new "3_dev" group test-launch entries right after the existing
+  "🧪test🌊mathematical-wfc" entry (order 391.8) and before "🛠️dev🏗️fem🩻2d⚛️react" (order 392):
+    🧪test📦pack-core      order 391.81  -> nx run @semio-tech/pack-core-rs:test
+    🧪test📦pack-format    order 391.82  -> nx run @semio-tech/pack-format-rs:test
+    🧪test📦pack-value     order 391.83  -> nx run @semio-tech/pack-value-rs:test
+    🧪test📦pack-io        order 391.84  -> nx run @semio-tech/pack-io-rs:test
+    🧪test📦pack-async     order 391.85  -> nx run @semio-tech/pack-async-rs:test
+    🧪test📦pack-http      order 391.86  -> nx run @semio-tech/pack-http-rs:test
+    🧪test📦pack-index     order 391.87  -> nx run @semio-tech/pack-index-rs:test
+    🧪test📦pack           order 391.88  -> nx run @semio-tech/pack-rs:test
+    🧪test📦pack-testkit   order 391.89  -> nx run @semio-tech/pack-testkit-rs:test
+    🧪test📦pack-cli       order 391.9   -> nx run @semio-tech/pack-cli-rs:test
+  None of these order values collided with existing entries (grepped "order": 391 first).
+
+Verification performed:
+- All 10 project.json files parsed as valid JSON (python3 json.load).
+- .vscode/launch.json parsed as valid JSONC (comments stripped first) — 230 total
+  configurations, all 10 new pack entries present with expected names.
+- `cargo check -p pack_core -p pack_format -p pack_value -p pack_io -p pack_async
+  -p pack_http -p pack_index -p pack -p pack_testkit -p pack_cli` from /Users/ueli/Documents/semio
+  succeeded cleanly (only a benign warning about lib.rs being both the pack_cli lib and bin
+  target, which is expected/intentional per the contract, and a dead-code warning on the
+  placeholder `fn main() {}` — both harmless for a placeholder).
+- `cargo check --workspace` was ALSO run as instructed. It does NOT succeed workspace-wide,
+  but the failure is entirely unrelated to this scaffold: `ui_tui` (ui/tui/rs/lib.rs) fails
+  to compile with 6x E0609 "no field `canvas`/`window`/`panel`/`hover_window`/`hover_panel`/
+  `temporary` on type `&ChromePalette`". This is pre-existing/concurrent churn in
+  ui/styling (visible in git status as modified: ui/styling/js/palette.css,
+  ui/styling/js/tokens.generated.ts, ui/styling/js/ui.css, ui/styling/py/styling/generated.py,
+  ui/styling/rs/generated.rs, ui/styling/script.ts, ui/styling/tokens.json,
+  framework/renderer/react/index.tsx, ui/js/react/index.tsx) — another session appears to be
+  mid-refactor on the ChromePalette struct. Not touched, not caused, and not in scope for this
+  ticket/crate. The 10 new pack crates themselves check clean individually and add no new
+  workspace-wide breakage (ui_tui does not depend on any pack crate).
+
+No crate logic was implemented — every lib.rs is a one-line placeholder module doc comment
+(pack_cli additionally has the required empty `fn main() {}` for its [[bin]] target), per
+the FOUNDATION-agent scope (scaffolding only).

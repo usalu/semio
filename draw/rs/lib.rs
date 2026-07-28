@@ -52,12 +52,9 @@ pub struct GradientStop {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum FillStyle {
-    #[dsl(key = "solid")]
     Solid { color: [f64; 4] },
-    #[dsl(key = "linearGradient")]
-    LinearGradient { x1: f64, y1: f64, x2: f64, y2: f64, stops: Vec<GradientStop> },
-    #[dsl(key = "radialGradient")]
-    RadialGradient { cx: f64, cy: f64, r: f64, stops: Vec<GradientStop> },
+    LinearGradient { x1: f64, y1: f64, x2: f64, y2: f64, #[dsl(table)] stops: Vec<GradientStop> },
+    RadialGradient { cx: f64, cy: f64, r: f64, #[dsl(table)] stops: Vec<GradientStop> },
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -264,42 +261,72 @@ pub struct DrawTraceBody {
 #[serde(tag = "kind")]
 pub enum DrawLayerNode {
     #[serde(rename = "shape")]
-    #[dsl(key = "shape")]
     Shape(DrawShapeBody),
     #[serde(rename = "path")]
-    #[dsl(key = "path")]
     Path(DrawPathBody),
     #[serde(rename = "text")]
-    #[dsl(key = "text")]
     Text(DrawTextBody),
     #[serde(rename = "image")]
-    #[dsl(key = "image")]
     Image(DrawImageBody),
     #[serde(rename = "group")]
-    #[dsl(key = "group")]
     Group(DrawGroupBody),
     #[serde(rename = "boolean")]
-    #[dsl(key = "boolean")]
     Boolean(DrawBooleanBody),
     #[serde(rename = "trace")]
-    #[dsl(key = "trace")]
     Trace(DrawTraceBody),
 }
 
+// 🖊️ Keywords/field order are a genuine SUBSET of SVG path data's absolute commands
+// (`M`/`L`/`Q`/`C`/`A`/`Z`), each field `#[dsl(positional)]` so a segment prints as compact
+// command-then-args tokens — `M 1.25,196.933 L 36.25,161.125 ... Z` — instead of `move to=1.25,196.933`.
+// Field order per variant mirrors the SVG spec's own argument order (e.g. `A rx ry rotation
+// large-arc-flag sweep-flag x,y`) so it reads as real SVG path syntax, just space- instead of
+// comma/space-mixed-delimited between commands.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum PathSegment {
-    #[dsl(key = "move")]
-    Move { to: [f64; 2] },
-    #[dsl(key = "line")]
-    Line { to: [f64; 2] },
-    #[dsl(key = "quad")]
-    Quad { ctrl: [f64; 2], to: [f64; 2] },
-    #[dsl(key = "cubic")]
-    Cubic { ctrl1: [f64; 2], ctrl2: [f64; 2], to: [f64; 2] },
-    #[dsl(key = "arc")]
-    Arc { rx: f64, ry: f64, rotation: f64, large_arc: bool, sweep: bool, to: [f64; 2] },
-    #[dsl(key = "close")]
+    #[dsl(key = "M")]
+    Move {
+        #[dsl(positional)]
+        to: [f64; 2],
+    },
+    #[dsl(key = "L")]
+    Line {
+        #[dsl(positional)]
+        to: [f64; 2],
+    },
+    #[dsl(key = "Q")]
+    Quad {
+        #[dsl(positional)]
+        ctrl: [f64; 2],
+        #[dsl(positional)]
+        to: [f64; 2],
+    },
+    #[dsl(key = "C")]
+    Cubic {
+        #[dsl(positional)]
+        ctrl1: [f64; 2],
+        #[dsl(positional)]
+        ctrl2: [f64; 2],
+        #[dsl(positional)]
+        to: [f64; 2],
+    },
+    #[dsl(key = "A")]
+    Arc {
+        #[dsl(positional)]
+        rx: f64,
+        #[dsl(positional)]
+        ry: f64,
+        #[dsl(positional)]
+        rotation: f64,
+        #[dsl(positional)]
+        large_arc: bool,
+        #[dsl(positional)]
+        sweep: bool,
+        #[dsl(positional)]
+        to: [f64; 2],
+    },
+    #[dsl(key = "Z")]
     Close,
 }
 
@@ -1239,63 +1266,52 @@ fn resolve_trace_layer_segments(doc: &DrawDocument, trace: &DrawTraceBody) -> Ve
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum DrawOperation {
-    #[dsl(key = "setLayerVisible")]
     SetLayerVisible {
         layer_id: String,
         visible: bool,
     },
-    #[dsl(key = "setLayerLocked")]
     SetLayerLocked {
         layer_id: String,
         locked: bool,
     },
-    #[dsl(key = "setLayerOpacity")]
     SetLayerOpacity {
         layer_id: String,
         opacity: f64,
     },
-    #[dsl(key = "setLayerBlendMode")]
     SetLayerBlendMode {
         layer_id: String,
         blend_mode: String,
     },
-    #[dsl(key = "setLayerName")]
     SetLayerName {
         layer_id: String,
         name: String,
     },
-    #[dsl(key = "setLayerTransform")]
     SetLayerTransform {
         layer_id: String,
         #[dsl(block)]
         transform: DrawTransform,
     },
-    #[dsl(key = "setFill")]
     SetFill {
         layer_id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
         #[dsl(statements, block)]
         fill: Option<FillStyle>,
     },
-    #[dsl(key = "setStroke")]
     SetStroke {
         layer_id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
         #[dsl(block)]
         stroke: Option<StrokeStyle>,
     },
-    #[dsl(key = "setBooleanOperation")]
     SetBooleanOperation {
         layer_id: String,
         boolean_operation: String,
     },
-    #[dsl(key = "setTraceParams")]
     SetTraceParams {
         layer_id: String,
         #[dsl(block)]
         params: DrawTraceParams,
     },
-    #[dsl(key = "addLayer")]
     AddLayer {
         #[serde(skip_serializing_if = "Option::is_none")]
         parent_id: Option<String>,
@@ -1304,27 +1320,22 @@ pub enum DrawOperation {
         #[dsl(statements)]
         layer: Box<DrawLayerNode>,
     },
-    #[dsl(key = "duplicateLayer")]
     DuplicateLayer {
         layer_id: String,
     },
-    #[dsl(key = "removeLayer")]
     RemoveLayer {
         layer_id: String,
     },
-    #[dsl(key = "reorderLayer")]
     ReorderLayer {
         layer_id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
         parent_id: Option<String>,
         index: usize,
     },
-    #[dsl(key = "setCamera")]
     SetCamera {
         #[dsl(block)]
         camera: DrawCamera,
     },
-    #[dsl(key = "setDocument")]
     SetDocument {
         #[dsl(block)]
         document: DrawDocument,

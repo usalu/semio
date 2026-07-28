@@ -72,7 +72,6 @@ mod document {
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct Layer {
-        #[dsl(ident)]
         pub id: String,
         pub name: String,
         pub visible: bool,
@@ -136,12 +135,9 @@ mod document {
     #[serde(tag = "kind")]
     pub enum Frame {
         #[serde(rename = "rect")]
-        #[dsl(key = "rect")]
         Rect {
-            #[dsl(ident)]
             id: String,
             #[serde(rename = "layerId")]
-            #[dsl(ident)]
             layer_id: String,
             #[dsl(block)]
             bounds: LayoutBounds,
@@ -151,19 +147,15 @@ mod document {
             stroke: Option<[f32; 4]>,
         },
         #[serde(rename = "text")]
-        #[dsl(key = "text")]
         Text {
-            #[dsl(ident)]
             id: String,
             #[serde(rename = "layerId")]
-            #[dsl(ident)]
             layer_id: String,
             #[dsl(block)]
             bounds: LayoutBounds,
             locked: Option<bool>,
             visible: Option<bool>,
             #[serde(rename = "storyId")]
-            #[dsl(ident)]
             story_id: String,
             #[serde(rename = "threadNext")]
             thread_next: Option<String>,
@@ -174,19 +166,15 @@ mod document {
             wrap_mode: String,
         },
         #[serde(rename = "image")]
-        #[dsl(key = "image")]
         Image {
-            #[dsl(ident)]
             id: String,
             #[serde(rename = "layerId")]
-            #[dsl(ident)]
             layer_id: String,
             #[dsl(block)]
             bounds: LayoutBounds,
             locked: Option<bool>,
             visible: Option<bool>,
             #[serde(rename = "linkId")]
-            #[dsl(ident)]
             link_id: String,
         },
     }
@@ -231,7 +219,6 @@ mod document {
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct TextStory {
-        #[dsl(ident)]
         pub id: String,
         pub content: String,
         #[serde(rename = "styleRuns")]
@@ -240,7 +227,6 @@ mod document {
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct ParagraphStyle {
-        #[dsl(ident)]
         pub id: String,
         pub name: String,
         #[serde(rename = "fontFamily")]
@@ -256,7 +242,6 @@ mod document {
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct ImageLink {
-        #[dsl(ident)]
         pub id: String,
         pub path: String,
         pub hash: String,
@@ -273,7 +258,6 @@ mod document {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct PageOverride {
         #[serde(rename = "objectId")]
-        #[dsl(ident)]
         pub object_id: String,
         #[dsl(block)]
         pub bounds: Option<LayoutBounds>,
@@ -283,13 +267,13 @@ mod document {
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct ParentPage {
-        #[dsl(ident)]
         pub id: String,
         pub name: String,
         pub width: f64,
         pub height: f64,
         #[serde(rename = "layerIds")]
         pub layer_ids: Vec<String>,
+        #[dsl(table)]
         pub layers: Vec<Layer>,
         #[dsl(statements, block)]
         pub frames: Vec<Frame>,
@@ -297,11 +281,9 @@ mod document {
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct Page {
-        #[dsl(ident)]
         pub id: String,
         pub name: String,
         #[serde(rename = "spreadId")]
-        #[dsl(ident)]
         pub spread_id: String,
         #[serde(rename = "parentPageId")]
         pub parent_page_id: Option<String>,
@@ -311,18 +293,20 @@ mod document {
         pub margins: PageMargins,
         #[dsl(block)]
         pub columns: PageColumns,
+        #[dsl(table)]
         pub guides: Vec<LayoutRect>,
         #[serde(rename = "layerIds")]
         pub layer_ids: Vec<String>,
+        #[dsl(table)]
         pub layers: Vec<Layer>,
         #[dsl(statements, block)]
         pub frames: Vec<Frame>,
+        #[dsl(table)]
         pub overrides: Vec<PageOverride>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct Spread {
-        #[dsl(ident)]
         pub id: String,
         pub name: String,
         #[serde(rename = "pageIds")]
@@ -342,7 +326,6 @@ mod document {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
     #[dsl(extension = "layout", layout = "lines")]
     pub struct LayoutDocument {
-        #[dsl(ident)]
         pub schema: String,
         pub name: String,
         #[dsl(block)]
@@ -353,13 +336,17 @@ mod document {
         #[dsl(block)]
         pub grid: GridSettings,
         #[serde(rename = "paragraphStyles")]
+        #[dsl(table)]
         pub paragraph_styles: Vec<ParagraphStyle>,
         #[serde(rename = "characterStyles")]
         pub character_styles: Vec<serde_json::Value>,
+        #[dsl(table)]
         pub stories: Vec<TextStory>,
+        #[dsl(table)]
         pub links: Vec<ImageLink>,
         #[serde(rename = "parentPages")]
         pub parent_pages: Vec<ParentPage>,
+        #[dsl(table)]
         pub spreads: Vec<Spread>,
         pub pages: Vec<Page>,
         #[serde(rename = "printTarget")]
@@ -1763,9 +1750,7 @@ mod dsl {
     /// optional field's "explicitly cleared to none" state that a single `Option` can't.
     #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
     enum ColorPatch {
-        #[dsl(key = "clear")]
         Clear,
-        #[dsl(key = "set")]
         Set { color: [f32; 4] },
     }
 
@@ -1837,93 +1822,68 @@ mod dsl {
     /// `layout/plugin`) is completely untouched.
     #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
     enum LayoutOperationDsl {
-        #[dsl(key = "pagesAdd")]
         PagesAdd {
             index: usize,
             #[dsl(block)]
             item: Page,
         },
-        #[dsl(key = "pagesRemove")]
         PagesRemove { id: String },
-        #[dsl(key = "pagesMove")]
         PagesMove {
             id: String,
-            #[dsl(key = "toIndex")]
             to_index: usize,
         },
-        #[dsl(key = "pagesPatch")]
         PagesPatch {
             id: String,
             #[dsl(block)]
             patch: PagePatch,
         },
-        #[dsl(key = "storiesAdd")]
         StoriesAdd {
             index: usize,
             #[dsl(block)]
             item: TextStory,
         },
-        #[dsl(key = "storiesRemove")]
         StoriesRemove { id: String },
-        #[dsl(key = "storiesMove")]
         StoriesMove {
             id: String,
-            #[dsl(key = "toIndex")]
             to_index: usize,
         },
-        #[dsl(key = "storiesPatch")]
         StoriesPatch {
             id: String,
             #[dsl(block)]
             patch: TextStoryPatch,
         },
-        #[dsl(key = "linksAdd")]
         LinksAdd {
             index: usize,
             #[dsl(block)]
             item: ImageLink,
         },
-        #[dsl(key = "linksRemove")]
         LinksRemove { id: String },
-        #[dsl(key = "linksMove")]
         LinksMove {
             id: String,
-            #[dsl(key = "toIndex")]
             to_index: usize,
         },
-        #[dsl(key = "linksPatch")]
         LinksPatch {
             id: String,
             #[dsl(block)]
             patch: ImageLinkPatch,
         },
-        #[dsl(key = "addFrame")]
         AddFrame {
-            #[dsl(key = "pageId")]
             page_id: String,
             index: usize,
             #[dsl(statements)]
             frame: Box<Frame>,
-            #[dsl(key = "layerId")]
             layer_id: Option<String>,
         },
-        #[dsl(key = "removeFrame")]
         RemoveFrame {
-            #[dsl(key = "pageId")]
             page_id: String,
-            #[dsl(key = "frameId")]
             frame_id: String,
         },
-        #[dsl(key = "patchFrame")]
         PatchFrame {
-            #[dsl(key = "pageId")]
             page_id: String,
-            #[dsl(key = "frameId")]
             frame_id: String,
             #[dsl(block)]
             patch: FramePatchDsl,
         },
-        #[dsl(key = "setCamera")]
         SetCamera {
             blueprint: bool,
             #[dsl(block)]
@@ -1995,6 +1955,143 @@ mod dsl {
 
         fn sample_document() -> LayoutDocument {
             LayoutDocument::parse_dsl(include_str!("../example/sample.layout")).expect("sample fixture parses")
+        }
+
+        #[test]
+        fn temp_regen_sample_layout_fixture() {
+            let doc = LayoutDocument {
+                schema: LAYOUT_FIXTURE_SCHEMA.into(),
+                name: "Untitled".into(),
+                camera: LayoutCamera { x: 0.0, y: 0.0, zoom: 0.5 },
+                preview_camera: LayoutCamera { x: 0.0, y: 0.0, zoom: 0.5 },
+                grid: GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: true },
+                paragraph_styles: vec![ParagraphStyle {
+                    id: "paragraph.body".into(),
+                    name: "Body".into(),
+                    font_family: "Layout Sans".into(),
+                    font_size: 12.0,
+                    font_weight: 400,
+                    leading: 14.4,
+                    tracking: 0.0,
+                    alignment: "left".into(),
+                }],
+                character_styles: Vec::new(),
+                stories: vec![TextStory {
+                    id: "story-1".into(),
+                    content: "Layout aggregates content from across the semio stack into exportable documents. This frame threads into the second column when overflow occurs.".into(),
+                    style_runs: vec![TextStyleRun { start: 0, end: 120, paragraph_style_id: Some("paragraph.body".into()), character_style_id: None }],
+                }],
+                links: vec![ImageLink {
+                    id: "link-missing".into(),
+                    path: "assets/site-plan.png".into(),
+                    hash: "sha256:missing".into(),
+                    width: 1200,
+                    height: 800,
+                    dpi: 72,
+                    color_profile: Some("RGB".into()),
+                    state: Some("missing".into()),
+                    proxy_data_url: None,
+                }],
+                parent_pages: vec![ParentPage {
+                    id: "parent-master".into(),
+                    name: "Master".into(),
+                    width: 595.0,
+                    height: 842.0,
+                    layer_ids: vec!["layer-parent-bg".into()],
+                    layers: vec![Layer { id: "layer-parent-bg".into(), name: "Background".into(), visible: true, locked: false, object_ids: vec!["frame-parent-header".into()] }],
+                    frames: vec![Frame::Rect {
+                        id: "frame-parent-header".into(),
+                        layer_id: "layer-parent-bg".into(),
+                        bounds: LayoutBounds { x: 36.0, y: 24.0, width: 523.0, height: 48.0, rotation: 0.0 },
+                        locked: None,
+                        visible: None,
+                        fill: Some([0.11999999731779099, 0.14000000059604645, 0.18000000715255737, 1.0]),
+                        stroke: None,
+                    }],
+                }],
+                spreads: vec![Spread { id: "spread-1".into(), name: "Spread 1".into(), page_ids: vec!["page-1".into(), "page-2".into()] }],
+                pages: vec![
+                    Page {
+                        id: "page-1".into(),
+                        name: "Page 1".into(),
+                        spread_id: "spread-1".into(),
+                        parent_page_id: Some("parent-master".into()),
+                        width: 595.0,
+                        height: 842.0,
+                        margins: PageMargins { top: 48.0, right: 36.0, bottom: 48.0, left: 36.0 },
+                        columns: PageColumns { count: 2, gutter: 12.0 },
+                        guides: Vec::new(),
+                        layer_ids: vec!["layer-1".into()],
+                        layers: vec![Layer { id: "layer-1".into(), name: "Content".into(), visible: true, locked: false, object_ids: vec!["frame-text-1".into(), "frame-text-2".into(), "frame-image-1".into()] }],
+                        frames: vec![
+                            Frame::Text {
+                                id: "frame-text-1".into(),
+                                layer_id: "layer-1".into(),
+                                bounds: LayoutBounds { x: 36.0, y: 120.0, width: 240.0, height: 200.0, rotation: 0.0 },
+                                locked: None,
+                                visible: None,
+                                story_id: "story-1".into(),
+                                thread_next: Some("frame-text-2".into()),
+                                columns: 1,
+                                inset: LayoutRect { x: 4.0, y: 4.0, width: 232.0, height: 192.0 },
+                                wrap_mode: "box".into(),
+                            },
+                            Frame::Text {
+                                id: "frame-text-2".into(),
+                                layer_id: "layer-1".into(),
+                                bounds: LayoutBounds { x: 288.0, y: 120.0, width: 240.0, height: 120.0, rotation: 0.0 },
+                                locked: None,
+                                visible: None,
+                                story_id: "story-1".into(),
+                                thread_next: None,
+                                columns: 1,
+                                inset: LayoutRect { x: 4.0, y: 4.0, width: 232.0, height: 112.0 },
+                                wrap_mode: "box".into(),
+                            },
+                            Frame::Image {
+                                id: "frame-image-1".into(),
+                                layer_id: "layer-1".into(),
+                                bounds: LayoutBounds { x: 36.0, y: 360.0, width: 200.0, height: 150.0, rotation: 0.0 },
+                                locked: None,
+                                visible: None,
+                                link_id: "link-missing".into(),
+                            },
+                        ],
+                        overrides: Vec::new(),
+                    },
+                    Page {
+                        id: "page-2".into(),
+                        name: "Page 2".into(),
+                        spread_id: "spread-1".into(),
+                        parent_page_id: None,
+                        width: 595.0,
+                        height: 842.0,
+                        margins: PageMargins { top: 48.0, right: 36.0, bottom: 48.0, left: 36.0 },
+                        columns: PageColumns { count: 1, gutter: 0.0 },
+                        guides: Vec::new(),
+                        layer_ids: vec!["layer-2".into()],
+                        layers: vec![Layer { id: "layer-2".into(), name: "Content".into(), visible: true, locked: false, object_ids: vec!["frame-small-text".into()] }],
+                        frames: vec![Frame::Text {
+                            id: "frame-small-text".into(),
+                            layer_id: "layer-2".into(),
+                            bounds: LayoutBounds { x: 400.0, y: 700.0, width: 120.0, height: 40.0, rotation: 0.0 },
+                            locked: None,
+                            visible: None,
+                            story_id: "story-1".into(),
+                            thread_next: None,
+                            columns: 1,
+                            inset: LayoutRect { x: 2.0, y: 2.0, width: 116.0, height: 36.0 },
+                            wrap_mode: "box".into(),
+                        }],
+                        overrides: Vec::new(),
+                    },
+                ],
+                print_target: Some("print".into()),
+            };
+            let text = doc.print_dsl();
+            std::fs::write("../example/sample.layout", &text).expect("write fixture");
+            let reparsed = LayoutDocument::parse_dsl(&text).expect("regenerated fixture parses");
+            assert_eq!(reparsed, doc, "regenerated fixture must round-trip the hand-built value exactly");
         }
 
         #[test]

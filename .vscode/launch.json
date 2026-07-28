@@ -2916,6 +2916,116 @@
       }
     },
     {
+      "name": "🧪test📦pack-core",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/pack-core-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.81
+      }
+    },
+    {
+      "name": "🧪test📦pack-format",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/pack-format-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.82
+      }
+    },
+    {
+      "name": "🧪test📦pack-value",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/pack-value-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.83
+      }
+    },
+    {
+      "name": "🧪test📦pack-io",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/pack-io-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.84
+      }
+    },
+    {
+      "name": "🧪test📦pack-async",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/pack-async-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.85
+      }
+    },
+    {
+      "name": "🧪test📦pack-http",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/pack-http-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.86
+      }
+    },
+    {
+      "name": "🧪test📦pack-index",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/pack-index-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.87
+      }
+    },
+    {
+      "name": "🧪test📦pack",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/pack-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.88
+      }
+    },
+    {
+      "name": "🧪test📦pack-testkit",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/pack-testkit-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.89
+      }
+    },
+    {
+      "name": "🧪test📦pack-cli",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/pack-cli-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.9
+      }
+    },
+    {
       "name": "🛠️dev🏗️fem🩻2d⚛️react",
       "type": "node-terminal",
       "request": "launch",

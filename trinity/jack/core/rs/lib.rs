@@ -927,8 +927,8 @@ pub fn example_graph_fixture() -> GraphFixture {
         edges: vec![Edge {
             id: "e1".into(),
             kind: "Connection".into(),
-            source: "root:out".into(),
-            target: "child:in".into(),
+            source: "root@out".into(),
+            target: "child@in".into(),
             properties: PropertyBag::new(),
         }],
     }
@@ -1825,8 +1825,8 @@ mod tests {
             edges: vec![Edge {
                 id: "e1".into(),
                 kind: "Connection".into(),
-                source: "root:out".into(),
-                target: "child:in".into(),
+                source: "root@out".into(),
+                target: "child@in".into(),
                 properties: {
                     let mut p = PropertyBag::new();
                     p.insert("u".into(), PropertyValue::Number(1.0));
@@ -1937,7 +1937,11 @@ mod tests {
 
     #[test]
     fn format_is_idempotent() {
-        let source = "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a.name, b.name";
+        // 🩹 this crate's `format()` delegates to `mathematical_graph_dsl::format`, which now
+        // unifies on `dsl_core`'s shared alphabet: no standalone `-` token, so a bracketed edge
+        // label's leading connector is `--`, not the old bare dash (`(a)-[r]->(b)`, this crate's
+        // own independent `parse`/`run` grammar below, is unaffected and keeps accepting it).
+        let source = "MATCH (a:Piece)--[r:Connection]->(b:Piece) RETURN a.name, b.name";
         let once = format(source).unwrap();
         let twice = format(&once).unwrap();
         assert_eq!(once, twice);

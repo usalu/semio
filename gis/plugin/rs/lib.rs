@@ -88,10 +88,13 @@ pub(crate) mod domain {
     #[dsl(extension = "gismap", layout = "lines")]
     pub struct GisMapDocument {
         #[serde(default)]
+        #[dsl(table)]
         pub positions: Vec<MapFeature>,
         #[serde(default)]
+        #[dsl(table)]
         pub routes: Vec<MapFeature>,
         #[serde(default)]
+        #[dsl(table)]
         pub regions: Vec<MapFeature>,
     }
     
@@ -346,31 +349,18 @@ pub(crate) mod domain {
     /// itself, and every consumer matching on it, is completely untouched.
     #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
     enum GisMapOperationDsl {
-        #[dsl(key = "add-position")]
         AddPosition { index: usize, #[dsl(block)] item: MapFeature },
-        #[dsl(key = "remove-position")]
         RemovePosition { id: String },
-        #[dsl(key = "move-position")]
         MovePosition { id: String, #[dsl(key = "to")] to_index: usize },
-        #[dsl(key = "patch-position")]
         PatchPosition { id: String, #[dsl(block)] patch: MapFeaturePatch },
-        #[dsl(key = "add-route")]
         AddRoute { index: usize, #[dsl(block)] item: MapFeature },
-        #[dsl(key = "remove-route")]
         RemoveRoute { id: String },
-        #[dsl(key = "move-route")]
         MoveRoute { id: String, #[dsl(key = "to")] to_index: usize },
-        #[dsl(key = "patch-route")]
         PatchRoute { id: String, #[dsl(block)] patch: MapFeaturePatch },
-        #[dsl(key = "add-region")]
         AddRegion { index: usize, #[dsl(block)] item: MapFeature },
-        #[dsl(key = "remove-region")]
         RemoveRegion { id: String },
-        #[dsl(key = "move-region")]
         MoveRegion { id: String, #[dsl(key = "to")] to_index: usize },
-        #[dsl(key = "patch-region")]
         PatchRegion { id: String, #[dsl(block)] patch: MapFeaturePatch },
-        #[dsl(key = "set-document")]
         SetDocument { #[dsl(block)] document: GisMapDocument },
     }
 
@@ -455,7 +445,6 @@ pub(crate) mod domain {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
     #[serde(tag = "operation", rename_all = "camelCase")]
     pub enum Gis3dTerrainOperation {
-        #[dsl(key = "set-exaggeration")]
         SetExaggeration { exaggeration: f64 },
     }
     

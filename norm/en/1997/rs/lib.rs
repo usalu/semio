@@ -289,7 +289,6 @@ pub struct Document {
     pub d_f_m: f64,
     pub e_s_mpa: f64,
     pub nu: f64,
-    #[dsl(ident)]
     pub design_approach: String,
     pub annex: AnnexChoice,
     pub settlement_limit_mm: f64,

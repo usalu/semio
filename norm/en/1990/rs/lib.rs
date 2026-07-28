@@ -430,6 +430,7 @@ pub struct QkEntry {
 #[dsl(extension = "en1990", layout = "lines")]
 pub struct Document {
     pub g_k: f64,
+    #[dsl(table)]
     pub q_k: Vec<QkEntry>,
     pub resistance_kn: f64,
     pub consequence_class: u8,

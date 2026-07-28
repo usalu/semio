@@ -968,17 +968,14 @@ export function applyUiThemeToDocument(theme: UiTheme): void {
   if (typeof hairline === "number") setCssVar(root, "--stroke-hairline", `${hairline}px`);
   const chrome = theme.metrics.chrome;
   if (chrome) {
-    if (typeof chrome.glassBlurPx === "number") setCssVar(root, "--glass-blur", `${chrome.glassBlurPx / 16}rem`);
-    if (typeof chrome.glassPanelBlurPx === "number") setCssVar(root, "--glass-panel-blur", `${chrome.glassPanelBlurPx / 16}rem`);
-    if (typeof chrome.glassWindowOptionsBlurPx === "number") setCssVar(root, "--glass-window-options-blur", `${chrome.glassWindowOptionsBlurPx / 16}rem`);
     if (typeof chrome.glassSaturate === "number") setCssVar(root, "--glass-saturate", `${chrome.glassSaturate}`);
+    if (typeof chrome.shadeStepPercent === "number") setCssVar(root, "--level-shade-step", `${chrome.shadeStepPercent}%`);
+    if (typeof chrome.elementStepPercent === "number") setCssVar(root, "--element-shade-step", `${chrome.elementStepPercent}%`);
+    if (typeof chrome.hoverStepPercent === "number") setCssVar(root, "--hover-shade-step", `${chrome.hoverStepPercent}%`);
+    if (typeof chrome.glassAlphaStep === "number") setCssVar(root, "--glass-alpha-step", `${chrome.glassAlphaStep}`);
+    if (typeof chrome.glassBlurStepPx === "number") setCssVar(root, "--glass-blur-step", `${chrome.glassBlurStepPx / 16}rem`);
+    if (typeof chrome.glassChromeAlphaFactor === "number") setCssVar(root, "--glass-chrome-alpha-factor", `${chrome.glassChromeAlphaFactor}`);
   }
-  const glassPanelAlpha = theme.opacities.glassPanelAlpha;
-  if (typeof glassPanelAlpha === "number") setCssVar(root, "--glass-panel-alpha", `${glassPanelAlpha}`);
-  const glassMenuAlpha = theme.opacities.glassMenuAlpha;
-  if (typeof glassMenuAlpha === "number") setCssVar(root, "--glass-menu-alpha", `${glassMenuAlpha}`);
-  const glassWindowOptionsAlpha = theme.opacities.glassWindowOptionsAlpha;
-  if (typeof glassWindowOptionsAlpha === "number") setCssVar(root, "--glass-window-options-alpha", `${glassWindowOptionsAlpha}`);
   clearColorResolveCache();
 }
 
@@ -1037,6 +1034,22 @@ if (import.meta.vitest) {
       const parsed = JSON.parse(serializeCanvasThemeJson("light")) as { rasterClear: number[] };
       expect(parsed.rasterClear).not.toEqual(STYLING_BOARD_PALETTES.light.rasterClear);
       unsubscribe();
+    });
+
+    it("applyUiThemeToDocument writes the level knob CSS vars, never the deleted per-tier ones", () => {
+      const theme = semioTheme();
+      applyUiThemeToDocument(theme);
+      const root = document.documentElement;
+      const chrome = theme.metrics.chrome;
+      if (typeof chrome?.shadeStepPercent === "number") {
+        expect(root.style.getPropertyValue("--level-shade-step")).toBe(`${chrome.shadeStepPercent}%`);
+      }
+      if (typeof chrome?.glassAlphaStep === "number") {
+        expect(root.style.getPropertyValue("--glass-alpha-step")).toBe(`${chrome.glassAlphaStep}`);
+      }
+      for (const deleted of ["--glass-panel-blur", "--glass-panel-alpha", "--glass-menu-alpha", "--glass-window-options-blur", "--glass-window-options-alpha"]) {
+        expect(root.style.getPropertyValue(deleted)).toBe("");
+      }
     });
   });
 }

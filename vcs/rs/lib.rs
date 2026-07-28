@@ -2,14 +2,15 @@
 
 // The `dsl::DslDocument`/`dsl::DslOps` derive macros emit `::vcs::DocumentDsl`/`::vcs::OpText` paths
 // (see `dsl/derive/rs/lib.rs`), which only resolve for crates that depend on `vcs` as an external
-// crate — every real consumer, but NOT this crate's own in-crate `🔖Dsl`/`🔖OpText` test fixtures
-// below (a crate is never its own dependency). `extern crate self as vcs;` is the same fix `dsl/rs/lib.rs`
-// uses for its own in-crate derive tests: it makes `::vcs` resolve to this crate even when the derive
-// is exercised in-crate. Only needed for the in-crate tests, so it's cfg-gated to avoid an
-// "unused extern crate" warning in ordinary (non-test) builds.
-#[cfg(test)]
+// crate — every real consumer, INCLUDING this crate's own `.ops` header grammar (`OpsHeaderLine` in
+// `🔖TextFormat` below, derived on the engine directly) as well as its in-crate `🔖Dsl`/`🔖OpText`
+// test fixtures (a crate is never its own dependency otherwise). `extern crate self as vcs;` is the
+// same fix `dsl/rs/lib.rs` uses for its own in-crate derive usage: it makes `::vcs` resolve to this
+// crate even when the derive is exercised in-crate. Unconditional (not `#[cfg(test)]`-gated) because
+// `OpsHeaderLine` is production code, not just a test fixture.
 extern crate self as vcs;
 
+use dsl::{DslOps, DslRecord};
 use semio_framework_core::{
     ActorId, DocumentDiff, DocumentId, DocumentVersion, HybridLogicalTimestamp, InverseOperation,
     MergeStrategyKind, OperationEnvelope, OperationId, PayloadHash, SchemaId, SchemaVersion, UndoPolicy,
@@ -682,160 +683,99 @@ pub struct ParsedDocumentText<P, Operation> {
     pub projection: P,
 }
 
-/// @emoji 🔐 Delegates to `dsl_core`'s one canonical escape scheme (a strict superset: also
-/// escapes `\r`/`\t`/control chars, which this grammar's old private copy passed through raw).
-fn escape_text_field(value: &str) -> String {
-    dsl_core::escape_text(value)
+//#region 🔖OpsHeaderGrammar
+/// @emoji 🖋️ One `by=[...]` list entry on a `checkpoint` header line: id then name, both positional
+/// (bare-preferred, quoted only when needed — e.g. a name containing a space). `Author::avatar` is
+/// never part of the textual `.ops` format (this mirrors the pre-derive printer, which never carried
+/// it either — see {@link Author}).
+#[derive(Clone, Debug, PartialEq, DslRecord)]
+struct OpsAuthor {
+    #[dsl(positional)]
+    id: String,
+    #[dsl(positional)]
+    name: String,
 }
 
-/// @emoji 🔓 Delegates to `dsl_core`'s unescape; forgiving (never fails) to match this function's
-/// prior behavior of passing unknown escapes through literally rather than erroring.
-fn unescape_text_field(value: &str) -> String {
-    dsl_core::unescape_text(value, true).unwrap_or_else(|_| value.to_string())
-}
-
-/// @emoji 🔎 Finds the char index of the unescaped opening `"` of a trailing quoted field, if `chars`
-/// ends with an unescaped closing `"`. Content between the two quotes never contains an unescaped `"`
-/// (escaping guarantees it), so the first unescaped `"` found scanning backwards is the opening one.
-fn find_unescaped_trailing_quote(chars: &[char]) -> Option<usize> {
-    if chars.is_empty() || *chars.last().unwrap() != '"' {
-        return None;
-    }
-    let last = chars.len() - 1;
-    let mut i = last;
-    while i > 0 {
-        i -= 1;
-        if chars[i] == '"' {
-            let mut backslashes = 0;
-            let mut j = i;
-            while j > 0 && chars[j - 1] == '\\' {
-                backslashes += 1;
-                j -= 1;
-            }
-            if backslashes % 2 == 0 {
-                return Some(i);
-            }
-        }
-    }
-    None
-}
-
-/// @emoji 🧾 One parsed structural line (`@doc`/`@edit`/`@change`/`@checkpoint`/`@alternative`/`@active`):
-/// the `@kind` marker, its `key=value` tokens, and an optional trailing quoted text field.
-#[derive(Debug)]
-struct StructuralLine {
-    kind: String,
-    fields: HashMap<String, String>,
-    text: Option<String>,
-}
-
-fn parse_structural_line(line: &str, line_no: u32) -> Result<StructuralLine, TextError> {
-    let trimmed = line.trim_end();
-    let chars: Vec<char> = trimmed.chars().collect();
-    let (head, text) = match find_unescaped_trailing_quote(&chars) {
-        Some(open) => {
-            let content: String = chars[open + 1..chars.len() - 1].iter().collect();
-            let head: String = chars[..open].iter().collect();
-            (head.trim_end().to_string(), Some(unescape_text_field(&content)))
-        }
-        None => (trimmed.to_string(), None),
-    };
-    let mut tokens = head.split_whitespace();
-    let kind = tokens
-        .next()
-        .filter(|token| token.starts_with('@'))
-        .ok_or_else(|| TextError::new("expected a structural line starting with '@'", TextSpan::at(line_no, 1)))?
-        .to_string();
-    let mut fields = HashMap::new();
-    for token in tokens {
-        let (key, value) = token
-            .split_once('=')
-            .ok_or_else(|| TextError::new(format!("expected key=value token, got '{token}'"), TextSpan::at(line_no, 1)))?;
-        fields.insert(key.to_string(), value.to_string());
-    }
-    Ok(StructuralLine { kind, fields, text })
-}
-
-fn field<'a>(fields: &'a HashMap<String, String>, key: &str, line_no: u32) -> Result<&'a str, TextError> {
-    fields
-        .get(key)
-        .map(|value| value.as_str())
-        .ok_or_else(|| TextError::new(format!("missing field '{key}'"), TextSpan::at(line_no, 1)))
-}
-
-fn optional_field<'a>(fields: &'a HashMap<String, String>, key: &str) -> Option<&'a str> {
-    fields.get(key).map(|value| value.as_str()).filter(|value| *value != "-")
-}
-
-fn split_ids(value: &str) -> Vec<String> {
-    if value == "-" {
-        Vec::new()
-    } else {
-        value.split(',').map(|id| id.to_string()).collect()
+impl From<&Author> for OpsAuthor {
+    fn from(author: &Author) -> Self {
+        Self { id: author.id.clone(), name: author.name.clone() }
     }
 }
 
-fn join_ids(ids: &[String]) -> String {
-    if ids.is_empty() {
-        "-".to_string()
-    } else {
-        ids.join(",")
+impl From<OpsAuthor> for Author {
+    fn from(author: OpsAuthor) -> Self {
+        Self { id: author.id, name: author.name, avatar: None }
     }
 }
 
-fn print_authors(authors: &[Author]) -> String {
-    if authors.is_empty() {
-        return "-".to_string();
-    }
-    authors
-        .iter()
-        .map(|author| format!("{}:{}", escape_id_component(&author.id), escape_id_component(&author.name)))
-        .collect::<Vec<_>>()
-        .join(",")
+/// @emoji 🧾 One `.ops` header/structural line — `doc`/`edit`/`change`/`checkpoint`/`alternative`/
+/// `active` — re-derived directly on the `dsl_schema` grammar engine (`#[derive(DslOps)]` generates
+/// `OpText::parse_op`/`print_op` from this declaration; see {@link print_edit_lines}/
+/// {@link print_document_text}/{@link parse_document_text}, its only callers). Sigil-free lowercase
+/// keywords (bare `doc`, never `@doc` — `@` is reserved for connection points everywhere else in the
+/// unified DSL syntax); `id` is always the first positional field on every line; every other field is
+/// a plain `key=value` attribute that is simply OMITTED when absent (no more `-` placeholder
+/// sentinel); `edits`/`changes`/`checkpoints`/`by` are real DSL lists (`by=[ u1 "Ueli Saluz" ]`), not
+/// comma-joined, percent-escaped strings.
+#[derive(Clone, Debug, PartialEq, DslOps)]
+enum OpsHeaderLine {
+    Doc {
+        #[dsl(positional)]
+        id: String,
+        schema: String,
+    },
+    Edit {
+        #[dsl(positional)]
+        id: String,
+        started: String,
+        actor: Option<String>,
+        finished: Option<String>,
+        key: Option<String>,
+        description: Option<String>,
+    },
+    Change {
+        #[dsl(positional)]
+        id: String,
+        saved: String,
+        edits: Vec<String>,
+        description: Option<String>,
+    },
+    Checkpoint {
+        #[dsl(positional)]
+        id: String,
+        at: String,
+        changes: Vec<String>,
+        parent: Option<String>,
+        by: Vec<OpsAuthor>,
+        message: Option<String>,
+    },
+    Alternative {
+        #[dsl(positional)]
+        id: String,
+        name: String,
+        checkpoints: Vec<String>,
+    },
+    Active {
+        #[dsl(positional)]
+        id: String,
+    },
 }
+//#endregion 🔖OpsHeaderGrammar
 
-fn parse_authors(value: &str) -> Vec<Author> {
-    if value == "-" {
-        return Vec::new();
-    }
-    value
-        .split(',')
-        .map(|entry| {
-            let mut parts = entry.splitn(2, ':');
-            let id = unescape_id_component(parts.next().unwrap_or_default());
-            let name = unescape_id_component(parts.next().unwrap_or_default());
-            Author { id, name, avatar: None }
-        })
-        .collect()
-}
-
-/// @emoji 🔐 Minimal percent-escape for id/name components embedded in comma/colon-delimited lists.
-fn escape_id_component(value: &str) -> String {
-    value.replace('%', "%25").replace(',', "%2C").replace(':', "%3A")
-}
-
-fn unescape_id_component(value: &str) -> String {
-    value.replace("%3A", ":").replace("%2C", ",").replace("%25", "%")
-}
-
-/// @emoji 📤 Prints one edit as `@edit ...` followed by one two-space-indented `print_op` line per
-/// forward operation — the hot-path append unit for the op log. Backwards operations and per-operation
-/// metadata are never serialized; they are recomputed during {@link parse_document_text}'s load replay.
+/// @emoji 📤 Prints one edit as an `edit ...` header line followed by one two-space-indented
+/// `print_op` line per forward operation — the hot-path append unit for the op log. Backwards
+/// operations and per-operation metadata are never serialized; they are recomputed during
+/// {@link parse_document_text}'s load replay.
 pub fn print_edit_lines<Operation: OpText>(edit: &Edit<Operation>) -> Result<String, VcsError> {
-    let mut out = String::new();
-    out.push_str("@edit id=");
-    out.push_str(&edit.id);
-    out.push_str(" actor=");
-    out.push_str(&edit.actor.clone().unwrap_or_else(|| "-".to_string()));
-    out.push_str(" started=");
-    out.push_str(&edit.started_at);
-    out.push_str(" finished=");
-    out.push_str(&edit.finished_at.clone().unwrap_or_else(|| "-".to_string()));
-    out.push_str(" key=");
-    out.push_str(&edit.coalesce_key.clone().unwrap_or_else(|| "-".to_string()));
-    out.push_str(" \"");
-    out.push_str(&escape_text_field(edit.description.as_deref().unwrap_or("-")));
-    out.push('"');
+    let header = OpsHeaderLine::Edit {
+        id: edit.id.clone(),
+        started: edit.started_at.clone(),
+        actor: edit.actor.clone(),
+        finished: edit.finished_at.clone(),
+        key: edit.coalesce_key.clone(),
+        description: edit.description.clone(),
+    };
+    let mut out = header.print_op();
     out.push('\n');
     for operation in &edit.forwards {
         let printed = operation.print_op();
@@ -850,8 +790,8 @@ pub fn print_edit_lines<Operation: OpText>(edit: &Edit<Operation>) -> Result<Str
 }
 
 /// @emoji 📤 Prints the full textual VCS document: the DSL text (initial projection) and the complete
-/// op log (`@doc` header, every edit ever created as an `@edit` block, then `@change`/`@checkpoint`/
-/// `@alternative`/`@active` records). Replaces the JSON envelope as the canonical persisted form.
+/// op log (`doc` header, every edit ever created as an `edit` block, then `change`/`checkpoint`/
+/// `alternative`/`active` records). Replaces the JSON envelope as the canonical persisted form.
 pub fn print_document_text<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>) -> Result<DocumentTextFiles, VcsError>
 where
     P: DocumentDsl,
@@ -859,46 +799,51 @@ where
 {
     let dsl = envelope.vcs.initial_projection.print_dsl();
     let mut ops = String::new();
-    ops.push_str(&format!("@doc schema={} id={}\n", envelope.schema, envelope.id));
+    ops.push_str(&OpsHeaderLine::Doc { id: envelope.id.clone(), schema: envelope.schema.clone() }.print_op());
+    ops.push('\n');
     for edit in &envelope.vcs.edits {
         ops.push_str(&print_edit_lines(edit)?);
     }
     for change in &envelope.vcs.changes {
-        ops.push_str(&format!(
-            "@change id={} saved={} edits={} \"{}\"\n",
-            change.id,
-            change.saved_at,
-            join_ids(&change.edit_ids),
-            escape_text_field(change.description.as_deref().unwrap_or("-")),
-        ));
+        let header = OpsHeaderLine::Change {
+            id: change.id.clone(),
+            saved: change.saved_at.clone(),
+            edits: change.edit_ids.clone(),
+            description: change.description.clone(),
+        };
+        ops.push_str(&header.print_op());
+        ops.push('\n');
     }
     for checkpoint in &envelope.vcs.checkpoints {
-        ops.push_str(&format!(
-            "@checkpoint id={} parent={} changes={} by={} at={} \"{}\"\n",
-            checkpoint.id,
-            checkpoint.parent_id.clone().unwrap_or_else(|| "-".to_string()),
-            join_ids(&checkpoint.change_ids),
-            print_authors(&checkpoint.authors),
-            checkpoint.timestamp,
-            escape_text_field(checkpoint.message.as_deref().unwrap_or("-")),
-        ));
+        let header = OpsHeaderLine::Checkpoint {
+            id: checkpoint.id.clone(),
+            at: checkpoint.timestamp.clone(),
+            changes: checkpoint.change_ids.clone(),
+            parent: checkpoint.parent_id.clone(),
+            by: checkpoint.authors.iter().map(OpsAuthor::from).collect(),
+            message: checkpoint.message.clone(),
+        };
+        ops.push_str(&header.print_op());
+        ops.push('\n');
     }
     for alternative in &envelope.vcs.alternatives {
-        ops.push_str(&format!(
-            "@alternative id={} checkpoints={} \"{}\"\n",
-            alternative.id,
-            join_ids(&alternative.checkpoint_ids),
-            escape_text_field(&alternative.name),
-        ));
+        let header = OpsHeaderLine::Alternative {
+            id: alternative.id.clone(),
+            name: alternative.name.clone(),
+            checkpoints: alternative.checkpoint_ids.clone(),
+        };
+        ops.push_str(&header.print_op());
+        ops.push('\n');
     }
     if let Some(active_id) = &envelope.active_alternative_id {
-        ops.push_str(&format!("@active id={active_id}\n"));
+        ops.push_str(&OpsHeaderLine::Active { id: active_id.clone() }.print_op());
+        ops.push('\n');
     }
     Ok(DocumentTextFiles { dsl, ops })
 }
 
 /// @emoji 📥 Parses the textual VCS document back into an envelope plus its live (fully-replayed)
-/// projection. Every `@edit` in the log is treated as applied, in file order — mirroring the existing
+/// projection. Every `edit` in the log is treated as applied, in file order — mirroring the existing
 /// JSON `load_document` semantics (undo/redo position and checkout-alternative state are runtime-only
 /// and are not restored across a save/load cycle either way).
 pub fn parse_document_text<P, Operation>(dsl: &str, ops: &str) -> Result<ParsedDocumentText<P, Operation>, TextError>
@@ -916,19 +861,31 @@ where
     let mut active_alternative_id: Option<String> = None;
     let mut projection = initial_projection.clone();
 
-    let mut pending_edit: Option<(u32, StructuralLine)> = None;
+    /// @emoji 🕰️ An `edit` header line's fields, held until its trailing indented op-lines are all
+    /// read (its final `Edit` can only be built once `forwards` — and therefore `backwards`/
+    /// `operation_meta`, both computed by replaying against `projection` — are known).
+    struct PendingEdit {
+        line_no: u32,
+        id: String,
+        actor: Option<String>,
+        started_at: String,
+        finished_at: Option<String>,
+        coalesce_key: Option<String>,
+        description: Option<String>,
+    }
+    let mut pending_edit: Option<PendingEdit> = None;
     let mut pending_forwards: Vec<Operation> = Vec::new();
 
     let flush_pending_edit =
-        |pending_edit: &mut Option<(u32, StructuralLine)>, pending_forwards: &mut Vec<Operation>, edits: &mut Vec<Edit<Operation>>, projection: &mut P| -> Result<(), TextError> {
-            let Some((line_no, header)) = pending_edit.take() else {
+        |pending_edit: &mut Option<PendingEdit>, pending_forwards: &mut Vec<Operation>, edits: &mut Vec<Edit<Operation>>, projection: &mut P| -> Result<(), TextError> {
+            let Some(header) = pending_edit.take() else {
                 return Ok(());
             };
             let forwards = std::mem::take(pending_forwards);
             let mut backwards = Vec::with_capacity(forwards.len());
             let mut operation_meta = Vec::with_capacity(forwards.len());
             for operation in &forwards {
-                operation.validate(projection).map_err(|message| TextError::new(message, TextSpan::at(line_no, 1)))?;
+                operation.validate(projection).map_err(|message| TextError::new(message, TextSpan::at(header.line_no, 1)))?;
                 let mut back = operation.backwards(projection);
                 back.reverse();
                 backwards.extend(back);
@@ -943,23 +900,17 @@ where
                 });
                 *projection = apply_operation(projection, operation);
             }
-            let id = field(&header.fields, "id", line_no)?.to_string();
-            let actor = optional_field(&header.fields, "actor").map(|value| value.to_string());
-            let started_at = field(&header.fields, "started", line_no)?.to_string();
-            let finished_at = optional_field(&header.fields, "finished").map(|value| value.to_string());
-            let coalesce_key = optional_field(&header.fields, "key").map(|value| value.to_string());
-            let description = header.text.filter(|text| text != "-");
             edits.push(Edit {
-                id,
-                actor,
+                id: header.id,
+                actor: header.actor,
                 forwards,
                 backwards,
                 operation_meta,
-                description,
-                coalesce_key,
+                description: header.description,
+                coalesce_key: header.coalesce_key,
                 sequence_number: edits.len() as i32 + 1,
-                started_at,
-                finished_at,
+                started_at: header.started_at,
+                finished_at: header.finished_at,
             });
             Ok(())
         };
@@ -977,46 +928,34 @@ where
             continue;
         }
         flush_pending_edit(&mut pending_edit, &mut pending_forwards, &mut edits, &mut projection)?;
-        let structural = parse_structural_line(raw_line, line_no)?;
-        match structural.kind.as_str() {
-            "@doc" => {
-                schema = field(&structural.fields, "schema", line_no)?.to_string();
-                id = field(&structural.fields, "id", line_no)?.to_string();
+        let line = OpsHeaderLine::parse_op(trimmed).map_err(|error| TextError::new(error.message, TextSpan::at(line_no, error.span.column)))?;
+        match line {
+            OpsHeaderLine::Doc { id: doc_id, schema: doc_schema } => {
+                schema = doc_schema;
+                id = doc_id;
             }
-            "@edit" => {
-                pending_edit = Some((line_no, structural));
+            OpsHeaderLine::Edit { id: edit_id, started, actor, finished, key, description } => {
+                pending_edit = Some(PendingEdit { line_no, id: edit_id, actor, started_at: started, finished_at: finished, coalesce_key: key, description });
                 pending_forwards = Vec::new();
             }
-            "@change" => {
-                changes.push(Change {
-                    id: field(&structural.fields, "id", line_no)?.to_string(),
-                    edit_ids: split_ids(field(&structural.fields, "edits", line_no)?),
-                    description: structural.text.clone().filter(|text| text != "-"),
-                    saved_at: field(&structural.fields, "saved", line_no)?.to_string(),
-                });
+            OpsHeaderLine::Change { id: change_id, saved, edits: edit_ids, description } => {
+                changes.push(Change { id: change_id, edit_ids, description, saved_at: saved });
             }
-            "@checkpoint" => {
+            OpsHeaderLine::Checkpoint { id: checkpoint_id, at, changes: change_ids, parent, by, message } => {
                 checkpoints.push(Checkpoint {
-                    id: field(&structural.fields, "id", line_no)?.to_string(),
-                    change_ids: split_ids(field(&structural.fields, "changes", line_no)?),
-                    parent_id: optional_field(&structural.fields, "parent").map(|value| value.to_string()),
-                    authors: parse_authors(optional_field(&structural.fields, "by").unwrap_or("-")),
-                    message: structural.text.clone().filter(|text| text != "-"),
-                    timestamp: field(&structural.fields, "at", line_no)?.to_string(),
+                    id: checkpoint_id,
+                    change_ids,
+                    parent_id: parent,
+                    authors: by.into_iter().map(Author::from).collect(),
+                    message,
+                    timestamp: at,
                 });
             }
-            "@alternative" => {
-                alternatives.push(Alternative {
-                    id: field(&structural.fields, "id", line_no)?.to_string(),
-                    name: structural.text.clone().unwrap_or_default(),
-                    checkpoint_ids: split_ids(field(&structural.fields, "checkpoints", line_no)?),
-                });
+            OpsHeaderLine::Alternative { id: alternative_id, name, checkpoints: checkpoint_ids } => {
+                alternatives.push(Alternative { id: alternative_id, name, checkpoint_ids });
             }
-            "@active" => {
-                active_alternative_id = Some(field(&structural.fields, "id", line_no)?.to_string());
-            }
-            other => {
-                return Err(TextError::new(format!("unknown structural line kind '{other}'"), TextSpan::at(line_no, 1)));
+            OpsHeaderLine::Active { id: active_id } => {
+                active_alternative_id = Some(active_id);
             }
         }
     }
@@ -4304,7 +4243,7 @@ mod tests {
             .expect("apply");
         let edit = store.envelope().vcs.edits.last().expect("edit");
         let printed = print_edit_lines(edit).expect("print edit lines");
-        assert!(printed.starts_with("@edit id="));
+        assert!(printed.starts_with("edit "), "got {printed:?}");
         assert!(printed.contains("\n  set-n n=1\n"));
     }
 
@@ -4335,7 +4274,7 @@ mod tests {
     fn parse_document_text_rejects_invalid_op_line_with_span() {
         let files = DocumentTextFiles {
             dsl: "n=0\n".to_string(),
-            ops: "@doc schema=demo/v1 id=demo\n@edit id=e1 actor=- started=1 finished=- key=- \"-\"\n  not-an-op\n".to_string(),
+            ops: "doc demo schema=demo/v1\nedit e1 started=\"1\"\n  not-an-op\n".to_string(),
         };
         let error = parse_document_text::<DemoProjection, DemoOperation>(&files.dsl, &files.ops).unwrap_err();
         assert_eq!(error.span.line, 3);
@@ -4793,103 +4732,74 @@ mod tests {
 
     //#region 🔖TextFormatHelpers
     #[test]
-    fn split_and_join_ids_round_trip_the_dash_sentinel_and_lists() {
-        assert_eq!(split_ids("-"), Vec::<String>::new());
-        assert_eq!(split_ids("a,b,c"), vec!["a".to_string(), "b".to_string(), "c".to_string()]);
-        assert_eq!(join_ids(&[]), "-");
-        assert_eq!(join_ids(&["a".to_string(), "b".to_string()]), "a,b");
+    fn ops_author_conversion_drops_avatar_matching_the_ops_text_format() {
+        let author = Author { id: "a1".into(), name: "Alice".into(), avatar: Some("http://example/a1.png".into()) };
+        let round_tripped: Author = OpsAuthor::from(&author).into();
+        assert_eq!(round_tripped, Author { id: "a1".into(), name: "Alice".into(), avatar: None }, "OpsAuthor never carries avatar — it is not part of the .ops text format");
     }
 
     #[test]
-    fn escape_and_unescape_id_component_round_trip_delimiter_characters() {
-        let raw = "we:ird,id%with/delims";
-        let escaped = escape_id_component(raw);
-        assert!(!escaped.contains(',') && !escaped.contains(':'), "delimiters must be escaped away: {escaped}");
-        assert_eq!(unescape_id_component(&escaped), raw);
+    fn ops_header_line_checkpoint_round_trips_including_delimiter_and_quote_characters_in_authors() {
+        let header = OpsHeaderLine::Checkpoint {
+            id: "c1".to_string(),
+            at: "18".to_string(),
+            changes: vec!["ch1".to_string(), "ch2".to_string()],
+            parent: None,
+            by: vec![
+                OpsAuthor { id: "a:1,x".to_string(), name: "Alice, A. \"the great\"".to_string() },
+                OpsAuthor { id: "b2".to_string(), name: "Bob".to_string() },
+            ],
+            message: Some("first \"checkpoint\"".to_string()),
+        };
+        let printed = header.print_op();
+        assert!(!printed.contains('\n'), "print_op must be one line: {printed:?}");
+        assert!(!printed.contains("parent="), "an absent optional field must be omitted, not printed as a '-' placeholder: {printed}");
+        let parsed = OpsHeaderLine::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op failed for {printed:?}: {e}"));
+        assert_eq!(parsed, header, "OpsHeaderLine::Checkpoint round trip diverged for {printed:?}");
     }
 
     #[test]
-    fn print_and_parse_authors_round_trip_including_delimiter_characters_and_dash() {
-        assert_eq!(parse_authors("-"), Vec::new());
-        let authors = vec![
-            Author { id: "a:1,x".into(), name: "Alice, A.".into(), avatar: None },
-            Author { id: "b2".into(), name: "Bob".into(), avatar: None },
-        ];
-        let printed = print_authors(&authors);
-        let parsed = parse_authors(&printed);
-        let expected: Vec<Author> = authors
-            .into_iter()
-            .map(|author| Author { avatar: None, ..author })
-            .collect();
-        assert_eq!(parsed, expected, "author id/name delimiter characters survive the print/parse round trip");
+    fn ops_header_line_edit_round_trips_including_a_quoted_description() {
+        let header = OpsHeaderLine::Edit {
+            id: "e1".to_string(),
+            started: "1".to_string(),
+            actor: None,
+            finished: None,
+            key: None,
+            description: Some("hello \"world\"".to_string()),
+        };
+        let printed = header.print_op();
+        assert!(!printed.contains('\n'), "print_op must be one line: {printed:?}");
+        assert!(!printed.contains("actor="), "an absent optional field must be omitted: {printed}");
+        let parsed = OpsHeaderLine::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op failed for {printed:?}: {e}"));
+        assert_eq!(parsed, header, "OpsHeaderLine::Edit round trip diverged for {printed:?}");
     }
 
     #[test]
-    fn find_unescaped_trailing_quote_distinguishes_escaped_from_real_closing_quotes() {
-        let ends_in_escaped_quote: Vec<char> = r#"head \""#.chars().collect();
-        assert_eq!(find_unescaped_trailing_quote(&ends_in_escaped_quote), None, "a lone escaped quote is not a real closing quote");
-
-        let real_quoted: Vec<char> = r#"head "body""#.chars().collect();
-        let open = find_unescaped_trailing_quote(&real_quoted).expect("a genuinely closed quote is found");
-        assert_eq!(real_quoted[open], '"');
-        assert_eq!(real_quoted[open + 1..real_quoted.len() - 1].iter().collect::<String>(), "body");
-
-        let escaped_backslash_then_quote: Vec<char> = r#"head "a\\""#.chars().collect();
-        assert!(
-            find_unescaped_trailing_quote(&escaped_backslash_then_quote).is_some(),
-            "an even number of backslashes before the quote still counts it as unescaped"
-        );
+    fn ops_header_line_parse_op_rejects_a_line_with_no_known_keyword() {
+        let error = OpsHeaderLine::parse_op("not a structural line").unwrap_err();
+        assert!(error.message.contains("unknown operation line"), "got {error:?}");
     }
 
     #[test]
-    fn parse_structural_line_rejects_a_line_without_leading_at() {
-        let error = parse_structural_line("not a structural line", 3).unwrap_err();
-        assert!(error.message.contains("starting with '@'"), "got {error:?}");
-        assert_eq!(error.span.line, 3);
-    }
-
-    #[test]
-    fn parse_structural_line_rejects_a_token_without_equals() {
-        let error = parse_structural_line("@doc badtoken", 5).unwrap_err();
-        assert!(error.message.contains("key=value"), "got {error:?}");
-        assert_eq!(error.span.line, 5);
-    }
-
-    #[test]
-    fn parse_structural_line_extracts_kind_fields_and_trailing_quoted_text() {
-        let structural = parse_structural_line(r#"@edit id=e1 actor=- "hello \"world\"""#, 1).expect("parses");
-        assert_eq!(structural.kind, "@edit");
-        assert_eq!(structural.fields.get("id").map(String::as_str), Some("e1"));
-        assert_eq!(structural.text.as_deref(), Some(r#"hello "world""#));
-    }
-
-    #[test]
-    fn field_reports_a_missing_key_with_the_line_number() {
-        let fields: HashMap<String, String> = HashMap::new();
-        let error = field(&fields, "id", 7).unwrap_err();
-        assert!(error.message.contains("missing field 'id'"), "got {error:?}");
-        assert_eq!(error.span.line, 7);
-    }
-
-    #[test]
-    fn parse_document_text_rejects_a_structural_line_missing_a_required_field() {
+    fn parse_document_text_rejects_a_header_line_missing_its_required_positional_id() {
         let files = DocumentTextFiles {
             dsl: "n=0\n".to_string(),
-            ops: "@doc schema=demo/v1\n".to_string(),
+            ops: "active\n".to_string(),
         };
         let error = parse_document_text::<DemoProjection, DemoOperation>(&files.dsl, &files.ops).unwrap_err();
-        assert!(error.message.contains("missing field 'id'"), "got {error:?}");
+        assert!(error.message.contains("expected Text"), "got {error:?}");
         assert_eq!(error.span.line, 1);
     }
 
     #[test]
-    fn parse_document_text_rejects_an_unknown_structural_line_kind() {
+    fn parse_document_text_rejects_an_unknown_header_line_keyword() {
         let files = DocumentTextFiles {
             dsl: "n=0\n".to_string(),
-            ops: "@doc schema=demo/v1 id=demo\n@bogus id=x\n".to_string(),
+            ops: "doc demo schema=demo/v1\nbogus id=x\n".to_string(),
         };
         let error = parse_document_text::<DemoProjection, DemoOperation>(&files.dsl, &files.ops).unwrap_err();
-        assert!(error.message.contains("unknown structural line kind"), "got {error:?}");
+        assert!(error.message.contains("unknown operation line"), "got {error:?}");
         assert_eq!(error.span.line, 2);
     }
 
@@ -4908,7 +4818,7 @@ mod tests {
             .expect("create alternative (auto-commits and activates it)");
         assert!(store.envelope().active_alternative_id.is_some(), "precondition: an alternative is active");
         let files = print_document_text(store.envelope()).expect("print document text");
-        assert!(files.ops.contains("@active id="), "an active alternative must print an @active record");
+        assert!(files.ops.lines().any(|line| line.starts_with("active ")), "an active alternative must print an `active` header line: {}", files.ops);
         test_support::assert_document_text_round_trip(&store);
     }
     //#endregion 🔖TextFormatHelpers

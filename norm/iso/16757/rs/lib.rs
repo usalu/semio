@@ -50,6 +50,11 @@ pub struct LocalizedText {
 pub struct Names {
     pub preferred: LocalizedText,
     pub short_name: Option<String>,
+    // Not `#[dsl(table)]`: `Names` is embedded in several table ROW types (`ProductGroup`,
+    // `ProductClass`, `Product`, `Subject`, ...), and `dsl_schema`'s `Shape::Table` does not yet
+    // support a table nested inside another table's row (the printer drops the nested field's own
+    // keyword, and the parser then runs away past `max_nodes` re-reading it) — plain `Shape::List`
+    // here instead; see the analogous `CatalogueProduct.records` note in `norm_vdi_3805`.
     pub alternatives: Vec<LocalizedText>,
 }
 
@@ -144,10 +149,10 @@ fn renormalize_whole_number_floats(value: serde_json::Value) -> serde_json::Valu
 /// ∅ Value availability states.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 pub enum NullState {
-    #[dsl(key = "unavailable")]
     Unavailable,
-    #[dsl(key = "unknown")]
     Unknown,
+    /// 🔡 `NotApplicable` auto-kebabs to `not-applicable`; kept camelCase to match this crate's
+    /// ISO-16757-native external property naming convention (see `SubjectKind`/`RelationshipKind`).
     #[dsl(key = "notApplicable")]
     NotApplicable,
 }
@@ -263,13 +268,9 @@ pub mod part_1 {
     /// 📊 Property kind per Part 1 §5.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
     pub enum PropertyKind {
-        #[dsl(key = "static")]
         Static,
-        #[dsl(key = "dynamic")]
         Dynamic,
-        #[dsl(key = "selection")]
         Selection,
-        #[dsl(key = "external")]
         External,
     }
 
@@ -351,14 +352,21 @@ pub mod part_1 {
         pub metadata: CatalogueMetadata,
         pub manufacturer: Manufacturer,
         pub dictionary: DictionaryRef,
+        #[dsl(table)]
         pub product_groups: Vec<ProductGroup>,
+        #[dsl(table)]
         pub product_classes: Vec<ProductClass>,
+        #[dsl(table)]
         pub product_series: Vec<ProductSeries>,
+        #[dsl(table)]
         pub products: Vec<Product>,
+        #[dsl(table)]
         pub product_indexes: Vec<ProductIndex>,
+        #[dsl(table)]
         pub property_definitions: Vec<PropertyDefinition>,
         pub accessories: BTreeMap<String, Vec<AccessoryRelationship>>,
         pub compositions: BTreeMap<String, Vec<CompositionRelationship>>,
+        #[dsl(table)]
         pub descriptive_objects: Vec<DescriptiveObject>,
         pub extensions: ExtensionBag,
     }
@@ -397,7 +405,6 @@ pub mod part_1 {
     /// ⚖️ Constraint operator.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
     pub enum ConstraintOperator {
-        #[dsl(key = "equal")]
         Equal,
         #[dsl(key = "notEqual")]
         NotEqual,
@@ -582,15 +589,11 @@ pub mod part_2 {
     /// 📐 Space classification per Part 2 §5.3.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
     pub enum SpaceKind {
-        #[dsl(key = "overall")]
         Overall,
-        #[dsl(key = "operation")]
         Operation,
-        #[dsl(key = "access")]
         Access,
         #[dsl(key = "placementTransportation")]
         PlacementTransportation,
-        #[dsl(key = "installation")]
         Installation,
     }
 
@@ -647,33 +650,26 @@ pub mod part_2 {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
     #[serde(tag = "node", rename_all = "camelCase")]
     pub enum GeometryNode {
-        #[dsl(key = "primitive")]
         Primitive { kind: String, parameters: BTreeMap<String, f64> },
-        #[dsl(key = "transform")]
         Transform {
             translation: [f64; 3],
             rotation_deg: [f64; 3],
             #[dsl(statements)]
             child: Box<GeometryNode>,
         },
-        #[dsl(key = "boolean")]
         Boolean {
             operator: BooleanOperator,
             #[dsl(statements, block)]
             children: Vec<GeometryNode>,
         },
-        #[dsl(key = "reference")]
         Reference { geometry_id: String },
     }
 
     /// ➕ Boolean CSG operator.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
     pub enum BooleanOperator {
-        #[dsl(key = "union")]
         Union,
-        #[dsl(key = "intersection")]
         Intersection,
-        #[dsl(key = "difference")]
         Difference,
     }
 
@@ -710,6 +706,7 @@ pub mod part_2 {
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct GeometryCatalogue {
         pub objects: BTreeMap<String, GeometryObject>,
+        #[dsl(table)]
         pub primitive_registry: Vec<PrimitiveKind>,
     }
 
@@ -852,11 +849,8 @@ pub mod part_4 {
         ManufacturerMetadata,
         #[dsl(key = "propertyBlock")]
         PropertyBlock,
-        #[dsl(key = "port")]
         Port,
-        #[dsl(key = "inlet")]
         Inlet,
-        #[dsl(key = "outlet")]
         Outlet,
         #[dsl(key = "inOutlet")]
         InOutlet,
@@ -929,10 +923,15 @@ pub mod part_4 {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct Dictionary {
         pub reference: DictionaryRef,
+        #[dsl(table)]
         pub subjects: Vec<Subject>,
+        #[dsl(table)]
         pub relationships: Vec<Relationship>,
+        #[dsl(table)]
         pub properties: Vec<DictionaryProperty>,
+        #[dsl(table)]
         pub controlled_lists: Vec<ControlledValueList>,
+        #[dsl(table)]
         pub meta_subjects: Vec<Subject>,
     }
 

@@ -166,13 +166,9 @@ pub mod part_1_2 {
     /// 🏗️ Fire resistance rating.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
     pub enum FireRating {
-        #[dsl(key = "r30")]
         R30,
-        #[dsl(key = "r60")]
         R60,
-        #[dsl(key = "r90")]
         R90,
-        #[dsl(key = "r120")]
         R120,
     }
 
@@ -306,11 +302,8 @@ pub mod part_3 {
     /// 💧 Tightness class per EN 1992-3 Table 7.105: required degree of protection against leakage.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
     pub enum TightnessClass {
-        #[dsl(key = "tc0")]
         Tc0,
-        #[dsl(key = "tc1")]
         Tc1,
-        #[dsl(key = "tc2")]
         Tc2,
     }
 
@@ -809,9 +802,10 @@ mod tests {
     fn document_dsl_parse_error_reports_the_real_line_of_the_bad_field() {
         // The engine's per-token spans are a concrete improvement over the old `dsl_kv` printer,
         // whose errors always reported `TextSpan::at(1, 1)` regardless of which line actually
-        // failed. `fire_rating` is the 16th `key value` line in `print_dsl`'s fixed field order.
+        // failed. `fire-rating` (kebab-cased from `fire_rating`) is the 16th `key value` line in
+        // `print_dsl`'s fixed field order.
         let printed = <Document as vcs::DocumentDsl>::print_dsl(&Document::default());
-        let bad = printed.replacen("fire_rating=r60", "fire_rating=not-a-rating", 1);
+        let bad = printed.replacen("fire-rating=r60", "fire-rating=not-a-rating", 1);
         assert_ne!(bad, printed, "fire_rating's printed line must match the literal replaced above");
         let bad_line = bad.lines().position(|l| l.contains("not-a-rating")).expect("bad line present") as u32 + 1;
         let error = <Document as vcs::DocumentDsl>::parse_dsl(&bad).expect_err("an unknown fire_rating tag must fail to parse");

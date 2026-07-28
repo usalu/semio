@@ -206,7 +206,6 @@ pub struct SlotRef {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-#[dsl(keyword = "step")]
 pub struct SequenceStep {
     pub id: String,
     pub kind: String,
@@ -223,21 +222,27 @@ pub struct SequenceStep {
     pub collapsed: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+/// 🔌 Runtime edge shape (id/from/to step ids) — kept plain `Serialize`/`Deserialize` only; the
+/// `.sequence` DSL text and op-log representations go through the `SequenceEdgeDsl` mirror (see
+/// `🔖Dsl`/`🔖OpText`) instead of deriving `dsl::DslRecord` here directly, so this struct (and
+/// every consumer matching on `.from`/`.to` — `connect_steps`, `sync_edges_from_dag`, ...) stays
+/// untouched by the unified `dsl::Wire` connection syntax.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[dsl(keyword = "edge")]
 pub struct SequenceEdge {
     pub id: String,
     pub from: String,
     pub to: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+/// 🧾 Runtime fixture shape — kept plain `Serialize`/`Deserialize` only; see `SequenceFixtureDsl`
+/// (`🔖Dsl` region) for the `.sequence` DSL text mirror (SoA `steps`/`edges` tables, `edges` as
+/// `dsl::Wire` links) and the hand-written `impl vcs::DocumentDsl for SequenceFixture` that
+/// converts through it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "sequence", layout = "lines")]
 pub struct SequenceFixture {
     pub schema: String,
-    #[dsl(block)]
     pub camera: SequenceCamera,
     pub steps: Vec<SequenceStep>,
     pub edges: Vec<SequenceEdge>,
@@ -1557,46 +1562,22 @@ fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: &mut 
 /// orphan rule requires a local type to anchor the impl on, and its OWN outer type isn't local).
 /// {@link Operation for SequenceOperation} below reconstructs a `CollectionOperation` ad hoc per
 /// match arm to keep reusing `vcs`'s generic collection diff/invert helpers.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+/// 🧮 Typed sequence operation — kept plain `Serialize`/`Deserialize` only; see `SequenceOperationDsl`
+/// (`🔖OpText` region) for the op-log DSL text mirror (`EdgesAdd`/`EdgesPatch` items as
+/// `SequenceEdgeDsl`, a `dsl::Wire`-backed connection) and the hand-written `impl vcs::OpText for
+/// SequenceOperation` that converts through it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum SequenceOperation {
-    #[dsl(key = "steps.add")]
-    StepsAdd {
-        index: usize,
-        #[dsl(block)]
-        item: SequenceStep,
-    },
-    #[dsl(key = "steps.remove")]
+    StepsAdd { index: usize, item: SequenceStep },
     StepsRemove { id: String },
-    #[dsl(key = "steps.move")]
     StepsMove { id: String, to_index: usize },
-    #[dsl(key = "steps.patch")]
-    StepsPatch {
-        id: String,
-        #[dsl(block)]
-        patch: SequenceStepPatch,
-    },
-    #[dsl(key = "edges.add")]
-    EdgesAdd {
-        index: usize,
-        #[dsl(block)]
-        item: SequenceEdge,
-    },
-    #[dsl(key = "edges.remove")]
+    StepsPatch { id: String, patch: SequenceStepPatch },
+    EdgesAdd { index: usize, item: SequenceEdge },
     EdgesRemove { id: String },
-    #[dsl(key = "edges.move")]
     EdgesMove { id: String, to_index: usize },
-    #[dsl(key = "edges.patch")]
-    EdgesPatch {
-        id: String,
-        #[dsl(block)]
-        patch: SequenceEdgePatch,
-    },
-    #[dsl(key = "camera.set")]
-    SetCamera {
-        #[dsl(block)]
-        camera: SequenceCamera,
-    },
+    EdgesPatch { id: String, patch: SequenceEdgePatch },
+    SetCamera { camera: SequenceCamera },
 }
 
 /// 🔁 Converts a generic step `CollectionOperation` (as produced by `vcs::invert_collection_operation`)
@@ -1753,6 +1734,150 @@ pub fn sequence_fixture_operations(before: &SequenceFixture, after: &SequenceFix
 }
 // #endregion 🔖Operations
 
+// #region 🔖Dsl
+/// 🔌 DSL-only mirror of `SequenceEdge` — models the `from`/`to` step-id pair as a single unified
+/// `dsl::Wire` literal (`from->to`) instead of two separate string fields, per the unified syntax
+/// law for graph edges/connections. Converts at the `vcs::DocumentDsl`/`vcs::OpText` boundary only
+/// (`sequence_fixture_to_dsl`/`sequence_operation_to_dsl` and their inverses); `SequenceEdge`
+/// itself (and every consumer matching on its `from`/`to` fields directly) is completely
+/// untouched. `SequenceEdgePatch` stays a plain sparse two-`Option<String>` patch rather than a
+/// `Wire` — a `Wire`'s two endpoints are not independently optional, but `EdgesPatch` legitimately
+/// needs to rewire only `from` OR only `to` (see `sequence_fixture_operations`).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct SequenceEdgeDsl {
+    id: String,
+    link: dsl::Wire,
+}
+
+fn sequence_edge_to_dsl(edge: &SequenceEdge) -> SequenceEdgeDsl {
+    let from = dsl::WireNode { id: edge.from.clone(), kind: None, port: None };
+    let to = dsl::WireNode { id: edge.to.clone(), kind: None, port: None };
+    SequenceEdgeDsl { id: edge.id.clone(), link: dsl::Wire(dsl::WireValue { from, edge: Some((true, to)), properties: dsl::DslValue::Object(Vec::new()) }) }
+}
+
+fn sequence_edge_from_dsl(edge: SequenceEdgeDsl) -> Result<SequenceEdge, String> {
+    let dsl::WireValue { from, edge: link, .. } = edge.link.0;
+    let (directed, to) = link.ok_or_else(|| "sequence edge wire literal must have a target".to_string())?;
+    if !directed {
+        return Err("sequence edge wire literal must be directed".into());
+    }
+    Ok(SequenceEdge { id: edge.id, from: from.id, to: to.id })
+}
+
+/// 📄 DSL-only mirror of `SequenceFixture` — `steps`/`edges` print as SoA `#[dsl(table)]` columns
+/// instead of the old array-of-structures form, and `edges` goes through `SequenceEdgeDsl` for the
+/// unified wire syntax. See this region's opening doc comment on `SequenceEdgeDsl`.
+#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+#[dsl(extension = "sequence")]
+#[dsl(layout = "lines")]
+struct SequenceFixtureDsl {
+    schema: String,
+    #[dsl(block)]
+    camera: SequenceCamera,
+    #[dsl(table)]
+    steps: Vec<SequenceStep>,
+    #[dsl(table)]
+    edges: Vec<SequenceEdgeDsl>,
+}
+
+fn sequence_fixture_to_dsl(fixture: &SequenceFixture) -> SequenceFixtureDsl {
+    SequenceFixtureDsl { schema: fixture.schema.clone(), camera: fixture.camera.clone(), steps: fixture.steps.clone(), edges: fixture.edges.iter().map(sequence_edge_to_dsl).collect() }
+}
+
+fn sequence_fixture_dsl_to_fixture(fixture: SequenceFixtureDsl) -> Result<SequenceFixture, String> {
+    Ok(SequenceFixture { schema: fixture.schema, camera: fixture.camera, steps: fixture.steps, edges: fixture.edges.into_iter().map(sequence_edge_from_dsl).collect::<Result<Vec<_>, _>>()? })
+}
+
+impl vcs::DocumentDsl for SequenceFixture {
+    const EXTENSION: &'static str = "sequence";
+
+    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+        let dsl_fixture = <SequenceFixtureDsl as vcs::DocumentDsl>::parse_dsl(text)?;
+        sequence_fixture_dsl_to_fixture(dsl_fixture).map_err(|message| vcs::TextError::new(message, vcs::TextSpan::at(1, 1)))
+    }
+
+    fn print_dsl(&self) -> String {
+        <SequenceFixtureDsl as vcs::DocumentDsl>::print_dsl(&sequence_fixture_to_dsl(self))
+    }
+}
+// #endregion 🔖Dsl
+
+// #region 🔖OpText
+/// ✂️ DSL-only mirror of `SequenceOperation` — identical shape except `EdgesAdd.item` goes through
+/// `SequenceEdgeDsl` for the unified wire syntax (see `🔖Dsl`'s doc comment on `SequenceEdgeDsl`
+/// for why `EdgesPatch.patch` stays a plain `SequenceEdgePatch`, not a wire).
+#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+enum SequenceOperationDsl {
+    StepsAdd {
+        index: usize,
+        #[dsl(block)]
+        item: SequenceStep,
+    },
+    StepsRemove { id: String },
+    StepsMove { id: String, to_index: usize },
+    StepsPatch {
+        id: String,
+        #[dsl(block)]
+        patch: SequenceStepPatch,
+    },
+    EdgesAdd {
+        index: usize,
+        #[dsl(block)]
+        item: SequenceEdgeDsl,
+    },
+    EdgesRemove { id: String },
+    EdgesMove { id: String, to_index: usize },
+    EdgesPatch {
+        id: String,
+        #[dsl(block)]
+        patch: SequenceEdgePatch,
+    },
+    SetCamera {
+        #[dsl(block)]
+        camera: SequenceCamera,
+    },
+}
+
+fn sequence_operation_to_dsl(operation: &SequenceOperation) -> SequenceOperationDsl {
+    match operation {
+        SequenceOperation::StepsAdd { index, item } => SequenceOperationDsl::StepsAdd { index: *index, item: item.clone() },
+        SequenceOperation::StepsRemove { id } => SequenceOperationDsl::StepsRemove { id: id.clone() },
+        SequenceOperation::StepsMove { id, to_index } => SequenceOperationDsl::StepsMove { id: id.clone(), to_index: *to_index },
+        SequenceOperation::StepsPatch { id, patch } => SequenceOperationDsl::StepsPatch { id: id.clone(), patch: patch.clone() },
+        SequenceOperation::EdgesAdd { index, item } => SequenceOperationDsl::EdgesAdd { index: *index, item: sequence_edge_to_dsl(item) },
+        SequenceOperation::EdgesRemove { id } => SequenceOperationDsl::EdgesRemove { id: id.clone() },
+        SequenceOperation::EdgesMove { id, to_index } => SequenceOperationDsl::EdgesMove { id: id.clone(), to_index: *to_index },
+        SequenceOperation::EdgesPatch { id, patch } => SequenceOperationDsl::EdgesPatch { id: id.clone(), patch: patch.clone() },
+        SequenceOperation::SetCamera { camera } => SequenceOperationDsl::SetCamera { camera: camera.clone() },
+    }
+}
+
+fn sequence_operation_from_dsl(operation: SequenceOperationDsl) -> Result<SequenceOperation, String> {
+    Ok(match operation {
+        SequenceOperationDsl::StepsAdd { index, item } => SequenceOperation::StepsAdd { index, item },
+        SequenceOperationDsl::StepsRemove { id } => SequenceOperation::StepsRemove { id },
+        SequenceOperationDsl::StepsMove { id, to_index } => SequenceOperation::StepsMove { id, to_index },
+        SequenceOperationDsl::StepsPatch { id, patch } => SequenceOperation::StepsPatch { id, patch },
+        SequenceOperationDsl::EdgesAdd { index, item } => SequenceOperation::EdgesAdd { index, item: sequence_edge_from_dsl(item)? },
+        SequenceOperationDsl::EdgesRemove { id } => SequenceOperation::EdgesRemove { id },
+        SequenceOperationDsl::EdgesMove { id, to_index } => SequenceOperation::EdgesMove { id, to_index },
+        SequenceOperationDsl::EdgesPatch { id, patch } => SequenceOperation::EdgesPatch { id, patch },
+        SequenceOperationDsl::SetCamera { camera } => SequenceOperation::SetCamera { camera },
+    })
+}
+
+impl vcs::OpText for SequenceOperation {
+    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+        let dsl_operation = <SequenceOperationDsl as vcs::OpText>::parse_op(line)?;
+        sequence_operation_from_dsl(dsl_operation).map_err(|message| vcs::TextError::new(message, vcs::TextSpan::at(1, 1)))
+    }
+
+    fn print_op(&self) -> String {
+        <SequenceOperationDsl as vcs::OpText>::print_op(&sequence_operation_to_dsl(self))
+    }
+}
+// #endregion 🔖OpText
+
 // #region 🧪OpsTests
 #[cfg(test)]
 mod ops_tests {
@@ -1813,6 +1938,16 @@ mod ops_tests {
     #[test]
     fn dsl_round_trips_default_fixture() {
         vcs::test_support::assert_dsl_round_trip(&default_fixture());
+    }
+
+    /// 📜 `sequence/example/default.sequence` is the handcrafted `.sequence` DSL-text fixture
+    /// (regenerated from `default_fixture()`'s canonical print form) — this is the permanent proof
+    /// that the checked-in fixture still parses and round trips, not a one-time migration script.
+    #[test]
+    fn default_sequence_example_dsl_round_trips() {
+        let text = include_str!("../../example/default.sequence");
+        let fixture = <SequenceFixture as vcs::DocumentDsl>::parse_dsl(text).expect("default.sequence must parse");
+        vcs::test_support::assert_dsl_round_trip(&fixture);
     }
 
     #[test]

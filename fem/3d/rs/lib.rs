@@ -80,10 +80,8 @@ pub struct FemNode {
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum FemElement {
     #[serde(rename_all = "camelCase")]
-    #[dsl(key = "bar")]
     Bar { id: String, start: String, end: String, material_id: String, section_id: String },
     #[serde(rename_all = "camelCase")]
-    #[dsl(key = "frame")]
     Frame { id: String, start: String, end: String, material_id: String, section_id: String, roll: f64 },
 }
 
@@ -132,13 +130,10 @@ pub struct FemSupport {
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum FemLoad {
     #[serde(rename_all = "camelCase")]
-    #[dsl(key = "nodal")]
     Nodal { id: String, node_id: String, dof: FemDof, value: f64 },
     #[serde(rename_all = "camelCase")]
-    #[dsl(key = "memberUdl")]
     MemberUdl { id: String, element_id: String, wx: f64, wy: f64, wz: f64 },
     #[serde(rename_all = "camelCase")]
-    #[dsl(key = "area")]
     Area { id: String, solid_id: String, pressure: f64 },
 }
 
@@ -234,14 +229,21 @@ impl Default for FemCamera {
 #[serde(rename_all = "camelCase")]
 #[dsl(extension = "fem3d", layout = "lines")]
 pub struct Fem3dDocument {
+    #[dsl(table)]
     pub nodes: Vec<FemNode>,
     #[dsl(statements, block)]
     pub elements: Vec<FemElement>,
+    #[dsl(table)]
     pub materials: Vec<FemMaterial>,
+    #[dsl(table)]
     pub sections: Vec<FemSection>,
+    #[dsl(table)]
     pub solids: Vec<FemSolid>,
+    #[dsl(table)]
     pub supports: Vec<FemSupport>,
+    #[dsl(table)]
     pub load_cases: Vec<FemLoadCase>,
+    #[dsl(table)]
     pub combinations: Vec<FemCombination>,
     #[dsl(block)]
     pub analysis: FemAnalysisSettings,
@@ -499,57 +501,38 @@ impl OperationDiff<Fem3dDocument> for Fem3dDiff {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum Fem3dOperation {
-    #[dsl(key = "setNode")]
     SetNode { index: usize, node: FemNode },
-    #[dsl(key = "removeNode")]
     RemoveNode { id: String },
     // `FemElement` is a `DslEnum` (tagged, data-carrying variants), not a `DslRecord`, so it has no
     // `DslField` impl of its own — a bare scalar field can't bind it directly. `#[dsl(statements)]`
     // on a `Box<T>` is the engine's "exactly one required tagged value" shape for that case.
-    #[dsl(key = "setElement")]
     SetElement {
         index: usize,
         #[dsl(statements)]
         element: Box<FemElement>,
     },
-    #[dsl(key = "removeElement")]
     RemoveElement { id: String },
-    #[dsl(key = "setMaterial")]
     SetMaterial { index: usize, material: FemMaterial },
-    #[dsl(key = "removeMaterial")]
     RemoveMaterial { id: String },
-    #[dsl(key = "setSection")]
     SetSection { index: usize, section: FemSection },
-    #[dsl(key = "removeSection")]
     RemoveSection { id: String },
-    #[dsl(key = "setSolid")]
     SetSolid { index: usize, solid: FemSolid },
-    #[dsl(key = "removeSolid")]
     RemoveSolid { id: String },
-    #[dsl(key = "setSupport")]
     SetSupport { index: usize, support: FemSupport },
-    #[dsl(key = "removeSupport")]
     RemoveSupport { id: String },
-    #[dsl(key = "setLoadCase")]
     SetLoadCase { index: usize, load_case: FemLoadCase },
-    #[dsl(key = "removeLoadCase")]
     RemoveLoadCase { id: String },
-    #[dsl(key = "setCombination")]
     SetCombination { index: usize, combination: FemCombination },
-    #[dsl(key = "removeCombination")]
     RemoveCombination { id: String },
-    #[dsl(key = "setCamera")]
     SetCamera {
         #[dsl(block)]
         camera: FemCamera,
     },
-    #[dsl(key = "setAnalysisSettings")]
     SetAnalysisSettings {
         #[dsl(block)]
         settings: FemAnalysisSettings,
     },
     /// 🌍 Replaces the whole document (example import / reset).
-    #[dsl(key = "setDocument")]
     SetDocument {
         #[dsl(block)]
         document: Fem3dDocument,

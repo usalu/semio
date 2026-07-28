@@ -233,9 +233,7 @@ fn port_center_y(node: &DagNodeSpec, port_index: usize, count: usize) -> f64 {
 #[serde(rename_all = "camelCase")]
 pub enum PortShape {
     #[default]
-    #[dsl(key = "semicircle")]
     Semicircle,
-    #[dsl(key = "triangle")]
     Triangle,
 }
 
@@ -244,9 +242,7 @@ pub enum PortShape {
 #[serde(rename_all = "camelCase")]
 pub enum EdgeRouteStyle {
     #[default]
-    #[dsl(key = "bezier")]
     Bezier,
-    #[dsl(key = "sharpSz")]
     SharpSz,
 }
 
@@ -261,7 +257,6 @@ pub struct IoPortSpec {
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub abbreviation: String,
     #[serde(rename = "fullName", default, skip_serializing_if = "String::is_empty")]
-    #[dsl(key = "fullName")]
     pub full_name: String,
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     #[dsl(key = "type")]
@@ -273,7 +268,6 @@ pub struct IoPortSpec {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub connected: Option<bool>,
     #[serde(rename = "resourceKind", skip_serializing_if = "Option::is_none")]
-    #[dsl(key = "resourceKind")]
     pub resource_kind: Option<String>,
     #[serde(default = "default_port_cardinality")]
     pub cardinality: String,
@@ -354,13 +348,9 @@ pub struct DagMedia {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 #[serde(rename_all = "camelCase")]
 pub enum DagMediaKind {
-    #[dsl(key = "image")]
     Image,
-    #[dsl(key = "svg")]
     Svg,
-    #[dsl(key = "pdf")]
     Pdf,
-    #[dsl(key = "video")]
     Video,
 }
 // #endregion 🔖Media
@@ -378,17 +368,13 @@ const DAG_PREVIEW_MIN_SIZE: f64 = 20.0;
 #[serde(rename_all = "camelCase", tag = "variant")]
 pub enum DagPreviewContent {
     #[default]
-    #[dsl(key = "empty")]
     Empty,
-    #[dsl(key = "scalar")]
     Scalar {
         text: String,
     },
-    #[dsl(key = "image")]
     Image {
         src: String,
     },
-    #[dsl(key = "tree")]
     Tree {
         json: serde_json::Value,
     },
@@ -1870,7 +1856,6 @@ pub struct DagFixtureEdge {
     pub source: String,
     pub target: String,
     #[serde(default)]
-    #[dsl(key = "routeStyle")]
     pub route_style: EdgeRouteStyle,
     #[serde(default)]
     pub properties: PropertyBag,
@@ -7171,48 +7156,41 @@ pub type DagStore = DocumentVcsStore<DagDocument, DagOperation>;
 // original unboxed shape and never leave this crate — conversion happens right at this boundary.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum DagNodeKindDsl {
-    #[dsl(key = "computation")]
     Computation {
+        #[dsl(table)]
         inputs: Vec<IoPortSpec>,
+        #[dsl(table)]
         outputs: Vec<IoPortSpec>,
-        #[dsl(key = "variadicInputs")]
         variadic_inputs: bool,
-        #[dsl(key = "variadicOutputs")]
         variadic_outputs: bool,
     },
-    #[dsl(key = "slider")]
     Slider { min: f64, max: f64, step: f64, value: f64, output: IoPortSpec },
-    #[dsl(key = "select")]
     Select { options: Vec<String>, selected: usize, output: IoPortSpec },
-    #[dsl(key = "screen")]
     Screen { media: Option<DagMedia>, input: IoPortSpec },
-    #[dsl(key = "note")]
     Note { text: String, output: IoPortSpec },
-    #[dsl(key = "image")]
     Image { src: String, output: IoPortSpec },
-    #[dsl(key = "preview")]
     Preview {
         #[dsl(statements)]
         content: Box<DagPreviewContent>,
         expanded: Vec<String>,
         input: IoPortSpec,
     },
-    #[dsl(key = "action")]
     Action { label: String, input: IoPortSpec },
-    #[dsl(key = "export")]
     Export { label: String, format: String, input: IoPortSpec },
-    #[dsl(key = "cluster")]
-    Cluster { inputs: Vec<IoPortSpec>, outputs: Vec<IoPortSpec> },
-    #[dsl(key = "appInstance")]
+    Cluster {
+        #[dsl(table)]
+        inputs: Vec<IoPortSpec>,
+        #[dsl(table)]
+        outputs: Vec<IoPortSpec>,
+    },
     AppInstance {
-        #[dsl(key = "instanceId")]
         instance_id: String,
-        #[dsl(key = "programId")]
         program_id: String,
-        #[dsl(key = "appId")]
         app_id: String,
         icon: String,
+        #[dsl(table)]
         inputs: Vec<IoPortSpec>,
+        #[dsl(table)]
         outputs: Vec<IoPortSpec>,
     },
 }
@@ -7265,7 +7243,6 @@ struct DagNodeSpecDsl {
     y: f64,
     width: f64,
     height: f64,
-    #[dsl(key = "operatorKind")]
     operator_kind: Option<String>,
     properties: PropertyBag,
     #[dsl(statements)]
@@ -7333,6 +7310,7 @@ fn dag_node_patch_from_dsl(mirror: DagNodePatchDsl) -> DagNodePatch {
 struct DagDocumentDsl {
     schema: String,
     nodes: Vec<DagNodeSpecDsl>,
+    #[dsl(table)]
     edges: Vec<DagFixtureEdge>,
 }
 
@@ -7367,35 +7345,27 @@ impl vcs::DocumentDsl for DagDocument {
 /// `dsl::DslField` from their own direct `#[derive(dsl::DslRecord)]` above.
 #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
 enum DagOperationDsl {
-    #[dsl(key = "nodesAdd")]
     NodesAdd { index: usize, item: DagNodeSpecDsl },
-    #[dsl(key = "nodesRemove")]
     NodesRemove { id: String },
-    #[dsl(key = "nodesMove")]
     NodesMove {
         id: String,
         #[dsl(key = "to")]
         to_index: usize,
     },
-    #[dsl(key = "nodesPatch")]
     NodesPatch { id: String, patch: DagNodePatchDsl },
-    #[dsl(key = "edgesAdd")]
     EdgesAdd { index: usize, item: DagFixtureEdge },
-    #[dsl(key = "edgesRemove")]
     EdgesRemove { id: String },
-    #[dsl(key = "edgesMove")]
     EdgesMove {
         id: String,
         #[dsl(key = "to")]
         to_index: usize,
     },
-    #[dsl(key = "edgesPatch")]
     EdgesPatch { id: String, patch: DagEdgePatch },
-    #[dsl(key = "setNodes")]
     SetNodes { nodes: Vec<DagNodeSpecDsl> },
-    #[dsl(key = "setEdges")]
-    SetEdges { edges: Vec<DagFixtureEdge> },
-    #[dsl(key = "setDocument")]
+    SetEdges {
+        #[dsl(table)]
+        edges: Vec<DagFixtureEdge>,
+    },
     SetDocument { document: DagDocumentDsl },
 }
 

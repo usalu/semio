@@ -164,16 +164,14 @@ fn default_to_port() -> String {
     String::new()
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SynapseSpec {
     pub id: String,
     pub from: String,
     pub to: String,
-    #[dsl(key = "fromPort")]
     #[serde(default = "default_from_port")]
     pub from_port: String,
-    #[dsl(key = "toPort")]
     #[serde(default = "default_to_port")]
     pub to_port: String,
 }
@@ -4307,15 +4305,12 @@ pub fn flow_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 struct ValueDsl {
     /// 🕳️ Presence-only flag (the payload is never inspected) — `Atom::Null`'s tag.
-    #[dsl(key = "null")]
     null: Option<bool>,
     #[dsl(key = "bool")]
     boolean: Option<bool>,
     #[dsl(key = "int")]
     integer: Option<i64>,
-    #[dsl(key = "decimal")]
     decimal: Option<f64>,
-    #[dsl(key = "text")]
     text: Option<String>,
     #[dsl(key = "dict")]
     dictionary: Option<BTreeMap<String, ValueDsl>>,
@@ -4393,14 +4388,14 @@ fn vec_to_btree_set(items: Vec<String>) -> BTreeSet<String> {
 struct TreeDsl {
     #[dsl(statements, block)]
     neurons: Vec<NeuronNodeDsl>,
-    synapses: Vec<SynapseSpec>,
+    #[dsl(table)]
+    synapses: Vec<SynapseDsl>,
 }
 
 /// 🔵 Local twin of `neural::Neuron` — a one-variant `dsl::DslEnum` (not a plain `DslRecord`) purely
 /// for the mutual-recursion reason documented on `TreeDsl`.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum NeuronNodeDsl {
-    #[dsl(key = "neuron")]
     Neuron {
         id: String,
         kind: String,
@@ -4410,27 +4405,60 @@ enum NeuronNodeDsl {
     },
 }
 
+/// 🔌 DSL-only mirror of `SynapseSpec` (and of `neural::Synapse`, its foreign twin embedded in
+/// `Tree`) — models the `from`/`fromPort` -> `to`/`toPort` connection as a single unified
+/// `dsl::Wire` literal (`from@fromPort->to@toPort`) instead of four separate string fields, per
+/// the unified syntax law for graph edges/connections. Converts at the `vcs::DocumentDsl`/
+/// `vcs::OpText` boundary only (`flow_fixture_to_dsl`/`flow_operation_to_dsl` and their inverses,
+/// plus `tree_to_tree_dsl`/`tree_dsl_to_tree` for the nested neural-tree case); `SynapseSpec`
+/// itself (JSON shape, `tree_from_fixture`, `flow_fixture_operations`, every other consumer
+/// matching on its `from`/`to`/`from_port`/`to_port` fields) is completely untouched.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct SynapseDsl {
+    id: String,
+    link: dsl::Wire,
+}
+
+fn synapse_to_dsl(synapse: &SynapseSpec) -> SynapseDsl {
+    let from = dsl::WireNode { id: synapse.from.clone(), kind: None, port: (!synapse.from_port.is_empty()).then(|| synapse.from_port.clone()) };
+    let to = dsl::WireNode { id: synapse.to.clone(), kind: None, port: (!synapse.to_port.is_empty()).then(|| synapse.to_port.clone()) };
+    SynapseDsl { id: synapse.id.clone(), link: dsl::Wire(dsl::WireValue { from, edge: Some((true, to)), properties: dsl::DslValue::Object(Vec::new()) }) }
+}
+
+fn synapse_from_dsl(synapse: SynapseDsl) -> Result<SynapseSpec, String> {
+    let dsl::WireValue { from, edge, .. } = synapse.link.0;
+    let (directed, to) = edge.ok_or_else(|| "synapse wire literal must have a target".to_string())?;
+    if !directed {
+        return Err("synapse wire literal must be directed".into());
+    }
+    Ok(SynapseSpec { id: synapse.id, from: from.id, to: to.id, from_port: from.port.unwrap_or_default(), to_port: to.port.unwrap_or_default() })
+}
+
 fn tree_to_tree_dsl(tree: &Tree) -> TreeDsl {
     TreeDsl {
         neurons: tree.neurons.iter().map(neuron_to_neuron_node_dsl).collect(),
-        synapses: tree.synapses.iter().map(|synapse| SynapseSpec { id: synapse.id.clone(), from: synapse.from.clone(), to: synapse.to.clone(), from_port: synapse.from_port.clone(), to_port: synapse.to_port.clone() }).collect(),
+        synapses: tree.synapses.iter().map(|synapse| synapse_to_dsl(&SynapseSpec { id: synapse.id.clone(), from: synapse.from.clone(), to: synapse.to.clone(), from_port: synapse.from_port.clone(), to_port: synapse.to_port.clone() })).collect(),
     }
 }
 
-fn tree_dsl_to_tree(tree: TreeDsl) -> Tree {
-    Tree {
-        neurons: tree.neurons.into_iter().map(neuron_node_dsl_to_neuron).collect(),
-        synapses: tree.synapses.into_iter().map(|spec| Synapse { id: spec.id, from: spec.from, to: spec.to, from_port: spec.from_port, to_port: spec.to_port }).collect(),
-    }
+fn tree_dsl_to_tree(tree: TreeDsl) -> Result<Tree, String> {
+    Ok(Tree {
+        neurons: tree.neurons.into_iter().map(neuron_node_dsl_to_neuron).collect::<Result<Vec<_>, _>>()?,
+        synapses: tree.synapses.into_iter().map(|dsl_synapse| synapse_from_dsl(dsl_synapse).map(|spec| Synapse { id: spec.id, from: spec.from, to: spec.to, from_port: spec.from_port, to_port: spec.to_port })).collect::<Result<Vec<_>, _>>()?,
+    })
 }
 
 fn neuron_to_neuron_node_dsl(neuron: &Neuron) -> NeuronNodeDsl {
     NeuronNodeDsl::Neuron { id: neuron.id.clone(), kind: neuron.kind.clone(), params: dictionary_to_option_dsl_map(&neuron.params), tree: neuron.tree.as_deref().map(tree_to_tree_dsl) }
 }
 
-fn neuron_node_dsl_to_neuron(node: NeuronNodeDsl) -> Neuron {
+fn neuron_node_dsl_to_neuron(node: NeuronNodeDsl) -> Result<Neuron, String> {
     let NeuronNodeDsl::Neuron { id, kind, params, tree } = node;
-    Neuron { id, kind, params: option_dsl_map_to_dictionary(params), tree: tree.map(|tree| Box::new(tree_dsl_to_tree(tree))) }
+    let tree = match tree {
+        Some(tree) => Some(Box::new(tree_dsl_to_tree(tree)?)),
+        None => None,
+    };
+    Ok(Neuron { id, kind, params: option_dsl_map_to_dictionary(params), tree })
 }
 
 /// 🎛️ Local twin of `Widget` — a tagged `dsl::DslEnum` mirroring its serde `kind` tags one-for-one.
@@ -4442,37 +4470,25 @@ fn neuron_node_dsl_to_neuron(node: NeuronNodeDsl) -> Neuron {
 /// itself gets relative to `FlowFixture`, just one level further in.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum WidgetDsl {
-    #[dsl(key = "neuron")]
     Neuron {
         id: String,
-        #[dsl(key = "neuronKind")]
         neuron_kind: String,
         params: Option<BTreeMap<String, ValueDsl>>,
-        #[dsl(key = "inputPorts")]
         input_ports: Vec<String>,
-        #[dsl(key = "outputPorts")]
         output_ports: Vec<String>,
         preview: bool,
     },
-    #[dsl(key = "inputSlider")]
     InputSlider { id: String, value: f64, min: f64, max: f64, step: f64 },
-    #[dsl(key = "inputNote")]
     InputNote { id: String, text: String },
-    #[dsl(key = "inputImage")]
     InputImage { id: String, src: String },
-    #[dsl(key = "variable")]
     Variable { id: String, name: String, schema: String },
-    #[dsl(key = "outputPreview")]
     OutputPreview {
         id: String,
         preview: Option<BTreeMap<String, ValueDsl>>,
         expanded: Vec<String>,
     },
-    #[dsl(key = "outputAction")]
     OutputAction { id: String, action: String },
-    #[dsl(key = "outputExport")]
     OutputExport { id: String, format: String },
-    #[dsl(key = "cluster")]
     Cluster {
         id: String,
         name: String,
@@ -4519,8 +4535,8 @@ fn widget_to_widget_dsl(widget: &Widget) -> WidgetDsl {
     }
 }
 
-fn widget_dsl_to_widget(widget: WidgetDsl) -> Widget {
-    match widget {
+fn widget_dsl_to_widget(widget: WidgetDsl) -> Result<Widget, String> {
+    Ok(match widget {
         WidgetDsl::Neuron { id, neuron_kind, params, input_ports, output_ports, preview } => {
             Widget::Neuron { id, neuron_kind, params: option_dsl_map_to_dictionary(params), input_ports, output_ports, preview }
         }
@@ -4531,8 +4547,8 @@ fn widget_dsl_to_widget(widget: WidgetDsl) -> Widget {
         WidgetDsl::OutputPreview { id, preview, expanded } => Widget::OutputPreview { id, preview: option_dsl_map_to_dictionary(preview), expanded: vec_to_btree_set(expanded) },
         WidgetDsl::OutputAction { id, action } => Widget::OutputAction { id, action },
         WidgetDsl::OutputExport { id, format } => Widget::OutputExport { id, format },
-        WidgetDsl::Cluster { id, name, tree, flow } => Widget::Cluster { id, name, tree: tree_dsl_to_tree(tree), flow: serde_json::from_value(flow).unwrap_or_default() },
-    }
+        WidgetDsl::Cluster { id, name, tree, flow } => Widget::Cluster { id, name, tree: tree_dsl_to_tree(tree)?, flow: serde_json::from_value(flow).unwrap_or_default() },
+    })
 }
 
 /// 📄 Local mirror of `FlowFixture` — see this region's opening doc comment for why `widgets:
@@ -4549,23 +4565,31 @@ struct FlowFixtureDsl {
     camera: CameraJson,
     #[dsl(statements, block)]
     widgets: Vec<WidgetDsl>,
-    synapses: Vec<SynapseSpec>,
+    #[dsl(table)]
+    synapses: Vec<SynapseDsl>,
     layout: BTreeMap<String, WidgetLayout>,
 }
 
 fn flow_fixture_to_dsl(fixture: &FlowFixture) -> FlowFixtureDsl {
-    FlowFixtureDsl { schema: fixture.schema.clone(), camera: fixture.camera.clone(), widgets: fixture.widgets.iter().map(widget_to_widget_dsl).collect(), synapses: fixture.synapses.clone(), layout: fixture.layout.clone() }
+    FlowFixtureDsl { schema: fixture.schema.clone(), camera: fixture.camera.clone(), widgets: fixture.widgets.iter().map(widget_to_widget_dsl).collect(), synapses: fixture.synapses.iter().map(synapse_to_dsl).collect(), layout: fixture.layout.clone() }
 }
 
-fn flow_fixture_dsl_to_fixture(fixture: FlowFixtureDsl) -> FlowFixture {
-    FlowFixture { schema: fixture.schema, camera: fixture.camera, widgets: fixture.widgets.into_iter().map(widget_dsl_to_widget).collect(), synapses: fixture.synapses, layout: fixture.layout }
+fn flow_fixture_dsl_to_fixture(fixture: FlowFixtureDsl) -> Result<FlowFixture, String> {
+    Ok(FlowFixture {
+        schema: fixture.schema,
+        camera: fixture.camera,
+        widgets: fixture.widgets.into_iter().map(widget_dsl_to_widget).collect::<Result<Vec<_>, _>>()?,
+        synapses: fixture.synapses.into_iter().map(synapse_from_dsl).collect::<Result<Vec<_>, _>>()?,
+        layout: fixture.layout,
+    })
 }
 
 impl vcs::DocumentDsl for FlowFixture {
     const EXTENSION: &'static str = "flow";
 
     fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        Ok(flow_fixture_dsl_to_fixture(<FlowFixtureDsl as vcs::DocumentDsl>::parse_dsl(text)?))
+        let dsl_fixture = <FlowFixtureDsl as vcs::DocumentDsl>::parse_dsl(text)?;
+        flow_fixture_dsl_to_fixture(dsl_fixture).map_err(|message| vcs::TextError::new(message, vcs::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
@@ -4584,45 +4608,37 @@ impl vcs::DocumentDsl for FlowFixture {
 /// consumer matching on it (`flow_fixture_operations`, `flow/plugin`), is completely untouched.
 #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
 enum FlowOperationDsl {
-    #[dsl(key = "widgets-add")]
     WidgetsAdd {
         index: usize,
         #[dsl(block)]
         item: WidgetDsl,
     },
-    #[dsl(key = "widgets-remove")]
     WidgetsRemove { id: String },
-    #[dsl(key = "widgets-move")]
     WidgetsMove {
         id: String,
         #[dsl(key = "to")]
         to_index: usize,
     },
-    #[dsl(key = "widgets-patch")]
     WidgetsPatch {
         id: String,
         #[dsl(block)]
         patch: WidgetDsl,
     },
-    #[dsl(key = "synapses-add")]
     SynapsesAdd {
         index: usize,
         #[dsl(block)]
-        item: SynapseSpec,
+        item: SynapseDsl,
     },
-    #[dsl(key = "synapses-remove")]
     SynapsesRemove { id: String },
-    #[dsl(key = "synapses-move")]
     SynapsesMove {
         id: String,
         #[dsl(key = "to")]
         to_index: usize,
     },
-    #[dsl(key = "synapses-patch")]
     SynapsesPatch {
         id: String,
         #[dsl(block)]
-        patch: SynapseSpec,
+        patch: SynapseDsl,
     },
     #[dsl(key = "layout")]
     SetLayout { entries: Vec<FlowLayoutEntry> },
@@ -4639,33 +4655,34 @@ fn flow_operation_to_dsl(operation: &FlowOperation) -> FlowOperationDsl {
         FlowOperation::Widgets(CollectionOperation::Remove { id }) => FlowOperationDsl::WidgetsRemove { id: id.clone() },
         FlowOperation::Widgets(CollectionOperation::Move { id, to_index }) => FlowOperationDsl::WidgetsMove { id: id.clone(), to_index: *to_index },
         FlowOperation::Widgets(CollectionOperation::Patch { id, patch }) => FlowOperationDsl::WidgetsPatch { id: id.clone(), patch: widget_to_widget_dsl(patch) },
-        FlowOperation::Synapses(CollectionOperation::Add { index, item }) => FlowOperationDsl::SynapsesAdd { index: *index, item: item.clone() },
+        FlowOperation::Synapses(CollectionOperation::Add { index, item }) => FlowOperationDsl::SynapsesAdd { index: *index, item: synapse_to_dsl(item) },
         FlowOperation::Synapses(CollectionOperation::Remove { id }) => FlowOperationDsl::SynapsesRemove { id: id.clone() },
         FlowOperation::Synapses(CollectionOperation::Move { id, to_index }) => FlowOperationDsl::SynapsesMove { id: id.clone(), to_index: *to_index },
-        FlowOperation::Synapses(CollectionOperation::Patch { id, patch }) => FlowOperationDsl::SynapsesPatch { id: id.clone(), patch: patch.clone() },
+        FlowOperation::Synapses(CollectionOperation::Patch { id, patch }) => FlowOperationDsl::SynapsesPatch { id: id.clone(), patch: synapse_to_dsl(patch) },
         FlowOperation::SetLayout { entries } => FlowOperationDsl::SetLayout { entries: entries.clone() },
         FlowOperation::SetFixture { fixture } => FlowOperationDsl::SetFixture { fixture: flow_fixture_to_dsl(fixture) },
     }
 }
 
-fn flow_operation_from_dsl(operation: FlowOperationDsl) -> FlowOperation {
-    match operation {
-        FlowOperationDsl::WidgetsAdd { index, item } => FlowOperation::Widgets(CollectionOperation::Add { index, item: widget_dsl_to_widget(item) }),
+fn flow_operation_from_dsl(operation: FlowOperationDsl) -> Result<FlowOperation, String> {
+    Ok(match operation {
+        FlowOperationDsl::WidgetsAdd { index, item } => FlowOperation::Widgets(CollectionOperation::Add { index, item: widget_dsl_to_widget(item)? }),
         FlowOperationDsl::WidgetsRemove { id } => FlowOperation::Widgets(CollectionOperation::Remove { id }),
         FlowOperationDsl::WidgetsMove { id, to_index } => FlowOperation::Widgets(CollectionOperation::Move { id, to_index }),
-        FlowOperationDsl::WidgetsPatch { id, patch } => FlowOperation::Widgets(CollectionOperation::Patch { id, patch: widget_dsl_to_widget(patch) }),
-        FlowOperationDsl::SynapsesAdd { index, item } => FlowOperation::Synapses(CollectionOperation::Add { index, item }),
+        FlowOperationDsl::WidgetsPatch { id, patch } => FlowOperation::Widgets(CollectionOperation::Patch { id, patch: widget_dsl_to_widget(patch)? }),
+        FlowOperationDsl::SynapsesAdd { index, item } => FlowOperation::Synapses(CollectionOperation::Add { index, item: synapse_from_dsl(item)? }),
         FlowOperationDsl::SynapsesRemove { id } => FlowOperation::Synapses(CollectionOperation::Remove { id }),
         FlowOperationDsl::SynapsesMove { id, to_index } => FlowOperation::Synapses(CollectionOperation::Move { id, to_index }),
-        FlowOperationDsl::SynapsesPatch { id, patch } => FlowOperation::Synapses(CollectionOperation::Patch { id, patch }),
+        FlowOperationDsl::SynapsesPatch { id, patch } => FlowOperation::Synapses(CollectionOperation::Patch { id, patch: synapse_from_dsl(patch)? }),
         FlowOperationDsl::SetLayout { entries } => FlowOperation::SetLayout { entries },
-        FlowOperationDsl::SetFixture { fixture } => FlowOperation::SetFixture { fixture: flow_fixture_dsl_to_fixture(fixture) },
-    }
+        FlowOperationDsl::SetFixture { fixture } => FlowOperation::SetFixture { fixture: flow_fixture_dsl_to_fixture(fixture)? },
+    })
 }
 
 impl vcs::OpText for FlowOperation {
     fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-        Ok(flow_operation_from_dsl(<FlowOperationDsl as vcs::OpText>::parse_op(line)?))
+        let dsl_operation = <FlowOperationDsl as vcs::OpText>::parse_op(line)?;
+        flow_operation_from_dsl(dsl_operation).map_err(|message| vcs::TextError::new(message, vcs::TextSpan::at(1, 1)))
     }
 
     fn print_op(&self) -> String {

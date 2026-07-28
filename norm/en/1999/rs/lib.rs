@@ -371,7 +371,6 @@ pub struct Document {
     pub m_ed_knm: f64,
     pub a_mm2: f64,
     pub w_el_mm3: f64,
-    #[dsl(ident)]
     pub alloy: String,
     pub chi: f64,
     pub i_t_mm4: f64,

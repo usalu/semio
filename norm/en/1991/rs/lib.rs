@@ -118,11 +118,8 @@ pub mod part_1_2 {
     /// 🔥 Nominal fire exposure curve per EN 1991-1-2 §3.2/Annex B.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
     pub enum FireCurve {
-        #[dsl(key = "standard")]
         Standard,
-        #[dsl(key = "external")]
         External,
-        #[dsl(key = "hydrocarbon")]
         Hydrocarbon,
     }
 

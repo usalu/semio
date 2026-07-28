@@ -2,16 +2,25 @@ schema="flow.fixture"
 camera {
   x=94.75581571737445 y=-97.50833134679668 zoom=1.7844325616011099
 }
-widgets {
-  inputSlider id="height" value=6 min=0 max=10 step=0.5
-  inputSlider id="radius" value=0.5 min=0.1 max=2 step=0.05
-  inputSlider id="sides" value=6 min=3 max=12 step=1
-  neuron id="profile" neuronKind=brep.curve.polygon preview=false inputPorts= [ "radius" "sides" ] outputPorts= [ ] params= [ ]
-  neuron id="extrusion-axis" neuronKind=math.vector preview=false inputPorts= [ "x" "y" "z" ] outputPorts= [ ] params= [ ]
-  neuron id="extrude" neuronKind=brep.solid.extrude preview=true inputPorts= [ "wire" "vector" ] outputPorts= [ ] params= [ ]
-  outputPreview id="column-preview" preview= [ ] expanded= [ ]
-}
-synapses= [ id="e1" from="height" to="extrusion-axis" fromPort="number" toPort="z" id="e2" from="radius" to="profile" fromPort="number" toPort="radius" id="e3" from="sides" to="profile" fromPort="number" toPort="sides" id="e4" from="profile" to="extrude" fromPort="wire" toPort="wire" id="e5" from="extrusion-axis" to="extrude" fromPort="vector" toPort="vector" id="e6" from="extrude" to="column-preview" fromPort="solid" toPort="" ] layout= {
+layout={
   column-preview=x=237.4197774877085 y=-103.14518978933415 extrude=x=34.842068675720895 y=-154.18083645790136 extrusion-axis=x=-65.26327021036892 y=-116.45687403531778 height=x=-197.1913555449187 y=-102.70789997839545 profile=x=-64.49671116929301 y=-163.40310309861746 radius=x=-156.03796288966 y=-177.3373596163105 sides=x=-156.43467044109153 y=-155.28679730672846
 }
-generations= [ ]
+synapses [id:TEXT wire:WIRE] {
+  e1 height@number->extrusion-axis@z
+  e2 radius@number->profile@radius
+  e3 sides@number->profile@sides
+  e4 profile@wire->extrude@wire
+  e5 extrusion-axis@vector->extrude@vector
+  e6 extrude@solid->column-preview
+}
+generations [id:TEXT name:TEXT values:VAL] {
+}
+widgets {
+  input-slider id="height" value=6 min=0 max=10 step=0.5
+  input-slider id="radius" value=0.5 min=0.1 max=2 step=0.05
+  input-slider id="sides" value=6 min=3 max=12 step=1
+  neuron id="profile" neuron-kind=brep.curve.polygon preview=false input-ports=[ "radius" "sides" ] output-ports=[ ] params=[ ]
+  neuron id="extrusion-axis" neuron-kind=math.vector preview=false input-ports=[ "x" "y" "z" ] output-ports=[ ] params=[ ]
+  neuron id="extrude" neuron-kind=brep.solid.extrude preview=true input-ports=[ "wire" "vector" ] output-ports=[ ] params=[ ]
+  output-preview id="column-preview" preview=[ ] expanded=[ ]
+}

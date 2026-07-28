@@ -57,10 +57,8 @@ pub(crate) mod domain {
         pub x: f64,
         #[serde(default)]
         pub y: f64,
-        #[dsl(key = "scaleX")]
         #[serde(default = "default_one")]
         pub scale_x: f64,
-        #[dsl(key = "scaleY")]
         #[serde(default = "default_one")]
         pub scale_y: f64,
         #[serde(default)]
@@ -89,7 +87,6 @@ pub(crate) mod domain {
     #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslEnum)]
     #[serde(tag = "kind", rename_all = "camelCase")]
     pub enum RasterLayerNode {
-        #[dsl(key = "pixel")]
         #[serde(rename = "pixel", rename_all = "camelCase")]
         Pixel {
             id: String,
@@ -111,7 +108,6 @@ pub(crate) mod domain {
             #[dsl(key = "image")]
             image_key: Option<String>,
         },
-        #[dsl(key = "group")]
         #[serde(rename = "group", rename_all = "camelCase")]
         Group {
             id: String,
@@ -131,7 +127,6 @@ pub(crate) mod domain {
             #[dsl(statements, block)]
             children: Vec<RasterLayerNode>,
         },
-        #[dsl(key = "adjustment")]
         #[serde(rename = "adjustment", rename_all = "camelCase")]
         Adjustment {
             id: String,
@@ -450,17 +445,11 @@ pub(crate) mod domain {
     #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslOps)]
     #[serde(tag = "operation", rename_all = "camelCase")]
     pub enum RasterOperation {
-        #[dsl(key = "addLayer")]
         AddLayer { parent_id: Option<String>, index: usize, #[dsl(statements)] layer: Box<RasterLayerNode> },
-        #[dsl(key = "removeLayer")]
         RemoveLayer { #[dsl(key = "id")] layer_id: String },
-        #[dsl(key = "patchLayer")]
         PatchLayer { #[dsl(key = "id")] layer_id: String, #[dsl(block)] patch: RasterLayerPatch },
-        #[dsl(key = "moveLayer")]
         MoveLayer { #[dsl(key = "id")] layer_id: String, #[dsl(key = "parent")] parent_id: Option<String>, index: usize },
-        #[dsl(key = "setCamera")]
         SetCamera { #[dsl(block)] camera: RasterCamera },
-        #[dsl(key = "replaceDocument")]
         ReplaceDocument { #[dsl(block)] document: RasterProjection },
     }
     

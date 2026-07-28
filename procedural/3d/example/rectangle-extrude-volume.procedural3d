@@ -2,16 +2,25 @@ schema="flow.fixture"
 camera {
   x=140 y=-60 zoom=2.2
 }
-widgets {
-  inputSlider id="width" value=2 min=0.1 max=10 step=0.1
-  inputSlider id="height" value=2 min=0.1 max=10 step=0.1
-  inputSlider id="distance" value=3 min=0.1 max=10 step=0.1
-  neuron id="rect" neuronKind=brep.curve.rectangle preview=false inputPorts= [ "width" "height" ] outputPorts= [ ] params= [ ]
-  neuron id="vector" neuronKind=math.vector preview=false inputPorts= [ "x" "y" "z" ] outputPorts= [ ] params= [ ]
-  neuron id="extrude" neuronKind=brep.solid.extrude preview=true inputPorts= [ "wire" "vector" ] outputPorts= [ ] params= [ ]
-  neuron id="volume" neuronKind=brep.measure.volume preview=false inputPorts= [ "geometry" ] outputPorts= [ ] params= [ ]
-}
-synapses= [ id="e1" from="width" to="rect" fromPort="number" toPort="width" id="e2" from="height" to="rect" fromPort="number" toPort="height" id="e3" from="rect" to="extrude" fromPort="wire" toPort="wire" id="e4" from="distance" to="vector" fromPort="number" toPort="z" id="e5" from="vector" to="extrude" fromPort="vector" toPort="vector" id="e6" from="extrude" to="volume" fromPort="solid" toPort="geometry" ] layout= {
+layout={
   distance=x=120 y=20 extrude=x=280 y=-40 height=x=40 y=-20 rect=x=120 y=-40 vector=x=200 y=20 volume=x=360 y=-40 width=x=40 y=-60
 }
-generations= [ ]
+synapses [id:TEXT wire:WIRE] {
+  e1 width@number->rect@width
+  e2 height@number->rect@height
+  e3 rect@wire->extrude@wire
+  e4 distance@number->vector@z
+  e5 vector@vector->extrude@vector
+  e6 extrude@solid->volume@geometry
+}
+generations [id:TEXT name:TEXT values:VAL] {
+}
+widgets {
+  input-slider id="width" value=2 min=0.1 max=10 step=0.1
+  input-slider id="height" value=2 min=0.1 max=10 step=0.1
+  input-slider id="distance" value=3 min=0.1 max=10 step=0.1
+  neuron id="rect" neuron-kind=brep.curve.rectangle preview=false input-ports=[ "width" "height" ] output-ports=[ ] params=[ ]
+  neuron id="vector" neuron-kind=math.vector preview=false input-ports=[ "x" "y" "z" ] output-ports=[ ] params=[ ]
+  neuron id="extrude" neuron-kind=brep.solid.extrude preview=true input-ports=[ "wire" "vector" ] output-ports=[ ] params=[ ]
+  neuron id="volume" neuron-kind=brep.measure.volume preview=false input-ports=[ "geometry" ] output-ports=[ ] params=[ ]
+}

@@ -394,9 +394,9 @@ pub enum EntityRef {
     Edge(String),
 }
 
-/// 🔑 Parse `nodeId:portId` port key.
+/// 🔑 Parse `nodeId@portId` port key (`@` is the unified syntax's one port sigil — `:` is reserved for typing).
 pub fn parse_port_key(key: &str) -> Option<(&str, &str)> {
-    let (node, port) = key.split_once(':')?;
+    let (node, port) = key.split_once('@')?;
     if node.is_empty() || port.is_empty() {
         return None;
     }
@@ -415,7 +415,7 @@ pub fn port_port_id(key: &str) -> Option<&str> {
 
 /// 🏗️ Build a port key.
 pub fn port_key(node_id: &str, port_id: &str) -> String {
-    format!("{node_id}:{port_id}")
+    format!("{node_id}@{port_id}")
 }
 // #endregion 🔖Runtime
 
@@ -908,333 +908,6 @@ impl Operation<GraphFixture> for TrinityGraphOperation {
 //#region 🔖Dsl
 use vcs::{DocumentDsl, OpText, TextError, TextSpan};
 
-//#region 🔖DslLexer
-/// 🔤 One token of the hand-rolled `.trinity` DSL / op-text lexer, shared by `🔖Dsl` and `🔖OpText`.
-#[derive(Clone, Debug, PartialEq)]
-enum DslTok {
-    Ident(String),
-    Number(f64),
-    Str(String),
-    Colon,
-    At,
-    Arrow,
-    Comma,
-    LBrace,
-    RBrace,
-    LBracket,
-    RBracket,
-    Eof,
-}
-
-/// 🔢 A digit-led scanned token is a number only if it is ENTIRELY digits with at most one `.` —
-/// anything else (letters, `-`) means it was actually a UUID-shaped id like `7dc5b737-3b6b-...`.
-fn looks_like_number(text: &str) -> bool {
-    let mut seen_dot = false;
-    !text.is_empty()
-        && text.bytes().all(|b| {
-            if b == b'.' {
-                if seen_dot {
-                    return false;
-                }
-                seen_dot = true;
-                true
-            } else {
-                b.is_ascii_digit()
-            }
-        })
-}
-
-/// 🔎 Tokenizes one line. UUID-shaped ids embed `-` (e.g. `7dc5b737-3b6b-...`) and may start with a
-/// digit, so `-` only starts a number (next char a digit) or the `->` arrow (next char `>`) at a token
-/// boundary, and a digit-led scan is only treated as a number if `looks_like_number` confirms it.
-fn dsl_lex(line: &str, line_no: u32) -> Result<Vec<DslTok>, TextError> {
-    let bytes = line.as_bytes();
-    let mut out = Vec::new();
-    let mut i = 0usize;
-    while i < bytes.len() {
-        let c = bytes[i];
-        if c.is_ascii_whitespace() {
-            i += 1;
-            continue;
-        }
-        match c {
-            b':' => {
-                out.push(DslTok::Colon);
-                i += 1;
-            }
-            b'@' => {
-                out.push(DslTok::At);
-                i += 1;
-            }
-            b',' => {
-                out.push(DslTok::Comma);
-                i += 1;
-            }
-            b'{' => {
-                out.push(DslTok::LBrace);
-                i += 1;
-            }
-            b'}' => {
-                out.push(DslTok::RBrace);
-                i += 1;
-            }
-            b'[' => {
-                out.push(DslTok::LBracket);
-                i += 1;
-            }
-            b']' => {
-                out.push(DslTok::RBracket);
-                i += 1;
-            }
-            b'-' if i + 1 < bytes.len() && bytes[i + 1] == b'>' => {
-                out.push(DslTok::Arrow);
-                i += 2;
-            }
-            b'-' if i + 1 < bytes.len() && bytes[i + 1].is_ascii_digit() => {
-                let start = i;
-                i += 1;
-                while i < bytes.len() && (bytes[i].is_ascii_digit() || bytes[i] == b'.') {
-                    i += 1;
-                }
-                let text = std::str::from_utf8(&bytes[start..i]).expect("ascii digits");
-                let n: f64 = text.parse().map_err(|_| TextError::new(format!("invalid number '{text}'"), TextSpan::at(line_no, start as u32 + 1)))?;
-                out.push(DslTok::Number(n));
-            }
-            b'\'' | b'"' => {
-                let quote = c;
-                i += 1;
-                let mut text = String::new();
-                loop {
-                    if i >= bytes.len() {
-                        return Err(TextError::new("unterminated string", TextSpan::at(line_no, i as u32 + 1)));
-                    }
-                    if bytes[i] == b'\\' && i + 1 < bytes.len() {
-                        match bytes[i + 1] {
-                            b'n' => text.push('\n'),
-                            b'\\' => text.push('\\'),
-                            other if other == quote => text.push(quote as char),
-                            other => {
-                                text.push('\\');
-                                text.push(other as char);
-                            }
-                        }
-                        i += 2;
-                        continue;
-                    }
-                    if bytes[i] == quote {
-                        i += 1;
-                        break;
-                    }
-                    let rest = std::str::from_utf8(&bytes[i..]).unwrap_or("");
-                    let ch = rest.chars().next().unwrap_or('\u{FFFD}');
-                    text.push(ch);
-                    i += ch.len_utf8();
-                }
-                out.push(DslTok::Str(text));
-            }
-            b'0'..=b'9' | b'a'..=b'z' | b'A'..=b'Z' | b'_' => {
-                // 🔀 Digit-led tokens are ambiguous: `96`/`1.2` are numbers, but UUID-shaped ids like
-                // `7dc5b737-3b6b-...` also start with a digit. Scan the maximal ident-or-number run
-                // first, then classify by content (`looks_like_number`) rather than by first char.
-                let start = i;
-                loop {
-                    if i >= bytes.len() {
-                        break;
-                    }
-                    let ch = bytes[i];
-                    if ch.is_ascii_alphanumeric() || ch == b'_' || ch == b'.' {
-                        i += 1;
-                        continue;
-                    }
-                    if ch == b'-' && i + 1 < bytes.len() && bytes[i + 1] != b'>' && (bytes[i + 1].is_ascii_alphanumeric() || bytes[i + 1] == b'_') {
-                        i += 1;
-                        continue;
-                    }
-                    break;
-                }
-                let text = std::str::from_utf8(&bytes[start..i]).expect("scanned bytes are ascii ident/number chars").to_string();
-                if c.is_ascii_digit() && looks_like_number(&text) {
-                    let n: f64 = text.parse().map_err(|_| TextError::new(format!("invalid number '{text}'"), TextSpan::at(line_no, start as u32 + 1)))?;
-                    out.push(DslTok::Number(n));
-                } else {
-                    out.push(DslTok::Ident(text));
-                }
-            }
-            _ => {
-                return Err(TextError::new(format!("unexpected character '{}'", c as char), TextSpan::at(line_no, i as u32 + 1)));
-            }
-        }
-    }
-    out.push(DslTok::Eof);
-    Ok(out)
-}
-
-/// 🧭 Cursor over a lexed line's tokens for the hand-rolled recursive-descent DSL/op-text parsers.
-struct DslParser {
-    tokens: Vec<DslTok>,
-    pos: usize,
-    line_no: u32,
-}
-
-impl DslParser {
-    fn new(tokens: Vec<DslTok>, line_no: u32) -> Self {
-        Self { tokens, pos: 0, line_no }
-    }
-
-    fn peek(&self) -> &DslTok {
-        self.tokens.get(self.pos).unwrap_or(&DslTok::Eof)
-    }
-
-    fn bump(&mut self) -> DslTok {
-        let tok = self.peek().clone();
-        if !matches!(tok, DslTok::Eof) {
-            self.pos += 1;
-        }
-        tok
-    }
-
-    fn err(&self, message: impl Into<String>) -> TextError {
-        TextError::new(message.into(), TextSpan::at(self.line_no, self.pos as u32 + 1))
-    }
-
-    fn expect_tok(&mut self, expected: DslTok, label: &str) -> Result<(), TextError> {
-        let got = self.bump();
-        if std::mem::discriminant(&got) == std::mem::discriminant(&expected) {
-            Ok(())
-        } else {
-            Err(self.err(format!("expected {label}, got {got:?}")))
-        }
-    }
-
-    fn expect_ident(&mut self) -> Result<String, TextError> {
-        match self.bump() {
-            DslTok::Ident(s) => Ok(s),
-            other => Err(self.err(format!("expected identifier, got {other:?}"))),
-        }
-    }
-
-    /// 🧪 Not called by production code anymore (the hand-rolled node/edge/op grammar that used it
-    /// was replaced by the `dsl::` derive engine — see `🔖DslMirrors`), but kept as a general-purpose
-    /// `DslParser` helper alongside `expect_ident`/`expect_tok`, and still exercised directly by
-    /// `dsl_parser_expect_helpers_report_errors_on_mismatch`.
-    fn expect_str(&mut self) -> Result<String, TextError> {
-        match self.bump() {
-            DslTok::Str(s) => Ok(s),
-            other => Err(self.err(format!("expected string, got {other:?}"))),
-        }
-    }
-
-    /// 🧪 See `expect_str`'s doc comment — same status.
-    fn expect_number(&mut self) -> Result<f64, TextError> {
-        match self.bump() {
-            DslTok::Number(n) => Ok(n),
-            other => Err(self.err(format!("expected number, got {other:?}"))),
-        }
-    }
-
-    fn expect_eof(&mut self) -> Result<(), TextError> {
-        if matches!(self.peek(), DslTok::Eof) {
-            Ok(())
-        } else {
-            Err(self.err(format!("unexpected trailing token {:?}", self.peek())))
-        }
-    }
-}
-//#endregion 🔖DslLexer
-
-//#region 🔖DslValue
-/// 📝 Prints a property value using `mathematical_graph_dsl::wire`'s literal style (`'str'`, bare
-/// number/bool/null, `{k: v}`, `[v, v]`). Exposed `pub` so `trinity_rewrite`'s own `RewriteRuleState`
-/// DSL can reuse it for `parameter_bindings` values instead of hand-rolling a second copy.
-pub fn print_property_value(value: &PropertyValue) -> String {
-    match value {
-        PropertyValue::Null => "null".into(),
-        PropertyValue::Bool(b) => b.to_string(),
-        PropertyValue::Number(n) => n.to_string(),
-        PropertyValue::String(s) => format!("'{}'", escape_quoted(s, '\'')),
-        PropertyValue::Object(map) => {
-            let inner = map.iter().map(|(k, v)| format!("{k}: {}", print_property_value(v))).collect::<Vec<_>>().join(", ");
-            format!("{{{inner}}}")
-        }
-        PropertyValue::Array(items) => {
-            let inner = items.iter().map(print_property_value).collect::<Vec<_>>().join(", ");
-            format!("[{inner}]")
-        }
-    }
-}
-
-/// 🔍 Parses one property-value expression, recursing into nested `{...}`/`[...]` — unlike
-/// `mathematical_graph_dsl::wire::dag_from_wire_literal`'s `parse_value`, which only reads scalars,
-/// this is required here: trinity fixtures carry nested object properties (`position: {x, y, z}`).
-fn parse_property_value(p: &mut DslParser) -> Result<PropertyValue, TextError> {
-    match p.bump() {
-        DslTok::Str(s) => Ok(PropertyValue::String(s)),
-        DslTok::Number(n) => Ok(PropertyValue::Number(n)),
-        DslTok::Ident(s) if s == "true" => Ok(PropertyValue::Bool(true)),
-        DslTok::Ident(s) if s == "false" => Ok(PropertyValue::Bool(false)),
-        DslTok::Ident(s) if s == "null" => Ok(PropertyValue::Null),
-        DslTok::LBrace => {
-            let mut map = BTreeMap::new();
-            while !matches!(p.peek(), DslTok::RBrace) {
-                let key = p.expect_ident()?;
-                p.expect_tok(DslTok::Colon, "':'")?;
-                let value = parse_property_value(p)?;
-                map.insert(key, value);
-                if matches!(p.peek(), DslTok::Comma) {
-                    p.bump();
-                }
-            }
-            p.bump();
-            Ok(PropertyValue::Object(map))
-        }
-        DslTok::LBracket => {
-            let mut items = Vec::new();
-            while !matches!(p.peek(), DslTok::RBracket) {
-                items.push(parse_property_value(p)?);
-                if matches!(p.peek(), DslTok::Comma) {
-                    p.bump();
-                }
-            }
-            p.bump();
-            Ok(PropertyValue::Array(items))
-        }
-        other => Err(p.err(format!("expected a property value, got {other:?}"))),
-    }
-}
-
-/// 🔍 Parses a single standalone property-value expression from a whole string. `pub` so
-/// `trinity_rewrite` can decode its `RewriteRuleState.parameter_bindings` values without depending on
-/// this module's private lexer/parser types.
-pub fn parse_property_value_line(text: &str) -> Result<PropertyValue, TextError> {
-    let tokens = dsl_lex(text, 1)?;
-    let mut p = DslParser::new(tokens, 1);
-    let value = parse_property_value(&mut p)?;
-    p.expect_eof()?;
-    Ok(value)
-}
-
-/// ✂️ Still used by `print_property_value`'s `String` case; the rest of the hand-rolled
-/// `.trinity` document/op grammar that used to share this (`print_property_bag`/`quote_text`) was
-/// removed once `GraphFixtureDsl`/`TrinityGraphOperationDsl` (see `🔖DslMirrors`) took over — a
-/// `PropertyBag` field binds directly through the engine's `BTreeMap<String, T: DslField>` blanket
-/// impl now, and every other quoted-text field goes through the engine's own `Shape::Text`.
-fn escape_quoted(value: &str, quote: char) -> String {
-    let mut out = String::with_capacity(value.len());
-    for ch in value.chars() {
-        match ch {
-            '\\' => out.push_str("\\\\"),
-            '\n' => out.push_str("\\n"),
-            c if c == quote => {
-                out.push('\\');
-                out.push(c);
-            }
-            _ => out.push(ch),
-        }
-    }
-    out
-}
-//#endregion 🔖DslValue
-
 //#region 🔖DslMirrors
 /// 🔒 Local twin of `PortDirection` (foreign, re-exported from `mathematical_graph_manifest` and
 /// consumed by `trinity_jack`/`trinity_plugin`/`framework::*` — this crate does not own the freedom
@@ -1243,9 +916,7 @@ fn escape_quoted(value: &str, quote: char) -> String {
 /// `Port`/`PortDsl` boundary via `From`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar)]
 enum PortDirectionDsl {
-    #[dsl(key = "in")]
     In,
-    #[dsl(key = "out")]
     Out,
 }
 
@@ -1337,7 +1008,9 @@ struct GraphFixtureDsl {
     manifest_id: Option<String>,
     #[dsl(block)]
     camera: Camera,
+    #[dsl(table)]
     nodes: Vec<NodeDsl>,
+    #[dsl(table)]
     edges: Vec<Edge>,
     root_node_id: Option<String>,
 }
@@ -1378,9 +1051,7 @@ fn graph_fixture_dsl_to_graph_fixture(parsed: GraphFixtureDsl) -> Result<GraphFi
 /// collections, not a single required field).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar)]
 enum EntityKindDsl {
-    #[dsl(key = "node")]
     Node,
-    #[dsl(key = "edge")]
     Edge,
 }
 
@@ -1423,25 +1094,15 @@ impl From<EntityRefDsl> for EntityRef {
 /// layout, satisfying `OpText::print_op`'s one-line law without any manual escaping.
 #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
 enum TrinityGraphOperationDsl {
-    #[dsl(key = "createNode")]
-    CreateNode { id: String, kind: String, name: String, x: f64, y: f64, width: f64, height: f64, ports: Vec<PortDsl> },
-    #[dsl(key = "deleteNode")]
+    CreateNode { id: String, kind: String, name: String, x: f64, y: f64, width: f64, height: f64, #[dsl(table)] ports: Vec<PortDsl> },
     DeleteNode { id: String },
-    #[dsl(key = "createEdge")]
     CreateEdge { id: String, kind: String, source: String, target: String, properties: PropertyBag },
-    #[dsl(key = "deleteEdge")]
     DeleteEdge { id: String },
-    #[dsl(key = "rename")]
     Rename { id: String, name: String },
-    #[dsl(key = "reposition")]
     Reposition { id: String, x: f64, y: f64 },
-    #[dsl(key = "setDataProperty")]
     SetDataProperty { entity: EntityRefDsl, key: String, value: PropertyValue },
-    #[dsl(key = "clearDataProperty")]
     ClearDataProperty { entity: EntityRefDsl, key: String },
-    #[dsl(key = "setCamera")]
     SetCamera { camera: Camera },
-    #[dsl(key = "setFixture")]
     SetFixture { fixture: GraphFixture },
 }
 
@@ -1633,8 +1294,8 @@ mod tests {
             edges: vec![Edge {
                 id: "e1".into(),
                 kind: "Connection".into(),
-                source: "root:out-a".into(),
-                target: "child:in-a".into(),
+                source: "root@out-a".into(),
+                target: "child@in-a".into(),
                 properties: {
                     let mut p = PropertyBag::new();
                     p.insert("u".into(), PropertyValue::Number(1.2));
@@ -1750,8 +1411,8 @@ mod tests {
                 Edge {
                     id: "e-a".into(),
                     kind: "Connection".into(),
-                    source: "root-a:out".into(),
-                    target: "child-a:in".into(),
+                    source: "root-a@out".into(),
+                    target: "child-a@in".into(),
                     properties: {
                         let mut p = PropertyBag::new();
                         p.insert("u".into(), PropertyValue::Number(2.0));
@@ -1762,8 +1423,8 @@ mod tests {
                 Edge {
                     id: "e-b".into(),
                     kind: "Connection".into(),
-                    source: "root-b:out".into(),
-                    target: "child-b:in".into(),
+                    source: "root-b@out".into(),
+                    target: "child-b@in".into(),
                     properties: {
                         let mut p = PropertyBag::new();
                         p.insert("u".into(), PropertyValue::Number(3.0));
@@ -1985,7 +1646,7 @@ mod tests {
         g.add_node(Node { id: "extra".into(), kind: "Piece".into(), name: "extra".into(), x: 0.0, y: 0.0, width: 10.0, height: 10.0, properties: PropertyBag::new(), ports: vec![] });
         assert!(g.node("extra").is_some());
 
-        g.add_edge(Edge { id: "e2".into(), kind: "Connection".into(), source: "root:out-a".into(), target: "extra:in-a".into(), properties: PropertyBag::new() });
+        g.add_edge(Edge { id: "e2".into(), kind: "Connection".into(), source: "root@out-a".into(), target: "extra@in-a".into(), properties: PropertyBag::new() });
         assert!(g.edge("e2").is_some());
         assert!(g.remove_edge("e2"));
         assert!(!g.remove_edge("e2"));
@@ -2065,8 +1726,8 @@ mod tests {
                 Node { id: "b".into(), kind: "Piece".into(), name: "b".into(), x: 0.0, y: 0.0, width: 10.0, height: 10.0, properties: PropertyBag::new(), ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }] },
             ],
             edges: vec![
-                Edge { id: "ab".into(), kind: "Connection".into(), source: "a:out".into(), target: "b:out".into(), properties: { let mut p = PropertyBag::new(); p.insert("u".into(), PropertyValue::Number(1.0)); p.insert("v".into(), PropertyValue::Number(0.0)); p } },
-                Edge { id: "ba".into(), kind: "Connection".into(), source: "b:out".into(), target: "a:out".into(), properties: PropertyBag::new() },
+                Edge { id: "ab".into(), kind: "Connection".into(), source: "a@out".into(), target: "b@out".into(), properties: { let mut p = PropertyBag::new(); p.insert("u".into(), PropertyValue::Number(1.0)); p.insert("v".into(), PropertyValue::Number(0.0)); p } },
+                Edge { id: "ba".into(), kind: "Connection".into(), source: "b@out".into(), target: "a@out".into(), properties: PropertyBag::new() },
             ],
         };
         let mut g = Graph::from_fixture(fixture).unwrap();
@@ -2077,13 +1738,13 @@ mod tests {
 
     #[test]
     fn port_key_helpers_handle_malformed_keys() {
-        assert_eq!(parse_port_key("node:port"), Some(("node", "port")));
+        assert_eq!(parse_port_key("node@port"), Some(("node", "port")));
         assert_eq!(parse_port_key("noport"), None);
-        assert_eq!(parse_port_key(":port"), None);
-        assert_eq!(parse_port_key("node:"), None);
-        assert_eq!(port_node_id("node:port"), Some("node"));
-        assert_eq!(port_port_id("node:port"), Some("port"));
-        assert_eq!(port_key("a", "b"), "a:b");
+        assert_eq!(parse_port_key("@port"), None);
+        assert_eq!(parse_port_key("node@"), None);
+        assert_eq!(port_node_id("node@port"), Some("node"));
+        assert_eq!(port_port_id("node@port"), Some("port"));
+        assert_eq!(port_key("a", "b"), "a@b");
     }
     //#endregion 🔖GraphAccessorTests
 
@@ -2110,9 +1771,9 @@ mod tests {
     #[test]
     fn graph_op_create_edge_rejects_invalid_port_keys() {
         let fixture = mini_fixture();
-        let bad_source = TrinityGraphOperation::CreateEdge { id: "e2".into(), kind: "Connection".into(), source: "noColon".into(), target: port_key("child", "in-a"), properties: PropertyBag::new() };
+        let bad_source = TrinityGraphOperation::CreateEdge { id: "e2".into(), kind: "Connection".into(), source: "noAt".into(), target: port_key("child", "in-a"), properties: PropertyBag::new() };
         assert!(matches!(validate_trinity_graph_operation(&bad_source, &fixture), Err(TrinityRamError::InvalidSourcePortKey(_))));
-        let bad_target = TrinityGraphOperation::CreateEdge { id: "e3".into(), kind: "Connection".into(), source: port_key("root", "out-a"), target: "noColon".into(), properties: PropertyBag::new() };
+        let bad_target = TrinityGraphOperation::CreateEdge { id: "e3".into(), kind: "Connection".into(), source: port_key("root", "out-a"), target: "noAt".into(), properties: PropertyBag::new() };
         assert!(matches!(validate_trinity_graph_operation(&bad_target, &fixture), Err(TrinityRamError::InvalidTargetPortKey(_))));
     }
 
@@ -2288,94 +1949,6 @@ mod tests {
     //#endregion 🔖TrinityGraphDiffTests
 
     //#region 🔖DslInternalsTests
-    #[test]
-    fn dsl_lex_rejects_unterminated_string() {
-        let err = dsl_lex("name 'unterminated", 1).expect_err("unterminated string");
-        assert_eq!(err.message, "unterminated string");
-    }
-
-    #[test]
-    fn dsl_lex_rejects_unexpected_character() {
-        let err = dsl_lex("name #bogus", 1).expect_err("unexpected char");
-        assert!(err.message.contains("unexpected character"));
-    }
-
-    #[test]
-    fn dsl_lex_handles_escape_sequences_in_strings() {
-        let tokens = dsl_lex(r#"'a\nb\\c\'d'"#, 1).unwrap();
-        assert_eq!(tokens[0], DslTok::Str("a\nb\\c'd".into()));
-    }
-
-    #[test]
-    fn dsl_lex_scans_negative_number_and_arrow() {
-        let tokens = dsl_lex("-5 ->", 1).unwrap();
-        assert_eq!(tokens[0], DslTok::Number(-5.0));
-        assert_eq!(tokens[1], DslTok::Arrow);
-    }
-
-    #[test]
-    fn dsl_lex_treats_uuid_shaped_ids_as_identifiers() {
-        let tokens = dsl_lex("7dc5b737-3b6b-4dbb", 1).unwrap();
-        assert_eq!(tokens[0], DslTok::Ident("7dc5b737-3b6b-4dbb".into()));
-    }
-
-    #[test]
-    fn looks_like_number_rejects_multiple_dots_and_letters() {
-        assert!(looks_like_number("12.5"));
-        assert!(!looks_like_number("12.5.6"));
-        assert!(!looks_like_number("12a"));
-        assert!(!looks_like_number(""));
-    }
-
-    #[test]
-    fn dsl_parser_expect_helpers_report_errors_on_mismatch() {
-        let mut p = DslParser::new(dsl_lex("42", 1).unwrap(), 1);
-        assert!(p.expect_ident().unwrap_err().message.contains("expected identifier"));
-
-        let mut p = DslParser::new(dsl_lex("foo", 1).unwrap(), 1);
-        assert!(p.expect_number().unwrap_err().message.contains("expected number"));
-
-        let mut p = DslParser::new(dsl_lex("foo", 1).unwrap(), 1);
-        assert!(p.expect_str().unwrap_err().message.contains("expected string"));
-
-        let mut p = DslParser::new(dsl_lex("foo", 1).unwrap(), 1);
-        assert!(p.expect_tok(DslTok::Colon, "':'").unwrap_err().message.contains("expected ':'"));
-
-        let mut p = DslParser::new(dsl_lex("foo bar", 1).unwrap(), 1);
-        p.expect_ident().unwrap();
-        assert!(p.expect_eof().unwrap_err().message.contains("unexpected trailing token"));
-    }
-
-    #[test]
-    fn parse_property_value_line_rejects_invalid_value() {
-        let err = parse_property_value_line(":").expect_err("invalid value");
-        assert!(err.message.contains("expected a property value"));
-    }
-
-    #[test]
-    fn parse_property_value_line_round_trips_all_variants() {
-        assert_eq!(parse_property_value_line("true").unwrap(), PropertyValue::Bool(true));
-        assert_eq!(parse_property_value_line("false").unwrap(), PropertyValue::Bool(false));
-        assert_eq!(parse_property_value_line("null").unwrap(), PropertyValue::Null);
-        let array = parse_property_value_line("[1, 2, 'x']").unwrap();
-        assert_eq!(array, PropertyValue::Array(vec![PropertyValue::Number(1.0), PropertyValue::Number(2.0), PropertyValue::String("x".into())]));
-        let object = parse_property_value_line("{a: 1, b: 'y'}").unwrap();
-        let mut expected = BTreeMap::new();
-        expected.insert("a".into(), PropertyValue::Number(1.0));
-        expected.insert("b".into(), PropertyValue::String("y".into()));
-        assert_eq!(object, PropertyValue::Object(expected));
-    }
-
-    #[test]
-    fn print_property_value_covers_all_variants() {
-        assert_eq!(print_property_value(&PropertyValue::Null), "null");
-        assert_eq!(print_property_value(&PropertyValue::Bool(true)), "true");
-        assert_eq!(print_property_value(&PropertyValue::Number(1.5)), "1.5");
-        assert_eq!(print_property_value(&PropertyValue::String("a'b".into())), "'a\\'b'");
-        let array = PropertyValue::Array(vec![PropertyValue::Number(1.0), PropertyValue::Bool(false)]);
-        assert_eq!(print_property_value(&array), "[1, false]");
-    }
-
     #[test]
     fn parse_dsl_rejects_unknown_keyword() {
         // 🔀 The `dsl::` derive engine parses `GraphFixtureDsl` as a structured `key=value` record

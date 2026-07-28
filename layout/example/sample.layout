@@ -1,71 +1,94 @@
-schema=layout.fixture name="Untitled"
+schema=layout.fixture name=Untitled print-target=print
 camera {
   x=0 y=0 zoom=0.5
 }
-preview_camera {
+preview-camera {
   x=0 y=0 zoom=0.5
 }
 grid {
-  baseline_grid=12 baseline_offset=0 snap_to_baseline=true
+  baseline-grid=12 baseline-offset=0 snap-to-baseline=true
 }
-paragraph_styles= [ id=paragraph.body name="Body" font_family="Layout Sans" font_size=12 font_weight=400 leading=14.4 tracking=0 alignment="left" ] character_styles= [ ] stories= [ id=story-1 content="Layout aggregates content from across the semio stack into exportable documents. This frame threads into the second column when overflow occurs." style_runs= [ start=0 end=120 paragraph_style_id="paragraph.body" ] ] links= [ id=link-missing path="assets/site-plan.png" hash="sha256:missing" width=1200 height=800 dpi=72 color_profile="RGB" state="missing" ] parent_pages= [ id=parent-master name="Master" width=595 height=842 layer_ids= [ "layer-parent-bg" ] layers= [ id=layer-parent-bg name="Background" visible=true locked=false object_ids= [ "frame-parent-header" ] ]
+character-styles=[ ] parent-pages=[ id=parent-master name=Master width=595 height=842 layer-ids=[ layer-parent-bg ]
 frames {
-  rect id=frame-parent-header layer_id=layer-parent-bg
+  rect id=frame-parent-header layer-id=layer-parent-bg fill=0.11999999731779099,0.14000000059604645,0.18000000715255737,1
   bounds {
     x=36 y=24 width=523 height=48 rotation=0
   }
-  fill= 0.11999999731779099,0.14000000059604645,0.18000000715255737,1
 }
-] spreads= [ id=spread-1 name="Spread 1" page_ids= [ "page-1" "page-2" ] ] pages= [ id=page-1 name="Page 1" spread_id=spread-1 parent_page_id="parent-master" width=595 height=842
+layers [id:TEXT name:TEXT visible:BOOL locked:BOOL object-ids:LIST] {
+  layer-parent-bg Background true false [ frame-parent-header ]
+}
+] pages=[ id=page-1 name="Page 1" spread-id=spread-1 parent-page-id=parent-master width=595 height=842
 margins {
   top=48 right=36 bottom=48 left=36
 }
 columns {
   count=2 gutter=12
 }
-guides= [ ] layer_ids= [ "layer-1" ] layers= [ id=layer-1 name="Content" visible=true locked=false object_ids= [ "frame-text-1" "frame-text-2" "frame-image-1" ] ]
+layer-ids=[ layer-1 ]
 frames {
-  text id=frame-text-1 layer_id=layer-1
+  text id=frame-text-1 layer-id=layer-1 story-id=story-1 thread-next=frame-text-2 columns=1 wrap-mode=box
   bounds {
     x=36 y=120 width=240 height=200 rotation=0
   }
-  story_id=story-1 thread_next="frame-text-2" columns=1
   inset {
     x=4 y=4 width=232 height=192
   }
-  wrap_mode="box"
-  text id=frame-text-2 layer_id=layer-1
+  text id=frame-text-2 layer-id=layer-1 story-id=story-1 columns=1 wrap-mode=box
   bounds {
     x=288 y=120 width=240 height=120 rotation=0
   }
-  story_id=story-1 columns=1
   inset {
     x=4 y=4 width=232 height=112
   }
-  wrap_mode="box"
-  image id=frame-image-1 layer_id=layer-1
+  image id=frame-image-1 layer-id=layer-1 link-id=link-missing
   bounds {
     x=36 y=360 width=200 height=150 rotation=0
   }
-  link_id=link-missing
 }
-overrides= [ ] id=page-2 name="Page 2" spread_id=spread-1 width=595 height=842
+guides [x:NUM y:NUM width:NUM height:NUM] {
+}
+layers [id:TEXT name:TEXT visible:BOOL locked:BOOL object-ids:LIST] {
+  layer-1 Content true false [ frame-text-1 frame-text-2 frame-image-1 ]
+}
+overrides [object-id:TEXT bounds:BLOCK visible:BOOL locked:BOOL] {
+}
+id=page-2 name="Page 2" spread-id=spread-1 width=595 height=842
 margins {
   top=48 right=36 bottom=48 left=36
 }
 columns {
   count=1 gutter=0
 }
-guides= [ ] layer_ids= [ "layer-2" ] layers= [ id=layer-2 name="Content" visible=true locked=false object_ids= [ "frame-small-text" ] ]
+layer-ids=[ layer-2 ]
 frames {
-  text id=frame-small-text layer_id=layer-2
+  text id=frame-small-text layer-id=layer-2 story-id=story-1 columns=1 wrap-mode=box
   bounds {
     x=400 y=700 width=120 height=40 rotation=0
   }
-  story_id=story-1 columns=1
   inset {
     x=2 y=2 width=116 height=36
   }
-  wrap_mode="box"
 }
-overrides= [ ] ] print_target="print"
+guides [x:NUM y:NUM width:NUM height:NUM] {
+}
+layers [id:TEXT name:TEXT visible:BOOL locked:BOOL object-ids:LIST] {
+  layer-2 Content true false [ frame-small-text ]
+}
+overrides [object-id:TEXT bounds:BLOCK visible:BOOL locked:BOOL] {
+}
+]
+paragraph-styles [id:TEXT name:TEXT font-family:TEXT font-size:NUM font-weight:UINT leading:NUM tracking:NUM alignment:TEXT] {
+  paragraph.body Body "Layout Sans" 12 400 14.4 0 left
+}
+stories [id:TEXT content:TEXT style-runs:TABLE] {
+  story-1 "Layout aggregates content from across the semio stack into exportable documents. This frame threads into the second column when overflow occurs." [start:UINT end:UINT paragraph-style-id:TEXT character-style-id:TEXT] {
+    0 120 paragraph.body _
+  }
+}
+links [id:TEXT path:TEXT hash:TEXT width:UINT height:UINT dpi:UINT color-profile:TEXT state:TEXT proxy-data-url:TEXT] {
+  link-missing assets/site-plan.png "sha256:missing" 1200 800 72 RGB missing _
+}
+spreads [id:TEXT name:TEXT page-ids:LIST] {
+  spread-1 "Spread 1" [ page-1 page-2 ]
+}

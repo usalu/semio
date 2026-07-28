@@ -354,22 +354,6 @@ function emitPaletteTheme(tokens: Tokens): string {
   }
   lines.push("}");
   lines.push("");
-  //#region 🌓Levels
-  const levels = tokens.levels ?? LEVELS_DEFAULT;
-  lines.push("/* 🌓 Level system knobs (ui/styling/tokens.json → levels) — formula in ui.css's [data-level] blocks reads these. */");
-  lines.push(":root {");
-  lines.push(`  --level-shade-step-percent: ${levels.shadeStepPercent}%;`);
-  lines.push(`  --level-element-step-percent: ${levels.elementStepPercent}%;`);
-  lines.push(`  --level-hover-step-percent: ${levels.hoverStepPercent}%;`);
-  lines.push(`  --level-glass-alpha-step: ${levels.glassAlphaStep};`);
-  lines.push(`  --level-glass-blur-step: ${levels.glassBlurStepPx}px;`);
-  lines.push(`  --level-glass-saturate: ${levels.glassSaturate};`);
-  lines.push(`  --level-glass-chrome-alpha-factor: ${levels.glassChromeAlphaFactor};`);
-  lines.push(`  --level-veil-alpha-extra-steps: ${levels.veilAlphaExtraSteps};`);
-  lines.push(`  --level-z-step: ${levels.zStep};`);
-  lines.push("}");
-  lines.push("");
-  //#endregion 🌓Levels
   return lines.join("\n");
 }
 

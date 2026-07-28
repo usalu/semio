@@ -277,15 +277,12 @@ pub fn procedural3d_fixture_operations(before: &FlowFixture, after: &FlowFixture
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 struct ValueDsl {
     /// 🕳️ Presence-only flag (the payload is never inspected) — `Atom::Null`'s tag.
-    #[dsl(key = "null")]
     null: Option<bool>,
     #[dsl(key = "bool")]
     boolean: Option<bool>,
     #[dsl(key = "int")]
     integer: Option<i64>,
-    #[dsl(key = "decimal")]
     decimal: Option<f64>,
-    #[dsl(key = "text")]
     text: Option<String>,
     #[dsl(key = "dict")]
     dictionary: Option<Vec<DictEntryDsl>>,
@@ -377,24 +374,30 @@ fn layout_from_dsl(layout: WidgetLayoutDsl) -> WidgetLayout {
     WidgetLayout { x: layout.x, y: layout.y }
 }
 
-/// 🔗 Local twin of `flow_core::SynapseSpec`.
+/// 🔗 Local twin of `flow_core::SynapseSpec` — a graph edge (`from@fromPort->to@toPort`) via the
+/// engine's unified `dsl::Wire` shape; an empty `from_port`/`to_port` (the "no explicit port" sentinel
+/// the real `SynapseSpec` uses) round-trips through an absent `WireNode::port`.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 struct SynapseSpecDsl {
     id: String,
-    from: String,
-    to: String,
-    #[dsl(key = "fromPort")]
-    from_port: String,
-    #[dsl(key = "toPort")]
-    to_port: String,
+    wire: dsl::Wire,
 }
 
 fn synapse_to_dsl(synapse: &SynapseSpec) -> SynapseSpecDsl {
-    SynapseSpecDsl { id: synapse.id.clone(), from: synapse.from.clone(), to: synapse.to.clone(), from_port: synapse.from_port.clone(), to_port: synapse.to_port.clone() }
+    SynapseSpecDsl {
+        id: synapse.id.clone(),
+        wire: dsl::Wire(dsl::WireValue {
+            from: dsl::WireNode { id: synapse.from.clone(), kind: None, port: (!synapse.from_port.is_empty()).then(|| synapse.from_port.clone()) },
+            edge: Some((true, dsl::WireNode { id: synapse.to.clone(), kind: None, port: (!synapse.to_port.is_empty()).then(|| synapse.to_port.clone()) })),
+            properties: dsl::DslValue::Object(Vec::new()),
+        }),
+    }
 }
 
 fn synapse_from_dsl(synapse: SynapseSpecDsl) -> SynapseSpec {
-    SynapseSpec { id: synapse.id, from: synapse.from, to: synapse.to, from_port: synapse.from_port, to_port: synapse.to_port }
+    let wire = synapse.wire.0;
+    let to = wire.edge.map(|(_, to)| to).unwrap_or_default();
+    SynapseSpec { id: synapse.id, from: wire.from.id, to: to.id, from_port: wire.from.port.unwrap_or_default(), to_port: to.port.unwrap_or_default() }
 }
 
 /// 🎛️ Local twin of `flow_core::Widget` — `Neuron`/`OutputPreview`'s `Dictionary` fields route
@@ -405,33 +408,22 @@ fn synapse_from_dsl(synapse: SynapseSpecDsl) -> SynapseSpec {
 /// instead of a hand-rolled quoted-string re-parse.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum WidgetDsl {
-    #[dsl(key = "neuron")]
     Neuron {
         id: String,
-        #[dsl(key = "neuronKind", ident)]
         neuron_kind: String,
         preview: bool,
-        #[dsl(key = "inputPorts")]
         input_ports: Vec<String>,
-        #[dsl(key = "outputPorts")]
         output_ports: Vec<String>,
+        #[dsl(table)]
         params: Vec<DictEntryDsl>,
     },
-    #[dsl(key = "inputSlider")]
     InputSlider { id: String, value: f64, min: f64, max: f64, step: f64 },
-    #[dsl(key = "inputNote")]
     InputNote { id: String, text: String },
-    #[dsl(key = "inputImage")]
     InputImage { id: String, src: String },
-    #[dsl(key = "variable")]
-    Variable { id: String, name: String, #[dsl(ident)] schema: String },
-    #[dsl(key = "outputPreview")]
-    OutputPreview { id: String, preview: Vec<DictEntryDsl>, expanded: Vec<String> },
-    #[dsl(key = "outputAction")]
+    Variable { id: String, name: String, schema: String },
+    OutputPreview { id: String, #[dsl(table)] preview: Vec<DictEntryDsl>, expanded: Vec<String> },
     OutputAction { id: String, action: String },
-    #[dsl(key = "outputExport")]
-    OutputExport { id: String, #[dsl(ident)] format: String },
-    #[dsl(key = "cluster")]
+    OutputExport { id: String, format: String },
     Cluster { id: String, name: String, tree: serde_json::Value, flow: serde_json::Value },
 }
 
@@ -500,12 +492,13 @@ struct Procedural3dDocumentDsl {
     camera: CameraJsonDsl,
     #[dsl(statements, block)]
     widgets: Vec<WidgetDsl>,
+    #[dsl(table)]
     synapses: Vec<SynapseSpecDsl>,
     layout: BTreeMap<String, WidgetLayoutDsl>,
-    #[dsl(key = "selectedGeneration")]
+    #[dsl(key = "selected-generation")]
     selected_generation_id: Option<String>,
-    #[dsl(key = "previewText")]
     preview_text: Option<String>,
+    #[dsl(table)]
     generations: Vec<FormGenerationDsl>,
 }
 
@@ -559,50 +552,37 @@ impl vcs::DocumentDsl for Procedural3dDocument {
 /// enum-in-enum.
 #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
 enum Procedural3dOperationDsl {
-    #[dsl(key = "set-widget")]
     SetWidget {
         index: usize,
         #[dsl(statements)]
         widget: Box<WidgetDsl>,
     },
-    #[dsl(key = "remove-widget")]
     RemoveWidget { id: String },
-    #[dsl(key = "set-synapse")]
     SetSynapse {
         index: usize,
         #[dsl(block)]
         synapse: SynapseSpecDsl,
     },
-    #[dsl(key = "remove-synapse")]
     RemoveSynapse { id: String },
-    #[dsl(key = "set-layout")]
     SetLayout {
         id: String,
         #[dsl(block)]
         layout: WidgetLayoutDsl,
     },
-    #[dsl(key = "remove-layout")]
     RemoveLayout { id: String },
-    #[dsl(key = "set-camera")]
     SetCamera {
         #[dsl(block)]
         camera: CameraJsonDsl,
     },
-    #[dsl(key = "set-schema")]
     SetSchema { schema: String },
-    #[dsl(key = "generation-add")]
     GenerationAdd {
         #[dsl(block)]
         generation: FormGenerationDsl,
     },
-    #[dsl(key = "generation-remove")]
     GenerationRemove { id: String },
-    #[dsl(key = "generation-rename")]
     GenerationRename { id: String, name: String },
-    #[dsl(key = "generation-update-values")]
     GenerationUpdateValues {
         id: String,
-        #[dsl(key = "questionId")]
         question_id: String,
         value: serde_json::Value,
     },

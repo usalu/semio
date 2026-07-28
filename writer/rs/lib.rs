@@ -61,19 +61,16 @@ mod document_vcs {
         pub camera: WriterCamera,
     }
 
-    /// 📐 Typed content mutation for a `WriterProjection`. `#[dsl(key = ...)]` per variant matches the
-    /// premigration hand-rolled one-line op text exactly (see {@link vcs::OpText}).
+    /// 📐 Typed content mutation for a `WriterProjection`. Each variant's op keyword is the
+    /// auto-derived kebab-case of its own name (`SetText` -> `set-text`, ...) — see {@link vcs::OpText}.
     #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslOps)]
     #[serde(tag = "operation", rename_all = "camelCase")]
     pub enum WriterOperation {
-        #[dsl(key = "setText")]
         SetText { text: String },
-        #[dsl(key = "setCamera")]
         SetCamera {
             #[dsl(block)]
             camera: WriterCamera,
         },
-        #[dsl(key = "setDocument")]
         SetDocument {
             #[dsl(block)]
             document: WriterProjection,
@@ -227,7 +224,7 @@ mod document_vcs {
                 id: "jack".into(),
                 language_id: "jack".into(),
                 uri: "writer://jack".into(),
-                text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = 'core'\nRETURN a.name, b.name".into(),
+                text: "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = \"core\"\nRETURN a.name, b.name".into(),
                 camera: WriterCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             }
         }
@@ -241,13 +238,17 @@ mod document_vcs {
         #[test]
         fn writer_dsl_prints_readable_multiline_text() {
             let printed = jack_projection().print_dsl();
-            assert!(printed.contains("schema=\"writer.document\""));
-            assert!(printed.contains("id=\"jack\""));
-            assert!(printed.contains("language_id=\"jack\""));
+            // Bare-ident-shaped scalars print unquoted (`is_bare_ident`); `writer://jack` contains `:`
+            // and `/`, so it isn't bare and stays quoted.
+            assert!(printed.contains("schema=writer.document"));
+            assert!(printed.contains("id=jack"));
+            assert!(printed.contains("language-id=jack"));
             assert!(printed.contains("uri=\"writer://jack\""));
             assert!(printed.contains("camera {"));
-            // The multiline query text is a single escaped-quoted field (`\n`, not raw newlines).
-            assert!(printed.contains("MATCH (a:Piece)-[r:Connection]->(b:Piece)\\nWHERE a.name = 'core'\\nRETURN a.name, b.name"));
+            // The multiline query text is a single escaped-quoted field (`\n`, not raw newlines); the
+            // embedded Jack string literal uses the unified double-quoting too, so its own `"` is
+            // backslash-escaped one level deeper inside the outer DSL string.
+            assert!(printed.contains("MATCH (a:Piece)-[r:Connection]->(b:Piece)\\nWHERE a.name = \\\"core\\\"\\nRETURN a.name, b.name"));
         }
 
         #[test]

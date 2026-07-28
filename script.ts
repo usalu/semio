@@ -1527,11 +1527,7 @@ const POLICY_ALWAYS_ALLOWED_DEP_PREFIXES = ["framework/", "ui/", "vcs/", "protoc
  * is migrated (see an already-migrated sibling crate's `*_fixture` round-trip test for the pattern).
  */
 const POLICY_JSON_FIXTURE_ALLOWLIST = new Set<string>([
-  "forms/example/building-component.forms.json",
-  "s/example/demo.s.json",
   "lowpoly/example/default.lowpoly.json",
-  "gis/2d/example/reuse.graph.gis.json",
-  "infinite/board/port/directed/dag/example/demo.dag.json",
 ]);
 
 /** 🛡️Path prefixes exempt from the no-JSON-fixture rule structurally — not a technology document fixture (e.g. `coda/`'s `example/` holds a whole simulated ACC project's run/iteration artifacts, unrelated to the dsl/ migration). */

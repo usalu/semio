@@ -206,24 +206,50 @@ export function runJackOnPuzzle3dFixture(fixtureJson: string, query: string): Ja
   return runJackOnBoardFixture(fixtureJson, query);
 }
 
+/** @emoji 🔐 Mirrors `dsl_core::escape_text` (Rust): the one canonical escape scheme for
+ * double-quoted text — `\\ \" \n \r \t` plus `\u{XXXX}` for any other control character. Both
+ * quote styles are accepted on parse by the unified Rust lexer, but printing is always
+ * double-quoted — this TS twin must emit the exact same bytes. */
+function escapeWireText(value: string): string {
+  let out = "";
+  for (const ch of value) {
+    const code = ch.codePointAt(0) ?? 0;
+    if (ch === "\\") out += "\\\\";
+    else if (ch === '"') out += '\\"';
+    else if (ch === "\n") out += "\\n";
+    else if (ch === "\r") out += "\\r";
+    else if (ch === "\t") out += "\\t";
+    else if (code < 0x20) out += `\\u{${code.toString(16)}}`;
+    else out += ch;
+  }
+  return out;
+}
+
+function sortedEntries(properties: Readonly<Record<string, unknown>>): readonly (readonly [string, unknown])[] {
+  return Object.entries(properties).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+}
+
+/** @emoji 🩹 Unified wire syntax: `key=value` (never `key: value`), double-quoted strings with
+ * `dsl_core`'s canonical escape (never single-quoted), keys sorted — mirrors
+ * `dsl_schema::print_dsl_value`/`mathematical_graph_dsl::wire`'s Rust printer byte-for-byte. */
 function formatWirePropertyValue(value: unknown): string {
   if (value == null) return "null";
-  if (typeof value === "string") return `'${value.replace(/'/g, "\\'")}'`;
+  if (typeof value === "string") return `"${escapeWireText(value)}"`;
   if (typeof value === "number" || typeof value === "boolean") return String(value);
-  if (Array.isArray(value)) return `[${value.map(formatWirePropertyValue).join(", ")}]`;
+  if (Array.isArray(value)) return `[ ${value.map(formatWirePropertyValue).join(" ")} ]`;
   if (typeof value === "object") {
-    const entries = Object.entries(value as Record<string, unknown>).map(([key, row]) => `${key}: ${formatWirePropertyValue(row)}`);
-    return `{${entries.join(", ")}}`;
+    const entries = sortedEntries(value as Record<string, unknown>).map(([key, row]) => `${key}=${formatWirePropertyValue(row)}`);
+    return `{ ${entries.join(" ")} }`;
   }
   return "null";
 }
 
 function formatWireProperties(properties: Readonly<Record<string, unknown>> | undefined): string {
   if (!properties || Object.keys(properties).length === 0) return "";
-  const inner = Object.entries(properties)
-    .map(([key, value]) => `${key}: ${formatWirePropertyValue(value)}`)
-    .join(", ");
-  return `{${inner}}`;
+  const inner = sortedEntries(properties)
+    .map(([key, value]) => `${key}=${formatWirePropertyValue(value)}`)
+    .join(" ");
+  return ` { ${inner} }`;
 }
 
 function splitWireEndpoint(endpoint: string): { readonly node: string; readonly port: string } {

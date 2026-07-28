@@ -429,6 +429,7 @@ pub mod host {
         pub active_program_id: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub active_alternative_id: Option<String>,
+        #[dsl(table)]
         pub app_instances: Vec<OsAppInstance>,
         #[dsl(block)]
         pub media_graph: OsMediaGraph,
@@ -436,6 +437,7 @@ pub mod host {
         #[dsl(statements)]
         pub parameters: Vec<OsParameter>,
         #[serde(default)]
+        #[dsl(table)]
         pub parameter_bindings: Vec<OsParameterFieldBinding>,
     }
 
@@ -927,65 +929,51 @@ pub mod host {
     /// `infinite_board_port_directed_dag`'s `DagOperationDsl`.
     #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
     enum OsOperationDsl {
-        #[dsl(key = "set-active-program")]
         SetActiveProgram {
             #[dsl(key = "id")]
             program_id: Option<String>,
         },
-        #[dsl(key = "set-active-alternative")]
         SetActiveAlternative {
             #[dsl(key = "id")]
             alternative_id: Option<String>,
         },
-        #[dsl(key = "spawn-app-instance")]
         SpawnAppInstance { instance: OsAppInstance, position: MediaGraphPosition, #[dsl(key = "node")] node_id: String },
-        #[dsl(key = "remove-app-instance")]
         RemoveAppInstance {
             #[dsl(key = "id")]
             instance_id: String,
         },
-        #[dsl(key = "connect-media-ports")]
         ConnectMediaPorts { edge: OsMediaGraphEdge },
-        #[dsl(key = "disconnect-media-edge")]
         DisconnectMediaEdge {
             #[dsl(key = "id")]
             edge_id: String,
         },
-        #[dsl(key = "move-media-node")]
         MoveMediaNode {
             #[dsl(key = "id")]
             node_id: String,
             x: f64,
             y: f64,
         },
-        #[dsl(key = "patch-app-instance")]
         PatchAppInstance {
             #[dsl(key = "id")]
             instance_id: String,
             label: Option<String>,
         },
-        #[dsl(key = "add-parameter")]
         AddParameter {
             #[dsl(statements)]
             parameter: Box<OsParameter>,
         },
-        #[dsl(key = "remove-parameter")]
         RemoveParameter {
             #[dsl(key = "id")]
             parameter_id: String,
         },
-        #[dsl(key = "patch-parameter")]
         PatchParameter {
             #[dsl(key = "target")]
             parameter_id: String,
             #[dsl(statements)]
             parameter: Box<OsParameter>,
         },
-        #[dsl(key = "bind-parameter-field")]
         BindParameterField { binding: OsParameterFieldBinding },
-        #[dsl(key = "unbind-parameter-field")]
         UnbindParameterField { instance_id: String, field_path: String },
-        #[dsl(key = "sync-parameter-ports")]
         SyncParameterPorts,
     }
 
@@ -2347,7 +2335,6 @@ pub mod instance {
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
     #[serde(tag = "type", rename_all = "lowercase")]
     pub enum OsParameter {
-        #[dsl(key = "numeric")]
         Numeric {
             id: String,
             name: String,
@@ -2359,20 +2346,17 @@ pub mod instance {
             #[serde(skip_serializing_if = "Option::is_none")]
             step: Option<f64>,
         },
-        #[dsl(key = "categorical")]
         Categorical {
             id: String,
             name: String,
             value: String,
             options: Vec<String>,
         },
-        #[dsl(key = "toggle")]
         Toggle {
             id: String,
             name: String,
             value: bool,
         },
-        #[dsl(key = "text")]
         Text {
             id: String,
             name: String,
@@ -3406,7 +3390,9 @@ pub mod media_graph {
     #[serde(rename_all = "camelCase")]
     pub struct OsMediaGraph {
         pub schema: String,
+        #[dsl(table)]
         pub nodes: Vec<OsMediaGraphNode>,
+        #[dsl(table)]
         pub edges: Vec<OsMediaGraphEdge>,
     }
 

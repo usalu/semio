@@ -2,11 +2,16 @@ schema="flow.fixture"
 camera {
   x=0 y=0 zoom=1
 }
+layout={
+}
+synapses [id:TEXT wire:WIRE] {
+  s1 rect@draw.drawing->fill@drawing
+  s2 fill@draw.drawing->preview
+}
+generations [id:TEXT name:TEXT values:VAL] {
+}
 widgets {
-  neuron id="rect" neuronKind=draw.shape.rect preview=true inputPorts= [ ] outputPorts= [ ] params= [ ]
-  neuron id="fill" neuronKind=draw.style.fill preview=true inputPorts= [ ] outputPorts= [ ] params= [ ]
-  outputPreview id="preview" preview= [ ] expanded= [ ]
+  neuron id="rect" neuron-kind=draw.shape.rect preview=true input-ports=[ ] output-ports=[ ] params=[ ]
+  neuron id="fill" neuron-kind=draw.style.fill preview=true input-ports=[ ] output-ports=[ ] params=[ ]
+  output-preview id="preview" preview=[ ] expanded=[ ]
 }
-synapses= [ id="s1" from="rect" to="fill" fromPort="draw.drawing" toPort="drawing" id="s2" from="fill" to="preview" fromPort="draw.drawing" toPort="" ] layout= {
-}
-generations= [ ]

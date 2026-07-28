@@ -734,18 +734,15 @@ pub struct LayerDocument {
 #[serde(rename_all = "camelCase")]
 #[dsl(extension = "din4108", layout = "lines")]
 pub struct Document {
-    #[dsl(ident)]
     pub category: String,
+    #[dsl(table)]
     pub layers: Vec<LayerDocument>,
     pub climate: ClimateZoneDe,
     pub airtightness_n50: f64,
     pub psi_times_l_sum: f64,
     pub rh_int: f64,
-    #[dsl(ident)]
     pub catalog_id: String,
-    #[dsl(ident)]
     pub material_id: String,
-    #[dsl(ident)]
     pub airtightness_class: String,
     pub t_int_c: f64,
     pub solar_absorptance: f64,
@@ -754,9 +751,7 @@ pub struct Document {
     pub moisture_mu_interior: f64,
     pub envelope_area_m2: f64,
     pub bb2_details_conform: bool,
-    #[dsl(ident)]
     pub application_type: String,
-    #[dsl(ident)]
     pub declared_application_class: String,
 }
 
