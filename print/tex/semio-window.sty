@@ -2381,39 +2381,19 @@
   \semio@hierarchy@path@set{\csname the#4\endcsname}%
   \sbox{\semio@window@tab@box}{\semio@heading@chip{#1}{#2}{#5}}%
 
-  % LR-rednum: solid heading bars fill with the level colour (e.g. red), so the
-  % two-tone number (muted grey prefix + dark last level) rendered the prefix
-  % low-contrast on the fill. Render the number single-tone in the chip's own
-  % foreground colour here so "1.2.3.4" stays fully legible on the coloured bar;
-  % outline headings (\semio@heading@pair@outline) keep the two-tone on canvas.
-  \sbox{\semio@window@ctrl@box}{\semio@heading@chip{#1}{#2}{\csname the#4\endcsname}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@chip{#1}{#2}{\semio@heading@kind@number{#3}{#4}}}%
   \setlength{\semio@window@gap@w}{%
     \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
   }%
-  % LR-longtitle: a very long title (e.g. an interview quote as a heading) makes
-  % title+number exceed \linewidth, so the number tab overflowed the right margin
-  % and was clipped. When that happens, keep a minimal connector and scale the
-  % whole bar down to the text width so the number stays legible inside the margin.
-  \ifdim\semio@window@gap@w<2\semio@chrome@padding
-    \setlength{\semio@window@gap@w}{2\semio@chrome@padding}%
-    \semio@heading@row@wrap{%
-      \noindent\resizebox{\linewidth}{!}{%
-        \usebox{\semio@window@tab@box}%
-        \semio@window@header@gap@paint{#1}{#1}%
-        \usebox{\semio@window@ctrl@box}%
-      }%
+  \semio@heading@row@wrap{%
+    \hbox to \linewidth{%
+      \usebox{\semio@window@tab@box}%
+      % Solid heading bars: the chips fill with #1, so the band fills with #1
+      % too (stroke = #1, i.e. seamless) → one continuous coloured bar.
+      \semio@window@header@gap@paint{#1}{#1}%
+      \usebox{\semio@window@ctrl@box}%
     }%
-  \else
-    \semio@heading@row@wrap{%
-      \hbox to \linewidth{%
-        \usebox{\semio@window@tab@box}%
-        % Solid heading bars: the chips fill with #1, so the band fills with #1
-        % too (stroke = #1, i.e. seamless) → one continuous coloured bar.
-        \semio@window@header@gap@paint{#1}{#1}%
-        \usebox{\semio@window@ctrl@box}%
-      }%
-    }%
-  \fi
+  }%
 }
 
 \newcommand{\semio@heading@pair@outline}[5]{%
@@ -2423,26 +2403,13 @@
   \setlength{\semio@window@gap@w}{%
     \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
   }%
-  % LR-longtitle: see \semio@heading@pair — scale a too-wide title+number bar to
-  % the text width so the outline number tab stays inside the right margin.
-  \ifdim\semio@window@gap@w<2\semio@chrome@padding
-    \setlength{\semio@window@gap@w}{2\semio@chrome@padding}%
-    \semio@heading@row@wrap{%
-      \noindent\resizebox{\linewidth}{!}{%
-        \usebox{\semio@window@tab@box}%
-        \semio@window@header@gap@paint@nofill{#1}%
-        \usebox{\semio@window@ctrl@box}%
-      }%
+  \semio@heading@row@wrap{%
+    \hbox to \linewidth{%
+      \usebox{\semio@window@tab@box}%
+      \semio@window@header@gap@paint@nofill{#1}%
+      \usebox{\semio@window@ctrl@box}%
     }%
-  \else
-    \semio@heading@row@wrap{%
-      \hbox to \linewidth{%
-        \usebox{\semio@window@tab@box}%
-        \semio@window@header@gap@paint@nofill{#1}%
-        \usebox{\semio@window@ctrl@box}%
-      }%
-    }%
-  \fi
+  }%
 }
 
 \newcommand{\semio@heading@pair@nofill@num}[4]{%
@@ -2763,13 +2730,6 @@
 % pins every chip to [titleh][0pt]), so \ht+\dp gives exactly the band height and
 % the fill lines up with both chips, long titles and enlarged fonts included.
 \newcommand{\semio@window@header@gap@paint}[2]{%
-  \begingroup
-  \setlength{\semio@window@cap@titleh}{%
-    \dimexpr\ht\semio@window@tab@box+\dp\semio@window@tab@box\relax
-  }%
-  \setlength{\semio@window@cap@body@h}{%
-    \dimexpr\semio@window@cap@titleh-\semio@stroke@hairline\relax
-  }%
   \semio@window@cap@raise{%
     \vbox to \semio@window@cap@titleh{%
       \nointerlineskip
@@ -2782,7 +2742,6 @@
       }%
     }%
   }%
-  \endgroup
 }
 
 % Outline (nofill) headings keep the transparent middle closed only by the
