@@ -49,7 +49,7 @@ required-features = ["native-bin"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-plugin-host = { path = "../../../plugin/host/rs" }
-semio-framework-sync = { path = "../../../sync/rs" }
+store_sync = { path = "../../../../store/sync/rs" }
 vcs = { path = "../../../../vcs/rs" }
 tokio = { version = "1", features = ["sync"], default-features = false }
 ureq = "2.12.1"

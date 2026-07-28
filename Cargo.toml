@@ -26,6 +26,7 @@ members = [
     "puzzle/3d/rs",
     "puzzle/5d/rs",
     "vcs/rs",
+    "store/rs",
     "db/core/rs",
     "db/actor/rs",
     "db/state/rs",
@@ -184,8 +185,8 @@ members = [
     "reasoning/mindmap/plugin/rs",
     "s/plugin/rs",
     "s/rs",
-    "framework/sync/rs",
-    "framework/sync/worker/rs",
+    "store/sync/rs",
+    "store/worker/rs",
     "framework/plugin/host/rs",
     "framework/renderer/wgpu/rs",
     "shooting/rs",
@@ -269,10 +270,12 @@ incremental = true
 codegen-units = 256
 lto = "off"
 
-# LLVM 22's WASM linker crashes in ElemSection::writeBody when the VCS cdylib is
-# split across the workspace-wide 256 codegen units. Keep the fast default for
-# the rest of the workspace and bound this component to a stable shard count.
-[profile.release.package.vcs]
+# LLVM 22's WASM linker crashes in ElemSection::writeBody when a component's cdylib is split
+# across the workspace-wide 256 codegen units. Keep the fast default for the rest of the workspace
+# and bound the affected component to a stable shard count. `vcs` moved off cdylib entirely (pure
+# rlib now — its cdylib/wasm surface moved to `store`, see EXTRACT-STORE-INTO-ITS-OWN-TECHNOLOGY),
+# so only `store` needs this override today.
+[profile.release.package.store]
 codegen-units = 16
 
 # 🧹 RUST-WIDE-CLEAN-REFACTOR-CAMPAIGN baseline. Kept at "warn" (never "deny") in

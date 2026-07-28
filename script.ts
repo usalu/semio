@@ -1524,7 +1524,7 @@ const POLICY_SHARED_DOMAIN_CRATE_ALLOWLIST = new Set<string>(["flow_core", "flow
  * reachable only through the hub servers (and, behind a feature, `db_engine`), enforced by
  * `policyDbServerOnlyBreaches` instead of this always-allowed list.
  */
-const POLICY_ALWAYS_ALLOWED_DEP_PREFIXES = ["framework/", "ui/", "vcs/", "playbook/", "protocol/", "repo/"];
+const POLICY_ALWAYS_ALLOWED_DEP_PREFIXES = ["framework/", "ui/", "vcs/", "store/", "playbook/", "protocol/", "repo/"];
 
 /**
  * 🎫 dsl/ derive-engine migration lock step: technologies whose example/*.json fixture has not yet
@@ -2477,7 +2477,7 @@ const POLICY_DB_DEP_RE = /^(db(?:_[a-z0-9]+)*)\s*=\s*\{[^\n]*?\bpath\s*=\s*"([^"
 /**
  * 📏db/ server-only rule: no `db`/`db_*` family Cargo dependency may live outside `db/` itself, the
  * `os-hub` server (`framework/product/os/hub/`), or a compose hub crate (`compose/**​/hub/**`) — db is
- * server-side storage for the hubs; clients keep local-first backbones (`vcs` + `framework/sync`) and
+ * server-side storage for the hubs; clients keep local-first backbones (`vcs` + `store`) and
  * only ever reach db indirectly over the wire. `POLICY_ALWAYS_ALLOWED_DEP_PREFIXES` deliberately does
  * NOT include `"db/"` (unlike `"protocol/"`) so this stays the one gate that enforces it.
  */
@@ -2498,7 +2498,7 @@ function policyDbServerOnlyBreaches(repoRoot: string): BreachRecord[] {
         kind: "protocol-migration/db-server-only",
         scope: relPath,
         priority: "high",
-        reason: "db is server-side storage for the hubs — only db/ itself, framework/product/os/hub/, and compose's hub crates may depend on a db/db_* crate; clients keep local-first backbones (vcs + framework/sync) and only ever reach db indirectly over the wire.",
+        reason: "db is server-side storage for the hubs — only db/ itself, framework/product/os/hub/, and compose's hub crates may depend on a db/db_* crate; clients keep local-first backbones (vcs + store) and only ever reach db indirectly over the wire.",
         solution: `Remove the "${depName}" dependency from ${relPath}, or if this crate genuinely is a hub server, move/confirm it under db/, framework/product/os/hub/, or a compose/**/hub/** directory.`,
       });
     }

@@ -18,7 +18,7 @@ use semio_framework_core::{ActorId, DocumentDiff, DocumentVersion, InverseOperat
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::sync::{broadcast, mpsc};
-use vcs::{reconcile_alternative, BackboneMessage, ChannelBackbone, ChannelBackboneRemote, DocumentVcsStore, StudioConflict};
+use store::{reconcile_alternative, BackboneMessage, ChannelBackbone, ChannelBackboneRemote, DocumentStore, StudioConflict};
 
 //#region 🔖Errors
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
@@ -210,7 +210,7 @@ fn hub_ws_url(base_url: &str, studio_id: &str, document_id: &str) -> String {
 
 //#region 🔖WireBridge
 /// @emoji 🌉 Converts between this actor's local, schema-agnostic {@link OperationEnvelope}
-/// (`semio_framework_core`, the shape `vcs::DocumentVcsStore`/`ChannelBackbone` speak) and
+/// (`semio_framework_core`, the shape `store::DocumentStore`/`ChannelBackbone` speak) and
 /// `protocol_causal::OperationEnvelope` (the shape `protocol_wire::ClientFrame::Commands`/
 /// `ServerFrame::Commands` carry on the wire). `ActorId`/`DocumentId`/`OperationId` are literally
 /// the same type on both sides (`semio_framework_core` re-exports them from `protocol_core`
@@ -330,7 +330,7 @@ where
     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P>,
 {
-    pub store: DocumentVcsStore<P, Operation>,
+    pub store: DocumentStore<P, Operation>,
     cmd_tx: Option<mpsc::UnboundedSender<DocumentActorMsg>>,
     events: Option<broadcast::Receiver<DocumentEvent>>,
     status: DocumentSyncStatus,
@@ -341,7 +341,7 @@ where
     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
     Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P>,
 {
-    pub fn new(store: DocumentVcsStore<P, Operation>) -> Self {
+    pub fn new(store: DocumentStore<P, Operation>) -> Self {
         Self { store, cmd_tx: None, events: None, status: DocumentSyncStatus::default() }
     }
 
@@ -416,7 +416,7 @@ where
 
 //#region 🔖Host
 /// @emoji 🎛️ The channels {@link DocumentHost::open} hands back to a caller: attach `channel_backbone`
-/// to your `DocumentVcsStore`, and send control messages (or wakes) on `cmd_tx`.
+/// to your `DocumentStore`, and send control messages (or wakes) on `cmd_tx`.
 pub struct DocumentChannels {
     pub cmd_tx: mpsc::UnboundedSender<DocumentActorMsg>,
     /// @emoji 🔗 The store-side backbone end. The caller owns store attachment:
@@ -538,17 +538,17 @@ mod native_actor {
 
     /// @emoji 📁 A folder/file binding's storage driver, keyed for multi-document sqlite or single
     /// pack-backed blob. `Pack` (was `Text`) stores the actor's whole-envelope JSON as a REAL pack
-    /// file + real `.ops` text + a DSL mirror via `vcs::FolderTextStorage::write_pack`/`read_pack` —
+    /// file + real `.ops` text + a DSL mirror via `FolderTextStorage::write_pack`/`read_pack` —
     /// this actor stays `serde_json::Value`-typed end to end (it drains/relays generic backbone
     /// messages, never a concrete `Projection`/`Operation`), so the `schema` string is how it reaches a
-    /// concrete codec: `vcs::document_codec(schema)` looks up the `vcs::DocumentCodec` a real app
+    /// concrete codec: `store::document_codec(schema)` looks up the `store::DocumentCodec` a real app
     /// registered (`register_document_codec_for_app`, wave 2) and does the pack↔envelope-JSON bridging
     /// on this actor's behalf. Replaces the old bug where `.dsl` held a raw envelope-JSON dump and
     /// `.ops` was always written empty (see `read`/`write` below — a missing codec is now a hard
     /// error, never a silent JSON-in-`.dsl` fallback).
     enum FolderEndpoint {
-        Sqlite { storage: vcs::FolderSqliteStorage, document_id: String, schema: String },
-        Pack { storage: vcs::FolderTextStorage, document_id: String, extension: String, schema: String },
+        Sqlite { storage: FolderSqliteStorage, document_id: String, schema: String },
+        Pack { storage: FolderTextStorage, document_id: String, extension: String, schema: String },
     }
 
     impl FolderEndpoint {
@@ -560,7 +560,7 @@ mod native_actor {
             match self {
                 FolderEndpoint::Sqlite { storage, document_id, .. } => storage.read(document_id).map_err(|error| error.to_string()),
                 FolderEndpoint::Pack { storage, document_id, extension, schema } => {
-                    let Some(codec) = vcs::document_codec(schema) else {
+                    let Some(codec) = store::document_codec(schema) else {
                         return Err(format!("no document codec registered for schema {schema:?}"));
                     };
                     if let Some(pack_files) = storage.read_pack(document_id, extension).map_err(|error| error.to_string())? {
@@ -580,7 +580,7 @@ mod native_actor {
             match self {
                 FolderEndpoint::Sqlite { storage, document_id, schema } => storage.write(document_id, schema, json).map_err(|error| error.to_string()),
                 FolderEndpoint::Pack { storage, document_id, extension, schema } => {
-                    let Some(codec) = vcs::document_codec(schema) else {
+                    let Some(codec) = store::document_codec(schema) else {
                         return Err(format!("no document codec registered for schema {schema:?}"));
                     };
                     let (pack_files, dsl_mirror) = (codec.print)(json).map_err(|error| error.to_string())?;
@@ -819,7 +819,7 @@ mod native_actor {
 
         //#region 🔖Folder
         /// @emoji ✍️ Persists the current envelope JSON to the folder binding and records the content
-        /// hash for self-write suppression. A write failure (e.g. no `vcs::DocumentCodec` registered
+        /// hash for self-write suppression. A write failure (e.g. no `store::DocumentCodec` registered
         /// for this document's schema — see `FolderEndpoint::write`) is swallowed here the same way
         /// every other best-effort path in this actor already is, but deliberately does NOT record
         /// `last_written_hash` on failure — a false "persisted" mark would make `handle_external_change`
@@ -1118,13 +1118,13 @@ mod native_actor {
             Some(extension) => {
                 let folder = path.parent().map(|parent| parent.to_path_buf()).unwrap_or_else(|| PathBuf::from("."));
                 FolderEndpoint::Pack {
-                    storage: vcs::FolderTextStorage::new(folder),
+                    storage: FolderTextStorage::new(folder),
                     document_id: document_id.to_string(),
                     extension: extension.to_string(),
                     schema: schema.to_string(),
                 }
             }
-            None => FolderEndpoint::Sqlite { storage: vcs::FolderSqliteStorage::new(path.to_path_buf()), document_id: document_id.to_string(), schema: schema.to_string() },
+            None => FolderEndpoint::Sqlite { storage: FolderSqliteStorage::new(path.to_path_buf()), document_id: document_id.to_string(), schema: schema.to_string() },
         }
     }
 
@@ -1511,14 +1511,283 @@ pub fn load_fixtures(dir: &std::path::Path) -> Vec<ActorFixture> {
 }
 //#endregion 🔖Fixtures
 
+
+//#region 🔖FolderStorage
+/// @emoji 🗄️ Pure multi-document sqlite persistence (`folder://`), the canonical local store. Rows
+/// are keyed by document id: `document(id, schema, json, updated_at)` — a single folder holds every
+/// open document's envelope. No `Backbone` impl: the `framework/sync` actor layer drives this from
+/// its own thread; this crate only owns the sqlite schema.
+#[cfg(not(target_arch = "wasm32"))]
+pub struct FolderSqliteStorage {
+    folder: std::path::PathBuf,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl FolderSqliteStorage {
+    pub fn new(folder: std::path::PathBuf) -> Self {
+        Self { folder }
+    }
+
+    fn db_path(&self) -> std::path::PathBuf {
+        self.folder.join(".semio").join("documents.db")
+    }
+
+    fn connection(&self) -> Result<rusqlite::Connection, vcs::VcsError> {
+        let semio_dir = self.folder.join(".semio");
+        std::fs::create_dir_all(&semio_dir).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        let conn = rusqlite::Connection::open(self.db_path()).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        Self::ensure_schema(&conn)?;
+        Ok(conn)
+    }
+
+    fn ensure_schema(conn: &rusqlite::Connection) -> Result<(), vcs::VcsError> {
+        conn.execute_batch(
+            "CREATE TABLE IF NOT EXISTS document (\
+                 id TEXT PRIMARY KEY,\
+                 schema TEXT,\
+                 json TEXT NOT NULL,\
+                 pack BLOB,\
+                 updated_at INTEGER NOT NULL\
+             );\
+             CREATE TABLE IF NOT EXISTS blobs (\
+                 hash TEXT PRIMARY KEY,\
+                 media_type TEXT NOT NULL,\
+                 size INTEGER NOT NULL,\
+                 bytes BLOB NOT NULL\
+             );",
+        )
+        .map_err(|e| vcs::VcsError::Backbone(e.to_string()))
+    }
+
+    /// @emoji 📖 Reads the stored envelope JSON for `document_id`, or `None` if absent.
+    pub fn read(&self, document_id: &str) -> Result<Option<String>, vcs::VcsError> {
+        use rusqlite::OptionalExtension;
+        let conn = self.connection()?;
+        conn.query_row("SELECT json FROM document WHERE id = ?1", [document_id], |row| row.get(0))
+            .optional()
+            .map_err(|e| vcs::VcsError::Backbone(e.to_string()))
+    }
+
+    /// @emoji ✍️ Upserts `document_id`'s envelope JSON (with its schema id and an `updated_at` stamp).
+    pub fn write(&self, document_id: &str, schema: &str, envelope_json: &str) -> Result<(), vcs::VcsError> {
+        let conn = self.connection()?;
+        conn.execute(
+            "INSERT INTO document (id, schema, json, updated_at) VALUES (?1, ?2, ?3, ?4) \
+             ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, json = excluded.json, updated_at = excluded.updated_at",
+            rusqlite::params![document_id, schema, envelope_json, now_ms() as i64],
+        )
+        .map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        Ok(())
+    }
+
+    /// @emoji 📖 Reads the stored pack bytes for `document_id`, or `None` if absent — no row, or a
+    /// row written before the `pack` column existed (SQL `NULL`, surfaced as `None` the same way).
+    pub fn read_pack(&self, document_id: &str) -> Result<Option<Vec<u8>>, vcs::VcsError> {
+        use rusqlite::OptionalExtension;
+        let conn = self.connection()?;
+        conn.query_row("SELECT pack FROM document WHERE id = ?1", [document_id], |row| row.get::<_, Option<Vec<u8>>>(0))
+            .optional()
+            .map(|row| row.flatten())
+            .map_err(|e| vcs::VcsError::Backbone(e.to_string()))
+    }
+
+    /// @emoji ✍️ Upserts `document_id`'s envelope JSON + pack bytes together (schema id, `updated_at`
+    /// stamp) — the pack-aware sibling of `write`.
+    pub fn write_pack(&self, document_id: &str, schema: &str, envelope_json: &str, pack: &[u8]) -> Result<(), vcs::VcsError> {
+        let conn = self.connection()?;
+        conn.execute(
+            "INSERT INTO document (id, schema, json, pack, updated_at) VALUES (?1, ?2, ?3, ?4, ?5) \
+             ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, json = excluded.json, pack = excluded.pack, updated_at = excluded.updated_at",
+            rusqlite::params![document_id, schema, envelope_json, pack, now_ms() as i64],
+        )
+        .map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        Ok(())
+    }
+
+    /// @emoji 📇 Lists every stored document id (newest write first), for a folder-wide index.
+    pub fn document_ids(&self) -> Result<Vec<String>, vcs::VcsError> {
+        let conn = self.connection()?;
+        let mut statement = conn
+            .prepare("SELECT id FROM document ORDER BY updated_at DESC")
+            .map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        let ids = statement
+            .query_map([], |row| row.get::<_, String>(0))
+            .map_err(|e| vcs::VcsError::Backbone(e.to_string()))?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        Ok(ids)
+    }
+}
+
+/// @emoji 🗃️ Textual persistence for one folder of documents: `<id>.<ext>` holds the DSL text (initial
+/// projection), `<id>.<ext>.ops` holds the append-only op log (see `store::print_document_text`/
+/// `store::parse_document_text`). No `Backbone` impl: like `FolderSqliteStorage` above, this actor
+/// layer drives it from its own thread; this crate only owns the file format. Additive alongside the
+/// sqlite storage today — a technology adopts it by implementing `DocumentDsl`/`OpText` and having
+/// its sync endpoint construct one of these instead; nothing currently reads or writes through it
+/// automatically.
+#[cfg(not(target_arch = "wasm32"))]
+pub struct FolderTextStorage {
+    folder: std::path::PathBuf,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl FolderTextStorage {
+    pub fn new(folder: std::path::PathBuf) -> Self {
+        Self { folder }
+    }
+
+    fn dsl_path(&self, document_id: &str, extension: &str) -> std::path::PathBuf {
+        self.folder.join(format!("{document_id}.{extension}"))
+    }
+
+    fn ops_path(&self, document_id: &str, extension: &str) -> std::path::PathBuf {
+        self.folder.join(format!("{document_id}.{extension}.ops"))
+    }
+
+    /// @emoji 🏷️ Path of the authoritative binary pack file — `dsl_path` with a `.pack` suffix.
+    pub fn pack_path(&self, document_id: &str, extension: &str) -> std::path::PathBuf {
+        self.folder.join(format!("{document_id}.{extension}.pack"))
+    }
+
+    /// @emoji 📖 Reads both files for `document_id`, or `None` if the DSL file does not exist yet.
+    pub fn read(&self, document_id: &str, extension: &str) -> Result<Option<DocumentTextFiles>, vcs::VcsError> {
+        let dsl = match std::fs::read_to_string(self.dsl_path(document_id, extension)) {
+            Ok(text) => text,
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+            Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
+        };
+        let ops = match std::fs::read_to_string(self.ops_path(document_id, extension)) {
+            Ok(text) => text,
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => String::new(),
+            Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
+        };
+        Ok(Some(DocumentTextFiles { dsl, ops }))
+    }
+
+    /// @emoji ✍️ Overwrites both files wholesale (the structural-command cold path — undo/redo/
+    /// checkpoint/alternative — mirrors `FileJsonStorage::write`'s whole-envelope semantics).
+    pub fn write(&self, document_id: &str, extension: &str, files: &DocumentTextFiles) -> Result<(), vcs::VcsError> {
+        std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        std::fs::write(self.dsl_path(document_id, extension), &files.dsl).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        std::fs::write(self.ops_path(document_id, extension), &files.ops).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
+    }
+
+    /// @emoji 📖 Pack-first read: reads the pack bytes + op log for `document_id`, or `None` if the
+    /// `.pack` file itself doesn't exist (unlike `read`, the DSL mirror's existence alone doesn't
+    /// count — pack is authoritative per the disk-layout LAW, the DSL file is import-only).
+    pub fn read_pack(&self, document_id: &str, extension: &str) -> Result<Option<DocumentPackFiles>, vcs::VcsError> {
+        let pack = match std::fs::read(self.pack_path(document_id, extension)) {
+            Ok(bytes) => bytes,
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+            Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
+        };
+        let ops = match std::fs::read_to_string(self.ops_path(document_id, extension)) {
+            Ok(text) => text,
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => String::new(),
+            Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
+        };
+        Ok(Some(DocumentPackFiles { pack, ops }))
+    }
+
+    /// @emoji ✍️ Overwrites all three files: the authoritative `.pack`, the shared `.ops` log, and the
+    /// always-written DSL mirror `dsl_mirror` (`print_dsl` on the initial projection) — the pack-aware
+    /// sibling of `write`.
+    pub fn write_pack(&self, document_id: &str, extension: &str, files: &DocumentPackFiles, dsl_mirror: &str) -> Result<(), vcs::VcsError> {
+        std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        std::fs::write(self.pack_path(document_id, extension), &files.pack).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        std::fs::write(self.ops_path(document_id, extension), &files.ops).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        std::fs::write(self.dsl_path(document_id, extension), dsl_mirror).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
+    }
+
+    /// @emoji ➕ Appends already-printed op-log lines (one {@link print_edit_lines} block) to the `.ops`
+    /// file without rewriting it — the hot-path append unit, O(new edit) instead of O(whole history).
+    pub fn append_ops(&self, document_id: &str, extension: &str, lines: &str) -> Result<(), vcs::VcsError> {
+        use std::io::Write;
+        std::fs::create_dir_all(&self.folder).map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        let mut file = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(self.ops_path(document_id, extension))
+            .map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        file.write_all(lines.as_bytes()).map_err(|e| vcs::VcsError::Backbone(e.to_string()))
+    }
+
+    /// @emoji 📇 Lists every stored document id (by DSL file stem) for a given extension.
+    pub fn document_ids(&self, extension: &str) -> Result<Vec<String>, vcs::VcsError> {
+        let suffix = format!(".{extension}");
+        let entries = match std::fs::read_dir(&self.folder) {
+            Ok(entries) => entries,
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
+            Err(err) => return Err(vcs::VcsError::Backbone(err.to_string())),
+        };
+        let mut ids = Vec::new();
+        for entry in entries {
+            let entry = entry.map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+            if let Some(name) = entry.file_name().to_str() {
+                if let Some(id) = name.strip_suffix(&suffix) {
+                    ids.push(id.to_string());
+                }
+            }
+        }
+        Ok(ids)
+    }
+}
+//#endregion 🔖FolderStorage
+
+//#region 🔖BlobStoreImpl
+
+/// @emoji 🗄️ `FolderSqliteStorage`'s `blobs(hash, media_type, size, bytes)` table (bootstrapped
+/// alongside `document` in `ensure_schema`) — one whole-blob `BLOB` column is plenty for v1; this
+/// crate's other tables don't chunk large payloads either, and the `store::BlobStore` trait itself stays
+/// whole-blob regardless of how a given backend chooses to store the bytes internally.
+#[cfg(not(target_arch = "wasm32"))]
+impl store::BlobStore for FolderSqliteStorage {
+    fn put(&self, bytes: &[u8], media_type: &str) -> Result<store::BlobRef, vcs::VcsError> {
+        let hash = semio_framework_hash::hash_bytes(bytes);
+        let conn = self.connection()?;
+        conn.execute(
+            "INSERT OR IGNORE INTO blobs (hash, media_type, size, bytes) VALUES (?1, ?2, ?3, ?4)",
+            rusqlite::params![hash, media_type, bytes.len() as i64, bytes],
+        )
+        .map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        Ok(store::BlobRef { hash, size: bytes.len() as u64, media_type: media_type.to_string() })
+    }
+
+    fn get(&self, hash: &str) -> Result<Option<Vec<u8>>, vcs::VcsError> {
+        use rusqlite::OptionalExtension;
+        let conn = self.connection()?;
+        conn.query_row("SELECT bytes FROM blobs WHERE hash = ?1", [hash], |row| row.get(0))
+            .optional()
+            .map_err(|e| vcs::VcsError::Backbone(e.to_string()))
+    }
+
+    fn has(&self, hash: &str) -> Result<bool, vcs::VcsError> {
+        let conn = self.connection()?;
+        let count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM blobs WHERE hash = ?1", [hash], |row| row.get(0))
+            .map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        Ok(count > 0)
+    }
+
+    fn delete(&self, hash: &str) -> Result<(), vcs::VcsError> {
+        let conn = self.connection()?;
+        conn.execute("DELETE FROM blobs WHERE hash = ?1", [hash])
+            .map_err(|e| vcs::VcsError::Backbone(e.to_string()))?;
+        Ok(())
+    }
+}
+//#endregion 🔖BlobStoreImpl
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use serde::{Deserialize, Serialize};
-    use vcs::{create_document_vcs_envelope, operation_envelope_from_edit};
+    use store::{create_document_envelope, operation_envelope_from_edit};
     use protocol::{Edit, Operation, OperationDiff};
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+    #[dsl(extension = "demo")]
     struct DemoProjection {
         n: i32,
     }
@@ -1573,15 +1842,15 @@ mod tests {
             started_at: "0".into(),
             finished_at: None,
         };
-        let placeholder: vcs::DocumentVcsEnvelope<DemoProjection, DemoOperation> = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let placeholder: store::DocumentEnvelope<DemoProjection, DemoOperation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         operation_envelope_from_edit(&placeholder, &edit, Vec::new()).expect("operation envelope")
     }
 
     //#region 🧪SyncSession
     #[test]
     fn receive_materializes_remote_envelope_into_the_edit_timeline() {
-        let envelope: vcs::DocumentVcsEnvelope<DemoProjection, DemoOperation> = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let store = DocumentVcsStore::new(envelope);
+        let envelope: store::DocumentEnvelope<DemoProjection, DemoOperation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let store = DocumentStore::new(envelope);
         let mut session = SyncSession::new(store);
         session.receive(sample_operation_envelope("edit-1", 5)).expect("receive");
         assert_eq!(session.store.projection().expect("projection").n, 5);
@@ -1590,8 +1859,8 @@ mod tests {
 
     #[test]
     fn receive_buffers_out_of_order_envelopes_until_dependencies_arrive() {
-        let envelope: vcs::DocumentVcsEnvelope<DemoProjection, DemoOperation> = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let store = DocumentVcsStore::new(envelope);
+        let envelope: store::DocumentEnvelope<DemoProjection, DemoOperation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let store = DocumentStore::new(envelope);
         let mut session = SyncSession::new(store);
         let mut second = sample_operation_envelope("edit-2", 9);
         second.deps = vec![semio_framework_core::OperationId("edit-1".into())];
@@ -1732,8 +2001,8 @@ mod tests {
         use tokio::sync::{broadcast as tokio_broadcast, Mutex};
         use tokio_tungstenite::tungstenite::Message as WsMessage;
 
-        fn demo_envelope(document_id: &str) -> vcs::DocumentVcsEnvelope<DemoProjection, DemoOperation> {
-            create_document_vcs_envelope("demo/v1", document_id, DemoProjection { n: 0 }, None)
+        fn demo_envelope(document_id: &str) -> store::DocumentEnvelope<DemoProjection, DemoOperation> {
+            create_document_envelope("demo/v1", document_id, DemoProjection { n: 0 }, None)
         }
 
         async fn wait_for_event(events: &mut broadcast::Receiver<DocumentEvent>, mut predicate: impl FnMut(&DocumentEvent) -> bool) -> DocumentEvent {
@@ -1758,15 +2027,15 @@ mod tests {
             let host = DocumentHost::new();
             let channels = host.open(DocumentActorConfig { document_id: "doc-a".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() });
             let mut events = host.subscribe("doc-a");
-            let mut store = DocumentVcsStore::new(demo_envelope("doc-a"));
+            let mut store = DocumentStore::new(demo_envelope("doc-a"));
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
 
             // A local apply establishes a persisted edit on disk.
-            store.dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply");
+            store.dispatch(store::DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply");
             channels.cmd_tx.send(DocumentActorMsg::LocalOperations { envelopes: Vec::new() }).expect("wake");
 
             // Wait until the actor has persisted the local edit to the folder db.
-            let storage = vcs::FolderSqliteStorage::new(dir.path().to_path_buf());
+            let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
             let stored = loop {
                 if let Some(json) = storage.read("doc-a").expect("read") {
                     if json.contains("\"edits\":[{") {
@@ -1937,7 +2206,7 @@ mod tests {
                 watch_external: false,
                 actor: "A".into(),
             });
-            let mut store_a = DocumentVcsStore::new(demo_envelope("shared"));
+            let mut store_a = DocumentStore::new(demo_envelope("shared"));
             store_a.attach_backbone(Box::new(channels_a.channel_backbone)).expect("attach a");
 
             let host_b = DocumentHost::new();
@@ -1949,13 +2218,13 @@ mod tests {
                 actor: "B".into(),
             });
             let mut events_b = host_b.subscribe("shared");
-            let mut store_b = DocumentVcsStore::new(demo_envelope("shared"));
+            let mut store_b = DocumentStore::new(demo_envelope("shared"));
             store_b.attach_backbone(Box::new(channels_b.channel_backbone)).expect("attach b");
 
             // Give both actors time to connect + Hello.
             tokio::time::sleep(Duration::from_millis(300)).await;
 
-            store_a.dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 7 }], description: None }).expect("apply on a");
+            store_a.dispatch(store::DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 7 }], description: None }).expect("apply on a");
             channels_a.cmd_tx.send(DocumentActorMsg::LocalOperations { envelopes: Vec::new() }).expect("wake a");
 
             let event = wait_for_event(&mut events_b, |event| matches!(event, DocumentEvent::RemoteOperations { .. })).await;
@@ -1985,13 +2254,13 @@ mod tests {
                 watch_external: false,
                 actor: "A".into(),
             });
-            let mut store_a = DocumentVcsStore::new(demo_envelope("catchup"));
+            let mut store_a = DocumentStore::new(demo_envelope("catchup"));
             store_a.attach_backbone(Box::new(channels_a.channel_backbone)).expect("attach a");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
             // A applies two operations while nobody else is connected.
             for n in [3, 4] {
-                store_a.dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n }], description: None }).expect("apply on a");
+                store_a.dispatch(store::DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n }], description: None }).expect("apply on a");
                 channels_a.cmd_tx.send(DocumentActorMsg::LocalOperations { envelopes: Vec::new() }).expect("wake a");
                 tokio::time::sleep(Duration::from_millis(80)).await;
             }
@@ -2001,7 +2270,7 @@ mod tests {
             let channels_b =
                 host_b.open(DocumentActorConfig { document_id: "catchup".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, studio_id: "studio-1".into(), token: None }], watch_external: false, actor: "B".into() });
             let mut events_b = host_b.subscribe("catchup");
-            let mut store_b = DocumentVcsStore::new(demo_envelope("catchup"));
+            let mut store_b = DocumentStore::new(demo_envelope("catchup"));
             store_b.attach_backbone(Box::new(channels_b.channel_backbone)).expect("attach b");
 
             let event = wait_for_event(&mut events_b, |event| matches!(event, DocumentEvent::RemoteOperations { .. })).await;
@@ -2032,17 +2301,17 @@ mod tests {
                 actor: "B".into(),
             });
             let mut events_b = host_b.subscribe("drain");
-            let mut store_b = DocumentVcsStore::new(demo_envelope("drain"));
+            let mut store_b = DocumentStore::new(demo_envelope("drain"));
             store_b.attach_backbone(Box::new(channels_b.channel_backbone)).expect("attach b");
 
             let host_a = DocumentHost::new();
             let channels_a =
                 host_a.open(DocumentActorConfig { document_id: "drain".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, studio_id: "studio-1".into(), token: None }], watch_external: false, actor: "A".into() });
-            let mut store_a = DocumentVcsStore::new(demo_envelope("drain"));
+            let mut store_a = DocumentStore::new(demo_envelope("drain"));
             store_a.attach_backbone(Box::new(channels_a.channel_backbone)).expect("attach a");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
-            store_a.dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 5 }], description: None }).expect("apply on a");
+            store_a.dispatch(store::DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 5 }], description: None }).expect("apply on a");
             // Immediately close A without waiting for the poll tick: Detach must flush the outbox first.
             host_a.close("drain");
 
@@ -2065,11 +2334,11 @@ mod tests {
             let channels =
                 host.open(DocumentActorConfig { document_id: "outcome".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, studio_id: "studio-1".into(), token: None }], watch_external: false, actor: "A".into() });
             let mut events = host.subscribe("outcome");
-            let mut store = DocumentVcsStore::new(demo_envelope("outcome"));
+            let mut store = DocumentStore::new(demo_envelope("outcome"));
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
-            store.dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply");
+            store.dispatch(store::DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply");
             channels.cmd_tx.send(DocumentActorMsg::LocalOperations { envelopes: Vec::new() }).expect("wake");
 
             let event = wait_for_event(&mut events, |event| matches!(event, DocumentEvent::CommandOutcome { .. })).await;
@@ -2129,9 +2398,9 @@ mod tests {
             let channels =
                 host.open(DocumentActorConfig { document_id: fixture.document_id.clone(), schema: fixture.schema.clone(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() });
             let mut events = host.subscribe(&fixture.document_id);
-            let mut store = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOperation>(&fixture.schema, &fixture.document_id, DemoProjection { n: 0 }, None));
+            let mut store = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>(&fixture.schema, &fixture.document_id, DemoProjection { n: 0 }, None));
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
-            let storage = vcs::FolderSqliteStorage::new(dir.path().to_path_buf());
+            let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
             // Wait for the seed snapshot to land on disk.
             loop {
                 if storage.read(&fixture.document_id).expect("read").is_some() {

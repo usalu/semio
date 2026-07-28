@@ -1,39 +1,39 @@
 {
-  "name": "@semio-tech/framework-sync-worker",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@semio-tech/store-worker",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "wasm": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "framework/sync/worker",
+        "cwd": "store/worker",
         "command": "bun ./script.ts wasm"
       }
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "framework/sync/worker",
+        "cwd": "store/worker",
         "command": "bun ./script.ts test"
       }
     },
     "test-quick": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "framework/sync/worker",
+        "cwd": "store/worker",
         "command": "bun ./script.ts test quick"
       }
     },
     "test-long": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "framework/sync/worker",
+        "cwd": "store/worker",
         "command": "bun ./script.ts test long"
       }
     },
     "test-exhaustive": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "framework/sync/worker",
+        "cwd": "store/worker",
         "command": "bun ./script.ts test exhaustive"
       }
     }

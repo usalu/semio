@@ -1,9 +1,9 @@
 [package]
-name = "semio-framework-sync-worker"
+name = "store_worker"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "Browser Web Worker WASM actor for framework/sync DocumentHost"
+description = "Browser Web Worker WASM actor for store's DocumentHost"
 
 [lints]
 workspace = true
@@ -13,7 +13,7 @@ crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
 
 [dependencies]
-semio-framework-sync = { path = "../../rs" }
+store_sync = { path = "../../sync/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 tokio = { version = "1", features = ["sync"], default-features = false }

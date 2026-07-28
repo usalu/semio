@@ -351,6 +351,11 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Extract/Extend/Refactor store into its own technology. store is a local first, non-blocking client side in memory store in rust. All the backbones (file, folder, remote) are hot-swappable at runtime to store.
+Make sure that it works perfectly with vcs, pack (along with dsl), protocol (along with op) and hub (along with db).
+
+---
+
 Introduce a general tutorial mechanism with voicover, event timeline, video overlay e.g. for camera.
 tutorials are an similar to introductions.
 Add both a tutorial player and a tutorial recorder. Ui state, document state, commands, operations, etc everything is tracked, so that when a tutorial is active then the ui also reacts and jumps to the state of the recording. The user an also modify the ui state but when play is pressed then the current state is interpolated to the one from the recording.

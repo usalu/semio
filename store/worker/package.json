@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/store-worker",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./rs/pkg/store_worker.js"
+  }
+}

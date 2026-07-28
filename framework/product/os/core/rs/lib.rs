@@ -2240,7 +2240,7 @@ pub mod host_runtime {
     //!    `WasmPluginRuntime::deregister_host_backbone(uri)`.
 
     use crate::instance::OsDocumentRef;
-    use semio_framework_sync::{DocumentActorConfig, DocumentActorMsg, DocumentChannels, DocumentEvent, DocumentHost, PersistenceBinding};
+    use store_sync::{DocumentActorConfig, DocumentActorMsg, DocumentChannels, DocumentEvent, DocumentHost, PersistenceBinding};
 
     /// @emoji 📌 The local persistence binding for a folder-backed document (one row per `document_id`
     /// in the folder's `.semio` sqlite store — see `vcs::FolderSqliteStorage`).

@@ -127,7 +127,7 @@ async function writeBackbonePayload(uri: string, documentId: string | null, sche
 }
 
 /** 👁️ Per-folder-uri debounced watchers feeding every subscribed SSE response for that uri — one
- * `node:fs.watch` per folder regardless of subscriber count. Mirrors `framework/sync`'s native
+ * `node:fs.watch` per folder regardless of subscriber count. Mirrors `store_sync`'s native
  * `notify` watcher (200ms debounce) so both the dev-browser and native paths agree on cadence. */
 const folderWatchSubscribers = new Map<string, Set<{ write: (chunk: string) => void }>>();
 const folderWatchHandles = new Map<string, ReturnType<typeof watch>>();

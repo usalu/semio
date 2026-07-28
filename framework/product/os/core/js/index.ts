@@ -256,10 +256,10 @@ export const BLOB_ENDPOINT_PATH = "/semio-blob";
 
 //#region 🔖SyncProtocol
 /**
- * 🔁 TS mirror of `framework/sync`'s Rust actor protocol (`DocumentActorConfig`/`DocumentActorMsg`/
+ * 🔁 TS mirror of `store_sync`'s Rust actor protocol (`DocumentActorConfig`/`DocumentActorMsg`/
  * `DocumentEvent`/`DocumentSyncStatus`/`RemoteState`/`PersistenceBinding`) — the wire/postMessage
  * shapes `backbone-worker.ts` speaks, kept camelCase-tag-identical to the Rust side (`#[serde(tag =
- * "kind", rename_all = "camelCase")]`) so a shared JSON fixture suite (`framework/sync/fixtures/`)
+ * "kind", rename_all = "camelCase")]`) so a shared JSON fixture suite (`store/sync/fixtures/`)
  * stays plausible across both runtimes even though this file is a deliberately dumb TS twin (no
  * materialization — it only relays queues, exactly like the Rust actor's `ChannelBackbone` side).
  */

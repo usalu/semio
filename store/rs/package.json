@@ -1,8 +1,8 @@
 {
-  "name": "@semio-tech/vcs-rs",
+  "name": "@semio-tech/store-rs",
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./pkg/vcs.js"
+    ".": "./pkg/store.js"
   }
 }

@@ -3,7 +3,7 @@
 Scripted test vectors for the schema-agnostic document sync actor. The same JSON files are replayed
 by two harnesses to keep the Rust actor and its TypeScript twin (WS-E `backbone-worker.ts`) in lockstep:
 
-- **Rust** — `framework/sync/rs/lib.rs` `tests::actor_tests::fixtures_replay_matches_expected_events`
+- **Rust** — `store/sync/rs/lib.rs` `tests::actor_tests::fixtures_replay_matches_expected_events`
   drives a real `DocumentHost` over a temp folder binding.
 - **TypeScript** (later, WS-E) — a vitest harness replays the same files against the TS backbone worker.
 

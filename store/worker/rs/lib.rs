@@ -1,7 +1,7 @@
 //! 🧵 WASM backbone worker — browser-side `DocumentHost` actor relaying the same protocol as
 //! `framework/product/os/core/js/backbone-worker.ts`, without materializing projections.
 
-use semio_framework_sync::{
+use store_sync::{
     DocumentActorConfig, DocumentActorMsg, DocumentEvent, DocumentHost, PersistenceBinding,
 };
 use serde::Deserialize;

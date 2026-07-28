@@ -9607,9 +9607,9 @@ dependencies = [
  "rusqlite",
  "semio-framework-core",
  "semio-framework-plugin",
- "semio-framework-sync",
  "serde",
  "serde_json",
+ "store_sync",
  "thiserror 2.0.18",
  "tiny-skia",
  "tokio",
@@ -9683,9 +9683,9 @@ dependencies = [
  "semio-framework-core",
  "semio-framework-plugin",
  "semio-framework-plugin-host",
- "semio-framework-sync",
  "serde",
  "serde_json",
+ "store_sync",
  "tiny-skia",
  "tokio",
  "ui_wgpu",
@@ -9709,42 +9709,6 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.18",
-]
-
-[[package]]
-name = "semio-framework-sync"
-version = "0.1.0"
-dependencies = [
- "futures-util",
- "js-sys",
- "notify",
- "protocol",
- "semio-framework-core",
- "semio-framework-hash",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.18",
- "tokio",
- "tokio-tungstenite 0.26.2",
- "vcs",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "semio-framework-sync-worker"
-version = "0.1.0"
-dependencies = [
- "js-sys",
- "semio-framework-sync",
- "serde",
- "serde_json",
- "tokio",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
 ]
 
 [[package]]
@@ -10416,6 +10380,67 @@ name = "static_assertions_next"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d7beae5182595e9a8b683fa98c4317f956c9a2dec3b9716990d20023cc60c766"
+
+[[package]]
+name = "store"
+version = "0.1.0"
+dependencies = [
+ "dsl",
+ "dsl_core",
+ "js-sys",
+ "pack",
+ "protocol",
+ "semio-framework-core",
+ "semio-framework-hash",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.18",
+ "vcs",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "store_sync"
+version = "0.1.0"
+dependencies = [
+ "dsl",
+ "futures-util",
+ "js-sys",
+ "notify",
+ "protocol",
+ "rusqlite",
+ "semio-framework-core",
+ "semio-framework-hash",
+ "serde",
+ "serde_json",
+ "store",
+ "tempfile",
+ "thiserror 2.0.18",
+ "tokio",
+ "tokio-tungstenite 0.26.2",
+ "vcs",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "store_worker"
+version = "0.1.0"
+dependencies = [
+ "js-sys",
+ "serde",
+ "serde_json",
+ "store_sync",
+ "tokio",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
 
 [[package]]
 name = "strict-num"
@@ -11959,22 +11984,11 @@ name = "vcs"
 version = "0.1.0"
 dependencies = [
  "blake3",
- "dsl",
- "dsl_core",
- "js-sys",
- "pack",
  "protocol",
- "rusqlite",
- "semio-framework-core",
- "semio-framework-hash",
  "serde",
- "serde-wasm-bindgen",
  "serde_json",
  "tempfile",
  "thiserror 2.0.18",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
 ]
 
 [[package]]

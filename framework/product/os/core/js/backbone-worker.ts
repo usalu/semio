@@ -1,7 +1,7 @@
 // #region Header
 /**
- * @emoji 🧵 `backbone-worker.ts` — thin loader for the Rust WASM `semio-framework-sync-worker`
- * actor (`framework/sync/worker/rs`). When the wasm package is unavailable (vitest/node), falls
+ * @emoji 🧵 `backbone-worker.ts` — thin loader for the Rust WASM `store_worker`
+ * actor (`store/worker/rs`). When the wasm package is unavailable (vitest/node), falls
  * back to the embedded TypeScript actor twin so dev workflows keep working.
  */
 // #endregion Header
@@ -23,7 +23,7 @@ let rustHost: RustWorkerHost | null = null;
 // published, either fails the build outright or emits a phantom `__vite-browser-external-*.js` chunk
 // reference that 404s in production. Left dynamic, the browser's native module loader simply rejects
 // the unresolvable bare specifier at runtime, which the `catch` below already treats as "unavailable".
-const RUST_SYNC_WORKER_MODULE_SPECIFIER = "@semio-tech/framework-sync-worker";
+const RUST_SYNC_WORKER_MODULE_SPECIFIER = "@semio-tech/store-worker";
 
 async function ensureRustHost(): Promise<RustWorkerHost | null> {
   if (rustHost) return rustHost;
@@ -728,7 +728,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
-      const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), "../../../../sync/fixtures/wire");
+      const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), "../../../../../store/sync/fixtures/wire");
 
       const helloBytes = new Uint8Array(readFileSync(join(fixturesDir, "client-hello.bin")));
       const hello = decodeClientFrame(helloBytes);

@@ -1,0 +1,6 @@
+885	918	collection_diff_from_op_projects_each_variant
+1101	1121	collection_op_add_and_invert
+1123	1140	collection_op_move_and_invert
+1142	1155	collection_op_patch_and_invert
+1157	1170	collection_op_remove_and_invert
+2045	2068	content_addressed_checkpoint_id_is_deterministic_and_content_sensitive

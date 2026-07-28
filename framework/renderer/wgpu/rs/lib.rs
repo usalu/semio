@@ -16094,7 +16094,7 @@ use infinite_world::{
 };
 use crate::plugin_bridge::{is_studio_mode, resolve_playground_app_id, resolve_plugin_host_config, PluginBridgeEntry, PluginHostConfig};
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_sync::{
+use store_sync::{
     DocumentActorMsg, DocumentEvent, DocumentHost, DocumentSyncStatus, PersistenceBinding, RemoteState,
 };
 use semio_framework_core::{
@@ -17896,7 +17896,7 @@ impl ShellState {
             let bindings = Self::parse_persistence_binding(&uri)?;
             self.detach_sync_backbone_internal();
             let actor_uri = format!("actor://{document_id}");
-            let channels = self.document_host.open(semio_framework_sync::DocumentActorConfig {
+            let channels = self.document_host.open(store_sync::DocumentActorConfig {
                 document_id: document_id.clone(),
                 schema,
                 bindings,

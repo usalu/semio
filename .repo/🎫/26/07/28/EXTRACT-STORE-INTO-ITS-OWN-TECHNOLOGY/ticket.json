@@ -1,0 +1,13 @@
+{
+  "title": "Extract Store into its Own Technology",
+  "emoji": "🗃️",
+  "status": "open",
+  "description": "Extract/Extend/Refactor store into its own technology. Store is a local-first, non-blocking, client-side, in-memory store (currently the DocumentVcsStore/Backbone/BlobStore/Studio regions inside vcs/rs/lib.rs). All backbones (file, folder, remote) are hot-swappable at runtime to store. Ensure it works cleanly with vcs (version-graph algebra), pack+dsl (serialization), protocol+op (op algebra), and hub+db (server). Full facade: apps depend on store, never vcs directly; dsl derive macros flip ::vcs:: -\u003e ::store::. Also rename the colliding compose/client/bin/store sidecar to compose-gql. Approved plan: /Users/ueli/.claude/plans/extract-extend-refactor-store-into-its-cozy-ullman.md",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2369"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪88b79cd5cb064f60859bdebfb728ca70"
+  ]
+}
