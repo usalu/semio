@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 const [, , pdf, out, pg, x, y, w, h, sc] = process.argv;
-const scale = Number(sc||8);
+const scale = Number(sc||2);
 const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
 const { createCanvas } = createRequire(import.meta.url)("@napi-rs/canvas");
 const doc = await pdfjs.getDocument({ data: new Uint8Array(readFileSync(pdf)), useSystemFonts: true }).promise;

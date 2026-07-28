@@ -227,7 +227,12 @@
   \semio@table@header@cell{#3} &
   \semio@table@header@cell{#4} \\
   \hhline{|---|}
-  \global\semio@table@row@startedfalse
+  % Reset in \noalign: a bare \global assignment here sits *between* the \hhline
+  % and \endfirsthead outside any row, so array's row scanner reads it as the
+  % start of a new cell — opening an empty, strut-height phantom row (a cream
+  % band, unfilled by the header cellcolor) between the header and the first
+  % entry. \noalign executes it on the row boundary without starting that row.
+  \noalign{\global\semio@table@row@startedfalse}%
 }
 
 \newcommand{\semio@table@long@header@continuation@three}[4]{%
@@ -235,8 +240,10 @@
   \semio@table@header@cell{#3} &
   \semio@table@header@cell{#4} \\
   \hhline{|---|}
-  \noalign{\vskip\z@}% head->body transition: no negative pull (a -\semio@table@body@height skip here pulled the first body row up over the header row, hiding it)
-  \global\semio@table@row@startedfalse
+  % head->body transition: no negative pull (a -\semio@table@body@height skip
+  % here pulled the first body row up over the header row, hiding it). The
+  % row-started reset shares the \noalign so it, too, cannot open a phantom row.
+  \noalign{\vskip\z@\global\semio@table@row@startedfalse}%
 }
 
 \newif\ifsemio@table@long@title@number
@@ -344,7 +351,6 @@
   #3%
   \endhead
   \noalign{\vskip\z@}% head->body transition: no negative pull (a -\semio@table@body@height skip here pulled the first body row up over the header row, hiding it)
-  \noalign{{\color{red}\hrule height 3pt}}% DIAGNOSTIC MARKER body-start
   #4%
   \end{longtable}%
   \endgroup
@@ -474,12 +480,18 @@
   \tl_put_right:Nx \l_semio_table_long_head_tl {
     \exp_not:N \hhline { | \prg_replicate:nn { \seq_count:N \l_semio_table_row_seq } { - } | }
   }
-  \global\long\expandafter\def\expandafter\semio@table@long@head@current\expandafter{\l_semio_table_long_head_tl\global\semio@table@row@startedfalse}
+  % 🩹 The row-started reset MUST ride inside \noalign, exactly like
+  % \semio@table@long@header@repeat@three does it. A bare \global sitting
+  % between the header's \hhline and \endfirsthead/\endhead is outside any row,
+  % so array's row scanner reads it as the start of a new cell and opens an
+  % empty strut-height phantom row — a cream band for a plain column, or a dark
+  % notch here because the \SemioProject colspec's first column carries
+  % \cellcolor{semio-chrome-canvas} in its >{...} prefix. \noalign runs the
+  % assignment on the row boundary without opening that row, so the column-header
+  % rule sits flush on the first body row (no gap) with an unbroken fill.
+  \global\long\expandafter\def\expandafter\semio@table@long@head@current\expandafter{\l_semio_table_long_head_tl\noalign{\global\semio@table@row@startedfalse}}
   \tl_put_right:Nn \l_semio_table_long_head_tl {
-    \noalign{\vskip\z@}% head->body transition: no negative pull (a -\semio@table@body@height skip here pulled the first body row up over the header row, hiding it)
-  }
-  \tl_put_right:Nn \l_semio_table_long_head_tl {
-    \global\semio@table@row@startedfalse
+    \noalign{\vskip\z@\global\semio@table@row@startedfalse}% head->body transition (no negative pull) + row-started reset, both on the row boundary so neither opens a phantom band
   }
   % 🩹 Not \tl_gset_eq:NN: that \let-aliases \semio@table@long@head@current to
   % an expl3 tl variable, which l3 always defines as a non-\long macro. A
