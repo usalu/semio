@@ -356,7 +356,10 @@
 \cs_new_protected:Npn \semio_window_vskip_stroke_hairline: {
   \group_begin:
   \ExplSyntaxOff
-  \vskip\dimexpr-3\semio@stroke@hairline\relax
+  % LR-2.14 seam: overlap the content frame onto the tab by exactly one hairline
+  % so the frame's top edge sits on the tab's baseline rule (one shared rule, no
+  % gap, no doubling). Paired with before~skip=0 on the semio~window style.
+  \vskip\dimexpr-\semio@stroke@hairline\relax
   \group_end:
 }
 
@@ -740,7 +743,12 @@
     left=\semio@chrome@padding,
     right=\semio@chrome@padding,
     bottom=\semio@chrome@padding,
-    before~skip=\semio@spacing@table@outer,
+    % LR-2.14 seam: the title tab is welded on immediately above this box, so any
+    % `before skip` becomes a gap between the tab and the content frame (the tab
+    % floats, the borders start too low). External top spacing is provided
+    % separately by \semio@block@before before the tab, so this must be zero — the
+    % content frame then rises to meet the tab's baseline rule as one component.
+    before~skip=0pt,
     after~skip=\semio@spacing@table@outer,
     parbox=false,
     % 🪟 Repeat the header chip row (title chip + hierarchy chip, see
