@@ -746,7 +746,7 @@
     leftrule=\semio@stroke@hairline,
     rightrule=\semio@stroke@hairline,
     bottomrule=\semio@stroke@hairline,
-    colback=semio-chrome-canvas,
+    colback=red,
     coltext=semio-chrome-text-normal,
     top=\semio@chrome@padding,
     left=\semio@chrome@padding,
@@ -2339,7 +2339,12 @@
   \semio@hierarchy@path@set{\csname the#4\endcsname}%
   \sbox{\semio@window@tab@box}{\semio@heading@chip{#1}{#2}{#5}}%
 
-  \sbox{\semio@window@ctrl@box}{\semio@heading@chip{#1}{#2}{\semio@heading@kind@number{#3}{#4}}}%
+  % LR-rednum: solid heading bars fill with the level colour (e.g. red), so the
+  % two-tone number (muted grey prefix + dark last level) rendered the prefix
+  % low-contrast on the fill. Render the number single-tone in the chip's own
+  % foreground colour here so "1.2.3.4" stays fully legible on the coloured bar;
+  % outline headings (\semio@heading@pair@outline) keep the two-tone on canvas.
+  \sbox{\semio@window@ctrl@box}{\semio@heading@chip{#1}{#2}{\csname the#4\endcsname}}%
   \setlength{\semio@window@gap@w}{%
     \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
   }%
@@ -3227,5 +3232,3 @@
 \RenewDocumentCommand \tableofcontents { } { \semio@tableofcontents }
 \ExplSyntaxOff
 \makeatother
-
-	hisIsADeliberateUndefinedCommandForTesting
