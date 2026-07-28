@@ -2080,9 +2080,25 @@
 % \rightmark is used (this build's kernel predates the ltmarks \NewMarkClass API;
 % fancyhdr, already loaded, provides \rightmark). The \gdef is kept as a harmless
 % legacy value; the navbar reads the mark.
+% LR-navshort: an optional short label for the RUNNING HEADER only. Placing
+% \SemioNavShort{short} immediately before a heading feeds the navbar/mark a
+% shorter form so long sentence-titles render at the flat 7.2pt chip size
+% instead of auto-shrinking — while the FULL title stays verbatim in the body.
+% The pending short is consumed (and cleared) by the next marking heading, so it
+% never leaks onto a following section. \markright stores a copy of the tokens,
+% and \let copies the meaning into the fallback macro, so both stay stable even
+% after the pending is redefined by the next heading.
+\let\semio@nav@short@pending\relax
+\newcommand{\SemioNavShort}[1]{\gdef\semio@nav@short@pending{#1}}
 \newcommand{\semio@chrome@heading@set}[1]{%
-  \gdef\semio@chrome@heading{#1}%
-  \markright{#1}%
+  \ifx\semio@nav@short@pending\relax
+    \gdef\semio@chrome@heading{#1}%
+    \markright{#1}%
+  \else
+    \global\let\semio@chrome@heading\semio@nav@short@pending
+    \expandafter\markright\expandafter{\semio@nav@short@pending}%
+    \global\let\semio@nav@short@pending\relax
+  \fi
 }
 
 \newcommand{\semio@chrome@heading@track}[2]{%
@@ -2101,6 +2117,14 @@
       \semio@chrome@heading@set{#2}%
     \fi
   \fi\fi\fi
+  % LR-navshort (any level): part/chapter/section already consumed a pending
+  % label above (which clears it), so this is a no-op for them. Deeper levels
+  % (subsection…) get no custom mark and fall back to KOMA's full-title mark — so
+  % if a short label is pending, force it through here to override that with the
+  % short form in the running header. \semio@chrome@heading@set clears the pending.
+  \ifx\semio@nav@short@pending\relax\else
+    \semio@chrome@heading@set{#2}%
+  \fi
 }
 
 \newsavebox{\semio@window@cap@slot}
