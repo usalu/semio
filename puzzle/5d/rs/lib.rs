@@ -115,7 +115,8 @@ use serde_json::Value;
 use vcs::{create_document_vcs_envelope, DocumentVcsCommand};
 #[cfg(test)]
 use vcs::DocumentDsl;
-use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
+use protocol::{Operation, OperationDiff};
 
 pub const PUZZLE_5D_SCHEMA: &str = "puzzle.5d";
 

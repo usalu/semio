@@ -1,0 +1,81 @@
+CW7 App fan-out — imperative_plugin (imperative/plugin/rs/lib.rs)
+
+STATUS: BLOCKED — no change made to lib.rs. This is a real cross-crate dependency block, not a
+false-positive grep hit.
+
+What I found (fresh read of imperative/plugin/rs/lib.rs, imperative/core/rs/lib.rs, and this
+crate's Cargo.toml before touching anything):
+
+- imperative/plugin/rs/lib.rs itself contains no calls to vcs::apply_collection_operation,
+  vcs::invert_collection_operation, or vcs::collection_diff_from_operation. It has no `protocol`
+  Cargo dependency at all (checked Cargo.toml — only imperative_core, imperative_engine,
+  semio-framework-plugin, serde, serde_json, vcs).
+- It DOES construct `CollectionOperation::Add/Remove/Move/Patch` in four call sites in
+  `handle_action` (addStep/addStepAt -> Add at old line 254, removeStep/removeStepAt -> Remove at
+  261, moveStep/moveStepAt -> Move at 272, setStepParams/setStepParamsAt -> Patch at 284), via
+  `use vcs::CollectionOperation;` (lib.rs:14).
+- Crucially, every one of those constructions is building the `collection` field of
+  `ImperativeOperation`, and that struct is DEFINED in the sibling crate imperative_core
+  (imperative/core/rs/lib.rs:42-44):
+      pub struct ImperativeOperation {
+          ...
+          pub collection: vcs::CollectionOperation<String, Step, Dictionary>,
+      }
+  imperative_core also implements `vcs::Operation`/`vcs::OperationDiff`/`vcs::OpText` for
+  ImperativeOperation/ImperativeDiff against this same old-shape type (core lib.rs:50, 69, 360),
+  and imperative_core is STILL on the OLD vcs shape everywhere I looked (Add{index,item},
+  Move{id,to_index} — grep-confirmed at core lib.rs:338-352, 647-870, no `protocol::` import
+  anywhere in that file).
+
+Because `ImperativeOperation.collection`'s type is fixed by imperative_core to
+`vcs::CollectionOperation<String, Step, Dictionary>` (the OLD shape), imperative_plugin's four
+call sites are not independently migratable: rewriting them to construct
+`protocol::CollectionOperation::Add { id, item, at }` etc. would not type-check against that
+field — it's a different enum shape entirely (protocol's Add has a mandatory extra `id` field
+that vcs's Add doesn't have room for). This isn't imperative_plugin's own generic-shape choice to
+make; it inherits imperative_core's shape verbatim by using imperative_core's own operation type.
+
+imperative/core/rs is in this same CW7 wave's 17-crate assignment list, so it is presumably being
+migrated by another concurrent session, but had not landed as of this read. Until imperative_core
+flips `ImperativeOperation.collection`'s field type (and its Operation/OperationDiff/OpText impls,
+and its own Add/Remove/Move/Patch construction/match sites, and its `dsl` round-trip in the
+OpText region) to `protocol::CollectionOperation`, imperative_plugin has literally nothing valid
+to change — any edit here would either (a) not compile, or (b) require also touching
+imperative/core/rs/lib.rs, which is outside this crate's ownership per the ticket's ownership
+rules ("Touch ONLY your assigned crate's own files... Never touch: ... any other app crate").
+
+Per the ownership discipline and ticket instructions ("do NOT edit a crate outside your
+assignment; report a cross-crate ripple instead"), I made NO changes to
+imperative/plugin/rs/lib.rs or imperative/plugin/rs/Cargo.toml.
+
+ACTION NEEDED (not performed by me): once imperative/core/rs's CollectionOperation migration
+lands, imperative_plugin's lib.rs:14 `use vcs::CollectionOperation;` should become
+`use protocol::CollectionOperation;`, and the four construction sites should become:
+  - Add: `CollectionOperation::Add { id: id.clone(), item: step, at: index }` — id source: the
+    `id` local already computed via `next_step_id(document)` two lines above the Add construction
+    (lib.rs:251-252), which is exactly the same id later used to build the `Step` itself and to
+    seed `self.runtime.selected_step_ids`. This is the natural id source per the instructions
+    doc's guidance (id generated fresh at insertion time, preserve the generation, just also
+    thread it into Add).
+  - Remove: unchanged shape, no edit needed beyond the import switch.
+  - Move: `CollectionOperation::Move { id: id.into(), to: new_index }` (pure rename from
+    `to_index`).
+  - Patch: unchanged shape, no edit needed beyond the import switch.
+  A `protocol` dependency will also need to be added to imperative/plugin/rs/Cargo.toml at that
+  time (currently absent).
+  This crate has no direct `vcs::Operation`/`OperationDiff`/`OpText` imports of its own (it only
+  consumes imperative_core's `ImperativeOperation`/`ImperativeOperationDsl`/testkit types), so
+  step 7 of the instructions doc (Operation/OperationDiff/OpText import-path switch) does not
+  apply to imperative_plugin itself — that trio's import surgery belongs entirely to
+  imperative/core/rs.
+
+BUILD/TEST (baseline, unmodified code):
+  cd /Users/ueli/Documents/semio/imperative/plugin/rs && cargo build -p imperative-plugin
+    -> Finished, no errors (unrelated pre-existing warnings elsewhere in the workspace, e.g.
+       framework/core/rs lifetime-elision warnings, unrelated to this change).
+  cd /Users/ueli/Documents/semio/imperative/plugin/rs && cargo test -p imperative-plugin
+    -> 16 passed; 0 failed (imperative_plugin's own unit tests) + 0 doc-tests.
+  (Note: package name in Cargo.toml is `imperative-plugin`, not `imperative_plugin`; cargo -p
+  requires the hyphenated form.)
+
+Files touched: none.

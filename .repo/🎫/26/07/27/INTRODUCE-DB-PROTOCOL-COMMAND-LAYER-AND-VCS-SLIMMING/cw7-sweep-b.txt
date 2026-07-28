@@ -1,0 +1,156 @@
+CW7 sweep B — vcs::{Operation, OpText, OperationDiff, Edit} -> protocol:: import-path surgery
+================================================================================================
+Scope: pure import-path surgery for playbook/rs, playbook/module/procedural/rs, procedural/2d/rs,
+procedural/3d/rs, puzzle/2d/rs, puzzle/3d/rs, puzzle/5d/rs, raster/plugin/rs, reasoning/mindmap/rs.
+Confirmed first (vcs/rs/lib.rs line 63: `pub use protocol::{merge_concurrent_diffs, Edit, Operation,
+OperationDiff, OperationMeta, OpText, ReconcileReport, ReconcileSeverity};`) that vcs's own
+Operation/OperationDiff/OpText/Edit are themselves just re-exports of protocol's — trait/type shapes
+are byte-identical, so no behavioral changes anywhere in this sweep, only import paths.
+
+None of these 9 crates construct or pattern-match vcs::CollectionOperation (grepped, zero hits in
+all 9 lib.rs files) — so the CollectionOperation shape-migration steps in cw7-instructions.md do
+NOT apply to any of them; this was pure import-path surgery across the board.
+
+None of these 9 crates use vcs::Edit (grepped, zero real hits — only unrelated string literals like
+"Edit" mode labels). Only Operation/OperationDiff/OpText were present.
+
+All 9 crates already carried a direct `protocol` Cargo dependency (added in CW3's mechanical sweep)
+— no Cargo.toml changes were needed anywhere.
+
+--------------------------------------------------------------------------------------------------
+1. playbook/rs
+--------------------------------------------------------------------------------------------------
+Changed: `use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};` (line 9) split
+into `use vcs::{DocumentVcsEnvelope, DocumentVcsStore};` + `use protocol::{Operation, OperationDiff};`.
+No OpText/Edit/CollectionOperation usage. Left the doc comment at line 517 ("`vcs::OpText` for
+`PlaybookOperation`") untouched — it describes the dsl-derive-generated impl (derive macro lives in
+dsl/derive/rs, out of scope, still literally expands to `vcs::OpText`), so the comment stays accurate.
+Build: `cargo build -p playbook` — OK.
+Test: `cargo test -p playbook` — 21/21 unit tests passed, doc-tests 0/0 (no doctests).
+
+--------------------------------------------------------------------------------------------------
+2. playbook/module/procedural/rs
+--------------------------------------------------------------------------------------------------
+Changed: `use vcs::{Operation, OperationDiff};` (line 13) -> `use protocol::{Operation, OperationDiff};`
+(whole-line swap, nothing else was in that import). No OpText/Edit/CollectionOperation usage.
+Build: `cargo build -p playbook-module-procedural` — OK.
+Test: `cargo test -p playbook-module-procedural` — 14/14 unit tests passed. Doc-test step FAILED
+with `error[E0463]: can't find crate for flow_core/playbook/semio_framework_plugin` — this is a
+pre-existing infra quirk from `crate-type = ["cdylib", "rlib"]` in this crate's Cargo.toml (rustdoc's
+merged-doctest binary can't resolve deps against a cdylib target); unrelated to this import change
+(same crate-type is already present, no doctest content exists to fail on its own merits). Not
+something in scope for this ticket to fix.
+
+--------------------------------------------------------------------------------------------------
+3. procedural/2d/rs
+--------------------------------------------------------------------------------------------------
+Changed three sites:
+  - line 8: `use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};` split into
+    `use vcs::{DocumentVcsEnvelope, DocumentVcsStore};` + `use protocol::{Operation, OperationDiff};`.
+  - `impl vcs::OpText for Procedural2dOperation` -> `impl protocol::OpText for Procedural2dOperation`,
+    plus its two inline `<Procedural2dOperationDsl as vcs::OpText>::...` calls -> `as protocol::OpText`.
+    (`vcs::TextError` in the same fn signatures left untouched — out of migration scope.)
+  - test module: `use vcs::{apply_operation, create_document_vcs_envelope, test_support, DocumentDsl,
+    DocumentVcsCommand, OpText};` -> OpText pulled into a separate `use protocol::OpText;`, rest stay
+    on vcs.
+No Edit/CollectionOperation usage.
+Build: `cargo build -p procedural_2d` — OK.
+Test: `cargo test -p procedural_2d --lib` — 46/46 passed. (Skipped doctest run — same
+`crate-type = ["rlib", "cdylib"]` pre-existing quirk as crate #2, confirmed present in this crate's
+Cargo.toml too; not exercised, not part of this migration's surface.)
+
+--------------------------------------------------------------------------------------------------
+4. procedural/3d/rs
+--------------------------------------------------------------------------------------------------
+Identical structure/edits to procedural/2d/rs (this crate mirrors it 1:1):
+  - line 8 import split (Operation/OperationDiff -> protocol).
+  - `impl vcs::OpText for Procedural3dOperation` + two inline `as vcs::OpText` casts -> protocol::OpText.
+  - test module OpText pulled to `use protocol::OpText;`.
+No Edit/CollectionOperation usage.
+Build: `cargo build -p procedural_3d` — OK.
+Test: `cargo test -p procedural_3d --lib` — 34/34 passed.
+
+--------------------------------------------------------------------------------------------------
+5. puzzle/2d/rs
+--------------------------------------------------------------------------------------------------
+Changed two sites (both isolated `use vcs::{Operation, OperationDiff};` lines, nothing else mixed in):
+  - line 584 (crate-root `//#region DocumentVcs`).
+  - line 5108 (inside `force_graph_tests` test module, function `puzzle2d_delta_ops_are_granular_and_round_trip`).
+No OpText/Edit/CollectionOperation usage anywhere in this file. `vcs::DocumentDsl` uses at lines 156,
+3969, 4061 left untouched (out of scope).
+Build: `cargo build -p puzzle_2d` — OK.
+Test: `cargo test -p puzzle_2d --lib` — 119 passed, 2 FAILED:
+  - `host_tests::board_host_fill_base_core_rectangular_excludes_cylindric_tambour`
+  - `host_tests::puzzle2d_default_manifest_satisfies_board_host_validation`
+  (panic: `InvalidHandleKindColor("var(--muted-foreground)")`, and a fill-placement count mismatch).
+  Verified NOT caused by this migration: `git diff -- puzzle/2d/rs/lib.rs` shows only the two isolated
+  import-line swaps above, nothing touching board-host fill logic or kind-catalog color parsing. The
+  panic originates in `infinite/board/port/directed/normal/rs/lib.rs` (`NormalPortError::
+  InvalidHandleKindColor`, a CSS color parser) — a different crate entirely, not part of this
+  assignment and not touched by it. Consistent with known concurrent-workspace-churn: another
+  in-flight session appears to be mid-change on the CSS-variable/color-catalog path this test
+  exercises. Reporting as a cross-crate pre-existing failure, not fixed here (out of ownership per
+  cw7-instructions.md's "do NOT edit a crate outside your assignment; report a cross-crate ripple").
+
+--------------------------------------------------------------------------------------------------
+6. puzzle/3d/rs
+--------------------------------------------------------------------------------------------------
+Changed: line 3040 `use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};`
+split into `use vcs::{DocumentVcsEnvelope, DocumentVcsStore};` + `use protocol::{Operation,
+OperationDiff};`. No OpText/Edit/CollectionOperation usage anywhere in this file (grepped explicitly).
+`vcs::DocumentDsl`/`vcs::create_document_vcs_envelope`/`vcs::DocumentVcsCommand` left untouched.
+Build: `cargo build -p puzzle_3d` — OK.
+Test: `cargo test -p puzzle_3d --lib` — 64/64 passed.
+
+--------------------------------------------------------------------------------------------------
+7. puzzle/5d/rs
+--------------------------------------------------------------------------------------------------
+Changed: line 118 `use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};`
+split into `use vcs::{DocumentVcsEnvelope, DocumentVcsStore};` + `use protocol::{Operation,
+OperationDiff};`. No OpText/Edit/CollectionOperation usage anywhere in this file.
+Build: `cargo build -p puzzle_5d` — OK.
+Test: `cargo test -p puzzle_5d --lib` — 5/5 passed.
+
+--------------------------------------------------------------------------------------------------
+8. raster/plugin/rs
+--------------------------------------------------------------------------------------------------
+Changed: line 11, `use vcs::{Operation, OperationDiff};` -> `use protocol::{Operation, OperationDiff};`
+inside the nested `pub(crate) mod domain { ... }` module (crate-root `protocol::` path resolves fine
+from a nested module under 2018+ edition path rules — verified by successful build). No OpText/Edit/
+CollectionOperation usage anywhere in this file.
+Build: `cargo build -p raster-plugin` — OK.
+Test: `cargo test -p raster-plugin --lib` — 26 passed, 3 FAILED:
+  - `__semio_plugin_sanity_declared_apps_appear_in_bundle_manifest`
+  - `tests::set_active_utility_switch_emits_no_ops_and_reads_from_view_state`
+  - `tests::utility_registry_declares_utilities_scoped_to_the_composite_window`
+  (all three panic identically: "invalid catalog icon name" at
+  `ui/wgpu/rs/../../../ui/asset/icon/generated/icon_name.rs:1507`). Verified NOT caused by this
+  migration: `git diff -- raster/plugin/rs/lib.rs` shows only the single import-line swap above,
+  unrelated to icon catalogs. The panic site is a generated icon-name lookup table in a completely
+  different crate/subsystem (`ui/asset/icon`), consistent with concurrent-workspace churn from
+  another in-flight session touching the icon catalog. Reporting as a cross-crate pre-existing
+  failure, not fixed here (out of ownership).
+
+--------------------------------------------------------------------------------------------------
+9. reasoning/mindmap/rs
+--------------------------------------------------------------------------------------------------
+Changed: line 40, `use vcs::{Operation, OperationDiff};` -> `use protocol::{Operation, OperationDiff};`
+(whole-line swap). No OpText/Edit/CollectionOperation usage in code; the doc comment at line 295
+("the generated `impl vcs::DocumentDsl for MindmapWiresDocument`/`impl vcs::OpText for
+MindmapWiresOperation` live entirely in the derive expansion") was left untouched — it accurately
+describes what the `dsl::DslOps` derive macro (dsl/derive/rs, out of scope/forbidden to edit) still
+literally generates, so rewriting the comment would make it inaccurate.
+Build: `cargo build -p reasoning_mindmap` — OK.
+Test: `cargo test -p reasoning_mindmap --lib` — 12/12 passed.
+
+--------------------------------------------------------------------------------------------------
+Summary
+--------------------------------------------------------------------------------------------------
+All 9 crates: import-path surgery complete, builds clean, no Cargo.toml changes needed (protocol dep
+already direct everywhere). 7 of 9 crates have fully green test suites (playbook, playbook-module-
+procedural [unit tests], procedural_2d, procedural_3d, puzzle_3d, puzzle_5d, reasoning_mindmap).
+2 of 9 crates (puzzle_2d, raster-plugin) have pre-existing test failures verified unrelated to this
+migration (confirmed via minimal git diff + panic sites in other crates entirely: infinite/board/
+port/directed/normal/rs's CSS color parser, and ui/asset/icon's generated catalog) — these read as
+concurrent-workspace churn from other in-flight sessions, not fallout from this sweep. No files
+outside the 9 assigned crates were touched.

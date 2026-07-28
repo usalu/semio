@@ -1,0 +1,99 @@
+CW7 App fan-out — CollectionOperation shape migration
+Crate: layout/rs (layout_rs)
+File touched: /Users/ueli/Documents/semio/layout/rs/lib.rs
+Cargo.toml: unchanged — `protocol` was already a direct dependency, no edit needed.
+
+## Summary
+
+layout/rs had real, non-trivial CollectionOperation usage (not a false positive): the `operations`
+module defines `LayoutOperation::{Pages, Stories, Links}` wrapping `CollectionOperation<String, _, _>`
+for the document's Pages/Stories/Links id-keyed collections, applies/inverts them via
+`apply_collection_operation`/`invert_collection_operation`, and the `dsl` module has a local
+`LayoutOperationDsl` mirror (`PagesAdd`/`PagesMove`/etc.) that flattens the wrapper for text-op
+encoding.
+
+## Changes made
+
+1. `mod operations` (`use` at former line 1268): switched
+   `vcs::{apply_collection_operation, invert_collection_operation, CollectionOperation, Identified,
+   Operation, OperationDiff, Patchable}` to the equivalent `protocol::{...}` import (all seven names
+   are re-exported at the `protocol` facade). This covers step 6 (CollectionOperation +
+   apply/invert_collection_operation) and step 7 (Operation/OperationDiff, since `vcs::Operation`/
+   `vcs::OperationDiff` were already just a shim re-export of `protocol::Operation`/
+   `protocol::OperationDiff` — pure import-path surgery, no behavior change).
+
+2. `mod dsl` (`use` at former line 1746): split `vcs::{CollectionOperation, OpText, TextError}` into
+   `protocol::{CollectionOperation, OpText}` + `vcs::TextError` (unchanged — `TextError` is not part
+   of the Operation/OperationDiff/OpText trio and `dsl_core::TextError` is not re-exported at the
+   `protocol` facade, so it stays sourced from `vcs`, which still re-exports `dsl_core::TextError`
+   verbatim).
+
+3. **Id source for `Add` (step 2 of the instructions):** used the item's own `id: String` field —
+   `Page`, `TextStory`, and `ImageLink` all already carry `id` (verified: `Remove`/`Move`/`Patch`
+   already key off this same field via `Identified<String>::id(&self) -> &String { &self.id }`), so
+   every `Add` construction/pattern became `CollectionOperation::Add { id: <item>.id.clone(), item,
+   at: <old index> }`, and every match arm that doesn't need the id binds `id: _id` (the DSL→Op
+   direction ignores it since the mirrored `item` field already carries the same id after
+   `layout_operation_from_dsl` reconstructs it).
+
+4. **`Identified<String>` impls** (`Page`/`TextStory`/`ImageLink`): no code change needed —
+   `protocol::Identified`'s `fn id(&self) -> &TId` has the exact same signature as `vcs::Identified`'s,
+   so only the import switch (item 1) was required.
+
+5. **`Patchable` impls — NOT a pure rename, real signature change:** `protocol_command::Patchable`
+   splits `vcs::Patchable`'s single `apply_patch(&mut self, &TPatch) -> TPatch` (mutate + return
+   inverse) into two methods, `fn apply_patch(&mut self, &TPatch)` (mutate only) and `fn diff_patch(&self,
+   other: &Self) -> Option<TPatch>` (structural diff, used by the new `invert_collection_operation`'s
+   `Patch` arm as `after.diff_patch(&prior)`). This is required by the frozen shape (confirmed by
+   reading `protocol/command/rs/lib.rs`'s `invert_collection_operation`), not optional — rewrote all
+   three impls (`Patchable<PagePatch> for Page`, `Patchable<TextStoryPatch> for TextStory`,
+   `Patchable<ImageLinkPatch> for ImageLink`):
+   - `apply_patch` keeps the exact same field-mutation logic, just drops the inverse-patch
+     construction/return.
+   - `diff_patch(&self, other)` does a field-by-field comparison and returns `Some(patch)` with every
+     field that differs between `self` and `other` set to `other`'s value (`None` if nothing differs) —
+     semantically equivalent to the old per-touched-field inverse for every case exercised by this
+     crate's round-trip tests (all patched fields in the test fixtures carry a genuine value change).
+
+6. **`LayoutOperationDsl` conversions** (`layout_operation_to_dsl`/`layout_operation_from_dsl`):
+   `Add`/`Move` arms updated for the new field names (`at`, `to`) and the new mandatory `id` on `Add`.
+   The DSL mirror's own field names (`index`, `to_index`) were deliberately left as-is — they're this
+   crate's own local encoding, not the frozen protocol shape, and instructions only asked for the
+   `CollectionOperation` construction/match sites and the vcs→protocol import surgery, not to rename
+   unrelated local DSL field names.
+
+7. Updated every test-module `CollectionOperation::Add`/`Move` construction (operations::tests and
+   dsl::tests) to the new shape (`id`, `at`/`to`).
+
+## Explicitly left untouched (out of scope)
+
+- `vcs::apply_operation` calls (round-trip test helper, `LayoutOperation::AddFrame`/`RemoveFrame` test
+  setup) — this is a *different*, still-vcs-only generic helper (`fn apply_operation<P, Operation>`)
+  that is not part of the `apply_collection_operation`/`invert_collection_operation`/
+  `collection_diff_from_operation` trio and was never moved to `protocol`; left as `vcs::apply_operation`.
+- `vcs::DocumentDsl`, `vcs::create_document_vcs_envelope`, `vcs::test_support`,
+  `vcs::DocumentVcsCommand`, `vcs::DocumentVcsStore` — unrelated to this migration, untouched.
+- `FramePatch`/`apply_frame_patch` (the per-page nested-frame patch system used by
+  `AddFrame`/`RemoveFrame`/`PatchFrame`) — this is a bespoke, non-`CollectionOperation` mechanism (frames
+  are nested per-page, not a flat id-keyed `Vec` collection operated on via `CollectionOperation`), so
+  it's outside this migration's shape change entirely; untouched.
+
+## Cross-crate ripple (reported, NOT fixed — out of ownership)
+
+`layout/plugin/rs/lib.rs` (a separate crate in this same CW7 assignment list) constructs
+`LayoutOperation::Pages(CollectionOperation::Add { index: document.pages.len(), item: page })` at line
+1450 using the OLD shape (`index`/no `id`). Now that `layout/rs`'s `LayoutOperation::Pages` wraps the
+new-shape `protocol::CollectionOperation`, this call site in `layout/plugin/rs` will fail to compile
+(`index` isn't a field of `Add` anymore, `id` is now mandatory) until `layout/plugin/rs` is migrated —
+whoever owns that crate's ticket entry needs to add `id: page.id.clone()` (or equivalent) and rename
+`index` to `at`. Per ownership discipline this was reported here, not edited.
+
+## Build/test status
+
+- `cd /Users/ueli/Documents/semio/layout/rs && cargo build -p layout_rs` — succeeds (only pre-existing,
+  unrelated lint warnings: elided lifetimes in `SceneQuery`/`DwgBitReader` uses, workspace-wide
+  multi-target-file warnings for other crates' `Cargo.toml`s).
+- `cd /Users/ueli/Documents/semio/layout/rs && cargo test -p layout_rs` — all 36 tests pass (0 failed),
+  including every Pages/Stories/Links add/patch round-trip, the full `LayoutOperationDsl`
+  add/remove/move/patch op-text round-trip suite, and the document-text/pack round-trip test that
+  dispatches a live `DocumentVcsStore`.

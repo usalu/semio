@@ -12,8 +12,8 @@ use semio_framework_plugin::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use protocol::CollectionOperation;
 use std::collections::{BTreeSet, HashMap};
-use vcs::CollectionOperation;
 
 //#region ⚠️ Errors
 /// ⚠️ Errors from DAG play app edge-connection building.
@@ -761,7 +761,7 @@ impl DocumentApp for DagPlayApp {
                             let to_port = operation.get("targetPortId").and_then(|value| value.as_str());
                             if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) {
                                 if let Ok(edge) = connect_edge(document, from, from_port, to, to_port) {
-                                    emitted.push(DagOperation::Edges(CollectionOperation::Add { index: document.edges.len(), item: edge }));
+                                    emitted.push(DagOperation::Edges(CollectionOperation::Add { id: edge.id.clone(), at: document.edges.len(), item: edge }));
                                 }
                             }
                         }
@@ -841,7 +841,7 @@ impl DocumentApp for DagPlayApp {
                 let target_port_id = args.and_then(|value| value.get("targetPortId")).and_then(|value| value.as_str());
                 if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (source_node_id, source_port_id, target_node_id, target_port_id) {
                     if let Ok(edge) = connect_edge(document, from, from_port, to, to_port) {
-                        return ActionEmit::operations(vec![DagOperation::Edges(CollectionOperation::Add { index: document.edges.len(), item: edge })]);
+                        return ActionEmit::operations(vec![DagOperation::Edges(CollectionOperation::Add { id: edge.id.clone(), at: document.edges.len(), item: edge })]);
                     }
                 }
                 ActionEmit::default()
@@ -853,7 +853,7 @@ impl DocumentApp for DagPlayApp {
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                 let node = default_node_for_kind(kind, &id, x, y);
                 self.runtime.selected_node_ids = vec![id];
-                ActionEmit::operations(vec![DagOperation::Nodes(CollectionOperation::Add { index: document.nodes.len(), item: node })])
+                ActionEmit::operations(vec![DagOperation::Nodes(CollectionOperation::Add { id: node.id.clone(), at: document.nodes.len(), item: node })])
             }
             "reorganize" => {
                 if let Ok(mut host) = DagHost::load_fixture_json(&serde_json::to_string(&dag_fixture_from_document(document, self.runtime.camera.clone())).unwrap_or_default()) {

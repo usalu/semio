@@ -28,40 +28,16 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use thiserror::Error;
 
-//#region 🚧TEMPORARY protocol shim
-// 🚧 TEMPORARY shim for the CW3 kernel cut-over — deleted at CW8 once every ~40 dependent crate
-// imports protocol:: directly. `Operation`/`OperationDiff`/`OpText`/`OperationMeta`/`Edit`/
-// `merge_concurrent_diffs` moved to `protocol_command`/`protocol_crdt`, re-exported here under
-// their original names so every existing `vcs::Operation`/`vcs::OpText`/etc reference across the
-// ~40 dependent crates keeps resolving unchanged, and so bare (unqualified) uses inside this crate
-// itself keep compiling too. `Edit`/`OperationMeta` moved verbatim (identical field shape, same
-// `#[serde(rename_all = "camelCase")]`); `Operation`/`OperationDiff`/`OpText` moved with only
-// additive defaulted methods + id-newtype-typed return values (verified empirically: none of this
-// crate's own three real impls — `StudioHistoryOperation`/`DemoOperation`/`TimestampedOperation` —
-// override anything but `diff`/`backwards`/`timestamp`, all unaffected); `merge_concurrent_diffs`
-// has a genuinely different signature but zero external callers exist (grepped repo-wide).
-//
-// NOT shimmed this wave (see each item's own removal-site comment for the full justification —
-// summary: the frozen contract's new shape is real and correct, but re-exporting it here would
-// break confirmed, extensive PRODUCTION usage across many app crates outside this wave's scope,
-// which is squarely CW7's "app fan-out" job, not a same-shape drop-in this wave can silently absorb):
-// - `operation_envelope_from_edit` — `vcs` keeps its OWN function of that name (unchanged 3-arg/
-//   whole-edit-per-envelope shape): `framework/sync`'s hub wire protocol (outside this wave's
-//   ownership, reserved for CW5) calls it directly with the old signature and constructs
-//   `OperationEnvelope`/`DocumentDiff`/`InverseOperation` in the old `semio_framework_core` shape
-//   throughout; protocol_causal's version has an incompatible per-operation (not per-edit) shape.
-// - `Identified`/`Patchable`/`CollectionOperation`/`CollectionDiff`/`ItemPatch`/
-//   `apply_collection_operation`/`invert_collection_operation`/`collection_diff_from_operation` —
-//   the frozen contract's `CollectionOperation` shape genuinely changed (`Add` gained an `id` field
-//   and `index` renamed `at`; `Move`'s `to_index` renamed `to`) — confirmed via grep to be
-//   constructed/pattern-matched by field name in ~20 live production crates (`imperative/core`,
-//   `imperative/plugin`, `layout/plugin`, `layout/rs`, `architect/program`, `architect/plugin`,
-//   `trinity/plugin`, `sequence/core`, `infinite/board/*`, `gis/plugin`, `shooting/*`,
-//   `process/plugin`, `process/3d`, `flow/core`, `animate/present`, `animate/plugin`,
-//   `lowpoly/core`, `kernel/3d/brep` — not an exhaustive list). Shimming the new shape would break
-//   every one of them; kept as vcs's own unchanged local definitions instead.
-pub use protocol::{merge_concurrent_diffs, Edit, Operation, OperationDiff, OperationMeta, OpText, ReconcileReport, ReconcileSeverity};
-//#endregion 🚧TEMPORARY protocol shim
+// 🎞️ CW8: the temporary public `pub use protocol::{...}` shim (CW3-CW8) is gone — every dependent
+// crate now imports `protocol::{Operation, OperationDiff, OpText, OperationMeta, Edit,
+// ReconcileReport, ...}` directly, so `vcs::Operation`/`vcs::OpText`/etc no longer resolve
+// externally. This crate's OWN body still spells these names bare throughout (generic bounds like
+// `Operation: OpText`, `Edit<Operation>` struct literals, `crate::Operation<P>` disambiguating the
+// trait from the same-named generic parameter, etc.) — a private (non-`pub`) import keeps that
+// internal ergonomics unchanged without re-exposing the names on `vcs`'s own public API.
+// `merge_concurrent_diffs`/`ReconcileSeverity` aren't referenced bare anywhere in this crate (only
+// fully-qualified `protocol::` elsewhere), so they're deliberately not imported here.
+use protocol::{Edit, Operation, OperationDiff, OperationMeta, OpText, ReconcileReport};
 
 static ID_COUNTER: AtomicU64 = AtomicU64::new(0);
 
@@ -3536,6 +3512,62 @@ pub mod test_support {
         assert_eq!(parsed_pack.projection, parsed_text.projection, "document-pack path diverged from document-text path");
     }
 
+    /// @emoji ✉️ Asserts that converting an `Edit<Operation>` into `protocol::OperationEnvelope`s
+    /// (`protocol_causal`'s canonical wire/causal representation, moved from `framework/core` in CW3,
+    /// via `protocol::operation_envelope_from_edit`) preserves every operation's essential facts —
+    /// the causal-wire sibling of `assert_pack_round_trip`/`assert_dsl_round_trip` for the app
+    /// fan-out's "pack laws" cluster.
+    ///
+    /// `OperationEnvelope` is a runtime struct that is never itself re-serialized back into an
+    /// `Edit` (unlike `encode_pack`/`decode_pack`, there is no `envelope_to_edit` inverse — vcs's OWN
+    /// `edit_from_operation_envelope` recovers a *whole edit* from vcs's own, differently-shaped,
+    /// per-edit `semio_framework_core::OperationEnvelope`, not from this per-operation
+    /// `protocol_causal` one), so a byte-level encode-then-decode law is not meaningful here.
+    /// Instead this checks the two LAWS that actually matter for this bridge: (1) whatever
+    /// `edit.operation_meta` explicitly recorded for a slot (the ground-truth source
+    /// `operation_envelope_from_edit` prefers over its own `Operation`-trait/structural fallbacks —
+    /// see that function's own doc comment) survives unchanged onto the envelope's
+    /// `operation_id`/`dependencies`/`actor`/`timestamp`; and (2) `envelope.diff.payload`/
+    /// `envelope.inverse.inverse_diff` decode back (via `Operation`'s own `Deserialize` impl) into
+    /// operations equal to `edit.forwards[i]`/`edit.backwards[i]` — the part a hand-rolled
+    /// `Serialize`/`Deserialize` pair can silently break. Deliberately does NOT recompute the
+    /// envelope's fallback chain (id/actor/deps when `operation_meta` is absent) itself, since doing
+    /// so would just re-run `operation_envelope_from_edit`'s own logic against itself and always
+    /// agree — see this function's `🧪Tests` sibling for a deliberately lossy `Operation` impl that
+    /// trips law (2).
+    pub fn assert_command_envelope_round_trip<P, Operation>(edit: &Edit<Operation>, document_id: &DocumentId)
+    where
+        P: Clone + PartialEq + std::fmt::Debug,
+        Operation: crate::Operation<P> + PartialEq + std::fmt::Debug,
+    {
+        let envelopes = protocol::operation_envelope_from_edit::<P, Operation>(edit, document_id);
+        assert_eq!(envelopes.len(), edit.forwards.len(), "one envelope must be produced per forward operation");
+        for (index, envelope) in envelopes.iter().enumerate() {
+            assert_eq!(envelope.document_id, *document_id, "document id did not survive the envelope conversion");
+            if let Some(meta) = edit.operation_meta.get(index) {
+                if let Some(operation_id) = &meta.operation_id {
+                    assert_eq!(&envelope.operation_id, operation_id, "explicit operation id did not survive the envelope conversion");
+                }
+                assert_eq!(envelope.dependencies, meta.dependencies, "explicit dependencies did not survive the envelope conversion");
+                if let Some(author_id) = &meta.author_id {
+                    assert_eq!(&envelope.actor, author_id, "explicit author id did not survive the envelope conversion");
+                }
+                assert_eq!(envelope.timestamp, meta.timestamp, "explicit timestamp did not survive the envelope conversion");
+            }
+            let recovered_forward: Operation = serde_json::from_value(envelope.diff.payload.clone())
+                .unwrap_or_else(|error| panic!("envelope diff payload must decode back into an equal operation: {error}"));
+            assert_eq!(&recovered_forward, &edit.forwards[index], "envelope diff payload did not decode back into an equal forward operation");
+            match edit.backwards.get(index) {
+                Some(backward) => {
+                    let recovered_backward: Operation = serde_json::from_value(envelope.inverse.inverse_diff.clone())
+                        .unwrap_or_else(|error| panic!("envelope inverse payload must decode back into an equal operation: {error}"));
+                    assert_eq!(&recovered_backward, backward, "envelope inverse payload did not decode back into an equal backward operation");
+                }
+                None => assert_eq!(envelope.inverse.inverse_diff, serde_json::Value::Null, "inverse payload must be Null when the edit has no corresponding backwards op"),
+            }
+        }
+    }
+
     /// @emoji 🩺 Asserts the store's incrementally-maintained live projection agrees with a
     /// from-scratch full replay — the differential check for `DocumentVcsStore`'s stateful `current`
     /// field. Call after arbitrary command sequences (apply/amend/undo/redo/checkpoint/switch
@@ -4729,6 +4761,88 @@ mod tests {
     fn test_support_round_trip_helpers_pass_for_demo_operation() {
         test_support::assert_operation_round_trip(&DemoProjection { n: 4 }, DemoOperation::SetN { n: 9 });
         test_support::assert_store_roundtrip(DemoProjection { n: 4 }, DemoOperation::SetN { n: 9 });
+
+        let edit = Edit::<DemoOperation> {
+            id: "edit-command-envelope".into(),
+            actor: Some("actor-fallback".into()),
+            forwards: vec![DemoOperation::SetN { n: 9 }],
+            backwards: vec![DemoOperation::SetN { n: 4 }],
+            operation_meta: vec![OperationMeta {
+                operation_id: Some(OperationId("op-a".into())),
+                dependencies: vec![OperationId("op-0".into())],
+                base_version: 0,
+                author_id: Some(ActorId("actor-explicit".into())),
+                timestamp: protocol::HybridLogicalTimestamp::new(1, 1000),
+                undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+                payload_hash: None,
+            }],
+            description: None,
+            coalesce_key: None,
+            sequence_number: 1,
+            started_at: "2026-07-27T00:00:00Z".into(),
+            finished_at: None,
+        };
+        test_support::assert_command_envelope_round_trip::<DemoProjection, DemoOperation>(&edit, &DocumentId("doc-command-envelope".into()));
+    }
+
+    /// @emoji 🪤 Proves `assert_command_envelope_round_trip` is not a trivially-true check: a hand-rolled
+    /// `Operation` whose `Deserialize` impl silently drops its own field (encodes `n` faithfully but
+    /// always decodes to `n: 0`) must trip law (2) of the doc comment on
+    /// `assert_command_envelope_round_trip` — the same "deliberately lossy impl" pattern
+    /// `protocol_testkit`'s `op_text_round_trip_panics_on_a_lossy_impl` uses for `assert_op_text_round_trip`.
+    #[test]
+    #[should_panic(expected = "did not decode back into an equal forward operation")]
+    fn command_envelope_round_trip_panics_on_a_lossy_operation() {
+        #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+        struct LossyDiff;
+
+        impl OperationDiff<DemoProjection> for LossyDiff {
+            fn apply(&self, projection: &DemoProjection) -> DemoProjection {
+                projection.clone()
+            }
+            fn absorb(&mut self, _other: Self) {}
+        }
+
+        #[derive(Clone, Debug, PartialEq)]
+        struct LossyOperation {
+            n: i32,
+        }
+
+        impl Serialize for LossyOperation {
+            fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+                serializer.serialize_i32(self.n)
+            }
+        }
+
+        impl<'de> Deserialize<'de> for LossyOperation {
+            fn deserialize<D: serde::Deserializer<'de>>(_deserializer: D) -> Result<Self, D::Error> {
+                Ok(LossyOperation { n: 0 })
+            }
+        }
+
+        impl Operation<DemoProjection> for LossyOperation {
+            type Diff = LossyDiff;
+            fn diff(&self, _projection: &DemoProjection) -> LossyDiff {
+                LossyDiff
+            }
+            fn backwards(&self, _projection: &DemoProjection) -> Vec<Self> {
+                vec![self.clone()]
+            }
+        }
+
+        let edit = Edit::<LossyOperation> {
+            id: "edit-lossy".into(),
+            actor: None,
+            forwards: vec![LossyOperation { n: 7 }],
+            backwards: vec![],
+            operation_meta: vec![],
+            description: None,
+            coalesce_key: None,
+            sequence_number: 0,
+            started_at: "2026-07-27T00:00:00Z".into(),
+            finished_at: None,
+        };
+        test_support::assert_command_envelope_round_trip::<DemoProjection, LossyOperation>(&edit, &DocumentId("doc-lossy".into()));
     }
 
     // `DemoProjection`'s `vcs::DocumentDsl` impl and `DemoOperation`'s `vcs::OpText` impl are now

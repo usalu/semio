@@ -1517,8 +1517,14 @@ const POLICY_TREE_ITEM_REDEFINITION_ALLOWLIST = new Set<string>(["puzzle/plugin/
  */
 const POLICY_SHARED_DOMAIN_CRATE_ALLOWLIST = new Set<string>(["flow_core", "flow_module_draw", "flow_module_brep", "trinity_jack", "trinity_ram", "mathematical_graph_drawing", "mathematical_geometry", "infinite_board_port_directed", "infinite_board_port_directed_dag"]);
 
-/** 🛡️Path prefixes (repo-relative) always allowed as plugin/rs dependency targets: generic shared infra. */
-const POLICY_ALWAYS_ALLOWED_DEP_PREFIXES = ["framework/", "ui/", "vcs/", "playbook/", "repo/"];
+/**
+ * 🛡️Path prefixes (repo-relative) always allowed as plugin/rs dependency targets: generic shared
+ * infra. `"protocol/"` was added at CW8 — every app now imports `protocol::` directly (CW7's import
+ * sweep) the same way it already reaches `vcs`/`ui`/`framework`. Deliberately NOT `"db/"`: db stays
+ * reachable only through the hub servers (and, behind a feature, `db_engine`), enforced by
+ * `policyDbServerOnlyBreaches` instead of this always-allowed list.
+ */
+const POLICY_ALWAYS_ALLOWED_DEP_PREFIXES = ["framework/", "ui/", "vcs/", "playbook/", "protocol/", "repo/"];
 
 /**
  * 🎫 dsl/ derive-engine migration lock step: technologies whose example/*.json fixture has not yet
@@ -1543,6 +1549,74 @@ const POLICY_JSON_FIXTURE_PATH_PREFIX_ALLOWLIST = ["coda/"];
  * remove that file from this list; wave 3 verifies it has shrunk to empty.
  */
 const POLICY_PACK_COMPLETENESS_ALLOWLIST = new Set<string>([]);
+
+/**
+ * 🎫 CW7 command-envelope law lock step (`.repo/🎫/26/07/27/
+ * INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING`): every `*.rs` file that already calls
+ * `assert_dsl_pack_equivalence(`/`assert_document_pack_round_trip(` but does not yet ALSO call
+ * `vcs::test_support::assert_command_envelope_round_trip` (added in CW7) on the same fixtures — seeded
+ * at CW8 with every file that fails the check today, exactly like `POLICY_PACK_COMPLETENESS_ALLOWLIST`
+ * was seeded for the dsl/pack lock step (`vcs/rs/lib.rs` itself proves the mechanism on its own
+ * `DemoProjection`/`LossyOperation` fixtures, which is why it is NOT in this list). Remove an entry
+ * once that file adds the command-envelope-round-trip call.
+ */
+const POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST = new Set<string>([
+  "animate/present/rs/lib.rs",
+  "architect/program/rs/lib.rs",
+  "cad/rs/lib.rs",
+  "compose/client/lib/rs/lib.rs",
+  "draw/rs/lib.rs",
+  "dsl/rs/lib.rs",
+  "fem/2d/rs/lib.rs",
+  "fem/3d/rs/lib.rs",
+  "flow/core/rs/lib.rs",
+  "forms/rs/lib.rs",
+  "framework/product/os/core/rs/lib.rs",
+  "gis/plugin/rs/lib.rs",
+  "imperative/core/rs/lib.rs",
+  "infinite/board/port/directed/dag/rs/lib.rs",
+  "layout/rs/lib.rs",
+  "lowpoly/core/rs/lib.rs",
+  "mathematical/plugin/rs/lib.rs",
+  "norm/core/rs/lib.rs",
+  "norm/din/4108/rs/lib.rs",
+  "norm/din/en/16798/rs/lib.rs",
+  "norm/din/v/18599/rs/lib.rs",
+  "norm/en/1990/rs/lib.rs",
+  "norm/en/1991/rs/lib.rs",
+  "norm/en/1992/rs/lib.rs",
+  "norm/en/1993/rs/lib.rs",
+  "norm/en/1994/rs/lib.rs",
+  "norm/en/1995/rs/lib.rs",
+  "norm/en/1996/rs/lib.rs",
+  "norm/en/1997/rs/lib.rs",
+  "norm/en/1998/rs/lib.rs",
+  "norm/en/1999/rs/lib.rs",
+  "norm/iso/16757/rs/lib.rs",
+  "norm/vdi/3805/rs/lib.rs",
+  "note/plugin/rs/lib.rs",
+  "playbook/module/procedural/rs/lib.rs",
+  "playbook/rs/lib.rs",
+  "procedural/2d/rs/lib.rs",
+  "procedural/3d/rs/lib.rs",
+  "process/3d/rs/lib.rs",
+  "puzzle/2d/rs/lib.rs",
+  "puzzle/3d/rs/lib.rs",
+  "puzzle/5d/rs/lib.rs",
+  "puzzle/plugin/rs/lib.rs",
+  "raster/plugin/rs/lib.rs",
+  "reasoning/mindmap/rs/lib.rs",
+  "remodel/rs/lib.rs",
+  "s/plugin/rs/lib.rs",
+  "s/rs/lib.rs",
+  "sequence/core/rs/lib.rs",
+  "shooting/rs/lib.rs",
+  "sourcing/curate/rs/lib.rs",
+  "trinity/ram/rs/lib.rs",
+  "trinity/rewrite/engine/rs/lib.rs",
+  "vcs/plugin/rs/lib.rs",
+  "writer/rs/lib.rs",
+]);
 
 /**
  * 🎫 dsl/ derive-engine migration lock step: known generic bridges whose `DocumentDsl`/`OpText` coverage
@@ -2099,9 +2173,13 @@ function policyDocumentAppUsages(scope: string, content: string): PolicyDocument
 
 const POLICY_STRUCT_OR_ENUM_DECL_RE = /^\s*(?:pub\s+)?(?:struct|enum)\s+(\w+)\b/gm;
 const POLICY_DSL_DERIVE_RE = /derive\([^)]*\bDsl(?:Document|Ops|Record|Enum|Scalar)\b[^)]*\)/;
-const POLICY_HAND_ROLLED_IMPL_RE = /impl(?:<[^>]*>)?\s+(?:vcs::)?(DocumentDsl|OpText)\s+for\s+(?:vcs::)?(\w+)/g;
+// 🎞️ CW9: `OpText` moved from `vcs` to `protocol` (see protocol/command/rs) — CW7's import-path sweep
+// rewrote every hand-rolled `impl vcs::OpText for X` to `impl protocol::OpText for X`, so this must
+// recognize both prefixes (`DocumentDsl` stays vcs-owned, but allowing `protocol::` there too is
+// harmless since no such impl exists).
+const POLICY_HAND_ROLLED_IMPL_RE = /impl(?:<[^>]*>)?\s+(?:vcs::|protocol::)?(DocumentDsl|OpText)\s+for\s+(?:vcs::|protocol::)?(\w+)/g;
 
-/** 🧬One O(total content) pass building every type name that's DSL-complete — via `#[derive(dsl::Dsl…)]` a few lines above its own `struct`/`enum` declaration, or a hand-rolled `impl (vcs::)?DocumentDsl`/`impl (vcs::)?OpText` (an explicit generic impl also counts, e.g. `impl<D> OpText for SetDocumentOperation<D>`) — split by trait since a type may satisfy one but not the other. */
+/** 🧬One O(total content) pass building every type name that's DSL-complete — via `#[derive(dsl::Dsl…)]` a few lines above its own `struct`/`enum` declaration, or a hand-rolled `impl (vcs::|protocol::)?DocumentDsl`/`impl (vcs::|protocol::)?OpText` (an explicit generic impl also counts, e.g. `impl<D> OpText for SetDocumentOperation<D>`) — split by trait since a type may satisfy one but not the other. */
 function policyDslCompleteTypeNames(files: readonly { content: string }[]): { documentDsl: Set<string>; opText: Set<string> } {
   const documentDsl = new Set<string>();
   const opText = new Set<string>();
@@ -2235,6 +2313,200 @@ function policyPackCompletenessBreaches(repoRoot: string): BreachRecord[] {
 }
 //#endregion 🔧PolicyRulePackCompleteness
 
+//#region 🔧PolicyRuleCommandEnvelopeCompleteness
+/**
+ * 📏CW7 command-envelope law rule — mirrors `policyPackCompletenessBreaches`'s shrinking-allowlist
+ * pattern one step further: every file that already proves the dsl/pack round-trip laws
+ * (`assert_dsl_pack_equivalence(`/`assert_document_pack_round_trip(`) must ALSO call
+ * `vcs::test_support::assert_command_envelope_round_trip` beside them — a technology's `Edit<Operation>`
+ * round-tripping through `protocol::OperationEnvelope`s is a third projection of the same value model,
+ * not an optional extra. `POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST` tracks not-yet-converted
+ * files exactly like `POLICY_PACK_COMPLETENESS_ALLOWLIST` does for the pack lock step.
+ */
+function policyCommandEnvelopeCompletenessBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyAllRustFiles(repoRoot)) {
+    if (POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST.has(relPath)) continue;
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const hasPackCheck = content.includes("assert_dsl_pack_equivalence(") || content.includes("assert_document_pack_round_trip(");
+    if (!hasPackCheck) continue;
+    if (content.includes("assert_command_envelope_round_trip")) continue;
+    breaches.push({
+      id: `command-envelope-completeness-${relPath}`,
+      summary: `"${relPath}" proves the pack round-trip law but never calls assert_command_envelope_round_trip`,
+      kind: "protocol-migration/command-envelope-completeness",
+      scope: relPath,
+      priority: "high",
+      reason: "CW7 added vcs::test_support::assert_command_envelope_round_trip as the command-envelope law every technology's Edit/Operation pair must also prove, beside its existing dsl/pack round-trip laws.",
+      solution: `Add a vcs::test_support::assert_command_envelope_round_trip::<Projection, Operation>(...) call beside ${relPath}'s existing pack round-trip test(s), or if this technology hasn't wired the command-envelope law yet, add "${relPath}" to POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST citing the follow-up ticket.`,
+    });
+  }
+  return breaches;
+}
+//#endregion 🔧PolicyRuleCommandEnvelopeCompleteness
+
+//#region 🔧PolicyRuleProtocolMigration
+/**
+ * 🔒Names that must never again be reached through a re-created `vcs::` shim: the temporary CW3
+ * `pub use protocol::{...}` re-export deleted in CW8 (`Operation`/`OperationDiff`/`OperationMeta`/
+ * `OpText`/`Edit`/`merge_concurrent_diffs`/`ReconcileReport`/`ReconcileSeverity`), the CW3-extracted
+ * `semio_framework_core` types (`HybridLogicalTimestamp`/`OperationEnvelope`/`OpDag`/`UndoPolicy`/
+ * `MergeStrategyKind`), and the hub wire-frame enums (`HubClientFrame`/`HubServerFrame`).
+ */
+const POLICY_PROTOCOL_MIGRATION_NAMES = [
+  "Operation",
+  "OperationDiff",
+  "OperationMeta",
+  "OpText",
+  "Edit",
+  "merge_concurrent_diffs",
+  "ReconcileReport",
+  "ReconcileSeverity",
+  "HybridLogicalTimestamp",
+  "OperationEnvelope",
+  "OpDag",
+  "UndoPolicy",
+  "MergeStrategyKind",
+  "HubClientFrame",
+  "HubServerFrame",
+] as const;
+const POLICY_PROTOCOL_MIGRATION_QUALIFIED_RE = new RegExp(`\\bvcs::(${POLICY_PROTOCOL_MIGRATION_NAMES.join("|")})\\b`, "g");
+const POLICY_PROTOCOL_MIGRATION_USE_BLOCK_RE = /use\s+(?:::)?vcs::\{([^}]*)\}/gs;
+
+/**
+ * 📏CW8 regression-prevention rule: `vcs/rs/lib.rs`'s temporary CW3 `pub use protocol::{Operation,
+ * OperationDiff, OpText, OperationMeta, Edit, merge_concurrent_diffs, ReconcileReport,
+ * ReconcileSeverity}` shim is deleted — every dependent crate now imports `protocol::` directly (see
+ * `policyCommandEnvelopeCompletenessBreaches` above and CW7's import sweep). This rule fires the
+ * moment `vcs::` is asked to re-supply any of those names again, or any of the other CW3-extracted
+ * `semio_framework_core` types or the hub wire-frame enums — none of which `vcs` has ever re-exported,
+ * so today this is pure regression prevention, not an open migration.
+ */
+function policyProtocolMigrationBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyAllRustFiles(repoRoot)) {
+    if (relPath === "vcs/rs/lib.rs") continue; // the crate that used to own the shim; never reaches itself via "vcs::"
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const seenLines = new Set<number>();
+    const lineOf = (index: number): number => content.slice(0, index).split(/\r?\n/).length;
+    const isCommentLine = (line: number): boolean => /^\s*(\/\/|\*)/.test(content.split(/\r?\n/)[line - 1] ?? "");
+
+    let m: RegExpExecArray | null;
+    POLICY_PROTOCOL_MIGRATION_QUALIFIED_RE.lastIndex = 0;
+    while ((m = POLICY_PROTOCOL_MIGRATION_QUALIFIED_RE.exec(content))) {
+      // Skip "crate::vcs::X" — a crate's own nested module happening to be named "vcs" (e.g.
+      // compose's GraphQL "vcs" entity module) is not the external "vcs" crate's root.
+      if (content.slice(Math.max(0, m.index - 7), m.index) === "crate::") continue;
+      const line = lineOf(m.index);
+      if (isCommentLine(line) || seenLines.has(line)) continue;
+      seenLines.add(line);
+      breaches.push({
+        id: `protocol-migration-${relPath}-${line}`,
+        summary: `"${relPath}:${line}" still references vcs::${m[1]} — the CW8 shim is gone, import protocol::${m[1]} directly`,
+        kind: "protocol-migration/vcs-shim-regression",
+        scope: relPath,
+        line,
+        priority: "high",
+        reason: "CW8 deleted vcs/rs/lib.rs's temporary pub-use shim for protocol-owned Operation/OpText/OperationDiff/OperationMeta/Edit/ReconcileReport/ReconcileSeverity and never re-exported the CW3-extracted framework_core types or hub wire frames — vcs:: must never resolve any of them again.",
+        solution: `Import the name from "protocol" directly (e.g. "use protocol::${m[1]};") instead of "vcs::${m[1]}".`,
+      });
+    }
+
+    POLICY_PROTOCOL_MIGRATION_USE_BLOCK_RE.lastIndex = 0;
+    while ((m = POLICY_PROTOCOL_MIGRATION_USE_BLOCK_RE.exec(content))) {
+      const tokens = new Set((m[1] ?? "").split(/[^\w]+/).filter(Boolean));
+      const hit = POLICY_PROTOCOL_MIGRATION_NAMES.find((name) => tokens.has(name));
+      if (!hit) continue;
+      const line = lineOf(m.index);
+      if (seenLines.has(line)) continue;
+      seenLines.add(line);
+      breaches.push({
+        id: `protocol-migration-use-${relPath}-${line}`,
+        summary: `"${relPath}:${line}" imports ${hit} from vcs:: — the CW8 shim is gone, import protocol::${hit} directly`,
+        kind: "protocol-migration/vcs-shim-regression",
+        scope: relPath,
+        line,
+        priority: "high",
+        reason: "CW8 deleted vcs/rs/lib.rs's temporary pub-use shim; a multi-name \"use vcs::{...}\" block must not re-import a name that only protocol:: still owns.",
+        solution: `Split the "use vcs::{...}" block at ${relPath}:${line}: keep vcs's own names there and add a separate "use protocol::{${hit}, ...};" for ${hit}.`,
+      });
+    }
+  }
+  return breaches;
+}
+//#endregion 🔧PolicyRuleProtocolMigration
+
+//#region 🔧PolicyRuleDbServerOnly
+/** 🔎Repo-wide `Cargo.toml` file paths (repo-relative), same walker + `POLICY_SKIP_DIRS` as the other policy file discoverers. */
+function policyDiscoverCargoTomlFiles(repoRoot: string): string[] {
+  const found: string[] = [];
+  const walk = (relDir: string): void => {
+    const abs = join(repoRoot, relDir);
+    let entries: ReturnType<typeof readdirSync>;
+    try {
+      entries = readdirSync(abs, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const ent of entries) {
+      const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
+      if (ent.isDirectory()) {
+        if (POLICY_SKIP_DIRS.has(ent.name)) continue;
+        walk(childRel);
+        continue;
+      }
+      if (ent.name === "Cargo.toml") found.push(childRel);
+    }
+  };
+  walk("");
+  return found.sort();
+}
+
+/** 🛡️Directory prefixes always allowed to carry a `db`/`db_*` Cargo dependency: the db family itself and the os hub server. Compose hub crates (`compose/**​/hub/**`) are matched structurally in `policyDbAllowedDir` since they aren't one fixed prefix. */
+const POLICY_DB_SERVER_ONLY_ALLOWED_PREFIXES = ["db/", "framework/product/os/hub/"];
+
+/** 🛡️True if `dir` (a repo-relative directory, trailing "/") may depend on `db`/`db_*`: under `db/` itself, under the os hub server, or any compose crate whose path runs through a `hub/` segment. */
+function policyDbAllowedDir(dir: string): boolean {
+  if (POLICY_DB_SERVER_ONLY_ALLOWED_PREFIXES.some((p) => dir.startsWith(p))) return true;
+  const segments = dir.split("/").filter(Boolean);
+  return segments[0] === "compose" && segments.includes("hub");
+}
+
+const POLICY_DB_DEP_RE = /^(db(?:_[a-z0-9]+)*)\s*=\s*\{[^\n]*?\bpath\s*=\s*"([^"]+)"[^\n]*\}\s*$/gm;
+
+/**
+ * 📏db/ server-only rule: no `db`/`db_*` family Cargo dependency may live outside `db/` itself, the
+ * `os-hub` server (`framework/product/os/hub/`), or a compose hub crate (`compose/**​/hub/**`) — db is
+ * server-side storage for the hubs; clients keep local-first backbones (`vcs` + `framework/sync`) and
+ * only ever reach db indirectly over the wire. `POLICY_ALWAYS_ALLOWED_DEP_PREFIXES` deliberately does
+ * NOT include `"db/"` (unlike `"protocol/"`) so this stays the one gate that enforces it.
+ */
+function policyDbServerOnlyBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyDiscoverCargoTomlFiles(repoRoot)) {
+    const lastSlash = relPath.lastIndexOf("/");
+    const dir = lastSlash === -1 ? "" : relPath.slice(0, lastSlash + 1);
+    if (policyDbAllowedDir(dir)) continue;
+    const text = readFileSync(join(repoRoot, relPath), "utf8");
+    let m: RegExpExecArray | null;
+    POLICY_DB_DEP_RE.lastIndex = 0;
+    while ((m = POLICY_DB_DEP_RE.exec(text))) {
+      const depName = m[1]!;
+      breaches.push({
+        id: `db-server-only-${relPath}-${depName}`,
+        summary: `"${relPath}" depends on "${depName}" outside db/'s server-only boundary`,
+        kind: "protocol-migration/db-server-only",
+        scope: relPath,
+        priority: "high",
+        reason: "db is server-side storage for the hubs — only db/ itself, framework/product/os/hub/, and compose's hub crates may depend on a db/db_* crate; clients keep local-first backbones (vcs + framework/sync) and only ever reach db indirectly over the wire.",
+        solution: `Remove the "${depName}" dependency from ${relPath}, or if this crate genuinely is a hub server, move/confirm it under db/, framework/product/os/hub/, or a compose/**/hub/** directory.`,
+      });
+    }
+  }
+  return breaches;
+}
+//#endregion 🔧PolicyRuleDbServerOnly
+
 //#region 🔧PolicyRuleNoPackFiles
 /** 🔎Repo-wide `*.pack` file paths (repo-relative), same walker + `POLICY_SKIP_DIRS` as `policyDiscoverExampleJsonFiles`/`policyDiscoverOpsFiles`. */
 function policyDiscoverPackFiles(repoRoot: string): string[] {
@@ -2315,6 +2587,9 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyOpsGrammarBreaches(repoRoot));
   breaches.push(...policyDslCompletenessBreaches(repoRoot));
   breaches.push(...policyPackCompletenessBreaches(repoRoot));
+  breaches.push(...policyCommandEnvelopeCompletenessBreaches(repoRoot));
+  breaches.push(...policyProtocolMigrationBreaches(repoRoot));
+  breaches.push(...policyDbServerOnlyBreaches(repoRoot));
   breaches.push(...policyNoPackFilesBreaches(repoRoot));
   return breaches;
 });

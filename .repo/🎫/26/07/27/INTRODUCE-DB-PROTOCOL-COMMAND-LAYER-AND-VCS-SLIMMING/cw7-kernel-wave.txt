@@ -1,0 +1,101 @@
+CW7 kernel wave — s/plugin/rs + framework/product/os/core/rs
+Scope: pure import-path surgery, vcs::{Operation,OpText,OperationDiff,OperationMeta,Edit} -> protocol::{...}
+(trait/type SHAPES unchanged; vcs still re-exports these from protocol via the CW3 temporary shim
+at vcs/rs/lib.rs:63). NOT the CollectionOperation shape migration (cw7-instructions.md )— neither
+crate constructs/matches CollectionOperation, apply_collection_operation,
+invert_collection_operation, or collection_diff_from_operation (grep-verified, zero hits).
+
+Grep before editing found only the trio actually in use in these two crates: vcs::Operation,
+vcs::OpText, vcs::OperationDiff. No vcs::OperationMeta, no vcs::Edit anywhere in either file.
+
+=== s/plugin/rs/lib.rs ===
+Cargo.toml: `protocol` dependency already present (added by CW3's mechanical sweep) — no Cargo.toml
+change needed.
+4 edits, all in the SHomeOperation block (no `use vcs::{Operation, ...}` import existed here — the
+crate referenced the traits fully-qualified inline):
+  - line 106: doc comment `{@link vcs::OperationDiff}` -> `{@link protocol::OperationDiff}`
+  - line 116: `impl vcs::OperationDiff<SHomeDocument> for SHomeOperation` -> `impl protocol::OperationDiff<...>`
+  - line 133: `impl vcs::Operation<SHomeDocument> for SHomeOperation` -> `impl protocol::Operation<...>`
+  - line 154: comment describing the derive-emitted OpText impl updated from `impl vcs::OpText ...`
+    to `impl protocol::OpText ...` (matches what dsl/derive/rs/lib.rs actually emits post-CW3:
+    `impl ::protocol::OpText for #name` — confirmed by reading dsl/derive/rs/lib.rs:730-737).
+Untouched (out of scope, correctly left as vcs::): vcs::create_document_vcs_envelope,
+vcs::LocalStorageBackbonePort, vcs::DocumentDsl, vcs::test_support::*, vcs::DocumentVcsStore,
+vcs::DocumentVcsCommand — none of these are in the Operation/OpText/OperationDiff/OperationMeta/Edit
+trio.
+
+=== framework/product/os/core/rs/lib.rs ===
+Cargo.toml: `protocol` dependency already present — no Cargo.toml change needed.
+Re-read the file fresh immediately before editing (live concurrent repo; git status showed this
+file as already modified by another in-flight change elsewhere in the file, unrelated to this
+wave's lines).
+2 edits, both inside `pub mod host { ... }`:
+  - line 19: split the combined `use vcs::{... Operation, OperationDiff ...}` import — added a new
+    `use protocol::{Operation, OperationDiff};` line immediately above, and removed `Operation,
+    OperationDiff` from the `use vcs::{...}` list (which still legitimately imports
+    create_document_vcs_envelope, document_backbone_ref, materialize_document_projection,
+    DocumentBackboneRef, DocumentVcs, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore,
+    StudioConflict, VcsError — none of these are in the trio).
+  - lines 1032-1039 (`impl vcs::OpText for OsOperation`): `impl vcs::OpText` -> `impl protocol::OpText`,
+    and both `<OsOperationDsl as vcs::OpText>::parse_op/print_op` -> `<OsOperationDsl as
+    protocol::OpText>::...`. Left `Result<Self, vcs::TextError>` as-is — TextError is not in the
+    trio; it is `dsl_core::TextError` re-exported by vcs at vcs/rs/lib.rs:223 (a separate,
+    legitimate vcs re-export unrelated to the Operation/OpText/OperationDiff/OperationMeta/Edit
+    migration), unchanged per the task's explicit "do NOT touch anything not in this trio" rule.
+Verified downstream: `impl OperationDiff<OsProjection> for OsDiff` (line 674, unqualified) and
+`impl Operation<OsProjection> for OsOperation` (line 703, unqualified) both resolve through the
+line-19 `use` and now bind to `protocol::{Operation, OperationDiff}` — no further edits needed
+there since trait identity/shape is unchanged (vcs's re-export IS the same trait object, so this
+was a pure spelling change, zero behavior change).
+Untouched (out of scope, correctly left as vcs::): vcs::ReconcileReport, vcs::ReconcileSeverity
+(used in the `reconcile()` override at line ~775-779 — NOT in the named trio per the task's exact
+scope list, even though the campaign plan's Part 1 notes `reconcile` is "re-typed to protocol-owned
+ReconcileReport"; left alone per explicit instruction to touch only
+Operation/OpText/OperationDiff/OperationMeta/Edit), vcs::TextError, vcs::BackbonePort,
+vcs::DocumentDsl, vcs::DocumentPackFiles, vcs::DocumentTextFiles, vcs::document_codec,
+vcs::FolderTextStorage, vcs::FolderSqliteStorage, vcs::MemoryBackbone, vcs::MemoryBackbonePort,
+vcs::test_support::*, and the final `pub use vcs::{...}` facade re-export (line 5158) — none carry
+Operation/OpText/OperationDiff/OperationMeta/Edit.
+No vcs::CollectionOperation, vcs::apply_collection_operation, vcs::invert_collection_operation, or
+vcs::collection_diff_from_operation usage found in either crate (grep-verified, zero hits) — the
+CollectionOperation shape migration from cw7-instructions.md does not apply to this wave.
+
+=== Ripple check ===
+Neither crate re-exports Operation/OpText/OperationDiff to its own downstream consumers (s-plugin
+has no `pub use` block at all; os/core's only `pub use vcs::{...}` at line 5158 does not include
+the trio). Since vcs::Operation/OpText/OperationDiff ARE protocol::Operation/OpText/OperationDiff
+(re-export, same trait identity, not a newtype), this is a zero-behavior-change spelling edit —
+no sibling crate depending on s-plugin's or semio-framework-os's public API can observe any
+difference. Confirmed empirically: note-plugin (an unrelated CW7-scope-adjacent crate that also
+depends on semio-framework-os and separately imports `vcs::{Operation, OperationDiff}` itself)
+built and passed its lib tests unaffected during this session's verification run.
+
+=== Build + test ===
+`cargo build -p semio-framework-os -p s-plugin` — clean build, zero errors (only pre-existing
+unrelated warnings: `unnecessary qualification` in infinite_board_port_directed_dag, one
+pre-existing `unused import: HashSet` at s/plugin/rs/lib.rs:836 that predates this change).
+`cargo test -p semio-framework-os -p s-plugin` (lib tests):
+  - s-plugin: 50 passed; 0 failed
+  - semio-framework-os (host, host_runtime, instance, media_graph, registry modules): 55 passed;
+    0 failed
+  - Includes op-text round-trip tests for every OsOperation variant
+    (host::tests::op_text_round_trips_*) and the SHomeOperation/DocumentVcsStore round-trip tests
+    in s-plugin — all exercise the exact protocol::OpText/Operation/OperationDiff impls touched by
+    this wave, all green.
+Doc-tests for s-plugin fail with `error[E0463]: can't find crate for semio_framework_os` — this is
+a PRE-EXISTING, repo-wide artifact of `crate-type = ["cdylib", "rlib"]` (rustdoc cannot link a
+cdylib crate for --doc), unrelated to this change: reproduced identically on an untouched sibling
+crate (note-plugin, same crate-type) with a different missing-crate ("vcs does not exist") on the
+same rustdoc invocation shape. Neither file in this wave contains any ``` doctest code fences, so
+no doctest content was even added. Not a regression from this wave.
+`cargo clippy -p semio-framework-os -p s-plugin --lib --tests` was also run; it triggered a full
+first-time clippy rebuild of the wgpu/resvg/usvg dependency tree (clippy's `cargo-clippy` cfg
+invalidates the regular build cache), which took several minutes but completed clean: zero `error`
+lines in the full output (grep for `^error` over the complete clippy run returned nothing).
+
+=== Files touched ===
+- /Users/ueli/Documents/semio/s/plugin/rs/lib.rs (4 line edits, lines 106/116/133/154)
+- /Users/ueli/Documents/semio/framework/product/os/core/rs/lib.rs (2 edits: new use-line at 19-20,
+  impl block at 1032-1039)
+No Cargo.toml changes (protocol dep already present in both crates from CW3's sweep). No other
+files touched; no crate outside this wave's two-crate assignment was edited.

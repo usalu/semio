@@ -1,0 +1,85 @@
+CW7 integration verification (post-workflow + manual completion pass)
+
+CW7 workflow ran 18 parallel agents against the 18 crates confirmed (by grep) to construct or
+pattern-match vcs::CollectionOperation or call vcs::apply_collection_operation/
+invert_collection_operation/collection_diff_from_operation. Before launching, found and fixed a
+real gap: protocol/rs's facade re-exported CollectionOperation/Identified/Patchable/CollectionDiff
+but NOT the three free functions (apply_collection_operation/invert_collection_operation/
+collection_diff_from_operation) — added them to the re-export list.
+
+Workflow outcome: 14/18 crates migrated cleanly. 4 reported real or apparent blockers:
+  - animate_plugin: reported blocked on animate_present (sibling, same wave) — turned out to be a
+    parallel-execution race; animate_present had actually finished by workflow end. No fix needed.
+  - dag_plugin: same race pattern against infinite/board/port/directed/dag/rs (same wave) — also
+    already resolved by workflow end. No fix needed.
+  - architect_plugin: same race pattern against architect_program (same wave, 78 sites, took
+    longest) — architect_program finished with 181/181 tests passing, but architect_plugin's own
+    agent had already given up and reported blocked before that happened.
+  - imperative_core / imperative_plugin: genuine blocker, NOT a race. Both depend on `Step` (defined
+    in imperative/engine/rs, a THIRD sibling crate never in the original 18-crate assignment list),
+    which only implemented vcs::Identified/vcs::Patchable, not protocol::Identified/Patchable. Since
+    vcs::Patchable::apply_patch(&mut self, &TPatch) -> TPatch (single method, mutate-and-return-
+    inverse) is a genuinely different shape from protocol::Patchable's split apply_patch(&mut self,
+    &TPatch) / diff_patch(&self, &Self) -> Option<TPatch>, this isn't a mechanical rename, and
+    Rust's orphan rule forbids adding the impl from either of the two assigned crates (neither owns
+    Step nor the trait). Both agents correctly declined to force a broken workaround and reported
+    the precise blocker instead.
+
+Manual completion pass (this session, after reading all 18 reports):
+  1. Verified architect_plugin's blocker was stale by direct inspection (architect_program's file
+     already had the new {id, item, at}/{id, to} shape) — completed architect_plugin's own migration
+     by hand: 6 CollectionOperation::Add sites (one via a macro, all id sources were an
+     already-in-scope item.header.id/item.id — no new id-generation logic needed), added the
+     protocol dependency, switched the import. 11/11 tests pass.
+  2. Confirmed animate_plugin and dag_plugin needed no further action — already on the new shape
+     using protocol::CollectionOperation, verified by direct grep.
+  3. Added the missing protocol::Identified<String>/protocol::Patchable<Dictionary> impls for Step
+     in imperative/engine/rs (kept the existing vcs:: impls alongside, unchanged — both traits are
+     legitimately implemented by the same type for their respective consumers; diff_patch reports
+     None when params is unchanged, matching the same full-replace semantics as the vcs impl).
+     Added a protocol dependency to imperative/engine/rs/Cargo.toml.
+  4. Completed imperative_core's migration: struct field type, both free-function calls, the
+     bidirectional DSL<->Operation conversion (Add's id intentionally dropped in the DSL's on-disk
+     text shape per the pattern established by other already-migrated crates — Step.id round-trips
+     it losslessly on decode), and all test-fixture construction/pattern-match sites. 40/40 tests
+     pass.
+  5. Completed imperative_plugin's migration (was blocked purely on imperative_core): 1 Add site
+     (id from the already-constructed Step's own id field, since the outer local id var had already
+     been moved into a Vec earlier in the same function), 1 Move site (to_index -> to rename), added
+     the protocol dependency. 16/16 tests pass.
+  6. Fixed 5 pre-existing (not introduced by this migration) clippy findings encountered while
+     touching imperative_core/imperative_plugin under --no-deps -D warnings (redundant path
+     qualifications, two map().unwrap_or() chains, one redundant .clone()) — cheap, unrelated to the
+     shape migration but touched the same files this pass already had open.
+
+Full-repo verification after the manual completion pass:
+  grep -rln "vcs::CollectionOperation::" (excluding vcs/rs itself, worktrees, backups) -> ZERO hits.
+  grep -rln "vcs::apply_collection_operation|vcs::invert_collection_operation|
+             vcs::collection_diff_from_operation" (same exclusions) -> ZERO hits (the one match in
+  protocol/command/rs/lib.rs is a doc-comment reference, not code).
+  The entire CollectionOperation shape migration (CW3's deviation #3, the ~20-crate item explicitly
+  deferred as "genuine adapter-writing... not a small wire-through") is now complete across the
+  live repo.
+
+  cargo build --workspace: clean, zero errors (checked 3x across this wave: before the workflow,
+  after the workflow, after the manual completion pass).
+  cargo clippy -p architect-plugin -p imperative_core -p imperative-plugin -p imperative_engine
+    -p protocol --all-targets --no-deps -- -D warnings: clean.
+  cargo test on the same 5 crates: 81 tests total (11 + 16 + 40 + 6 + 8 + 0 doctests), 0 failures.
+
+Status: CW7 complete and verified. 18 individual per-crate agent reports plus this integration
+summary are in this ticket folder (cw7-<crate>.txt, cw7-instructions.md).
+
+Not touched this wave (confirmed out of scope): the 5 originally-scoped crates that turned out to
+have zero real usage (trinity/plugin, infinite/board/normal/undirected, infinite/board/port/
+directed [non-dag], kernel/3d/brep — never assigned, correctly excluded during scoping) plus
+compose/client/lib/rs (uses vcs::Operation but not CollectionOperation, not in scope for this
+specific migration).
+
+Remaining waves (not started/completed this session): CW6b compose-hub rebuild (in progress live
+by a concurrent session at time of writing — not touched), CW8 shim removal (delete vcs's temporary
+`pub use protocol::{...}` block once every dependent imports protocol:: directly — the app-crate
+side of that is now much closer to done after CW7, but framework/core's deferred
+OperationEnvelope/OpDag/HubProtocol/PayloadHash unification and vcs's own remaining
+operation_envelope_from_edit shim are still open per CW3's report), CW9 end-to-end verification
+(hub integration tests, crash harness, full verify gate). Ticket intentionally left open.

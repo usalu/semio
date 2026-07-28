@@ -4162,7 +4162,8 @@ pub fn dwg_decode_mesh_json(data_base64: &str) -> String {
 // them in every build.
 use vcs::create_document_vcs_envelope;
 use vcs::DocumentVcsCommand;
-use vcs::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable};
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
+use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Identified, Operation, OperationDiff, Patchable};
 
 pub const FLOW_DOCUMENT_SCHEMA: &str = "flow.fixture";
 
@@ -4184,10 +4185,16 @@ impl Identified<String> for Widget {
 }
 
 /// 🩹 Whole-value replacement patch — flow widgets are heterogeneous enum variants, so a granular
-/// per-field patch buys nothing; `Patch { patch: Widget }` LWW-replaces and inverts to the prior widget.
+/// per-field patch buys nothing; `Patch { patch: Widget }` LWW-replaces and `diff_patch` inverts to
+/// the prior widget unconditionally (never `None`, matching `invert_collection_operation`'s
+/// no-panic contract for a `Patchable` whose `apply_patch` can be a genuine no-op).
 impl Patchable<Widget> for Widget {
-    fn apply_patch(&mut self, patch: &Widget) -> Widget {
-        std::mem::replace(self, patch.clone())
+    fn apply_patch(&mut self, patch: &Widget) {
+        *self = patch.clone();
+    }
+
+    fn diff_patch(&self, other: &Self) -> Option<Widget> {
+        Some(other.clone())
     }
 }
 
@@ -4198,8 +4205,12 @@ impl Identified<String> for SynapseSpec {
 }
 
 impl Patchable<SynapseSpec> for SynapseSpec {
-    fn apply_patch(&mut self, patch: &SynapseSpec) -> SynapseSpec {
-        std::mem::replace(self, patch.clone())
+    fn apply_patch(&mut self, patch: &SynapseSpec) {
+        *self = patch.clone();
+    }
+
+    fn diff_patch(&self, other: &Self) -> Option<SynapseSpec> {
+        Some(other.clone())
     }
 }
 
@@ -4346,7 +4357,7 @@ pub fn flow_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec
     for (index, widget) in after.widgets.iter().enumerate() {
         let id = widget_id_for(widget);
         match before.widgets.iter().find(|entry| widget_id_for(entry) == id) {
-            None => operations.push(FlowOperation::Widgets(CollectionOperation::Add { index, item: widget.clone() })),
+            None => operations.push(FlowOperation::Widgets(CollectionOperation::Add { id: id.to_string(), item: widget.clone(), at: index })),
             Some(prev) if prev != widget => operations.push(FlowOperation::Widgets(CollectionOperation::Patch { id: id.to_string(), patch: widget.clone() })),
             Some(_) => {}
         }
@@ -4359,7 +4370,7 @@ pub fn flow_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec
     }
     for (index, synapse) in after.synapses.iter().enumerate() {
         match before.synapses.iter().find(|entry| entry.id == synapse.id) {
-            None => operations.push(FlowOperation::Synapses(CollectionOperation::Add { index, item: synapse.clone() })),
+            None => operations.push(FlowOperation::Synapses(CollectionOperation::Add { id: synapse.id.clone(), item: synapse.clone(), at: index })),
             Some(prev) if *prev != *synapse => operations.push(FlowOperation::Synapses(CollectionOperation::Patch { id: synapse.id.clone(), patch: synapse.clone() })),
             Some(_) => {}
         }
@@ -4704,13 +4715,14 @@ impl vcs::DocumentPack for FlowFixture {
 //#endregion 🔖Dsl
 
 //#region 🔖OpText
-/// ✂️ Local DSL-only mirror of `FlowOperation` — `vcs::CollectionOperation<K,V,P>` is declared in the
-/// `vcs` crate (foreign type), so it cannot itself gain a `dsl::DslField`/`dsl::DslVariants` binding
-/// here (orphan rule). This twin flattens the `Widgets`/`Synapses { collection }` wrappers into their
-/// own keyworded variants — mirroring `imperative_core::ImperativeOperationDsl`'s/
-/// `process_3d::Process3dOperationDsl`'s identical fix for the same foreign-`CollectionOperation`
-/// problem — and converts at the `vcs::OpText` boundary only; `FlowOperation` itself, and every
-/// consumer matching on it (`flow_fixture_operations`, `flow/plugin`), is completely untouched.
+/// ✂️ Local DSL-only mirror of `FlowOperation` — `protocol::CollectionOperation<K,V,P>` is declared
+/// in the `protocol` crate (foreign type), so it cannot itself gain a `dsl::DslField`/
+/// `dsl::DslVariants` binding here (orphan rule). This twin flattens the `Widgets`/
+/// `Synapses { collection }` wrappers into their own keyworded variants — mirroring
+/// `imperative_core::ImperativeOperationDsl`'s/`process_3d::Process3dOperationDsl`'s identical fix
+/// for the same foreign-`CollectionOperation` problem — and converts at the `protocol::OpText`
+/// boundary only; `FlowOperation` itself, and every consumer matching on it
+/// (`flow_fixture_operations`, `flow/plugin`), is completely untouched.
 #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
 enum FlowOperationDsl {
     WidgetsAdd {
@@ -4756,13 +4768,13 @@ enum FlowOperationDsl {
 
 fn flow_operation_to_dsl(operation: &FlowOperation) -> FlowOperationDsl {
     match operation {
-        FlowOperation::Widgets(CollectionOperation::Add { index, item }) => FlowOperationDsl::WidgetsAdd { index: *index, item: widget_to_widget_dsl(item) },
+        FlowOperation::Widgets(CollectionOperation::Add { id: _id, item, at }) => FlowOperationDsl::WidgetsAdd { index: *at, item: widget_to_widget_dsl(item) },
         FlowOperation::Widgets(CollectionOperation::Remove { id }) => FlowOperationDsl::WidgetsRemove { id: id.clone() },
-        FlowOperation::Widgets(CollectionOperation::Move { id, to_index }) => FlowOperationDsl::WidgetsMove { id: id.clone(), to_index: *to_index },
+        FlowOperation::Widgets(CollectionOperation::Move { id, to }) => FlowOperationDsl::WidgetsMove { id: id.clone(), to_index: *to },
         FlowOperation::Widgets(CollectionOperation::Patch { id, patch }) => FlowOperationDsl::WidgetsPatch { id: id.clone(), patch: widget_to_widget_dsl(patch) },
-        FlowOperation::Synapses(CollectionOperation::Add { index, item }) => FlowOperationDsl::SynapsesAdd { index: *index, item: synapse_to_dsl(item) },
+        FlowOperation::Synapses(CollectionOperation::Add { id: _id, item, at }) => FlowOperationDsl::SynapsesAdd { index: *at, item: synapse_to_dsl(item) },
         FlowOperation::Synapses(CollectionOperation::Remove { id }) => FlowOperationDsl::SynapsesRemove { id: id.clone() },
-        FlowOperation::Synapses(CollectionOperation::Move { id, to_index }) => FlowOperationDsl::SynapsesMove { id: id.clone(), to_index: *to_index },
+        FlowOperation::Synapses(CollectionOperation::Move { id, to }) => FlowOperationDsl::SynapsesMove { id: id.clone(), to_index: *to },
         FlowOperation::Synapses(CollectionOperation::Patch { id, patch }) => FlowOperationDsl::SynapsesPatch { id: id.clone(), patch: synapse_to_dsl(patch) },
         FlowOperation::SetLayout { entries } => FlowOperationDsl::SetLayout { entries: entries.clone() },
         FlowOperation::SetFixture { fixture } => FlowOperationDsl::SetFixture { fixture: flow_fixture_to_dsl(fixture) },
@@ -4771,27 +4783,33 @@ fn flow_operation_to_dsl(operation: &FlowOperation) -> FlowOperationDsl {
 
 fn flow_operation_from_dsl(operation: FlowOperationDsl) -> Result<FlowOperation, String> {
     Ok(match operation {
-        FlowOperationDsl::WidgetsAdd { index, item } => FlowOperation::Widgets(CollectionOperation::Add { index, item: widget_dsl_to_widget(item)? }),
+        FlowOperationDsl::WidgetsAdd { index, item } => {
+            let item = widget_dsl_to_widget(item)?;
+            FlowOperation::Widgets(CollectionOperation::Add { id: widget_id_for(&item).to_string(), item, at: index })
+        }
         FlowOperationDsl::WidgetsRemove { id } => FlowOperation::Widgets(CollectionOperation::Remove { id }),
-        FlowOperationDsl::WidgetsMove { id, to_index } => FlowOperation::Widgets(CollectionOperation::Move { id, to_index }),
+        FlowOperationDsl::WidgetsMove { id, to_index } => FlowOperation::Widgets(CollectionOperation::Move { id, to: to_index }),
         FlowOperationDsl::WidgetsPatch { id, patch } => FlowOperation::Widgets(CollectionOperation::Patch { id, patch: widget_dsl_to_widget(patch)? }),
-        FlowOperationDsl::SynapsesAdd { index, item } => FlowOperation::Synapses(CollectionOperation::Add { index, item: synapse_from_dsl(item)? }),
+        FlowOperationDsl::SynapsesAdd { index, item } => {
+            let item = synapse_from_dsl(item)?;
+            FlowOperation::Synapses(CollectionOperation::Add { id: item.id.clone(), item, at: index })
+        }
         FlowOperationDsl::SynapsesRemove { id } => FlowOperation::Synapses(CollectionOperation::Remove { id }),
-        FlowOperationDsl::SynapsesMove { id, to_index } => FlowOperation::Synapses(CollectionOperation::Move { id, to_index }),
+        FlowOperationDsl::SynapsesMove { id, to_index } => FlowOperation::Synapses(CollectionOperation::Move { id, to: to_index }),
         FlowOperationDsl::SynapsesPatch { id, patch } => FlowOperation::Synapses(CollectionOperation::Patch { id, patch: synapse_from_dsl(patch)? }),
         FlowOperationDsl::SetLayout { entries } => FlowOperation::SetLayout { entries },
         FlowOperationDsl::SetFixture { fixture } => FlowOperation::SetFixture { fixture: flow_fixture_dsl_to_fixture(fixture)? },
     })
 }
 
-impl vcs::OpText for FlowOperation {
+impl protocol::OpText for FlowOperation {
     fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-        let dsl_operation = <FlowOperationDsl as vcs::OpText>::parse_op(line)?;
+        let dsl_operation = <FlowOperationDsl as protocol::OpText>::parse_op(line)?;
         flow_operation_from_dsl(dsl_operation).map_err(|message| vcs::TextError::new(message, vcs::TextSpan::at(1, 1)))
     }
 
     fn print_op(&self) -> String {
-        <FlowOperationDsl as vcs::OpText>::print_op(&flow_operation_to_dsl(self))
+        <FlowOperationDsl as protocol::OpText>::print_op(&flow_operation_to_dsl(self))
     }
 }
 //#endregion 🔖OpText
@@ -5079,7 +5097,7 @@ mod flow_vcs_tests {
     #[test]
     fn widget_add_patch_remove_round_trip() {
         let fixture = FlowFixture { widgets: Vec::new(), synapses: Vec::new(), ..FlowFixture::default() };
-        let add = FlowOperation::Widgets(CollectionOperation::Add { index: 0, item: sample_widget("w1") });
+        let add = FlowOperation::Widgets(CollectionOperation::Add { id: "w1".into(), item: sample_widget("w1"), at: 0 });
         let with_widget = round_trip(&fixture, &add);
         assert_eq!(with_widget.widgets.len(), 1);
 
@@ -5163,14 +5181,14 @@ mod flow_vcs_tests {
     /// `🔖OpText` region's `FlowOperationDsl` twin.
     #[test]
     fn flow_operation_op_text_round_trips_every_variant() {
-        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Add { index: 0, item: sample_widget("w1") }));
+        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Add { id: "w1".into(), item: sample_widget("w1"), at: 0 }));
         vcs::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Remove { id: "w1".into() }));
-        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Move { id: "w1".into(), to_index: 2 }));
+        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Move { id: "w1".into(), to: 2 }));
         vcs::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Patch { id: "w1".into(), patch: sample_widget("w1") }));
         let synapse = SynapseSpec { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "x".into(), to_port: "y".into() };
-        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Add { index: 0, item: synapse.clone() }));
+        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Add { id: "s1".into(), item: synapse.clone(), at: 0 }));
         vcs::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Remove { id: "s1".into() }));
-        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Move { id: "s1".into(), to_index: 1 }));
+        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Move { id: "s1".into(), to: 1 }));
         vcs::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Patch { id: "s1".into(), patch: synapse }));
         vcs::test_support::assert_op_line_round_trip(&FlowOperation::SetLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: Some(WidgetLayout { x: 1.0, y: 2.0 }) }] });
         vcs::test_support::assert_op_line_round_trip(&FlowOperation::SetLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: None }] });
@@ -5183,7 +5201,7 @@ mod flow_vcs_tests {
     #[test]
     fn flow_fixture_satisfies_vcs_test_support_store_roundtrip() {
         let document = FlowFixture::default();
-        let operation = FlowOperation::Widgets(CollectionOperation::Add { index: 0, item: sample_widget("w1") });
+        let operation = FlowOperation::Widgets(CollectionOperation::Add { id: "w1".into(), item: sample_widget("w1"), at: 0 });
         vcs::test_support::assert_store_roundtrip(document, operation);
     }
 

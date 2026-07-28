@@ -1,0 +1,163 @@
+CW7 App fan-out — gis/plugin/rs (crate: gis-plugin)
+=====================================================
+
+Scope: migrate CollectionOperation::Add/Move construction+match sites, and
+vcs::apply_collection_operation/invert_collection_operation/collection_diff_from_operation
+calls in gis/plugin/rs/lib.rs onto the frozen protocol::CollectionOperation shape
+(Add gains mandatory `id`, `index`->`at`; Move `to_index`->`to`). Also switch the
+Operation/OperationDiff/OpText trio's import path from vcs:: to protocol:: while
+in the file.
+
+Real usage confirmed: YES. This crate has substantial CollectionOperation usage —
+GisMapOperation::Positions/Routes/Regions wrap CollectionOperation<String, MapFeature,
+MapFeaturePatch> for the GIS map document's three id-keyed feature collections
+(positions/routes/regions), used in production code (positions_operations diffing,
+patchRoutes action handler), a hand-rolled DSL twin (GisMapOperationDsl) for the
+foreign-type orphan-rule workaround, and ~15 test call sites.
+
+Files touched: ONLY gis/plugin/rs/lib.rs. Cargo.toml untouched — `protocol = { path =
+"../../../protocol/rs" }` was already present (confirmed before editing).
+
+What changed
+------------
+1. `domain` module's `use vcs::{ ... }` import block split: CollectionDiff,
+   CollectionOperation, Identified, Operation, OperationDiff, Patchable, plus the
+   collection_diff_from_operation/invert_collection_operation functions now come
+   from `protocol::`. create_document_vcs_envelope, DocumentVcsCommand,
+   DocumentVcsEnvelope, DocumentVcsStore, TextError (the VCS-store machinery, not
+   part of the frozen CollectionOperation/Identified/Patchable/Operation contract)
+   stayed on `vcs::`.
+
+2. `MapFeature`'s `impl Patchable<MapFeaturePatch>` rewritten from the old vcs shape
+   (`apply_patch(&mut self, &TPatch) -> TPatch`, mutate-and-return-inverse) to the
+   new protocol shape (`apply_patch(&mut self, &TPatch)` mutate-only, plus a
+   separate `diff_patch(&self, other: &Self) -> Option<TPatch>`). This was required
+   because protocol::invert_collection_operation calls `.diff_patch()`, not the old
+   single-method `.apply_patch()` — a genuine second-order consequence of switching
+   the Patchable import, not just a rename. Verified against the same pattern
+   already used by layout/rs's Patchable impls (TextStoryPatch/ImageLinkPatch:
+   `(self.field != other.field).then(|| Patch { field: Some(other.field.clone()) })`).
+   Confirmed by test: `positions_add_patch_remove_round_trip` exercises Add + Patch +
+   Remove round-tripping through invert_collection_operation and still passes.
+
+3. `Add { index, item }` construction sites rewritten to `Add { id, item, at: index }`
+   across all three collections (Positions/Routes/Regions), in:
+   - domain test module (round_trip helper calls, dispatch test) — id: literal
+     "p1".into(), matching the id already used by the sibling Remove/Move calls in
+     the same test.
+   - `gis_map_operation_from_dsl` (DSL -> GisMapOperation conversion) — id:
+     `item.id.clone()`, the item's own id field (the DSL twin's Add{index,item}
+     variant has no separate id token; MapFeature already carries id as a field, so
+     that's the natural/only available id source here, per the instructions doc's
+     guidance).
+   - `positions_operations` (production diffing helper in app_2d, before/after
+     array diff) — id: `feature.id.clone()` where `feature: &MapFeature` is the
+     loop variable already used for Patch's id lookup two lines below.
+   - app_2d test module (op-line round-trip tests x3, dispatch test) — id: literal
+     "p1".into(), matching the sibling Remove/Move/Patch calls in the same tests
+     (all of which target the fixture MapFeature{id:"p1",...} returned by
+     sample_patch_feature()).
+
+4. `Move { id, to_index }` renamed to `Move { id, to }` (pure rename, no semantic
+   change) at all pattern-match and construction sites: `gis_map_operation_to_dsl`/
+   `gis_map_operation_from_dsl` (x3 collections each) and the op-line round-trip
+   tests (x3). The local DSL twin's own field name (`GisMapOperationDsl::MovePosition
+   { to_index: usize }`, printed via `#[dsl(key = "to")]`) is untouched — only the
+   protocol::CollectionOperation::Move field it reads from/writes to changed name.
+
+5. Pattern-match sites for `Add`/`Move` updated to bind the new `id`/`at` fields;
+   `id` is bound `_id` (prefixed-unused) in `gis_map_operation_to_dsl`'s Add arms
+   since the DSL twin's AddPosition/AddRoute/AddRegion variants carry no separate id
+   field (MapFeature's own `.id` inside `item` already round-trips it — confirmed
+   by `gis_map_positions/routes/regions_op_lines_round_trip` tests passing).
+
+6. `impl vcs::OpText for GisMapOperation` -> `impl protocol::OpText for
+   GisMapOperation`; the two `<GisMapOperationDsl as vcs::OpText>::{parse_op,
+   print_op}` calls -> `<GisMapOperationDsl as protocol::OpText>::{...}` (per step 7
+   of the instructions doc — the Operation/OperationDiff/OpText trio). Note:
+   dsl::DslOps's derive macro already generates `impl ::protocol::OpText for
+   GisMapOperationDsl` directly (confirmed in dsl/derive/rs/lib.rs), so this was
+   already protocol-native on that side; only GisMapOperation's own hand-written
+   impl needed the path switch. `vcs::TextError` in `parse_op`'s return type left
+   as-is: `vcs::TextError` is a verbatim `pub use dsl_core::TextError` re-export in
+   vcs/rs/lib.rs, i.e. the literal same type `protocol::OpText::parse_op`'s
+   signature (`Result<Self, dsl_core::TextError>`) requires, so no functional
+   change was needed there.
+
+7. `use vcs::CollectionOperation;` in `app_2d` module -> `use protocol::
+   CollectionOperation;`.
+
+8. Two doc-comment references updated for accuracy (the `GisMapOperationDsl` twin's
+   doc comment: `vcs::CollectionOperation<K,V,P>` -> `protocol::CollectionOperation
+   <K,V,P>`, "declared in the `vcs` crate" -> "declared in the `protocol` crate",
+   `vcs::OpText` -> `protocol::OpText`).
+
+Id source rationale (step 2 of the instructions doc)
+-----------------------------------------------------
+Every Add site in this crate's collections (positions/routes/regions, all
+Vec<MapFeature>) already has Remove/Move/Patch obtaining their TId from
+`MapFeature.id: String` (a `#[dsl(positional)]` field on the `#[derive(dsl::
+DslRecord)]` struct, implementing `Identified<String> for MapFeature` via
+`fn id(&self) -> &String { &self.id }`). No fresh id is generated at insertion
+time anywhere in this crate — every Add call site already has a fully-formed
+MapFeature (with its id already set, either from a fixture, a document-derived
+feature, or DSL-parsed input) before constructing the operation. So the id
+source for every Add is simply the item's own `.id` field (or, in tests, the
+literal id the fixture MapFeature is known to carry) — no counter/ULID/slug
+generation logic existed to preserve.
+
+Cross-crate ripple check
+-------------------------
+Grepped repo-wide for `GisMapOperation`, `GisMapDocument`, `MapFeature`,
+`MapFeaturePatch` (this crate's public API names) outside gis/plugin/rs — no
+hits in any other crate's source. No ripple.
+
+Build / test status
+--------------------
+`cargo build -p gis-plugin`: SUCCESS (`Finished dev profile [unoptimized] target(s)
+in 2m 02s`). Only pre-existing warnings unrelated to this change (unused imports
+of create_document_vcs_envelope/DocumentVcsCommand/TextError under the
+non-wasm32/non-test cfg combination — those three are only referenced inside
+`#[cfg(target_arch = "wasm32")] mod wasm_bridge` and `#[cfg(test)]` blocks, both
+compiled out of a plain native `cargo build`; unused UiControlNode/WindowMeasure
+imports; unused doc comments on two `app_labels!` macro invocations; four unused
+DocumentVcsEnvelope/DocumentVcsStore type aliases). None of these are new — none
+touch CollectionOperation/Identified/Patchable/Operation/OperationDiff/OpText.
+
+`cargo test -p gis-plugin`: 32 passed, 3 failed, 0 ignored (35 total). All
+CollectionOperation-shape-relevant tests PASS, including the ones directly
+exercising Add/Move/Patch round-tripping through the new protocol:: functions:
+  - domain::gis_map_vcs_tests::positions_add_patch_remove_round_trip (exercises
+    invert_collection_operation via Add->Patch->Remove, i.e. exactly the new
+    Patchable::diff_patch path)
+  - domain::gis_map_vcs_tests::gis_map_document_vcs_replays_operations
+  - app_2d::tests::gis_map_positions_op_lines_round_trip
+  - app_2d::tests::gis_map_routes_op_lines_round_trip
+  - app_2d::tests::gis_map_regions_op_lines_round_trip
+  - app_2d::tests::gis_map_set_document_op_line_round_trips
+  - app_2d::tests::gis_map_document_text_round_trips_through_store
+  - app_2d::tests::patch_routes_emits_route_patch_ops_and_updates_document
+  - app_2d::tests::two_instances_converge_on_disjoint_route_edits
+  - app_2d::tests::set_active_example_empty_then_reuse_round_trips_document
+
+The 3 failures (app_2d::tests::catalogue_lists_layer_toggles,
+app_2d::tests::document_lists_map_layers,
+app_2d::tests::gis2d_labels_translate_inspector_and_layers_in_german) all panic
+identically at `ui/wgpu/rs/../../../ui/asset/icon/generated/icon_name.rs:1507:31:
+invalid catalog icon name` — an icon-catalog lookup failure in an unrelated,
+generated UI-asset file, nothing to do with CollectionOperation/Patchable/Operation
+at all. `git status` shows zero changes under ui/asset/icon or ui/wgpu in this
+session; this looks like concurrent unrelated churn elsewhere in the live repo
+(consistent with prior sessions' "Concurrent Cargo Workspace Churn" experience) or
+a pre-existing icon/catalog mismatch (e.g. the "route"/"git-branch"/"square-dashed"
+etc. icon ids in GIS_MAP_LAYER_IDS no longer present in the generated icon catalog),
+predating and independent of this migration. Not fixed — out of scope (not this
+crate's own file, not related to the assigned CollectionOperation shape change).
+
+Deviations: none from the migration procedure itself. The one non-mechanical piece
+was the MapFeature Patchable impl split (item 2 above), which was necessary
+(compile error otherwise) but not explicitly called out in the instructions doc's
+"pure rename" framing for Move — flagged here for visibility since it changes the
+runtime semantics' *implementation* (not behavior: round-trip tests confirm
+identical observable behavior — patch-then-invert restores the exact prior state,
+same as before).

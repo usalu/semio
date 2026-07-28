@@ -1,0 +1,86 @@
+CW7 App fan-out — process_plugin (process/plugin/rs/lib.rs)
+
+STATUS: MIGRATED. Build passes, all unit tests pass.
+
+Context (why this one was NOT a false positive and NOT blocked, unlike some sibling crates):
+process_plugin/rs constructs `CollectionOperation` values that become the `collection` field of
+`process_3d::Process3dOperation::Steps`, a type OWNED by the sibling crate process/3d/rs (also in
+this wave's 17-crate list). I confirmed via a fresh read of process/3d/rs/lib.rs, mid-session, that
+it had ALREADY been migrated by a concurrent session by the time I built this crate (its
+`Process3dOperation::Steps.collection` field is now `protocol::CollectionOperation<String,
+ProcessStep, ProcessStepPatch>`, imported via `use protocol::{..., CollectionOperation, ...}` at
+process/3d/rs/lib.rs:4). My very first baseline build (before touching anything) already failed
+with E0308 mismatched-types errors (vcs::CollectionOperation vs protocol_command::CollectionOperation)
+at process/plugin/rs/lib.rs:180, 1324, 1335 — i.e. process_3d's landing broke process_plugin's
+baseline out from under me. So this crate needed migrating regardless, not by my own choice of
+scope.
+
+What changed in process/plugin/rs/lib.rs:
+- Import (line 22 area): `use vcs::{CollectionOperation, DocumentDsl};` split into
+  `use protocol::CollectionOperation;` + `use vcs::DocumentDsl;` (DocumentDsl stays on vcs — it's
+  the DSL parse/print trait for `Process3dDocument::parse_dsl`, unrelated to this shape freeze, not
+  in the migration's scope per the instructions doc).
+- `insert_step_operations` (was line 175): `CollectionOperation::Add { index: cursor, item: step }`
+  -> `CollectionOperation::Add { id, item: step, at: cursor }`, with
+  `let id = step.id.clone();` added just above (id source below).
+- `remove_step_operations` (was line 180): `CollectionOperation::Remove { id: id.to_string() }` —
+  unchanged shape, only the enum now resolves to `protocol::CollectionOperation` via the import
+  switch.
+- `process3d_inspector_patch_operation` (was line 539): `CollectionOperation::Patch { id:
+  step_id.to_string(), patch }` — unchanged shape, import switch only.
+- "moveStep" action handler (was line 1314): `CollectionOperation::Move { id: id.to_string(),
+  to_index: index as usize }` -> `CollectionOperation::Move { id: id.to_string(), to: index as
+  usize }` (pure rename).
+- "updateStep" action handler (was line 1324): `CollectionOperation::Patch { id: step.id, patch }`
+  — unchanged shape, import switch only.
+- "setStepEnabled" action handler (was line 1335): `CollectionOperation::Patch { id:
+  id.to_string(), patch }` — unchanged shape, import switch only.
+
+No `vcs::apply_collection_operation`/`vcs::invert_collection_operation`/
+`vcs::collection_diff_from_operation` calls exist in this file — those live entirely in
+process/3d/rs (already migrated, confirmed by that crate's own `use protocol::{apply_collection_
+operation, invert_collection_operation, ...}`). process_plugin/rs itself has no
+`vcs::Operation`/`OperationDiff`/`OpText` impls of its own (it only builds `Process3dOperation`
+values and hands them to the framework's `ActionEmit`/`DocumentApp` machinery; the trait impls live
+in process_3d), so instructions-doc step 7 (the Operation/OperationDiff/OpText import-path switch)
+does not apply to this crate.
+
+Id source for `Add` (step 2 of the instructions doc): `insert_step_operations` and
+`worldPointerDown`'s inline call both receive an already-constructed `ProcessStep { id:
+next_step_id(), ... }` — `next_step_id()` (an `AtomicU32`-backed counter formatted as
+`"step-{n}"`, lib.rs `PROCESS3D_ID_COUNTER`) is the crate's existing fresh-id generator, unchanged.
+I preserved that generation exactly and just threaded the already-generated `step.id` into `Add`'s
+new `id` field via `step.id.clone()` before `step` is moved into the `item` field — no new id
+scheme invented, matches instructions-doc guidance for "id generated fresh at insertion time."
+
+Cargo.toml: added `protocol = { path = "../../../protocol/rs" }` (was genuinely absent — only
+`vcs` was present; process_3d and shooting/plugin already had it, confirmed as the standard
+relative path for this depth before adding).
+
+Cross-crate ripple check: grepped repo-wide for `process_plugin`'s own public API names — this
+crate exports no `CollectionOperation`-shaped public types of its own (it's a leaf app plugin, not
+a library other crates depend on), so there is nothing downstream to ripple into.
+
+BUILD/TEST:
+  cd /Users/ueli/Documents/semio/process/plugin/rs && cargo build -p process-plugin
+    -> Finished, 0 errors. Only pre-existing warnings unrelated to this change (unused-doc-comment
+       on the `app_labels!` macro invocation, an unnecessary-qualification lint, three dead-code
+       lints on struct/enum fields already unused before this change, plus unrelated warnings
+       further upstream in semio-framework-os).
+  cd /Users/ueli/Documents/semio/process/plugin/rs && cargo test -p process-plugin
+    -> 34 passed; 0 failed; 0 ignored (process_plugin's own unit test suite, including
+       add_step_action_inserts_and_selects, undo_after_add_step_restores_previous_step_count,
+       world_pointer_down_* tests, world_face_drag_end_*_end_to_end, and the round-trip/kernel
+       tests — every test that exercises Add/Remove/Move/Patch through the changed code paths
+       passed).
+    -> Doc-tests: this crate has 0 real doc-tests, but the doc-test harness itself intermittently
+       failed with "extern location for process_3d/vcs does not exist" on two separate reruns
+       (each time naming a DIFFERENT crate as missing) — a shared target/ directory race from
+       another concurrent session rebuilding process_3d/vcs at the same time (confirmed: the named
+       .rlib existed on disk moments before/after each failure). Re-running `cargo test -p
+       process-plugin --doc` alone immediately after succeeded with "0 passed; 0 failed". Not a
+       real regression from this change; consistent with this repo's known concurrent-build-churn
+       behavior.
+
+Files touched: process/plugin/rs/lib.rs, process/plugin/rs/Cargo.toml (added protocol dependency).
+No other files touched; no git commands run.

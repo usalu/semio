@@ -336,7 +336,8 @@ pub use present::{compile_present_site, compile_scene_to_assets, PresentCompileE
 use serde::{Deserialize, Serialize};
 #[cfg(any(test, target_arch = "wasm32"))]
 use vcs::DocumentVcsCommand;
-use vcs::{collection_diff_from_operation, create_document_vcs_envelope, invert_collection_operation, materialize_document_projection, CollectionDiff, CollectionOperation, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable};
+use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Identified, Operation, OperationDiff, Patchable};
+use vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentVcsEnvelope, DocumentVcsStore};
 
 pub const PRESENT_DECK_SCHEMA: &str = "animate.present.deck";
 
@@ -569,15 +570,17 @@ pub struct FigureTileDraftPatch {
 }
 
 impl Patchable<FigureTileDraftPatch> for FigureTileDraft {
-    fn apply_patch(&mut self, patch: &FigureTileDraftPatch) -> FigureTileDraftPatch {
-        let inverse = FigureTileDraftPatch { name: patch.name.as_ref().map(|_| self.name.clone()), crop: patch.crop.as_ref().map(|_| self.crop.clone()) };
+    fn apply_patch(&mut self, patch: &FigureTileDraftPatch) {
         if let Some(name) = &patch.name {
             self.name = name.clone();
         }
         if let Some(crop) = &patch.crop {
             self.crop = crop.clone();
         }
-        inverse
+    }
+
+    fn diff_patch(&self, other: &Self) -> Option<FigureTileDraftPatch> {
+        Some(FigureTileDraftPatch { name: (self.name != other.name).then(|| other.name.clone()), crop: (self.crop != other.crop).then(|| other.crop.clone()) })
     }
 }
 
@@ -696,7 +699,7 @@ impl Operation<PresentDeck> for PresentOperation {
 /// trait and the type live outside this crate, so Rust's orphan rules forbid it). Every `Tiles(...)`
 /// case is flattened into its own tagged variant instead; `SetSource`/`SetTiles`/`SetDeck` carry
 /// straight through unchanged. `From`/`Into` below keep this an implementation detail — nothing
-/// outside `impl vcs::OpText for PresentOperation` ever names it.
+/// outside `impl protocol::OpText for PresentOperation` ever names it.
 #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
 enum PresentOperationDsl {
     TilesAdd {
@@ -728,9 +731,9 @@ enum PresentOperationDsl {
 impl From<&PresentOperation> for PresentOperationDsl {
     fn from(operation: &PresentOperation) -> Self {
         match operation {
-            PresentOperation::Tiles(CollectionOperation::Add { index, item }) => PresentOperationDsl::TilesAdd { index: *index, item: item.clone() },
+            PresentOperation::Tiles(CollectionOperation::Add { id: _id, item, at }) => PresentOperationDsl::TilesAdd { index: *at, item: item.clone() },
             PresentOperation::Tiles(CollectionOperation::Remove { id }) => PresentOperationDsl::TilesRemove { id: id.clone() },
-            PresentOperation::Tiles(CollectionOperation::Move { id, to_index }) => PresentOperationDsl::TilesMove { id: id.clone(), to_index: *to_index },
+            PresentOperation::Tiles(CollectionOperation::Move { id, to }) => PresentOperationDsl::TilesMove { id: id.clone(), to_index: *to },
             PresentOperation::Tiles(CollectionOperation::Patch { id, patch }) => PresentOperationDsl::TilesPatch { id: id.clone(), patch: patch.clone() },
             PresentOperation::SetSource { source } => PresentOperationDsl::SetSource { source: source.clone() },
             PresentOperation::SetTiles { tiles } => PresentOperationDsl::SetTiles { tiles: tiles.clone() },
@@ -742,9 +745,9 @@ impl From<&PresentOperation> for PresentOperationDsl {
 impl From<PresentOperationDsl> for PresentOperation {
     fn from(operation: PresentOperationDsl) -> Self {
         match operation {
-            PresentOperationDsl::TilesAdd { index, item } => PresentOperation::Tiles(CollectionOperation::Add { index, item }),
+            PresentOperationDsl::TilesAdd { index, item } => PresentOperation::Tiles(CollectionOperation::Add { id: item.id.clone(), item, at: index }),
             PresentOperationDsl::TilesRemove { id } => PresentOperation::Tiles(CollectionOperation::Remove { id }),
-            PresentOperationDsl::TilesMove { id, to_index } => PresentOperation::Tiles(CollectionOperation::Move { id, to_index }),
+            PresentOperationDsl::TilesMove { id, to_index } => PresentOperation::Tiles(CollectionOperation::Move { id, to: to_index }),
             PresentOperationDsl::TilesPatch { id, patch } => PresentOperation::Tiles(CollectionOperation::Patch { id, patch }),
             PresentOperationDsl::SetSource { source } => PresentOperation::SetSource { source },
             PresentOperationDsl::SetTiles { tiles } => PresentOperation::SetTiles { tiles },
@@ -756,7 +759,7 @@ impl From<PresentOperationDsl> for PresentOperation {
 /// ⚡ One-line op-text for every `PresentOperation` variant, routed through {@link PresentOperationDsl}
 /// (see its doc comment for why a direct `#[derive(dsl::DslOps)]` on `PresentOperation` itself isn't
 /// possible).
-impl vcs::OpText for PresentOperation {
+impl protocol::OpText for PresentOperation {
     fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
         PresentOperationDsl::parse_op(line).map(PresentOperationDsl::into)
     }
@@ -893,7 +896,7 @@ mod tests {
     fn tile_add_patch_remove_round_trip() {
         let deck = default_present_deck();
         let tile = FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
-        let added = round_trip(&deck, &PresentOperation::Tiles(CollectionOperation::Add { index: 0, item: tile }));
+        let added = round_trip(&deck, &PresentOperation::Tiles(CollectionOperation::Add { id: tile.id.clone(), item: tile, at: 0 }));
         assert_eq!(added.tiles.len(), 1);
         let renamed = round_trip(&added, &PresentOperation::Tiles(CollectionOperation::Patch { id: "t1".into(), patch: FigureTileDraftPatch { name: Some("Renamed".into()), crop: None } }));
         assert_eq!(renamed.tiles[0].name, "Renamed");
@@ -908,7 +911,7 @@ mod tests {
         let mut store = PresentStore::new(create_document_vcs_envelope(PRESENT_DECK_SCHEMA, "animate-present", empty_present_deck(), None));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![PresentOperation::Tiles(CollectionOperation::Add { index: 0, item: FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
+                operations: vec![PresentOperation::Tiles(CollectionOperation::Add { id: "t1".into(), item: FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } }, at: 0 })],
                 description: None,
             })
             .expect("apply");
@@ -941,7 +944,7 @@ mod tests {
     #[test]
     fn op_text_round_trip_tiles_add() {
         let tile = FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
-        test_support::assert_op_line_round_trip(&PresentOperation::Tiles(CollectionOperation::Add { index: 0, item: tile }));
+        test_support::assert_op_line_round_trip(&PresentOperation::Tiles(CollectionOperation::Add { id: tile.id.clone(), item: tile, at: 0 }));
     }
 
     #[test]
@@ -951,7 +954,7 @@ mod tests {
 
     #[test]
     fn op_text_round_trip_tiles_move() {
-        test_support::assert_op_line_round_trip(&PresentOperation::Tiles(CollectionOperation::Move { id: "t1".into(), to_index: 2 }));
+        test_support::assert_op_line_round_trip(&PresentOperation::Tiles(CollectionOperation::Move { id: "t1".into(), to: 2 }));
     }
 
     #[test]
@@ -990,7 +993,7 @@ mod tests {
         let mut store = PresentStore::new(create_document_vcs_envelope(PRESENT_DECK_SCHEMA, "animate-present", default_present_deck(), None));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![PresentOperation::Tiles(CollectionOperation::Add { index: 0, item: FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
+                operations: vec![PresentOperation::Tiles(CollectionOperation::Add { id: "t1".into(), item: FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } }, at: 0 })],
                 description: None,
             })
             .expect("apply");

@@ -2,7 +2,7 @@
 //! catalogue object kinds, user-adjustable filters, and a curated set with per-kind counts.
 
 use serde::{Deserialize, Serialize};
-use vcs::{Operation, OperationDiff};
+use protocol::{Operation, OperationDiff};
 
 pub const SOURCING_CURATE_SCHEMA: &str = "sourcing.curate/v1";
 

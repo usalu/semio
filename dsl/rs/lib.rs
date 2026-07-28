@@ -438,9 +438,9 @@ mod tests {
             DerivedOperation::Reset,
         ];
         for op in ops {
-            let printed = <DerivedOperation as vcs::OpText>::print_op(&op);
+            let printed = <DerivedOperation as protocol::OpText>::print_op(&op);
             assert!(!printed.contains('\n'), "print_op must be one line: {printed:?}");
-            let parsed = <DerivedOperation as vcs::OpText>::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op failed for {printed:?}: {e}"));
+            let parsed = <DerivedOperation as protocol::OpText>::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op failed for {printed:?}: {e}"));
             assert_eq!(parsed, op, "OpText round trip diverged for {printed:?}");
         }
     }
@@ -651,9 +651,9 @@ mod tests {
     #[test]
     fn derived_required_statements_boxed_field_round_trips() {
         let op = PaintOp::AddShape { shape: Box::new(ShapeNode::Circle(CircleBody { id: "c1".to_string(), r: 2.0 })) };
-        let printed = <PaintOp as vcs::OpText>::print_op(&op);
+        let printed = <PaintOp as protocol::OpText>::print_op(&op);
         assert!(!printed.contains('\n'), "print_op must be one line: {printed:?}");
-        let parsed = <PaintOp as vcs::OpText>::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op failed for {printed:?}: {e}"));
+        let parsed = <PaintOp as protocol::OpText>::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op failed for {printed:?}: {e}"));
         assert_eq!(parsed, op, "boxed required-statements round trip diverged for {printed:?}");
     }
 

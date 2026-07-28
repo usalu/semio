@@ -21,6 +21,7 @@ path = "lib.rs"
 [dependencies]
 architect_program = { path = "../../program/rs" }
 vcs = { path = "../../../vcs/rs" }
+protocol = { path = "../../../protocol/rs" }
 semio-framework-plugin = { path = "../../../framework/plugin/rs" }
 semio-framework-core = { path = "../../../framework/core/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

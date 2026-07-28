@@ -15,7 +15,7 @@ class BuildScript extends BundleScript {
   }
 }
 
-/** ⏱️Level-budgeted; the Postgres testcontainer suite lives in `mod exhaustive` (see bin.rs), only run at the `exhaustive` level. */
+/** ⏱️Level-budgeted; the full db-backed integration suite lives in `mod exhaustive` (see bin.rs) — no external services required (`db::Database` is a zero-touch `FsStorage` in a tempdir) — only run at the `exhaustive` level. */
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);

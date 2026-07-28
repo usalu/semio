@@ -104,6 +104,7 @@ version = "0.1.0"
 dependencies = [
  "animate_present",
  "animate_video",
+ "protocol",
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-plugin",
@@ -229,6 +230,7 @@ name = "architect-plugin"
 version = "0.1.0"
 dependencies = [
  "architect_program",
+ "protocol",
  "semio-framework-core",
  "semio-framework-plugin",
  "serde",
@@ -1092,6 +1094,7 @@ dependencies = [
  "cad_document",
  "kernel_3d_brepkit",
  "kernel_3d_engine",
+ "protocol",
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-plugin",
@@ -1899,6 +1902,7 @@ name = "dag-plugin"
 version = "0.1.0"
 dependencies = [
  "infinite_board_port_directed_dag",
+ "protocol",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -2564,6 +2568,7 @@ dependencies = [
  "dsl_core",
  "dsl_derive",
  "dsl_schema",
+ "protocol",
  "serde",
  "serde_json",
  "vcs",
@@ -4795,6 +4800,7 @@ version = "0.1.0"
 dependencies = [
  "imperative_core",
  "imperative_engine",
+ "protocol",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -4827,6 +4833,7 @@ dependencies = [
  "imperative_module_math",
  "imperative_module_text",
  "neural_engine",
+ "protocol",
  "serde",
  "serde_json",
  "vcs",
@@ -5434,6 +5441,7 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "layout_rs",
+ "protocol",
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-plugin",
@@ -6619,6 +6627,7 @@ name = "norm_core"
 version = "0.1.0"
 dependencies = [
  "dsl",
+ "protocol",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -8167,6 +8176,7 @@ dependencies = [
  "kernel_3d_brepkit",
  "kernel_3d_engine",
  "process_3d",
+ "protocol",
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-plugin",
@@ -9993,6 +10003,7 @@ dependencies = [
 name = "shooting-plugin"
 version = "0.1.0"
 dependencies = [
+ "protocol",
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-plugin",

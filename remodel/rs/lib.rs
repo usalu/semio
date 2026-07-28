@@ -11,7 +11,7 @@ use base64::Engine as _;
 use semio_framework_core::MeshData;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use vcs::{Operation, OperationDiff};
+use protocol::{Operation, OperationDiff};
 
 pub const REMODEL_DOCUMENT_SCHEMA: &str = "remodel.scene";
 

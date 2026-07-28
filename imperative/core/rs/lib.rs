@@ -41,18 +41,18 @@ impl Default for ImperativeDocument {
 #[serde(rename_all = "camelCase")]
 pub struct ImperativeOperation {
     pub path_ref: PathRef,
-    pub collection: vcs::CollectionOperation<String, Step, Dictionary>,
+    pub collection: protocol::CollectionOperation<String, Step, Dictionary>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct ImperativeDiff(pub Option<ImperativeOperation>);
 
-impl vcs::OperationDiff<ImperativeDocument> for ImperativeDiff {
+impl protocol::OperationDiff<ImperativeDocument> for ImperativeDiff {
     fn apply(&self, projection: &ImperativeDocument) -> ImperativeDocument {
         let mut next = projection.clone();
         if let Some(operation) = &self.0 {
             if let Some(steps) = resolve_steps_mut(&mut next, &operation.path_ref) {
-                vcs::apply_collection_operation(steps, &operation.collection);
+                protocol::apply_collection_operation(steps, &operation.collection);
             }
             prune_empty_slot(&mut next, &operation.path_ref);
         }
@@ -66,7 +66,7 @@ impl vcs::OperationDiff<ImperativeDocument> for ImperativeDiff {
     }
 }
 
-impl vcs::Operation<ImperativeDocument> for ImperativeOperation {
+impl protocol::Operation<ImperativeDocument> for ImperativeOperation {
     type Diff = ImperativeDiff;
 
     fn diff(&self, _projection: &ImperativeDocument) -> Self::Diff {
@@ -75,7 +75,7 @@ impl vcs::Operation<ImperativeDocument> for ImperativeOperation {
 
     fn backwards(&self, projection: &ImperativeDocument) -> Vec<Self> {
         match resolve_steps(projection, &self.path_ref) {
-            Some(steps) => vec![ImperativeOperation { path_ref: self.path_ref.clone(), collection: vcs::invert_collection_operation(steps, &self.collection) }],
+            Some(steps) => vec![ImperativeOperation { path_ref: self.path_ref.clone(), collection: protocol::invert_collection_operation(steps, &self.collection) }],
             None => Vec::new(),
         }
     }
@@ -89,7 +89,7 @@ fn resolve_steps<'a>(document: &'a ImperativeDocument, path_ref: &PathRef) -> Op
     let owner = path_ref.owner.as_ref()?;
     let slot = path_ref.slot.as_ref()?;
     let owner_step = document.path.steps.iter().find(|step| &step.id == owner)?;
-    Some(owner_step.bodies.get(slot).map(|path| path.steps.as_slice()).unwrap_or(&[]))
+    Some(owner_step.bodies.get(slot).map_or(&[] as &[Step], |path| path.steps.as_slice()))
 }
 
 fn resolve_steps_mut<'a>(document: &'a mut ImperativeDocument, path_ref: &PathRef) -> Option<&'a mut Vec<Step>> {
@@ -335,35 +335,39 @@ fn imperative_operation_to_dsl(operation: &ImperativeOperation) -> ImperativeOpe
     let owner = operation.path_ref.owner.clone();
     let slot = operation.path_ref.slot.clone();
     match &operation.collection {
-        vcs::CollectionOperation::Add { index, item } => ImperativeOperationDsl::Add { owner, slot, index: *index, item: Box::new(step_to_step_node_dsl(item)) },
-        vcs::CollectionOperation::Remove { id } => ImperativeOperationDsl::Remove { owner, slot, id: id.clone() },
-        vcs::CollectionOperation::Move { id, to_index } => ImperativeOperationDsl::Move { owner, slot, id: id.clone(), to_index: *to_index },
-        vcs::CollectionOperation::Patch { id, patch } => ImperativeOperationDsl::Patch { owner, slot, id: id.clone(), patch: dictionary_to_value_dsl_map(patch) },
+        // 🔒 `id` is intentionally dropped in the DSL's `Add` shape (unchanged on-disk text
+        // format) — `Step.id` round-trips it losslessly, recovered on the reverse conversion below.
+        protocol::CollectionOperation::Add { id: _id, item, at } => ImperativeOperationDsl::Add { owner, slot, index: *at, item: Box::new(step_to_step_node_dsl(item)) },
+        protocol::CollectionOperation::Remove { id } => ImperativeOperationDsl::Remove { owner, slot, id: id.clone() },
+        protocol::CollectionOperation::Move { id, to } => ImperativeOperationDsl::Move { owner, slot, id: id.clone(), to_index: *to },
+        protocol::CollectionOperation::Patch { id, patch } => ImperativeOperationDsl::Patch { owner, slot, id: id.clone(), patch: dictionary_to_value_dsl_map(patch) },
     }
 }
 
 fn imperative_operation_from_dsl(dsl_op: ImperativeOperationDsl) -> ImperativeOperation {
     match dsl_op {
         ImperativeOperationDsl::Add { owner, slot, index, item } => {
-            ImperativeOperation { path_ref: PathRef { owner, slot }, collection: vcs::CollectionOperation::Add { index, item: step_node_dsl_to_step(*item) } }
+            let item = step_node_dsl_to_step(*item);
+            let id = item.id.clone();
+            ImperativeOperation { path_ref: PathRef { owner, slot }, collection: protocol::CollectionOperation::Add { id, item, at: index } }
         }
-        ImperativeOperationDsl::Remove { owner, slot, id } => ImperativeOperation { path_ref: PathRef { owner, slot }, collection: vcs::CollectionOperation::Remove { id } },
+        ImperativeOperationDsl::Remove { owner, slot, id } => ImperativeOperation { path_ref: PathRef { owner, slot }, collection: protocol::CollectionOperation::Remove { id } },
         ImperativeOperationDsl::Move { owner, slot, id, to_index } => {
-            ImperativeOperation { path_ref: PathRef { owner, slot }, collection: vcs::CollectionOperation::Move { id, to_index } }
+            ImperativeOperation { path_ref: PathRef { owner, slot }, collection: protocol::CollectionOperation::Move { id, to: to_index } }
         }
         ImperativeOperationDsl::Patch { owner, slot, id, patch } => {
-            ImperativeOperation { path_ref: PathRef { owner, slot }, collection: vcs::CollectionOperation::Patch { id, patch: value_dsl_map_to_dictionary(&patch) } }
+            ImperativeOperation { path_ref: PathRef { owner, slot }, collection: protocol::CollectionOperation::Patch { id, patch: value_dsl_map_to_dictionary(&patch) } }
         }
     }
 }
 
-impl vcs::OpText for ImperativeOperation {
+impl protocol::OpText for ImperativeOperation {
     fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-        Ok(imperative_operation_from_dsl(<ImperativeOperationDsl as vcs::OpText>::parse_op(line)?))
+        Ok(imperative_operation_from_dsl(<ImperativeOperationDsl as protocol::OpText>::parse_op(line)?))
     }
 
     fn print_op(&self) -> String {
-        <ImperativeOperationDsl as vcs::OpText>::print_op(&imperative_operation_to_dsl(self))
+        <ImperativeOperationDsl as protocol::OpText>::print_op(&imperative_operation_to_dsl(self))
     }
 }
 //#endregion 🔖OpText
@@ -644,7 +648,7 @@ mod tests {
     #[test]
     fn add_step_op_round_trips() {
         let document = default_document();
-        let operation = ImperativeOperation { path_ref: PathRef::default(), collection: vcs::CollectionOperation::Add { index: 0, item: step("step-x", "log.print") } };
+        let operation = ImperativeOperation { path_ref: PathRef::default(), collection: protocol::CollectionOperation::Add { id: "step-x".to_string(), item: step("step-x", "log.print"), at: 0 } };
         vcs::test_support::assert_operation_round_trip(&document, operation.clone());
         vcs::test_support::assert_op_line_round_trip(&operation);
         vcs::test_support::assert_store_roundtrip(document, operation);
@@ -653,7 +657,7 @@ mod tests {
     #[test]
     fn remove_step_op_round_trips() {
         let document = default_document();
-        let operation = ImperativeOperation { path_ref: PathRef::default(), collection: vcs::CollectionOperation::Remove { id: "step-1".into() } };
+        let operation = ImperativeOperation { path_ref: PathRef::default(), collection: protocol::CollectionOperation::Remove { id: "step-1".into() } };
         vcs::test_support::assert_operation_round_trip(&document, operation.clone());
         vcs::test_support::assert_op_line_round_trip(&operation);
         vcs::test_support::assert_store_roundtrip(document, operation);
@@ -662,7 +666,7 @@ mod tests {
     #[test]
     fn move_step_op_round_trips() {
         let document = default_document();
-        let operation = ImperativeOperation { path_ref: PathRef::default(), collection: vcs::CollectionOperation::Move { id: "step-1".into(), to_index: 1 } };
+        let operation = ImperativeOperation { path_ref: PathRef::default(), collection: protocol::CollectionOperation::Move { id: "step-1".into(), to: 1 } };
         vcs::test_support::assert_operation_round_trip(&document, operation.clone());
         vcs::test_support::assert_op_line_round_trip(&operation);
         vcs::test_support::assert_store_roundtrip(document, operation);
@@ -671,7 +675,7 @@ mod tests {
     #[test]
     fn patch_step_params_op_round_trips() {
         let document = default_document();
-        let operation = ImperativeOperation { path_ref: PathRef::default(), collection: vcs::CollectionOperation::Patch { id: "step-1".into(), patch: Dictionary::new().insert("key", neural_engine::Value::Atom(neural_engine::Atom::String("renamed".into()))) } };
+        let operation = ImperativeOperation { path_ref: PathRef::default(), collection: protocol::CollectionOperation::Patch { id: "step-1".into(), patch: Dictionary::new().insert("key", Value::Atom(Atom::String("renamed".into()))) } };
         vcs::test_support::assert_operation_round_trip(&document, operation.clone());
         vcs::test_support::assert_op_line_round_trip(&operation);
         vcs::test_support::assert_store_roundtrip(document, operation);
@@ -682,7 +686,7 @@ mod tests {
         let mut document = default_document();
         document.path.steps.push(step("step-if", "control.if"));
         let path_ref = PathRef { owner: Some("step-if".into()), slot: Some("then".into()) };
-        let operation = ImperativeOperation { path_ref: path_ref.clone(), collection: vcs::CollectionOperation::Add { index: 0, item: step("step-nested", "log.print") } };
+        let operation = ImperativeOperation { path_ref, collection: protocol::CollectionOperation::Add { id: "step-nested".to_string(), item: step("step-nested", "log.print"), at: 0 } };
         vcs::test_support::assert_operation_round_trip(&document, operation.clone());
         vcs::test_support::assert_op_line_round_trip(&operation);
         let post = vcs::apply_operation(&document, &operation);
@@ -702,7 +706,7 @@ mod tests {
         let document = default_document();
         let envelope = vcs::create_document_vcs_envelope::<ImperativeDocument, ImperativeOperation>("imperative.document/v1", "test", document, None);
         let mut store = vcs::DocumentVcsStore::new(envelope);
-        let operation = ImperativeOperation { path_ref: PathRef::default(), collection: vcs::CollectionOperation::Add { index: 0, item: step("step-x", "log.print") } };
+        let operation = ImperativeOperation { path_ref: PathRef::default(), collection: protocol::CollectionOperation::Add { id: "step-x".to_string(), item: step("step-x", "log.print"), at: 0 } };
         store
             .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![operation], description: None })
             .expect("apply");
@@ -772,21 +776,21 @@ mod tests {
         let document = default_document();
         let operation = ImperativeOperation {
             path_ref: PathRef { owner: Some("missing".into()), slot: Some("then".into()) },
-            collection: vcs::CollectionOperation::Remove { id: "step-x".into() },
+            collection: protocol::CollectionOperation::Remove { id: "step-x".into() },
         };
-        assert!(vcs::Operation::backwards(&operation, &document).is_empty());
+        assert!(protocol::Operation::backwards(&operation, &document).is_empty());
     }
 
     #[test]
     fn imperative_diff_absorb_keeps_latest_some_and_ignores_none() {
-        use vcs::OperationDiff;
-        let first = ImperativeOperation { path_ref: PathRef::default(), collection: vcs::CollectionOperation::Remove { id: "step-1".into() } };
-        let second = ImperativeOperation { path_ref: PathRef::default(), collection: vcs::CollectionOperation::Remove { id: "step-2".into() } };
+        use protocol::OperationDiff;
+        let first = ImperativeOperation { path_ref: PathRef::default(), collection: protocol::CollectionOperation::Remove { id: "step-1".into() } };
+        let second = ImperativeOperation { path_ref: PathRef::default(), collection: protocol::CollectionOperation::Remove { id: "step-2".into() } };
         let mut diff = ImperativeDiff(Some(first));
         diff.absorb(ImperativeDiff(None));
-        assert!(matches!(&diff.0, Some(op) if matches!(&op.collection, vcs::CollectionOperation::Remove { id } if id == "step-1")));
+        assert!(matches!(&diff.0, Some(op) if matches!(&op.collection, protocol::CollectionOperation::Remove { id } if id == "step-1")));
         diff.absorb(ImperativeDiff(Some(second)));
-        assert!(matches!(&diff.0, Some(op) if matches!(&op.collection, vcs::CollectionOperation::Remove { id } if id == "step-2")));
+        assert!(matches!(&diff.0, Some(op) if matches!(&op.collection, protocol::CollectionOperation::Remove { id } if id == "step-2")));
     }
     //#endregion resolve_steps / resolve_steps_mut / prune_empty_slot
 
@@ -855,19 +859,19 @@ mod tests {
     #[test]
     fn op_text_rejects_unknown_operation_keyword() {
         let line = r#"frobnicate owner=- slot=- id="step-1""#;
-        assert!(<ImperativeOperation as vcs::OpText>::parse_op(line).is_err());
+        assert!(<ImperativeOperation as protocol::OpText>::parse_op(line).is_err());
     }
 
     #[test]
     fn op_text_round_trips_add_with_owner_and_slot() {
         let operation = ImperativeOperation {
             path_ref: PathRef { owner: Some("step-if".into()), slot: Some("then".into()) },
-            collection: vcs::CollectionOperation::Add { index: 0, item: step("step-nested", "log.print") },
+            collection: protocol::CollectionOperation::Add { id: "step-nested".to_string(), item: step("step-nested", "log.print"), at: 0 },
         };
-        let printed = <ImperativeOperation as vcs::OpText>::print_op(&operation);
+        let printed = <ImperativeOperation as protocol::OpText>::print_op(&operation);
         assert!(printed.contains("owner=step-if"), "printed: {printed}");
         assert!(printed.contains("slot=then"), "printed: {printed}");
-        let parsed = <ImperativeOperation as vcs::OpText>::parse_op(&printed).expect("round trips");
+        let parsed = <ImperativeOperation as protocol::OpText>::parse_op(&printed).expect("round trips");
         assert_eq!(parsed, operation);
     }
     //#endregion DSL text round trips and error paths
@@ -976,7 +980,7 @@ mod tests {
         let mut host = ImperativeHost::default();
         host.set_step_params_json("step-2", r#"{"message":"updated"}"#).expect("sets params");
         let step = host.document.path.steps.iter().find(|step| step.id == "step-2").expect("step-2 exists");
-        assert_eq!(step.params.get("message"), Some(&neural_engine::Value::Atom(Atom::String("updated".into()))));
+        assert_eq!(step.params.get("message"), Some(&Value::Atom(Atom::String("updated".into()))));
     }
 
     #[test]

@@ -1,0 +1,2 @@
+[DEBUG] framework-sync-worker has no native tests; wasm build is the verification target
+SYNC_WORKER_TEST_EXIT:0

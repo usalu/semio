@@ -22,6 +22,7 @@ path = "lib.rs"
 
 [dependencies]
 infinite_board_port_directed_dag = { path = "../../rs" }
+protocol = { path = "../../../../../../../protocol/rs" }
 vcs = { path = "../../../../../../../vcs/rs" }
 semio-framework-plugin = { path = "../../../../../../../framework/plugin/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

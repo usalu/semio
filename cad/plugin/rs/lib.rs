@@ -4997,7 +4997,33 @@ fn start_interaction_session(runtime: &mut CadPlayRuntime, pane: CadPaneId, inte
 #[derive(Default)]
 struct CadPlayApp {
     runtime: CadPlayRuntime,
+    /// 👻 Per-`key` monotone counter for `gesture_preview` — see `//#region 🔖GesturePreview`.
+    preview_seq: u64,
 }
+
+//#region 🔖GesturePreview
+impl CadPlayApp {
+    /// 👻 CW7 db+protocol+vcs-slimming campaign, "preview law for gesture apps": the live rubber-band
+    /// engagement session — `worldPointerMove`'s own doc already calls this out: "applies pointer.move
+    /// ... without ever committing an object or touching VCS history" — shaped as the exact payload
+    /// `framework_sync::SyncSession::publish_preview(key, seq, payload)` expects, ready to hand off the
+    /// instant a transport exists. `None` outside an active engagement session; reads
+    /// `CadEngagementSession` only, never `CadScene`/`CadOperation` — a preview can never become
+    /// persistent state.
+    ///
+    /// 🚧 Deliberately unwired beyond this accessor — same gap as `draw-plugin`'s
+    /// `draw_gesture_preview_payload` (see that doc for the full explanation): `framework/sync::
+    /// SyncSession::publish_preview` is host-only and unreachable from this WASI-P2 sandboxed plugin
+    /// crate, and `vcs::BackboneMessage` has no preview-shaped variant to relay one through. See
+    /// `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw7-preview-law.txt`.
+    /// `#[allow(dead_code)]`: exercised by `🧪Tests` only until a host bridge exists.
+    #[allow(dead_code)]
+    fn gesture_preview(&self) -> Option<(&'static str, u64, Vec<u8>)> {
+        let session = self.runtime.engagement_session.as_ref()?;
+        Some(("gesture:engagement", self.preview_seq, serde_json::to_vec(session).ok()?))
+    }
+}
+//#endregion 🔖GesturePreview
 
 impl DocumentApp for CadPlayApp {
     type Projection = CadScene;
@@ -5654,6 +5680,7 @@ impl DocumentApp for CadPlayApp {
                 let point = args.and_then(|value| value.get("position"));
                 if let Some(session) = self.runtime.engagement_session.as_mut() {
                     apply_event(session, "pointer.move", point);
+                    self.preview_seq = self.preview_seq.wrapping_add(1);
                 }
                 ActionEmit::default()
             }
@@ -6007,7 +6034,8 @@ mod tests {
     use super::*;
     use cad_document::empty_cad_projection;
     use semio_framework_plugin::{ActionMeta, HistoryView, PluginApp, VcsDocumentApp};
-    use vcs::{Backbone, BackboneMessage, MemoryBackbone, Operation, OperationDiff};
+    use protocol::{Operation, OperationDiff};
+    use vcs::{Backbone, BackboneMessage, MemoryBackbone};
 
     //#region 🔖Harness
     fn meta(actor: &str) -> ActionMeta {
@@ -6803,6 +6831,53 @@ mod tests {
         assert_eq!(session.state, "first_corner", "pointer.move must not change state");
         assert_eq!(session.context.get("cursor"), Some(&json!([3.0, 4.0, 0.0])));
     }
+
+    //#region 🔖GesturePreview
+    /// 🔬 CW7 preview-law seam: `CadPlayApp::gesture_preview` reads `CadEngagementSession` only, never
+    /// `CadScene`/`CadOperation` — driven through the real `worldPointerMove` handler (the natural
+    /// per-tick gesture handler) via the existing `drive` helper.
+    #[test]
+    fn gesture_preview_is_none_without_a_live_engagement_session() {
+        let app = CadPlayApp::default();
+        assert!(app.gesture_preview().is_none(), "no live engagement session, nothing to preview");
+    }
+
+    #[test]
+    fn gesture_preview_reflects_the_live_rubber_band_preview_and_clears_on_abort() {
+        let mut app = CadPlayApp::default();
+        let scene = default_document();
+        app.runtime.engagement_input = "b".into();
+        drive(&mut app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })));
+
+        drive(&mut app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [3.0, 4.0, 0.0] })));
+        let (key, seq_after_first, payload) = app.gesture_preview().expect("a live engagement session is previewable");
+        assert_eq!(key, "gesture:engagement");
+        let value: Value = serde_json::from_slice(&payload).expect("payload is valid json");
+        assert_eq!(value["context"]["cursor"], json!([3.0, 4.0, 0.0]));
+
+        drive(&mut app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [5.0, 6.0, 0.0] })));
+        let (_, seq_after_second, payload_after_second) = app.gesture_preview().expect("still live mid-gesture");
+        assert!(seq_after_second > seq_after_first, "seq is monotone per tick, for staleness detection on the receiving end");
+        let value_after_second: Value = serde_json::from_slice(&payload_after_second).expect("payload is valid json");
+        assert_eq!(value_after_second["context"]["cursor"], json!([5.0, 6.0, 0.0]), "preview tracks the live cursor, not the gesture start");
+
+        drive(&mut app, &scene, "engagementAbort", None);
+        assert!(app.gesture_preview().is_none(), "the engagement session was aborted: nothing left to preview");
+    }
+
+    #[test]
+    fn gesture_preview_is_a_pure_read_never_mutating_the_engagement_session() {
+        let mut app = CadPlayApp::default();
+        let scene = default_document();
+        app.runtime.engagement_input = "b".into();
+        drive(&mut app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })));
+        drive(&mut app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [1.0, 2.0, 0.0] })));
+        let session_before = app.runtime.engagement_session.clone();
+        let _ = app.gesture_preview();
+        let _ = app.gesture_preview();
+        assert_eq!(app.runtime.engagement_session, session_before, "gesture_preview must never mutate the live engagement session it reads");
+    }
+    //#endregion 🔖GesturePreview
 
     #[test]
     fn engagement_repeat_last_restarts_the_last_finalized_interaction() {

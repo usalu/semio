@@ -420,7 +420,8 @@ pub fn port_key(node_id: &str, port_id: &str) -> String {
 // #endregion 🔖Runtime
 
 // #region 🔖GraphOperations
-use vcs::{apply_operation, create_document_vcs_envelope, CollectionDiff, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, ItemPatch, Operation, OperationDiff};
+use protocol::{Operation, OperationDiff};
+use vcs::{apply_operation, create_document_vcs_envelope, CollectionDiff, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, ItemPatch};
 
 pub const TRINITY_GRAPH_SCHEMA: &str = GraphFixture::SCHEMA;
 
@@ -906,7 +907,8 @@ impl Operation<GraphFixture> for TrinityGraphOperation {
 // #endregion 🔖GraphOperations
 
 //#region 🔖Dsl
-use vcs::{DocumentDsl, DocumentPack, OpText, PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};
+use protocol::OpText;
+use vcs::{DocumentDsl, DocumentPack, PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};
 
 //#region 🔖DslMirrors
 /// 🔒 Local twin of `PortDirection` (foreign, re-exported from `mathematical_graph_manifest` and
@@ -1091,7 +1093,7 @@ impl From<EntityRefDsl> for EntityRef {
     }
 }
 
-/// ⚡ Local mirror of `TrinityGraphOperation` for `vcs::OpText` — `entity: EntityRef` and
+/// ⚡ Local mirror of `TrinityGraphOperation` for `protocol::OpText` — `entity: EntityRef` and
 /// `ports`/`fixture` fields transitively carry the same foreign/tuple-variant shapes handled above,
 /// so the real enum can't derive `dsl::DslOps` directly. `fixture: GraphFixture` binds through
 /// `GraphFixture`'s own hand-written `dsl::DslField` impl (below) unchanged — a nested `Record`
@@ -1203,7 +1205,7 @@ impl DocumentPack for GraphFixture {
 //#endregion 🔖Dsl
 
 //#region 🔖OpText
-/// ⚡ One-line textual notation for [`TrinityGraphOperation`] (`vcs::OpText`), delegating to the
+/// ⚡ One-line textual notation for [`TrinityGraphOperation`] (`protocol::OpText`), delegating to the
 /// derive-generated `TrinityGraphOperationDsl` mirror (see `🔖DslMirrors`).
 impl OpText for TrinityGraphOperation {
     fn parse_op(line: &str) -> Result<Self, TextError> {

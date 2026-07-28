@@ -12,7 +12,8 @@ use std::cell::Cell;
 use std::collections::{BTreeMap, HashMap};
 use trinity_jack::{execute, parse};
 use trinity_ram::{create_trinity_graph_envelope, dispatch_trinity_graph_operations, port_key, Graph, GraphFixture, Node, PortDirection, PropertyValue, TrinityGraphOperation, TrinityGraphStore};
-use vcs::{DocumentDsl, OpText};
+use protocol::OpText;
+use vcs::DocumentDsl;
 
 pub use trinity_jack::{complete as complete_jack, parse as parse_jack, run as run_jack, run_json as run_jack_json, tokenize as tokenize_jack, Completion as JackCompletion, Pattern, QueryResult, QueryResultKind, TokenSpan as JackTokenSpan};
 pub use trinity_ram::{self, Camera, Manifest};
@@ -280,7 +281,8 @@ struct RuleQueryResult {
 // #endregion 🔖Rewrite
 
 // #region 🔖RuleVcs
-use vcs::{create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
+use protocol::{Operation, OperationDiff};
+use vcs::{create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore};
 
 /// 📍 Local `{x, y}` twin for a bare `(f64, f64)` tuple — the DSL engine's `DslField` binding has no
 /// impl for raw Rust tuples (only named `DslRecord`/`DslScalar` types can bind), so `rule_layout`'s
@@ -384,7 +386,7 @@ pub fn dispatch_rewrite_rule_state(store: &mut RewriteRuleStore, state: RewriteR
 // #endregion 🔖RuleVcs
 
 //#region 🔖Dsl
-/// 📜 `RewriteRuleState`/`RewriteRuleOperation` derive their `vcs::DocumentDsl`/`vcs::OpText` impls
+/// 📜 `RewriteRuleState`/`RewriteRuleOperation` derive their `vcs::DocumentDsl`/`protocol::OpText` impls
 /// directly (see `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslOps)]` on their own declarations in
 /// `🔖RuleVcs`) — every field already binds through the `dsl::` engine with no foreign types, so no
 /// hand-written parser/printer or twin type is needed here at all.

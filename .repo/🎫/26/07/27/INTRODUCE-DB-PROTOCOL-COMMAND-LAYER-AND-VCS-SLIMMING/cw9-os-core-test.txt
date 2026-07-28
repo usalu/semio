@@ -1,0 +1,10 @@
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/framework/product/os/core/js
+
+
+ Test Files  4 passed (4)
+      Tests  38 passed (38)
+   Start at  02:52:15
+   Duration  1.58s (transform 2.01s, setup 0ms, import 2.66s, tests 218ms, environment 1ms)
+
+OS_CORE_TEST_EXIT:0

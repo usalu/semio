@@ -2,7 +2,8 @@
 
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
-use vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentBackboneRef, DocumentVcs, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff, VcsError};
+use protocol::{Operation, OperationDiff};
+use vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentBackboneRef, DocumentVcs, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, VcsError};
 
 pub const S_STUDIO_SCHEMA: &str = "s.studio";
 pub const S_MEDIA_GRAPH_SCHEMA: &str = "s.media-graph";
@@ -306,7 +307,7 @@ pub fn materialize_studio_projection(document: &SStudioDocument, applied_edit_id
 //#endregion 🔖Dsl
 
 //#region 🔖OpText
-// `impl vcs::OpText for StudioOperation` is emitted automatically by the `#[derive(dsl::DslOps)]`
+// `impl protocol::OpText for StudioOperation` is emitted automatically by the `#[derive(dsl::DslOps)]`
 // on `StudioOperation` itself (see `🔖Schemas`) — no manual impl needed here.
 //#endregion 🔖OpText
 

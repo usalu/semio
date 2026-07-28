@@ -1,0 +1,198 @@
+CW7 App fan-out — flow_core (/Users/ueli/Documents/semio/flow/core/rs/lib.rs)
+================================================================================
+
+Scope: migrate CollectionOperation::Add/Move construction+pattern-matches and the
+vcs::collection_diff_from_operation/invert_collection_operation calls onto protocol::
+CollectionOperation's frozen shape (Add gains mandatory `id`, `index`->`at`; Move
+`to_index`->`to`). Only file touched: flow/core/rs/lib.rs. Cargo.toml untouched —
+`protocol` was already a direct dependency (confirmed by reading Cargo.toml first, from
+an earlier wave's mechanical sweep), no change needed.
+
+Real usage confirmed (not a false positive): flow_core has two live collection ops —
+`FlowOperation::Widgets(CollectionOperation<String, Widget, Widget>)` and
+`FlowOperation::Synapses(CollectionOperation<String, SynapseSpec, SynapseSpec>)` — applied
+via `collection_diff_from_operation`/`invert_collection_operation` inside
+`Operation<FlowFixture>::diff`/`backwards` for `FlowOperation`, plus a local DSL twin
+(`FlowOperationDsl`) flattening `Add`/`Remove`/`Move`/`Patch` into keyworded per-collection
+variants, plus construction sites in `flow_fixture_operations` (the host-mutation-diff
+bridge) and ~9 test-site constructions. `vcs::apply_collection_operation` was never called
+anywhere in this crate (the crate applies operations only via `vcs::apply_operation` at the
+outer `FlowOperation`/`FlowDiff` level, which internally calls `OperationDiff::apply`, not
+`apply_collection_operation` directly) — so there was no call site to migrate for that
+function name; only `collection_diff_from_operation`/`invert_collection_operation` were in
+use.
+
+What changed
+------------
+1. Import switch (was `use vcs::{collection_diff_from_operation, invert_collection_operation,
+   CollectionDiff, CollectionOperation, DocumentVcsEnvelope, DocumentVcsStore, Identified,
+   Operation, OperationDiff, Patchable};`): split into
+   `use vcs::{DocumentVcsEnvelope, DocumentVcsStore};` and
+   `use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionDiff,
+   CollectionOperation, Identified, Operation, OperationDiff, Patchable};` — the seven
+   collection-op-adjacent symbols plus `Operation`/`OperationDiff` (step 7 trio, minus
+   `OpText` which was referenced via explicit `vcs::`/`impl vcs::OpText` rather than imported
+   unqualified) now come from `protocol` (verified all are re-exported at the top-level
+   `protocol/rs/lib.rs` facade). `DocumentVcsEnvelope`/`DocumentVcsStore` stay on `vcs` — out
+   of scope, not part of the shape freeze; the two `use vcs::create_document_vcs_envelope;` /
+   `use vcs::DocumentVcsCommand;` lines above them are also untouched (document-store
+   machinery, not collection-op shape).
+
+2. `CollectionOperation::Add` construction sites, both in `flow_fixture_operations` (diffing
+   a before/after `FlowFixture` into granular ops): rewritten from
+   `CollectionOperation::Add { index, item: X }` to
+   `CollectionOperation::Add { id: <id>, item: X, at: index }`.
+   Id source:
+     - Widgets: `widget_id_for(widget).to_string()` — `widget_id_for` is this same function's
+       existing helper (already used two lines above, in the loop's own `id` binding, to drive
+       the parallel `Remove`/`Patch` construction for this same collection) that
+       pattern-matches every `Widget` variant's `id` field; `Identified<String> for Widget`
+       delegates to the identical match. Reused the loop-local `id: &str` binding directly
+       (`id.to_string()`), no new lookup.
+     - Synapses: `synapse.id.clone()` — `SynapseSpec.id: pub String`, the same field
+       `Identified<String>::id()` returns and the same field the sibling `Remove`/`Patch`
+       arms in this same loop already use.
+   No fresh id generation (no counter/ULID) — both ids are pre-existing fields on the item
+   being added, consistent with how `Remove`/`Move`/`Patch` already obtain a `TId` for this
+   crate's two collections.
+
+3. `CollectionOperation::Move` — no live construction site anywhere in this crate outside the
+   DSL twin's own `to_index` field name (see #4) and test-site literals (see #6); no
+   `flow_fixture_operations`/production code path constructs `Move` at all (widget/synapse
+   reordering isn't modelled as a document operation in this crate — only add/patch/remove).
+
+4. `FlowOperationDsl` (local text-DSL mirror of `FlowOperation`, orphan-rule workaround since
+   `vcs`/`protocol`'s foreign `CollectionOperation<K,V,P>` can't itself derive
+   `dsl::DslField`): struct shape left UNCHANGED (`WidgetsAdd`/`SynapsesAdd` still carry only
+   `index`/`item`, no new `id` field, and `WidgetsMove`/`SynapsesMove` still carry
+   `#[dsl(key = "to")] to_index: usize`) — this is a crate-private text-serialization type,
+   independent of the frozen `protocol::CollectionOperation` shape, and its own field names
+   are not part of this migration's scope. Instead, the conversion functions bridging it to/
+   from the real `CollectionOperation` were updated:
+     - `flow_operation_to_dsl` (encoding, `&FlowOperation` -> `FlowOperationDsl`):
+       `CollectionOperation::Add { index, item }` -> `CollectionOperation::Add { id: _id, item,
+       at }` (bind and discard `id` — the DSL twin has no field to put it in and doesn't need
+       one, since decoding recovers it from `item` itself, see next bullet), `at: *at` in place
+       of `*index`. `CollectionOperation::Move { id, to_index }` -> `{ id, to }`, RHS
+       `to_index: *to`.
+     - `flow_operation_from_dsl` (decoding, `FlowOperationDsl` -> `Result<FlowOperation,
+       String>`): `WidgetsAdd { index, item }` now converts `item` first
+       (`widget_dsl_to_widget(item)?`), then derives `id: widget_id_for(&item).to_string()`
+       from the now-owned `item` before moving it into the `CollectionOperation::Add { id,
+       item, at: index }` literal. `SynapsesAdd` analogous with `item.id.clone()`. This means
+       the DSL text format itself is byte-for-byte unchanged (no new keyword/field appears in
+       `.flow` op-text) — `id` is reconstructed losslessly from the item on decode, exactly
+       mirroring how `flow_fixture_operations` derives it on construction. `WidgetsMove`/
+       `SynapsesMove` decode: `{ id, to_index }` -> `CollectionOperation::Move { id, to:
+       to_index }` (pure rename passthrough).
+
+5. `impl vcs::OpText for FlowOperation` -> `impl protocol::OpText for FlowOperation` (step 7),
+   and its two internal `<FlowOperationDsl as vcs::OpText>::...` calls ->
+   `<FlowOperationDsl as protocol::OpText>::...` (confirmed `FlowOperationDsl`'s
+   `dsl::DslOps`-derived impl already targets `::protocol::OpText` directly in the derive
+   macro's generated code — `dsl/derive/rs/lib.rs` line 737 — so this just names the trait via
+   `protocol::OpText` instead of `vcs`'s re-export-shim alias, zero behavior change).
+   `vcs::TextError`/`vcs::TextSpan` left untouched in `parse_op`'s body/return type per the
+   instructions' "only for the Operation/OperationDiff/OpText trio, do not touch anything
+   else" — `vcs::TextError` is itself `pub use dsl_core::{TextError, TextSpan}`, the exact
+   same concrete type `protocol::OpText::parse_op`'s signature requires, so no behavior change
+   either way. `impl Operation<FlowFixture> for FlowOperation` and
+   `impl OperationDiff<FlowFixture> for FlowDiff` were already unqualified (no `vcs::` prefix)
+   before this change, so they needed zero edits at the impl site — they now resolve through
+   `protocol::{Operation, OperationDiff}` automatically once the top-of-region `use` switched
+   (#1).
+
+6. Test-site literal constructions (9 sites across `flow_vcs_tests`): every
+   `CollectionOperation::Add { index: N, item: X }` -> `{ id: "<matching-item-id>", item: X,
+   at: N }` (id literal always matches the item's own `id` field, e.g. `sample_widget("w1")`
+   paired with `id: "w1".into()`, `synapse` with `id: "s1".into()` — no divergence introduced);
+   every `CollectionOperation::Move { id, to_index: N }` -> `{ id, to: N }`.
+
+7. `Patchable<Widget> for Widget` / `Patchable<SynapseSpec> for SynapseSpec` — NOT a pure
+   rename, and NOT explicitly called out in the instructions doc's "shape change" section
+   (only step 6's aside mentions `Patchable` "moved to protocol too per the same shape
+   freeze"), but mandatory for the crate to build: `protocol::Patchable<TPatch>` splits
+   `vcs::Patchable`'s single `apply_patch(&mut self, &TPatch) -> TPatch` (mutate-and-
+   return-prior-value) into two required methods —
+   `apply_patch(&mut self, &TPatch)` (mutate only, no return) and
+   `diff_patch(&self, other: &Self) -> Option<TPatch>` (compute the patch that would turn
+   `self` into `other`) — confirmed against `protocol/command/rs/lib.rs`'s trait definition
+   and `invert_collection_operation`'s `Patch` arm (`after.apply_patch(patch);
+   let inverse_patch = after.diff_patch(&prior).expect(...)`). Both impls here are
+   whole-value-replacement patches (documented as such already: "flow widgets are
+   heterogeneous enum variants, so a granular per-field patch buys nothing"), so:
+     - `apply_patch`: `*self = patch.clone();` (was `std::mem::replace(self, patch.clone())`
+       discarding the return).
+     - `diff_patch`: `Some(other.clone())` unconditionally — never `None`, matching
+       `invert_collection_operation`'s doc comment ("a technology whose `Patchable` impl can
+       produce a no-op patch should have `diff_patch` return `Some(unchanged-patch)`, not
+       `None`") and reproducing the old single-method impl's exact semantics (it
+       unconditionally returned the prior value as the inverse, regardless of whether the
+       patch actually changed anything).
+   `Identified<String> for Widget`/`for SynapseSpec`: zero-diff, `protocol::Identified` is an
+   identical single-method trait shape to `vcs::Identified`, pure re-anchoring via the import
+   switch.
+
+Cross-crate ripple check
+-------------------------
+Grepped the repo for `flow_core::FlowOperation`/`FlowOperation::Widgets`/
+`FlowOperation::Synapses` and for `flow_core::` combined with
+`CollectionOperation`/`Identified`/`Patchable` across every real (non-worktree, non-backup)
+crate that references `flow_core::` at all (`playbook/module/procedural/rs/lib.rs`,
+`framework/renderer/wgpu/rs/lib.rs`, `procedural/3d/rs/lib.rs`, `procedural/plugin/rs/lib.rs`,
+`procedural/2d/rs/lib.rs`, `flow/plugin/rs/lib.rs`) — none of them touch
+`flow_core::CollectionOperation`/`FlowOperation::Widgets`/`FlowOperation::Synapses`/
+`Identified`/`Patchable`. No sibling crate constructs or pattern-matches this crate's
+collection ops. No ripple to report. (One stray hit in
+`.claude/worktrees/agent-afa905cc164f52ed8/flow/plugin/rs/lib.rs` — a leftover worktree
+directory, not touched, not part of this repo's live tree, out of scope and against this
+repo's own no-worktree policy to engage with.)
+
+Build / test status
+--------------------
+- `cargo build -p flow_core` — clean, exit 0. Initial build surfaced 4 real errors (E0053 x2,
+  E0046 x2) from the `Patchable` shape gap described in #7 above; fixed in this same pass,
+  rebuild clean. Only pre-existing, unrelated `unused_qualifications` warnings remain (7,
+  none touching lines this migration changed except purely coincidental proximity — e.g.
+  line 4350/4365 `std::collections::BTreeSet` — pre-existing lint noise, not introduced by
+  this change, left as-is per "touch only what's needed").
+- `cargo test -p flow_core` — clean, exit 0, 94 passed / 0 failed / 0 ignored (lib tests).
+  All Add/Move/Patch-exercising tests
+  (`widget_add_patch_remove_round_trip`, `flow_fixture_ops_diffs_widgets_synapses_layout`,
+  `flow_operation_op_text_round_trips_every_variant`,
+  `flow_fixture_satisfies_vcs_test_support_store_roundtrip`,
+  `coalesced_layout_drag_produces_one_edit`) exercise the migrated Add/Move/Patch
+  diff+invert+DSL-round-trip path and pass unchanged.
+  `cargo test -p flow_core --doc` — 0 doc tests (crate has no `///` doctest code blocks),
+  `ok`. One transient, unrelated hiccup during verification: the doc-test phase of the first
+  full `cargo test -p flow_core` run failed with `E0463: can't find crate for
+  infinite_board_port_directed_dag` / `playbook` — a concurrent-rebuild race (this is a live,
+  concurrently-edited monorepo; both crates were mid-recompile from other sessions at that
+  moment, confirmed via `ps aux` showing sibling `cargo build`/`cargo test` processes for
+  `animate_present`, `lowpoly_core`, `architect_program`, `process_3d`, `animate-plugin`, and
+  a workspace-wide `cargo test --workspace` running concurrently). Re-ran
+  `cargo test -p flow_core --doc` alone immediately after and it passed clean. Not caused by
+  this migration.
+
+Deviations
+----------
+- Same deviation class as other CW7 reports in this ticket folder (e.g. process_3d's):
+  instructions step 6 undersold `Patchable`'s divergence as a same-shape import-path swap
+  alongside `Identified`/`CollectionOperation`/`CollectionDiff`; in reality
+  `protocol::Patchable` is a genuinely different (split two-method) trait shape from
+  `vcs::Patchable`, mandatory to implement correctly (not just re-path) because
+  `protocol::collection_diff_from_operation`/`invert_collection_operation`'s generic bounds
+  require protocol's own `Patchable`. Handled per the doc's spirit (frozen-contract shape,
+  same collaboration semantics) rather than skipped; documented in full above (#7) for
+  reviewer verification since it's the one part of this migration that isn't a pure rename.
+- The local `FlowOperationDsl` text-DSL twin's own field names (`index`, `to_index`) were
+  deliberately left unrenamed — they are crate-private serialization details, not the frozen
+  `protocol::CollectionOperation` shape itself, and renaming them would have been an
+  unrequested text-format change outside this migration's scope. `Add`'s new mandatory `id`
+  was absorbed into the twin without adding a new DSL field, by deriving it losslessly from
+  `item` on decode (see #4) — keeps `.flow` op-text output byte-for-byte unchanged.
+- No false positive — every construction/pattern-match found was real, live
+  `CollectionOperation` usage for the `widgets`/`synapses` collections. No `apply_collection_
+  operation` call site existed in this crate (only `collection_diff_from_operation`/
+  `invert_collection_operation`), so nothing to migrate for that third function name — noted,
+  not a deviation.

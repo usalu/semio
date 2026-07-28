@@ -882,7 +882,7 @@ mod store {
 
     /// 🗄️✍️ Writes `value` to `path` atomically (temp file + rename) so a crash mid-write never
     /// corrupts the previous contents — the same `write_atomic` convention `pack`/`FsStorage` use.
-    fn write_json_atomic<T: serde::Serialize>(path: &std::path::Path, value: &T) -> Result<(), SessionError> {
+    fn write_json_atomic<T: Serialize>(path: &std::path::Path, value: &T) -> Result<(), SessionError> {
         if let Some(parent) = path.parent() {
             std::fs::create_dir_all(parent).map_err(|e| SessionError::Internal(format!("create dir {}: {e}", parent.display())))?;
         }
@@ -1626,7 +1626,7 @@ mod actor {
     /// envelope/frontier pair `protocol_wire` clients (framework/sync-style actors) expect.
     #[derive(Clone)]
     pub enum WireEvent {
-        Commands { envelope: protocol::OperationEnvelope, frontier: db::Frontier },
+        Commands { envelope: Box<protocol::OperationEnvelope>, frontier: db::Frontier },
         Preview { actor: protocol::ActorId, key: String, seq: u64, payload: Vec<u8> },
     }
 
@@ -1653,8 +1653,8 @@ mod actor {
                         let _ = reply.send(result);
                     }
                     ActorMessage::ComposeCommand { envelope, command, reply } => {
-                        let result = self.handle_compose_command(envelope, command);
-                        let _ = reply.send(result);
+                        self.handle_compose_command(&envelope, &command);
+                        let _ = reply.send(Ok(()));
                     }
                     ActorMessage::GetSnapshot { reply } => {
                         let _ = reply.send(self.build_snapshot());
@@ -1713,7 +1713,7 @@ mod actor {
             }
 
             let _ = self.event_tx.send(SessionEvent::DomainCommandAccepted { command_id: envelope.command_id, domain_version: new_version, changes });
-            let _ = self.wire_tx.send(WireEvent::Commands { envelope: op_envelope, frontier: receipt.frontier });
+            let _ = self.wire_tx.send(WireEvent::Commands { envelope: Box::new(op_envelope), frontier: receipt.frontier });
             Ok(CommandResult::Accepted { domain_version: new_version })
         }
 
@@ -1723,13 +1723,13 @@ mod actor {
         /// `compose.cursor`/`compose.look`/`compose.selection_*` tables but never actually wrote them
         /// into `SessionState.compose_people` (a latent dead field) — fixed here: presence now
         /// genuinely updates the in-memory replica admin/introspection reads.
-        fn handle_compose_command(&mut self, envelope: ComposeEnvelope, command: ComposeCommand) -> Result<(), SessionError> {
+        fn handle_compose_command(&mut self, envelope: &ComposeEnvelope, command: &ComposeCommand) {
             let pid = envelope.person_id.0;
             let fid = envelope.frontend_id.clone();
             let new_version = self.state.compose_version + 1;
             let key = (pid, fid.clone());
             let person = self.state.compose_people.entry(key).or_insert_with(|| ComposePersonState { person_id: pid, frontend_id: fid.clone(), display_name: None, color: None, is_present: true, cursor: None, look: None, selected_piece_ids: Vec::new(), selected_design_ids: Vec::new() });
-            let update = match &command {
+            let update = match command {
                 ComposeCommand::UpsertCursor(c) => {
                     person.cursor = Some([c.u, c.v]);
                     person.is_present = true;
@@ -1755,7 +1755,6 @@ mod actor {
             if let Ok(payload) = serde_json::to_vec(&update) {
                 let _ = self.wire_tx.send(WireEvent::Preview { actor: protocol::ActorId(pid.to_string()), key: format!("compose:{}:{}", pid, envelope.frontend_id), seq: new_version as u64, payload });
             }
-            Ok(())
         }
 
         pub fn build_snapshot(&self) -> SessionSnapshot {
@@ -2282,34 +2281,20 @@ mod directory {
             Self { sessions: Arc::new(DashMap::new()), db, history, directory_store }
         }
 
-        /// 🗄️🌱 Creates a brand-new session: a `db` document + directory record + genesis commit
-        /// (recorded at domain_version 0, submitted through the SAME `db::DocumentHandle::submit`
-        /// path every later domain command uses, so `db`'s frontier/WAL/conflict machinery covers the
-        /// initial kit too, not just an out-of-band Postgres row as before).
+        /// 🗄️🌱 Creates a brand-new session: a `db` document (empty at `head_seq == 0`, matching
+        /// `domain_version == 0` — no genesis commit is submitted through `db` itself, so the first
+        /// REAL domain command still lands at `domain_version == 1`, unchanged from the pre-CW6b
+        /// numbering) + directory record + a `HistoryStore` snapshot at version 0 for the initial kit.
         pub async fn create_session(&self, fallback_kit_id: Uuid, fallback_kit_name: &str, initial_kit: Option<&serde_json::Value>) -> Result<(Uuid, Uuid, Uuid), SessionError> {
             let session_id = Uuid::now_v7();
             let (kit_id, _kit_name, kit_json) = initial_session_kit(fallback_kit_id, fallback_kit_name, initial_kit)?;
-            let handle = self.db.create_document(db::DocumentSpec::new(document_id(session_id)))?;
+            self.db.create_document(db::DocumentSpec::new(document_id(session_id)))?;
             let owner_token = self.directory_store.create_session(session_id, kit_id)?;
 
             // Validates the kit JSON shape up front (same `session_kit_id`/`session_kit_name`
             // requirements the pre-CW6b implementation enforced at creation time); the typed
             // `SessionState` itself is (re)built lazily by `get_or_activate` on first activation.
             session_state_from_kit_json(session_id, 0, 0, &kit_json)?;
-            let mut payload = serde_json::Map::new();
-            payload.insert(format!("kit/{}", kit_id), kit_json.clone());
-            let payload = serde_json::Value::Object(payload);
-            let genesis = protocol::OperationEnvelope {
-                operation_id: protocol::OperationId(format!("genesis:{session_id}")),
-                document_id: document_id(session_id),
-                actor: protocol::ActorId("system".to_string()),
-                dependencies: Vec::new(),
-                diff: protocol::DocumentDiff { schema: "generic".to_string(), payload },
-                inverse: protocol::InverseOperation { schema: "generic".to_string(), inverse_diff: serde_json::Value::Object(serde_json::Map::new()) },
-                timestamp: now_hlc(Uuid::nil()),
-            };
-            let batch = db::document::CommandBatch::new(vec![genesis])?;
-            handle.submit(batch, db::document::SubmitOptions { durability: db::DurabilityClass::Fsync }).await??;
 
             self.history.record_domain_commit(session_id, 0, session_id)?;
             self.history.store_kit_snapshot(session_id, 0, &kit_json)?;
@@ -2708,7 +2693,7 @@ mod ws {
                     let (frame, lane) = match event {
                         WireEvent::Commands { envelope, frontier } => {
                             let origin = envelope.actor.clone();
-                            (protocol::ServerFrame::Commands { envelopes: vec![envelope], origin, frontier: frontier_to_wire(&frontier) }, protocol::Lane::Command)
+                            (protocol::ServerFrame::Commands { envelopes: vec![*envelope], origin, frontier: frontier_to_wire(&frontier) }, protocol::Lane::Command)
                         }
                         WireEvent::Preview { actor, key, seq, payload } => (protocol::ServerFrame::Preview { actor, key, seq, payload }, protocol::Lane::Preview),
                     };
@@ -2760,7 +2745,7 @@ mod ws {
                     },
                     Err(e) => protocol::AckStage::Applied { outcome: Box::new(protocol::ApplyOutcome::Rejected { reason: e.to_string() }) },
                 };
-                let frontier = db_handle.frontier().map(|f| frontier_to_wire(&f)).unwrap_or(protocol::RuntimeFrontierSummary { document_id: document_id(session_id), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0; 32] });
+                let frontier = db_handle.frontier().map_or(protocol::RuntimeFrontierSummary { document_id: document_id(session_id), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: [0; 32] }, |f| frontier_to_wire(&f));
                 let ack = protocol::ServerFrame::Ack { batch_id, stages: vec![protocol::AckStage::Received, protocol::AckStage::Persisted, stage], frontier };
                 ws_tx.send(Message::Binary(protocol::encode_server_frame(&ack, protocol::Lane::Command).into())).await.map_err(|_| ())
             }
@@ -3399,7 +3384,7 @@ async fn main() -> std::process::ExitCode {
     // 🗄️ Zero-touch data root: `db/` (FsStorage-backed `db::Database`), `directory.json` + `history/`
     // (compose-hub's own file-backed session/share-token/kit-history bookkeeping) — replaces
     // `DATABASE_URL`/Postgres entirely.
-    let data_dir = std::env::var("COMPOSE_HUB_DATA").map(std::path::PathBuf::from).unwrap_or_else(|_| std::path::PathBuf::from("./.semio/compose-hub"));
+    let data_dir = std::env::var("COMPOSE_HUB_DATA").map_or_else(|_| std::path::PathBuf::from("./.semio/compose-hub"), std::path::PathBuf::from);
     let database = match open_database(&data_dir) {
         Ok(database) => database,
         Err(e) => {
@@ -3917,7 +3902,7 @@ mod tests {
 
         use super::*;
         pub fn load_metabolism_kit_json() -> serde_json::Value {
-            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().join("asset/compose/metabolism/wip/initialKit/kit.compose.json");
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().parent().unwrap().join("fixture/metabolism.shallow.kit.compose.json");
             let data = std::fs::read_to_string(&path).expect("metabolism kit JSON");
             serde_json::from_str(&data).expect("parse metabolism kit JSON")
         }
@@ -3938,7 +3923,9 @@ mod tests {
         #[test]
         pub fn metabolism_kit_has_authors() {
             let kit = load_metabolism_kit_json();
-            let authors = kit["authors"].as_array().expect("authors array");
+            // 🧾 The fixture's `authors` is content-addressed (`{hash, items: [...]}`), not a bare
+            // array — matches every other content-addressed collection in this fixture family.
+            let authors = kit["authors"]["items"].as_array().expect("authors items array");
             assert!(!authors.is_empty());
             assert_eq!(authors[0]["name"].as_str().unwrap(), "Ueli Saluz");
         }
@@ -4031,13 +4018,13 @@ mod tests {
 
         use super::*;
         pub fn load_nakagin_design_json() -> serde_json::Value {
-            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().join("asset/compose/nakagin-capsule-tower.shallow.design.compose.json");
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().parent().unwrap().join("fixture/nakagin-capsule-tower.shallow.design.compose.json");
             let data = std::fs::read_to_string(&path).expect("nakagin design JSON");
             serde_json::from_str(&data).expect("parse nakagin design JSON")
         }
 
         pub fn load_nakagin_diff_json() -> serde_json::Value {
-            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().join("asset/compose/nakagin-capsule-tower.with-diff.design.compose.json");
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().parent().unwrap().join("fixture/nakagin-capsule-tower.with-diff.design.compose.json");
             let data = std::fs::read_to_string(&path).expect("nakagin diff JSON");
             serde_json::from_str(&data).expect("parse nakagin diff JSON")
         }
@@ -4464,7 +4451,7 @@ mod tests {
 
         use super::*;
         pub fn load_metabolism_diff_json() -> serde_json::Value {
-            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().join("asset/compose/metabolism.kit.diff.compose.json");
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().parent().unwrap().join("fixture/metabolism.kit.diff.compose.json");
             let data = std::fs::read_to_string(&path).expect("metabolism diff JSON");
             serde_json::from_str(&data).expect("parse metabolism diff JSON")
         }
@@ -4777,7 +4764,7 @@ mod tests {
             AppState::new(directory)
         }
 
-        async fn spawn_router(app: axum::Router) -> String {
+        async fn spawn_router(app: Router) -> String {
             let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
             let addr = listener.local_addr().unwrap();
             tokio::spawn(async move {
@@ -4974,8 +4961,8 @@ mod tests {
             let (mut _ws2_write, mut ws2_read) = ws2.split();
 
             // First frame on each socket is a binary `ServerFrame::Welcome`.
-            let welcome1 = tokio::time::timeout(std::time::Duration::from_secs(5), ws1_read.next()).await.expect("ws1 welcome").unwrap();
-            let welcome2 = tokio::time::timeout(std::time::Duration::from_secs(5), ws2_read.next()).await.expect("ws2 welcome").unwrap();
+            let welcome1 = tokio::time::timeout(std::time::Duration::from_secs(5), ws1_read.next()).await.expect("ws1 welcome").unwrap().unwrap();
+            let welcome2 = tokio::time::timeout(std::time::Duration::from_secs(5), ws2_read.next()).await.expect("ws2 welcome").unwrap().unwrap();
             for msg in [welcome1, welcome2] {
                 let bytes = msg.into_data();
                 let (_, frame) = protocol::decode_server_frame(&bytes).expect("decode welcome");
@@ -4998,8 +4985,8 @@ mod tests {
                 .unwrap();
             assert_eq!(resp.status(), 200);
 
-            let msg1 = tokio::time::timeout(std::time::Duration::from_secs(5), ws1_read.next()).await.expect("ws1 commands frame").unwrap();
-            let msg2 = tokio::time::timeout(std::time::Duration::from_secs(5), ws2_read.next()).await.expect("ws2 commands frame").unwrap();
+            let msg1 = tokio::time::timeout(std::time::Duration::from_secs(5), ws1_read.next()).await.expect("ws1 commands frame").unwrap().unwrap();
+            let msg2 = tokio::time::timeout(std::time::Duration::from_secs(5), ws2_read.next()).await.expect("ws2 commands frame").unwrap().unwrap();
             for msg in [msg1, msg2] {
                 let bytes = msg.into_data();
                 let (lane, frame) = protocol::decode_server_frame(&bytes).expect("decode commands frame");

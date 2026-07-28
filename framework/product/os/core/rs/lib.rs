@@ -16,7 +16,8 @@ pub mod host {
     use std::collections::{HashMap, HashSet};
     use std::sync::{Arc, LazyLock, Mutex};
     use ui_wgpu::{ui_recovery_panel, UiNode};
-    use vcs::{create_document_vcs_envelope, document_backbone_ref, materialize_document_projection, DocumentBackboneRef, DocumentVcs, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff, StudioConflict, VcsError};
+    use protocol::{Operation, OperationDiff};
+    use vcs::{create_document_vcs_envelope, document_backbone_ref, materialize_document_projection, DocumentBackboneRef, DocumentVcs, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, StudioConflict, VcsError};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -772,11 +773,11 @@ pub mod host {
         /// media-graph rules themselves (`reconcile_os_media_graph`) are untouched — only this thin
         /// trait-facing wrapper adapts to the new signature, converting each `StudioConflict` to a
         /// `ReconcileReport` at the boundary.
-        fn reconcile(&self, projection: OsProjection) -> (OsProjection, Vec<vcs::ReconcileReport>) {
+        fn reconcile(&self, projection: OsProjection) -> (OsProjection, Vec<protocol::ReconcileReport>) {
             let (projection, conflicts) = reconcile_os_media_graph(projection);
             let reports = conflicts
                 .into_iter()
-                .map(|conflict| vcs::ReconcileReport { id: conflict.kind, message: conflict.message, severity: vcs::ReconcileSeverity::Warning })
+                .map(|conflict| protocol::ReconcileReport { id: conflict.kind, message: conflict.message, severity: protocol::ReconcileSeverity::Warning })
                 .collect();
             (projection, reports)
         }
@@ -1029,13 +1030,13 @@ pub mod host {
         }
     }
 
-    impl vcs::OpText for OsOperation {
+    impl protocol::OpText for OsOperation {
         fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-            Ok(os_operation_from_dsl(<OsOperationDsl as vcs::OpText>::parse_op(line)?))
+            Ok(os_operation_from_dsl(<OsOperationDsl as protocol::OpText>::parse_op(line)?))
         }
 
         fn print_op(&self) -> String {
-            <OsOperationDsl as vcs::OpText>::print_op(&os_operation_to_dsl(self))
+            <OsOperationDsl as protocol::OpText>::print_op(&os_operation_to_dsl(self))
         }
     }
     //#endregion 🔖OpTextMirror

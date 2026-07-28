@@ -22,7 +22,8 @@ use shooting::{
     ShootingOperation, ShootingSavedCamera, ShootingScenePatch, ShootingShot, ShootingShotPatch,
     SHOOTING_FIXTURE_SCHEMA,
 };
-use vcs::{CollectionOperation, DocumentDsl};
+use protocol::CollectionOperation;
+use vcs::DocumentDsl;
 use std::collections::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -1089,9 +1090,11 @@ impl DocumentApp for ShootingPlayApp {
                 let draft = self.runtime.camera_draft_label.trim().to_string();
                 let label = if draft.is_empty() { format!("Camera {}", fixture.saved_cameras.len() + 1) } else { draft };
                 self.runtime.camera_draft_label.clear();
+                let saved_camera = ShootingSavedCamera { id: next_shooting_id("camera"), label, camera: fixture.camera.clone() };
                 ActionEmit::operations(vec![ShootingOperation::SavedCameras(CollectionOperation::Add {
-                    index: fixture.saved_cameras.len(),
-                    item: ShootingSavedCamera { id: next_shooting_id("camera"), label, camera: fixture.camera.clone() },
+                    id: saved_camera.id.clone(),
+                    item: saved_camera,
+                    at: fixture.saved_cameras.len(),
                 })])
             }
             "loadSavedCamera" => {
@@ -1215,7 +1218,7 @@ impl DocumentApp for ShootingPlayApp {
                     self.runtime.selected_shot_ids.clear();
                     self.runtime.fit_revision += 1;
                     return ActionEmit::operations(vec![
-                        ShootingOperation::Assets(CollectionOperation::Add { index: fixture.assets.len(), item: asset }),
+                        ShootingOperation::Assets(CollectionOperation::Add { id: id.clone(), item: asset, at: fixture.assets.len() }),
                         ShootingOperation::SetActiveAsset { asset_id: Some(id) },
                     ]);
                 }
@@ -1338,7 +1341,7 @@ impl DocumentApp for ShootingPlayApp {
                 self.runtime.selected_shot_ids = vec![id.clone()];
                 self.runtime.selected_asset_ids.clear();
                 ActionEmit::operations(vec![
-                    ShootingOperation::Shots(CollectionOperation::Add { index: fixture.shots.len(), item: shot }),
+                    ShootingOperation::Shots(CollectionOperation::Add { id: id.clone(), item: shot, at: fixture.shots.len() }),
                     ShootingOperation::SetActiveShot { shot_id: Some(id) },
                 ])
             }
@@ -1357,7 +1360,7 @@ impl DocumentApp for ShootingPlayApp {
                 self.runtime.selected_asset_ids = vec![id.clone()];
                 self.runtime.selected_shot_ids.clear();
                 ActionEmit::operations(vec![
-                    ShootingOperation::Assets(CollectionOperation::Add { index: fixture.assets.len(), item: asset }),
+                    ShootingOperation::Assets(CollectionOperation::Add { id: id.clone(), item: asset, at: fixture.assets.len() }),
                     ShootingOperation::SetActiveAsset { asset_id: Some(id) },
                 ])
             }

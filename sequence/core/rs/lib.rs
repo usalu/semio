@@ -1448,7 +1448,7 @@ mod tests {
 }
 
 // #region 🔖DocumentVcs
-use vcs::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Identified, Operation, OperationDiff, Patchable};
+use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Identified, Operation, OperationDiff, Patchable};
 
 pub const SEQUENCE_FIXTURE_SCHEMA: &str = "sequence.fixture";
 
@@ -1482,8 +1482,7 @@ pub struct SequenceStepPatch {
 }
 
 impl Patchable<SequenceStepPatch> for SequenceStep {
-    fn apply_patch(&mut self, patch: &SequenceStepPatch) -> SequenceStepPatch {
-        let inverse = SequenceStepPatch { params: patch.params.as_ref().map(|_| self.params.clone()), x: patch.x.map(|_| self.x), y: patch.y.map(|_| self.y), collapsed: patch.collapsed.map(|_| self.collapsed) };
+    fn apply_patch(&mut self, patch: &SequenceStepPatch) {
         if let Some(params) = &patch.params {
             self.params = params.clone();
         }
@@ -1496,7 +1495,16 @@ impl Patchable<SequenceStepPatch> for SequenceStep {
         if let Some(collapsed) = patch.collapsed {
             self.collapsed = collapsed;
         }
-        inverse
+    }
+
+    fn diff_patch(&self, other: &Self) -> Option<SequenceStepPatch> {
+        let patch = SequenceStepPatch {
+            params: (self.params != other.params).then(|| other.params.clone()),
+            x: (self.x != other.x).then_some(other.x),
+            y: (self.y != other.y).then_some(other.y),
+            collapsed: (self.collapsed != other.collapsed).then_some(other.collapsed),
+        };
+        (patch != SequenceStepPatch::default()).then_some(patch)
     }
 }
 
@@ -1510,15 +1518,18 @@ pub struct SequenceEdgePatch {
 }
 
 impl Patchable<SequenceEdgePatch> for SequenceEdge {
-    fn apply_patch(&mut self, patch: &SequenceEdgePatch) -> SequenceEdgePatch {
-        let inverse = SequenceEdgePatch { from: patch.from.as_ref().map(|_| self.from.clone()), to: patch.to.as_ref().map(|_| self.to.clone()) };
+    fn apply_patch(&mut self, patch: &SequenceEdgePatch) {
         if let Some(from) = &patch.from {
             self.from = from.clone();
         }
         if let Some(to) = &patch.to {
             self.to = to.clone();
         }
-        inverse
+    }
+
+    fn diff_patch(&self, other: &Self) -> Option<SequenceEdgePatch> {
+        let patch = SequenceEdgePatch { from: (self.from != other.from).then(|| other.from.clone()), to: (self.to != other.to).then(|| other.to.clone()) };
+        (patch != SequenceEdgePatch::default()).then_some(patch)
     }
 }
 
@@ -1556,15 +1567,15 @@ fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: &mut 
 
 // #region 🔖Operations
 /// 🧮 Typed sequence operation: id-keyed step/edge collection edits plus the scalar canvas camera.
-/// Flattened into one keyword-tagged variant per {@link vcs::CollectionOperation} case rather than
-/// wrapping that generic type directly — `CollectionOperation` is foreign (defined in `vcs`) and
-/// generic, so it can never itself implement `dsl::DslField`/`dsl::DslVariants` from this crate (the
-/// orphan rule requires a local type to anchor the impl on, and its OWN outer type isn't local).
-/// {@link Operation for SequenceOperation} below reconstructs a `CollectionOperation` ad hoc per
-/// match arm to keep reusing `vcs`'s generic collection diff/invert helpers.
+/// Flattened into one keyword-tagged variant per {@link protocol::CollectionOperation} case rather
+/// than wrapping that generic type directly — `CollectionOperation` is foreign (defined in
+/// `protocol`) and generic, so it can never itself implement `dsl::DslField`/`dsl::DslVariants` from
+/// this crate (the orphan rule requires a local type to anchor the impl on, and its OWN outer type
+/// isn't local). {@link Operation for SequenceOperation} below reconstructs a `CollectionOperation`
+/// ad hoc per match arm to keep reusing `protocol`'s generic collection diff/invert helpers.
 /// 🧮 Typed sequence operation — kept plain `Serialize`/`Deserialize` only; see `SequenceOperationDsl`
 /// (`🔖OpText` region) for the op-log DSL text mirror (`EdgesAdd`/`EdgesPatch` items as
-/// `SequenceEdgeDsl`, a `dsl::Wire`-backed connection) and the hand-written `impl vcs::OpText for
+/// `SequenceEdgeDsl`, a `dsl::Wire`-backed connection) and the hand-written `impl protocol::OpText for
 /// SequenceOperation` that converts through it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "operation", rename_all = "camelCase")]
@@ -1580,13 +1591,13 @@ pub enum SequenceOperation {
     SetCamera { camera: SequenceCamera },
 }
 
-/// 🔁 Converts a generic step `CollectionOperation` (as produced by `vcs::invert_collection_operation`)
+/// 🔁 Converts a generic step `CollectionOperation` (as produced by `protocol::invert_collection_operation`)
 /// back into its flat `SequenceOperation` variant.
 fn steps_operation_from_collection(operation: CollectionOperation<String, SequenceStep, SequenceStepPatch>) -> SequenceOperation {
     match operation {
-        CollectionOperation::Add { index, item } => SequenceOperation::StepsAdd { index, item },
+        CollectionOperation::Add { id: _id, item, at } => SequenceOperation::StepsAdd { index: at, item },
         CollectionOperation::Remove { id } => SequenceOperation::StepsRemove { id },
-        CollectionOperation::Move { id, to_index } => SequenceOperation::StepsMove { id, to_index },
+        CollectionOperation::Move { id, to } => SequenceOperation::StepsMove { id, to_index: to },
         CollectionOperation::Patch { id, patch } => SequenceOperation::StepsPatch { id, patch },
     }
 }
@@ -1594,9 +1605,9 @@ fn steps_operation_from_collection(operation: CollectionOperation<String, Sequen
 /// 🔁 Edge counterpart of {@link steps_operation_from_collection}.
 fn edges_operation_from_collection(operation: CollectionOperation<String, SequenceEdge, SequenceEdgePatch>) -> SequenceOperation {
     match operation {
-        CollectionOperation::Add { index, item } => SequenceOperation::EdgesAdd { index, item },
+        CollectionOperation::Add { id: _id, item, at } => SequenceOperation::EdgesAdd { index: at, item },
         CollectionOperation::Remove { id } => SequenceOperation::EdgesRemove { id },
-        CollectionOperation::Move { id, to_index } => SequenceOperation::EdgesMove { id, to_index },
+        CollectionOperation::Move { id, to } => SequenceOperation::EdgesMove { id, to_index: to },
         CollectionOperation::Patch { id, patch } => SequenceOperation::EdgesPatch { id, patch },
     }
 }
@@ -1639,21 +1650,21 @@ impl Operation<SequenceFixture> for SequenceOperation {
     fn diff(&self, projection: &SequenceFixture) -> SequenceDiff {
         match self {
             SequenceOperation::StepsAdd { index, item } => {
-                SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Add { index: *index, item: item.clone() })), ..Default::default() }
+                SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Add { id: item.id.clone(), item: item.clone(), at: *index })), ..Default::default() }
             }
             SequenceOperation::StepsRemove { id } => SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Remove { id: id.clone() })), ..Default::default() },
             SequenceOperation::StepsMove { id, to_index } => {
-                SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Move { id: id.clone(), to_index: *to_index })), ..Default::default() }
+                SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Move { id: id.clone(), to: *to_index })), ..Default::default() }
             }
             SequenceOperation::StepsPatch { id, patch } => {
                 SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() })), ..Default::default() }
             }
             SequenceOperation::EdgesAdd { index, item } => {
-                SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Add { index: *index, item: item.clone() })), ..Default::default() }
+                SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Add { id: item.id.clone(), item: item.clone(), at: *index })), ..Default::default() }
             }
             SequenceOperation::EdgesRemove { id } => SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Remove { id: id.clone() })), ..Default::default() },
             SequenceOperation::EdgesMove { id, to_index } => {
-                SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Move { id: id.clone(), to_index: *to_index })), ..Default::default() }
+                SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Move { id: id.clone(), to: *to_index })), ..Default::default() }
             }
             SequenceOperation::EdgesPatch { id, patch } => {
                 SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() })), ..Default::default() }
@@ -1664,18 +1675,18 @@ impl Operation<SequenceFixture> for SequenceOperation {
 
     fn backwards(&self, projection: &SequenceFixture) -> Vec<Self> {
         match self {
-            SequenceOperation::StepsAdd { index, item } => vec![steps_operation_from_collection(invert_collection_operation(&projection.steps, &CollectionOperation::Add { index: *index, item: item.clone() }))],
+            SequenceOperation::StepsAdd { index, item } => vec![steps_operation_from_collection(invert_collection_operation(&projection.steps, &CollectionOperation::Add { id: item.id.clone(), item: item.clone(), at: *index }))],
             SequenceOperation::StepsRemove { id } => vec![steps_operation_from_collection(invert_collection_operation(&projection.steps, &CollectionOperation::Remove { id: id.clone() }))],
             SequenceOperation::StepsMove { id, to_index } => {
-                vec![steps_operation_from_collection(invert_collection_operation(&projection.steps, &CollectionOperation::Move { id: id.clone(), to_index: *to_index }))]
+                vec![steps_operation_from_collection(invert_collection_operation(&projection.steps, &CollectionOperation::Move { id: id.clone(), to: *to_index }))]
             }
             SequenceOperation::StepsPatch { id, patch } => {
                 vec![steps_operation_from_collection(invert_collection_operation(&projection.steps, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() }))]
             }
-            SequenceOperation::EdgesAdd { index, item } => vec![edges_operation_from_collection(invert_collection_operation(&projection.edges, &CollectionOperation::Add { index: *index, item: item.clone() }))],
+            SequenceOperation::EdgesAdd { index, item } => vec![edges_operation_from_collection(invert_collection_operation(&projection.edges, &CollectionOperation::Add { id: item.id.clone(), item: item.clone(), at: *index }))],
             SequenceOperation::EdgesRemove { id } => vec![edges_operation_from_collection(invert_collection_operation(&projection.edges, &CollectionOperation::Remove { id: id.clone() }))],
             SequenceOperation::EdgesMove { id, to_index } => {
-                vec![edges_operation_from_collection(invert_collection_operation(&projection.edges, &CollectionOperation::Move { id: id.clone(), to_index: *to_index }))]
+                vec![edges_operation_from_collection(invert_collection_operation(&projection.edges, &CollectionOperation::Move { id: id.clone(), to: *to_index }))]
             }
             SequenceOperation::EdgesPatch { id, patch } => {
                 vec![edges_operation_from_collection(invert_collection_operation(&projection.edges, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() }))]
@@ -1881,14 +1892,14 @@ fn sequence_operation_from_dsl(operation: SequenceOperationDsl) -> Result<Sequen
     })
 }
 
-impl vcs::OpText for SequenceOperation {
+impl protocol::OpText for SequenceOperation {
     fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-        let dsl_operation = <SequenceOperationDsl as vcs::OpText>::parse_op(line)?;
+        let dsl_operation = <SequenceOperationDsl as protocol::OpText>::parse_op(line)?;
         sequence_operation_from_dsl(dsl_operation).map_err(|message| vcs::TextError::new(message, vcs::TextSpan::at(1, 1)))
     }
 
     fn print_op(&self) -> String {
-        <SequenceOperationDsl as vcs::OpText>::print_op(&sequence_operation_to_dsl(self))
+        <SequenceOperationDsl as protocol::OpText>::print_op(&sequence_operation_to_dsl(self))
     }
 }
 // #endregion 🔖OpText

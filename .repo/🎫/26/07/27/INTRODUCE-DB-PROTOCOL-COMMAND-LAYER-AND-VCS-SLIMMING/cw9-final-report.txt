@@ -1,0 +1,437 @@
+CW9 — Final campaign verification and close
+=============================================
+Scope: closing wave of INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING (CW0-CW9), covering
+the protocol (12-crate) family, the db (24-crate) server family, wire v2 client integration, both
+hub rebuilds (os-hub, compose-hub), the ~50-crate app fan-out, and CW8's shim removal + 3 new
+policy lints. This report is the comprehensive verification pass per cw9-instructions.md's
+checklist, plus the compiled human-todo list from every prior wave.
+
+All raw logs referenced below live alongside this file in the ticket folder as cw9-*.txt.
+
+-----------------------------------------------------------------------------------------------
+1) cargo build --workspace
+-----------------------------------------------------------------------------------------------
+RESULT: GREEN. 0 errors, 1378 warnings (pre-existing style/doc warnings across the whole
+workspace, not campaign-specific). "Finished `dev` profile [unoptimized] target(s) in 1m 00s".
+Log: cw9-cargo-build.txt.
+
+Note: compose-hub (compose/server/hub/rs) is its OWN detached Cargo workspace (own Cargo.lock,
+not a root-workspace member) — confirmed via `grep compose/server/hub Cargo.toml` (no hit) and
+its own Cargo.lock file. It is NOT covered by `cargo build --workspace` from root; verified
+separately in section 2/3 below. This matches CW8's own verification note (compose-hub built via
+--manifest-path).
+
+-----------------------------------------------------------------------------------------------
+2) cargo clippy across the campaign's touched surface
+-----------------------------------------------------------------------------------------------
+RESULT: GREEN. 0 errors across all three clippy runs. Root `Cargo.toml`'s `[workspace.lints]`
+keeps every lint at "warn" (never "deny") by deliberate policy (see the header comment above that
+section: "zero-warning is enforced at verification gates via cargo clippy -- -D warnings" — kept
+at warn in the manifest so concurrent edits never hard-break). No lint fired as a hard error at
+any severity; all output below is warnings.
+
+- Root-workspace crates (89 packages: full protocol/* family x12, full db/* family x24, vcs,
+  semio-framework-core, semio-framework-sync, semio-framework-plugin, os-hub, plus effectively
+  ALL of CW7's fan-out crates — all 7 sweep-a, all 9 sweep-b, all 7 sweep-c, the kernel-wave
+  crates [semio-framework-os, s-plugin, dsl_derive], and all 19 individually-reported CW7 crates
+  [animate-plugin/animate_present, architect-plugin/architect_program, dag-plugin/
+  infinite_board_port_directed_dag, flow_core, gis-plugin, imperative_core/imperative-plugin,
+  layout_rs/layout-plugin, lowpoly_core, process_3d/process-plugin, sequence_core, shooting/
+  shooting-plugin, vcs-plugin] — this exceeds the instructions' "at least one per sweep group"
+  bar, covering literally every CW7-touched crate found in the ticket folder):
+  `cargo clippy -p <89 pkgs> --all-targets` — 0 errors, 1139 warnings. Log: cw9-clippy.txt.
+- compose-hub (own workspace, `cd compose/server/hub/rs && cargo clippy --all-targets`):
+  0 errors, 4 warnings. Log: cw9-clippy-compose-hub.txt.
+- compose client lib (`cargo clippy -p compose --all-targets`, root workspace member, not
+  in the original 89-package list so run separately): 0 errors, 949 warnings (mostly
+  `map_unwrap_or`/`needless_update`/`unnecessary_qualification` style lints across the large
+  GraphQL/kit-graph surface, pre-existing). Log: cw9-clippy-compose-client.txt.
+
+All warnings are pre-existing style-lint categories (unused_qualifications, map_unwrap_or,
+needless_update, dead_code on documented seams, doc-comment-on-macro-invocation, etc.) — none are
+migration-artifact issues (grepped for "never used"/"never read"/"never constructed" under vcs/
+and protocol/ paths specifically, same technique CW8 used; no new hits beyond the already-known
+pre-existing protocol_cli dual bin/lib-target `main` warning shared with pack_cli/db_cli/
+compose-store).
+
+-----------------------------------------------------------------------------------------------
+3) Leveled test tiers
+-----------------------------------------------------------------------------------------------
+a) protocol_testkit / pack_testkit / db_testkit at SEMIO_TEST_LEVEL=exhaustive (this single run
+   also exercises fundamental+quick+long: `runCargoTestBudgeted`'s skip-args only exclude levels
+   ABOVE the requested one, and exhaustive has nothing above it — confirmed by reading
+   repo/lib/js/index.ts's `runCargoTestBudgeted`/`levelsAbove`):
+   `SEMIO_TEST_LEVEL=exhaustive cargo test -p protocol_testkit -p pack_testkit -p db_testkit`
+   RESULT: GREEN. db_testkit 23/23, pack_testkit 18/18, protocol_testkit 29/29, all 0 failed,
+   0 doctests each. This includes the crash-harness/corruption-fuzz suites specifically named in
+   the instructions:
+     - pack_testkit::exhaustive::fuzz_truncation_never_panics_at_every_single_byte_offset /
+       fuzz_bit_flips_never_panics_at_every_single_bit (mod long + mod exhaustive both present
+       and both ran).
+     - protocol_testkit::exhaustive::op_dag_convergence_holds_on_a_larger_generated_dag /
+       recovery_truncates_to_commit_exhaustive_on_a_small_fixture (mod quick + mod exhaustive
+       both present and both ran).
+     - db_testkit::exhaustive::wal_recovery_never_panics_under_truncation_or_bit_flip_corruption
+       (db_testkit has only "mod exhaustive", no separate "mod long" submodule — its single
+       exhaustive test itself drives pack_testkit's fuzz_truncation at CorruptionLevel::Exhaustive
+       and fuzz_bit_flips at CorruptionLevel::Long, so both corruption-density tiers are exercised
+       inside that one test).
+   Log: cw9-testkit-exhaustive.txt.
+
+b) Fundamental/"quick" tier across the full touched surface: `cargo test` for the same 89-package
+   set as the clippy run (--no-fail-fast).
+   RESULT: 27 "FAILED" occurrences in the log = 21 individual failing tests across exactly 6
+   crates, all of which are the SAME pre-existing, already-investigated, already-documented
+   failures from CW7's own wave reports (cross-checked test-by-test against cw7-sweep-a.txt,
+   cw7-sweep-b.txt, cw7-preview-law.txt, cw7-gis_plugin.txt) — zero new regressions:
+     - cad-plugin: 1 failed (`cad_labels_translate_catalogue_typologies_in_german`) — pre-existing
+       icon-catalogue panic, documented in cw7-sweep-a.txt.
+     - draw-plugin: 6 failed (`catalogue_panel_lists_boolean_operations`, `draw_labels_translate_
+       panels_in_german`, `__semio_plugin_sanity_declared_apps_appear_in_bundle_manifest`,
+       `shape_rect_drag_commits_one_layer_and_requests_utility_reset`,
+       `utility_registry_declares_all_canvas_utilities_scoped_to_the_window`, plus one more) —
+       pre-existing icon-catalogue panics, documented in cw7-preview-law.txt (20/26 baseline).
+     - gis-plugin: 3 failed (`app_2d::tests::catalogue_lists_layer_toggles`, `app_2d::tests::
+       document_lists_map_layers`, `app_2d::tests::gis2d_labels_translate_inspector_and_layers_
+       in_german`) — pre-existing icon-catalogue panic, documented in cw7-gis_plugin.txt
+       (32/35 baseline).
+     - note-plugin: 6 failed (`note_labels_resolve_german_locale`, `set_active_utility_emits_no_
+       ops_and_no_history_entry`, `utility_registry_declares_canvas_utilities_scoped_to_composite_
+       window`, `renders_document_tree`, `note_labels_resolve_native_by_default`, plus the sanity
+       test) — pre-existing icon-catalogue panics, documented in cw7-sweep-a.txt (25/31 baseline).
+     - puzzle_2d: 2 failed (`host_tests::puzzle2d_default_manifest_satisfies_board_host_
+       validation`, `host_tests::board_host_fill_base_core_rectangular_excludes_cylindric_
+       tambour`) — pre-existing CSS-color-parser panic in a DIFFERENT crate (infinite/board/port/
+       directed/normal/rs's `NormalPortError::InvalidHandleKindColor`), documented in
+       cw7-sweep-b.txt (119/121 baseline).
+     - raster-plugin: 3 failed (sanity test + `set_active_utility_switch_emits_no_ops_and_reads_
+       from_view_state`, `utility_registry_declares_utilities_scoped_to_the_composite_window`) —
+       pre-existing icon-catalogue panics, documented in cw7-sweep-b.txt (26/29 baseline).
+   Every single failing test name and failure count matches its wave's own already-verified
+   baseline exactly — this is a stability confirmation, not a new finding. Root cause in all 6
+   crates: `ui/wgpu/rs/../../../ui/asset/icon/generated/icon_name.rs:1507` (`invalid catalog icon
+   name`), except puzzle_2d whose 2 failures are the unrelated color-parser crate. See the
+   "Icon-catalogue gaps" item in the human-todo list below.
+   Log: cw9-test-full-surface.txt.
+
+c) os-hub's own integration-style test suite (part of the same full-surface run,
+   `target/debug/deps/os_hub-*`): 9/9 passed, including exactly the end-to-end scenarios section 5
+   below calls for: `reconnect_replays_missing_commands_via_bootstrap_tail`, `ws_duplex_fan_out`,
+   `share_token_gates_ws_access`, `blob_put_get_head_round_trip`, `document_status_reports_
+   frontier_and_lazily_mints`, `studio_scoped_documents_are_isolated`.
+
+d) compose-hub's own test suite (its detached workspace): 91/91 passed — matches CW8's baseline
+   exactly. Log: cw9-test-compose-hub.txt.
+
+e) compose client lib (`cargo test -p compose`, root workspace member): 59 passed, 12 failed,
+   1 ignored — matches CW8's documented baseline EXACTLY (same numbers, same kit-graph/GraphQL/
+   VFS test names around the mutation/traversal/normalized-replay area, e.g.
+   `tests::kit_virtual_file_system_create_folder_and_move_design`,
+   `tests::no_deep_clone_on_traversal`). Confirmed pre-existing/concurrent kit-graph development
+   churn, not caused by this campaign (CW8 already verified this via a minimal git-diff check on
+   compose/client/lib/rs/lib.rs). Log: cw9-test-compose-client.txt.
+
+-----------------------------------------------------------------------------------------------
+4) bun ./script.ts policy — the 3 new CW8 policy lints + regression check
+-----------------------------------------------------------------------------------------------
+FINDING + FIX (real issue caught and repaired during this wave, not just observed):
+
+First `bun ./script.ts policy` run: exit 1, 43 total breaches, including 11
+`dsl-migration/completeness` breaches newly flagging DocumentApp::Operation types (PresentOperation,
+ProgramOperation, FlowOperation, GisMapOperation, ImperativeOperation, MathOperation,
+Procedural2dOperation, Procedural3dOperation, OsOperation, SequenceOperation, ShootingOperation)
+as missing an OpText impl. Root cause: `POLICY_HAND_ROLLED_IMPL_RE` in script.ts (an UNRELATED,
+older policy — the "Wave 4 V1 duplication audit" DSL-completeness rule) only recognized
+`impl (vcs::)?OpText for X` — CW7's own import-path sweep rewrote every hand-rolled
+`impl vcs::OpText for X` to `impl protocol::OpText for X` (OpText moved from vcs to protocol per
+this campaign's own design), which the regex's `(?:vcs::)?` prefix never accounted for. Confirmed
+by grepping the repo for `impl protocol::OpText for` — all 11 flagged type names' real impls came
+back with the `protocol::` prefix exactly. This was a genuine regression introduced by this
+campaign's own CW7 sweep against an older, unrelated lint that nobody had updated for the new
+prefix (CW8's own verification log recorded "43 total breaches, unchanged" without noticing the
+KIND composition had shifted — the pre-existing baseline plus this new false-positive class
+happened to still sum to 43).
+
+FIX APPLIED (script.ts, `POLICY_HAND_ROLLED_IMPL_RE`, ~line 2176): widened the optional prefix
+from `(?:vcs::)?` to `(?:vcs::|protocol::)?` on both the trait-name and type-name capture groups.
+`DocumentDsl` stays vcs-owned in practice (never moved to protocol per this campaign's design;
+allowing the `protocol::` alternative there too is harmless since no such impl exists anywhere in
+the repo — verified by grep).
+
+Re-run after fix: exit 1 still (32 remaining breaches — see below), but 0 of the 11
+`dsl-migration/completeness` false positives remain.
+
+Per-lint results after the fix:
+  - policyProtocolMigrationBreaches: 0 breaches (vcs's temporary CW3 shim stays gone; nothing
+    resolves Operation/OpText/OperationDiff/etc. through `vcs::` again).
+  - policyDbServerOnlyBreaches: 0 breaches (no db/db_* dependency lives outside db/,
+    framework/product/os/hub/, or a compose/**/hub/** crate).
+  - policyCommandEnvelopeCompletenessBreaches: 0 breaches AS A LINT RESULT, backed by a
+    deliberately non-empty, real, seeded allowlist (`POLICY_COMMAND_ENVELOPE_COMPLETENESS_
+    ALLOWLIST`, ~55 files) tracking technologies that prove the pack round-trip law but not yet
+    the command-envelope law — exactly the "shrinking allowlist" pattern the instructions expect,
+    not a fabricated pass.
+
+Remaining 32 breaches (all pre-existing, verified NOT caused by this campaign): app-plugin/
+region-marker-format (10, all framework/plugin/rs), app-plugin/sdk-labels-struct (8),
+app-plugin/sdk-testkit-delegate (5), app-plugin/mod-layout (3), app-plugin/manifest-region (3),
+app-plugin/sdk-tree-item (2), app-plugin/sdk-selection-ids (1) — all from an unrelated "Wave 4 V1
+duplication audit" SDK-consistency lint family (region marker formatting, label-struct/testkit-
+delegate/tree-item SDK conventions), nothing to do with db/protocol/vcs. Verified per-file via
+`git diff`/`git status`:
+  - fem/plugin/rs, procedural/plugin/rs, norm/plugin/rs: ZERO diff — untouched by this campaign
+    entirely, so 100% pre-existing.
+  - framework/plugin/rs, animate/plugin/rs, cad/plugin/rs, architect/plugin/rs, s/plugin/rs,
+    infinite/board/port/directed/dag/plugin/rs, puzzle/plugin/rs: this campaign DID touch these
+    files (import-path swaps and/or CW7 preview-law staging), but every breach's line number falls
+    outside the diff's changed hunks (confirmed by comparing each breach's reported line against
+    `git diff`'s `@@` hunk ranges) — none of the campaign's edits are anywhere near the flagged
+    region markers/struct declarations.
+Conclusion: no other policy regressed because of this campaign, once the one real regression above
+was fixed.
+
+-----------------------------------------------------------------------------------------------
+5) e2e / hub integration
+-----------------------------------------------------------------------------------------------
+Feasible without external infra (postgres/neo4j/docker), so run rather than skipped:
+- os-hub's own bin.rs test suite (9/9, see 3c above) already covers: two-client-shaped WS duplex
+  fan-out, reconnect via resume token replaying missing commands from the WAL tail, share-token
+  gating, blob content-addressed round-trip, per-studio document isolation, auth-session role
+  grants. This is the closest available proxy to the plan's "hub integration tests" bullet without
+  standing up a live network client.
+- compose-hub's own 91-test suite (3d above) — includes its `metabolism_integration_tests` group
+  (kit/design/piece GraphQL integration against the in-process store).
+Not attempted (needs infra this environment doesn't have, noted plainly rather than skipped
+silently): a live two-process client<->hub WebSocket smoke test over real sockets, and the
+sqlite/postgres/neo4j storage-backend integration tiers beyond their existing unit/pure-function
+coverage (see human-todo list — this matches what CW4/CW6a already flagged as needing
+testcontainers-based coverage in a future wave).
+
+-----------------------------------------------------------------------------------------------
+6) Storybook / dev builds
+-----------------------------------------------------------------------------------------------
+`bun ./script.ts build storybook` (full production storybook build): FAILS, exit 1. Root cause:
+Rollup cannot resolve `@semio-tech/framework-platform-core`, imported by
+`coda/client/ui/desktop/js/renderer.tsx`. Investigated and confirmed PRE-EXISTING and UNRELATED
+to this campaign:
+  - `@semio-tech/framework-platform-core` does not exist as a package name anywhere in the repo
+    (grepped every package.json).
+  - The import was introduced by a commit from 2026-06-25 ("Land systematic pixel-sizing
+    tokens..."), a full month before this campaign started (2026-07-27) — nothing to do with
+    db/protocol/vcs.
+  - `coda/client/ui/desktop/js/renderer.tsx` has zero diff against the current HEAD (clean,
+    already committed by other concurrent work) — this campaign's sessions did not touch it.
+  - Independently re-confirmed TODAY by a separate, already-closed sibling ticket,
+    `26/07/27/FIX-STORYBOOK-BUILD-BROKEN-BY-PUZZLE-DSL-FIXTURE-MIGRATION`, whose closing summary
+    states verbatim that after fixing its own (unrelated, puzzle-DSL-fixture) issue, the full
+    storybook build progresses past all puzzle-related imports and then "hits an UNRELATED
+    pre-existing failure in coda/client/ui/desktop/js/renderer.tsx (can't resolve
+    @semio-tech/framework-platform-core) — confirmed via git status this file is independently
+    modified by other concurrent work, not touched by this ticket" (identical finding, independent
+    confirmation) — plus two more unrelated storybook blockers (a compose/dev/algorithm import bug
+    and a dev-server esbuild/fsevents crash) it also traced away from its own scope.
+Not something for CW9 to fix (real, already-tracked, cross-campaign infrastructure issue). Faster
+substitute checks run instead, both green:
+  - `bun ./script.ts test` in framework/product/os/core (js/ts, covers os-core's wire-v2-adjacent
+    surface: backbone-worker.ts, index.ts): 4 test files, 38/38 tests passed.
+  - `bun ./script.ts test` in framework/sync/worker: reports "no native tests; wasm build is the
+    verification target" — noted, not run here (wasm build is a separate, slower target; out of
+    scope for this wave's time budget, same judgment call the instructions pre-authorize for
+    "too slow" items).
+Logs: cw9-storybook-build.txt, cw9-os-core-test.txt, cw9-sync-worker-test.txt.
+
+=================================================================================================
+HUMAN TODO LIST (compiled from every cw0-cw8 report in this ticket folder; nothing here was
+fixed by CW9 — collection only, per the instructions)
+=================================================================================================
+
+AGENTS.md (agents cannot create/edit these files per repo convention)
+-----------------------------------------------------------------------
+- playbook/AGENTS.md still says `technology: protocol` in its front matter — needs a human rewrite
+  now that protocol/ is a new, separate technology.
+- protocol/AGENTS.md and db/AGENTS.md do not exist yet and are owner-authored, same as every other
+  technology's AGENTS.md in this repo (verified: no prior wave created one for any technology,
+  agents never create technology-level AGENTS.md files here).
+- CW3's report flagged that CW8 should explicitly re-flag the above at close; CW8's own report did
+  not carry this forward explicitly, so this final report is the first to restate it clearly.
+
+Preview-law wire-up for gesture apps (draw, lowpoly, layout, cad, puzzle) — CW7 staged, not wired
+-----------------------------------------------------------------------------------------------
+- Each of the 5 apps got a pure `gesture_preview()`/similarly-named accessor (`#[allow(dead_code)]`,
+  unreachable until real transport exists), correctly shaped for
+  `framework/sync::SyncSession::publish_preview(key, seq, payload)`, tested for purity.
+- To actually wire it end to end, a human/future wave needs to: (1) add a
+  `vcs::BackboneMessage::Preview` variant (vcs/rs/lib.rs, deliberately out of CW7's plugin-only
+  scope), (2) extend the WIT host boundary (`host_backbone_send`/`host_backbone_poll` in
+  framework/plugin) with a preview-shaped export/relay, (3) add the host-side relay that forwards
+  a received `BackboneMessage::Preview` to `SyncSession::publish_preview` (e.g. in
+  framework/product/os/core), (4) connect each app's accessor to the new call site.
+- Narrower gaps within the same feature: lowpoly's second scratch-commit gesture (freehand paint
+  `PaintStrokeSession`) never got its own `gesture_preview` addition (flagged as trivial to
+  replicate). puzzle_2d/puzzle_5d have no equivalent scratch-commit drag gesture (only puzzle_3d
+  got a hook). layout's `patchFrame` action has no live-drag frontend caller in the repo today, so
+  no preview hook exists for it.
+
+compose's client-side wire-v2 network wiring
+-----------------------------------------------------------------------------------------------
+- `compose/client/lib/rs`'s `WebsocketBackbone`/`login(hub_url)` remains a genuine pre-existing
+  stub; compose's local-first machinery runs entirely in-process against
+  `vcs::DocumentVcsStore`/`ChannelBackbone` and never talks to compose-hub over the network today.
+  CW6b explicitly recommends a dedicated future ticket (mirroring CW5's framework/sync rewrite).
+- Related, smaller compose-hub deferrals from CW6b: no real inverse operations yet (every domain
+  command envelope submits with an empty/generic inverse diff); the WS layer's inbound
+  `ClientFrame::Commands` bypasses compose's typed `SessionActor`/`SessionState`/`EntityChange`
+  pipeline (only the HTTP `/commands/domain` route updates typed state); no swappable
+  `ComposeHubDirectory` backend family yet (single file-backed store, unlike os-hub's
+  sqlite/postgres/neo4j `HubDirectory` family); `Welcome.bootstrap` is always `Tail`, never
+  `Snapshot`.
+- Related CW5 (framework/sync client) deferrals: no client-to-hub whole-envelope snapshot push;
+  `Bootstrap::Snapshot`/`SnapshotChunk`/`SnapshotDone` are accepted and ignored client-side (no
+  pack decoder wired yet); `pack_schema_hash` sent as an all-zero placeholder; `ServerFrame::
+  CreditGrant` accepted and ignored (no congestion control); the TS fallback's `payloadHash` is a
+  non-cryptographic FNV-1a placeholder.
+
+Icon-catalogue gaps (confirmed still open by this wave's own fresh test run, section 3b above)
+-----------------------------------------------------------------------------------------------
+- A real, still-open, cross-crate gap: `invalid catalog icon name` panics at
+  `ui/wgpu/rs/../../../ui/asset/icon/generated/icon_name.rs:1507`, hit by draw-plugin (6 tests),
+  cad-plugin (1), note-plugin (6), raster-plugin (3), gis-plugin (3) — every CW7 wave that touched
+  these crates confirmed via git diff/status the icon catalog itself was untouched by their own
+  changes. Likely missing SVGs and/or a stale generated `IconName` enum out of sync with the
+  crates referencing icon names — worth a dedicated follow-up investigation (already filed
+  separately per the original rename-wave ticket, per cw9-instructions.md).
+- puzzle_2d's 2 failing tests are a DIFFERENT pre-existing issue in a different crate entirely
+  (infinite/board/port/directed/normal/rs's CSS `var(--muted-foreground)` color-parser,
+  `NormalPortError::InvalidHandleKindColor`) — not the icon catalog, but similarly pre-existing/
+  unrelated to this campaign.
+
+Crate/test/design issues explicitly deferred rather than fixed during the campaign
+-----------------------------------------------------------------------------------------------
+- `protocol::Patchable` vs the old `vcs::Patchable` shape divergence (single-method mutate+return-
+  inverse vs. split `apply_patch`/`diff_patch`) was independently rediscovered and hand-fixed in
+  nearly every CW7 crate (lowpoly_core, layout/rs, gis-plugin, sequence_core, process_3d,
+  flow_core, architect_program) — NOT anticipated by cw7-instructions.md, which described
+  `Patchable` as a pure shape-freeze move. No cross-cutting documentation update was made; flagged
+  as institutional-knowledge debt for any future similar sweep.
+- architect_program's `diff_patch` always full-snapshots `Option<T>` fields rather than doing a
+  minimal inequality-gated diff (no way to express "clear this field to None" in the current patch
+  representation) — reproduces a pre-existing limitation (undo already couldn't restore `None`
+  before this migration), documented as known/non-regressing/unfixed.
+- vcs's hand-rolled `.ops` text grammar (`OpsHeaderLine`/`print_ops_log`/`parse_document_text`)
+  was never delegated to `protocol_history::parse_ops_text`/`print_ops_text` — CW3 explicitly
+  deferred this "genuine adapter-writing task"; not picked up by any later wave.
+- vcs's own `operation_envelope_from_edit` (3-arg version) and framework/sync's/hub's
+  `OperationEnvelope`/`OpDag`/`HubProtocol`/`PayloadHash` usage in framework/core were
+  deliberately NOT shimmed/migrated in CW3 (call-site migration deferred to CW5/CW7); CW5's own
+  scope note says framework/sync's/hub's shapes here remain the OLD, un-migrated form.
+- framework/core's own `HybridLogicalTimestamp`/`UndoPolicy`/`MergeStrategyKind` were never
+  unified with protocol_core's versions (different serde attributes/wire shape) — CW3 flagged this
+  needs "a real decision" in a future coordinated wave; not resolved by any later wave.
+- vcs/rs/lib.rs's `reconcile_with_last` "most-recently-applied operation instance" semantics is
+  flagged by CW3 as safe for all CURRENT `Operation::reconcile` overrides but worth a design
+  review whenever the next real override is added.
+- db_engine's `Database::snapshot_now`/`subscribe`/`preview` and the `Consistency::Historical`/
+  `Speculative`/`PreviewAugmented` query modes return `DbError::Unimplemented` at the facade layer
+  (db_document itself grew real snapshot_now later, but db_engine's own facade methods stayed
+  unimplemented as of CW4's close).
+- db_engine has zero integration with db_cluster (sharding/leases/quorum/split-brain) — allowed by
+  the instructions as a lighter surface for this campaign, but a real absent capability.
+- CrashHarness (db_testkit) doesn't exercise the document's genesis-header write boundary — a
+  failed FIRST write during `DocumentEngine::create` isn't covered by the crash-recovery tests.
+- db_document's snapshot page doesn't persist a `last_writer` map — a path restored purely from a
+  snapshot has no recorded prior writer until touched again post-reopen, so a conflicting write
+  won't be flagged immediately after a snapshot-only reopen.
+- db_index's `RecordLocation.offset` is a command-sequence placeholder, not a true WAL byte offset
+  (`db_wal::WalAppendReceipt` doesn't expose real offsets yet) — needs either a `WalAppendReceipt`
+  extension or db_document tracking offsets itself for future db_cli/db_sync consumers.
+- db_conflict::ConflictRecord cannot replace db_document's local path-granular ConflictRecord
+  without a coordinated db_engine edit (the facade's `CommandReceipt.conflicts` type is fixed) —
+  flagged as a follow-up if per-command-pair conflict reporting is ever needed at the boundary.
+- db_projection's `ProjectionEngine::new`-vs-`Arc<dyn DbStorage>` self-referential-storage
+  workaround in db_document is not "the framework's final answer" — will recur if db_engine ever
+  registers real projections.
+- protocol_cli cannot build for wasm32 (documented, expected — mirrors pack_cli's identical
+  limitation, not a defect).
+- db_storage_neo4j's CAS/lease locking is read-then-decide (not atomic at MATCH time) — weaker than
+  db_storage_postgres's genuine `SELECT ... FOR UPDATE`; a follow-up task was already spawned
+  during CW4 (`task_26ef4ae3`, "Harden Neo4j CAS/lease locking against cross-connection races").
+- db_storage_postgres/neo4j asymmetric wasm32-gating (postgres doesn't self-`#[cfg(not(target_
+  arch="wasm32"))]`-wrap like sqlite does) — flagged as worth auditing in a future crate-shape-
+  consistency pass.
+
+Policy lint allowlist state (expected, not a defect)
+-----------------------------------------------------------------------------------------------
+- `POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST` is intentionally non-empty (~55 files that
+  prove the pack round-trip law but not yet the command-envelope law) — a shrinking allowlist by
+  design, mirroring `POLICY_PACK_COMPLETENESS_ALLOWLIST`'s established pattern; shrinks as future
+  work adds `assert_command_envelope_round_trip` calls file by file.
+- `policyProtocolMigrationBreaches`/`policyDbServerOnlyBreaches` are 0-breach regression-prevention
+  gates going forward, confirmed still 0 after this wave's fix (section 4 above).
+
+Storage backends needing real infra to test end-to-end
+-----------------------------------------------------------------------------------------------
+- db_storage_postgres and db_storage_neo4j are both fully unit-tested via extracted pure decision
+  functions / static Cypher-text checks, but never exercised against a live Postgres/Neo4j server
+  in this environment (no Docker available) — flagged for a future testcontainers-based or
+  env-var-gated integration tier. os-hub's own Postgres/Neo4j directory + db-storage backends
+  compile but were only integration-tested against sqlite (the zero-touch default) for the same
+  reason.
+
+Other loose ends explicitly flagged in wave reports
+-----------------------------------------------------------------------------------------------
+- protocol_cli's `verify`/`repair` don't distinctly surface "recovered but silently shorter than
+  the file on disk" vs. "fully clean" — worth fixing whenever those commands are next touched.
+- protocol_io's `HistoryFile::open_append`/`compact` are O(file size) on every resume/compact, and
+  `TailFollower::poll()` fully re-decodes the whole file on every call — both documented,
+  acceptable-for-now costs, revisit if protocol_history grows a genuine incremental-resume API.
+- protocol_io's resume/compact cannot preserve REC_PROJECTION/REC_INDEX/REC_SEALED/REC_EPHEMERAL
+  records (tolerated: protocol_materialize already falls back to full replay when a projection is
+  missing).
+- db_wal's `PayloadTransform` hook (encryption) has a trait + `IdentityPayloadTransform` default
+  but no real encrypting implementation — by design, deferred to whoever wires up real encryption.
+- db_snapshot's `select_generation`/`materialize_chain` are O(generations) (no lightweight
+  generation-index cache) — a reasonable future perf optimization, not a correctness gap.
+- db_index has no per-run sparse index/bloom filter for point lookups, and its FullTextIndex has
+  no ranking/relevance/stemming/stopwords (explicitly deferred to db_query's planner to layer on).
+- `db_core::ResumeToken` has no public constructor from an arbitrary wire string — framework/sync's
+  receive path works around this by using `Hello.frontier` instead of decoding an incoming resume
+  token.
+- os-hub's fanout/presence registries are a stand-in for real db-native live-query/preview
+  integration (documented extension seam, not attempted this campaign).
+- os-hub's studio-scoped VFS "document" nodes have no FK/back-reference to a real db document row
+  — correlated only by convention (matching document_id string).
+- os-hub's legacy REST document/operations routes were DELETED (not adapted) since they depended
+  on the no-longer-existing whole-JSON-snapshot semantics, replaced with a small new frontier-only
+  REST endpoint — a behavior change worth knowing about for any external tooling that used the old
+  routes.
+- compose-hub's `load_admin_persons` is empty (presence is ephemeral/in-actor-only; an admin-wide
+  listing would need to poll every live actor) — deferred.
+- Storybook full production build is currently broken for reasons entirely unrelated to this
+  campaign (section 6 above) — already independently tracked/partially addressed by sibling ticket
+  26/07/27/FIX-STORYBOOK-BUILD-BROKEN-BY-PUZZLE-DSL-FIXTURE-MIGRATION, which found two additional
+  unrelated blockers beyond the one this report also hit (a compose/dev/algorithm relative-import
+  bug, and a dev-server esbuild/fsevents/addon-vitest native-module crash). Recommend a dedicated
+  ticket to fix the coda/client/ui/desktop/js/renderer.tsx `@semio-tech/framework-platform-core`
+  import specifically, since it is the one blocking a full storybook build today.
+
+Continuity note
+-----------------------------------------------------------------------------------------------
+- The earlier PROTOCOL-BINARY-OP-LOG-LAYER ticket (issue #2362) was closed with a note that its
+  scope was merged into this campaign (CW0 amended its frozen contract.md with the semantics-layer
+  crates before any fan-out began) — referenced here for continuity, no action needed on that
+  ticket itself.
+
+=================================================================================================
+OVERALL CONCLUSION
+=================================================================================================
+Checklist items 1-5 are GREEN (build clean; clippy clean of errors across the full touched
+surface; leveled tests including exhaustive-tier crash/corruption-fuzz suites all pass; the 3 new
+CW8 policy lints are all 0-breach with the command-envelope allowlist correctly non-empty, and a
+genuine campaign-caused regression in an unrelated older policy lint was found and fixed during
+this wave; the feasible e2e/hub integration coverage is green). Item 6 (storybook) is RED but for
+a pre-existing, independently-confirmed, cross-campaign reason unrelated to db/protocol/vcs —
+documented rather than silently skipped or treated as this campaign's fault. All remaining test
+failures (21 individual tests across 6 crates, 12 in compose's client lib) are confirmed, by exact
+name-and-count match against prior waves' own baselines, to be pre-existing and unrelated to this
+campaign — zero new regressions found beyond the one policy-lint regex issue, which was fixed in
+place. The ticket is ready to close.

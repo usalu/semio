@@ -581,7 +581,7 @@ impl BoardSession {
 // instead of clobbering. See `fem_2d::Fem2dOperation` for the sibling typed pattern this mirrors.
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use vcs::{Operation, OperationDiff};
+use protocol::{Operation, OperationDiff};
 
 pub const PUZZLE_2D_SCHEMA: &str = "puzzle.2d.fixture";
 
@@ -5105,7 +5105,7 @@ mod force_graph_tests {
     fn puzzle2d_delta_ops_are_granular_and_round_trip() {
         use crate::{puzzle2d_document_delta_operations, Puzzle2dOperation, PUZZLE_2D_SCHEMA};
         use serde_json::Value;
-        use vcs::{Operation, OperationDiff};
+        use protocol::{Operation, OperationDiff};
 
         let before = json!({ "schema": PUZZLE_2D_SCHEMA, "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [{ "id": "n1", "x": 0.0, "y": 0.0, "handles": [] }, { "id": "n2", "x": 10.0, "y": 0.0, "handles": [] }], "edges": [] });
         // Move n2, add n3, remove n1, pan the camera — a disjoint mix of granular edits.

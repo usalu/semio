@@ -1,0 +1,135 @@
+warning: hidden lifetime parameters in types are deprecated
+    --> /Users/ueli/Documents/semio/framework/core/rs/lib.rs:1803:42
+     |
+1803 | fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+     |                                          ^^^^^^^^^^^^ expected lifetime parameter
+     |
+     = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+     = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+     |
+1803 | fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+     |                                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> /Users/ueli/Documents/semio/framework/core/rs/lib.rs:1816:43
+     |
+1816 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+     |                                           ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1816 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>) -> Result<u64, String> {
+     |                                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> /Users/ueli/Documents/semio/framework/core/rs/lib.rs:1931:53
+     |
+1931 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                     ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1931 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                                 ++++
+
+warning: `semio-framework-core` (lib) generated 3 warnings
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.62s
+     Running unittests bin.rs (target/debug/deps/compose_hub-5578b0f9234f5cd9)
+
+running 91 tests
+test tests::command_tests::compose_command_look_serde ... ok
+test tests::command_tests::command_result_serde ... ok
+test tests::command_tests::compose_command_cursor_serde ... ok
+test tests::command_tests::delete_type_command_serde ... ok
+test tests::domain_tests::client_id_newtype ... ok
+test tests::domain_tests::command_id_newtype ... ok
+test tests::domain_tests::conflict_policy_last_writer_wins ... ok
+test tests::command_tests::command_envelope_serde ... ok
+test tests::command_tests::create_connection_command_serde ... ok
+test tests::command_tests::create_piece_command_serde ... ok
+test tests::command_tests::create_type_command_serde ... ok
+test tests::command_tests::create_design_command_serde ... ok
+test tests::domain_tests::lifecycle_active_default ... ok
+test tests::command_tests::batch_command_serde ... ok
+test tests::domain_tests::lifecycle_tombstoned ... ok
+test tests::domain_tests::field_patch_clear ... ok
+test tests::domain_tests::person_id_newtype ... ok
+test tests::domain_tests::request_id_newtype ... ok
+test tests::domain_tests::access_mode_viewer_default ... ok
+test tests::domain_tests::session_id_newtype ... ok
+test tests::domain_tests::access_mode_serde_roundtrip ... ok
+test tests::domain_tests::share_token_id_newtype ... ok
+test tests::domain_tests::session_status_display ... ok
+test tests::domain_tests::entity_kind_serde_roundtrip ... ok
+test tests::domain_tests::field_patch_set ... ok
+test tests::event_tests::compose_update_variants_serde ... ok
+test tests::event_tests::entity_change_variants_serde ... ok
+test tests::event_tests::session_event_closed_serde ... ok
+test tests::event_tests::session_event_compose_updated_serde ... ok
+test tests::event_tests::session_event_domain_accepted_serde ... ok
+test tests::error_tests::internal_returns_500 ... ok
+test tests::error_tests::validation_returns_400 ... ok
+test tests::error_tests::forbidden_returns_403 ... ok
+test tests::error_tests::actor_gone_returns_503 ... ok
+test tests::error_tests::session_not_found_returns_404 ... ok
+test tests::error_tests::conflict_returns_409 ... ok
+test tests::error_tests::idempotent_duplicate_returns_200 ... ok
+test tests::error_tests::entity_not_found_returns_404 ... ok
+test tests::error_tests::unauthorized_returns_401 ... ok
+test tests::exhaustive::require_admin_rejects_missing_bearer ... ok
+test tests::exhaustive::require_admin_rejects_without_token_set ... ok
+test tests::exhaustive::require_admin_rejects_wrong_bearer ... ok
+test tests::exhaustive::require_admin_accepts_correct_bearer ... ok
+test tests::exhaustive::session_directory_tracks_active_connections ... ok
+test tests::exhaustive::session_lifecycle ... ok
+test tests::exhaustive::domain_commands_and_history ... ok
+test tests::exhaustive::resubmitting_the_same_client_request_is_idempotent ... ok
+test tests::history_unit_tests::apply_change_log_create_type ... ok
+test tests::history_unit_tests::apply_change_log_update_kit_name ... ok
+test tests::history_unit_tests::apply_change_log_delete_type ... ok
+test tests::history_unit_tests::apply_change_log_update_type_fields ... ok
+test tests::history_unit_tests::apply_multiple_change_logs_sequentially ... ok
+test tests::history_unit_tests::compaction_result_serde ... ok
+test tests::history_unit_tests::serialize_session_kit_has_required_fields ... ok
+test tests::history_unit_tests::session_kit_identity_helpers_require_id_and_name ... ok
+test tests::lookback_tests::lookback_points_ordered_ascending ... ok
+test tests::lookback_tests::lookback_seconds_known_tokens ... ok
+test tests::lookback_tests::lookback_seconds_unknown_token ... ok
+test tests::lookback_tests::lookback_tokens_returns_all_12 ... ok
+test tests::metabolism_diff_tests::metabolism_diff_has_removed_types ... ok
+test tests::metabolism_diff_tests::metabolism_diff_roundtrip_commands ... ok
+test tests::exhaustive::auth_forbidden_without_token ... ok
+test tests::exhaustive::http_api_round_trip ... ok
+test tests::exhaustive::multi_frontend_websocket_wire_v2 ... ok
+test tests::exhaustive::admin_endpoints_round_trip ... ok
+test tests::exhaustive::share_token_flow ... ok
+test tests::exhaustive::snapshot_and_piece_patch_roundtrip ... ok
+test tests::multi_frontend_tests::multi_frontend_broadcast_via_channel ... ok
+test tests::multi_frontend_tests::multi_frontend_concurrent_commands_via_actor_channel ... ok
+test tests::multi_frontend_tests::multi_frontend_cursor_events ... ok
+test tests::multi_frontend_tests::multi_frontend_look_changes ... ok
+test tests::multi_frontend_tests::multi_frontend_selection_independence ... ok
+test tests::nakagin_integration_tests::nakagin_build_design_state ... ok
+test tests::nakagin_integration_tests::nakagin_create_connection_commands_for_all_connections ... ok
+test tests::nakagin_integration_tests::nakagin_create_piece_commands_for_all_pieces ... ok
+test tests::nakagin_integration_tests::nakagin_design_name ... ok
+test tests::nakagin_integration_tests::nakagin_design_parses_179_connections ... ok
+test tests::nakagin_integration_tests::nakagin_design_parses_180_pieces ... ok
+test tests::nakagin_integration_tests::nakagin_diff_has_diff_status ... ok
+test tests::state_tests::design_state_with_pieces_and_connections ... ok
+test tests::state_tests::session_state_creation ... ok
+test tests::state_tests::type_state_with_connectors ... ok
+test tests::exhaustive::metabolism_full_kit_history ... ok
+test tests::full_metabolism_nakagin_session_test::full_session_with_metabolism_types_and_nakagin_design ... ok
+test tests::metabolism_integration_tests::metabolism_kit_has_designs ... ok
+test tests::history_unit_tests::serialize_session_kit_with_types_and_designs ... ok
+test tests::metabolism_integration_tests::metabolism_build_types_in_session_state ... ok
+test tests::metabolism_integration_tests::metabolism_kit_name ... ok
+test tests::metabolism_integration_tests::metabolism_kit_parses_50_types ... ok
+test tests::metabolism_integration_tests::metabolism_create_type_commands_for_all_types ... ok
+test tests::metabolism_integration_tests::metabolism_kit_has_authors ... ok
+
+test result: ok. 91 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.82s
+
+TEST_COMPOSE_HUB_EXIT:0

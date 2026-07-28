@@ -1,0 +1,101 @@
+CW7 — App fan-out: CollectionOperation shape migration
+Crate: animate/plugin/rs (package `animate-plugin`)
+File touched: animate/plugin/rs/lib.rs
+File touched: animate/plugin/rs/Cargo.toml (added missing `protocol` dependency)
+
+## What changed
+
+animate/plugin/rs only ever constructs `CollectionOperation::Add/Remove/Patch` as the
+payload of `PresentOperation::Tiles(...)`, where `PresentOperation` is a foreign type
+imported from the sibling crate `animate_present` (animate/present/rs). It does NOT call
+`vcs::apply_collection_operation`/`invert_collection_operation`/`collection_diff_from_operation`
+itself (those live inside animate_present's own `Operation`/`OperationDiff` impl), and it does
+NOT import `vcs::{Operation, OperationDiff, OpText}` (not used in this file at all), so step 7
+of the instructions doc did not apply here.
+
+Because `CollectionOperation` here is a type parameter dictated entirely by
+`animate_present::PresentOperation::Tiles`'s field type, this crate's migration was blocked
+until animate/present/rs's own CW7 migration landed. I verified this empirically:
+
+1. Read the file fresh, found `use vcs::{CollectionOperation, DocumentDsl};` and 6 call sites
+   (2x `Add`, 2x `Remove`, 2x `Patch`, no `Move`).
+2. Confirmed baseline `cargo build -p animate-plugin` / `cargo test -p animate-plugin` were
+   green before any edit.
+3. Confirmed at that moment `animate/present/rs` still declared
+   `Tiles(CollectionOperation<...>)` against the OLD `vcs::CollectionOperation` shape
+   (`Add { index, item }`, `Move { to_index }`) — i.e. migrating my file alone would have been
+   a guaranteed type-mismatch build break against a sibling crate I'm not allowed to touch.
+4. Rather than force a broken build, I re-verified against the live file before editing (per
+   the "live, concurrently-edited repo" instruction). By the time I re-checked,
+   `animate/present/rs` had been migrated concurrently by its own CW7 assignment (now imports
+   `protocol::{CollectionOperation, Identified, Operation, OperationDiff, Patchable,
+   apply_collection_operation is not used there directly but collection_diff_from_operation/
+   invert_collection_operation are}`, and `PresentOperation::Tiles`'s field type is now
+   `protocol::CollectionOperation<String, FigureTileDraft, FigureTileDraftPatch>`), which
+   unblocked (and in fact now required) this crate's migration.
+
+With the sibling type migrated, I applied the migration:
+
+- `use vcs::{CollectionOperation, DocumentDsl};` split into
+  `use protocol::CollectionOperation;` + `use vcs::DocumentDsl;` (`DocumentDsl` stays on vcs —
+  it's only used for the unrelated `.print_dsl()` call in the manifest builder, not part of
+  this shape freeze).
+- Two `Add { index: deck.tiles.len(), item: tile }` construction sites (the `addTile` action
+  and the `engagementSubmit` "add" keyword branch) rewritten to
+  `Add { id: tile.id.clone(), at: deck.tiles.len(), item: tile }`.
+- `Remove { id }` (2 sites) and `Patch { id, patch }` (2 sites) are unchanged — their shape was
+  already identical between vcs and protocol.
+- No `Move` construction exists in this file — nothing to rename `to_index` -> `to`.
+- No `vcs::apply_collection_operation`/`invert_collection_operation`/
+  `collection_diff_from_operation` calls exist in this file — nothing to switch there.
+
+## Id source chosen and why
+
+Both `Add` sites already generate the tile's id *before* constructing the `FigureTileDraft`
+item (via `let id = new_tile_id("tile");`, a monotonic `AtomicU32`-backed counter formatted as
+`"{prefix}-{serial}"`), then embed it as `FigureTileDraft.id` when building `tile`. Since `id`
+itself is moved into `self.runtime.selected_ids` immediately after, I supplied the new `Add`
+field as `tile.id.clone()` (cloning off the already-constructed item, evaluated before the
+`item: tile` field moves `tile`) rather than re-using the now-moved local `id` variable. This
+preserves the exact existing id-generation logic verbatim, only surfacing the value one field
+name earlier, per the instructions' guidance ("use that... supply the resulting value as Add's
+new id field instead of only implicitly deriving it after the fact").
+
+## Cargo.toml
+
+`protocol` was genuinely missing as a direct dependency (only `vcs` was present). Added
+`protocol = { path = "../../../protocol/rs" }` directly under `animate_video`, matching the
+exact path-relative convention used by every other already-migrated plugin crate (verified
+against gis/plugin/rs, mathematical/plugin/rs, layout/plugin/rs, framework/plugin/rs,
+process/plugin/rs).
+
+## Build / test status
+
+- `cargo build -p animate-plugin`: PASS (clean; only a pre-existing, unrelated
+  `unused import: compile_scene_to_assets` warning that was already present in the baseline
+  build before my change).
+- `cargo test -p animate-plugin`: PASS — all 45 unit tests green (`test result: ok. 45 passed;
+  0 failed`), including the CollectionOperation-exercising tests
+  (`add_delete_and_rename_tile_round_trip_through_operations`,
+  `patch_tile_crop_clamps_and_is_reversible`, `undo_redo_round_trip_through_the_wrapper`,
+  `two_instances_converge_disjoint_edits_via_backbone`).
+- The same test run's doc-test phase failed once with
+  `extern location for vcs does not exist: .../libvcs.rlib` — a stale-artifact race from other
+  concurrent cargo processes rewriting the shared target dir at that exact moment (confirmed
+  several concurrent `cargo build`/`cargo test` processes running against this workspace
+  during my session, including the sibling animate_present migration). Re-ran
+  `cargo test -p animate-plugin --doc` alone afterwards: clean pass (`running 0 tests ... ok` —
+  this crate has no doctests). Not a regression from this change.
+
+## Deviation from a literal reading of the instructions
+
+None of substance. The one procedural note: this crate had no independently-migratable
+CollectionOperation usage until animate/present/rs (a separate CW7 crate assignment) landed
+its own migration concurrently during my session — I did not touch animate/present/rs myself,
+I only waited for and then built against its already-completed change, per the ownership rule
+("never touch... any other app crate").
+
+## Files touched
+
+- animate/plugin/rs/lib.rs
+- animate/plugin/rs/Cargo.toml

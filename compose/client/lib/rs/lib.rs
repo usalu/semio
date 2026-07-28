@@ -7813,7 +7813,8 @@ pub mod vcs {
         use crate::external_adapters::serde_json::Value;
         #[cfg(test)]
         use vcs::DocumentVcsCommand;
-        use vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentVcsEnvelope, DocumentVcsStore, Operation as VcsOperation, OperationDiff};
+        use vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentVcsEnvelope, DocumentVcsStore};
+        use protocol::{Operation as VcsOperation, OperationDiff};
 
         pub const KIT_SNAPSHOT_SCHEMA: &str = "compose.kit";
 
@@ -7905,7 +7906,7 @@ pub mod vcs {
         /// raw `\n`: `serde_json` escapes embedded newlines inside string values as `\n`, satisfying
         /// `OpText::print_op`'s one-line law). The richly-typed per-kind operation text format lives
         /// one level up, on the real `operation::Operation` enum (`operation::ComposeOperationDsl`).
-        impl vcs::OpText for ComposeWireOperation {
+        impl protocol::OpText for ComposeWireOperation {
             fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
                 crate::external_adapters::serde_json::from_str(line).map_err(|error| vcs::TextError::new(error.to_string(), vcs::TextSpan::at(1, 1)))
             }
@@ -10855,13 +10856,13 @@ pub mod operation {
         }
     }
 
-    impl vcs::OpText for Operation {
+    impl protocol::OpText for Operation {
         fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-            Ok(compose_operation_from_dsl(<ComposeOperationDsl as vcs::OpText>::parse_op(line)?))
+            Ok(compose_operation_from_dsl(<ComposeOperationDsl as protocol::OpText>::parse_op(line)?))
         }
 
         fn print_op(&self) -> String {
-            <ComposeOperationDsl as vcs::OpText>::print_op(&compose_operation_to_dsl(self))
+            <ComposeOperationDsl as protocol::OpText>::print_op(&compose_operation_to_dsl(self))
         }
     }
     //#endregion 🔖OpText
@@ -19530,7 +19531,8 @@ mod tests {
     #[test]
     fn vcs_typed_ops_materialize_projection() {
         use serde::{Deserialize, Serialize};
-        use vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentVcsCommand, DocumentVcsStore, Operation, OperationDiff};
+        use vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentVcsCommand, DocumentVcsStore};
+        use protocol::{Operation, OperationDiff};
 
         #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
         struct KitProjection {

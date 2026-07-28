@@ -8,7 +8,7 @@ pub(crate) mod domain {
     use std::collections::BTreeMap;
 
     //#region 🔖DocumentVcs
-    use vcs::{Operation, OperationDiff};
+    use protocol::{Operation, OperationDiff};
 
     pub const RASTER_DOCUMENT_SCHEMA: &str = "raster.document";
 

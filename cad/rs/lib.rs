@@ -3,7 +3,8 @@
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
-use vcs::{CollectionDiff, DocumentVcsEnvelope, DocumentVcsStore, ItemPatch, Operation, OperationDiff};
+use protocol::{CollectionDiff, ItemPatch, Operation, OperationDiff};
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
 
 pub const CAD_DOCUMENT_SCHEMA: &str = "cad.scene";
 pub const CAD_PLAY_DOCUMENT_SCHEMA: &str = "cad.document";

@@ -5,7 +5,8 @@ use flow_core::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use playbook::{apply_generation_operation, invert_generation_operation, FormGeneration, GenerationOperation, GenerationPlayState};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
+use protocol::{Operation, OperationDiff};
 
 pub const PROCEDURAL_2D_SCHEMA: &str = "procedural.2d";
 
@@ -640,14 +641,14 @@ fn procedural2d_operation_from_dsl(operation: Procedural2dOperationDsl) -> Resul
 
 /// ⚡ `Procedural2dOperation`'s compact single-line op encoding — derive-engine grammar via
 /// `Procedural2dOperationDsl` (see above); `parse_op`/`print_op` convert at the boundary.
-impl vcs::OpText for Procedural2dOperation {
+impl protocol::OpText for Procedural2dOperation {
     fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-        let parsed = <Procedural2dOperationDsl as vcs::OpText>::parse_op(line)?;
+        let parsed = <Procedural2dOperationDsl as protocol::OpText>::parse_op(line)?;
         procedural2d_operation_from_dsl(parsed)
     }
 
     fn print_op(&self) -> String {
-        <Procedural2dOperationDsl as vcs::OpText>::print_op(&procedural2d_operation_to_dsl(self))
+        <Procedural2dOperationDsl as protocol::OpText>::print_op(&procedural2d_operation_to_dsl(self))
     }
 }
 //#endregion 🔖OpText
@@ -713,7 +714,8 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vcs::{apply_operation, create_document_vcs_envelope, test_support, DocumentDsl, DocumentVcsCommand, OpText};
+    use vcs::{apply_operation, create_document_vcs_envelope, test_support, DocumentDsl, DocumentVcsCommand};
+    use protocol::OpText;
 
     fn round_trip(projection: &Procedural2dDocument, operation: &Procedural2dOperation) -> Procedural2dDocument {
         let forward = apply_operation(projection, operation);

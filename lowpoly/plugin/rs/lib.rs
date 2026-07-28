@@ -1358,6 +1358,8 @@ struct LowpolyPlayApp {
     transform: Option<TransformSession>,
     transform_drag_active: bool,
     texture_cache: RefCell<PaintTextureCache>,
+    /// 👻 Per-`key` monotone counter for `gesture_preview` — see `//#region 🔖GesturePreview`.
+    preview_seq: u64,
 }
 
 impl Default for LowpolyPlayApp {
@@ -1370,6 +1372,7 @@ impl Default for LowpolyPlayApp {
             transform: None,
             transform_drag_active: false,
             texture_cache: RefCell::new(PaintTextureCache::default()),
+            preview_seq: 0,
         }
     }
 }
@@ -1577,6 +1580,7 @@ impl LowpolyPlayApp {
                 }
                 let _ = apply_transform(&mut session.doc, transform);
             }
+            self.preview_seq = self.preview_seq.wrapping_add(1);
             return ActionEmit::default();
         }
         let operations = self.mesh_edit(projection, move |doc| {
@@ -1624,6 +1628,34 @@ impl LowpolyPlayApp {
             "Transform selection",
         )
     }
+
+    //#region 🔖GesturePreview
+    /// 👻 CW7 db+protocol+vcs-slimming campaign, "preview law for gesture apps": the live gumball
+    /// drag's current object state, expressed as a patch anchored to the drag-start snapshot
+    /// (`session.before`) via the same `object_patch_diff` `commit_transform` uses for the eventual
+    /// real commit. Anchoring to a fixed base (not the previous preview tick) keeps this correct even
+    /// when the lossy, uncredited preview lane drops every message but the latest — a receiver only
+    /// ever needs the last-synced canonical object (`before`, already has it) plus this one patch,
+    /// never a chain of prior preview messages. `apply_transform` already calls
+    /// `sync_meshes_to_projection` every tick (mid-drag world-scene rendering needs it regardless), so
+    /// reading `session.doc.projection()` here adds no new per-tick cost. `None` outside an active drag;
+    /// this reads `TransformSession` only, never emits or mutates a `LowpolyOperation`.
+    ///
+    /// 🚧 Deliberately unwired beyond this accessor — same gap as `draw-plugin`'s
+    /// `draw_gesture_preview_payload`: `framework/sync::SyncSession::publish_preview` is host-only
+    /// ("WASI-P2 plugins never link this crate") and this crate compiles as a WASI-P2 component; the
+    /// one cross-sandbox channel this crate can reach, `vcs::BackboneMessage`, has no preview-shaped
+    /// variant. See `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw7-preview-law.txt`.
+    /// `#[allow(dead_code)]`: exercised by `🧪Tests` only until a host bridge exists.
+    #[allow(dead_code)]
+    fn gesture_preview(&self) -> Option<(&'static str, u64, Vec<u8>)> {
+        let session = self.transform.as_ref()?;
+        let after = session.doc.projection().objects.iter().find(|object| object.id == session.object_id)?.clone();
+        let patch = object_patch_diff(&session.before, &after);
+        let payload = json!({ "objectId": session.object_id.clone(), "patch": patch });
+        Some(("gesture:transform", self.preview_seq, serde_json::to_vec(&payload).ok()?))
+    }
+    //#endregion 🔖GesturePreview
 }
 
 /// @emoji 🎯 Extracts UV (0..1) from a paint action's args — either direct `u`/`v` (world 3d picks) or
@@ -2806,6 +2838,55 @@ mod tests {
         app.handle_action("undo", None, &ViewState::default(), &testkit::meta("a")).unwrap();
         assert_eq!(projection(&app).objects[0].mesh_json, before_mesh, "one undo reverts the whole coalesced gumball drag");
     }
+
+    //#region 🔖GesturePreview
+    /// 🔬 CW7 preview-law seam: `LowpolyPlayApp::gesture_preview` reads `TransformSession` only, never a
+    /// `LowpolyOperation` — exercised directly against `LowpolyPlayApp` (bypassing the `VcsDocumentApp`
+    /// wrapper, which has no accessor into the inner app) since `transform_selection` is the natural
+    /// per-tick gesture handler.
+    #[test]
+    fn gesture_preview_is_none_without_an_active_transform_drag() {
+        let app = LowpolyPlayApp::default();
+        assert!(app.gesture_preview().is_none(), "no live gumball drag, nothing to preview");
+    }
+
+    #[test]
+    fn gesture_preview_reflects_the_live_gumball_drag_and_clears_on_commit() {
+        let mut app = LowpolyPlayApp::default();
+        let projection = default_projection();
+        app.transform_drag_active = true;
+
+        let tick_a = app.transform_selection(&projection, "mesh", vec![], Transform::Translate(Vec3::new(0.5, 0.0, 0.0)), "translate");
+        assert!(tick_a.operations.is_empty(), "mid-drag ticks emit zero operations (scratch-commit pattern)");
+        let (key, seq_after_a, payload_a) = app.gesture_preview().expect("a live gumball drag is previewable");
+        assert_eq!(key, "gesture:transform");
+        let value_a: Value = serde_json::from_slice(&payload_a).expect("payload is valid json");
+        assert_eq!(value_a["objectId"], json!(projection.objects[0].id));
+        assert_ne!(value_a["patch"], json!(LowpolyObjectPatch::default()), "the patch anchored to the drag-start snapshot must reflect the first tick");
+
+        let tick_b = app.transform_selection(&projection, "mesh", vec![], Transform::Translate(Vec3::new(0.25, 0.0, 0.0)), "translate");
+        assert!(tick_b.operations.is_empty());
+        let (_, seq_after_b, payload_b) = app.gesture_preview().expect("still live mid-drag");
+        assert!(seq_after_b > seq_after_a, "seq is monotone per tick, for staleness detection on the receiving end");
+        assert_ne!(payload_a, payload_b, "the base-anchored patch accumulates both ticks, not just the latest one");
+
+        let end = app.commit_transform();
+        assert_eq!(end.operations.len(), 1, "the whole drag commits as exactly one real operation");
+        assert!(app.gesture_preview().is_none(), "the drag ended: nothing left to preview, and the commit above already carried the real operation");
+    }
+
+    #[test]
+    fn gesture_preview_is_a_pure_read_never_mutating_the_transform_session() {
+        let mut app = LowpolyPlayApp::default();
+        let projection = default_projection();
+        app.transform_drag_active = true;
+        app.transform_selection(&projection, "mesh", vec![], Transform::Translate(Vec3::new(1.0, 0.0, 0.0)), "translate");
+        let mesh_before = app.transform.as_ref().unwrap().doc.projection().objects[0].mesh_json.clone();
+        let _ = app.gesture_preview();
+        let _ = app.gesture_preview();
+        assert_eq!(app.transform.as_ref().unwrap().doc.projection().objects[0].mesh_json, mesh_before, "gesture_preview must never mutate the live transform scratch it reads");
+    }
+    //#endregion 🔖GesturePreview
 
     #[test]
     fn two_instances_converge_disjoint_edits_via_backbone() {

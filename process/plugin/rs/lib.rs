@@ -19,7 +19,8 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Mutex, OnceLock};
-use vcs::{CollectionOperation, DocumentDsl};
+use protocol::CollectionOperation;
+use vcs::DocumentDsl;
 
 //#region 🔖Constants
 const PROCESS_3D_PLAY_APP_ID: &str = "process3d-play";
@@ -172,7 +173,8 @@ fn fixture_signature(fixture: &process_3d::Process3dDocument) -> u64 {
 /// `&Process3dDocument` keeps `handle_action` free of manual mutation — the VCS store applies them.
 fn insert_step_operations(fixture: &process_3d::Process3dDocument, step: ProcessStep) -> Vec<Process3dOperation> {
     let cursor = fixture.resolved_up_to.unwrap_or(fixture.steps.len()).min(fixture.steps.len());
-    vec![Process3dOperation::Steps { collection: CollectionOperation::Add { index: cursor, item: step } }, Process3dOperation::SetCursor { resolved_up_to: Some(cursor + 1) }]
+    let id = step.id.clone();
+    vec![Process3dOperation::Steps { collection: CollectionOperation::Add { id, item: step, at: cursor } }, Process3dOperation::SetCursor { resolved_up_to: Some(cursor + 1) }]
 }
 
 fn remove_step_operations(fixture: &process_3d::Process3dDocument, id: &str) -> Option<Vec<Process3dOperation>> {
@@ -1311,7 +1313,7 @@ impl DocumentApp for Process3dPlayApp {
             "moveStep" => {
                 if let (Some(id), Some(index)) = (args.and_then(|value| value.get("id")).and_then(|value| value.as_str()), args.and_then(|value| value.get("index")).and_then(|value| value.as_u64())) {
                     if doc.projection.steps.iter().any(|step| step.id == id) {
-                        return ActionEmit::operations(vec![Process3dOperation::Steps { collection: CollectionOperation::Move { id: id.to_string(), to_index: index as usize } }]);
+                        return ActionEmit::operations(vec![Process3dOperation::Steps { collection: CollectionOperation::Move { id: id.to_string(), to: index as usize } }]);
                     }
                 }
                 ActionEmit::default()

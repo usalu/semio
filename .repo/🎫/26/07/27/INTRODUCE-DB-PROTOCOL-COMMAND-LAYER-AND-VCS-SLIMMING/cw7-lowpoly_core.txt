@@ -1,0 +1,81 @@
+CW7 app fan-out — crate: lowpoly/core/rs (lowpoly_core)
+File touched: /Users/ueli/Documents/semio/lowpoly/core/rs/lib.rs (only)
+Cargo.toml: unchanged — `protocol` was already a direct dependency (present from an earlier wave's sweep), no edit needed.
+
+Real usage confirmed (not a false positive): this crate has a live `objects` collection
+(`LowpolyProjection.objects: Vec<LowpolyObject>`) driven through
+`vcs::{apply_collection_operation, invert_collection_operation, CollectionOperation}` in two
+functions, `apply_lowpoly_operation`/`invert_lowpoly_operation`, plus a private helper
+`objects_operation_from_collection` that converts a generic `CollectionOperation` result back into
+the crate's own flat `LowpolyOperation::Objects*` variants.
+
+What changed:
+1. Import switched: `use vcs::{apply_collection_operation, invert_collection_operation,
+   CollectionOperation, Identified, Operation, OperationDiff, Patchable};` ->
+   `use protocol::{...same names...};` (single import line covers steps 6 and 7 of the procedure —
+   `Operation`/`OperationDiff` were already bundled with the collection-op names in one `use`).
+2. Two fully-qualified `<LowpolyOperation as vcs::OpText>::parse_op(...)` call sites in tests
+   switched to `protocol::OpText` (the trio rule from step 7 — these weren't behind the `use` line
+   since they're written qualified, but they're the same trait trio).
+3. `CollectionOperation::Add { index, item }` -> `Add { id, item, at }` and
+   `Move { id, to_index }` -> `Move { id, to }` rewritten at all 6 construction/match sites
+   (2 in `objects_operation_from_collection`'s match, 2 in `apply_lowpoly_operation`, 2 in
+   `invert_lowpoly_operation`). In the one pattern-match site (`objects_operation_from_collection`)
+   the new `id` field is bound `_id` and ignored — see id-source note below for why that's correct
+   here, not just a "unused, ignore it" shortcut.
+4. Doc comments referencing `vcs::CollectionOperation`/`vcs::invert_collection_operation`/"vcs's
+   generic collection apply/invert helpers" updated to say `protocol::` instead, to stay accurate.
+
+Id source for `Add`, and why: `LowpolyObject` already carries its own `id: String` field and
+`impl Identified<String> for LowpolyObject { fn id(&self) -> &String { &self.id } }` already exists
+(used by `Remove`/`Move`/`Patch` on this same collection). So at both `Add`-construction sites
+(`apply_lowpoly_operation`'s `ObjectsAdd` arm and `invert_lowpoly_operation`'s `ObjectsAdd` arm) the
+new `id` field is filled with `item.id.clone()` — no fresh id generation needed, the item already
+carries its permanent identity. Crucially, `LowpolyOperation::ObjectsAdd { index, item }` itself
+(the crate's own flat operation variant, `#[derive(dsl::DslOps)]`) was NOT given a new `id` field —
+it never needed one, since `item.id` already round-trips through DSL/JSON as part of `item`. That's
+also why `objects_operation_from_collection`'s `Add` match arm binds `id` as `_id` and discards it:
+converting a generic `CollectionOperation::Add{id, item, at}` back to
+`LowpolyOperation::ObjectsAdd{index, item}` only needs `item` and `at`; `id` is redundant with
+`item.id` by construction and dropping it loses no information.
+
+Undocumented-but-mandatory ripple inside this same file (found by the build, not anticipated by the
+instructions doc): `protocol::Patchable<TPatch>` is NOT a pure relocation of `vcs::Patchable` — its
+shape changed too. `vcs::Patchable::apply_patch(&mut self, patch: &TPatch) -> TPatch` (mutates and
+returns the inverse patch in one call); `protocol::Patchable` splits that into
+`apply_patch(&mut self, patch: &TPatch)` (returns `()`) plus a new required
+`diff_patch(&self, other: &Self) -> Option<TPatch>` method (computes an inverse/delta patch by
+comparing two states). Since `protocol::apply_collection_operation`/`invert_collection_operation`
+require `TItem: Identified<TId> + Clone + Patchable<TPatch>` where `Patchable` now resolves to
+`protocol::Patchable` (forced by the import switch — Rust trait resolution is nominal, so this
+isn't optional), `impl Patchable<LowpolyObjectPatch> for LowpolyObject` had to be rewritten to the
+new two-method shape. Verified this is the intended/expected pattern (not a scope overreach) by
+checking other already-migrated sibling crates in this same wave (`sequence/core/rs`,
+`layout/rs`, `architect/program/rs`, `gis/plugin/rs`, etc. all already have this exact
+`apply_patch`+`diff_patch` split) — same field-by-field `Some(...).then(...)`/`then_some(...)`
+diff pattern applied here. One test (`object_patch_apply_mutates_and_inverse_restores_all_fields`)
+relied on `apply_patch`'s old inverse-returning signature; updated it to call `apply_patch` then
+`object.diff_patch(&original)` to get the inverse before re-applying, same assertions preserved.
+Flagging this because the instructions doc's step 6 described `Patchable` as moving "per the same
+shape freeze" implying pure relocation, when in this crate (and evidently others) it also required
+a real signature/behavior port — future crates in this wave should expect this too, not just an
+import-path swap.
+
+Cross-crate ripple check (repo-grep for this crate's public API before declaring done, per step 9):
+only other crate depending on `lowpoly_core` is `lowpoly/plugin/rs` (`lowpoly-plugin`), which
+constructs `LowpolyOperation::ObjectsAdd { index, item: new_object }` at one call site
+(lowpoly/plugin/rs/lib.rs:1955). Since `LowpolyOperation::ObjectsAdd`'s own field shape
+(`{ index: usize, item: LowpolyObject }`) was deliberately left untouched (see id-source note
+above — no `id` field was added to it, only to the internal `protocol::CollectionOperation` values
+built from it), this call site needed no change. Confirmed by building `lowpoly-plugin` directly:
+compiles clean (only pre-existing unrelated warnings, no errors). No ripple to report/fix.
+
+Build: `cargo build -p lowpoly_core` — PASS (clean, no errors; unrelated pre-existing warnings in
+other workspace crates only).
+Test: `cargo test -p lowpoly_core` — PASS, 72 passed; 0 failed; 0 ignored.
+Also built `cargo build -p lowpoly-plugin` (dependent crate, ripple check) — PASS, no errors.
+
+Deviations from a literal reading of the instructions doc: none beyond the `Patchable` shape note
+above (which was a necessary correction, not a deviation — the crate would not compile otherwise).
+No Cargo.toml edit was needed. Not a false-positive crate — real, working `CollectionOperation`
+usage existed and is now fully migrated to the `protocol::` shape.

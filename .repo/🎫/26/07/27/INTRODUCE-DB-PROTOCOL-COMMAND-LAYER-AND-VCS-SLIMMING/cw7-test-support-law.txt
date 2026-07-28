@@ -1,0 +1,86 @@
+CW7 — vcs test_support: assert_command_envelope_round_trip
+============================================================
+
+File touched: vcs/rs/lib.rs (only file changed this task)
+  - `pub mod test_support` region: new fn `assert_command_envelope_round_trip<P, Operation>`,
+    inserted between `assert_document_pack_round_trip` and `assert_live_equals_replay`
+    ("beside pack laws", per the campaign plan's App fan-out note).
+  - `#[cfg(test)] mod tests`: extended `test_support_round_trip_helpers_pass_for_demo_operation`
+    with a positive case; added new test `command_envelope_round_trip_panics_on_a_lossy_operation`.
+
+What it does
+------------
+`assert_command_envelope_round_trip(edit: &Edit<Operation>, document_id: &DocumentId)` builds
+`protocol::OperationEnvelope`s (protocol_causal's canonical wire/causal type, moved from
+framework/core in CW3) from an `Edit<Operation>` via `protocol::operation_envelope_from_edit`
+(protocol_causal's per-operation bridge — NOT vcs's own same-named `operation_envelope_from_edit`,
+which still builds the OLD `semio_framework_core::OperationEnvelope` per-edit shape; the two
+coexist deliberately per the `🚧TEMPORARY protocol shim` block's documented CW3 deviation).
+
+It then asserts two laws per produced envelope:
+  1. Whatever `edit.operation_meta[i]` explicitly recorded (operation_id/dependencies/author_id/
+     timestamp) survives unchanged onto the envelope — this is the ground-truth source
+     `operation_envelope_from_edit` prefers over its own `Operation`-trait/structural fallbacks.
+  2. `envelope.diff.payload` / `envelope.inverse.inverse_diff` decode back (via `Operation`'s own
+     `Deserialize` impl) into operations equal to `edit.forwards[i]` / `edit.backwards[i]`.
+
+Design reasoning
+-----------------
+A byte-level encode-then-decode "round trip" (like `assert_pack_round_trip`'s
+`decode_pack(encode_pack(p)) == p`) isn't meaningful for `OperationEnvelope`: it's a runtime struct,
+never itself re-serialized back into an `Edit` (there is no `envelope_to_edit` inverse in
+protocol_causal — vcs's own `edit_from_operation_envelope` recovers a *whole edit* from vcs's own,
+differently-shaped, per-edit legacy envelope, not from this per-operation protocol_causal one).
+
+The task also warned against a *tautological* law: recomputing the envelope's fallback chain
+(operation_id/actor/deps when `operation_meta` is absent) inside the assertion and comparing it
+against itself would just re-run `operation_envelope_from_edit`'s own logic and always agree,
+proving nothing. So the assertion deliberately:
+  - only checks meta-derived facts when `operation_meta[i]` is explicitly present (checking against
+    the literal input data, not a re-derived fallback value), and
+  - checks the diff/inverse payloads via genuine independent round-trip: encode (inside
+    `operation_envelope_from_edit`) then decode (inside the assertion, via `serde_json::from_value`)
+    must recover an equal `Operation` — this is the part a hand-rolled `Serialize`/`Deserialize`
+    pair can silently break, and is a real, catchable law.
+
+Non-triviality proof
+---------------------
+Added `command_envelope_round_trip_panics_on_a_lossy_operation` (`#[should_panic(expected = "did
+not decode back into an equal forward operation")]`), mirroring the existing repo convention
+(`protocol/testkit/rs/lib.rs`'s `op_text_round_trip_panics_on_a_lossy_impl`). It defines a local
+`LossyOperation` with a hand-written `Serialize` (encodes `n` faithfully) and `Deserialize` (always
+returns `n: 0`, ignoring the wire value) — a deliberately lossy impl. `assert_command_envelope_round_trip`
+correctly panics on it, proving law (2) actually catches broken serialization rather than passing
+vacuously.
+
+Positive coverage
+------------------
+Extended `test_support_round_trip_helpers_pass_for_demo_operation` (vcs's own `DemoProjection`/
+`DemoOperation` fixtures, same ones `assert_operation_round_trip`'s test uses) with an `Edit<DemoOperation>`
+carrying an explicit `OperationMeta` (operation_id, dependencies, author_id, timestamp) and calls
+`assert_command_envelope_round_trip::<DemoProjection, DemoOperation>`, confirming the law holds for
+a well-behaved technology operation.
+
+Type-qualification note
+-------------------------
+`ActorId`/`DocumentId`/`OperationId` are, since CW3, literal re-exports of `protocol_core`'s types
+through `semio_framework_core` (`pub use protocol_core::{ActorId, DocumentId, DocumentVersion,
+OperationId, SchemaId};` in framework/core/rs/lib.rs) — so vcs's crate-root bare names already
+resolve to the identical protocol_core type; qualifying them as `protocol::OperationId` etc. is an
+unnecessary-qualification warning (confirmed via `cargo build -p vcs --tests`) and was removed.
+`HybridLogicalTimestamp` and `UndoPolicy`, by contrast, remain framework_core's own distinct local
+types (not re-exported from protocol_core) — those stay qualified as `protocol::HybridLogicalTimestamp`
+/ `protocol::UndoPolicy`, matching the existing convention already used by vcs's own
+`operation_envelope_from_edit` a few hundred lines above.
+
+Test results
+------------
+`cargo build -p vcs --tests` — clean, zero warnings from vcs/rs/lib.rs (pre-existing framework-core
+warnings unrelated).
+`cargo test -p vcs` — 81 passed; 0 failed; 0 ignored (includes
+`test_support_round_trip_helpers_pass_for_demo_operation` and
+`command_envelope_round_trip_panics_on_a_lossy_operation - should panic ... ok`).
+
+Files touched
+-------------
+- vcs/rs/lib.rs (only file)

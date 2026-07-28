@@ -103,7 +103,7 @@ pub mod app_home {
 
     /// @emoji 🔢 The Home launcher's only document operation: pins the catalog-generation counter that forces a
     /// re-materialize of the studio list after a create/import/delete side-effect on the catalog port.
-    /// It is its own {@link vcs::OperationDiff} (idempotent set), so forward/backward are symmetric.
+    /// It is its own {@link protocol::OperationDiff} (idempotent set), so forward/backward are symmetric.
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslOps)]
     #[serde(tag = "operation", rename_all = "camelCase")]
     pub enum SHomeOperation {
@@ -113,7 +113,7 @@ pub mod app_home {
         SetCatalogGeneration { value: u64 },
     }
 
-    impl vcs::OperationDiff<SHomeDocument> for SHomeOperation {
+    impl protocol::OperationDiff<SHomeDocument> for SHomeOperation {
         fn apply(&self, projection: &SHomeDocument) -> SHomeDocument {
             match self {
                 SHomeOperation::NoOperation => projection.clone(),
@@ -130,7 +130,7 @@ pub mod app_home {
         }
     }
 
-    impl vcs::Operation<SHomeDocument> for SHomeOperation {
+    impl protocol::Operation<SHomeDocument> for SHomeOperation {
         type Diff = SHomeOperation;
 
         fn diff(&self, _projection: &SHomeDocument) -> SHomeOperation {
@@ -151,7 +151,7 @@ pub mod app_home {
     //#endregion 🔖Dsl
 
     //#region 🔖OpText
-    // `impl vcs::OpText for SHomeOperation` is emitted automatically by the `#[derive(dsl::DslOps)]`
+    // `impl protocol::OpText for SHomeOperation` is emitted automatically by the `#[derive(dsl::DslOps)]`
     // on `SHomeOperation` itself (see `🔖Types`) — no manual impl needed here.
     //#endregion 🔖OpText
 

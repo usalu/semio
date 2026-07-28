@@ -19,7 +19,7 @@ use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU32, Ordering};
-use vcs::{Operation, OperationDiff};
+use protocol::{Operation, OperationDiff};
 
 //#region 🔖Constants
 const NOTE_PLAY_APP_ID: &str = "note-play";
@@ -264,7 +264,7 @@ fn default_camera() -> NoteCamera {
 /// snapshot (the recursive reid/clone tree makes per-node operations far messier than a snapshot); asset and
 /// full-document loads have dedicated variants.
 ///
-/// See {@link vcs::Operation} and {@link https://../../../vcs/plugin/rs/lib.rs VcsDemoOperation}.
+/// See {@link protocol::Operation} and {@link https://../../../vcs/plugin/rs/lib.rs VcsDemoOperation}.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 enum NoteOperation {

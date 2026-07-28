@@ -6,7 +6,8 @@ use semio_framework_plugin::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use vcs::{DocumentDsl, Operation, OperationDiff};
+use protocol::{Operation, OperationDiff};
+use vcs::DocumentDsl;
 
 //#region 🔖Constants
 const MATH_APP_ID: &str = "mathematical-play";
@@ -201,7 +202,7 @@ impl Operation<MathProjection> for MathOperation {
 
 /// 🔌 DSL-only mirror of `MathEdge` — folds `source`/`target` into one unified `dsl::Wire` literal
 /// (`source->target`) instead of two separate string fields, per the unified syntax law for graph
-/// edges/connections. Converts at the `vcs::DocumentDsl`/`vcs::OpText` boundary only
+/// edges/connections. Converts at the `vcs::DocumentDsl`/`protocol::OpText` boundary only
 /// (`math_edge_to_dsl`/`math_edge_from_dsl`); `MathEdge` itself (JSON shape, `algorithm_overlay`,
 /// `media_graph_json`, the `nodeGraphEdit` action) is completely untouched.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
@@ -335,14 +336,14 @@ fn math_operation_from_dsl(operation: MathOperationDsl) -> Result<MathOperation,
     })
 }
 
-impl vcs::OpText for MathOperation {
+impl protocol::OpText for MathOperation {
     fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-        let dsl_operation = <MathOperationDsl as vcs::OpText>::parse_op(line)?;
+        let dsl_operation = <MathOperationDsl as protocol::OpText>::parse_op(line)?;
         math_operation_from_dsl(dsl_operation).map_err(|message| vcs::TextError::new(message, vcs::TextSpan::at(1, 1)))
     }
 
     fn print_op(&self) -> String {
-        <MathOperationDsl as vcs::OpText>::print_op(&math_operation_to_dsl(self))
+        <MathOperationDsl as protocol::OpText>::print_op(&math_operation_to_dsl(self))
     }
 }
 //#endregion 🔖OpText

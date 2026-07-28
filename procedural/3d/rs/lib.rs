@@ -5,7 +5,8 @@ use flow_core::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use playbook::{apply_generation_operation, invert_generation_operation, FormGeneration, GenerationOperation, GenerationPlayState};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
+use protocol::{Operation, OperationDiff};
 
 pub const PROCEDURAL_3D_SCHEMA: &str = "procedural.3d";
 
@@ -640,14 +641,14 @@ fn procedural3d_operation_from_dsl(operation: Procedural3dOperationDsl) -> Resul
 
 /// ⚡ `Procedural3dOperation`'s compact single-line op encoding — derive-engine grammar via
 /// `Procedural3dOperationDsl` (see above); `parse_op`/`print_op` convert at the boundary.
-impl vcs::OpText for Procedural3dOperation {
+impl protocol::OpText for Procedural3dOperation {
     fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-        let parsed = <Procedural3dOperationDsl as vcs::OpText>::parse_op(line)?;
+        let parsed = <Procedural3dOperationDsl as protocol::OpText>::parse_op(line)?;
         procedural3d_operation_from_dsl(parsed)
     }
 
     fn print_op(&self) -> String {
-        <Procedural3dOperationDsl as vcs::OpText>::print_op(&procedural3d_operation_to_dsl(self))
+        <Procedural3dOperationDsl as protocol::OpText>::print_op(&procedural3d_operation_to_dsl(self))
     }
 }
 //#endregion 🔖OpText
@@ -713,7 +714,8 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vcs::{apply_operation, create_document_vcs_envelope, test_support, DocumentDsl, DocumentVcsCommand, OpText};
+    use vcs::{apply_operation, create_document_vcs_envelope, test_support, DocumentDsl, DocumentVcsCommand};
+    use protocol::OpText;
 
     fn round_trip(projection: &Procedural3dDocument, operation: &Procedural3dOperation) -> Procedural3dDocument {
         let forward = apply_operation(projection, operation);

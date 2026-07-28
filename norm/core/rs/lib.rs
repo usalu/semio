@@ -3,7 +3,8 @@
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fmt;
-use vcs::{DocumentDsl, Operation, OperationDiff, OpText, TextError, TextSpan};
+use protocol::{Operation, OperationDiff, OpText};
+use vcs::{DocumentDsl, TextError, TextSpan};
 
 // #region 🔖Quantity
 /// 📐 Physical quantity kind for SI-normalized norm computations.
@@ -480,7 +481,7 @@ impl NormFamilyId {
 /// 🧩 Headless norm family contract: typed document, undoable operations, and compliance evaluation.
 pub trait NormFamily: Send + Sync + 'static {
     type Document: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send;
-    type Operation: vcs::Operation<Self::Document> + Clone + PartialEq + Send;
+    type Operation: protocol::Operation<Self::Document> + Clone + PartialEq + Send;
 
     fn family_id() -> NormFamilyId;
     fn evaluate(document: &Self::Document) -> CheckReport;

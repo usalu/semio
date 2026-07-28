@@ -1,0 +1,71 @@
+CW7 — shooting/plugin/rs migration report
+==========================================
+
+Crate: shooting-plugin (/Users/ueli/Documents/semio/shooting/plugin/rs)
+File touched: lib.rs (Cargo.toml also touched — protocol dep was genuinely missing)
+
+Real usage confirmed: yes (not a false positive). lib.rs constructs `CollectionOperation::Add`
+(3 sites) and `CollectionOperation::Patch` (4 sites, shape-unchanged) against the `vcs`-shaped enum,
+and imported `CollectionOperation` from `vcs`. No `Move` usage in this file. No direct calls to
+`vcs::apply_collection_operation` / `vcs::invert_collection_operation` /
+`vcs::collection_diff_from_operation` in this file — those live in `shooting/rs` (a separate crate
+in this same wave's assignment list, already migrated independently; out of scope here) which owns
+`ShootingOperation`'s `Operation`/`OperationDiff`/`OpText` impls. No `Operation`/`OperationDiff`/
+`OpText` imports exist in this plugin file, so step 7 of the instructions (trait import path
+surgery) was a no-op here.
+
+What changed
+------------
+1. Import: `use vcs::{CollectionOperation, DocumentDsl};` split into
+   `use protocol::CollectionOperation;` + `use vcs::DocumentDsl;` (DocumentDsl has no protocol
+   equivalent — confirmed by checking protocol/rs/lib.rs's re-export list — so it stays on vcs).
+
+2. Three `CollectionOperation::Add { index, item }` construction sites rewritten to
+   `Add { id, item, at }`:
+   - "saveCamera" handler (SavedCameras collection): item was previously built inline inside the
+     `Add` literal, so it was hoisted into a `let saved_camera = ShootingSavedCamera { .. }` binding
+     first, then `id: saved_camera.id.clone()` supplied to `Add`, `at: fixture.saved_cameras.len()`.
+   - "importAsset" handler (Assets collection): `id: id.clone()` (the same locally-generated
+     `next_shooting_id("asset")` value already used for `asset.id` and later reused for
+     `ShootingOperation::SetActiveAsset { asset_id: Some(id) }`), `at: fixture.assets.len()`.
+   - "addShot" handler (Shots collection): `id: id.clone()` (locally-generated
+     `next_shooting_id("shot")`, also reused for `SetActiveShot`), `at: fixture.shots.len()`.
+   - "addAsset" handler (Assets collection): `id: id.clone()` (locally-generated
+     `next_shooting_id("asset")`, also reused for `SetActiveAsset`), `at: fixture.assets.len()`.
+
+   Id source rationale: in every site the crate already generates a fresh id via
+   `next_shooting_id(prefix)` (an atomic counter) BEFORE constructing the item, and stores it on
+   the item's own `id` field (`ShootingAsset.id` / `ShootingShot.id` / `ShootingSavedCamera.id`,
+   all `Identified<String>` per shooting/rs). That's the same id later reused for the
+   `SetActive*`/`SetActiveAsset` follow-up operation in each handler, so it was already the crate's
+   single source of truth for that item's identity — just not previously threaded into the `Add`
+   op itself. Supplied it verbatim (cloned where the local `id` binding is also needed afterward).
+
+3. `CollectionOperation::Patch { .. }` sites (4: setActiveShotLabel, setActiveShotFormat/Shape,
+   patchShot/patchShots, patchAsset/patchAssets) left untouched — Patch's shape is unchanged by the
+   freeze.
+
+4. Cargo.toml: added `protocol = { path = "../../../protocol/rs" }` (was genuinely missing — this
+   crate had not been touched by CW3's earlier mechanical sweep). Path pattern verified against
+   layout/plugin/rs's Cargo.toml (same directory depth, already has `protocol` at that path).
+
+Cross-crate ripple check (step 9)
+----------------------------------
+Grepped the repo for `shooting_plugin`/`shooting-plugin` references outside this crate's own
+Cargo.toml. Only hit was an unrelated agent worktree
+(.claude/worktrees/agent-afa905cc164f52ed8/...), not a real sibling crate in this workspace.
+shooting-plugin is a leaf WASM component (cdylib/rlib) with no downstream Rust crate depending on
+its public API. No ripple to report.
+
+Build/test status
+------------------
+`cd /Users/ueli/Documents/semio/shooting/plugin/rs && cargo build -p shooting-plugin` — success
+(only a pre-existing, unrelated `unused_doc_comment` warning on the `app_labels!` macro invocation
+at line 341, present before this change).
+
+`cd /Users/ueli/Documents/semio/shooting/plugin/rs && cargo test -p shooting-plugin` — success,
+31 passed; 0 failed; 0 ignored (plus 0 doc-tests).
+
+Deviations
+----------
+None. Followed the instructions doc's procedure exactly for this one crate.

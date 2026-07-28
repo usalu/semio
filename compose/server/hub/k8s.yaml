@@ -1,8 +1,12 @@
 # #region 🔖Header
 # 2025 Ueli Saluz <ueli@semio-tech.com>
 # AGPL-3.0
-# Kubernetes manifests for compose-hub only: Namespace, PostgreSQL StatefulSet, compose-hub Deployment, Services, Ingress. The hub binary applies DB migrations on startup; Postgres starts with an empty database.
-# Specs: kubectl apply -f k8s.yaml after replacing Secret placeholders. DATABASE_URL in the Secret must use the same credentials as POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB in ConfigMap + Secret. Hub is single-replica by default (in-process SessionDirectory).
+# Kubernetes manifests for compose-hub only: Namespace, compose-hub Deployment (`db`-backed, CW6b),
+# a PVC for its data root, Service, Ingress. Zero-touch: `db::Database` (FsStorage) + compose-hub's
+# own directory/history stores live under COMPOSE_HUB_DATA on the PVC — no external database service.
+# Specs: kubectl apply -f k8s.yaml after replacing the Secret placeholder. Hub is single-replica by
+# default (in-process SessionDirectory + a single-writer local `db::Database`) — `Recreate` strategy
+# ensures the old pod releases the PVC before the new one mounts it.
 # #endregion 🔖Header
 
 # #region 🔖Namespace
@@ -21,10 +25,7 @@ metadata:
   namespace: compose-hub
 type: Opaque
 stringData:
-  # Must match POSTGRES_PASSWORD below inside DATABASE_URL (same string in both places).
-  POSTGRES_PASSWORD: "REPLACE_ME_postgres_password"
   COMPOSE_ADMIN_TOKEN: "REPLACE_ME_admin_token"
-  DATABASE_URL: "postgresql://compose:REPLACE_ME_postgres_password@postgres:5432/compose_hub"
 # #endregion 🔖Secrets
 
 ---
@@ -35,91 +36,23 @@ metadata:
   name: compose-hub-config
   namespace: compose-hub
 data:
-  POSTGRES_DB: compose_hub
-  POSTGRES_USER: compose
   RUST_LOG: "compose_hub=info,tower_http=info"
+  COMPOSE_HUB_DB_PROFILE: "prod"
 # #endregion 🔖Config
 
 ---
-# #region 🔖PostgresService
+# #region 🔖HubData
 apiVersion: v1
-kind: Service
+kind: PersistentVolumeClaim
 metadata:
-  name: postgres
+  name: compose-hub-data
   namespace: compose-hub
 spec:
-  clusterIP: None
-  selector:
-    app: postgres
-  ports:
-    - name: postgres
-      port: 5432
-      targetPort: 5432
-# #endregion 🔖PostgresService
-
----
-# #region 🔖PostgresStatefulSet
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: postgres
-  namespace: compose-hub
-spec:
-  serviceName: postgres
-  replicas: 1
-  selector:
-    matchLabels:
-      app: postgres
-  template:
-    metadata:
-      labels:
-        app: postgres
-    spec:
-      containers:
-        - name: postgres
-          image: postgres:16-alpine
-          ports:
-            - containerPort: 5432
-          env:
-            - name: POSTGRES_DB
-              valueFrom:
-                configMapKeyRef:
-                  name: compose-hub-config
-                  key: POSTGRES_DB
-            - name: POSTGRES_USER
-              valueFrom:
-                configMapKeyRef:
-                  name: compose-hub-config
-                  key: POSTGRES_USER
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: compose-hub-secrets
-                  key: POSTGRES_PASSWORD
-            - name: PGDATA
-              value: /var/lib/postgresql/data/pgdata
-          volumeMounts:
-            - name: postgres-data
-              mountPath: /var/lib/postgresql/data
-          readinessProbe:
-            exec:
-              command: ["pg_isready", "-U", "compose", "-d", "compose_hub"]
-            initialDelaySeconds: 5
-            periodSeconds: 5
-          livenessProbe:
-            exec:
-              command: ["pg_isready", "-U", "compose", "-d", "compose_hub"]
-            initialDelaySeconds: 30
-            periodSeconds: 20
-  volumeClaimTemplates:
-    - metadata:
-        name: postgres-data
-      spec:
-        accessModes: ["ReadWriteOnce"]
-        resources:
-          requests:
-            storage: 20Gi
-# #endregion 🔖PostgresStatefulSet
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 20Gi
+# #endregion 🔖HubData
 
 ---
 # #region 🔖HubService
@@ -165,21 +98,26 @@ spec:
           env:
             - name: LISTEN_ADDR
               value: "0.0.0.0:8788"
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: compose-hub-secrets
-                  key: DATABASE_URL
+            - name: COMPOSE_HUB_DATA
+              value: "/data"
             - name: COMPOSE_ADMIN_TOKEN
               valueFrom:
                 secretKeyRef:
                   name: compose-hub-secrets
                   key: COMPOSE_ADMIN_TOKEN
+            - name: COMPOSE_HUB_DB_PROFILE
+              valueFrom:
+                configMapKeyRef:
+                  name: compose-hub-config
+                  key: COMPOSE_HUB_DB_PROFILE
             - name: RUST_LOG
               valueFrom:
                 configMapKeyRef:
                   name: compose-hub-config
                   key: RUST_LOG
+          volumeMounts:
+            - name: data
+              mountPath: /data
           readinessProbe:
             tcpSocket:
               port: 8788
@@ -197,6 +135,10 @@ spec:
             limits:
               cpu: "2"
               memory: "1Gi"
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: compose-hub-data
 # #endregion 🔖HubDeployment
 
 ---

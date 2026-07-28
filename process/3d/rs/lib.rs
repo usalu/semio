@@ -1,7 +1,8 @@
 //! 🪚 Process 3d document VCS on `vcs` — subtractive/additive processing steps on a stock solid.
 
 use serde::{Deserialize, Serialize};
-use vcs::{apply_collection_operation, invert_collection_operation, CollectionOperation, DocumentVcsEnvelope, DocumentVcsStore, Identified, OperationDiff, Patchable};
+use protocol::{apply_collection_operation, invert_collection_operation, CollectionOperation, Identified, Operation, OperationDiff, OpText, Patchable};
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
 
 pub const PROCESS_3D_SCHEMA: &str = "process.3d";
 
@@ -180,13 +181,7 @@ pub struct ProcessStepPatch {
 }
 
 impl Patchable<ProcessStepPatch> for ProcessStep {
-    fn apply_patch(&mut self, patch: &ProcessStepPatch) -> ProcessStepPatch {
-        let inverse = ProcessStepPatch {
-            label: patch.label.as_ref().map(|_| self.label.clone()),
-            enabled: patch.enabled.as_ref().map(|_| self.enabled),
-            measure: patch.measure.as_ref().map(|_| self.measure.clone()),
-            origin: patch.origin.as_ref().map(|_| self.origin.clone()),
-        };
+    fn apply_patch(&mut self, patch: &ProcessStepPatch) {
         if let Some(label) = &patch.label {
             self.label = label.clone();
         }
@@ -199,7 +194,16 @@ impl Patchable<ProcessStepPatch> for ProcessStep {
         if let Some(origin) = &patch.origin {
             self.origin = origin.clone();
         }
-        inverse
+    }
+
+    fn diff_patch(&self, other: &Self) -> Option<ProcessStepPatch> {
+        let patch = ProcessStepPatch {
+            label: (self.label != other.label).then(|| other.label.clone()),
+            enabled: (self.enabled != other.enabled).then_some(other.enabled),
+            measure: (self.measure != other.measure).then(|| other.measure.clone()),
+            origin: (self.origin != other.origin).then(|| other.origin.clone()),
+        };
+        (patch != ProcessStepPatch::default()).then_some(patch)
     }
 }
 
@@ -298,7 +302,7 @@ impl OperationDiff<Process3dDocument> for Process3dDiff {
     }
 }
 
-impl vcs::Operation<Process3dDocument> for Process3dOperation {
+impl Operation<Process3dDocument> for Process3dOperation {
     type Diff = Process3dDiff;
 
     fn diff(&self, _projection: &Process3dDocument) -> Self::Diff {
@@ -431,9 +435,9 @@ enum Process3dOperationDsl {
 
 fn process3d_operation_to_dsl(operation: &Process3dOperation) -> Process3dOperationDsl {
     match operation {
-        Process3dOperation::Steps { collection: CollectionOperation::Add { index, item } } => Process3dOperationDsl::StepsAdd { index: *index, item: item.clone() },
+        Process3dOperation::Steps { collection: CollectionOperation::Add { id: _id, item, at } } => Process3dOperationDsl::StepsAdd { index: *at, item: item.clone() },
         Process3dOperation::Steps { collection: CollectionOperation::Remove { id } } => Process3dOperationDsl::StepsRemove { id: id.clone() },
-        Process3dOperation::Steps { collection: CollectionOperation::Move { id, to_index } } => Process3dOperationDsl::StepsMove { id: id.clone(), to_index: *to_index },
+        Process3dOperation::Steps { collection: CollectionOperation::Move { id, to } } => Process3dOperationDsl::StepsMove { id: id.clone(), to_index: *to },
         Process3dOperation::Steps { collection: CollectionOperation::Patch { id, patch } } => {
             Process3dOperationDsl::StepsPatch { id: id.clone(), patch: process_step_patch_to_dsl(patch) }
         }
@@ -445,9 +449,9 @@ fn process3d_operation_to_dsl(operation: &Process3dOperation) -> Process3dOperat
 
 fn process3d_operation_from_dsl(operation: Process3dOperationDsl) -> Process3dOperation {
     match operation {
-        Process3dOperationDsl::StepsAdd { index, item } => Process3dOperation::Steps { collection: CollectionOperation::Add { index, item } },
+        Process3dOperationDsl::StepsAdd { index, item } => Process3dOperation::Steps { collection: CollectionOperation::Add { id: item.id.clone(), item, at: index } },
         Process3dOperationDsl::StepsRemove { id } => Process3dOperation::Steps { collection: CollectionOperation::Remove { id } },
-        Process3dOperationDsl::StepsMove { id, to_index } => Process3dOperation::Steps { collection: CollectionOperation::Move { id, to_index } },
+        Process3dOperationDsl::StepsMove { id, to_index } => Process3dOperation::Steps { collection: CollectionOperation::Move { id, to: to_index } },
         Process3dOperationDsl::StepsPatch { id, patch } => Process3dOperation::Steps { collection: CollectionOperation::Patch { id, patch: process_step_patch_from_dsl(patch) } },
         Process3dOperationDsl::SetStock { stock } => Process3dOperation::SetStock { stock },
         Process3dOperationDsl::SetCursor { value } => Process3dOperation::SetCursor { resolved_up_to: value },
@@ -455,13 +459,13 @@ fn process3d_operation_from_dsl(operation: Process3dOperationDsl) -> Process3dOp
     }
 }
 
-impl vcs::OpText for Process3dOperation {
+impl OpText for Process3dOperation {
     fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-        Ok(process3d_operation_from_dsl(<Process3dOperationDsl as vcs::OpText>::parse_op(line)?))
+        Ok(process3d_operation_from_dsl(<Process3dOperationDsl as OpText>::parse_op(line)?))
     }
 
     fn print_op(&self) -> String {
-        <Process3dOperationDsl as vcs::OpText>::print_op(&process3d_operation_to_dsl(self))
+        <Process3dOperationDsl as OpText>::print_op(&process3d_operation_to_dsl(self))
     }
 }
 //#endregion 🔖OpText
@@ -520,7 +524,7 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vcs::{create_document_vcs_envelope, test_support, Author, DocumentDsl, DocumentVcsCommand, Operation};
+    use vcs::{create_document_vcs_envelope, test_support, Author, DocumentDsl, DocumentVcsCommand};
 
     fn cut_step(id: &str) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: SolidSpec::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
@@ -533,7 +537,7 @@ mod tests {
     #[test]
     fn adds_and_removes_steps() {
         let mut store = new_store();
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Add { index: 0, item: cut_step("cut-1") } }], description: None }).expect("add step");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Add { id: "cut-1".into(), item: cut_step("cut-1"), at: 0 } }], description: None }).expect("add step");
         let projection = store.projection().expect("projection");
         assert_eq!(projection.steps.len(), 1);
         assert_eq!(projection.steps[0].id, "cut-1");
@@ -545,7 +549,7 @@ mod tests {
     #[test]
     fn patches_a_step_and_undo_restores_it() {
         let mut store = new_store();
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Add { index: 0, item: cut_step("cut-1") } }], description: None }).expect("add step");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Add { id: "cut-1".into(), item: cut_step("cut-1"), at: 0 } }], description: None }).expect("add step");
         store
             .dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Patch { id: "cut-1".into(), patch: ProcessStepPatch { enabled: Some(false), ..Default::default() } } }], description: None })
             .expect("patch step");
@@ -558,7 +562,7 @@ mod tests {
     #[test]
     fn patches_origin_and_undo_restores_it() {
         let mut store = new_store();
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Add { index: 0, item: cut_step("cut-1") } }], description: None }).expect("add step");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Add { id: "cut-1".into(), item: cut_step("cut-1"), at: 0 } }], description: None }).expect("add step");
         assert!(store.projection().expect("projection").steps[0].origin.is_none());
 
         let origin = StepOrigin { module_id: "wood".into(), machine_id: "circularSaw".into(), modification_kind_id: "crosscut".into() };
@@ -588,8 +592,8 @@ mod tests {
         store
             .dispatch(DocumentVcsCommand::Apply {
                 operations: vec![
-                    Process3dOperation::Steps { collection: CollectionOperation::Add { index: 0, item: cut_step("a") } },
-                    Process3dOperation::Steps { collection: CollectionOperation::Add { index: 1, item: cut_step("b") } },
+                    Process3dOperation::Steps { collection: CollectionOperation::Add { id: "a".into(), item: cut_step("a"), at: 0 } },
+                    Process3dOperation::Steps { collection: CollectionOperation::Add { id: "b".into(), item: cut_step("b"), at: 1 } },
                     Process3dOperation::SetCursor { resolved_up_to: Some(2) },
                 ],
                 description: None,
@@ -650,7 +654,7 @@ mod tests {
     #[test]
     fn backwards_of_add_is_remove() {
         let projection = empty_process3d_projection();
-        let operation = Process3dOperation::Steps { collection: CollectionOperation::Add { index: 0, item: cut_step("a") } };
+        let operation = Process3dOperation::Steps { collection: CollectionOperation::Add { id: "a".into(), item: cut_step("a"), at: 0 } };
         let inverse = operation.backwards(&projection);
         assert_eq!(inverse.len(), 1);
         match &inverse[0] {
@@ -731,7 +735,7 @@ mod tests {
     //#region 🔖OpTextTests
     #[test]
     fn process3d_op_text_round_trips_steps_add() {
-        test_support::assert_op_line_round_trip(&Process3dOperation::Steps { collection: CollectionOperation::Add { index: 0, item: cut_step("cut-1") } });
+        test_support::assert_op_line_round_trip(&Process3dOperation::Steps { collection: CollectionOperation::Add { id: "cut-1".into(), item: cut_step("cut-1"), at: 0 } });
     }
 
     #[test]
@@ -741,7 +745,7 @@ mod tests {
 
     #[test]
     fn process3d_op_text_round_trips_steps_move() {
-        test_support::assert_op_line_round_trip(&Process3dOperation::Steps { collection: CollectionOperation::Move { id: "cut-1".into(), to_index: 2 } });
+        test_support::assert_op_line_round_trip(&Process3dOperation::Steps { collection: CollectionOperation::Move { id: "cut-1".into(), to: 2 } });
     }
 
     #[test]
@@ -797,8 +801,8 @@ mod tests {
             .dispatch(DocumentVcsCommand::Apply {
                 operations: vec![
                     Process3dOperation::SetStock { stock: Stock { id: "beam".into(), label: "Timber Beam".into(), solid: SolidSpec::Box { width: 2.4, depth: 0.12, height: 0.24 }, pose: Pose::default() } },
-                    Process3dOperation::Steps { collection: CollectionOperation::Add { index: 0, item: cut_step("cut-1") } },
-                    Process3dOperation::Steps { collection: CollectionOperation::Add { index: 1, item: drill_step("drill-1") } },
+                    Process3dOperation::Steps { collection: CollectionOperation::Add { id: "cut-1".into(), item: cut_step("cut-1"), at: 0 } },
+                    Process3dOperation::Steps { collection: CollectionOperation::Add { id: "drill-1".into(), item: drill_step("drill-1"), at: 1 } },
                     Process3dOperation::SetCursor { resolved_up_to: Some(1) },
                 ],
                 description: Some("build timeline".into()),

@@ -14,7 +14,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicU32, Ordering};
-use vcs::{CollectionOperation, DocumentDsl};
+use protocol::CollectionOperation;
+use vcs::DocumentDsl;
 
 //#region 🔖Constants
 const ANIMATE_PRESENT_PLAY_APP_ID: &str = "animate-present-play";
@@ -480,7 +481,7 @@ impl DocumentApp for AnimatePresentPlayApp {
                 let crop = args.and_then(|v| v.get("crop")).and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or(FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
                 let tile = FigureTileDraft { id: id.clone(), name: id.clone(), crop };
                 self.runtime.selected_ids = vec![id];
-                ActionEmit::operations(vec![PresentOperation::Tiles(CollectionOperation::Add { index: deck.tiles.len(), item: tile })])
+                ActionEmit::operations(vec![PresentOperation::Tiles(CollectionOperation::Add { id: tile.id.clone(), at: deck.tiles.len(), item: tile })])
             }
             "deleteTile" => {
                 let target = args.and_then(|v| v.get("id")).and_then(|v| v.as_str()).map(|id| vec![id.to_string()]).unwrap_or_else(|| self.runtime.selected_ids.clone());
@@ -631,7 +632,7 @@ impl DocumentApp for AnimatePresentPlayApp {
                         let tile = FigureTileDraft { id: id.clone(), name: id.clone(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
                         self.runtime.selected_ids = vec![id];
                         self.runtime.engagement_input.clear();
-                        ActionEmit::operations(vec![PresentOperation::Tiles(CollectionOperation::Add { index: deck.tiles.len(), item: tile })])
+                        ActionEmit::operations(vec![PresentOperation::Tiles(CollectionOperation::Add { id: tile.id.clone(), at: deck.tiles.len(), item: tile })])
                     }
                     "clear" => {
                         self.runtime.selected_ids.clear();

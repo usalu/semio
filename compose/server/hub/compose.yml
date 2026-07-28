@@ -1,29 +1,12 @@
 # #region 🔖Header
 # 2025 Ueli Saluz <ueli@semio-tech.com>
 # AGPL-3.0
-# Docker Compose for compose-hub only: PostgreSQL plus the Rust compose-hub binary. Schema is created by compose-hub at startup (run_migrations); no external init SQL.
+# Docker Compose for compose-hub only: the Rust compose-hub binary, `db`-backed (CW6b). Zero-touch:
+# `db::Database` (FsStorage) + compose-hub's own directory/history stores live under COMPOSE_HUB_DATA,
+# a plain volume-mounted directory — no external database service.
 # #endregion 🔖Header
 
 services:
-  # #region 🔖Postgres
-  postgres:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-compose_hub}
-      POSTGRES_USER: ${POSTGRES_USER:-compose}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-compose} -d ${POSTGRES_DB:-compose_hub}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    ports:
-      - "127.0.0.1:5432:5432"
-  # #endregion 🔖Postgres
-
   # #region 🔖Hub
   # Specs: compose-hub Rust backend with embedded /admin dashboard; protect JSON admin APIs with COMPOSE_ADMIN_TOKEN.
   hub:
@@ -32,15 +15,14 @@ services:
     working_dir: /workspace/compose/hub
     command: ["cargo", "run", "--bin", "compose-hub"]
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-compose}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-compose_hub}
+      COMPOSE_HUB_DATA: /data
       LISTEN_ADDR: 0.0.0.0:8788
       COMPOSE_ADMIN_TOKEN: ${COMPOSE_ADMIN_TOKEN:?COMPOSE_ADMIN_TOKEN required for /admin JSON APIs}
+      COMPOSE_HUB_DB_PROFILE: ${COMPOSE_HUB_DB_PROFILE:-prod}
       RUST_LOG: ${RUST_LOG:-compose_hub=info,tower_http=info}
     volumes:
       - ../..:/workspace
-    depends_on:
-      postgres:
-        condition: service_healthy
+      - compose_hub_data:/data
     ports:
       - "127.0.0.1:8788:8788"
     healthcheck:
@@ -51,4 +33,4 @@ services:
   # #endregion 🔖Hub
 
 volumes:
-  postgres_data:
+  compose_hub_data:

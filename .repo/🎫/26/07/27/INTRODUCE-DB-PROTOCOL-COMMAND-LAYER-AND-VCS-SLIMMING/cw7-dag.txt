@@ -1,0 +1,116 @@
+CW7 — App fan-out: CollectionOperation shape migration
+Crate: infinite/board/port/directed/dag/rs (infinite_board_port_directed_dag)
+File touched: infinite/board/port/directed/dag/rs/lib.rs (only file changed; Cargo.toml already had
+a `protocol` dependency from an earlier wave — no Cargo.toml edit needed)
+
+## Real usage confirmed
+Not a false positive. `DagOperation::Nodes`/`DagOperation::Edges` wrap
+`CollectionOperation<String, DagNodeSpec, DagNodePatch>` / `CollectionOperation<String,
+DagFixtureEdge, DagEdgePatch>` and are exercised throughout `DagOperation`'s `Operation`/`OpText`
+impls, the `DagOperationDsl` mirror conversion functions, and ~12 unit tests.
+
+## What changed
+
+1. Import switch (was one `use vcs::{...}` line):
+   - `collection_diff_from_operation`, `invert_collection_operation`, `CollectionDiff`,
+     `CollectionOperation`, `Identified`, `Operation`, `OperationDiff`, `Patchable` now come from
+     `protocol::` (added `OpText` to that same import too).
+   - `DocumentVcsEnvelope`/`DocumentVcsStore` stayed on `vcs::` (unrelated document/store layer, not
+     part of the CollectionOperation shape freeze).
+   - `impl vcs::OpText for DagOperation` -> `impl OpText for DagOperation` (now resolves to the
+     imported `protocol::OpText`; `vcs::OpText` is itself just a re-export of `protocol::OpText` per
+     CW3's shim, so this is a pure path-clarity change, not a behavior change). Also simplified the
+     two internal `<DagOperationDsl as vcs::OpText>::...` calls inside that impl to `<DagOperationDsl
+     as OpText>::...` to silence the "unnecessary qualification" lint the import switch introduced.
+
+2. `CollectionOperation::Add { index, item }` -> `Add { id, item, at }` at every construction and
+   pattern-match site (2 conversion-function pattern matches x2 collections, 2 conversion-function
+   constructions x2 collections, 8 test constructions). `index`'s value carries over verbatim as
+   `at`.
+
+3. `CollectionOperation::Move { id, to_index }` -> `Move { id, to }` (pure rename) at every site (2
+   pattern matches, 2 constructions inside the Dsl-mirror conversion functions, 2 test sites). The
+   `DagOperationDsl::NodesMove`/`EdgesMove` mirror variants keep their own field name `to_index`
+   unchanged (that's the DSL/wire keyword, `#[dsl(key = "to")]`, independent of the Rust field name
+   on the real `CollectionOperation`) — only the mapping at the conversion-function boundary changed.
+
+4. `vcs::apply_collection_operation`/`vcs::invert_collection_operation`/
+   `vcs::collection_diff_from_operation` -> `protocol::` equivalents (only
+   `collection_diff_from_operation`/`invert_collection_operation` were actually called in this
+   crate; `apply_collection_operation` itself is not called directly here — `vcs::apply_operation`
+   drives the store's dispatch loop and calls it internally, out of this crate's control).
+
+## Id source for Add (step 2 of the instructions)
+
+`DagNodeSpec` and `DagFixtureEdge` both already have a public `id: String` field, and both already
+implement `Identified<String>` returning `&self.id` — the exact "item type already carries the same
+id" case the instructions call out as the common case. Used `item.id().clone()` /
+`item.id.clone()` as the `id` source at every construction site (verified by inspecting every
+existing `Add` call site in this file: `sample_node("n1")`'s id and the operation's target id were
+already always identical, by construction). No fresh id generation exists in this crate for these
+collections.
+
+Because `id` is provably always equal to `item.id`, I did NOT add an `id` field to the
+`DagOperationDsl::NodesAdd`/`EdgesAdd` mirror variants (no wire-format change): the `to_dsl`
+direction drops `id` (binds it as `_id`, redundant with `item`'s own id), and the `from_dsl`
+direction reconstructs it as `item.id.clone()` after decoding `item`. All 8
+`assert_op_line_round_trip`/`assert_document_text_round_trip` tests covering Add operations still
+pass, confirming this is lossless.
+
+## Unplanned but required: Patchable signature split
+
+`protocol::Patchable<TPatch>` is NOT shape-identical to `vcs::Patchable<TPatch>` (unlike
+Identified/CollectionDiff, which are drop-in identical). vcs's version is a single
+`apply_patch(&mut self, &TPatch) -> TPatch` (mutate-and-return-inverse); protocol's frozen version
+splits this into `apply_patch(&mut self, &TPatch)` (mutate only, no return) plus a new
+`diff_patch(&self, other: &Self) -> Option<TPatch>` (self-relative-to-other structural diff), with
+`invert_collection_operation` internally composing them (`after.diff_patch(&prior)`) to recover the
+same inverse-patch behavior. Since this crate now calls `protocol::invert_collection_operation`
+(which requires `TItem: Patchable<TPatch>` from `protocol::`, not `vcs::`), the two existing
+`impl Patchable<...> for DagNodeSpec` / `impl Patchable<...> for DagFixtureEdge` blocks had to be
+rewritten to the new split shape, not just re-pointed at a new import:
+  - `apply_patch` kept its exact same field-by-field mutation logic, just dropped the
+    inverse-capturing/return code.
+  - `diff_patch` is new: field-by-field `self != other` comparison, `Some(other's value)` when
+    different, `None` per field when equal. Always returns `Some(patch)` (even an all-`None` patch)
+    rather than `None` for the whole thing, per `protocol::invert_collection_operation`'s own
+    documented guidance that a `Patchable` impl capable of producing a genuine no-op patch must
+    return `Some(unchanged-patch)`, not `None`, to avoid a spurious panic on a real no-op edit.
+  - The one caller of `apply_patch` in this file (`apply_collection_diff`, a local helper) already
+    discarded the return value as a statement, so it compiles unchanged under the new void-returning
+    signature.
+
+This is a real (if mechanical) behavior-preserving rewrite, not a pure import swap — flagging it
+explicitly since the instructions' step 6 describes Identified/Patchable/CollectionDiff/ItemPatch as
+uniformly "moved... per the same shape freeze", which holds for the other three but not for
+Patchable.
+
+## Cross-crate ripple (NOT fixed here, out of this crate's ownership)
+
+`infinite/board/port/directed/dag/plugin/rs/lib.rs` — a separate crate, itself listed as its own
+assignment in this same CW7 wave — constructs `CollectionOperation::Add { index, item }` and
+`CollectionOperation::Move`-shaped operations against `DagOperation::Nodes`/`DagOperation::Edges` at
+multiple call sites (lines ~216, 226, 764, 822, 832, 844, 856, 874 as of this writing). These will
+fail to compile against the new `DagOperation`/`CollectionOperation` shape until that crate's own
+CW7 pass migrates them. Left untouched, per ownership discipline — reporting here so whoever handles
+`dag/plugin/rs` knows the dag/rs half of the seam already changed underneath it.
+
+## Build / test status
+
+- `cargo build -p infinite_board_port_directed_dag`: PASSED (clean build, only pre-existing unrelated
+  `serde_json::Value` unnecessary-qualification warnings remain; the two `vcs::OpText` unnecessary-
+  qualification warnings introduced by this change's import switch were fixed).
+- `cargo test -p infinite_board_port_directed_dag --lib`: PASSED, 112/112 tests green, including all
+  12 `dag_vcs_tests::*` tests that exercise Add/Move/Patch/Remove round trips
+  (`node_add_patch_remove_round_trip`, `edge_add_remove_round_trip`,
+  `op_text_round_trips_nodes_add/move/patch/remove`,
+  `op_text_round_trips_edges_add/move/patch/remove`, `dag_document_vcs_replays_node_operations`,
+  `document_text_round_trips_a_store_with_an_applied_operation`).
+- `cargo test -p infinite_board_port_directed_dag` (full, incl. doctests): the lib+unit test binaries
+  both build and the 112 unit tests pass; the separate doctest binary failed to *link*, not to run,
+  with `extern location for mathematical_graph_manifest does not exist:
+  .../libmathematical_graph_manifest-....rlib` — a stale-artifact error against a sibling crate in
+  the shared `target/` dir, consistent with a concurrent build elsewhere in this live monorepo
+  clobbering that rlib mid-run, not something this change touches or caused (this crate does not
+  depend on doctests of `mathematical_graph_manifest`, and no doctest in this file references
+  anything migration-related). Did not attempt to fix, per scope (not this crate's file).

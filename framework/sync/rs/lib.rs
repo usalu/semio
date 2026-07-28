@@ -328,7 +328,7 @@ fn next_timestamp(seed: u64, counter: &mut u64) -> protocol::HybridLogicalTimest
 pub struct SyncSession<P, Operation>
 where
     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
-    Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + vcs::Operation<P>,
+    Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P>,
 {
     pub store: DocumentVcsStore<P, Operation>,
     cmd_tx: Option<mpsc::UnboundedSender<DocumentActorMsg>>,
@@ -339,7 +339,7 @@ where
 impl<P, Operation> SyncSession<P, Operation>
 where
     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
-    Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + vcs::Operation<P>,
+    Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P>,
 {
     pub fn new(store: DocumentVcsStore<P, Operation>) -> Self {
         Self { store, cmd_tx: None, events: None, status: DocumentSyncStatus::default() }
@@ -1515,7 +1515,8 @@ pub fn load_fixtures(dir: &std::path::Path) -> Vec<ActorFixture> {
 mod tests {
     use super::*;
     use serde::{Deserialize, Serialize};
-    use vcs::{create_document_vcs_envelope, operation_envelope_from_edit, Edit, Operation, OperationDiff};
+    use vcs::{create_document_vcs_envelope, operation_envelope_from_edit};
+    use protocol::{Edit, Operation, OperationDiff};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     struct DemoProjection {

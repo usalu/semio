@@ -1,0 +1,174 @@
+warning: protocol/cli/rs/Cargo.toml: file `/Users/ueli/Documents/semio/protocol/cli/rs/lib.rs` found to be present in multiple build targets:
+  * `lib` target `protocol_cli`
+  * `bin` target `protocol`
+warning: `protocol_cli` (manifest) generated 1 warning
+warning: pack/cli/rs/Cargo.toml: file `/Users/ueli/Documents/semio/pack/cli/rs/lib.rs` found to be present in multiple build targets:
+  * `lib` target `pack_cli`
+  * `bin` target `pack`
+warning: `pack_cli` (manifest) generated 1 warning
+warning: db/cli/rs/Cargo.toml: file `/Users/ueli/Documents/semio/db/cli/rs/lib.rs` found to be present in multiple build targets:
+  * `lib` target `db_cli`
+  * `bin` target `db`
+warning: `db_cli` (manifest) generated 1 warning
+   Compiling protocol v0.1.0 (/Users/ueli/Documents/semio/protocol/rs)
+   Compiling dsl v0.1.0 (/Users/ueli/Documents/semio/dsl/rs)
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1803:42
+     |
+1803 | fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+     |                                          ^^^^^^^^^^^^ expected lifetime parameter
+     |
+     = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+     = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+     |
+1803 | fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+     |                                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1816:43
+     |
+1816 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+     |                                           ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1816 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>) -> Result<u64, String> {
+     |                                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1931:53
+     |
+1931 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                     ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1931 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                                 ++++
+
+warning: `semio-framework-core` (lib) generated 3 warnings
+   Compiling pack_testkit v0.1.0 (/Users/ueli/Documents/semio/pack/testkit/rs)
+   Compiling db_wal v0.1.0 (/Users/ueli/Documents/semio/db/wal/rs)
+   Compiling db_projection v0.1.0 (/Users/ueli/Documents/semio/db/projection/rs)
+   Compiling db_conflict v0.1.0 (/Users/ueli/Documents/semio/db/conflict/rs)
+   Compiling db_security v0.1.0 (/Users/ueli/Documents/semio/db/security/rs)
+   Compiling protocol_testkit v0.1.0 (/Users/ueli/Documents/semio/protocol/testkit/rs)
+   Compiling vcs v0.1.0 (/Users/ueli/Documents/semio/vcs/rs)
+   Compiling db_sync v0.1.0 (/Users/ueli/Documents/semio/db/sync/rs)
+   Compiling db_compact v0.1.0 (/Users/ueli/Documents/semio/db/compact/rs)
+   Compiling db_preview v0.1.0 (/Users/ueli/Documents/semio/db/preview/rs)
+   Compiling db_query v0.1.0 (/Users/ueli/Documents/semio/db/query/rs)
+   Compiling db_cluster v0.1.0 (/Users/ueli/Documents/semio/db/cluster/rs)
+   Compiling db_document v0.1.0 (/Users/ueli/Documents/semio/db/document/rs)
+   Compiling db_engine v0.1.0 (/Users/ueli/Documents/semio/db/engine/rs)
+   Compiling db v0.1.0 (/Users/ueli/Documents/semio/db/rs)
+   Compiling db_testkit v0.1.0 (/Users/ueli/Documents/semio/db/testkit/rs)
+    Finished `test` profile [unoptimized] target(s) in 7.28s
+     Running unittests lib.rs (target/debug/deps/db_testkit-67b0707b09d71a68)
+
+running 23 tests
+test tests::fault_storage_cas_conflict_injection_rejects_without_touching_the_inner_root ... ok
+test tests::fault_storage_fsync_lies_never_delegates_to_the_inner_backend ... ok
+test tests::fault_storage_torn_write_forwards_only_the_kept_prefix ... ok
+test tests::fault_storage_passes_through_untouched_when_no_fault_is_scripted ... ok
+test tests::fault_storage_fail_nth_write_fails_exactly_once_at_the_scripted_call ... ok
+test tests::law_fencing_excludes_stale_writer_memory ... ok
+test tests::document_wal_open_recovers_from_a_torn_write_by_truncating_the_tail ... ok
+test tests::law_preview_never_durable ... ok
+test tests::law_projection_rebuild_equals_incremental ... ok
+test tests::crash_harness_recovers_cleanly_after_every_injected_write_failure ... ok
+test tests::law_inverse_undo_roundtrip ... ok
+test tests::law_overlay_structural_sharing ... ok
+test tests::explore_interleavings_every_permutation_of_disjoint_writes_converges_to_the_same_state ... ok
+test tests::next_range_never_divides_by_zero_and_stays_in_bounds ... ok
+test tests::sim_runtime_clock_advances_monotonically_and_only_explicitly ... ok
+test tests::sim_runtime_same_seed_reproduces_identical_task_order ... ok
+test tests::workload_gen_disjoint_batch_is_deterministic_and_covers_distinct_paths ... ok
+test tests::split_mix_64_same_seed_reproduces_identical_sequence_different_seed_diverges ... ok
+test tests::law_snapshot_plus_suffix_equals_replay ... ok
+test tests::law_sync_convergence ... ok
+test tests::law_fencing_excludes_stale_writer_fs ... ok
+test tests::exhaustive::wal_recovery_never_panics_under_truncation_or_bit_flip_corruption ... ok
+test tests::law_replay_deterministic ... ok
+
+test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.40s
+
+     Running unittests lib.rs (target/debug/deps/pack_testkit-0ad7810c3121704b)
+
+running 18 tests
+test tests::fuzz_truncation_and_bit_flips_report_zero_cases_for_empty_input ... ok
+test tests::golden_hash_hex_is_deterministic_and_sensitive_to_content ... ok
+test tests::fuzz_harness_catches_a_panicking_decoder_instead_of_crashing_the_process ... ok
+test tests::law_dsl_pack_bidirectional_holds_for_a_hand_built_sample ... ok
+test tests::fuzz_bit_flips_never_panics_on_a_real_encoded_document ... ok
+test tests::golden_hash_hex_matches_a_real_encoded_document_across_two_encodes ... ok
+test tests::fuzz_truncation_never_panics_on_a_real_encoded_document ... ok
+test tests::law_unknown_field_preserved_holds ... ok
+test tests::exhaustive::fuzz_truncation_never_panics_at_every_single_byte_offset ... ok
+test tests::record_value_gen_differs_across_seeds ... ok
+test tests::record_value_gen_bounds_recursion_by_max_depth ... ok
+test tests::record_value_gen_is_deterministic_for_the_same_seed ... ok
+test tests::law_encode_decode_identity_holds_for_generated_records ... ok
+test tests::long::fuzz_truncation_and_bit_flips_never_panic_at_long_density ... ok
+test tests::law_canonical_stable_holds_for_generated_records ... ok
+test tests::record_value_gen_produces_values_the_pack_codec_accepts ... ok
+test tests::exhaustive::fuzz_bit_flips_never_panics_at_every_single_bit ... ok
+test tests::law_streamed_equals_buffered_holds ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running unittests lib.rs (target/debug/deps/protocol_testkit-47fdba94a1497731)
+
+running 29 tests
+test tests::golden_hash_hex_is_deterministic_and_hex_encoded ... ok
+test tests::crdt_commutative_and_idempotent_hold_for_every_strategy ... ok
+test tests::fuzz_bit_flips_never_panics_history_reader_open ... ok
+test tests::history_canonical_stable_across_profiles ... ok
+test tests::fuzz_truncation_never_panics_recover ... ok
+test tests::history_encode_decode_identity_handles_empty_edits_and_history ... ok
+test tests::history_log_gen_different_seeds_usually_differ ... ok
+test tests::chain_detects_tamper_on_a_generated_history ... ok
+test tests::history_encode_decode_identity_across_profiles ... ok
+test tests::history_log_gen_is_deterministic_for_a_fixed_seed ... ok
+test tests::fuzz_truncation_never_panics_history_reader_open ... ok
+test tests::compaction_identity_on_a_generated_history ... ok
+test tests::history_log_gen_respects_edit_count_and_checkpoint_cadence ... ok
+test tests::history_log_gen_zero_checkpoint_every_produces_no_changes_or_checkpoints ... ok
+test tests::exhaustive::recovery_truncates_to_commit_exhaustive_on_a_small_fixture ... ok
+test tests::op_text_round_trip_holds_and_rejects_a_broken_impl ... ok
+test tests::op_dag_gen_produces_a_closed_topologically_orderable_set ... ok
+test tests::operation_diff_apply_matches_backwards_inverse ... ok
+test tests::op_text_round_trip_panics_on_a_lossy_impl - should panic ... ok
+test tests::ops_protocol_bidirectional_on_a_hand_written_sample ... ok
+test tests::ops_protocol_bidirectional_skips_comments_and_blank_lines ... ok
+test tests::wire_frame_round_trip_holds_for_client_and_server_samples ... ok
+test tests::quick::op_dag_convergence_holds_on_a_small_generated_dag ... ok
+test tests::zero_copy_holds_across_a_generated_history ... ok
+test tests::history_streamed_equals_buffered_across_profiles ... ok
+test tests::recovery_truncates_to_commit_quick ... ok
+test tests::history_log_gen_adversarial_op_text_never_breaks_the_ops_line_grammar ... ok
+test tests::ops_protocol_bidirectional_on_generated_logs ... ok
+test tests::exhaustive::op_dag_convergence_holds_on_a_larger_generated_dag ... ok
+
+test result: ok. 29 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+   Doc-tests db_testkit
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests pack_testkit
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests protocol_testkit
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+TESTKIT_EXHAUSTIVE_EXIT:0

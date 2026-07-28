@@ -7,9 +7,10 @@ use semio_framework_plugin::{SurfaceKind,
     ResourceKindSpec, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiStackNode,
     UiTreeItemNode, GraphTimelineScene, ViewState, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
 };
+use protocol::{Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use vcs::{DocumentVcsCommand, DocumentVcsStore, Operation, OperationDiff};
+use vcs::{DocumentVcsCommand, DocumentVcsStore};
 
 //#region 🔖Constants
 const VCS_PLAY_APP_ID: &str = "vcs-play";

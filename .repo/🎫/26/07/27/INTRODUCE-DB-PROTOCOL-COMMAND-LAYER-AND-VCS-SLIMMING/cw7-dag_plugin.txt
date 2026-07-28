@@ -1,0 +1,84 @@
+CW7 — App fan-out: CollectionOperation shape migration
+Crate: infinite/board/port/directed/dag/plugin/rs (dag-plugin)
+Files touched: infinite/board/port/directed/dag/plugin/rs/lib.rs,
+infinite/board/port/directed/dag/plugin/rs/Cargo.toml (protocol dependency was genuinely missing —
+checked first, only vcs/infinite_board_port_directed_dag/semio-framework-plugin/serde/serde_json/
+thiserror were present).
+
+## Real usage confirmed
+Not a false positive. Three `CollectionOperation::Add { index, item }` constructions (all wrapping
+`DagOperation::Nodes`/`DagOperation::Edges`, whose field type is defined in the sibling crate
+infinite/board/port/directed/dag/rs, itself a separate CW7 assignment). No `Move` construction or
+pattern-match exists in this file (grep-confirmed before and after editing). No direct calls to
+`vcs::apply_collection_operation`/`vcs::invert_collection_operation`/
+`vcs::collection_diff_from_operation` exist in this crate either — this plugin only constructs
+`CollectionOperation` values and hands them to `ActionEmit::operations(...)`; the actual
+apply/invert/diff functions are driven internally by `vcs`'s store dispatch loop and by
+`infinite_board_port_directed_dag`'s own `OpText`/`Operation` impls, both out of this crate's code.
+
+## What changed
+
+1. Import switch: `use vcs::CollectionOperation;` -> `use protocol::CollectionOperation;` (the only
+   `vcs::`-sourced import of this trio in the file; the one other `vcs::` reference in the file,
+   `use vcs::MemoryBackbone;` inside a test, is unrelated to the CollectionOperation shape freeze
+   and was left untouched). This crate has no `Operation`/`OperationDiff`/`OpText` imports of its
+   own (it only consumes `DagOperation`, a type from the sibling crate) — step 7 of the instructions
+   doc does not apply here.
+
+2. `CollectionOperation::Add { index, item }` -> `Add { id, item, at: index }` at all three
+   construction sites:
+   - `"nodeGraphEdit"`'s `"connect"` branch (`DagOperation::Edges(...)`, was ~line 764): id source
+     `edge.id.clone()` — `edge` is the `DagFixtureEdge` returned by `connect_edge(...)`, which
+     already assigns a fresh `id` (`format!("e{}", ...)`) before this call.
+   - `"connectMediaPorts"` action (`DagOperation::Edges(...)`, was ~line 844): same pattern, same
+     id source (`edge.id.clone()`).
+   - `"addNode"` action (`DagOperation::Nodes(...)`, was ~line 856): id source `node.id.clone()` —
+     `node` is the `DagNodeSpec` built by `default_node_for_kind(kind, &id, x, y)` from the `id`
+     local (`next_node_id(document)`, generated fresh two lines above); used `node.id.clone()`
+     rather than the `id` local directly because `id` is moved into
+     `self.runtime.selected_node_ids` on the line immediately before the `Add` construction, and
+     `node.id` is provably the same value (constructed from `id.into()`/`id: id.into()` inside
+     `default_node_for_kind`). Field-evaluation order in the struct literal (`id: node.id.clone()`
+     before `item: node`) means the borrow-then-move is sound.
+   No `Move` sites existed to rewrite.
+
+3. No `Patchable`/`Identified`/`CollectionDiff`/`ItemPatch` imports existed in this file to redirect
+   (this crate never implements those traits itself — `DagNodeSpec`/`DagFixtureEdge`/
+   `DagNodePatch`/`DagEdgePatch` and their trait impls all live in the sibling `dag/rs` crate).
+
+## Cargo.toml
+Added `protocol = { path = "../../../../../../../protocol/rs" }` (same relative depth as the
+existing `vcs`/`semio-framework-plugin` deps) — genuinely missing, confirmed by reading the file
+before editing.
+
+## Cross-crate ripple
+None outstanding. The sibling crate infinite/board/port/directed/dag/rs (this same file's other
+half of the seam) has already landed its own CW7 migration (see cw7-dag.txt in this same ticket
+folder, written by that crate's own migration pass) — its report explicitly flagged this crate's
+old-shape call sites as the pending ripple; this pass closes that loop. `DagOperation::Nodes`/
+`DagOperation::Edges` now wrap `protocol::CollectionOperation<String, DagNodeSpec, DagNodePatch>` /
+`protocol::CollectionOperation<String, DagFixtureEdge, DagEdgePatch>` on both sides of the seam.
+
+## Build / test status
+
+- `cargo build -p dag-plugin`: PASSED. Only pre-existing unrelated `unnecessary qualification`
+  (`std::collections::HashMap` -> `HashMap`) warnings remain, none introduced by this change.
+- `cargo test -p dag-plugin` (lib/unit tests): PASSED, 11/11 green, including
+  `add_node_action_updates_document`, `add_node_then_undo_restores_document`,
+  `rename_dag_node_rewrites_nodes_and_edges`, `remove_node_deletes_node_and_connected_edges`,
+  `patch_slider_value_coalesces_into_one_edit`, and
+  `two_instances_converge_disjoint_edits_via_backbone` (the multi-instance VCS convergence test that
+  exercises the new-shape `Add` end-to-end through `attach_backbone`/`MemoryBackbone`).
+- Doc-tests: flaky, not a real failure. `cargo test -p dag-plugin --doc` run in isolation passed
+  cleanly ("running 0 tests" — no doctest content exists in this file, confirmed via `grep '```'`
+  returning nothing). When run as part of the combined `cargo test -p dag-plugin` invocation
+  (unit tests immediately followed by the doctest binary link step), the doctest link occasionally
+  failed with `error[E0463]: can't find crate for infinite_board_port_directed_dag` /
+  `semio_framework_plugin` — both pre-existing dependency rlibs unrelated to this crate's own code
+  or to this migration's protocol/CollectionOperation changes. Reproduced this exact
+  intermittent-vs-clean split twice (isolated `--doc` run: clean; combined run immediately after:
+  failed), consistent with a concurrent build elsewhere in this live monorepo clobbering a shared
+  `target/debug/deps/*.rlib` mid-link (same class of issue the dag/rs migration report already
+  flagged and left unfixed, per this repo's known "Concurrent Cargo Workspace Churn" pattern — not
+  something this crate's file touches or caused). Did not attempt to fix; not actionable from this
+  crate's file.

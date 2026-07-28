@@ -6882,7 +6882,8 @@ mod tests {
 // #endregion 🔖Tests
 
 // #region 🔖DocumentVcs
-use vcs::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable};
+use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Identified, Operation, OperationDiff, OpText, Patchable};
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
 #[cfg(any(test, target_arch = "wasm32"))]
 use vcs::create_document_vcs_envelope;
 #[cfg(test)]
@@ -6954,15 +6955,7 @@ pub struct DagNodePatch {
 }
 
 impl Patchable<DagNodePatch> for DagNodeSpec {
-    fn apply_patch(&mut self, patch: &DagNodePatch) -> DagNodePatch {
-        let inverse = DagNodePatch {
-            name: patch.name.as_ref().map(|_| self.name.clone()),
-            x: patch.x.map(|_| self.x),
-            y: patch.y.map(|_| self.y),
-            width: patch.width.map(|_| self.width),
-            height: patch.height.map(|_| self.height),
-            kind: patch.kind.as_ref().map(|_| self.kind.clone()),
-        };
+    fn apply_patch(&mut self, patch: &DagNodePatch) {
         if let Some(name) = &patch.name {
             self.name = name.clone();
         }
@@ -6981,7 +6974,20 @@ impl Patchable<DagNodePatch> for DagNodeSpec {
         if let Some(kind) = &patch.kind {
             self.kind = kind.clone();
         }
-        inverse
+    }
+
+    /// 🧮 `self`-relative-to-`other` diff (protocol::Patchable convention) — used by
+    /// `invert_collection_operation` as `after.diff_patch(&prior)` to recover the pre-patch state.
+    /// Always returns `Some` (even an all-`None` patch) per that function's no-op-patch guidance.
+    fn diff_patch(&self, other: &Self) -> Option<DagNodePatch> {
+        Some(DagNodePatch {
+            name: (self.name != other.name).then(|| other.name.clone()),
+            x: (self.x != other.x).then_some(other.x),
+            y: (self.y != other.y).then_some(other.y),
+            width: (self.width != other.width).then_some(other.width),
+            height: (self.height != other.height).then_some(other.height),
+            kind: (self.kind != other.kind).then(|| other.kind.clone()),
+        })
     }
 }
 
@@ -6994,15 +7000,18 @@ pub struct DagEdgePatch {
 }
 
 impl Patchable<DagEdgePatch> for DagFixtureEdge {
-    fn apply_patch(&mut self, patch: &DagEdgePatch) -> DagEdgePatch {
-        let inverse = DagEdgePatch { source: patch.source.as_ref().map(|_| self.source.clone()), target: patch.target.as_ref().map(|_| self.target.clone()) };
+    fn apply_patch(&mut self, patch: &DagEdgePatch) {
         if let Some(source) = &patch.source {
             self.source = source.clone();
         }
         if let Some(target) = &patch.target {
             self.target = target.clone();
         }
-        inverse
+    }
+
+    /// 🧮 `self`-relative-to-`other` diff — see {@link DagNodeSpec}'s `Patchable` impl above.
+    fn diff_patch(&self, other: &Self) -> Option<DagEdgePatch> {
+        Some(DagEdgePatch { source: (self.source != other.source).then(|| other.source.clone()), target: (self.target != other.target).then(|| other.target.clone()) })
     }
 }
 
@@ -7384,13 +7393,13 @@ enum DagOperationDsl {
 
 fn dag_operation_to_dsl(operation: &DagOperation) -> DagOperationDsl {
     match operation {
-        DagOperation::Nodes(CollectionOperation::Add { index, item }) => DagOperationDsl::NodesAdd { index: *index, item: dag_node_spec_to_dsl(item) },
+        DagOperation::Nodes(CollectionOperation::Add { id: _id, item, at }) => DagOperationDsl::NodesAdd { index: *at, item: dag_node_spec_to_dsl(item) },
         DagOperation::Nodes(CollectionOperation::Remove { id }) => DagOperationDsl::NodesRemove { id: id.clone() },
-        DagOperation::Nodes(CollectionOperation::Move { id, to_index }) => DagOperationDsl::NodesMove { id: id.clone(), to_index: *to_index },
+        DagOperation::Nodes(CollectionOperation::Move { id, to }) => DagOperationDsl::NodesMove { id: id.clone(), to_index: *to },
         DagOperation::Nodes(CollectionOperation::Patch { id, patch }) => DagOperationDsl::NodesPatch { id: id.clone(), patch: dag_node_patch_to_dsl(patch) },
-        DagOperation::Edges(CollectionOperation::Add { index, item }) => DagOperationDsl::EdgesAdd { index: *index, item: item.clone() },
+        DagOperation::Edges(CollectionOperation::Add { id: _id, item, at }) => DagOperationDsl::EdgesAdd { index: *at, item: item.clone() },
         DagOperation::Edges(CollectionOperation::Remove { id }) => DagOperationDsl::EdgesRemove { id: id.clone() },
-        DagOperation::Edges(CollectionOperation::Move { id, to_index }) => DagOperationDsl::EdgesMove { id: id.clone(), to_index: *to_index },
+        DagOperation::Edges(CollectionOperation::Move { id, to }) => DagOperationDsl::EdgesMove { id: id.clone(), to_index: *to },
         DagOperation::Edges(CollectionOperation::Patch { id, patch }) => DagOperationDsl::EdgesPatch { id: id.clone(), patch: patch.clone() },
         DagOperation::SetNodes { nodes } => DagOperationDsl::SetNodes { nodes: nodes.iter().map(dag_node_spec_to_dsl).collect() },
         DagOperation::SetEdges { edges } => DagOperationDsl::SetEdges { edges: edges.clone() },
@@ -7400,13 +7409,16 @@ fn dag_operation_to_dsl(operation: &DagOperation) -> DagOperationDsl {
 
 fn dag_operation_from_dsl(mirror: DagOperationDsl) -> DagOperation {
     match mirror {
-        DagOperationDsl::NodesAdd { index, item } => DagOperation::Nodes(CollectionOperation::Add { index, item: dag_node_spec_from_dsl(item) }),
+        DagOperationDsl::NodesAdd { index, item } => {
+            let item = dag_node_spec_from_dsl(item);
+            DagOperation::Nodes(CollectionOperation::Add { id: item.id.clone(), item, at: index })
+        }
         DagOperationDsl::NodesRemove { id } => DagOperation::Nodes(CollectionOperation::Remove { id }),
-        DagOperationDsl::NodesMove { id, to_index } => DagOperation::Nodes(CollectionOperation::Move { id, to_index }),
+        DagOperationDsl::NodesMove { id, to_index } => DagOperation::Nodes(CollectionOperation::Move { id, to: to_index }),
         DagOperationDsl::NodesPatch { id, patch } => DagOperation::Nodes(CollectionOperation::Patch { id, patch: dag_node_patch_from_dsl(patch) }),
-        DagOperationDsl::EdgesAdd { index, item } => DagOperation::Edges(CollectionOperation::Add { index, item }),
+        DagOperationDsl::EdgesAdd { index, item } => DagOperation::Edges(CollectionOperation::Add { id: item.id.clone(), item, at: index }),
         DagOperationDsl::EdgesRemove { id } => DagOperation::Edges(CollectionOperation::Remove { id }),
-        DagOperationDsl::EdgesMove { id, to_index } => DagOperation::Edges(CollectionOperation::Move { id, to_index }),
+        DagOperationDsl::EdgesMove { id, to_index } => DagOperation::Edges(CollectionOperation::Move { id, to: to_index }),
         DagOperationDsl::EdgesPatch { id, patch } => DagOperation::Edges(CollectionOperation::Patch { id, patch }),
         DagOperationDsl::SetNodes { nodes } => DagOperation::SetNodes { nodes: nodes.into_iter().map(dag_node_spec_from_dsl).collect() },
         DagOperationDsl::SetEdges { edges } => DagOperation::SetEdges { edges },
@@ -7414,13 +7426,13 @@ fn dag_operation_from_dsl(mirror: DagOperationDsl) -> DagOperation {
     }
 }
 
-impl vcs::OpText for DagOperation {
+impl OpText for DagOperation {
     fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-        Ok(dag_operation_from_dsl(<DagOperationDsl as vcs::OpText>::parse_op(line)?))
+        Ok(dag_operation_from_dsl(<DagOperationDsl as OpText>::parse_op(line)?))
     }
 
     fn print_op(&self) -> String {
-        <DagOperationDsl as vcs::OpText>::print_op(&dag_operation_to_dsl(self))
+        <DagOperationDsl as OpText>::print_op(&dag_operation_to_dsl(self))
     }
 }
 //#endregion 🔖OpTextMirror
@@ -7496,14 +7508,14 @@ mod dag_vcs_tests {
     #[test]
     fn dag_document_vcs_replays_node_operations() {
         let mut store = DagStore::new(create_document_vcs_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None));
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![DagOperation::Nodes(CollectionOperation::Add { index: 0, item: sample_node("n1") })], description: None }).expect("apply");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![DagOperation::Nodes(CollectionOperation::Add { id: "n1".into(), item: sample_node("n1"), at: 0 })], description: None }).expect("apply");
         assert_eq!(store.projection().expect("projection").nodes.len(), 1);
     }
 
     #[test]
     fn node_add_patch_remove_round_trip() {
         let document = empty_dag_document();
-        let added = round_trip(&document, &DagOperation::Nodes(CollectionOperation::Add { index: 0, item: sample_node("n1") }));
+        let added = round_trip(&document, &DagOperation::Nodes(CollectionOperation::Add { id: "n1".into(), item: sample_node("n1"), at: 0 }));
         assert_eq!(added.nodes.len(), 1);
         let patched = round_trip(&added, &DagOperation::Nodes(CollectionOperation::Patch { id: "n1".into(), patch: DagNodePatch { name: Some("Renamed".into()), x: Some(42.0), ..Default::default() } }));
         assert_eq!(patched.nodes[0].name, "Renamed");
@@ -7517,7 +7529,7 @@ mod dag_vcs_tests {
         let mut document = empty_dag_document();
         document.nodes = vec![sample_node("a"), sample_node("b")];
         let edge = DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() };
-        let added = round_trip(&document, &DagOperation::Edges(CollectionOperation::Add { index: 0, item: edge }));
+        let added = round_trip(&document, &DagOperation::Edges(CollectionOperation::Add { id: "e1".into(), item: edge, at: 0 }));
         assert_eq!(added.edges.len(), 1);
         let removed = round_trip(&added, &DagOperation::Edges(CollectionOperation::Remove { id: "e1".into() }));
         assert!(removed.edges.is_empty());
@@ -7569,7 +7581,7 @@ mod dag_vcs_tests {
 
     #[test]
     fn op_text_round_trips_nodes_add() {
-        vcs::test_support::assert_op_line_round_trip(&DagOperation::Nodes(CollectionOperation::Add { index: 0, item: sample_node("n1") }));
+        vcs::test_support::assert_op_line_round_trip(&DagOperation::Nodes(CollectionOperation::Add { id: "n1".into(), item: sample_node("n1"), at: 0 }));
     }
 
     #[test]
@@ -7579,7 +7591,7 @@ mod dag_vcs_tests {
 
     #[test]
     fn op_text_round_trips_nodes_move() {
-        vcs::test_support::assert_op_line_round_trip(&DagOperation::Nodes(CollectionOperation::Move { id: "n1".into(), to_index: 2 }));
+        vcs::test_support::assert_op_line_round_trip(&DagOperation::Nodes(CollectionOperation::Move { id: "n1".into(), to: 2 }));
     }
 
     #[test]
@@ -7593,7 +7605,7 @@ mod dag_vcs_tests {
     #[test]
     fn op_text_round_trips_edges_add() {
         let edge = DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() };
-        vcs::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Add { index: 0, item: edge }));
+        vcs::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Add { id: "e1".into(), item: edge, at: 0 }));
     }
 
     #[test]
@@ -7603,7 +7615,7 @@ mod dag_vcs_tests {
 
     #[test]
     fn op_text_round_trips_edges_move() {
-        vcs::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Move { id: "e1".into(), to_index: 3 }));
+        vcs::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Move { id: "e1".into(), to: 3 }));
     }
 
     #[test]
@@ -7631,7 +7643,7 @@ mod dag_vcs_tests {
     fn document_text_round_trips_a_store_with_an_applied_operation() {
         let mut store = DagStore::new(create_document_vcs_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_document(), None));
         store
-            .dispatch(DocumentVcsCommand::Apply { operations: vec![DagOperation::Nodes(CollectionOperation::Add { index: 0, item: sample_node("extra") })], description: None })
+            .dispatch(DocumentVcsCommand::Apply { operations: vec![DagOperation::Nodes(CollectionOperation::Add { id: "extra".into(), item: sample_node("extra"), at: 0 })], description: None })
             .expect("apply");
         vcs::test_support::assert_document_text_round_trip(&store);
         vcs::test_support::assert_document_pack_round_trip(&store);

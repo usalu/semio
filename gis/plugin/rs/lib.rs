@@ -6,11 +6,10 @@
 /// `framework_surface_tiled_map`/`framework_surface_terrain`.
 pub(crate) mod domain {
     //#region 🔖DocumentVcs
-    use vcs::{
-        collection_diff_from_operation, create_document_vcs_envelope, invert_collection_operation, CollectionDiff, CollectionOperation,
-        DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable,
-        TextError,
+    use protocol::{
+        collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Identified, Operation, OperationDiff, Patchable,
     };
+    use vcs::{create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, TextError};
     use serde::{Deserialize, Serialize};
     
     pub const GIS_MAP_SCHEMA: &str = "gis.map";
@@ -40,12 +39,14 @@ pub(crate) mod domain {
     }
     
     impl Patchable<MapFeaturePatch> for MapFeature {
-        fn apply_patch(&mut self, patch: &MapFeaturePatch) -> MapFeaturePatch {
-            let inverse = MapFeaturePatch { data: patch.data.as_ref().map(|_| self.data.clone()) };
+        fn apply_patch(&mut self, patch: &MapFeaturePatch) {
             if let Some(data) = &patch.data {
                 self.data = data.clone();
             }
-            inverse
+        }
+
+        fn diff_patch(&self, other: &Self) -> Option<MapFeaturePatch> {
+            (self.data != other.data).then(|| MapFeaturePatch { data: Some(other.data.clone()) })
         }
     }
     
@@ -296,7 +297,7 @@ pub(crate) mod domain {
         #[test]
         fn positions_add_patch_remove_round_trip() {
             let document = GisMapDocument::default();
-            let added = round_trip(&document, &GisMapOperation::Positions(CollectionOperation::Add { index: 0, item: feature("p1") }));
+            let added = round_trip(&document, &GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: feature("p1"), at: 0 }));
             assert_eq!(added.positions.len(), 1);
             let patched = round_trip(
                 &added,
@@ -322,7 +323,7 @@ pub(crate) mod domain {
             let mut store = GisMapStore::new(create_document_vcs_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_projection(), None));
             store
                 .dispatch(DocumentVcsCommand::Apply {
-                    operations: vec![GisMapOperation::Positions(CollectionOperation::Add { index: 0, item: feature("p1") })],
+                    operations: vec![GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: feature("p1"), at: 0 })],
                     description: None,
                 })
                 .expect("apply");
@@ -340,12 +341,12 @@ pub(crate) mod domain {
     //#endregion 🔖Dsl
 
     //#region 🔖OpText
-    /// ✂️ Local DSL-only mirror of `GisMapOperation` — `vcs::CollectionOperation<K,V,P>` is declared
-    /// in the `vcs` crate (foreign type), so it cannot itself gain a `dsl::DslField`/`dsl::DslVariants`
+    /// ✂️ Local DSL-only mirror of `GisMapOperation` — `protocol::CollectionOperation<K,V,P>` is declared
+    /// in the `protocol` crate (foreign type), so it cannot itself gain a `dsl::DslField`/`dsl::DslVariants`
     /// binding here (orphan rule: neither the trait nor the type is local to this crate). This twin
     /// flattens each `Positions|Routes|Regions { collection }` wrapper into its own four keyworded
     /// variants — mirroring `process::Process3dOperationDsl`'s identical fix for the same foreign-
-    /// `CollectionOperation` problem — and converts at the `vcs::OpText` boundary only; `GisMapOperation`
+    /// `CollectionOperation` problem — and converts at the `protocol::OpText` boundary only; `GisMapOperation`
     /// itself, and every consumer matching on it, is completely untouched.
     #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
     enum GisMapOperationDsl {
@@ -366,17 +367,17 @@ pub(crate) mod domain {
 
     fn gis_map_operation_to_dsl(operation: &GisMapOperation) -> GisMapOperationDsl {
         match operation {
-            GisMapOperation::Positions(CollectionOperation::Add { index, item }) => GisMapOperationDsl::AddPosition { index: *index, item: item.clone() },
+            GisMapOperation::Positions(CollectionOperation::Add { id: _id, item, at }) => GisMapOperationDsl::AddPosition { index: *at, item: item.clone() },
             GisMapOperation::Positions(CollectionOperation::Remove { id }) => GisMapOperationDsl::RemovePosition { id: id.clone() },
-            GisMapOperation::Positions(CollectionOperation::Move { id, to_index }) => GisMapOperationDsl::MovePosition { id: id.clone(), to_index: *to_index },
+            GisMapOperation::Positions(CollectionOperation::Move { id, to }) => GisMapOperationDsl::MovePosition { id: id.clone(), to_index: *to },
             GisMapOperation::Positions(CollectionOperation::Patch { id, patch }) => GisMapOperationDsl::PatchPosition { id: id.clone(), patch: patch.clone() },
-            GisMapOperation::Routes(CollectionOperation::Add { index, item }) => GisMapOperationDsl::AddRoute { index: *index, item: item.clone() },
+            GisMapOperation::Routes(CollectionOperation::Add { id: _id, item, at }) => GisMapOperationDsl::AddRoute { index: *at, item: item.clone() },
             GisMapOperation::Routes(CollectionOperation::Remove { id }) => GisMapOperationDsl::RemoveRoute { id: id.clone() },
-            GisMapOperation::Routes(CollectionOperation::Move { id, to_index }) => GisMapOperationDsl::MoveRoute { id: id.clone(), to_index: *to_index },
+            GisMapOperation::Routes(CollectionOperation::Move { id, to }) => GisMapOperationDsl::MoveRoute { id: id.clone(), to_index: *to },
             GisMapOperation::Routes(CollectionOperation::Patch { id, patch }) => GisMapOperationDsl::PatchRoute { id: id.clone(), patch: patch.clone() },
-            GisMapOperation::Regions(CollectionOperation::Add { index, item }) => GisMapOperationDsl::AddRegion { index: *index, item: item.clone() },
+            GisMapOperation::Regions(CollectionOperation::Add { id: _id, item, at }) => GisMapOperationDsl::AddRegion { index: *at, item: item.clone() },
             GisMapOperation::Regions(CollectionOperation::Remove { id }) => GisMapOperationDsl::RemoveRegion { id: id.clone() },
-            GisMapOperation::Regions(CollectionOperation::Move { id, to_index }) => GisMapOperationDsl::MoveRegion { id: id.clone(), to_index: *to_index },
+            GisMapOperation::Regions(CollectionOperation::Move { id, to }) => GisMapOperationDsl::MoveRegion { id: id.clone(), to_index: *to },
             GisMapOperation::Regions(CollectionOperation::Patch { id, patch }) => GisMapOperationDsl::PatchRegion { id: id.clone(), patch: patch.clone() },
             GisMapOperation::SetDocument { document } => GisMapOperationDsl::SetDocument { document: document.clone() },
         }
@@ -384,29 +385,29 @@ pub(crate) mod domain {
 
     fn gis_map_operation_from_dsl(operation: GisMapOperationDsl) -> GisMapOperation {
         match operation {
-            GisMapOperationDsl::AddPosition { index, item } => GisMapOperation::Positions(CollectionOperation::Add { index, item }),
+            GisMapOperationDsl::AddPosition { index, item } => GisMapOperation::Positions(CollectionOperation::Add { id: item.id.clone(), item, at: index }),
             GisMapOperationDsl::RemovePosition { id } => GisMapOperation::Positions(CollectionOperation::Remove { id }),
-            GisMapOperationDsl::MovePosition { id, to_index } => GisMapOperation::Positions(CollectionOperation::Move { id, to_index }),
+            GisMapOperationDsl::MovePosition { id, to_index } => GisMapOperation::Positions(CollectionOperation::Move { id, to: to_index }),
             GisMapOperationDsl::PatchPosition { id, patch } => GisMapOperation::Positions(CollectionOperation::Patch { id, patch }),
-            GisMapOperationDsl::AddRoute { index, item } => GisMapOperation::Routes(CollectionOperation::Add { index, item }),
+            GisMapOperationDsl::AddRoute { index, item } => GisMapOperation::Routes(CollectionOperation::Add { id: item.id.clone(), item, at: index }),
             GisMapOperationDsl::RemoveRoute { id } => GisMapOperation::Routes(CollectionOperation::Remove { id }),
-            GisMapOperationDsl::MoveRoute { id, to_index } => GisMapOperation::Routes(CollectionOperation::Move { id, to_index }),
+            GisMapOperationDsl::MoveRoute { id, to_index } => GisMapOperation::Routes(CollectionOperation::Move { id, to: to_index }),
             GisMapOperationDsl::PatchRoute { id, patch } => GisMapOperation::Routes(CollectionOperation::Patch { id, patch }),
-            GisMapOperationDsl::AddRegion { index, item } => GisMapOperation::Regions(CollectionOperation::Add { index, item }),
+            GisMapOperationDsl::AddRegion { index, item } => GisMapOperation::Regions(CollectionOperation::Add { id: item.id.clone(), item, at: index }),
             GisMapOperationDsl::RemoveRegion { id } => GisMapOperation::Regions(CollectionOperation::Remove { id }),
-            GisMapOperationDsl::MoveRegion { id, to_index } => GisMapOperation::Regions(CollectionOperation::Move { id, to_index }),
+            GisMapOperationDsl::MoveRegion { id, to_index } => GisMapOperation::Regions(CollectionOperation::Move { id, to: to_index }),
             GisMapOperationDsl::PatchRegion { id, patch } => GisMapOperation::Regions(CollectionOperation::Patch { id, patch }),
             GisMapOperationDsl::SetDocument { document } => GisMapOperation::SetDocument { document },
         }
     }
 
-    impl vcs::OpText for GisMapOperation {
+    impl protocol::OpText for GisMapOperation {
         fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-            Ok(gis_map_operation_from_dsl(<GisMapOperationDsl as vcs::OpText>::parse_op(line)?))
+            Ok(gis_map_operation_from_dsl(<GisMapOperationDsl as protocol::OpText>::parse_op(line)?))
         }
 
         fn print_op(&self) -> String {
-            <GisMapOperationDsl as vcs::OpText>::print_op(&gis_map_operation_to_dsl(self))
+            <GisMapOperationDsl as protocol::OpText>::print_op(&gis_map_operation_to_dsl(self))
         }
     }
     //#endregion 🔖OpText
@@ -503,7 +504,7 @@ pub mod app_2d {
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use std::collections::{HashMap, HashSet};
-    use vcs::CollectionOperation;
+    use protocol::CollectionOperation;
 
     //#region 🔖Constants
     const GIS2D_PLAY_APP_ID: &str = "gis2d-play";
@@ -740,7 +741,7 @@ pub mod app_2d {
         }
         for (index, feature) in after.iter().enumerate() {
             match before.iter().find(|entry| entry.id == feature.id) {
-                None => operations.push(GisMapOperation::Positions(CollectionOperation::Add { index, item: feature.clone() })),
+                None => operations.push(GisMapOperation::Positions(CollectionOperation::Add { id: feature.id.clone(), item: feature.clone(), at: index })),
                 Some(prev) if prev.data != feature.data => operations.push(GisMapOperation::Positions(CollectionOperation::Patch {
                     id: feature.id.clone(),
                     patch: MapFeaturePatch { data: Some(feature.data.clone()) },
@@ -1889,9 +1890,9 @@ pub mod app_2d {
 
         #[test]
         fn gis_map_positions_op_lines_round_trip() {
-            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Add { index: 0, item: sample_patch_feature() }));
+            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 }));
             vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Remove { id: "p1".into() }));
-            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Move { id: "p1".into(), to_index: 3 }));
+            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Move { id: "p1".into(), to: 3 }));
             vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Patch {
                 id: "p1".into(),
                 patch: MapFeaturePatch { data: Some(json!({ "label": "Home" })) },
@@ -1901,9 +1902,9 @@ pub mod app_2d {
 
         #[test]
         fn gis_map_routes_op_lines_round_trip() {
-            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Add { index: 0, item: sample_patch_feature() }));
+            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 }));
             vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Remove { id: "p1".into() }));
-            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Move { id: "p1".into(), to_index: 1 }));
+            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Move { id: "p1".into(), to: 1 }));
             vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Patch {
                 id: "p1".into(),
                 patch: MapFeaturePatch { data: Some(json!({ "kind": "reuse" })) },
@@ -1912,9 +1913,9 @@ pub mod app_2d {
 
         #[test]
         fn gis_map_regions_op_lines_round_trip() {
-            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Add { index: 0, item: sample_patch_feature() }));
+            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 }));
             vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Remove { id: "p1".into() }));
-            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Move { id: "p1".into(), to_index: 2 }));
+            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Move { id: "p1".into(), to: 2 }));
             vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Patch {
                 id: "p1".into(),
                 patch: MapFeaturePatch { data: Some(json!({ "kind": "boundary" })) },
@@ -1933,7 +1934,7 @@ pub mod app_2d {
             let mut store = vcs::DocumentVcsStore::new(envelope);
             store
                 .dispatch(vcs::DocumentVcsCommand::Apply {
-                    operations: vec![GisMapOperation::Positions(CollectionOperation::Add { index: 0, item: sample_patch_feature() })],
+                    operations: vec![GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 })],
                     description: None,
                 })
                 .expect("apply");

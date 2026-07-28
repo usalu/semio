@@ -1,0 +1,165 @@
+CW7 App fan-out — process_3d (/Users/ueli/Documents/semio/process/3d/rs/lib.rs)
+================================================================================
+
+Scope: migrate CollectionOperation::Add/Move construction+pattern-matches and the
+vcs::apply_collection_operation/invert_collection_operation calls onto protocol::
+CollectionOperation's frozen shape (Add gains mandatory `id`, `index`->`at`; Move
+`to_index`->`to`). Only file touched: process/3d/rs/lib.rs. Cargo.toml untouched —
+`protocol` was already a direct dependency (confirmed by reading Cargo.toml first, from
+an earlier wave's mechanical sweep), no change needed.
+
+Real usage confirmed (not a false positive): process_3d has a live `Steps` collection op
+(`Process3dOperation::Steps { collection: CollectionOperation<String, ProcessStep,
+ProcessStepPatch> }`) applied via `apply_collection_operation`/`invert_collection_operation`
+inside `Process3dDiff::apply`/`Process3dOperation::backwards`, plus a local DSL twin
+(`Process3dOperationDsl`) flattening `Add`/`Remove`/`Move`/`Patch` into keyworded variants,
+plus ~14 test-site constructions of `CollectionOperation::Add`/`Move`.
+`vcs::collection_diff_from_operation` was never called anywhere in this crate — only
+`apply_collection_operation`/`invert_collection_operation` were in use — so there was no
+call site to migrate for that third function name.
+
+What changed
+------------
+1. Import switch (was `use vcs::{apply_collection_operation, invert_collection_operation,
+   CollectionOperation, DocumentVcsEnvelope, DocumentVcsStore, Identified, OperationDiff,
+   Patchable};`): split into
+   `use protocol::{apply_collection_operation, invert_collection_operation,
+   CollectionOperation, Identified, Operation, OperationDiff, OpText, Patchable};`
+   and `use vcs::{DocumentVcsEnvelope, DocumentVcsStore};` — the six collection-op-adjacent
+   symbols (`apply_collection_operation`, `invert_collection_operation`, `CollectionOperation`,
+   `Identified`, `OperationDiff`, `Patchable`) plus `Operation`/`OpText` (step 7 trio, were
+   previously referenced with an explicit `vcs::` prefix, not imported unqualified) now come
+   from `protocol` (verified all eight are re-exported at the `protocol/rs/lib.rs` facade, not
+   just `protocol_command`). `DocumentVcsEnvelope`/`DocumentVcsStore` stay on `vcs` — out of
+   scope, not part of the shape freeze.
+
+2. `CollectionOperation::Add` construction sites: one in `process3d_operation_from_dsl`
+   (converting the local DSL twin back into `Process3dOperation`), plus 12 test-site literal
+   constructions. Rewritten from `CollectionOperation::Add { index: N, item: X }` to
+   `CollectionOperation::Add { id: <id>, item: X, at: N }`.
+   Id source: `item.id` (the `ProcessStep.id: String` field) — `ProcessStep` already carries
+   a plain `pub id: String` field, the same field `Identified<String>::id()` returns for
+   `Remove`/`Move`/`Patch` on this same `steps` collection, so the id is already present on
+   the item being added; no new id generation logic needed, no counter/ULID involved for this
+   crate's Add path. In `process3d_operation_from_dsl` this is `item.id.clone()` (item bound
+   from the DSL twin, evaluated before the `item` field is moved into the new struct literal).
+   In tests, each site's id literal is the same string already passed to the `cut_step`/
+   `drill_step` helper that builds `item` (e.g. `Add { id: "cut-1".into(), item:
+   cut_step("cut-1"), at: 0 }`), so no divergence between the id and the item's own id was
+   introduced.
+
+3. `CollectionOperation::Move` construction sites (1, a test-site literal at
+   `process3d_op_text_round_trips_steps_move`): `to_index: 2` -> `to: 2` (pure rename).
+
+4. Pattern-match sites (`process3d_operation_to_dsl`, converting `Process3dOperation` into the
+   local DSL twin for op-text printing):
+   `CollectionOperation::Add { index, item }` -> `CollectionOperation::Add { id: _id, item, at }`
+   (bound `id` but prefixed `_id` since the local `Process3dOperationDsl::StepsAdd` variant
+   doesn't carry a separate `id` field — the id is already inside `item.id`, and by this
+   crate's chosen id-source rule `id` is always equal to `item.id`, so the freshly-bound `id`
+   from the real op carries no additional information this conversion needs).
+   `CollectionOperation::Move { id, to_index }` -> `CollectionOperation::Move { id, to }`
+   with `to_index: *to` on the RHS `Process3dOperationDsl::StepsMove` construction (pure
+   rename carried through; the local DSL twin's own field is still named `to_index` internally
+   — an unrelated, crate-private field name on `Process3dOperationDsl`, not part of the frozen
+   `protocol::CollectionOperation` shape, left untouched).
+
+5. `Identified<String> for ProcessStep`: signature unchanged (`fn id(&self) -> &String`), now
+   implements `protocol::Identified` instead of `vcs::Identified` (identical trait shape, pure
+   re-anchoring via the import switch — no body change).
+
+6. `Patchable<ProcessStepPatch> for ProcessStep`: NOT a pure rename — `protocol::Patchable`
+   splits `vcs::Patchable`'s single `apply_patch(&mut self, &TPatch) -> TPatch`
+   (mutate-and-return-inverse) into two methods: `apply_patch(&mut self, &TPatch)` (mutate
+   only, no return) and `diff_patch(&self, other: &Self) -> Option<TPatch>` (compute the patch
+   that would turn `self` into `other`). This is mandatory, not optional: once
+   `apply_collection_operation`/`invert_collection_operation` are called as `protocol::`, their
+   generic bounds (`TItem: Identified<TId> + Clone + Patchable<TPatch>`) resolve against
+   protocol's own trait definitions, so keeping the old vcs-shaped single-method impl would not
+   satisfy the new bound. Rewrote the impl:
+     - `apply_patch`: same field-by-field `if let Some(x) = &patch.x { self.x = x.clone(); }`
+       mutation logic as before (label/enabled/measure/origin), minus the `inverse`
+       capture/return.
+     - `diff_patch`: field-by-field compare (`self.field != other.field`), producing
+       `Some(other.field.clone())` per differing field via `.then(...)`/`.then_some(...)`,
+       `None` overall if the built patch equals `ProcessStepPatch::default()` (both the
+       `Default` and `PartialEq` derives were already present on `ProcessStepPatch`, no derive
+       changes needed). Verified this reproduces the same inverse-patch semantics
+       `protocol::invert_collection_operation`'s `Patch` arm relies on: `after = prior.clone();
+       after.apply_patch(patch); after.diff_patch(&prior)` — since `apply_patch` only touches
+       fields where the incoming patch is `Some`, all untouched fields stay equal between
+       `after` and `prior`, so `diff_patch` flags exactly the touched fields, capturing
+       `prior`'s old values — matching the old single-method `apply_patch`'s captured
+       pre-mutation values. `patches_a_step_and_undo_restores_it` and
+       `patches_origin_and_undo_restores_it` (undo-round-trip tests already in the file)
+       exercise exactly this path and pass unchanged.
+
+7. `Operation`/`OperationDiff`/`OpText` trio (step 7 of the instructions):
+     - `impl vcs::Operation<Process3dDocument> for Process3dOperation` ->
+       `impl Operation<Process3dDocument> for Process3dOperation` (now resolves through the
+       switched top-of-file `use protocol::{..., Operation, ...}` import).
+     - `impl OperationDiff<Process3dDocument> for Process3dDiff` — already imported/used
+       unqualified before this change; now resolves to `protocol::OperationDiff` automatically
+       once the top-of-region `use` switched, zero-diff at the impl site itself.
+     - `impl vcs::OpText for Process3dOperation` -> `impl OpText for Process3dOperation`, and
+       its two internal `<Process3dOperationDsl as vcs::OpText>::...` calls ->
+       `<Process3dOperationDsl as OpText>::...` (confirmed `Process3dOperationDsl`'s
+       `dsl::DslOps`-derived impl already targets `::protocol::OpText` directly in the derive
+       macro's generated code — `dsl/derive/rs/lib.rs` line 737 — so this just names the trait
+       via the already-imported `protocol::OpText` instead of `vcs`'s literal-re-export shim
+       alias). Left `vcs::TextError` untouched in `parse_op`'s return type per the
+       instructions' "only for the Operation/OperationDiff/OpText trio, do not touch anything
+       else" — `vcs::TextError` is itself `pub use dsl_core::TextError`, the exact same
+       concrete type `protocol::OpText::parse_op`'s signature requires, so no behavior change
+       either way.
+     - Test module's own `use vcs::{..., Operation}` import dropped `Operation` (it now
+       resolves through `use super::*` picking up the top-of-file `protocol::Operation`
+       import instead) — needed because `operation.backwards(&projection)` in
+       `backwards_of_add_is_remove` calls the trait method, and leaving a stray `vcs::Operation`
+       import there would have shadowed the glob import with the wrong (unimplemented-for-this-
+       type) trait, breaking that test's compile.
+
+Cross-crate ripple check
+-------------------------
+Grepped the repo for `Process3dOperation`/`process_3d::` outside this file: `layout/rs`,
+`gis/plugin/rs`, and `flow/core/rs` only mention `process_3d::Process3dOperationDsl`/
+`process_3d::SolidSpec` in doc comments (as a cross-reference for their own, unrelated
+hand-rolled DSL-twin idiom) — no real dependency. `process/plugin/rs` (also in this wave's
+crate list, assigned to a different agent) genuinely constructs/matches
+`Process3dOperation::Steps { collection: CollectionOperation::... }` at several sites — found
+it had *already* been migrated to the new shape independently (`use protocol::
+CollectionOperation;` at its own top, `CollectionOperation::Add { id, item: step, at: cursor }`,
+`Move { id, to: index as usize }`, etc., all already present) by the time this crate's build
+ran. No conflict, no ripple to report — both crates converged on the same frozen shape
+independently and compile together cleanly.
+
+Build / test status
+--------------------
+- `cargo build -p process_3d` — clean, exit 0. No errors or warnings from this migration.
+- `cargo test -p process_3d` — clean, exit 0, 26 passed / 0 failed / 0 ignored (plus 0 doc
+  tests; the crate has no `///` doctest code blocks). All Add/Move/Patch-exercising tests
+  (`adds_and_removes_steps`, `patches_a_step_and_undo_restores_it`,
+  `patches_origin_and_undo_restores_it`, `moves_and_clamps_cursor`,
+  `backwards_of_add_is_remove`, the full `process3d_op_text_round_trips_steps_*` suite, and
+  `process3d_document_text_round_trips_after_apply_and_checkpoint`) exercise the migrated
+  Add/Move/Patch diff+invert+DSL round trip and pass unchanged.
+  One transient, unrelated hiccup during verification: a doc-test run once failed with
+  `extern location for vcs does not exist: .../libvcs.rlib` — a concurrent-rebuild race (this
+  is a live, concurrently-edited monorepo and `vcs` was mid-recompile from another session at
+  that moment; the file existed under a hashed name in `target/debug/deps/` at the same
+  instant). Re-ran immediately after and it passed clean (`running 0 tests`, ok). Not caused
+  by this migration.
+
+Deviations
+----------
+- Same deviation class as other CW7 reports in this ticket folder: instructions step 6
+  undersold `Patchable`'s divergence as a same-shape import-path swap alongside `Identified`/
+  `CollectionOperation`; in reality `protocol::Patchable` is a genuinely different (split
+  two-method) trait shape from `vcs::Patchable`, mandatory to implement correctly (not just
+  re-path) because `protocol::apply_collection_operation`/`invert_collection_operation`'s
+  generic bounds require protocol's own `Patchable`. Handled per the doc's spirit (frozen-
+  contract shape, same collaboration semantics) rather than skipped; documented above in
+  detail (#6) for reviewer verification since it's the one part of this migration that isn't a
+  pure rename.
+- No other deviations. No false positive — every construction/pattern-match found was real,
+  live `CollectionOperation` usage for the `steps` collection.

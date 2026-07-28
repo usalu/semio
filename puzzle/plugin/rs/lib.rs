@@ -6311,6 +6311,8 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
         transform_drag_active: bool,
         transform_base: Option<Puzzle3dFixture>,
         transform_scratch: Option<Puzzle3dFixture>,
+        /// 👻 Per-`key` monotone counter for `gesture_preview` — see `//#region 🔖GesturePreview`.
+        preview_seq: u64,
     }
 
     impl Default for Puzzle3dPlayApp {
@@ -6321,6 +6323,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
                 transform_drag_active: false,
                 transform_base: None,
                 transform_scratch: None,
+                preview_seq: 0,
             }
         }
     }
@@ -6377,6 +6380,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
                 _ => {}
             }
             self.transform_scratch = Some(scratch);
+            self.preview_seq = self.preview_seq.wrapping_add(1);
             ActionEmit { ui_scope: puzzle3d_transform_drag_scope(), ..Default::default() }
         }
 
@@ -6407,6 +6411,34 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             }
             serde_json::from_value::<Puzzle3dFixture>(projection.clone()).unwrap_or_else(|_| empty_fixture())
         }
+
+        //#region 🔖GesturePreview
+        /// 👻 CW7 db+protocol+vcs-slimming campaign, "preview law for gesture apps": the live gumball
+        /// drag's current fixture state, expressed as the same document-delta operations
+        /// `commit_transform` would eventually emit for real — anchored to the drag-start snapshot
+        /// (`transform_base`), never to the previous preview tick, so a preview built from this stays
+        /// correct even when the lossy, uncredited preview lane drops every message but the latest (a
+        /// receiver only ever needs `transform_base` — the last-synced canonical fixture, which it
+        /// already has — plus this one delta, never a chain of prior preview messages). `None` outside
+        /// an active drag; this reads `transform_base`/`transform_scratch` only, never emits or mutates
+        /// a `Puzzle3dOperation`.
+        ///
+        /// 🚧 Deliberately unwired beyond this accessor — same gap as `draw-plugin`'s
+        /// `draw_gesture_preview_payload`: `framework/sync::SyncSession::publish_preview` is host-only
+        /// and unreachable from this WASI-P2 sandboxed plugin crate, and `vcs::BackboneMessage` has no
+        /// preview-shaped variant to relay one through. See `.repo/🎫/26/07/27/
+        /// INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw7-preview-law.txt`.
+        /// `#[allow(dead_code)]`: exercised by `🧪Tests` only until a host bridge exists.
+        #[allow(dead_code)]
+        fn gesture_preview(&self) -> Option<(&'static str, u64, Vec<u8>)> {
+            let base = self.transform_base.as_ref()?;
+            let scratch = self.transform_scratch.as_ref()?;
+            let before = serde_json::to_value(base).ok()?;
+            let operations = puzzle3d_operations_from_fixture_change(&before, scratch);
+            let payload = json!({ "operations": operations });
+            Some(("gesture:transform", self.preview_seq, serde_json::to_vec(&payload).ok()?))
+        }
+        //#endregion 🔖GesturePreview
     }
 
     impl DocumentApp for Puzzle3dPlayApp {
@@ -9463,6 +9495,58 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             let second = origin_of(&app);
             assert!((second[0] - start[0] - 2.0).abs() < 1e-9, "a second gumball drag session works from the restored base");
         }
+
+        //#region 🔖GesturePreview
+        /// 🔬 CW7 preview-law seam: `Puzzle3dPlayApp::gesture_preview` reads `transform_base`/
+        /// `transform_scratch` only, never a `Puzzle3dOperation` — exercised directly against
+        /// `Puzzle3dPlayApp` (bypassing the `VcsDocumentApp` wrapper, which has no accessor into the
+        /// inner app) since `transform_drag_tick` is the natural per-tick gesture handler.
+        #[test]
+        fn gesture_preview_is_none_without_an_active_transform_drag() {
+            let app = Puzzle3dPlayApp::default();
+            assert!(app.gesture_preview().is_none(), "no live gumball drag, nothing to preview");
+        }
+
+        #[test]
+        fn gesture_preview_reflects_the_live_gumball_drag_and_clears_on_commit() {
+            let mut app = Puzzle3dPlayApp::default();
+            let fixture = default_fixture();
+            let object_id = fixture.objects[0].id.clone();
+            let projection = serde_json::to_value(&fixture).unwrap();
+            app.transform_drag_active = true;
+
+            let tick_a = app.transform_drag_tick("translateSelection", Some(&json!({ "ids": [object_id.clone()], "dx": 1.0, "dy": 0.0, "dz": 0.0 })), &projection);
+            assert!(tick_a.operations.is_empty(), "mid-drag ticks emit zero operations (scratch-commit pattern)");
+            let (key, seq_after_a, payload_a) = app.gesture_preview().expect("a live gumball drag is previewable");
+            assert_eq!(key, "gesture:transform");
+            let value_a: Value = serde_json::from_slice(&payload_a).expect("payload is valid json");
+            assert!(!value_a["operations"].as_array().expect("operations array").is_empty(), "the delta anchored to the drag-start snapshot must reflect the first tick");
+
+            let tick_b = app.transform_drag_tick("translateSelection", Some(&json!({ "ids": [object_id], "dx": 5.0, "dy": 0.0, "dz": 0.0 })), &projection);
+            assert!(tick_b.operations.is_empty());
+            let (_, seq_after_b, payload_b) = app.gesture_preview().expect("still live mid-drag");
+            assert!(seq_after_b > seq_after_a, "seq is monotone per tick, for staleness detection on the receiving end");
+            assert_ne!(payload_a, payload_b, "the base-anchored delta accumulates both ticks, not just the latest one");
+
+            let end = app.commit_transform(&projection);
+            assert_eq!(end.operations.len(), 1, "the whole drag commits as exactly one real operation");
+            assert!(app.gesture_preview().is_none(), "the drag ended: nothing left to preview, and the commit above already carried the real operation");
+        }
+
+        #[test]
+        fn gesture_preview_is_a_pure_read_never_mutating_the_transform_scratch() {
+            let mut app = Puzzle3dPlayApp::default();
+            let fixture = default_fixture();
+            let object_id = fixture.objects[0].id.clone();
+            let projection = serde_json::to_value(&fixture).unwrap();
+            app.transform_drag_active = true;
+            app.transform_drag_tick("translateSelection", Some(&json!({ "ids": [object_id], "dx": 1.0, "dy": 0.0, "dz": 0.0 })), &projection);
+            let scratch_before = app.transform_scratch.clone();
+            let _ = app.gesture_preview();
+            let _ = app.gesture_preview();
+            assert_eq!(app.transform_scratch, scratch_before, "gesture_preview must never mutate the live transform scratch it reads");
+        }
+        //#endregion 🔖GesturePreview
         //#endregion 🧰 Window Actions & Utilities contract
     }
     //#endregion 🧪Tests

@@ -445,6 +445,36 @@ fn gesture_context_from_input(_input: ()) -> GestureContext {
 }
 //#endregion 🔖GestureContext
 
+//#region 🔖GesturePreview
+/// 👻 CW7 db+protocol+vcs-slimming campaign, "preview law for gesture apps": a pure, JSON-serializable
+/// snapshot of the gesture machine's live, uncommitted scratch geometry — shaped as the exact payload
+/// `framework_sync::SyncSession::publish_preview(key, seq, payload)` expects, ready to hand off the
+/// instant a transport exists. `None` while `draw_gesture` is `idle` (no live gesture to preview); this
+/// function only ever reads `GestureContext`, never `DrawDocument`/`DrawOperation` — a preview can never
+/// become persistent state.
+///
+/// 🚧 Deliberately unwired beyond `DrawPlayApp::gesture_preview` below: `framework/sync` (home of
+/// `SyncSession::publish_preview`) documents itself as host-only — "WASI-P2 plugins never link this
+/// crate" — and this crate compiles as a WASI-P2 component (`crate-type = ["cdylib", "rlib"]`,
+/// `semio:draw`), so it cannot reach that API directly. The one cross-sandbox channel this crate can
+/// reach, `vcs::BackboneMessage` (via `host_backbone_send`), has no preview-shaped variant yet — adding
+/// one is a `vcs`/WIT/`framework/plugin/host` change outside this ticket's plugin-crate-only file
+/// ownership. See `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw7-preview-law.txt`.
+fn draw_gesture_preview_payload(ctx: &GestureContext, is_idle: bool) -> Option<Value> {
+    if is_idle {
+        return None;
+    }
+    Some(json!({
+        "method": ctx.method,
+        "utility": ctx.utility,
+        "start": ctx.start,
+        "cursor": ctx.cursor,
+        "points": ctx.points,
+        "active": ctx.active,
+    }))
+}
+//#endregion 🔖GesturePreview
+
 //#region 🔖GestureGuards
 fn utility_is_marquee(_ctx: &GestureContext, event: Option<&draw_gesture::Event>) -> bool {
     matches!(event, Some(draw_gesture::Event::PointerDown { utility, .. }) if utility == "selectMarquee" || utility == "selectLasso")
@@ -1561,12 +1591,14 @@ struct DrawPlayApp {
     interaction: DrawInteractionState,
     /// 🎭 Live `fsm` snapshot driving pointer gestures — see `//#region 🔖GestureMachine`.
     gesture: draw_gesture::Snapshot,
+    /// 👻 Per-`key` monotone counter for `gesture_preview` — see `//#region 🔖GesturePreview`.
+    preview_seq: u64,
 }
 
 impl Default for DrawPlayApp {
     fn default() -> Self {
         let mut sink: Vec<fsm::Command<draw_gesture::DrawGesture>> = Vec::new();
-        Self { interaction: DrawInteractionState::default(), gesture: fsm::init::<draw_gesture::DrawGesture>((), &mut sink) }
+        Self { interaction: DrawInteractionState::default(), gesture: fsm::init::<draw_gesture::DrawGesture>((), &mut sink), preview_seq: 0 }
     }
 }
 
@@ -1577,6 +1609,7 @@ impl DrawPlayApp {
     fn step_gesture(&mut self, event: draw_gesture::Event, document: &DrawDocument) -> ActionEmit<DrawOperation> {
         let mut sink: Vec<fsm::Command<draw_gesture::DrawGesture>> = Vec::new();
         fsm::macrostep(&mut self.gesture, event, &mut sink, &mut fsm::NullInspector);
+        self.preview_seq = self.preview_seq.wrapping_add(1);
         let mut operations = Vec::new();
         let mut commit_description: Option<&'static str> = None;
         for command in sink {
@@ -1612,6 +1645,16 @@ impl DrawPlayApp {
             Some(description) => commit_with_utility_reset(operations, description),
             None => ActionEmit::default(),
         }
+    }
+
+    /// 👻 See `//#region 🔖GesturePreview` — the `(key, seq, payload)` tuple already shaped as
+    /// `SyncSession::publish_preview`'s exact argument list once a host bridge can carry it out of
+    /// this sandboxed plugin. `#[allow(dead_code)]`: no caller exists inside this crate today (see the
+    /// doc on `draw_gesture_preview_payload`); exercised by `🧪Tests` only until that bridge lands.
+    #[allow(dead_code)]
+    fn gesture_preview(&self) -> Option<(&'static str, u64, Vec<u8>)> {
+        let payload = draw_gesture_preview_payload(&self.gesture.context, self.gesture.matches("idle"))?;
+        Some(("gesture", self.preview_seq, serde_json::to_vec(&payload).ok()?))
     }
 }
 
@@ -2241,6 +2284,53 @@ mod tests {
         let up = app.handle_action("canvasPointerUp", Some(&json!({ "x": 40.0, "y": 40.0, "width": 800.0, "height": 600.0, "shift": false, "ctrl": false, "meta": false })), &view_with_utility("pen"), &testkit::meta("local")).expect("up");
         assert!(up.operations.is_empty(), "the in-progress shape draft was cleared on utility switch");
     }
+
+    //#region 🔖GesturePreview
+    /// 🔬 CW7 preview-law seam: `DrawPlayApp::gesture_preview` reads live `GestureContext` only, never
+    /// `DrawDocument`/`DrawOperation` — exercised directly against `DrawPlayApp` (bypassing the
+    /// `VcsDocumentApp` wrapper) since `step_gesture` is the natural per-tick gesture handler.
+    #[test]
+    fn gesture_preview_is_none_while_idle() {
+        let app = DrawPlayApp::default();
+        assert!(app.gesture_preview().is_none(), "no live gesture, nothing to preview");
+    }
+
+    #[test]
+    fn gesture_preview_reflects_live_shape_drag_and_clears_on_commit() {
+        let mut app = DrawPlayApp::default();
+        let document = default_draw_document("empty", None);
+
+        let down = app.step_gesture(draw_gesture::Event::PointerDown { utility: "shapeRect".into(), world: [10.0, 10.0], shift: false, ctrl: false, meta: false }, &document);
+        assert!(down.operations.is_empty(), "pointer-down starts a scratch drag, not a document operation");
+        let (key, seq_after_down, payload) = app.gesture_preview().expect("shape drag is live after pointer-down");
+        assert_eq!(key, "gesture");
+        let value: Value = serde_json::from_slice(&payload).expect("payload is valid json");
+        assert_eq!(value["start"], json!([10.0, 10.0]));
+        assert_eq!(value["cursor"], json!([10.0, 10.0]));
+
+        let moved = app.step_gesture(draw_gesture::Event::PointerMove { world: [40.0, 30.0], marquee_threshold_world: 4.0 }, &document);
+        assert!(moved.operations.is_empty(), "mid-drag ticks emit zero operations (scratch-commit pattern)");
+        let (_, seq_after_move, payload) = app.gesture_preview().expect("shape drag is still live mid-drag");
+        let value: Value = serde_json::from_slice(&payload).expect("payload is valid json");
+        assert_eq!(value["cursor"], json!([40.0, 30.0]), "preview tracks the live cursor, not the drag start");
+        assert!(seq_after_move > seq_after_down, "seq is monotone per tick, for staleness detection on the receiving end");
+
+        let up = app.step_gesture(draw_gesture::Event::PointerUp { utility: "shapeRect".into(), world: [40.0, 30.0], shift: false, ctrl: false, meta: false }, &document);
+        assert_eq!(up.operations.len(), 1, "pointer-up commits the shape as one real DrawOperation");
+        assert!(app.gesture_preview().is_none(), "the gesture returned to idle: nothing left to preview, and the commit above already carried the real operation");
+    }
+
+    #[test]
+    fn gesture_preview_is_a_pure_read_never_mutating_gesture_context() {
+        let mut app = DrawPlayApp::default();
+        let document = default_draw_document("empty", None);
+        app.step_gesture(draw_gesture::Event::PointerDown { utility: "shapeRect".into(), world: [1.0, 2.0], shift: false, ctrl: false, meta: false }, &document);
+        let context_before = app.gesture.context.clone();
+        let _ = app.gesture_preview();
+        let _ = app.gesture_preview();
+        assert_eq!(app.gesture.context, context_before, "gesture_preview must never mutate the live gesture scratch it reads");
+    }
+    //#endregion 🔖GesturePreview
 
     #[test]
     fn semio_example_fixture_parses() {

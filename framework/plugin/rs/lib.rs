@@ -213,9 +213,10 @@ use serde::{Deserialize, Serialize};
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
+use protocol::OpText;
 use vcs::{
     build_history_columns, create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope,
-    DocumentVcsStore, HistoryColumn, OpText, StudioConflict,
+    DocumentVcsStore, HistoryColumn, StudioConflict,
 };
 
 pub struct ModeSpec {
@@ -2087,7 +2088,7 @@ mod testkit_tests {
     use crate::{ui_text, UiNode};
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
-    use vcs::{Operation, OperationDiff};
+    use protocol::{Operation, OperationDiff};
 
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
     #[dsl(extension = "testkit-dummy")]
@@ -4734,7 +4735,8 @@ mod semio_plugin_macro_tests {
     use semio_framework_core::ActionArgDef;
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
-    use vcs::{Backbone, BackboneMessage, MemoryBackbone, Operation, OperationDiff};
+    use vcs::{Backbone, BackboneMessage, MemoryBackbone};
+    use protocol::{Operation, OperationDiff};
 
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
     #[dsl(extension = "testkit-macro")]

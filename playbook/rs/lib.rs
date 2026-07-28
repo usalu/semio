@@ -6,7 +6,8 @@
 //! (see `Contribution::PlaybookBlockKind` in `semio-framework-core`).
 
 use serde::{Deserialize, Serialize};
-use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
+use protocol::{Operation, OperationDiff};
 
 pub const PLAYBOOK_DOCUMENT_SCHEMA: &str = "playbook.program";
 

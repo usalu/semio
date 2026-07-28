@@ -7,7 +7,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 #[cfg(target_arch = "wasm32")]
 use vcs::create_document_vcs_envelope;
-use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
+use protocol::{Operation, OperationDiff};
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
 
 pub const FEM_2D_SCHEMA: &str = "fem.2d";
 

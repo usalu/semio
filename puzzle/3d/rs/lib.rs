@@ -3037,7 +3037,8 @@ impl Puzzle3dPrecomputeSession {
 use vcs::{create_document_vcs_envelope, DocumentVcsCommand};
 #[cfg(test)]
 use vcs::DocumentDsl;
-use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
+use protocol::{Operation, OperationDiff};
 
 pub const PUZZLE_3D_SCHEMA: &str = "puzzle.3d";
 

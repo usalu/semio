@@ -11,7 +11,7 @@ use semio_framework_plugin::{
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, HashMap};
-use vcs::CollectionOperation;
+use protocol::CollectionOperation;
 
 //#region 🔖Constants
 const IMPERATIVE_PLAY_APP_ID: &str = "imperative-play";
@@ -246,12 +246,12 @@ impl DocumentApp for ImperativePlayApp {
             }
             "addStep" | "addStepAt" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("log.print");
-                let index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).map(|value| value as usize).unwrap_or(usize::MAX);
+                let index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).map_or(usize::MAX, |value| value as usize);
                 let path_ref = path_ref_from_args(args, document);
                 let id = next_step_id(document);
                 let step = Step { id: id.clone(), kind: kind.into(), params: Dictionary::new(), bodies: BTreeMap::new() };
                 self.runtime.selected_step_ids = vec![id];
-                ActionEmit::operations(vec![ImperativeOperation { path_ref, collection: CollectionOperation::Add { index, item: step } }])
+                ActionEmit::operations(vec![ImperativeOperation { path_ref, collection: CollectionOperation::Add { id: step.id.clone(), at: index, item: step } }])
             }
             "removeStep" | "removeStepAt" => {
                 if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
@@ -269,7 +269,7 @@ impl DocumentApp for ImperativePlayApp {
                 if let (Some(id), Some(new_index)) = (id, new_index) {
                     if resolve_contains(document, args, id) {
                         let path_ref = path_ref_from_args(args, document);
-                        return ActionEmit::operations(vec![ImperativeOperation { path_ref, collection: CollectionOperation::Move { id: id.into(), to_index: new_index } }]);
+                        return ActionEmit::operations(vec![ImperativeOperation { path_ref, collection: CollectionOperation::Move { id: id.into(), to: new_index } }]);
                     }
                 }
                 ActionEmit::default()
@@ -320,7 +320,7 @@ impl DocumentApp for ImperativePlayApp {
 /// slot (an unmaterialized slot reads as empty).
 fn steps_at<'a>(document: &'a ImperativeDocument, path_ref: &PathRef) -> &'a [Step] {
     match (&path_ref.owner, &path_ref.slot) {
-        (Some(owner), Some(slot)) => document.path.steps.iter().find(|step| &step.id == owner).and_then(|step| step.bodies.get(slot)).map(|path| path.steps.as_slice()).unwrap_or(&[]),
+        (Some(owner), Some(slot)) => document.path.steps.iter().find(|step| &step.id == owner).and_then(|step| step.bodies.get(slot)).map_or(&[], |path| path.steps.as_slice()),
         _ => document.path.steps.as_slice(),
     }
 }

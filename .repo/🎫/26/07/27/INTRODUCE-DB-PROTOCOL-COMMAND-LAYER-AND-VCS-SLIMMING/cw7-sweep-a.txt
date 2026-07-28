@@ -1,0 +1,158 @@
+CW7 sweep A — import-path surgery: vcs::{Operation,OpText,OperationDiff,Edit,...} -> protocol::
+Scope: cad/rs, cad/plugin/rs, draw/rs, fem/2d/rs, fem/3d/rs, norm/core/rs, note/plugin/rs
+None of these 7 crates construct/match vcs::CollectionOperation (grep-verified, empty match in
+every crate) — so this was pure import-path surgery for all 7, no shape migration needed, no
+cross-reference to cw7-instructions.md's Add{id,item,at}/Move{to} steps required.
+
+Method per crate: grep vcs:: usages in lib.rs, move only the trait/type names that protocol/rs/lib.rs
+actually re-exports from protocol_command (Operation, OperationDiff, OpText, Edit, CollectionDiff,
+ItemPatch, Identified, Patchable, CollectionOperation, apply/invert/collection_diff_from_operation)
+to `protocol::`, leaving vcs-only concepts (DocumentVcsEnvelope, DocumentVcsStore,
+DocumentVcsCommand, create_document_vcs_envelope, apply_operation, DocumentDsl, Backbone family,
+TextError/TextSpan (from dsl_core, re-exported by vcs, never moved to protocol), vcs::test_support)
+on `vcs::`. Added `protocol` as a direct Cargo dep only where genuinely missing.
+
+================================================================================
+## cad/rs (package: cad_document)
+Status: DONE
+Changed:
+  - lib.rs line 6: `use vcs::{CollectionDiff, DocumentVcsEnvelope, DocumentVcsStore, ItemPatch,
+    Operation, OperationDiff};` split into
+    `use protocol::{CollectionDiff, ItemPatch, Operation, OperationDiff};` +
+    `use vcs::{DocumentVcsEnvelope, DocumentVcsStore};`
+  - No CollectionOperation usage in this crate (only CollectionDiff/ItemPatch, which are diff/patch
+    types, not the CollectionOperation enum from CW7's shape freeze) — pure rename, no shape work.
+  - Cargo.toml: protocol dep already present, no change needed.
+Build: `cargo build -p cad_document` — clean (2 pre-existing elided-lifetime warnings, unrelated).
+Test: `cargo test -p cad_document` — 15/15 unit tests pass. Doc-tests: 0 tests, clean (hit a
+  transient "extern location for vcs does not exist" doctest-linking error on the first run, caused
+  by another session's concurrent `cargo build` mid-flight on vcs's rlib; resolved after rebuilding
+  vcs and rerunning — not caused by this change).
+
+================================================================================
+## cad/plugin/rs (package: cad-plugin)
+Status: DONE
+Changed:
+  - Cargo.toml: added `protocol = { path = "../../../protocol/rs" }` (was genuinely missing).
+  - lib.rs line ~6010 (test module): `use vcs::{Backbone, BackboneMessage, MemoryBackbone,
+    Operation, OperationDiff};` split into `use protocol::{Operation, OperationDiff};` +
+    `use vcs::{Backbone, BackboneMessage, MemoryBackbone};`.
+  - Line ~7013 `vcs::create_document_vcs_envelope::<CadScene, CadOperation>(...)` left on vcs:: (not
+    part of the protocol facade).
+  - No CollectionOperation usage.
+Build: `cargo build -p cad-plugin` — clean (44 pre-existing dead-code warnings, unrelated).
+Test: `cargo test -p cad-plugin` — 77/78 pass. 1 pre-existing, unrelated failure:
+  `tests::cad_labels_translate_catalogue_typologies_in_german` panics at
+  `ui/wgpu/rs/../../../ui/asset/icon/generated/icon_name.rs:1507:31: invalid catalog icon name` —
+  an icon-catalogue lookup panic with zero connection to vcs/protocol/Operation imports (confirmed
+  by reading the test body: it only renders a catalogue view and checks translated strings). Not
+  touched, not in scope.
+
+================================================================================
+## draw/rs (package: draw)
+Status: DONE
+Changed:
+  - lib.rs line 8: `use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};`
+    split into `use protocol::{Operation, OperationDiff};` +
+    `use vcs::{DocumentVcsEnvelope, DocumentVcsStore};`.
+  - Line ~2944 (test): `use vcs::OpText;` -> `use protocol::OpText;`.
+  - `#[cfg(target_arch = "wasm32")] use vcs::create_document_vcs_envelope;` left on vcs:: (not part
+    of the protocol facade).
+  - No CollectionOperation usage.
+  - Cargo.toml: protocol dep already present, no change needed.
+Build: `cargo build -p draw` — clean (took ~4m23s cold, contending with heavy concurrent
+  repo-wide cargo activity from other sessions; no errors).
+Test: `cargo test -p draw` — 49/49 unit tests pass. Doc-tests: 0 tests, clean (same transient
+  vcs-rlib race as cad_document on the first attempt, resolved after rebuilding vcs).
+
+================================================================================
+## fem/2d/rs (package: fem_2d)
+Status: DONE
+Changed:
+  - lib.rs line 10: `use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};`
+    split into `use protocol::{Operation, OperationDiff};` +
+    `use vcs::{DocumentVcsEnvelope, DocumentVcsStore};`.
+  - `#[cfg(target_arch = "wasm32")] use vcs::create_document_vcs_envelope;` and the test-module
+    `use vcs::{apply_operation, create_document_vcs_envelope, DocumentDsl, DocumentVcsCommand};`
+    left on vcs:: (none of those four names are in the protocol facade).
+  - No CollectionOperation usage.
+  - Cargo.toml: protocol dep already present, no change needed.
+Build: `cargo build -p fem_2d` — clean (1 pre-existing unused-variable warning, unrelated).
+Test: `cargo test -p fem_2d` — 36/36 unit tests pass. Doc-tests: 0 tests, clean.
+
+================================================================================
+## fem/3d/rs (package: fem_3d)
+Status: DONE
+Changed:
+  - lib.rs line 10: same split as fem_2d:
+    `use protocol::{Operation, OperationDiff};` + `use vcs::{DocumentVcsEnvelope, DocumentVcsStore};`.
+  - Same vcs-only leftovers (create_document_vcs_envelope, apply_operation, DocumentDsl,
+    DocumentVcsCommand) kept on vcs::.
+  - No CollectionOperation usage.
+  - Cargo.toml: protocol dep already present, no change needed.
+Build: `cargo build -p fem_3d` — clean (no warnings of note).
+Test: `cargo test -p fem_3d` — 34/34 unit tests pass. Doc-tests: 0 tests, clean. (The doctest
+  *link* step hit a transient "extern location for vcs does not exist: .../libvcs.rlib" three
+  times in a row first — this workspace has many other sessions' `cargo build`/`cargo test`
+  processes running concurrently, confirmed via `ps aux`, that appear to delete/replace vcs's rlib
+  mid-build; rebuilding vcs and retrying a fourth time succeeded cleanly.)
+
+================================================================================
+## norm/core/rs (package: norm_core)
+Status: DONE
+Changed:
+  - Cargo.toml: added `protocol = { path = "../../../protocol/rs" }` (was genuinely missing).
+  - lib.rs line 6: `use vcs::{DocumentDsl, Operation, OperationDiff, OpText, TextError, TextSpan};`
+    split into `use protocol::{Operation, OperationDiff, OpText};` +
+    `use vcs::{DocumentDsl, TextError, TextSpan};` (TextError/TextSpan are dsl_core re-exports via
+    vcs, never part of the protocol facade — confirmed by grepping protocol/rs/lib.rs).
+  - Line 484: `type Operation: vcs::Operation<Self::Document> + ...` -> fully-qualified
+    `protocol::Operation<Self::Document>` (this fully-qualified form is required, not stylistic —
+    the trait bound sits inside a trait that also declares `type Operation` as an associated type
+    name, so a bare `Operation` would be ambiguous with that associated type in the same
+    definition). `vcs::apply_operation` call at line 559 left as-is (vcs-only function).
+  - No CollectionOperation usage.
+Build: `cargo build -p norm_core` — clean (1 pre-existing-pattern `unused_qualifications` warning
+  on the protocol::Operation bound at line 484 — rustc considers it technically redundant now that
+  `Operation` is in scope via the crate-level `use`, but it's kept fully-qualified deliberately, see
+  above; the equivalent `vcs::Operation` fully-qualified form triggered the identical warning before
+  this change, so this is not a new warning class introduced by the migration).
+Test: `cargo test -p norm_core` — 8/8 unit tests pass. Doc-tests: 0 tests, clean.
+
+================================================================================
+## note/plugin/rs (package: note-plugin)
+Status: DONE
+Changed:
+  - lib.rs line 22: `use vcs::{Operation, OperationDiff};` -> `use protocol::{Operation,
+    OperationDiff};`.
+  - Line ~267 docstring: `/// See {@link vcs::Operation} and ...` -> `/// See {@link
+    protocol::Operation} and ...` (doc-comment cross-reference kept in sync with the new import
+    path; not code, but left stale would be misleading).
+  - No CollectionOperation usage.
+  - Cargo.toml: protocol dep already present, no change needed.
+Build: `cargo build -p note-plugin` — clean.
+Test: `cargo test -p note-plugin --lib` — 25/31 pass. 6 pre-existing, unrelated failures, all the
+  same root cause as cad-plugin's failure — a panic at
+  `ui/wgpu/rs/../../../ui/asset/icon/generated/icon_name.rs:1507:31: invalid catalog icon name`:
+  __semio_plugin_sanity_declared_apps_appear_in_bundle_manifest, tests::renders_document_tree,
+  tests::note_labels_resolve_native_by_default, tests::note_labels_resolve_german_locale,
+  tests::set_active_utility_emits_no_ops_and_no_history_entry,
+  tests::utility_registry_declares_canvas_utilities_scoped_to_composite_window. Confirmed no
+  overlap with vcs/protocol/Operation code paths (icon-catalogue lookup only). Not touched, not in
+  scope for this ticket.
+
+================================================================================
+## Summary
+7/7 crates migrated: cad/rs, cad/plugin/rs, draw/rs, fem/2d/rs, fem/3d/rs, norm/core/rs,
+note/plugin/rs. All pure import-path surgery — none of the 7 construct/match
+vcs::CollectionOperation, so the CW7 shape-migration steps in cw7-instructions.md did not apply to
+any of them. protocol added as a direct Cargo dep to cad/plugin/rs and norm/core/rs (both
+previously missing it). All 7 crates build clean. Unit tests: 6/7 crates fully green
+(cad_document 15/15, draw 49/49, fem_2d 36/36, fem_3d 34/34, norm_core 8/8, cad-plugin 77/78 with
+1 pre-existing unrelated icon-catalogue failure, note-plugin 25/31 with 6 pre-existing unrelated
+icon-catalogue failures of the identical root cause). No ripple: none of the 7 crates publicly
+re-export Operation/OperationDiff/OpText/Edit from vcs, so no other crate's import surface changes.
+All 7 crates now have clean `cargo build` + `cargo test` (unit) + `cargo test --doc` runs, modulo
+the two pre-existing unrelated icon-catalogue test failures noted above (cad-plugin, note-plugin)
+and transient concurrent-build doctest-link races (cad_document, draw, fem_3d) that all resolved on
+retry after rebuilding vcs.

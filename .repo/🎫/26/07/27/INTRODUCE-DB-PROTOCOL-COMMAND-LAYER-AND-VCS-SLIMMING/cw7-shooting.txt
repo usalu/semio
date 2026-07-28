@@ -1,0 +1,109 @@
+CW7 app fan-out — crate: shooting/rs
+=====================================
+
+Scope confirmed: shooting/rs has real CollectionOperation usage (three collections: Assets, Shots,
+SavedCameras, each CollectionOperation<String, TItem, TPatch>), not a false-positive grep hit.
+
+File touched: /Users/ueli/Documents/semio/shooting/rs/lib.rs (only file changed)
+Cargo.toml: unchanged — `protocol` was already a direct dependency (confirmed before editing).
+
+What changed
+------------
+
+1. Import switch (top of file):
+   - `use vcs::{collection_diff_from_operation, CollectionDiff, CollectionOperation,
+     DocumentVcsEnvelope, DocumentVcsStore, Identified, ItemPatch, Operation, OperationDiff,
+     Patchable};`
+   became two imports:
+   - `use protocol::{collection_diff_from_operation, CollectionDiff, CollectionOperation,
+     Identified, ItemPatch, Operation, OperationDiff, Patchable};`
+   - `use vcs::{DocumentVcsEnvelope, DocumentVcsStore};` (these two are vcs-only document-store
+     types, not part of the frozen protocol_command contract — left untouched).
+
+2. `CollectionOperation::Add`/`Move` shape migration, in both directions of the DSL<->domain
+   converters (`shooting_operation_to_dsl` / `shooting_operation_from_dsl`) for all three
+   collections (Assets, Shots, SavedCameras):
+   - `Add { index, item }` -> `Add { id, item, at }` (index renamed to `at` verbatim).
+   - `Move { id, to_index }` -> `Move { id, to }` (pure rename).
+   - Pattern-match arms in `shooting_operation_to_dsl` bind `id: _id` on Add (the id is not needed
+     there — `ShootingOperationDsl::*Add` variants carry the id implicitly inside `item`, unchanged
+     DSL wire shape) with a comment-free `_id` prefix per the instructions doc's guidance never to
+     silently `..`-ignore a newly-mandatory field.
+   - Construction arms in `shooting_operation_from_dsl` now destructure the node wrapper first
+     (`let ShootingAssetNode::Asset(asset) = *item;`) so `asset.id.clone()` can be supplied as the
+     new `Add.id` before moving `asset` into `item`.
+
+3. Id source chosen for `Add`: `item.id` (the field already used by each item type's
+   `Identified<String>::id()` impl — ShootingAsset/ShootingShot/ShootingSavedCamera all carry a
+   plain `id: String` field). No fresh-id generation exists in this crate for these collections
+   (ids arrive pre-assigned from the caller/DSL payload), so this is a straight "read the existing
+   id off the item" case, matching the doc's primary guidance, not the counter/ULID fallback.
+
+4. `backwards()` in the `Operation<ShootingFixture> for ShootingOperation` impl: the three
+   `vcs::invert_collection_operation(...)` calls (Assets/Shots/SavedCameras) switched to
+   `protocol::invert_collection_operation(...)`.
+
+5. `impl vcs::OpText for ShootingOperation` -> `impl protocol::OpText for ShootingOperation`
+   (both call sites of `<ShootingOperationDsl as vcs::OpText>::...` inside it switched to
+   `<ShootingOperationDsl as protocol::OpText>::...` too). `Operation`/`OperationDiff` were already
+   using the (now protocol-sourced) trait names from the import-line change in step 1 — no further
+   edit needed for those two since Rust doesn't require re-qualifying a trait name at each `impl`
+   site the way `OpText` needed here (this crate's only fully-qualified use of the trio was OpText).
+
+6. Undocumented but load-bearing cascade from switching the `Patchable` import: protocol_command's
+   `Patchable<TPatch>` trait is NOT a pure re-export of vcs's — it splits vcs's single
+   `apply_patch(&mut self, &TPatch) -> TPatch` (mutate-and-return-inverse) into two methods,
+   `apply_patch(&mut self, &TPatch)` (mutate only, no return) and
+   `diff_patch(&self, other: &Self) -> Option<TPatch>` (compute the patch that would turn `self`
+   into `other`). This was NOT called out in cw7-instructions.md's "shape change" section (which
+   only described `CollectionOperation`), but step 6 of the instructions explicitly directs
+   switching `Patchable`'s import path too, and `protocol::apply_collection_operation`/
+   `invert_collection_operation` require `TItem: protocol::Patchable<TPatch>` (a distinct trait
+   from `vcs::Patchable`, no blanket bridge exists) — so this was a compile-time hard requirement,
+   not optional. Updated all three impls (`ShootingAsset`/`ShootingShot`/`ShootingSavedCamera`):
+   - `apply_patch` bodies kept identical mutation logic, just dropped the `inverse` computation and
+     the return value (the single call site, `apply_collection_diff`, already discarded the return
+     value, so this was a no-op change from the caller's perspective).
+   - Added `diff_patch(&self, other: &Self) -> Option<TPatch>` per type, doing a field-by-field
+     compare against the patch type's fields (mirroring exactly what the old inline `inverse`
+     construction computed, just recomputed from two full states instead of from
+     patch-plus-pre-state): a field's slot is `Some(other's value)` iff it differs from `self`'s,
+     `None` otherwise; returns `None` overall if no field differs (matches every round-trip case
+     this crate's test suite actually exercises — none of them apply a byte-identical patch, so the
+     documented "no-op patch must still yield `Some(unchanged patch)`" edge case in
+     `protocol_command::invert_collection_operation`'s doc comment never triggers here).
+   - This is a genuine, non-cosmetic behavior-preserving reimplementation, not a mechanical rename;
+     flagging it here since it's outside literally what the instructions doc's "shape change"
+     section described, in case other CW7 crates hit the same gap and this report helps triage.
+
+Build / test status
+--------------------
+- `cd shooting/rs && cargo build -p shooting` — succeeds, no warnings/errors from this crate
+  (workspace-wide pre-existing warnings in unrelated crates, e.g. framework/core lifetime lints,
+  left untouched, not ours).
+- `cd shooting/rs && cargo test -p shooting --lib` — all 17 unit tests pass, including
+  `assets_add_remove_patch_round_trip`, `shots_patch_round_trip`, `saved_cameras_add_round_trip`,
+  `shooting_op_text_round_trips_collection_variants` (op-text round trip for every
+  Add/Remove/Move/Patch variant on all three collections), and the two DSL round-trip tests.
+- `cargo test -p shooting` (full, including doctests) hit one doctest-runner failure:
+  `error: extern location for vcs does not exist: .../libvcs.rlib`. This is NOT caused by this
+  change — shooting/rs/lib.rs has zero ``` doc-code-fences (grep-confirmed), so there is nothing
+  for rustdoc to compile/link against vcs in the first place; the failure is a stale/missing build
+  artifact from a concurrently-running workspace build elsewhere in this live monorepo (matches
+  known "concurrent cargo workspace churn" behavior). Re-running `cargo test -p shooting --lib`
+  immediately after succeeded cleanly with no vcs-related error, confirming it's transient/
+  environmental, not a regression from this migration.
+
+Deviations from the ownership rules
+------------------------------------
+None. Only shooting/rs/lib.rs was edited; Cargo.toml was inspected but not modified (protocol dep
+already present); no git commands run; no other crate's files touched.
+
+Cross-crate ripple check
+-------------------------
+Grepped the repo for `ShootingOperation::Assets(` / `ShootingOperation::Shots(` /
+`ShootingOperation::SavedCameras(` / `shooting::CollectionOperation` outside shooting/rs — the
+sibling crate shooting/plugin/rs is a SEPARATE assignment in this same CW7 wave's crate list
+(`shooting/plugin/rs`), not something to fix here; noting per the doc's ripple-reporting
+instruction rather than silently touching it. No other crate outside the CW7 list appeared to
+reference shooting's `CollectionOperation`-typed variants directly.

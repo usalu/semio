@@ -16,7 +16,8 @@ mod document_vcs {
     #[cfg(target_arch = "wasm32")]
     use wasm_bindgen::prelude::*;
 
-    use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
+    use protocol::{Operation, OperationDiff};
+    use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
 
     /// 📷 Editor viewport transform persisted in the document projection. No `#[dsl(keyword = ...)]`:
     /// every field that embeds it (`WriterProjection::camera`, `WriterOperation::SetCamera::camera`)
@@ -62,7 +63,7 @@ mod document_vcs {
     }
 
     /// 📐 Typed content mutation for a `WriterProjection`. Each variant's op keyword is the
-    /// auto-derived kebab-case of its own name (`SetText` -> `set-text`, ...) — see {@link vcs::OpText}.
+    /// auto-derived kebab-case of its own name (`SetText` -> `set-text`, ...) — see {@link protocol::OpText}.
     #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslOps)]
     #[serde(tag = "operation", rename_all = "camelCase")]
     pub enum WriterOperation {
@@ -128,7 +129,7 @@ mod document_vcs {
     }
 
     // #region 🔖Dsl
-    // `vcs::DocumentDsl for WriterProjection` and `vcs::OpText for WriterOperation` are now generated
+    // `vcs::DocumentDsl for WriterProjection` and `protocol::OpText for WriterOperation` are now generated
     // by `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslOps)]` on the type definitions above — the
     // engine's `dsl_schema` grammar replaces this crate's own hand-rolled kv printer (the old
     // `writer_dsl` lexer/parser/printer module was deleted after regenerating `writer-plugin`'s two

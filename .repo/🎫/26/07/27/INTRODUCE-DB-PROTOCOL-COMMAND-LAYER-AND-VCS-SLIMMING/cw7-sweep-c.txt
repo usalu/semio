@@ -1,0 +1,100 @@
+# CW7 Sweep C — vcs::Operation/OpText/OperationDiff/Edit -> protocol:: import-path surgery
+
+Scope: pure import-path migration of `vcs::Operation`/`vcs::OpText`/`vcs::OperationDiff`/`vcs::Edit`
+to `protocol::` direct imports across 7 crates. Trait/type shapes unchanged (confirmed against
+protocol/rs/lib.rs, which re-exports `Edit, Operation, OperationDiff, OpText, CollectionOperation`
+etc. from protocol_command). No crate in this group constructs or matches `vcs::CollectionOperation`
+(grep-verified — zero hits for `CollectionOperation` in all 7 files), so no shape-migration steps
+from cw7-instructions.md applied to any of these; that document's crate list (imperative/*, layout/*,
+architect/*, sequence/core, dag/*, gis/plugin, shooting/*, process/*, flow/core, animate/*,
+lowpoly/core) is a disjoint set from this sweep's 7 crates.
+
+`s/plugin/rs` (kernel wave, sibling agent) was not touched — only `s/rs` from this group.
+
+All 7 crates already carried `protocol` as a direct Cargo dependency (from CW3's earlier mechanical
+sweep) — no Cargo.toml edits were needed anywhere.
+
+## remodel/rs (remodel_document)
+- `lib.rs:14`: `use vcs::{Operation, OperationDiff};` -> `use protocol::{Operation, OperationDiff};`
+- No other `vcs::Operation`/`OperationDiff`/`OpText`/`Edit` references (remaining `vcs::` usages are
+  `test_support::*`, `create_document_vcs_envelope`, `DocumentVcsStore`, `DocumentVcsCommand` — all
+  out of scope, left untouched).
+- Build + test: `cargo test -p remodel_document --lib` — PASS, 32/32 tests.
+
+## s/rs (s_studio)
+- `lib.rs:5`: split combined import
+  `use vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentBackboneRef, DocumentVcs, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff, VcsError};`
+  into
+  `use protocol::{Operation, OperationDiff};` +
+  `use vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentBackboneRef, DocumentVcs, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, VcsError};`
+- Updated stale doc comment (line ~309): `` `impl vcs::OpText for StudioOperation` `` ->
+  `` `impl protocol::OpText for StudioOperation` `` (matches what `dsl::DslOps` derive actually emits
+  per `dsl/derive/rs/lib.rs:737`, `impl ::protocol::OpText for #name`). Sibling comment about
+  `vcs::DocumentDsl` left untouched (out of scope).
+- Build + test: `cargo test -p s_studio --lib` — PASS, 5/5 tests.
+
+## sourcing/curate/rs (sourcing_curate)
+- `lib.rs:5`: `use vcs::{Operation, OperationDiff};` -> `use protocol::{Operation, OperationDiff};`
+- No other in-scope references.
+- Build + test: `cargo test -p sourcing_curate --lib` — PASS, 16/16 tests.
+
+## trinity/ram/rs (trinity_ram)
+- `lib.rs:423`: split
+  `use vcs::{apply_operation, create_document_vcs_envelope, CollectionDiff, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, ItemPatch, Operation, OperationDiff};`
+  into
+  `use protocol::{Operation, OperationDiff};` +
+  `use vcs::{apply_operation, create_document_vcs_envelope, CollectionDiff, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, ItemPatch};`
+- `lib.rs:909`: split
+  `use vcs::{DocumentDsl, DocumentPack, OpText, PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};`
+  into
+  `use protocol::OpText;` +
+  `use vcs::{DocumentDsl, DocumentPack, PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};`
+- Updated two stale doc comments referencing `` `vcs::OpText` `` (near `TrinityGraphOperation`'s DSL
+  mirror and its `impl OpText for TrinityGraphOperation` block) to `` `protocol::OpText` ``.
+- `vcs::VcsError` (error enum `#[from]`) left untouched — out of scope.
+- Build + test: `cargo test -p trinity_ram --lib` — PASS, 57/57 tests.
+
+## trinity/rewrite/engine/rs (trinity_rewrite)
+- `lib.rs:15`: `use vcs::{DocumentDsl, OpText};` -> `use protocol::OpText;` + `use vcs::DocumentDsl;`
+- `lib.rs:283`: split
+  `use vcs::{create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};`
+  into
+  `use protocol::{Operation, OperationDiff};` +
+  `use vcs::{create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore};`
+- Updated stale doc comment: `` `vcs::DocumentDsl`/`vcs::OpText` impls `` ->
+  `` `vcs::DocumentDsl`/`protocol::OpText` impls ``.
+- `vcs::VcsError` and the three local `use vcs::DocumentVcsCommand;` (inside `undo`/`redo`/
+  `commit_checkpoint`) left untouched — out of scope.
+- Build + test: `cargo test -p trinity_rewrite --lib` — PASS, 44/44 tests.
+
+## writer/rs (writer)
+- `lib.rs:19`: `use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};` ->
+  `use protocol::{Operation, OperationDiff};` + `use vcs::{DocumentVcsEnvelope, DocumentVcsStore};`
+- Updated two stale doc-comment references to `vcs::OpText` ->  `protocol::OpText` (the `{@link
+  vcs::OpText}` docstring and the `` `vcs::DocumentDsl` .. `vcs::OpText` `` region comment, the latter
+  split so `DocumentDsl` stays `vcs::` and `OpText` becomes `protocol::`).
+- Build + test: `cargo test -p writer --lib` — PASS, 7/7 tests.
+
+## mathematical/plugin/rs (mathematical-plugin)
+- `lib.rs:9`: `use vcs::{DocumentDsl, Operation, OperationDiff};` -> `use protocol::{Operation, OperationDiff};` + `use vcs::DocumentDsl;`
+- `impl vcs::OpText for MathOperation` (fully-qualified, no `use` import) -> `impl protocol::OpText for MathOperation`,
+  plus the two `<MathOperationDsl as vcs::OpText>::{parse_op,print_op}` calls inside that impl ->
+  `<MathOperationDsl as protocol::OpText>::...` (this crate hand-implements `OpText`/`DocumentPack`
+  rather than deriving them, so these were real trait-impl-header edits, not just an import
+  rewrite — shape unchanged, only the trait's home path).
+- Updated stale doc comment: `` `vcs::DocumentDsl`/`vcs::OpText` boundary `` ->
+  `` `vcs::DocumentDsl`/`protocol::OpText` boundary ``.
+- `impl vcs::DocumentPack for MathProjection` and its `vcs::PackEncodeOptions`/`vcs::PackError`/
+  `vcs::PackDecodeOptions`/`vcs::TextError`/`vcs::TextSpan`/`vcs::text_error_to_pack_error` bodies
+  left untouched — out of scope (not in the Operation/OpText/OperationDiff/Edit set).
+- Build + test: `cargo test -p mathematical-plugin --lib` — PASS, 13/13 tests.
+
+## Deviations / notes
+- `vcs::Edit` does not appear anywhere in any of the 7 crates (grep-verified, zero hits) — nothing
+  to migrate for that symbol in this sweep.
+- No `vcs::CollectionOperation` construction/matching in any of the 7 crates — the CW7
+  shape-migration steps in cw7-instructions.md were not applicable here.
+- No cross-crate ripple found: none of these 7 crates export public API that other crates construct
+  using the old `vcs::Operation`/`OpText`/`OperationDiff` bounds in a way this rename would break
+  (each crate's `Operation`/`OperationDiff` impls are on that crate's own local operation enum).
+- Total: 7/7 crates migrated, 7/7 build clean, 174/174 tests passing (32+5+16+57+44+7+13).

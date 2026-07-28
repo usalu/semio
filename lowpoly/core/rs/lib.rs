@@ -4,7 +4,7 @@
 
 use kernel_3d_mesh::{EdgeId, FaceId, HalfedgeMesh, MeshKernelError, Vec3, VertexId};
 use serde::{Deserialize, Serialize};
-use vcs::{apply_collection_operation, invert_collection_operation, CollectionOperation, Identified, Operation, OperationDiff, Patchable};
+use protocol::{apply_collection_operation, invert_collection_operation, CollectionOperation, Identified, Operation, OperationDiff, Patchable};
 
 //#region 🔖Pixels
 pub const LOWPOLY_PAINT_TEXTURE_SIZE: usize = 1024;
@@ -175,25 +175,29 @@ pub struct LowpolyObjectPatch {
 }
 
 impl Patchable<LowpolyObjectPatch> for LowpolyObject {
-    fn apply_patch(&mut self, patch: &LowpolyObjectPatch) -> LowpolyObjectPatch {
-        let mut inverse = LowpolyObjectPatch::default();
+    fn apply_patch(&mut self, patch: &LowpolyObjectPatch) {
         if let Some(value) = &patch.name {
-            inverse.name = Some(self.name.clone());
             self.name = value.clone();
         }
         if let Some(value) = patch.smooth_shading {
-            inverse.smooth_shading = Some(self.smooth_shading);
             self.smooth_shading = value;
         }
         if let Some(value) = &patch.transform {
-            inverse.transform = Some(self.transform.clone());
             self.transform = value.clone();
         }
         if let Some(value) = &patch.mesh_json {
-            inverse.mesh_json = Some(self.mesh_json.clone());
             self.mesh_json = value.clone();
         }
-        inverse
+    }
+
+    fn diff_patch(&self, other: &Self) -> Option<LowpolyObjectPatch> {
+        let patch = LowpolyObjectPatch {
+            name: (self.name != other.name).then(|| other.name.clone()),
+            smooth_shading: (self.smooth_shading != other.smooth_shading).then_some(other.smooth_shading),
+            transform: (self.transform != other.transform).then(|| other.transform.clone()),
+            mesh_json: (self.mesh_json != other.mesh_json).then(|| other.mesh_json.clone()),
+        };
+        (patch != LowpolyObjectPatch::default()).then_some(patch)
     }
 }
 
@@ -232,13 +236,13 @@ mod run_bytes_base64 {
 }
 
 /// @emoji 🧩 The typed lowpoly document operation. Mesh/object structure is flattened into one
-/// keyword-tagged variant per `vcs::CollectionOperation` case (`ObjectsAdd`/`ObjectsRemove`/
+/// keyword-tagged variant per `protocol::CollectionOperation` case (`ObjectsAdd`/`ObjectsRemove`/
 /// `ObjectsMove`/`ObjectsPatch`) rather than wrapping that generic type directly — `CollectionOperation`
-/// is foreign (defined in `vcs`) and generic, so it can never itself implement `dsl::DslField`/
+/// is foreign (defined in `protocol`) and generic, so it can never itself implement `dsl::DslField`/
 /// `dsl::DslVariants` from this crate (the orphan rule requires a local type to anchor the impl on,
 /// and its own outer type isn't local either). {@link apply_lowpoly_operation}/
 /// {@link invert_lowpoly_operation} reconstruct a `CollectionOperation` ad hoc per match arm to keep
-/// reusing `vcs`'s generic collection apply/invert helpers. Per-object paint-layer structure and pixel
+/// reusing `protocol`'s generic collection apply/invert helpers. Per-object paint-layer structure and pixel
 /// edits get dedicated variants whose inverses restore the exact prior layers / overwritten pixel runs.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
@@ -280,13 +284,13 @@ pub enum LowpolyOperation {
     },
 }
 
-/// 🔁 Converts a generic objects `CollectionOperation` (as produced by `vcs::invert_collection_operation`)
+/// 🔁 Converts a generic objects `CollectionOperation` (as produced by `protocol::invert_collection_operation`)
 /// back into its flat `LowpolyOperation` variant.
 fn objects_operation_from_collection(operation: CollectionOperation<String, LowpolyObject, LowpolyObjectPatch>) -> LowpolyOperation {
     match operation {
-        CollectionOperation::Add { index, item } => LowpolyOperation::ObjectsAdd { index, item },
+        CollectionOperation::Add { id: _id, item, at } => LowpolyOperation::ObjectsAdd { index: at, item },
         CollectionOperation::Remove { id } => LowpolyOperation::ObjectsRemove { id },
-        CollectionOperation::Move { id, to_index } => LowpolyOperation::ObjectsMove { id, to_index },
+        CollectionOperation::Move { id, to } => LowpolyOperation::ObjectsMove { id, to_index: to },
         CollectionOperation::Patch { id, patch } => LowpolyOperation::ObjectsPatch { id, patch },
     }
 }
@@ -330,9 +334,9 @@ fn apply_pixel_runs(pixels: &mut [u8], runs: &[PixelRun]) {
 /// calling so this never observes shared state.
 pub fn apply_lowpoly_operation(projection: &mut LowpolyProjection, operation: &LowpolyOperation) {
     match operation {
-        LowpolyOperation::ObjectsAdd { index, item } => apply_collection_operation(&mut projection.objects, &CollectionOperation::Add { index: *index, item: item.clone() }),
+        LowpolyOperation::ObjectsAdd { index, item } => apply_collection_operation(&mut projection.objects, &CollectionOperation::Add { id: item.id.clone(), item: item.clone(), at: *index }),
         LowpolyOperation::ObjectsRemove { id } => apply_collection_operation(&mut projection.objects, &CollectionOperation::Remove { id: id.clone() }),
-        LowpolyOperation::ObjectsMove { id, to_index } => apply_collection_operation(&mut projection.objects, &CollectionOperation::Move { id: id.clone(), to_index: *to_index }),
+        LowpolyOperation::ObjectsMove { id, to_index } => apply_collection_operation(&mut projection.objects, &CollectionOperation::Move { id: id.clone(), to: *to_index }),
         LowpolyOperation::ObjectsPatch { id, patch } => apply_collection_operation(&mut projection.objects, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() }),
         LowpolyOperation::AddPaintLayer { object_id, index, layer } => {
             if let Some(object) = object_mut(projection, object_id) {
@@ -376,11 +380,11 @@ fn layer_pixels_at<'a>(projection: &'a LowpolyProjection, object_id: &str, layer
 pub fn invert_lowpoly_operation(projection: &LowpolyProjection, operation: &LowpolyOperation) -> LowpolyOperation {
     match operation {
         LowpolyOperation::ObjectsAdd { index, item } => {
-            objects_operation_from_collection(invert_collection_operation(&projection.objects, &CollectionOperation::Add { index: *index, item: item.clone() }))
+            objects_operation_from_collection(invert_collection_operation(&projection.objects, &CollectionOperation::Add { id: item.id.clone(), item: item.clone(), at: *index }))
         }
         LowpolyOperation::ObjectsRemove { id } => objects_operation_from_collection(invert_collection_operation(&projection.objects, &CollectionOperation::Remove { id: id.clone() })),
         LowpolyOperation::ObjectsMove { id, to_index } => {
-            objects_operation_from_collection(invert_collection_operation(&projection.objects, &CollectionOperation::Move { id: id.clone(), to_index: *to_index }))
+            objects_operation_from_collection(invert_collection_operation(&projection.objects, &CollectionOperation::Move { id: id.clone(), to: *to_index }))
         }
         LowpolyOperation::ObjectsPatch { id, patch } => {
             objects_operation_from_collection(invert_collection_operation(&projection.objects, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() }))
@@ -1419,11 +1423,12 @@ mod tests {
             transform: Some(LowpolyTransform { position: [1.0, 2.0, 3.0], ..LowpolyTransform::default() }),
             mesh_json: Some(new_mesh.clone()),
         };
-        let inverse = object.apply_patch(&patch);
+        object.apply_patch(&patch);
         assert_eq!(object.name, "Renamed");
         assert!(object.smooth_shading);
         assert_eq!(object.transform.position, [1.0, 2.0, 3.0]);
         assert_eq!(object.mesh_json, new_mesh);
+        let inverse = object.diff_patch(&original).expect("patch changed state");
         object.apply_patch(&inverse);
         assert_eq!(object, original);
     }
@@ -1592,13 +1597,13 @@ mod tests {
 
     #[test]
     fn op_text_parse_rejects_unknown_operation_kind() {
-        let result = <LowpolyOperation as vcs::OpText>::parse_op("bogusOperation foo=bar");
+        let result = <LowpolyOperation as protocol::OpText>::parse_op("bogusOperation foo=bar");
         assert!(result.is_err());
     }
 
     #[test]
     fn op_text_parse_rejects_unknown_objects_suboperation() {
-        let result = <LowpolyOperation as vcs::OpText>::parse_op("objects.frobnicate id=obj-1");
+        let result = <LowpolyOperation as protocol::OpText>::parse_op("objects.frobnicate id=obj-1");
         assert!(result.is_err());
     }
     //#endregion 🔖DslAndOpText

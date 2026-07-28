@@ -1265,7 +1265,7 @@ mod operations {
     //! true pre-state inverse so undo/redo round-trips exactly. See {@link vcs::Operation}.
 
     use serde::{Deserialize, Serialize};
-    use vcs::{apply_collection_operation, invert_collection_operation, CollectionOperation, Identified, Operation, OperationDiff, Patchable};
+    use protocol::{apply_collection_operation, invert_collection_operation, CollectionOperation, Identified, Operation, OperationDiff, Patchable};
 
     use crate::document::{Frame, ImageLink, LayoutCamera, LayoutDocument, Page, TextStory};
 
@@ -1306,18 +1306,7 @@ mod operations {
     }
 
     impl Patchable<PagePatch> for Page {
-        fn apply_patch(&mut self, patch: &PagePatch) -> PagePatch {
-            let inverse = PagePatch {
-                name: patch.name.as_ref().map(|_| self.name.clone()),
-                width: patch.width.map(|_| self.width),
-                height: patch.height.map(|_| self.height),
-                margin_top: patch.margin_top.map(|_| self.margins.top),
-                margin_right: patch.margin_right.map(|_| self.margins.right),
-                margin_bottom: patch.margin_bottom.map(|_| self.margins.bottom),
-                margin_left: patch.margin_left.map(|_| self.margins.left),
-                columns_count: patch.columns_count.map(|_| self.columns.count),
-                columns_gutter: patch.columns_gutter.map(|_| self.columns.gutter),
-            };
+        fn apply_patch(&mut self, patch: &PagePatch) {
             if let Some(name) = &patch.name {
                 self.name = name.clone();
             }
@@ -1345,7 +1334,48 @@ mod operations {
             if let Some(value) = patch.columns_gutter {
                 self.columns.gutter = value;
             }
-            inverse
+        }
+
+        fn diff_patch(&self, other: &Self) -> Option<PagePatch> {
+            let mut patch = PagePatch::default();
+            let mut changed = false;
+            if self.name != other.name {
+                patch.name = Some(other.name.clone());
+                changed = true;
+            }
+            if self.width != other.width {
+                patch.width = Some(other.width);
+                changed = true;
+            }
+            if self.height != other.height {
+                patch.height = Some(other.height);
+                changed = true;
+            }
+            if self.margins.top != other.margins.top {
+                patch.margin_top = Some(other.margins.top);
+                changed = true;
+            }
+            if self.margins.right != other.margins.right {
+                patch.margin_right = Some(other.margins.right);
+                changed = true;
+            }
+            if self.margins.bottom != other.margins.bottom {
+                patch.margin_bottom = Some(other.margins.bottom);
+                changed = true;
+            }
+            if self.margins.left != other.margins.left {
+                patch.margin_left = Some(other.margins.left);
+                changed = true;
+            }
+            if self.columns.count != other.columns.count {
+                patch.columns_count = Some(other.columns.count);
+                changed = true;
+            }
+            if self.columns.gutter != other.columns.gutter {
+                patch.columns_gutter = Some(other.columns.gutter);
+                changed = true;
+            }
+            changed.then_some(patch)
         }
     }
 
@@ -1357,12 +1387,14 @@ mod operations {
     }
 
     impl Patchable<TextStoryPatch> for TextStory {
-        fn apply_patch(&mut self, patch: &TextStoryPatch) -> TextStoryPatch {
-            let inverse = TextStoryPatch { content: patch.content.as_ref().map(|_| self.content.clone()) };
+        fn apply_patch(&mut self, patch: &TextStoryPatch) {
             if let Some(content) = &patch.content {
                 self.content = content.clone();
             }
-            inverse
+        }
+
+        fn diff_patch(&self, other: &Self) -> Option<TextStoryPatch> {
+            (self.content != other.content).then(|| TextStoryPatch { content: Some(other.content.clone()) })
         }
     }
 
@@ -1374,12 +1406,14 @@ mod operations {
     }
 
     impl Patchable<ImageLinkPatch> for ImageLink {
-        fn apply_patch(&mut self, patch: &ImageLinkPatch) -> ImageLinkPatch {
-            let inverse = ImageLinkPatch { path: patch.path.as_ref().map(|_| self.path.clone()) };
+        fn apply_patch(&mut self, patch: &ImageLinkPatch) {
             if let Some(path) = &patch.path {
                 self.path = path.clone();
             }
-            inverse
+        }
+
+        fn diff_patch(&self, other: &Self) -> Option<ImageLinkPatch> {
+            (self.path != other.path).then(|| ImageLinkPatch { path: Some(other.path.clone()) })
         }
     }
 
@@ -1619,7 +1653,7 @@ mod operations {
             let doc = sample_doc();
             let mut page_2 = doc.pages[0].clone();
             page_2.id = "page-2".into();
-            let add = LayoutOperation::Pages(CollectionOperation::Add { index: 1, item: page_2 });
+            let add = LayoutOperation::Pages(CollectionOperation::Add { id: page_2.id.clone(), item: page_2, at: 1 });
             let with_page = round_trip(&doc, &add);
             assert_eq!(with_page.pages.len(), 2);
 
@@ -1743,7 +1777,8 @@ mod dsl {
 
     use crate::document::*;
     use crate::operations::*;
-    use vcs::{CollectionOperation, OpText, TextError};
+    use protocol::{CollectionOperation, OpText};
+    use vcs::TextError;
 
     //#region 🔖FramePatchDsl
     /// 🎨 3-state tag standing in for `FramePatch.fill`/`.stroke`'s `Option<Option<[f32;4]>>` — the DSL
@@ -1894,17 +1929,17 @@ mod dsl {
 
     fn layout_operation_to_dsl(operation: &LayoutOperation) -> LayoutOperationDsl {
         match operation {
-            LayoutOperation::Pages(CollectionOperation::Add { index, item }) => LayoutOperationDsl::PagesAdd { index: *index, item: item.clone() },
+            LayoutOperation::Pages(CollectionOperation::Add { id: _id, item, at }) => LayoutOperationDsl::PagesAdd { index: *at, item: item.clone() },
             LayoutOperation::Pages(CollectionOperation::Remove { id }) => LayoutOperationDsl::PagesRemove { id: id.clone() },
-            LayoutOperation::Pages(CollectionOperation::Move { id, to_index }) => LayoutOperationDsl::PagesMove { id: id.clone(), to_index: *to_index },
+            LayoutOperation::Pages(CollectionOperation::Move { id, to }) => LayoutOperationDsl::PagesMove { id: id.clone(), to_index: *to },
             LayoutOperation::Pages(CollectionOperation::Patch { id, patch }) => LayoutOperationDsl::PagesPatch { id: id.clone(), patch: patch.clone() },
-            LayoutOperation::Stories(CollectionOperation::Add { index, item }) => LayoutOperationDsl::StoriesAdd { index: *index, item: item.clone() },
+            LayoutOperation::Stories(CollectionOperation::Add { id: _id, item, at }) => LayoutOperationDsl::StoriesAdd { index: *at, item: item.clone() },
             LayoutOperation::Stories(CollectionOperation::Remove { id }) => LayoutOperationDsl::StoriesRemove { id: id.clone() },
-            LayoutOperation::Stories(CollectionOperation::Move { id, to_index }) => LayoutOperationDsl::StoriesMove { id: id.clone(), to_index: *to_index },
+            LayoutOperation::Stories(CollectionOperation::Move { id, to }) => LayoutOperationDsl::StoriesMove { id: id.clone(), to_index: *to },
             LayoutOperation::Stories(CollectionOperation::Patch { id, patch }) => LayoutOperationDsl::StoriesPatch { id: id.clone(), patch: patch.clone() },
-            LayoutOperation::Links(CollectionOperation::Add { index, item }) => LayoutOperationDsl::LinksAdd { index: *index, item: item.clone() },
+            LayoutOperation::Links(CollectionOperation::Add { id: _id, item, at }) => LayoutOperationDsl::LinksAdd { index: *at, item: item.clone() },
             LayoutOperation::Links(CollectionOperation::Remove { id }) => LayoutOperationDsl::LinksRemove { id: id.clone() },
-            LayoutOperation::Links(CollectionOperation::Move { id, to_index }) => LayoutOperationDsl::LinksMove { id: id.clone(), to_index: *to_index },
+            LayoutOperation::Links(CollectionOperation::Move { id, to }) => LayoutOperationDsl::LinksMove { id: id.clone(), to_index: *to },
             LayoutOperation::Links(CollectionOperation::Patch { id, patch }) => LayoutOperationDsl::LinksPatch { id: id.clone(), patch: patch.clone() },
             LayoutOperation::AddFrame { page_id, index, frame, layer_id } => {
                 LayoutOperationDsl::AddFrame { page_id: page_id.clone(), index: *index, frame: Box::new(frame.clone()), layer_id: layer_id.clone() }
@@ -1919,17 +1954,17 @@ mod dsl {
 
     fn layout_operation_from_dsl(operation: LayoutOperationDsl) -> LayoutOperation {
         match operation {
-            LayoutOperationDsl::PagesAdd { index, item } => LayoutOperation::Pages(CollectionOperation::Add { index, item }),
+            LayoutOperationDsl::PagesAdd { index, item } => LayoutOperation::Pages(CollectionOperation::Add { id: item.id.clone(), item, at: index }),
             LayoutOperationDsl::PagesRemove { id } => LayoutOperation::Pages(CollectionOperation::Remove { id }),
-            LayoutOperationDsl::PagesMove { id, to_index } => LayoutOperation::Pages(CollectionOperation::Move { id, to_index }),
+            LayoutOperationDsl::PagesMove { id, to_index } => LayoutOperation::Pages(CollectionOperation::Move { id, to: to_index }),
             LayoutOperationDsl::PagesPatch { id, patch } => LayoutOperation::Pages(CollectionOperation::Patch { id, patch }),
-            LayoutOperationDsl::StoriesAdd { index, item } => LayoutOperation::Stories(CollectionOperation::Add { index, item }),
+            LayoutOperationDsl::StoriesAdd { index, item } => LayoutOperation::Stories(CollectionOperation::Add { id: item.id.clone(), item, at: index }),
             LayoutOperationDsl::StoriesRemove { id } => LayoutOperation::Stories(CollectionOperation::Remove { id }),
-            LayoutOperationDsl::StoriesMove { id, to_index } => LayoutOperation::Stories(CollectionOperation::Move { id, to_index }),
+            LayoutOperationDsl::StoriesMove { id, to_index } => LayoutOperation::Stories(CollectionOperation::Move { id, to: to_index }),
             LayoutOperationDsl::StoriesPatch { id, patch } => LayoutOperation::Stories(CollectionOperation::Patch { id, patch }),
-            LayoutOperationDsl::LinksAdd { index, item } => LayoutOperation::Links(CollectionOperation::Add { index, item }),
+            LayoutOperationDsl::LinksAdd { index, item } => LayoutOperation::Links(CollectionOperation::Add { id: item.id.clone(), item, at: index }),
             LayoutOperationDsl::LinksRemove { id } => LayoutOperation::Links(CollectionOperation::Remove { id }),
-            LayoutOperationDsl::LinksMove { id, to_index } => LayoutOperation::Links(CollectionOperation::Move { id, to_index }),
+            LayoutOperationDsl::LinksMove { id, to_index } => LayoutOperation::Links(CollectionOperation::Move { id, to: to_index }),
             LayoutOperationDsl::LinksPatch { id, patch } => LayoutOperation::Links(CollectionOperation::Patch { id, patch }),
             LayoutOperationDsl::AddFrame { page_id, index, frame, layer_id } => LayoutOperation::AddFrame { page_id, index, frame: *frame, layer_id },
             LayoutOperationDsl::RemoveFrame { page_id, frame_id } => LayoutOperation::RemoveFrame { page_id, frame_id },
@@ -1994,9 +2029,9 @@ mod dsl {
 
             let mut page_2 = doc.pages[0].clone();
             page_2.id = "page-3".into();
-            test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Add { index: 1, item: page_2 }));
+            test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Add { id: page_2.id.clone(), item: page_2, at: 1 }));
             test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Remove { id: "page-1".into() }));
-            test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Move { id: "page-1".into(), to_index: 1 }));
+            test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Move { id: "page-1".into(), to: 1 }));
             test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Patch {
                 id: "page-1".into(),
                 patch: PagePatch { name: Some("Renamed".into()), width: Some(300.0), columns_count: Some(3), ..Default::default() },
@@ -2005,17 +2040,17 @@ mod dsl {
 
             let mut story_2 = doc.stories[0].clone();
             story_2.id = "story-2".into();
-            test_support::assert_op_line_round_trip(&LayoutOperation::Stories(CollectionOperation::Add { index: 1, item: story_2 }));
+            test_support::assert_op_line_round_trip(&LayoutOperation::Stories(CollectionOperation::Add { id: story_2.id.clone(), item: story_2, at: 1 }));
             test_support::assert_op_line_round_trip(&LayoutOperation::Stories(CollectionOperation::Remove { id: "story-1".into() }));
-            test_support::assert_op_line_round_trip(&LayoutOperation::Stories(CollectionOperation::Move { id: "story-1".into(), to_index: 0 }));
+            test_support::assert_op_line_round_trip(&LayoutOperation::Stories(CollectionOperation::Move { id: "story-1".into(), to: 0 }));
             test_support::assert_op_line_round_trip(&LayoutOperation::Stories(CollectionOperation::Patch { id: "story-1".into(), patch: TextStoryPatch { content: Some("Edited".into()) } }));
             test_support::assert_op_line_round_trip(&LayoutOperation::Stories(CollectionOperation::Patch { id: "story-1".into(), patch: TextStoryPatch { content: None } }));
 
             let mut link_2 = doc.links[0].clone();
             link_2.id = "link-2".into();
-            test_support::assert_op_line_round_trip(&LayoutOperation::Links(CollectionOperation::Add { index: 1, item: link_2 }));
+            test_support::assert_op_line_round_trip(&LayoutOperation::Links(CollectionOperation::Add { id: link_2.id.clone(), item: link_2, at: 1 }));
             test_support::assert_op_line_round_trip(&LayoutOperation::Links(CollectionOperation::Remove { id: "link-missing".into() }));
-            test_support::assert_op_line_round_trip(&LayoutOperation::Links(CollectionOperation::Move { id: "link-missing".into(), to_index: 0 }));
+            test_support::assert_op_line_round_trip(&LayoutOperation::Links(CollectionOperation::Move { id: "link-missing".into(), to: 0 }));
             test_support::assert_op_line_round_trip(&LayoutOperation::Links(CollectionOperation::Patch { id: "link-missing".into(), patch: ImageLinkPatch { path: Some("b.png".into()) } }));
             test_support::assert_op_line_round_trip(&LayoutOperation::Links(CollectionOperation::Patch { id: "link-missing".into(), patch: ImageLinkPatch { path: None } }));
 

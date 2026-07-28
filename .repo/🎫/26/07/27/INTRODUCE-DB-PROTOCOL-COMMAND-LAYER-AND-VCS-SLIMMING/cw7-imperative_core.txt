@@ -1,0 +1,106 @@
+CW7 — App fan-out: CollectionOperation shape migration
+Crate: imperative/core/rs (imperative_core)
+File touched: imperative/core/rs/lib.rs only. Cargo.toml NOT touched (protocol dependency already present from an earlier wave's sweep).
+
+## Real usage confirmed
+Grep-verified real, non-comment usage of vcs::CollectionOperation::Add/Move,
+vcs::apply_collection_operation, and vcs::invert_collection_operation in
+ImperativeOperation's `collection: vcs::CollectionOperation<String, Step, Dictionary>` field
+(the imperative-path step-list edit type), its OperationDiff::apply / Operation::backwards
+impls, its OpText <-> ImperativeOperationDsl mirror conversion, and ~10 test cases. Not a
+false positive.
+
+## BLOCKED: CollectionOperation shape migration NOT performed — cross-crate blocker
+
+Per step 2 of the instructions, I looked at how Remove/Move/Patch already obtain a TId for
+this collection: `Step` (defined in imperative/engine/rs, a sibling crate this crate depends
+on — Step is NOT defined in imperative_core itself) already carries `id: String` as a plain
+struct field, so the intended id source for the new `Add { id, item, at }` field would have
+been `item.id.clone()`, exactly mirroring how Remove/Move/Patch already use `step.id`.
+
+However, `protocol::apply_collection_operation` / `protocol::invert_collection_operation` /
+`protocol::collection_diff_from_operation` require `TItem: protocol::Identified<TId> +
+protocol::Patchable<TPatch>` (protocol's own locally-defined traits — NOT re-exported from
+vcs, unlike Operation/OperationDiff/OpText, which literally are `pub use protocol::{Operation,
+OperationDiff, OpText, ...}` in vcs/rs/lib.rs line 63). `Step`'s only such impls today are:
+
+  imperative/engine/rs/lib.rs:36  impl vcs::Identified<String> for Step
+  imperative/engine/rs/lib.rs:43  impl vcs::Patchable<Dictionary> for Step
+
+`vcs::Patchable` and `protocol::Patchable` are NOT the same trait and this is not a pure
+rename: vcs::Patchable is single-method (`apply_patch(&mut self, &TPatch) -> TPatch`,
+mutate-and-return-inverse), while protocol::Patchable is split into two methods
+(`apply_patch(&mut self, &TPatch)` mutate-only, plus `diff_patch(&self, other: &Self) ->
+Option<TPatch>`) per protocol_command's own doc comment. So `Step` needs a genuinely new,
+non-mechanical `impl protocol::Identified<String> for Step` + `impl protocol::Patchable
+<Dictionary> for Step` (the apply/diff split must be written by hand, it can't be
+copy-pasted from the old single-method impl) added in imperative/engine/rs/lib.rs before
+imperative_core can switch `CollectionOperation`'s type/functions to `protocol::`.
+
+Rust's orphan rule also forbids adding that impl from inside imperative_core/rs/lib.rs itself
+(neither `protocol::Identified`/`protocol::Patchable` nor `Step` are owned by this crate) —
+this file's own `🔖Dsl` region already documents the identical orphan-rule constraint for an
+unrelated reason (foreign types can't receive a foreign derive/trait impl here).
+
+imperative/engine/rs is a sibling crate outside this ticket's assignment (`imperative/core/rs`
+only) and outside the ownership list of any of the other 17 CW7-assigned crates I'm aware of.
+Per the ownership rule ("do NOT edit a crate outside your assignment; report a cross-crate
+ripple instead of silently fixing it in someone else's file"), I left `CollectionOperation`,
+`apply_collection_operation`, and `invert_collection_operation` in this file exactly as they
+were (still `vcs::`, old `Add { index, item }` / `Move { id, to_index }` shape) rather than
+force a change that would fail to compile.
+
+Recommended follow-up (separate ticket/wave, out of my scope): add
+`impl protocol::Identified<String> for Step` and `impl protocol::Patchable<Dictionary> for
+Step` to imperative/engine/rs/lib.rs (mirroring the existing vcs:: impls, splitting
+apply_patch's old return-the-inverse-patch behavior into apply_patch + diff_patch), then
+imperative_core's CollectionOperation::Add/Move sites and the three
+apply_collection_operation/invert_collection_operation/collection_diff_from_operation call
+sites can be mechanically migrated per the instructions doc (id source: `item.id.clone()`
+for Add, `to_index` -> `to` rename for Move).
+
+## DONE: Operation/OperationDiff/OpText trait-import trio (step 7)
+
+`vcs::Operation`/`vcs::OperationDiff`/`vcs::OpText` are a literal `pub use protocol::{...}`
+re-export in vcs/rs/lib.rs (line 63) — same trait, two paths, zero behavior/type change. Per
+step 7 ("do this while you're already in the file"), switched every qualified use of this
+trio, and only this trio, from `vcs::` to `protocol::`:
+
+- `impl vcs::OperationDiff<ImperativeDocument> for ImperativeDiff` -> `impl
+  protocol::OperationDiff<...>`
+- `impl vcs::Operation<ImperativeDocument> for ImperativeOperation` -> `impl
+  protocol::Operation<...>`
+- `impl vcs::OpText for ImperativeOperation` -> `impl protocol::OpText for
+  ImperativeOperation` (body's `Result<Self, vcs::TextError>` return type left as-is:
+  `vcs::TextError` is itself a `pub use dsl_core::{TextError, ...}` re-export, exactly the
+  same type `protocol::OpText::parse_op` requires — no change needed there)
+- Two internal `<ImperativeOperationDsl as vcs::OpText>::{parse_op,print_op}` calls ->
+  `protocol::OpText`
+- Test module: `vcs::Operation::backwards(&operation, &document)` -> `protocol::Operation::
+  backwards(...)`; `use vcs::OperationDiff;` -> `use protocol::OperationDiff;`; three
+  `<ImperativeOperation as vcs::OpText>::{parse_op,print_op}` call sites -> `protocol::OpText`
+
+Everything still reading `vcs::` in this file after this pass is either (a) the blocked
+CollectionOperation-shape items above, or (b) explicitly out of the trio's scope per the
+instructions (DocumentDsl, DocumentPack, TextError, pack_rt, text_error_to_pack_error,
+create_document_vcs_envelope, DocumentVcsStore, DocumentVcsCommand, apply_operation,
+test_support) — none of those were touched.
+
+## Cargo.toml
+`protocol = { path = "../../../protocol/rs" }` was already present (Cargo.toml line 26, from
+an earlier wave's sweep). No dependency change needed.
+
+## Build / test status
+- `cargo build -p imperative_core`: PASS (clean build, no new warnings from my change).
+- `cargo test -p imperative_core`: PASS — 40/40 tests passed, 0 failed.
+  (Three pre-existing "unnecessary qualification" warnings on lines 674/979 predate this
+  change and are unrelated to the CollectionOperation/Operation trio migration — not touched,
+  out of scope.)
+
+## Deviation summary
+Deviated from the instructions' expected end-state: `CollectionOperation`'s Add/Move fields
+and the three vcs::*_collection_operation call sites remain on the OLD vcs:: shape in this
+crate, because the id source type (`Step`) does not yet implement `protocol::Identified`/
+`protocol::Patchable` and cannot be given those impls from within imperative_core/rs/lib.rs
+without violating Rust's orphan rule. This is a genuine cross-crate blocker in
+imperative/engine/rs/lib.rs, reported here rather than silently worked around.

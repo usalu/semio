@@ -7,7 +7,8 @@ use serde_json::Value;
 use vcs::create_document_vcs_envelope;
 #[cfg(test)]
 use vcs::DocumentVcsCommand;
-use vcs::{collection_diff_from_operation, CollectionDiff, CollectionOperation, DocumentVcsEnvelope, DocumentVcsStore, Identified, ItemPatch, Operation, OperationDiff, Patchable};
+use protocol::{collection_diff_from_operation, CollectionDiff, CollectionOperation, Identified, ItemPatch, Operation, OperationDiff, Patchable};
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
 
 pub const SHOOTING_FIXTURE_SCHEMA: &str = "shooting.fixture";
 
@@ -276,14 +277,7 @@ pub struct ShootingAssetPatch {
 }
 
 impl Patchable<ShootingAssetPatch> for ShootingAsset {
-    fn apply_patch(&mut self, patch: &ShootingAssetPatch) -> ShootingAssetPatch {
-        let inverse = ShootingAssetPatch {
-            name: patch.name.as_ref().map(|_| self.name.clone()),
-            url: patch.url.as_ref().map(|_| self.url.clone()),
-            origin: patch.origin.map(|_| self.origin),
-            orientation: patch.orientation.map(|_| self.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])),
-            scale: patch.scale.as_ref().map(|_| self.scale.clone().unwrap_or(Value::Null)),
-        };
+    fn apply_patch(&mut self, patch: &ShootingAssetPatch) {
         if let Some(name) = &patch.name {
             self.name = name.clone();
         }
@@ -299,7 +293,17 @@ impl Patchable<ShootingAssetPatch> for ShootingAsset {
         if let Some(scale) = &patch.scale {
             self.scale = Some(scale.clone());
         }
-        inverse
+    }
+
+    fn diff_patch(&self, other: &Self) -> Option<ShootingAssetPatch> {
+        let patch = ShootingAssetPatch {
+            name: (self.name != other.name).then(|| other.name.clone()),
+            url: (self.url != other.url).then(|| other.url.clone()),
+            origin: (self.origin != other.origin).then_some(other.origin),
+            orientation: (self.orientation != other.orientation).then(|| other.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0])),
+            scale: (self.scale != other.scale).then(|| other.scale.clone().unwrap_or(Value::Null)),
+        };
+        (patch != ShootingAssetPatch::default()).then_some(patch)
     }
 }
 
@@ -314,14 +318,7 @@ pub struct ShootingShotPatch {
 }
 
 impl Patchable<ShootingShotPatch> for ShootingShot {
-    fn apply_patch(&mut self, patch: &ShootingShotPatch) -> ShootingShotPatch {
-        let inverse = ShootingShotPatch {
-            label: patch.label.as_ref().map(|_| self.label.clone()),
-            width: patch.width.map(|_| self.width),
-            height: patch.height.map(|_| self.height),
-            format: patch.format.as_ref().map(|_| self.format.clone()),
-            shape: patch.shape.as_ref().map(|_| self.shape.clone()),
-        };
+    fn apply_patch(&mut self, patch: &ShootingShotPatch) {
         if let Some(label) = &patch.label {
             self.label = label.clone();
         }
@@ -337,7 +334,17 @@ impl Patchable<ShootingShotPatch> for ShootingShot {
         if let Some(shape) = &patch.shape {
             self.shape = shape.clone();
         }
-        inverse
+    }
+
+    fn diff_patch(&self, other: &Self) -> Option<ShootingShotPatch> {
+        let patch = ShootingShotPatch {
+            label: (self.label != other.label).then(|| other.label.clone()),
+            width: (self.width != other.width).then_some(other.width),
+            height: (self.height != other.height).then_some(other.height),
+            format: (self.format != other.format).then(|| other.format.clone()),
+            shape: (self.shape != other.shape).then(|| other.shape.clone()),
+        };
+        (patch != ShootingShotPatch::default()).then_some(patch)
     }
 }
 
@@ -350,20 +357,23 @@ pub struct ShootingSavedCameraPatch {
 }
 
 impl Patchable<ShootingSavedCameraPatch> for ShootingSavedCamera {
-    fn apply_patch(&mut self, patch: &ShootingSavedCameraPatch) -> ShootingSavedCameraPatch {
-        let inverse = ShootingSavedCameraPatch { label: patch.label.as_ref().map(|_| self.label.clone()), camera: patch.camera.as_ref().map(|_| self.camera.clone()) };
+    fn apply_patch(&mut self, patch: &ShootingSavedCameraPatch) {
         if let Some(label) = &patch.label {
             self.label = label.clone();
         }
         if let Some(camera) = &patch.camera {
             self.camera = camera.clone();
         }
-        inverse
+    }
+
+    fn diff_patch(&self, other: &Self) -> Option<ShootingSavedCameraPatch> {
+        let patch = ShootingSavedCameraPatch { label: (self.label != other.label).then(|| other.label.clone()), camera: (self.camera != other.camera).then(|| other.camera.clone()) };
+        (patch != ShootingSavedCameraPatch::default()).then_some(patch)
     }
 }
 
 /// ▶️ Applies a `CollectionDiff` (removed → modified → added, matching `apply_collection_operation`'s
-/// ordering) to an owned `Vec` — `vcs::CollectionDiff` has no generic apply helper of its own since
+/// ordering) to an owned `Vec` — `protocol::CollectionDiff` has no generic apply helper of its own since
 /// `modified` patches require the item's `Patchable` impl.
 fn apply_collection_diff<TId, TItem, TPatch>(items: &mut Vec<TItem>, diff: &CollectionDiff<TId, TPatch, TItem>)
 where
@@ -628,10 +638,10 @@ impl Operation<ShootingFixture> for ShootingOperation {
 
     fn backwards(&self, projection: &ShootingFixture) -> Vec<Self> {
         match self {
-            ShootingOperation::Assets(operation) => vec![ShootingOperation::Assets(vcs::invert_collection_operation(&projection.assets, operation))],
-            ShootingOperation::Shots(operation) => vec![ShootingOperation::Shots(vcs::invert_collection_operation(&projection.shots, operation))],
+            ShootingOperation::Assets(operation) => vec![ShootingOperation::Assets(protocol::invert_collection_operation(&projection.assets, operation))],
+            ShootingOperation::Shots(operation) => vec![ShootingOperation::Shots(protocol::invert_collection_operation(&projection.shots, operation))],
             ShootingOperation::SavedCameras(operation) => {
-                vec![ShootingOperation::SavedCameras(vcs::invert_collection_operation(&projection.saved_cameras, operation))]
+                vec![ShootingOperation::SavedCameras(protocol::invert_collection_operation(&projection.saved_cameras, operation))]
             }
             ShootingOperation::SetActiveShot { .. } => vec![ShootingOperation::SetActiveShot { shot_id: if projection.active_shot_id.is_empty() { None } else { Some(projection.active_shot_id.clone()) } }],
             ShootingOperation::SetActiveAsset { .. } => vec![ShootingOperation::SetActiveAsset { asset_id: if projection.active_asset_id.is_empty() { None } else { Some(projection.active_asset_id.clone()) } }],
@@ -760,7 +770,7 @@ impl vcs::DocumentPack for ShootingFixture {
 
 //#region 🔖OpText
 /// ⚡ Local mirror of `ShootingOperation` — the real enum's `Assets`/`Shots`/`SavedCameras` variants
-/// each wrap a single `vcs::CollectionOperation<..>` field, a foreign generic type (orphan rule:
+/// each wrap a single `protocol::CollectionOperation<..>` field, a foreign generic type (orphan rule:
 /// can't `impl dsl::DslField` for it here) that also isn't the tagged-enum shape `#[derive(dsl::DslOps)]`
 /// needs anyway — so each `CollectionOperation` variant (`Add`/`Remove`/`Move`/`Patch`) is flattened
 /// into its own DSL-facing operation variant instead, exactly the `imperative::ImperativeOperationDsl`
@@ -852,21 +862,21 @@ enum ShootingOperationDsl {
 fn shooting_operation_to_dsl(operation: &ShootingOperation) -> ShootingOperationDsl {
     match operation {
         ShootingOperation::Assets(op) => match op {
-            CollectionOperation::Add { index, item } => ShootingOperationDsl::AssetsAdd { index: *index, item: Box::new(ShootingAssetNode::Asset(item.clone())) },
+            CollectionOperation::Add { id: _id, item, at } => ShootingOperationDsl::AssetsAdd { index: *at, item: Box::new(ShootingAssetNode::Asset(item.clone())) },
             CollectionOperation::Remove { id } => ShootingOperationDsl::AssetsRemove { id: id.clone() },
-            CollectionOperation::Move { id, to_index } => ShootingOperationDsl::AssetsMove { id: id.clone(), to_index: *to_index },
+            CollectionOperation::Move { id, to } => ShootingOperationDsl::AssetsMove { id: id.clone(), to_index: *to },
             CollectionOperation::Patch { id, patch } => ShootingOperationDsl::AssetsPatch { id: id.clone(), patch: patch.clone() },
         },
         ShootingOperation::Shots(op) => match op {
-            CollectionOperation::Add { index, item } => ShootingOperationDsl::ShotsAdd { index: *index, item: Box::new(ShootingShotNode::Shot(item.clone())) },
+            CollectionOperation::Add { id: _id, item, at } => ShootingOperationDsl::ShotsAdd { index: *at, item: Box::new(ShootingShotNode::Shot(item.clone())) },
             CollectionOperation::Remove { id } => ShootingOperationDsl::ShotsRemove { id: id.clone() },
-            CollectionOperation::Move { id, to_index } => ShootingOperationDsl::ShotsMove { id: id.clone(), to_index: *to_index },
+            CollectionOperation::Move { id, to } => ShootingOperationDsl::ShotsMove { id: id.clone(), to_index: *to },
             CollectionOperation::Patch { id, patch } => ShootingOperationDsl::ShotsPatch { id: id.clone(), patch: patch.clone() },
         },
         ShootingOperation::SavedCameras(op) => match op {
-            CollectionOperation::Add { index, item } => ShootingOperationDsl::SavedCamerasAdd { index: *index, item: Box::new(ShootingSavedCameraNode::SavedCamera(item.clone())) },
+            CollectionOperation::Add { id: _id, item, at } => ShootingOperationDsl::SavedCamerasAdd { index: *at, item: Box::new(ShootingSavedCameraNode::SavedCamera(item.clone())) },
             CollectionOperation::Remove { id } => ShootingOperationDsl::SavedCamerasRemove { id: id.clone() },
-            CollectionOperation::Move { id, to_index } => ShootingOperationDsl::SavedCamerasMove { id: id.clone(), to_index: *to_index },
+            CollectionOperation::Move { id, to } => ShootingOperationDsl::SavedCamerasMove { id: id.clone(), to_index: *to },
             CollectionOperation::Patch { id, patch } => ShootingOperationDsl::SavedCamerasPatch { id: id.clone(), patch: patch.clone() },
         },
         ShootingOperation::SetActiveShot { shot_id } => ShootingOperationDsl::SetActiveShot { shot_id: shot_id.clone() },
@@ -883,19 +893,26 @@ fn shooting_operation_to_dsl(operation: &ShootingOperation) -> ShootingOperation
 
 fn shooting_operation_from_dsl(dsl_op: ShootingOperationDsl) -> ShootingOperation {
     match dsl_op {
-        ShootingOperationDsl::AssetsAdd { index, item } => ShootingOperation::Assets(CollectionOperation::Add { index, item: { let ShootingAssetNode::Asset(asset) = *item; asset } }),
+        ShootingOperationDsl::AssetsAdd { index, item } => {
+            let ShootingAssetNode::Asset(asset) = *item;
+            ShootingOperation::Assets(CollectionOperation::Add { id: asset.id.clone(), item: asset, at: index })
+        }
         ShootingOperationDsl::AssetsRemove { id } => ShootingOperation::Assets(CollectionOperation::Remove { id }),
-        ShootingOperationDsl::AssetsMove { id, to_index } => ShootingOperation::Assets(CollectionOperation::Move { id, to_index }),
+        ShootingOperationDsl::AssetsMove { id, to_index } => ShootingOperation::Assets(CollectionOperation::Move { id, to: to_index }),
         ShootingOperationDsl::AssetsPatch { id, patch } => ShootingOperation::Assets(CollectionOperation::Patch { id, patch }),
-        ShootingOperationDsl::ShotsAdd { index, item } => ShootingOperation::Shots(CollectionOperation::Add { index, item: { let ShootingShotNode::Shot(shot) = *item; shot } }),
+        ShootingOperationDsl::ShotsAdd { index, item } => {
+            let ShootingShotNode::Shot(shot) = *item;
+            ShootingOperation::Shots(CollectionOperation::Add { id: shot.id.clone(), item: shot, at: index })
+        }
         ShootingOperationDsl::ShotsRemove { id } => ShootingOperation::Shots(CollectionOperation::Remove { id }),
-        ShootingOperationDsl::ShotsMove { id, to_index } => ShootingOperation::Shots(CollectionOperation::Move { id, to_index }),
+        ShootingOperationDsl::ShotsMove { id, to_index } => ShootingOperation::Shots(CollectionOperation::Move { id, to: to_index }),
         ShootingOperationDsl::ShotsPatch { id, patch } => ShootingOperation::Shots(CollectionOperation::Patch { id, patch }),
         ShootingOperationDsl::SavedCamerasAdd { index, item } => {
-            ShootingOperation::SavedCameras(CollectionOperation::Add { index, item: { let ShootingSavedCameraNode::SavedCamera(entry) = *item; entry } })
+            let ShootingSavedCameraNode::SavedCamera(entry) = *item;
+            ShootingOperation::SavedCameras(CollectionOperation::Add { id: entry.id.clone(), item: entry, at: index })
         }
         ShootingOperationDsl::SavedCamerasRemove { id } => ShootingOperation::SavedCameras(CollectionOperation::Remove { id }),
-        ShootingOperationDsl::SavedCamerasMove { id, to_index } => ShootingOperation::SavedCameras(CollectionOperation::Move { id, to_index }),
+        ShootingOperationDsl::SavedCamerasMove { id, to_index } => ShootingOperation::SavedCameras(CollectionOperation::Move { id, to: to_index }),
         ShootingOperationDsl::SavedCamerasPatch { id, patch } => ShootingOperation::SavedCameras(CollectionOperation::Patch { id, patch }),
         ShootingOperationDsl::SetActiveShot { shot_id } => ShootingOperation::SetActiveShot { shot_id },
         ShootingOperationDsl::SetActiveAsset { asset_id } => ShootingOperation::SetActiveAsset { asset_id },
@@ -909,13 +926,13 @@ fn shooting_operation_from_dsl(dsl_op: ShootingOperationDsl) -> ShootingOperatio
     }
 }
 
-impl vcs::OpText for ShootingOperation {
+impl protocol::OpText for ShootingOperation {
     fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-        Ok(shooting_operation_from_dsl(<ShootingOperationDsl as vcs::OpText>::parse_op(line)?))
+        Ok(shooting_operation_from_dsl(<ShootingOperationDsl as protocol::OpText>::parse_op(line)?))
     }
 
     fn print_op(&self) -> String {
-        <ShootingOperationDsl as vcs::OpText>::print_op(&shooting_operation_to_dsl(self))
+        <ShootingOperationDsl as protocol::OpText>::print_op(&shooting_operation_to_dsl(self))
     }
 }
 //#endregion 🔖OpText
@@ -987,14 +1004,14 @@ mod tests {
     #[test]
     fn shooting_projection_round_trip() {
         let mut store = ShootingStore::new(create_document_vcs_envelope(SHOOTING_FIXTURE_SCHEMA, "shooting", empty_shooting_fixture(), None));
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![ShootingOperation::Assets(CollectionOperation::Add { index: 0, item: sample_asset("a1") })], description: None }).expect("apply");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![ShootingOperation::Assets(CollectionOperation::Add { id: "a1".into(), item: sample_asset("a1"), at: 0 })], description: None }).expect("apply");
         assert_eq!(store.projection().expect("projection").assets.len(), 1);
     }
 
     #[test]
     fn assets_add_remove_patch_round_trip() {
         let fixture = empty_shooting_fixture();
-        let add = ShootingOperation::Assets(CollectionOperation::Add { index: 0, item: sample_asset("a1") });
+        let add = ShootingOperation::Assets(CollectionOperation::Add { id: "a1".into(), item: sample_asset("a1"), at: 0 });
         let with_asset = round_trip(&fixture, &add);
         assert_eq!(with_asset.assets.len(), 1);
 
@@ -1020,7 +1037,7 @@ mod tests {
     #[test]
     fn saved_cameras_add_round_trip() {
         let fixture = empty_shooting_fixture();
-        let add = ShootingOperation::SavedCameras(CollectionOperation::Add { index: 0, item: ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera::default() } });
+        let add = ShootingOperation::SavedCameras(CollectionOperation::Add { id: "cam1".into(), item: ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera::default() }, at: 0 });
         let added = round_trip(&fixture, &add);
         assert_eq!(added.saved_cameras.len(), 1);
     }
@@ -1172,27 +1189,27 @@ mod tests {
     #[test]
     fn shooting_op_text_round_trips_collection_variants() {
         let asset = sample_asset("a1");
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Add { index: 0, item: asset.clone() }));
+        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Add { id: "a1".into(), item: asset.clone(), at: 0 }));
         vcs::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Remove { id: "a1".into() }));
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Move { id: "a1".into(), to_index: 2 }));
+        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Move { id: "a1".into(), to: 2 }));
         vcs::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Patch {
             id: "a1".into(),
             patch: ShootingAssetPatch { name: Some("Renamed".into()), url: None, origin: Some([1.0, 2.0, 3.0]), orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: Some(serde_json::json!(2.5)) },
         }));
 
         let shot = sample_shot("s1");
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Add { index: 0, item: shot.clone() }));
+        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Add { id: "s1".into(), item: shot.clone(), at: 0 }));
         vcs::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Remove { id: "s1".into() }));
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Move { id: "s1".into(), to_index: 1 }));
+        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Move { id: "s1".into(), to: 1 }));
         vcs::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Patch {
             id: "s1".into(),
             patch: ShootingShotPatch { label: Some("Hero".into()), width: Some(512), height: None, format: None, shape: Some("ellipse".into()) },
         }));
 
         let saved_camera = ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera::default() };
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Add { index: 0, item: saved_camera.clone() }));
+        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Add { id: "cam1".into(), item: saved_camera.clone(), at: 0 }));
         vcs::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Remove { id: "cam1".into() }));
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Move { id: "cam1".into(), to_index: 0 }));
+        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Move { id: "cam1".into(), to: 0 }));
         vcs::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Patch {
             id: "cam1".into(),
             patch: ShootingSavedCameraPatch { label: Some("Renamed".into()), camera: Some(ShootingCamera { position: [1.0, 2.0, 3.0], ..Default::default() }) },
@@ -1224,7 +1241,7 @@ mod tests {
         let mut store = ShootingStore::new(create_document_vcs_envelope(SHOOTING_FIXTURE_SCHEMA, "shooting", empty_shooting_fixture(), None));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![ShootingOperation::Assets(CollectionOperation::Add { index: 0, item: sample_asset("a1") })],
+                operations: vec![ShootingOperation::Assets(CollectionOperation::Add { id: "a1".into(), item: sample_asset("a1"), at: 0 })],
                 description: None,
             })
             .expect("apply");

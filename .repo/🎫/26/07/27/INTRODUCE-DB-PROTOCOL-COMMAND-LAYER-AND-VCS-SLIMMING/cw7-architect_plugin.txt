@@ -1,0 +1,101 @@
+CW7 App fan-out — architect/plugin/rs (architect-plugin)
+=========================================================
+
+STATUS: NOT MIGRATED — blocked by an unmigrated prerequisite crate. No net change to
+architect/plugin/rs/lib.rs or Cargo.toml (change attempted, then fully reverted after
+confirming the block; git diff for both files is empty).
+
+What I found
+------------
+architect/plugin/rs/lib.rs has real, non-trivial CollectionOperation usage:
+  - `use vcs::CollectionOperation;` (line 19)
+  - 6 `CollectionOperation::Add { index, item }` construction sites (lines 629, 636, 677,
+    1564, 1589, 1597), all inside `add_register_item_operation`, the `addElement` action
+    handler, `runAnalysis`, and `runReport`.
+  - No `Move` usage anywhere in the file.
+  - No direct calls to `vcs::apply_collection_operation` / `vcs::invert_collection_operation`
+    / `vcs::collection_diff_from_operation` in this file (those live in architect_program's
+    `apply_operation`/`invert_operation`, out of this crate's scope).
+  - No `vcs::{Operation, OperationDiff, OpText}` imports in this file to flip either.
+
+id source (step 2 of the instructions): every Add site already computes the item's id
+before construction — `item.header.id.clone()` (via the `add!` macro and the `elements`
+arm) or `item.id.clone()` (the `traces` arm and the `addElement`/`runAnalysis`/`runReport`
+action handlers). This is the same id already used unchanged by the sibling
+`Remove`/`Patch` operations in this file. So the correct `id` for the new `Add { id, .. }`
+field is simply that pre-existing, already-computed id value — no new generation logic
+needed anywhere.
+
+Why nothing was changed: cross-crate type mismatch (blocking, not a false positive)
+-------------------------------------------------------------------------------------
+Every `CollectionOperation::Add`/`Remove`/`Patch` construction in this file is immediately
+wrapped in a `ProgramOperation::<Variant>(...)` value. `ProgramOperation` is defined in
+`architect/program/rs/lib.rs` (a SEPARATE crate, also on the CW7 assignment list), where
+each variant is concretely typed, e.g.:
+
+    Elements(CollectionOperation<EntityId, ProgramElement, ProgramElementPatch>),
+
+As of this session, architect/program/rs/lib.rs still has:
+
+    use vcs::{apply_collection_operation, invert_collection_operation, CollectionOperation,
+               Operation, OperationDiff, Patchable};
+
+i.e. architect_program's own CW7 migration has NOT landed yet — `ProgramOperation`'s fields
+are still nominally `vcs::CollectionOperation<...>` (old shape: `Add { index, item }`, no
+id). Because architect/plugin/rs only ever constructs a bare `CollectionOperation::Add {..}`
+expression that Rust type-infers from the expected `ProgramOperation::<Variant>(...)`
+argument type, the plugin crate has NO independent choice of which `CollectionOperation` it
+uses — it is entirely dictated by whatever architect_program currently imports.
+
+I verified this is a real, hard block rather than a theoretical concern: I made the full
+migration (import switched to `protocol::CollectionOperation`, all 6 `Add` sites rewritten
+to `Add { id, item, at }`, `protocol` added as a direct dependency in Cargo.toml) and ran
+`cargo build -p architect-plugin`. Result: 96 compile errors, all `E0308 mismatched types`,
+e.g.:
+
+    expected `CollectionOperation<EntityId, ProgramElement, ...>` (defined in crate `vcs`,
+    vcs/rs/lib.rs:488), found `CollectionOperation<EntityId, ProgramElement, ...>` (defined
+    in crate `protocol_command`, protocol/command/rs/lib.rs:197) — "have similar names, but
+    are actually distinct types"
+
+This confirms `Remove`/`Patch` sites (which look unchanged) also broke, because ALL variants
+of `ProgramOperation` — not just the ones I touched — are parameterized on architect_program's
+single `CollectionOperation` type alias/import, so switching only the plugin's local import
+poisons every use site in the file, including ones I didn't otherwise edit.
+
+I reverted both files completely (`use protocol::CollectionOperation;` back to
+`use vcs::CollectionOperation;`, all 6 Add sites back to `{ index, item }`, and removed the
+`protocol` dependency line from Cargo.toml). `git diff --stat -- architect/plugin/rs/lib.rs
+architect/plugin/rs/Cargo.toml` is empty — the crate is byte-for-byte unchanged from before
+this session.
+
+Deviation from instructions
+----------------------------
+Per the instructions' step 9 spirit (report cross-crate ripples rather than silently fixing
+them outside scope) — this is the inverse case: my assigned crate is itself blocked by a
+DEPENDENCY crate (architect/program/rs) also on the CW7 list but not yet migrated, rather
+than my crate rippling onto a dependent. I did not touch architect/program/rs (out of
+scope, explicitly listed as a "never touch" boundary is not stated for it, but it is a
+separate crate assignment I do not own). Recommend re-running CW7 for architect/plugin/rs
+once architect/program/rs's own CW7 migration (switching its `ProgramOperation` variants'
+`CollectionOperation` and its `apply_collection_operation`/`invert_collection_operation`
+calls to `protocol::`) has landed — at that point architect/plugin/rs's migration is
+mechanical: switch the import on line 19 to `use protocol::CollectionOperation;`, add
+`protocol = { path = "../../../protocol/rs" }` to Cargo.toml, and change the 6 Add sites
+from `Add { index: N, item }` to `Add { id: <existing id expr>, item, at: N }` exactly as
+I trialed above (verified to be otherwise correct and complete — the only failure was the
+cross-crate type mismatch, not anything about the shape of my rewrite).
+
+Build/test status (of the reverted, untouched crate)
+------------------------------------------------------
+`cargo build -p architect-plugin`: succeeds (warnings only, pre-existing, all in
+framework/core, not this crate).
+`cargo test -p architect-plugin`: 11/11 unit tests pass. One unrelated doc-test harness
+error appeared ("extern location for vcs does not exist: .../libvcs.rlib") — this is a
+stale/concurrent build-cache artifact from the shared workspace target dir (other sessions
+rebuilding vcs concurrently), not caused by any change in this file; git diff for this
+crate's files is empty so it cannot be this session's doing.
+
+Files touched: NONE (net). architect/plugin/rs/lib.rs and architect/plugin/rs/Cargo.toml
+were edited and then fully reverted within this session; final state matches the
+pre-session baseline exactly.

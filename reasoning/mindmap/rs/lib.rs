@@ -37,7 +37,7 @@ impl MindmapExtension for DefaultMindmapExtension {
 // #region 🔖DocumentVcs
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
-use vcs::{Operation, OperationDiff};
+use protocol::{Operation, OperationDiff};
 
 pub const MINDMAP_WIRES_SCHEMA: &str = "reasoning.wires.fixture";
 /// 🕸️ Mindmap's own board fixture schema — recognized by the neutral force-graph-layout crate

@@ -1,0 +1,97 @@
+CW7 — App fan-out: CollectionOperation shape migration
+Crate: animate/present/rs (animate_present)
+File touched: animate/present/rs/lib.rs only. Cargo.toml NOT touched (protocol dependency
+already present from an earlier wave's sweep, verified before starting).
+
+## Real usage confirmed
+Grep-verified real, non-comment usage in `PresentOperation::Tiles(vcs::CollectionOperation<
+String, FigureTileDraft, FigureTileDraftPatch>)` (the deck-tiles collection edit type), its
+`Operation::diff`/`Operation::backwards` impls (calling `collection_diff_from_operation`/
+`invert_collection_operation`), its `OpText` <-> `PresentOperationDsl` mirror conversion
+(`From<&PresentOperation> for PresentOperationDsl` / `From<PresentOperationDsl> for
+PresentOperation`), and ~9 test cases (unit + op-text round-trip + document-text round-trip).
+Not a false positive.
+
+## DONE: full CollectionOperation shape migration (steps 1-6)
+
+Id source chosen: `FigureTileDraft.id: String` (a plain struct field), the exact same id
+`Remove`/`Move`/`Patch` already use (`impl Identified<String> for FigureTileDraft { fn id(&self)
+-> &String { &self.id } }`). No fresh id generation exists in this crate for tile inserts — the
+caller (`animate_plugin`, and this crate's own tests) always constructs a full `FigureTileDraft`
+with its `id` already set before wrapping it in `Add`, so `item.id.clone()` is the correct,
+non-invented source.
+
+Changes made:
+- Import block: split `use vcs::{...}` into `use protocol::{collection_diff_from_operation,
+  invert_collection_operation, CollectionDiff, CollectionOperation, Identified, Operation,
+  OperationDiff, Patchable};` plus a remaining `use vcs::{create_document_vcs_envelope,
+  materialize_document_projection, DocumentVcsEnvelope, DocumentVcsStore};` for the names that
+  are NOT part of the frozen-shape move.
+- `impl Identified<String> for FigureTileDraft`: unchanged body, now resolves to
+  `protocol::Identified` via the import switch (same single-method shape, pure re-target).
+- `impl Patchable<FigureTileDraftPatch> for FigureTileDraft`: genuinely restructured, NOT a
+  pure rename — `vcs::Patchable` is single-method (`apply_patch(&mut self, &TPatch) ->
+  TPatch`, mutate-and-return-inverse); `protocol::Patchable` splits this into `apply_patch(&mut
+  self, &TPatch)` (mutate only) plus `diff_patch(&self, other: &Self) -> Option<TPatch>`.
+  Rewrote as: `apply_patch` now only mutates (no return); added `diff_patch` that compares
+  `self`/`other` field-by-field and returns `Some(FigureTileDraftPatch { name: (self.name !=
+  other.name).then(|| other.name.clone()), crop: (self.crop != other.crop).then(|| other.crop.
+  clone()) })` — always `Some(..)` (never `None`), per protocol_command's own doc-comment
+  guidance that a `Patchable` impl able to produce a no-op forward patch should return
+  `Some(unchanged-patch)` rather than `None`, so `invert_collection_operation`'s
+  `.expect("... must yield a computable inverse")` can never panic even if a forward `Patch`
+  op happens to set a field to its current value.
+- `PresentOperation::Tiles(CollectionOperation::Add { index, item })` (construction/match, both
+  directions of the `PresentOperationDsl` mirror) -> `Add { id, item, at }`:
+  - `From<&PresentOperation> for PresentOperationDsl`: match arm now binds `id: _id` (the dsl
+    mirror's `TilesAdd` variant has no separate id column — id is always recoverable from
+    `item.id` on the way back — so the bound `id` truly goes unused in this direction, per the
+    instructions' "prefix `_id` if truly unused" guidance) and emits `index: *at`.
+  - `From<PresentOperationDsl> for PresentOperation`: now supplies `id: item.id.clone()`
+    explicitly, `at: index`.
+- `CollectionOperation::Move { id, to_index }` -> `Move { id, to }`: pure rename, both directions
+  of the same mirror conversion, plus every test call site.
+- All ~9 test call sites constructing `CollectionOperation::Add`/`Move` updated to the new
+  shape (id supplied via `tile.id.clone()`, an inline `"t1".into()`, or captured before the
+  item is moved into the `item:` field where a local `tile` binding was consumed).
+- `impl vcs::OpText for PresentOperation` -> `impl protocol::OpText for PresentOperation`
+  (step 7, only this trio touched). `Result<Self, vcs::TextError>` return type on `parse_op`
+  left exactly as-is: `vcs::TextError` is itself `pub use dsl_core::{TextError, ...}` in
+  vcs/rs/lib.rs — the identical type `protocol::OpText::parse_op` requires, so no change was
+  needed or made there; `vcs::Operation`/`vcs::OperationDiff` were not present anywhere in this
+  file as standalone qualified paths (only via the now-switched `use` import), so nothing extra
+  to touch for the rest of the trio. Also updated the doc comment above `PresentOperationDsl`
+  that named `impl vcs::OpText for PresentOperation` to say `protocol::OpText`, to keep the
+  comment accurate.
+- `PresentOperationDsl`'s own internal DSL-mirror struct field names (`index`, `to_index`) were
+  intentionally left unchanged — these are this crate's own op-text wire-format field names
+  (unrelated to the vcs/protocol `CollectionOperation` shape freeze), translated to/from the
+  new `at`/`to` fields purely inside the `From`/`Into` impls described above.
+
+## Cargo.toml
+`protocol = { path = "../../../protocol/rs" }` was already present. No dependency change made.
+
+## Cross-crate ripple found (reported, NOT fixed — outside this ticket's assignment)
+`animate/plugin/rs/lib.rs` imports `PresentOperation` from this crate and separately does
+`use vcs::{CollectionOperation, DocumentDsl};`, then constructs `PresentOperation::Tiles
+(CollectionOperation::Add { index: ..., item: ... })` at lines 483 and 634 (old vcs:: shape,
+no `id`/`at` fields) — this will now fail to compile against `PresentOperation::Tiles`'s new
+`protocol::CollectionOperation` field type. `animate/plugin/rs` is itself one of the 17
+crates in this same CW7 wave's assignment list, so it is presumably being migrated in its own
+task; flagging here per the ownership rule rather than touching it from this session.
+
+## Build / test status
+- `cargo build -p animate_present`: PASS (clean build in the shared workspace target dir, no
+  new warnings from my change).
+- `cargo test -p animate_present`: PASS — 22/22 tests passed, 0 failed (unit tests, op-text
+  round-trips, DSL round-trips, document-text/pack round-trips, all under `tests` region).
+  (Several pre-existing "unnecessary qualification" (`std::fs::` vs `fs::`) warnings in the
+  `compiler` module predate this change and are unrelated to the CollectionOperation/Operation
+  trio migration — not touched, out of scope.)
+
+## Deviation summary
+None — full migration completed exactly per the instructions doc's shape/steps, including the
+non-mechanical `Patchable` split (flagged in step 6/the shape-freeze note as something to check
+for, not explicitly spelled out as "also do this" but required for the crate to compile against
+`protocol::apply_collection_operation`/`invert_collection_operation`'s trait bounds). One
+cross-crate ripple identified and reported per step 9, not fixed (outside assignment).

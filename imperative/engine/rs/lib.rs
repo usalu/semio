@@ -47,6 +47,26 @@ impl vcs::Patchable<Dictionary> for Step {
         inverse
     }
 }
+
+impl protocol::Identified<String> for Step {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+
+/// @emoji 🩹 `protocol::Patchable`'s split shape: `apply_patch` mutates only (no returned inverse —
+/// `protocol_command::invert_collection_operation` recomputes the inverse from a prior snapshot via
+/// `diff_patch` instead); `diff_patch` reports `None` when `params` is unchanged, matching this same
+/// full-replace semantics as `vcs::Patchable`'s impl above.
+impl protocol::Patchable<Dictionary> for Step {
+    fn apply_patch(&mut self, patch: &Dictionary) {
+        self.params = patch.clone();
+    }
+
+    fn diff_patch(&self, other: &Self) -> Option<Dictionary> {
+        if self.params == other.params { None } else { Some(other.params.clone()) }
+    }
+}
 // #endregion 🔖Path
 
 // #region 🔖EffectLog

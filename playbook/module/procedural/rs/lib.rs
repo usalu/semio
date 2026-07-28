@@ -10,7 +10,7 @@ use semio_framework_plugin::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
-use vcs::{Operation, OperationDiff};
+use protocol::{Operation, OperationDiff};
 
 //#region 🔖Constants
 const MODULE_PLUGIN_ID: &str = "playbook-module-procedural";

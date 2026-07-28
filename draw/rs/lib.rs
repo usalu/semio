@@ -5,7 +5,8 @@ use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
 #[cfg(target_arch = "wasm32")]
 use vcs::create_document_vcs_envelope;
-use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
+use protocol::{Operation, OperationDiff};
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
 /// 🔁 Reexported so downstream crates (e.g. `draw-plugin`) can call `DrawDocument::parse_dsl`/
 /// `.print_dsl()` without taking a direct `vcs` dependency just for the trait.
 pub use vcs::DocumentDsl;
@@ -2941,7 +2942,7 @@ mod tests {
 
     #[test]
     fn draw_operation_parse_op_reports_error_for_unknown_operation_name() {
-        use vcs::OpText;
+        use protocol::OpText;
         let err = DrawOperation::parse_op("bogusOperation layerId=layer-1").unwrap_err();
         assert!(err.message.contains("unknown operation line"), "unexpected error message: {}", err.message);
     }

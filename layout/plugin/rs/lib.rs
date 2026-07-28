@@ -19,7 +19,8 @@ use semio_framework_plugin::{SurfaceKind,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
-use vcs::{CollectionOperation, DocumentDsl};
+use protocol::CollectionOperation;
+use vcs::DocumentDsl;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -1235,10 +1236,44 @@ fn render_preview(doc: &LayoutDocument, runtime: &LayoutPlayRuntime) -> UiNode {
 }
 //#endregion 🔖Render
 
+//#region 🔖GesturePreview
+/// 👻 CW7 db+protocol+vcs-slimming campaign, "preview law for gesture apps": a pure, JSON-serializable
+/// snapshot of a live, uncommitted drag-from-catalogue gesture (`canvasDragOver`/`canvasDragLeave` —
+/// dropping a new frame onto the canvas commits via `addFrame`, never emitted until the drop lands) —
+/// shaped as the exact payload `framework_sync::SyncSession::publish_preview(key, seq, payload)`
+/// expects, ready to hand off the instant a transport exists. This function only ever reads
+/// `LayoutDropPreviewState`, never `LayoutDocument`/`LayoutOperation` — a preview can never become
+/// persistent state.
+///
+/// 🚧 Deliberately unwired beyond `LayoutPlayApp::gesture_preview` below — same gap as `draw-plugin`'s
+/// `draw_gesture_preview_payload` (see that doc for the full explanation): `framework/sync::
+/// SyncSession::publish_preview` is host-only and unreachable from this WASI-P2 sandboxed plugin
+/// crate, and `vcs::BackboneMessage` has no preview-shaped variant to relay one through. See
+/// `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw7-preview-law.txt`.
+fn layout_drag_preview_payload(state: &LayoutDropPreviewState) -> Value {
+    serde_json::to_value(state).unwrap_or(Value::Null)
+}
+//#endregion 🔖GesturePreview
+
 //#region 🔖LayoutPlayApp
 #[derive(Default)]
 struct LayoutPlayApp {
     runtime: LayoutPlayRuntime,
+    /// 👻 Per-`key` monotone counter for `gesture_preview` — see `//#region 🔖GesturePreview`.
+    preview_seq: u64,
+}
+
+impl LayoutPlayApp {
+    /// 👻 See `layout_drag_preview_payload`'s doc — the `(key, seq, payload)` tuple already shaped as
+    /// `SyncSession::publish_preview`'s exact argument list once a host bridge can carry it out of this
+    /// sandboxed plugin. `#[allow(dead_code)]`: no caller exists inside this crate today; exercised by
+    /// `🧪Tests` only until that bridge lands.
+    #[allow(dead_code)]
+    fn gesture_preview(&self) -> Option<(&'static str, u64, Vec<u8>)> {
+        let state = self.runtime.drop_preview.as_ref()?;
+        let payload = layout_drag_preview_payload(state);
+        Some(("gesture:dropPreview", self.preview_seq, serde_json::to_vec(&payload).ok()?))
+    }
 }
 
 impl DocumentApp for LayoutPlayApp {
@@ -1350,6 +1385,7 @@ impl DocumentApp for LayoutPlayApp {
                 let (sx, sy, width, height) = pointer_args(args);
                 let (wx, wy) = screen_to_world_for_surface(document, blueprint, sx, sy, width, height);
                 self.runtime.drop_preview = Some(LayoutDropPreviewState { kind, x: wx, y: wy });
+                self.preview_seq = self.preview_seq.wrapping_add(1);
                 ActionEmit::default()
             }
             "canvasDragLeave" => {
@@ -1447,7 +1483,7 @@ impl DocumentApp for LayoutPlayApp {
                 };
                 self.runtime.active_page_id = page_id.clone();
                 self.runtime.selected_ids = vec![page_id];
-                ActionEmit::operations(vec![LayoutOperation::Pages(CollectionOperation::Add { index: document.pages.len(), item: page })])
+                ActionEmit::operations(vec![LayoutOperation::Pages(CollectionOperation::Add { id: page.id.clone(), item: page, at: document.pages.len() })])
             }
             "patchPage" => {
                 let page_id = args
@@ -1911,7 +1947,7 @@ semio_framework_plugin::semio_plugin! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
+    use semio_framework_plugin::{testkit, HistoryView, PluginApp, VcsDocumentApp};
 
     fn render_json(app: &mut VcsDocumentApp<LayoutPlayApp>, body: &str) -> String {
         let node = app.render(body, None, &ViewState::default()).expect("render");
@@ -2298,6 +2334,75 @@ mod tests {
         app.handle_action("canvasDragLeave", Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT })), &ViewState::default(), &testkit::meta("local")).expect("leave");
         assert!(!render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("layout.drop-preview"));
     }
+
+    //#region 🔖GesturePreview
+    /// 🔬 CW7 preview-law seam: `LayoutPlayApp::gesture_preview` reads `LayoutDropPreviewState` only,
+    /// never `LayoutDocument`/`LayoutOperation` — exercised directly against `LayoutPlayApp` (bypassing
+    /// the `VcsDocumentApp` wrapper, which has no accessor into the inner app) since `canvasDragOver` is
+    /// the natural per-tick gesture handler.
+    fn bare_history_view() -> HistoryView {
+        HistoryView { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, current_checkpoint_id: None, recent_ops: Vec::new() }
+    }
+
+    #[test]
+    fn gesture_preview_is_none_without_a_live_drag_over() {
+        let app = LayoutPlayApp::default();
+        assert!(app.gesture_preview().is_none(), "no live drag-over, nothing to preview");
+    }
+
+    #[test]
+    fn gesture_preview_reflects_the_live_drag_over_and_clears_on_leave() {
+        let mut app = LayoutPlayApp::default();
+        let document = default_document();
+        let history = bare_history_view();
+        let doc = DocumentView { projection: &document, history: &history };
+        let types = json!([format!("{LAYOUT_CATALOGUE_KIND_MIME_PREFIX}rect")]);
+
+        let over = app.handle_action(
+            "canvasDragOver",
+            Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": 400.0, "y": 300.0, "width": 800.0, "height": 600.0, "types": types })),
+            &doc,
+            &ViewState::default(),
+        );
+        assert!(over.operations.is_empty(), "a live drag-over is a view action, not a document operation");
+        let (key, seq_after_over, payload) = app.gesture_preview().expect("a live drag-over is previewable");
+        assert_eq!(key, "gesture:dropPreview");
+        let value: Value = serde_json::from_slice(&payload).expect("payload is valid json");
+        assert_eq!(value["kind"], json!("rect"));
+
+        let moved = app.handle_action(
+            "canvasDragOver",
+            Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": 450.0, "y": 320.0, "width": 800.0, "height": 600.0, "types": types })),
+            &doc,
+            &ViewState::default(),
+        );
+        assert!(moved.operations.is_empty());
+        let (_, seq_after_move, payload_after_move) = app.gesture_preview().expect("still live mid-drag");
+        assert!(seq_after_move > seq_after_over, "seq is monotone per tick, for staleness detection on the receiving end");
+        assert_ne!(serde_json::from_slice::<Value>(&payload_after_move).unwrap()["x"], value["x"], "preview tracks the live drag position");
+
+        app.handle_action("canvasDragLeave", Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT })), &doc, &ViewState::default());
+        assert!(app.gesture_preview().is_none(), "the drag left the canvas: nothing left to preview");
+    }
+
+    #[test]
+    fn gesture_preview_is_a_pure_read_never_mutating_the_drop_preview_state() {
+        let mut app = LayoutPlayApp::default();
+        let document = default_document();
+        let history = bare_history_view();
+        let doc = DocumentView { projection: &document, history: &history };
+        app.handle_action(
+            "canvasDragOver",
+            Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": 400.0, "y": 300.0, "width": 800.0, "height": 600.0, "types": json!([format!("{LAYOUT_CATALOGUE_KIND_MIME_PREFIX}rect")]) })),
+            &doc,
+            &ViewState::default(),
+        );
+        let state_before = app.runtime.drop_preview.clone();
+        let _ = app.gesture_preview();
+        let _ = app.gesture_preview();
+        assert_eq!(app.runtime.drop_preview, state_before, "gesture_preview must never mutate the live drop-preview scratch it reads");
+    }
+    //#endregion 🔖GesturePreview
 
     #[test]
     fn catalogue_items_are_draggable() {

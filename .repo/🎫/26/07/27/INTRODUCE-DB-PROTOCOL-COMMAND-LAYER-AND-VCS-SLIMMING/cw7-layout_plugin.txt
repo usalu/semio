@@ -1,0 +1,87 @@
+CW7 — layout/plugin/rs — CollectionOperation shape migration report
+
+Crate: layout-plugin (layout/plugin/rs/lib.rs, layout/plugin/rs/Cargo.toml)
+Files touched: layout/plugin/rs/lib.rs, layout/plugin/rs/Cargo.toml
+Files NOT touched: layout/rs, vcs/rs, protocol/*, or any other crate.
+
+WHAT CHANGED
+
+1. Import (lib.rs top-of-file):
+   - Before: `use vcs::{CollectionOperation, DocumentDsl};`
+   - After:  `use protocol::CollectionOperation;` + `use vcs::DocumentDsl;`
+   DocumentDsl stays on vcs:: (unaffected by this migration; still used by
+   `LayoutDocument::parse_dsl` in `default_document()`). This crate has no
+   Operation/OperationDiff/OpText imports from vcs at all, so step 7 of the
+   instructions doc (switching that trio) does not apply here.
+
+2. Only one real `CollectionOperation::Add` construction exists in this crate,
+   in the `"addPage"` action handler (`impl DocumentApp for LayoutPlayApp`):
+   - Before: `CollectionOperation::Add { index: document.pages.len(), item: page }`
+   - After:  `CollectionOperation::Add { id: page.id.clone(), item: page, at: document.pages.len() }`
+   `index`'s value carries over verbatim as `at`. No `Move` constructions or
+   pattern-matches exist in this crate (grep confirmed). The `CollectionOperation::Patch`
+   sites (patchPage/patchFrame->Stories/Links, 3 call sites) are unchanged —
+   Patch's shape (`{ id, patch }`) did not change between vcs and protocol.
+
+3. ID SOURCE for the new `Add.id` field: `page.id.clone()`, taken from the
+   `Page` struct literal built two lines above (`id: page_id.clone()`, a
+   freshly-generated slug `format!("page-{}", document.pages.len() + 1)`).
+   This is the exact same id this collection's `Patch` sites already use
+   for `Page` (`page_id` bound from `args["pageId"]` / `runtime.active_page_id`
+   elsewhere in the file) — i.e. `Page.id: String`, consistent with the doc's
+   guidance to reuse the same TId source the collection's other operations
+   already rely on. Used `page.id.clone()` (borrow, not `page_id.clone()`)
+   because `page_id` itself is moved into `self.runtime.selected_ids` on the
+   line immediately before the `Add` construction — borrowing off the
+   already-built `page.id` field avoids a use-after-move without restructuring
+   unrelated code. Struct-literal field evaluation order in Rust follows
+   source order, so writing `id: page.id.clone()` before `item: page` in the
+   literal is sound (borrows page.id, then moves page).
+
+4. Cargo.toml: added `protocol = { path = "../../../protocol/rs" }`, genuinely
+   missing (checked first — this crate had `vcs` but not `protocol`; matched
+   the exact path convention layout/rs already uses for the same dependency).
+
+CROSS-CRATE NOTE (not a deviation, informational only)
+
+This crate's only real `CollectionOperation` usage is wrapped inside
+`layout_rs::LayoutOperation::Pages/Stories/Links`, a type owned by the sibling
+crate layout/rs (also in this wave's assignment list, migrated separately).
+Confirmed this by experiment: with the import switched to `protocol::CollectionOperation`
+but layout_rs's `LayoutOperation` enum still declared against `vcs::CollectionOperation`
+(its pre-migration state, confirmed by an initial baseline build that succeeded
+unchanged), the build failed with a nominal type mismatch (protocol's
+`CollectionOperation` and vcs's are distinct, non-interchangeable types despite
+matching shapes). Partway through this session layout_rs was migrated
+concurrently by another actor in this live repo (confirmed via a second read:
+`layout_rs`'s `mod operations` and its DSL-codec module now both import
+`protocol::{CollectionOperation, ...}` and use `id`/`at`/`to` throughout), after
+which this crate's change above compiled cleanly. No action was needed from
+this ticket beyond the crate's own file per the ownership rules — flagging in
+case another parallel CW7 task for layout/rs relied on the same ordering
+assumption.
+
+BUILD / TEST STATUS
+
+- `cargo build -p layout-plugin`: PASS (clean, only one pre-existing,
+  unrelated warning: `unused import: parse_layout_document`, present before
+  this migration too — not touched, out of scope).
+- `cargo test -p layout-plugin` (unit tests): PASS, 39/39, run twice for
+  confirmation, both green (0 failed).
+- `cargo test -p layout-plugin --doc`: flaky in this live/concurrently-built
+  workspace — two runs failed with `can't find crate for layout_rs` /
+  `extern location for vcs does not exist` (link-resolution errors, not type
+  errors), while a third run succeeded (`0 passed; 0 failed` — this crate has
+  no runnable doc-test code blocks, so 0 is the correct steady-state result).
+  Verified the failing runs were an artifact-availability race against other
+  sessions concurrently rebuilding `vcs`/`layout_rs`/`semio_framework_plugin`
+  in the shared `target/` dir (mtimes on the referenced .rlib files moved
+  during the test window; the errors are "can't find crate", never a
+  CollectionOperation/type-shape error). Consistent with this repo's known
+  concurrent-cargo-workspace-churn pattern. Not a defect introduced by this
+  migration.
+
+DEVIATIONS: none from the instructions doc's procedure. No `Move` operations
+existed in this crate to rename. No Operation/OperationDiff/OpText imports
+existed to flip. Zero pattern-matches on `CollectionOperation::Add`/`Move`
+exist in this crate (only one construction site, already covered above).

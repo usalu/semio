@@ -1,0 +1,75 @@
+
+┌  Building storybook v10.4.1
+│
+◇  Cleaning outputDir: storybook-static
+│
+◇  Loading presets
+│
+◇  Building manager..
+│
+●  Building preview..
+│  Vite vite v7.3.3 building client environment for production...
+│  Vite transforming...
+│
+▲  Vite node_modules/react-router/dist/development/index.mjs (11:0):
+│  Module level directives cause errors when bundled, "use client" in
+│  "node_modules/react-router/dist/development/index.mjs" was ignored.
+│
+▲  Vite [plugin vite:react-docgen-typescript] .storybook/preview.tsx:
+│  Skipping docgen for
+│  "/Users/ueli/Documents/semio/.storybook/preview.tsx" because it is not
+│  included in the active TypeScript project.
+│
+▲  Vite [plugin vite:react-docgen-typescript]
+│  .storybook/styling/index.tsx: Skipping docgen for
+│  "/Users/ueli/Documents/semio/.storybook/styling/index.tsx" because it
+│  is not included in the active TypeScript project.
+│
+▲  Vite [plugin vite:react-docgen-typescript]
+│  .storybook/framework/os/index.tsx: Skipping docgen for
+│  "/Users/ueli/Documents/semio/.storybook/framework/os/index.tsx"
+│  because it is not included in the active TypeScript project.
+│  Vite ✓ 212 modules transformed.
+│
+■  Vite ✗ Build failed in 8.40s
+│
+■  Failed to build the preview
+│
+■  [vite]: Rollup failed to resolve import
+│  "@semio-tech/framework-platform-core" from
+│  "./coda/client/ui/desktop/js/renderer.tsx".
+│  This is most likely unintended because it can break your application
+│  at runtime.
+│  If you do want to externalize this module explicitly add it to
+│  `build.rollupOptions.external`
+│  at viteLog
+│  (file://./node_modules/vite/dist/node/chunks/config.js:33655:57)
+│  at onRollupLog
+│  (file://./node_modules/vite/dist/node/chunks/config.js:33685:7)
+│  at onLog
+│  (file://./node_modules/vite/dist/node/chunks/config.js:33487:4)
+│  at file://./node_modules/rollup/dist/es/shared/node-entry.js:21390:32
+│  at Object.logger [as onLog]
+│  (file://./node_modules/rollup/dist/es/shared/node-entry.js:23385:9)
+│  at ModuleLoader.handleInvalidResolvedId
+│  (file://./node_modules/rollup/dist/es/shared/node-entry.js:22129:26)
+│  at file://./node_modules/rollup/dist/es/shared/node-entry.js:22087:26
+│
+└  Storybook exited with an error
+
+1103 |  * `null` to exempt); throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1104 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1105 |  */
+1106 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1107 |   const status = runCmdInternal(cmd, args, opts);
+1108 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: bunx storybook build -c .storybook --output-dir storybook-static exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/repo/lib/js/index.ts:1108:31)
+      at run (/Users/ueli/Documents/semio/script.ts:810:7)
+      at run (/Users/ueli/Documents/semio/repo/lib/js/index.ts:813:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/repo/lib/js/index.ts:848:16)
+      at /Users/ueli/Documents/semio/script.ts:2601:11
+
+Bun v1.3.14 (macOS arm64)
+STORYBOOK_BUILD_EXIT:1

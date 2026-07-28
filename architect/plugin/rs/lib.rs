@@ -16,7 +16,7 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
-use vcs::CollectionOperation;
+use protocol::CollectionOperation;
 
 //#region 🔖Constants
 const ARCHITECT_APP_ID: &str = "architect";
@@ -626,14 +626,14 @@ fn add_register_item_operation(program: &Program, register: &str, label: &str) -
         ($field:ident, $operation:ident, $item:expr) => {{
             let item = $item;
             let id = item.header.id.clone();
-            (ProgramOperation::$operation(CollectionOperation::Add { index: program.$field.len(), item }), id)
+            (ProgramOperation::$operation(CollectionOperation::Add { id: id.clone(), at: program.$field.len(), item }), id)
         }};
     }
     Some(match register {
         "elements" => {
             let item = default_element(label);
             let id = item.header.id.clone();
-            (ProgramOperation::Elements(CollectionOperation::Add { index: program.elements.len(), item }), id)
+            (ProgramOperation::Elements(CollectionOperation::Add { id: id.clone(), at: program.elements.len(), item }), id)
         }
         "stakeholders" => add!(stakeholders, Stakeholders, default_stakeholder(label)),
         "requirements" => add!(requirements, Requirements, default_requirement(label)),
@@ -674,7 +674,7 @@ fn add_register_item_operation(program: &Program, register: &str, label: &str) -
             let to = program.elements.get(1).map_or_else(|| EntityId::new_serial("to"), |element| element.header.id.clone());
             let item = TraceLink::new(from, to, TraceKind::FunctionToProgramElement);
             let id = item.id.clone();
-            (ProgramOperation::Traces(CollectionOperation::Add { index: program.traces.len(), item }), id)
+            (ProgramOperation::Traces(CollectionOperation::Add { id: id.clone(), at: program.traces.len(), item }), id)
         }
         _ => return None,
     })
@@ -1561,7 +1561,7 @@ impl DocumentApp for ArchitectApp {
                 let id = element.header.id.to_string();
                 self.runtime.selected_ids = vec![id];
                 self.runtime.active_register = "elements".into();
-                ActionEmit::operations(vec![ProgramOperation::Elements(CollectionOperation::Add { index: program.elements.len(), item: element })])
+                ActionEmit::operations(vec![ProgramOperation::Elements(CollectionOperation::Add { id: element.header.id.clone(), at: program.elements.len(), item: element })])
             }
             "removeElement" => {
                 let id = args.and_then(|value| value.get("elementId")).or_else(|| args.and_then(|value| value.get("id"))).and_then(|value| value.as_str());
@@ -1586,7 +1586,7 @@ impl DocumentApp for ArchitectApp {
                 let record = analysis_record_from(program, kind, &result);
                 self.runtime.last_analysis = Some(result.clone());
                 store_runtime_json(&mut self.runtime, &result);
-                ActionEmit::operations(vec![ProgramOperation::Analyses(CollectionOperation::Add { index: program.analyses.len(), item: record })])
+                ActionEmit::operations(vec![ProgramOperation::Analyses(CollectionOperation::Add { id: record.header.id.clone(), at: program.analyses.len(), item: record })])
             }
             "runReport" => {
                 let kind = report_kind_from_args(args);
@@ -1594,7 +1594,7 @@ impl DocumentApp for ArchitectApp {
                 let record = report_record_from(program, kind, &report);
                 self.runtime.last_report = Some(report.clone());
                 store_runtime_json(&mut self.runtime, &report);
-                ActionEmit::operations(vec![ProgramOperation::Reports(CollectionOperation::Add { index: program.reports.len(), item: record })])
+                ActionEmit::operations(vec![ProgramOperation::Reports(CollectionOperation::Add { id: record.header.id.clone(), at: program.reports.len(), item: record })])
             }
             "applyTemplate" => {
                 let Some(template_id) = parse_entity_id_from_args(args, "templateId") else {
