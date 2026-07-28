@@ -2423,7 +2423,12 @@
 % shared dispatch below via \addvspace, which merges with the block-before glue
 % (no double gap) and is dropped at the top of a page (leading headings aren't
 % pushed down). Adjust this one length to taste.
-\providecommand{\semio@heading@topskip}{2em}
+\providecommand{\semio@heading@topskip}{10pt}
+% LR-bottomskip: dedicated space BELOW every heading bar, before the body text
+% (KOMA's afterskip is pinned to 1sp, so without this there is no knob). May be
+% negative to tighten below the natural minimum. Applied at the end of the shared
+% dispatch and in the nested-paragraph renderer.
+\providecommand{\semio@heading@bottomskip}{-1.7pt}
 \newcommand{\semio@koma@heading@lines}[5]{%
   \semio@block@before
   \addvspace{\semio@heading@topskip}% LR-topspace: a bit more air above headings
@@ -2457,6 +2462,7 @@
       \fi
     }%
     {#3}%
+  \vspace{\semio@heading@bottomskip}% LR-bottomskip: space below the heading bar
 }
 
 \newcommand{\semio@heading@lines@dispatch}[4]{%
@@ -2626,6 +2632,7 @@
   \fi
   \semio@nest@style@resolve
   \semio@heading@pair@nofill@num{\semio@nest@num}{#1}{semio-chrome-foreground}{\semio@nest@style@border}%
+  \vspace{\semio@heading@bottomskip}% LR-bottomskip: space below nested-paragraph headings
   \semio@block@after
 }
 
