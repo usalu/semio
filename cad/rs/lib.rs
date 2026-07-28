@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use protocol::{CollectionDiff, ItemPatch, Operation, OperationDiff};
-use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
+use store::{DocumentEnvelope, DocumentStore};
 
 pub const CAD_DOCUMENT_SCHEMA: &str = "cad.scene";
 pub const CAD_PLAY_DOCUMENT_SCHEMA: &str = "cad.document";
@@ -321,8 +321,8 @@ fn default_model_definition_id() -> String {
     "spatial.shape".into()
 }
 
-pub type CadEnvelope = DocumentVcsEnvelope<CadScene, CadOperation>;
-pub type CadStore = DocumentVcsStore<CadScene, CadOperation>;
+pub type CadEnvelope = DocumentEnvelope<CadScene, CadOperation>;
+pub type CadStore = DocumentStore<CadScene, CadOperation>;
 
 pub fn empty_cad_projection() -> CadScene {
     CadScene {
@@ -1437,7 +1437,7 @@ impl InteractionSpec {
 mod wasm_bridge {
     use super::*;
     use std::cell::RefCell;
-    use vcs::create_document_vcs_envelope;
+    use store::create_document_envelope;
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
@@ -1454,14 +1454,19 @@ mod wasm_bridge {
                     let envelope: CadEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     CadStore::new(envelope)
                 }
-                None => CadStore::new(create_document_vcs_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None)),
+                None => CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
 
-        #[wasm_bindgen(js_name = dispatchJson)]
-        pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
+        #[wasm_bindgen(js_name = dispatchText)]
+        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = dispatchBinary)]
+        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
@@ -1476,17 +1481,17 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vcs::{create_document_vcs_envelope, DocumentVcsCommand};
+    use store::{create_document_envelope, DocumentCommand};
 
     #[test]
     fn cad_projection_defaults() {
-        let store = CadStore::new(create_document_vcs_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None));
+        let store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None));
         assert_eq!(store.projection().expect("projection").id, "cad");
     }
 
     #[test]
     fn add_object_round_trips_through_store() {
-        let mut store = CadStore::new(create_document_vcs_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None));
+        let mut store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None));
         let object = CadObject {
             id: "object-1".into(),
             label: "Box".into(),
@@ -1501,7 +1506,7 @@ mod tests {
             solid_handle: None,
             primitives: vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: "solid-1".into(), kind: "solid".into() }],
         };
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![CadOperation::AddObject { pane: CadPaneId::Shape, object }], description: None }).expect("apply");
+        store.dispatch(DocumentCommand::Apply { operations: vec![CadOperation::AddObject { pane: CadPaneId::Shape, object }], description: None }).expect("apply");
         let scene = store.projection().expect("projection");
         assert_eq!(scene.objects.len(), 1);
         assert_eq!(scene.objects[0].primitives[0].kind, "solid");
@@ -1509,9 +1514,9 @@ mod tests {
 
     #[test]
     fn translate_objects_updates_origin() {
-        let mut store = CadStore::new(create_document_vcs_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None));
+        let mut store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None));
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![CadOperation::AddObject {
                     pane: CadPaneId::Shape,
                     object: CadObject {
@@ -1532,33 +1537,33 @@ mod tests {
                 description: None,
             })
             .expect("apply");
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![CadOperation::TranslateObjects { object_ids: vec!["object-1".into()], dx: 1.0, dy: -1.0, dz: 0.5 }], description: None }).expect("translate");
+        store.dispatch(DocumentCommand::Apply { operations: vec![CadOperation::TranslateObjects { object_ids: vec!["object-1".into()], dx: 1.0, dy: -1.0, dz: 0.5 }], description: None }).expect("translate");
         let scene = store.projection().expect("projection");
         assert_eq!(scene.objects[0].origin, [2.0, 1.0, 3.5]);
     }
 
     #[test]
     fn set_scene_replaces_projection_and_inverts() {
-        let mut store = CadStore::new(create_document_vcs_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None));
+        let mut store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None));
         let mut replacement = empty_cad_projection();
         replacement.id = "replaced".into();
         replacement.nodes.push(CadNode { id: "node-1".into(), label: "Root".into(), kind: "group".into() });
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![CadOperation::SetScene { scene: Box::new(replacement) }], description: None }).expect("set scene");
+        store.dispatch(DocumentCommand::Apply { operations: vec![CadOperation::SetScene { scene: Box::new(replacement) }], description: None }).expect("set scene");
         assert_eq!(store.projection().expect("projection").id, "replaced");
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        store.dispatch(DocumentCommand::Undo).expect("undo");
         assert_eq!(store.projection().expect("projection").id, "cad");
         assert!(store.projection().expect("projection").nodes.is_empty());
     }
 
     #[test]
     fn set_camera_flows_through_operations() {
-        let mut store = CadStore::new(create_document_vcs_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None));
+        let mut store = CadStore::new(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None));
         let camera = CadCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], zoom: 2.0, fov: 60.0, projection: Value::Null };
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![CadOperation::SetCamera { pane: CadPaneId::Building, camera: camera.clone() }], description: None }).expect("apply");
+        store.dispatch(DocumentCommand::Apply { operations: vec![CadOperation::SetCamera { pane: CadPaneId::Building, camera: camera.clone() }], description: None }).expect("apply");
         let scene = store.projection().expect("projection");
         assert_eq!(cad_pane_camera(&scene, CadPaneId::Building).zoom, 2.0);
         assert_eq!(cad_pane_camera(&scene, CadPaneId::Shape).zoom, 1.0);
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        store.dispatch(DocumentCommand::Undo).expect("undo");
         let scene = store.projection().expect("projection");
         assert_eq!(cad_pane_camera(&scene, CadPaneId::Building).zoom, 1.0);
     }
@@ -1586,8 +1591,8 @@ mod tests {
         assert_eq!(cad_pane_camera(&scene, CadPaneId::Building).fov, 60.0);
     }
 
-    // --- 🧬 dsl:: engine adoption: `CadScene` (`vcs::DocumentDsl`, extension `cad`) and
-    // `CadOperation` (`vcs::OpText`) text round trips ---
+    // --- 🧬 dsl:: engine adoption: `CadScene` (`store::DocumentDsl`, extension `cad`) and
+    // `CadOperation` (`store::OpText`) text round trips ---
 
     fn sample_object(id: &str) -> CadObject {
         CadObject {
@@ -1647,8 +1652,8 @@ mod tests {
 
     #[test]
     fn cad_scene_round_trips_through_dsl_document() {
-        vcs::test_support::assert_dsl_round_trip(&sample_scene());
-        vcs::test_support::assert_dsl_pack_equivalence(&sample_scene());
+        store::test_support::assert_dsl_round_trip(&sample_scene());
+        store::test_support::assert_dsl_pack_equivalence(&sample_scene());
     }
 
     #[test]
@@ -1657,8 +1662,8 @@ mod tests {
         scene.building_geometry = Some(sample_geometry());
         scene.energy_geometry = Some(sample_geometry());
         scene.structure_classic_geometry = Some(sample_geometry());
-        vcs::test_support::assert_dsl_round_trip(&scene);
-        vcs::test_support::assert_dsl_pack_equivalence(&scene);
+        store::test_support::assert_dsl_round_trip(&scene);
+        store::test_support::assert_dsl_pack_equivalence(&scene);
     }
 
     #[test]
@@ -1681,7 +1686,7 @@ mod tests {
             CadOperation::SetScene { scene: Box::new(sample_scene()) },
         ];
         for op in ops {
-            vcs::test_support::assert_op_line_round_trip(&op);
+            store::test_support::assert_op_line_round_trip(&op);
         }
     }
 

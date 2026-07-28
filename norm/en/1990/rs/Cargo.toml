@@ -15,4 +15,5 @@ norm_core = { path = "../../../core/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 mathematical_algebra = { path = "../../../../mathematical/algebra/rs" }
 vcs = { path = "../../../../vcs/rs" }
+store = { path = "../../../../store/rs" }
 dsl = { path = "../../../../dsl/rs" }

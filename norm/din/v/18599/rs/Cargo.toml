@@ -17,3 +17,4 @@ norm_din_4108 = { path = "../../../4108/rs" }
 norm_din_en_16798 = { path = "../../../en/16798/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 vcs = { path = "../../../../../vcs/rs" }
+store = { path = "../../../../../store/rs" }

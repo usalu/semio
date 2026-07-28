@@ -1,12 +1,12 @@
 [package]
-name = "compose-store"
+name = "compose-gql"
 version = "0.1.0"
 edition = "2021"
 description = "HTTP GraphQL sidecar for compose native KitStore"
 publish = false
 
 [[bin]]
-name = "compose-store"
+name = "compose-gql"
 path = "bin.rs"
 
 

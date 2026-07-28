@@ -1,10 +1,10 @@
-//#region 🔖DocumentVcsStore
-pub struct DocumentVcsStore<P, Operation>
+//#region 🔖DocumentStore
+pub struct DocumentStore<P, Operation>
 where
     P: Clone + Serialize + DeserializeOwned,
     Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P>,
 {
-    envelope: DocumentVcsEnvelope<P, Operation>,
+    envelope: DocumentEnvelope<P, Operation>,
     backbone: Option<Box<dyn Backbone>>,
     dag: semio_framework_core::OpDag,
     applied_edit_ids: Vec<String>,
@@ -48,7 +48,7 @@ fn edit_actor_from_meta(operation_meta: &[OperationMeta]) -> Option<String> {
     operation_meta.first().and_then(|meta| meta.author_id.clone()).map(|actor_id| actor_id.0)
 }
 
-impl<P, Operation> DocumentVcsStore<P, Operation>
+impl<P, Operation> DocumentStore<P, Operation>
 where
     P: Clone + Serialize + DeserializeOwned,
     Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P>,
@@ -56,7 +56,7 @@ where
     /// @emoji 🚫 A store is always constructed with no backbone attached — the envelope's
     /// `backbone` field is a descriptor of the last attachment, never an instruction to
     /// reconnect. Callers attach explicitly via {@link attach_backbone}/{@link attach_backbone_uri}.
-    pub fn new(envelope: DocumentVcsEnvelope<P, Operation>) -> Self {
+    pub fn new(envelope: DocumentEnvelope<P, Operation>) -> Self {
         let current_checkpoint_id = envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
         let current = envelope.vcs.initial_projection.clone();
         Self {
@@ -79,7 +79,7 @@ where
         self.generation
     }
 
-    pub fn envelope(&self) -> &DocumentVcsEnvelope<P, Operation> {
+    pub fn envelope(&self) -> &DocumentEnvelope<P, Operation> {
         &self.envelope
     }
 
@@ -136,7 +136,7 @@ where
         build_history_columns(&self.envelope)
     }
 
-    pub fn set_envelope(&mut self, envelope: DocumentVcsEnvelope<P, Operation>, applied_edit_ids: Vec<String>) {
+    pub fn set_envelope(&mut self, envelope: DocumentEnvelope<P, Operation>, applied_edit_ids: Vec<String>) {
         self.set_state(envelope, applied_edit_ids, Vec::new());
     }
 
@@ -144,7 +144,7 @@ where
     /// round-tripping through a serialized envelope (e.g. one `dispatch` call per request).
     pub fn set_state(
         &mut self,
-        envelope: DocumentVcsEnvelope<P, Operation>,
+        envelope: DocumentEnvelope<P, Operation>,
         applied_edit_ids: Vec<String>,
         redo_edit_ids: Vec<String>,
     ) {
@@ -237,20 +237,20 @@ where
         &self.conflicts
     }
 
-    pub fn dispatch(&mut self, command: DocumentVcsCommand<Operation>) -> Result<(), VcsError> {
+    pub fn dispatch(&mut self, command: DocumentCommand<Operation>) -> Result<(), VcsError> {
         self.pump()?;
-        let is_apply = matches!(command, DocumentVcsCommand::Apply { .. });
+        let is_apply = matches!(command, DocumentCommand::Apply { .. });
         self.dispatch_inner(command)?;
         self.flush_outbound(is_apply)
     }
 
-    fn dispatch_inner(&mut self, command: DocumentVcsCommand<Operation>) -> Result<(), VcsError> {
+    fn dispatch_inner(&mut self, command: DocumentCommand<Operation>) -> Result<(), VcsError> {
         match command {
-            DocumentVcsCommand::Undo => self.dispatch(DocumentVcsCommand::UndoWithPolicy {
+            DocumentCommand::Undo => self.dispatch(DocumentCommand::UndoWithPolicy {
                 policy: UndoPolicy::ExactBaseOnly,
                 semantic_command: None,
             }),
-            DocumentVcsCommand::UndoWithPolicy {
+            DocumentCommand::UndoWithPolicy {
                 policy,
                 semantic_command,
             } => match policy {
@@ -293,12 +293,12 @@ where
                     let command_json = semantic_command.ok_or_else(|| {
                         VcsError::Backbone("semantic undo requires compensating command".into())
                     })?;
-                    let command: DocumentVcsCommand<Operation> =
+                    let command: DocumentCommand<Operation> =
                         serde_json::from_str(&command_json).map_err(|e| VcsError::Deserialize(e.to_string()))?;
                     self.dispatch_inner(command)
                 }
             },
-            DocumentVcsCommand::Redo => {
+            DocumentCommand::Redo => {
                 let next = self.redo_edit_ids.pop().ok_or(VcsError::NothingToRedo)?;
                 self.applied_edit_ids.push(next.clone());
                 // ⚡ Fold the redone edit's forwards onto `current` in their own natural order — cheap
@@ -316,7 +316,7 @@ where
                 self.bump();
                 Ok(())
             }
-            DocumentVcsCommand::CommitCheckpoint { message, authors } => {
+            DocumentCommand::CommitCheckpoint { message, authors } => {
                 let pending = uncommitted_edit_ids(&self.envelope, &self.applied_edit_ids);
                 if pending.is_empty() {
                     return Ok(());
@@ -364,9 +364,9 @@ where
                 self.bump();
                 Ok(())
             }
-            DocumentVcsCommand::CreateAlternative { name } => {
+            DocumentCommand::CreateAlternative { name } => {
                 if self.envelope.vcs.checkpoints.is_empty() {
-                    self.dispatch(DocumentVcsCommand::CommitCheckpoint {
+                    self.dispatch(DocumentCommand::CommitCheckpoint {
                         message: None,
                         authors: Vec::new(),
                     })?;
@@ -387,7 +387,7 @@ where
                 self.bump();
                 Ok(())
             }
-            DocumentVcsCommand::SwitchAlternative { alternative_id } => {
+            DocumentCommand::SwitchAlternative { alternative_id } => {
                 let alternative = self
                     .envelope
                     .vcs
@@ -409,7 +409,7 @@ where
                 self.bump();
                 Ok(())
             }
-            DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id } => {
+            DocumentCommand::CheckoutCheckpoint { checkpoint_id } => {
                 if !self.envelope.vcs.checkpoints.iter().any(|cp| cp.id == checkpoint_id) {
                     return Err(VcsError::UnknownChange(checkpoint_id.clone()));
                 }
@@ -424,7 +424,7 @@ where
                 self.bump();
                 Ok(())
             }
-            DocumentVcsCommand::Apply {
+            DocumentCommand::Apply {
                 operations,
                 description,
             } => {
@@ -460,7 +460,7 @@ where
                 self.bump();
                 Ok(())
             }
-            DocumentVcsCommand::AmendLast {
+            DocumentCommand::AmendLast {
                 operations,
                 coalesce_key,
             } => {
@@ -564,7 +564,7 @@ where
     }
 
     pub fn dispatch_json(&mut self, command_json: &str) -> Result<(), VcsError> {
-        let command: DocumentVcsCommand<Operation> =
+        let command: DocumentCommand<Operation> =
             serde_json::from_str(command_json).map_err(|e| VcsError::Deserialize(e.to_string()))?;
         self.dispatch(command)
     }
@@ -653,7 +653,7 @@ where
     }
 
     fn merge_remote_snapshot(&mut self, envelope_json: &str) -> Result<(), VcsError> {
-        let remote: DocumentVcsEnvelope<P, Operation> =
+        let remote: DocumentEnvelope<P, Operation> =
             serde_json::from_str(envelope_json).map_err(|e| VcsError::Deserialize(e.to_string()))?;
         if self.envelope.vcs.edits.is_empty() {
             let applied: Vec<String> = remote.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
@@ -807,7 +807,7 @@ fn merge_by_id<T: Clone>(local: &mut Vec<T>, remote: Vec<T>, id_of: impl Fn(&T) 
 
 /// @emoji 📦 Serializes an `Edit` into the causal wire envelope exchanged over a backbone channel.
 pub fn operation_envelope_from_edit<P, Operation>(
-    envelope: &DocumentVcsEnvelope<P, Operation>,
+    envelope: &DocumentEnvelope<P, Operation>,
     edit: &Edit<Operation>,
     deps: Vec<OperationId>,
 ) -> Result<OperationEnvelope, VcsError>
@@ -863,4 +863,4 @@ where
 {
     serde_json::from_value(envelope.diff.payload.clone()).map_err(|e| VcsError::Deserialize(e.to_string()))
 }
-//#endregion 🔖DocumentVcsStore
+//#endregion 🔖DocumentStore

@@ -274,7 +274,7 @@ pub mod vcs_integration {
     //#region 🔖SchemaErasedTypes
     /// @emoji #️⃣ The `VersionGraph` seam (`db_core::ChangeRecord`/`CheckpointRequest`) is already
     /// schema-erased — it carries a `pack_core::ContentHash`, never document semantics — so this
-    /// crate drives the real `vcs::DocumentVcsStore<P, Operation>` with the smallest concrete `P`/
+    /// crate drives the real `store::DocumentStore<P, Operation>` with the smallest concrete `P`/
     /// `Operation` pair that can faithfully round-trip exactly that: a projection that IS the
     /// latest recorded hash, and an operation that overwrites it (its `backwards` recovering the
     /// PRIOR hash from the pre-state, a real, correct inverse — not a placeholder). This mirrors
@@ -285,18 +285,18 @@ pub mod vcs_integration {
         pub latest_hash: [u8; 32],
     }
 
-    impl vcs::DocumentDsl for HashProjection {
+    impl store::DocumentDsl for HashProjection {
         const EXTENSION: &'static str = "dbhash";
 
-        fn parse_dsl(text: &str) -> Result<HashProjection, vcs::TextError> {
+        fn parse_dsl(text: &str) -> Result<HashProjection, store::TextError> {
             let trimmed = text.trim();
             if trimmed.len() != 64 || !trimmed.bytes().all(|byte| byte.is_ascii_hexdigit()) {
-                return Err(vcs::TextError::new("expected 64 lowercase hex characters", vcs::TextSpan::at(1, 1)));
+                return Err(store::TextError::new("expected 64 lowercase hex characters", store::TextSpan::at(1, 1)));
             }
             let mut latest_hash = [0u8; 32];
             for (index, slot) in latest_hash.iter_mut().enumerate() {
                 *slot = u8::from_str_radix(&trimmed[index * 2..index * 2 + 2], 16)
-                    .map_err(|_| vcs::TextError::new("invalid hex byte", vcs::TextSpan::at(1, (index * 2 + 1) as u32)))?;
+                    .map_err(|_| store::TextError::new("invalid hex byte", store::TextSpan::at(1, (index * 2 + 1) as u32)))?;
             }
             Ok(HashProjection { latest_hash })
         }
@@ -362,7 +362,7 @@ pub mod vcs_integration {
     //#endregion 🔖SchemaErasedTypes
 
     //#region 🔖Store
-    type HashStore = vcs::DocumentVcsStore<HashProjection, HashOperation>;
+    type HashStore = store::DocumentStore<HashProjection, HashOperation>;
 
     // 🔒 Used as a bare fn-pointer error mapper (`.map_err(map_vcs_error)`) below — same rationale
     // as `db_document`'s `json_err`: `Result::map_err`'s `FnOnce(E) -> F2` bound always calls the
@@ -372,7 +372,7 @@ pub mod vcs_integration {
         DbError::Internal(format!("vcs: {err}"))
     }
 
-    /// @emoji 🌿 One real `vcs::DocumentVcsStore` per document, driven by real `Apply`/
+    /// @emoji 🌿 One real `store::DocumentStore` per document, driven by real `Apply`/
     /// `CommitCheckpoint` dispatches — `db_core::VersionGraph`'s real implementation.
     pub struct VcsVersionGraph {
         stores: Mutex<HashMap<String, HashStore>>,
@@ -392,8 +392,8 @@ pub mod vcs_integration {
         fn with_store<R>(&self, document: &db_core::DocumentId, f: impl FnOnce(&mut HashStore) -> Result<R, DbError>) -> Result<R, DbError> {
             let mut stores = self.stores.lock().map_err(|_| DbError::Internal("vcs_integration: store registry mutex poisoned".to_string()))?;
             let store = stores.entry(document.0.clone()).or_insert_with(|| {
-                let envelope = vcs::create_document_vcs_envelope::<HashProjection, HashOperation>("db_engine.version_graph", &document.0, HashProjection::default(), None);
-                vcs::DocumentVcsStore::new(envelope)
+                let envelope = store::create_document_envelope::<HashProjection, HashOperation>("db_engine.version_graph", &document.0, HashProjection::default(), None);
+                store::DocumentStore::new(envelope)
             });
             f(store)
         }
@@ -407,14 +407,14 @@ pub mod vcs_integration {
                     author: Some(protocol::ActorId(change.author.0.clone())),
                     timestamp: Some(protocol::HybridLogicalTimestamp::new(0, change.timestamp_ms)),
                 };
-                store.dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![operation], description: Some(change.message.clone()) }).map_err(map_vcs_error)?;
+                store.dispatch(store::DocumentCommand::Apply { operations: vec![operation], description: Some(change.message.clone()) }).map_err(map_vcs_error)?;
                 Ok(store.envelope().vcs.edits.last().map(|edit| edit.id.clone()).unwrap_or_default())
             })
         }
 
         /// @emoji 🎯 Design choice: `request.parent_checkpoint`/`change_ids` are NOT threaded
-        /// through — `vcs::DocumentVcsCommand::CommitCheckpoint` always folds every edit applied
-        /// since the store's OWN current checkpoint (tracked internally by `DocumentVcsStore`,
+        /// through — `store::DocumentCommand::CommitCheckpoint` always folds every edit applied
+        /// since the store's OWN current checkpoint (tracked internally by `DocumentStore`,
         /// advanced by `record_change`'s `Apply` calls above), which is the only value that could
         /// ever be consistent with this store's real history. `request.timestamp_ms` is similarly
         /// unused: `vcs`'s own `CommitCheckpoint` handler stamps its own `now_iso()` timestamp into
@@ -423,13 +423,13 @@ pub mod vcs_integration {
         fn checkpoint(&self, document: &db_core::DocumentId, request: db_core::CheckpointRequest) -> Result<String, DbError> {
             self.with_store(document, |store| {
                 let authors: Vec<vcs::Author> = request.authors.iter().map(|author| vcs::Author { id: author.0.clone(), name: author.0.clone(), avatar: None }).collect();
-                store.dispatch(vcs::DocumentVcsCommand::CommitCheckpoint { message: Some(request.message.clone()), authors }).map_err(map_vcs_error)?;
+                store.dispatch(store::DocumentCommand::CommitCheckpoint { message: Some(request.message.clone()), authors }).map_err(map_vcs_error)?;
                 store.current_checkpoint_id().map(str::to_string).ok_or_else(|| DbError::Internal("vcs: commit_checkpoint produced no checkpoint id".to_string()))
             })
         }
 
         fn merge_base(&self, document: &db_core::DocumentId, a: &str, b: &str) -> Result<Option<String>, DbError> {
-            self.with_store(document, |store| Ok(vcs::merge_base(store.envelope(), a, b)))
+            self.with_store(document, |store| Ok(store::merge_base(store.envelope(), a, b)))
         }
 
         fn head(&self, document: &db_core::DocumentId, alternative: &str) -> Result<Option<String>, DbError> {

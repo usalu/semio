@@ -310,8 +310,8 @@
         "vite-plugin-singlefile": "*",
       },
     },
-    "compose/client/bin/store": {
-      "name": "@semio-tech/compose-store",
+    "compose/client/bin/gql": {
+      "name": "@semio-tech/compose-gql",
       "version": "1.0.0",
     },
     "compose/client/lib/go": {
@@ -876,6 +876,12 @@
         "typescript": "^5.9.3",
       },
     },
+    "store/rs": {
+      "name": "@semio-tech/store-rs",
+    },
+    "store/worker": {
+      "name": "@semio-tech/store-worker",
+    },
     "trinity/jack/lsp": {
       "name": "@semio-tech/trinity-jack-lsp-worker",
     },
@@ -975,9 +981,6 @@
       "devDependencies": {
         "typescript": "^5.9.3",
       },
-    },
-    "vcs/rs": {
-      "name": "@semio-tech/vcs-rs",
     },
     "writer/rs": {
       "name": "@semio-tech/writer-rs",
@@ -2030,6 +2033,8 @@
 
     "@semio-tech/compose-go": ["@semio-tech/compose-go@workspace:compose/client/lib/go"],
 
+    "@semio-tech/compose-gql": ["@semio-tech/compose-gql@workspace:compose/client/bin/gql"],
+
     "@semio-tech/compose-grasshopper": ["@semio-tech/compose-grasshopper@workspace:compose/client/ui/gh/Compose.Grasshopper"],
 
     "@semio-tech/compose-js": ["@semio-tech/compose-js@workspace:compose/client/lib/js"],
@@ -2053,8 +2058,6 @@
     "@semio-tech/compose-sketchpad-play": ["@semio-tech/compose-sketchpad-play@workspace:compose/client/lib/sketchpad/play"],
 
     "@semio-tech/compose-sqlite": ["@semio-tech/compose-sqlite@workspace:compose/client/schema/sqlite"],
-
-    "@semio-tech/compose-store": ["@semio-tech/compose-store@workspace:compose/client/bin/store"],
 
     "@semio-tech/dag-core": ["@semio-tech/dag-core@workspace:infinite/board/port/directed/dag"],
 
@@ -2144,6 +2147,10 @@
 
     "@semio-tech/sequence-core": ["@semio-tech/sequence-core@workspace:sequence/core"],
 
+    "@semio-tech/store-rs": ["@semio-tech/store-rs@workspace:store/rs"],
+
+    "@semio-tech/store-worker": ["@semio-tech/store-worker@workspace:store/worker"],
+
     "@semio-tech/trinity-jack-lsp-worker": ["@semio-tech/trinity-jack-lsp-worker@workspace:trinity/jack/lsp"],
 
     "@semio-tech/trinity-ram-rs": ["@semio-tech/trinity-ram-rs@workspace:trinity/ram"],
@@ -2153,8 +2160,6 @@
     "@semio-tech/ui-react": ["@semio-tech/ui-react@workspace:ui/js/react"],
 
     "@semio-tech/ui-styling": ["@semio-tech/ui-styling@workspace:ui/styling/js"],
-
-    "@semio-tech/vcs-rs": ["@semio-tech/vcs-rs@workspace:vcs/rs"],
 
     "@semio-tech/writer-rs": ["@semio-tech/writer-rs@workspace:writer/rs"],
 

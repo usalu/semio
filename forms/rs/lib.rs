@@ -23,11 +23,11 @@ pub fn empty_forms_projection() -> FormSpec {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vcs::{create_document_vcs_envelope, test_support::{assert_dsl_pack_equivalence, assert_dsl_round_trip}};
+    use store::{create_document_envelope, test_support::{assert_dsl_pack_equivalence, assert_dsl_round_trip}};
 
     #[test]
     fn forms_document_vcs_materializes() {
-        let store = FormsStore::new(create_document_vcs_envelope(FORMS_DOCUMENT_SCHEMA, "forms", empty_forms_projection(), None));
+        let store = FormsStore::new(create_document_envelope(FORMS_DOCUMENT_SCHEMA, "forms", empty_forms_projection(), None));
         let projection = store.projection().expect("projection");
         assert_eq!(projection.schema, FORMS_DOCUMENT_SCHEMA);
     }
@@ -42,9 +42,9 @@ mod tests {
 
     #[test]
     fn add_step_op_replays() {
-        let mut store = FormsStore::new(create_document_vcs_envelope(FORMS_DOCUMENT_SCHEMA, "forms", empty_forms_projection(), None));
+        let mut store = FormsStore::new(create_document_envelope(FORMS_DOCUMENT_SCHEMA, "forms", empty_forms_projection(), None));
         let step = FormStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() };
-        store.dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![FormOperation::AddStep { step, index: None }], description: None }).expect("apply");
+        store.dispatch(store::DocumentCommand::Apply { operations: vec![FormOperation::AddStep { step, index: None }], description: None }).expect("apply");
         assert_eq!(store.projection().expect("projection").steps.len(), 2);
     }
 
@@ -70,7 +70,7 @@ mod tests {
     #[test]
     fn building_component_fixture_dsl_round_trips() {
         let text = include_str!("../example/building-component.forms");
-        let spec = <FormSpec as vcs::DocumentDsl>::parse_dsl(text).expect("building-component.forms parses");
+        let spec = <FormSpec as store::DocumentDsl>::parse_dsl(text).expect("building-component.forms parses");
         assert_eq!(spec.id, "building-component");
         assert_eq!(spec.steps.len(), 2);
         assert_dsl_round_trip(&spec);

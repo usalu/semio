@@ -9824,7 +9824,7 @@ public class TruncateTextComponent : ScriptingComponent
 #endregion 📌Scripting
 
 #region ⭐Engine
-// Local kit persistence uses compose-store via Compose.Store.StoreKitIO (same as Compose).
+// Local kit persistence uses compose-gql via Compose.Store.StoreKitIO (same as Compose).
 
 public readonly struct Unit
 {
@@ -9943,7 +9943,7 @@ public abstract class KitOperationComponent<TInput, TOutput> : Component
 }
 
 #region ⛑️Persistence
-// Load/save kits through compose-store (see Compose/Store/StoreKitIO in the net bundle).
+// Load/save kits through compose-gql (see Compose/Store/StoreKitIO in the net bundle).
 
 public abstract class PersistenceComponent<TPersistentInput, TResponse> : KitOperationComponent<PersistenceRequest<TPersistentInput>, TResponse>
 {
@@ -10055,7 +10055,7 @@ public class SaveKitComponent : PersistenceComponent<Kit, Kit>
 
 public class UpdateKitComponent : KitOperationComponent<UpdateKitInput, UpdateKitOutput>
 {
-    public UpdateKitComponent() : base("Update Kit", "Kit↻", "Apply a kit diff and persist the result to the local kit folder (compose-store).") { }
+    public UpdateKitComponent() : base("Update Kit", "Kit↻", "Apply a kit diff and persist the result to the local kit folder (compose-gql).") { }
     protected override string RunDescription => "True to update the kit.";
     protected override string SuccessDescription => "True if the kit was successfully updated. False otherwise.";
     public override Guid ComponentGuid => new("B7104D9E-E2BD-4FBE-9D04-A4527B978AEE");

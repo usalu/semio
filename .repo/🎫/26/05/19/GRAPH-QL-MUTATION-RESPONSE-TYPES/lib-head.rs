@@ -1106,9 +1106,9 @@ pub mod gql_relay {
         }
     }
 
-    crate::entity_relay!(EditConnection, EditEdge, Arc<crate::vcs::Edit>);
+    crate::entity_relay!(EditConnection, EditEdge, Arc<crate::store::Edit>);
     impl EditConnection {
-        pub async fn from_edits(entities: Vec<Arc<crate::vcs::Edit>>) -> Self {
+        pub async fn from_edits(entities: Vec<Arc<crate::store::Edit>>) -> Self {
             Self::from_entities(entities).await
         }
 
@@ -3722,7 +3722,7 @@ pub mod kit {
 
     pub struct Kit {
         pub id: Id,
-        pub owner_graph: Weak<crate::vcs::Graph>,
+        pub owner_graph: Weak<crate::store::Graph>,
         pub name: RwLock<String>,
         pub description: RwLock<Option<String>>,
         pub icon: RwLock<Option<String>>,
@@ -3800,11 +3800,11 @@ pub mod kit {
     }
 
     impl Kit {
-        pub async fn new(owner_graph: Weak<crate::vcs::Graph>, name: String) -> Arc<Self> {
+        pub async fn new(owner_graph: Weak<crate::store::Graph>, name: String) -> Arc<Self> {
             Arc::new(Self { id: Id::new().await, owner_graph, name: RwLock::new(name), ..Default::default() })
         }
 
-        pub(crate) fn new_sync(owner_graph: Weak<crate::vcs::Graph>, name: String) -> Arc<Self> {
+        pub(crate) fn new_sync(owner_graph: Weak<crate::store::Graph>, name: String) -> Arc<Self> {
             Arc::new(Self { id: Id::new_sync(), owner_graph, name: RwLock::new(name), ..Default::default() })
         }
 
@@ -6481,7 +6481,7 @@ pub mod operation {
         PubInputInterface,
     };
     use crate::meta::{ConceptInput, QualityInput, TagInput};
-    use crate::vcs::Edit;
+    use crate::store::Edit;
 
     //#region ­ƒº¡ normalized operation contract
     //#region ­ƒöû canonical_kit_diff
@@ -8410,7 +8410,7 @@ pub mod kit_graph_engine {
     use crate::id::Id;
     use crate::kit;
     use crate::operation::{self, Operation, Scope};
-    use crate::vcs::Graph;
+    use crate::store::Graph;
 
     //#region ­ƒöû design_slot
     /// @emoji ­ƒºÀ Opaque internal design list index; external [`Id`] maps only in [`kit::Kit::bind_external_design_id`].
@@ -8509,7 +8509,7 @@ pub mod kit_backbone {
 
     use crate::error::ComposeError;
     use crate::id::Id;
-    use crate::vcs::Graph;
+    use crate::store::Graph;
 
     //#region ­ƒº¥ wire format
 
@@ -9472,8 +9472,8 @@ pub mod kit_backbone {
         Ok(())
     }
 
-    pub async fn graph_new_overlay_from_initial_projection_json(json: serde_json::Value) -> Result<std::sync::Arc<crate::vcs::Graph>, crate::error::ComposeError> {
-        let g = crate::vcs::Graph::new().await;
+    pub async fn graph_new_overlay_from_initial_projection_json(json: serde_json::Value) -> Result<std::sync::Arc<crate::store::Graph>, crate::error::ComposeError> {
+        let g = crate::store::Graph::new().await;
         {
             let mut slot = g.mutable_kit.write().await;
             hydrate_kit_from_initial_projection_value(&slot, &json).await?;
@@ -9688,9 +9688,9 @@ pub mod kit_backbone {
 
         /// @emoji ­ƒô© Project one live change into a bundle edit; each step's `kitDiff` is computed from that op's `to_diff` against a [`Kit`] materialized for the same [`Workspace`](../../../schema/graphql/schema.golden.graphql) / [`Edit`](../../../schema/graphql/schema.golden.graphql) cursor as full materialization.
         async fn edit_from_runtime_change(
-            graph: &std::sync::Arc<crate::vcs::Graph>,
+            graph: &std::sync::Arc<crate::store::Graph>,
             workspace_id: &crate::id::Id,
-            tx: &std::sync::Arc<crate::vcs::Edit>,
+            tx: &std::sync::Arc<crate::store::Edit>,
             change_idx: usize,
             ch: &std::sync::Arc<crate::vcs::Change>,
             sequence_number: i32,
@@ -9736,7 +9736,7 @@ pub mod kit_backbone {
         }
 
         /// @emoji ­ƒô© Project one live write session into a version change with edits.
-        async fn change_from_runtime_edit(graph: &std::sync::Arc<crate::vcs::Graph>, workspace_id: &crate::id::Id, tx: &std::sync::Arc<crate::vcs::Edit>, saved: bool) -> VersionChange {
+        async fn change_from_runtime_edit(graph: &std::sync::Arc<crate::store::Graph>, workspace_id: &crate::id::Id, tx: &std::sync::Arc<crate::store::Edit>, saved: bool) -> VersionChange {
             let mut edits = Vec::new();
             for (idx, ch) in tx.changes.read().await.iter().enumerate() {
                 edits.push(Self::edit_from_runtime_change(graph, workspace_id, tx, idx, ch, (idx + 1) as i32).await);
@@ -9752,7 +9752,7 @@ pub mod kit_backbone {
             }
         }
 
-        async fn change_lists_for_workspace(graph: &std::sync::Arc<crate::vcs::Graph>, workspace_id: &crate::id::Id) -> (BlockHashedList<VersionChange>, BlockHashedList<VersionChange>) {
+        async fn change_lists_for_workspace(graph: &std::sync::Arc<crate::store::Graph>, workspace_id: &crate::id::Id) -> (BlockHashedList<VersionChange>, BlockHashedList<VersionChange>) {
             let mut saved = BlockHashedList::default();
             let mut unsaved = BlockHashedList::default();
             if let Some((saved_edits, unsaved_edits)) = graph.workspace_saved_and_unsaved_edits(workspace_id).await {
@@ -9768,7 +9768,7 @@ pub mod kit_backbone {
 
         /// @emoji ­ƒô© Project the live `Graph` into a metabolism-shaped bundle ready for atomic write.
         /// `wip.id` mirrors the graph id; `wip.initialKit` is the immutable [`Graph::initial_kit`] baseline (SDL `Graph.initialKit`); head materialization stays on `theKit.kit` / version changes.
-        pub async fn from_graph(graph: &crate::vcs::Graph) -> Self {
+        pub async fn from_graph(graph: &crate::store::Graph) -> Self {
             let mut bundle = Self::template();
             let g = graph.arc_here();
             let initial = crate::kit_backbone::initial_kit_projection_value(&*g.initial_kit.read().await).await;
@@ -9913,7 +9913,7 @@ pub mod kit_backbone {
         //#endregion ­ƒôª bundle file blobs (content-addressed outside kit projection JSON)
 
         /// @emoji ­ƒ®╗ Hydrate the live graph from a previously-persisted bundle JSON and keep version changes available for  replay.
-        pub async fn hydrate_into_graph(graph: &std::sync::Arc<crate::vcs::Graph>, json: &str) -> Result<Self, ComposeError> {
+        pub async fn hydrate_into_graph(graph: &std::sync::Arc<crate::store::Graph>, json: &str) -> Result<Self, ComposeError> {
             let bundle: Self = serde_json::from_str(json).map_err(|e| ComposeError::invalid(format!("bundle parse: {e}")))?;
             if bundle.schema != KIT_STORE_BUNDLE_SCHEMA {
                 return Err(ComposeError::invalid(format!("bundle schema mismatch: {} != {}", bundle.schema, KIT_STORE_BUNDLE_SCHEMA)));
@@ -10513,7 +10513,7 @@ pub mod worker {
             spawn_child("wip", wip_graph.clone(), bus.clone(), wip_rx);
             spawn_child("auth", auth_graph.clone(), bus.clone(), auth_rx);
 
-            let sess = crate::vcs::Session::new().await;
+            let sess = crate::store::Session::new().await;
             let sessions = RwLock::new(vec![sess]);
 
             let local_id = Id::new().await;
@@ -10546,7 +10546,7 @@ pub mod worker {
             spawn_child("wip", wip_graph.clone(), bus.clone(), wip_rx);
             spawn_child("auth", auth_graph.clone(), bus.clone(), auth_rx);
 
-            let sess = crate::vcs::Session::new().await;
+            let sess = crate::store::Session::new().await;
             let sessions = RwLock::new(vec![sess]);
 
             let local_id = Id::new().await;
@@ -10743,7 +10743,7 @@ pub mod gql {
     use crate::geom::{OffsetInput, PositionInput};
     use crate::id::Id;
     use crate::operation::{Command, Input, Scope};
-    use crate::vcs::Graph;
+    use crate::store::Graph;
     use crate::worker::ParentStore;
 
     //#region ­ƒôí subscription_paths
@@ -10850,12 +10850,12 @@ pub mod gql {
             field(name = "owns", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>")
         )]
         pub enum EntityInterface {
-            Graph(Arc<crate::vcs::Graph>),
-            Session(Arc<crate::vcs::Session>),
-            Edit(Arc<crate::vcs::Edit>),
+            Graph(Arc<crate::store::Graph>),
+            Session(Arc<crate::store::Session>),
+            Edit(Arc<crate::store::Edit>),
             Alternative(Arc<crate::vcs::Alternative>),
             Checkpoint(Arc<crate::vcs::Checkpoint>),
-            Conflict(Arc<crate::vcs::Conflict>),
+            Conflict(Arc<crate::store::Conflict>),
             LocalProvider(Arc<crate::gql::LocalProvider>),
             RemoteProvider(Arc<crate::gql::RemoteProvider>),
             Kit(Arc<crate::kit::Kit>),
@@ -10915,9 +10915,9 @@ pub mod gql {
             Plane(Arc<Plane>),
             Position(Arc<Position>),
             Location(Arc<Location>),
-            Graph(Arc<crate::vcs::Graph>),
-            Session(Arc<crate::vcs::Session>),
-            Conflict(Arc<crate::vcs::Conflict>),
+            Graph(Arc<crate::store::Graph>),
+            Session(Arc<crate::store::Session>),
+            Conflict(Arc<crate::store::Conflict>),
             Kit(Arc<crate::kit::Kit>),
             Design(Arc<crate::kit::design::Design>),
             Piece(Arc<crate::kit::design::piece::Piece>),
@@ -12514,12 +12514,12 @@ pub mod gql {
             field(name = "owns", ty = "Option<crate::gql::interfaces::EntityConnectionInterface>")
         )]
         pub enum StrongEntityInterface {
-            Graph(Arc<crate::vcs::Graph>),
-            Session(Arc<crate::vcs::Session>),
-            Edit(Arc<crate::vcs::Edit>),
+            Graph(Arc<crate::store::Graph>),
+            Session(Arc<crate::store::Session>),
+            Edit(Arc<crate::store::Edit>),
             Alternative(Arc<crate::vcs::Alternative>),
             Checkpoint(Arc<crate::vcs::Checkpoint>),
-            Conflict(Arc<crate::vcs::Conflict>),
+            Conflict(Arc<crate::store::Conflict>),
             LocalProvider(Arc<crate::gql::LocalProvider>),
             RemoteProvider(Arc<crate::gql::RemoteProvider>),
             Kit(Arc<crate::kit::Kit>),
@@ -12534,7 +12534,7 @@ pub mod gql {
             Concept(Arc<crate::meta::Concept>),
             Quality(Arc<crate::meta::Quality>),
             Change(Arc<crate::vcs::Change>),
-            TheKit(Arc<crate::vcs::TheKit>),
+            TheKit(Arc<crate::store::TheKit>),
             Side(Arc<crate::kit::design::connection::Side>),
             Place(Arc<Place>),
             Operation(crate::operation::OperationInterface),
@@ -12609,7 +12609,7 @@ pub mod gql {
             field(name = "kit", ty = "Arc<crate::kit::Kit>")
         )]
         pub enum WorkspaceInterface {
-            TheKit(Arc<crate::vcs::TheKit>),
+            TheKit(Arc<crate::store::TheKit>),
             Alternative(Arc<crate::vcs::Alternative>),
         }
     }
@@ -12998,8 +12998,8 @@ pub mod gql {
             })
         }
 
-        /// @emoji ­ƒº¡ First active [`crate::vcs::Session`] on this runtime.
-        pub async fn session(&self, ctx: &Context<'_>) -> async_graphql::Result<Arc<crate::vcs::Session>> {
+        /// @emoji ­ƒº¡ First active [`crate::store::Session`] on this runtime.
+        pub async fn session(&self, ctx: &Context<'_>) -> async_graphql::Result<Arc<crate::store::Session>> {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             rt.sessions.read().await.first().cloned().ok_or_else(|| async_graphql::Error::new("no session"))
         }
@@ -13853,7 +13853,7 @@ pub mod gql {
 
     pub struct Subscription;
 
-    type SessionStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Arc<crate::vcs::Session>>> + Send>>;
+    type SessionStream = Pin<Box<dyn Stream<Item = async_graphql::Result<Arc<crate::store::Session>>> + Send>>;
     type OperationStream = Pin<Box<dyn Stream<Item = async_graphql::Result<crate::operation::OperationInterface>> + Send>>;
 
     #[Subscription]
@@ -14107,7 +14107,7 @@ pub mod gql {
             .register_output_type::<crate::gql_relay::PositionConnection>()
             .register_output_type::<crate::gql_relay::LocationConnection>()
             .register_output_type::<crate::color::Color>()
-            .register_output_type::<crate::vcs::VersionKind>()
+            .register_output_type::<crate::store::VersionKind>()
             .register_input_type::<crate::geom::VectorInput>()
             .register_input_type::<crate::geom::PointInput>()
             .register_input_type::<crate::geom::CoordinateInput>()
@@ -14770,7 +14770,7 @@ mod tests {
     #[test]
     fn change_forward_operation_record_ids_populated_on_record() {
         block_on(async {
-            let g = std::sync::Arc::new(crate::vcs::Graph::new().await);
+            let g = std::sync::Arc::new(crate::store::Graph::new().await);
             g.ensure_default_checkpoint_for_the_kit().await;
             let ws = g.id.clone();
             let tx = g.open_transaction(&ws).await;
@@ -15120,7 +15120,7 @@ mod tests {
             let ops_json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
             let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read kit-store.golden.expected")).expect("parse expected");
 
-            let g = crate::vcs::Graph::new().await;
+            let g = crate::store::Graph::new().await;
             let workspace_id = g.id.clone();
             let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
             let golden_ops = crate::kit_backbone::golden_operation_records_ref(&ops_json).expect("operations|ops");
@@ -15181,7 +15181,7 @@ mod tests {
             let ops_json: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
             let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read kit-store.golden.expected")).expect("parse expected");
 
-            let g = crate::vcs::Graph::new().await;
+            let g = crate::store::Graph::new().await;
             let workspace_id = g.id.clone();
             let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
             let golden_ops = crate::kit_backbone::golden_operation_records_ref(&ops_json).expect("operations|ops");
@@ -15214,7 +15214,7 @@ mod tests {
             let golden_ops: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read operations")).expect("parse golden operations");
             let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
 
-            let g = crate::vcs::Graph::new().await;
+            let g = crate::store::Graph::new().await;
             let legacy_workspace = golden_ops["draftId"].as_str().expect("draftId");
             let graph_workspace = g.id.as_str().to_string();
             let mut stored = crate::kit_backbone::stored_operations_from_golden_operations_json(&golden_ops).expect("golden ÔåÆ stored operations");
@@ -15255,10 +15255,10 @@ mod tests {
             let golden_ops: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read operations")).expect("parse golden operations");
             let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
 
-            let g_bootstrap = crate::vcs::Graph::new().await;
+            let g_bootstrap = crate::store::Graph::new().await;
             let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g_bootstrap).await.expect("bootstrap .compose layout");
 
-            let g2 = crate::vcs::Graph::new().await;
+            let g2 = crate::store::Graph::new().await;
             let legacy_workspace = golden_ops["draftId"].as_str().expect("draftId");
             let graph_workspace = g2.id.as_str().to_string();
             let mut stored = crate::kit_backbone::stored_operations_from_golden_operations_json(&golden_ops).expect("golden ÔåÆ stored operations");
@@ -15456,7 +15456,7 @@ mod tests {
             let uri_full = format!("file://{}", path.display());
             let norm = crate::kit_backbone::normalize_connection_uri(&uri_full);
 
-            let g = crate::vcs::Graph::new().await;
+            let g = crate::store::Graph::new().await;
             let mut bone = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g).await.expect("mount empty bundle");
             let workspace_id = crate::id::Id::from("draft-rs-1");
             let tx_id = crate::id::Id::from("tx-rs-1");
@@ -15520,7 +15520,7 @@ mod tests {
     #[test]
     fn kit_store_bundle_projects_alternative_workspace_changes() {
         block_on(async {
-            let graph = crate::vcs::Graph::new().await;
+            let graph = crate::store::Graph::new().await;
             let alt_id = graph.create_alternative_from_tip("branch-a".to_string(), None).await.expect("alternative");
             let bundle = crate::kit_backbone::DevBackboneBundleDoc::from_graph(graph.as_ref()).await;
             assert!(bundle.wip.the_kit.saved_changes.items.is_empty());
@@ -15538,7 +15538,7 @@ mod tests {
     #[test]
     fn normalized_kit_operation_create_tag_diff_and_backwards_use_scoped_ids() {
         block_on(async {
-            let graph = crate::vcs::Graph::new().await;
+            let graph = crate::store::Graph::new().await;
             let kit = graph.mutable_kit.read().await.clone();
             let owner_id = kit.workspace_kit_id().await;
             let tag_id = crate::id::Id::from("tag-scope-1");
@@ -15671,7 +15671,7 @@ mod tests {
     #[test]
     fn normalized_create_fixed_piece_replay_reuses_scoped_piece_id() {
         block_on(async {
-            let graph = crate::vcs::Graph::new().await;
+            let graph = crate::store::Graph::new().await;
             let workspace_id = graph.id.clone();
             let operation = crate::operation::Operation::CreateFixedPiece {
                 scope: crate::operation::Scope::CreateFixedPiece {

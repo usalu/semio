@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sourcing_curate::{grid_placement, grid_scale, mesh_spec_for, sourcing_modules, typology_flatten, CurateDocument, ObjectKind, SortDirection, SourcingOperation, TableSort, TypologyNode, SOURCING_CURATE_SCHEMA};
 use std::collections::HashSet;
-use vcs::DocumentDsl;
+use store::DocumentDsl;
 
 //#region 🔖Constants
 const SOURCING_CURATE_APP_ID: &str = "sourcing-curate";

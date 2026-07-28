@@ -1,0 +1,13 @@
+{
+  "title": "No Window Active by Default",
+  "emoji": "🪟",
+  "status": "open",
+  "description": "UI: By default no window should be active. The aggregator currently preactivates the Perspective window; remove all implicit initial window activation while preserving explicit user activation and persisted/tutorial-restored focus.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2373"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪8bf1b3344a6a4568abfe47352d9654d2"
+  ]
+}

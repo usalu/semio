@@ -80,11 +80,11 @@ import pytransform3d.rotations
 # #endregion 🔌Adapters
 
 # #region store
-_DEFAULT_EXE = "compose-exe" if sys.platform == "win32" else "compose-store"
+_DEFAULT_EXE = "compose-exe" if sys.platform == "win32" else "compose-gql"
 
 
 def resolve_compose_store_binary() -> str:
-    p = os.environ.get("COMPOSE_STORE_BIN", "").strip()
+    p = os.environ.get("COMPOSE_GQL_BIN", "").strip()
     if p:
         return p
     here = os.path.dirname(os.path.abspath(__file__))
@@ -97,7 +97,7 @@ def resolve_compose_store_binary() -> str:
 
 class StoreClient:
     """
-    Spawns :program:`compose-store` (one kit per process). :meth:`call` sends a JSON-RPC
+    Spawns :program:`compose-gql` (one kit per process). :meth:`call` sends a JSON-RPC
     request and returns the ``result`` (or raises on ``error``). ``event`` lines are
     dropped unless you use :attr:`_on_event` via :meth:`on_event` (kept in sync
     in the read loop; production callers should set ``COMPOSE_STORE_NO_EVENTS=1`` on
@@ -238,7 +238,7 @@ def _ndjson_read_until_id(stream: typing.BinaryIO, want_id: int) -> dict[str, ty
     while True:
         line = stream.readline()
         if not line:
-            raise RuntimeError("unexpected EOF on compose-store stdout")
+            raise RuntimeError("unexpected EOF on compose-gql stdout")
         s = line.decode("utf-8", errors="replace").strip()
         if not s:
             continue
@@ -270,7 +270,7 @@ def load_kit_via_io(
         env={**os.environ, "COMPOSE_STORE_NO_EVENTS": "1", "RUST_LOG": "error"},
     )
     if child.stdin is None or child.stdout is None:
-        raise RuntimeError("no pipes on compose-store")
+        raise RuntimeError("no pipes on compose-gql")
     try:
         msg1: dict[str, typing.Any] = {
             "jsonrpc": "2.0",
@@ -15952,13 +15952,13 @@ def _read_kit_from_sqlite(db_path: str) -> dict:
 
 
 def import_file_kit(path: str) -> KitData:
-    """📥Import a JSON file kit (via the ``compose-store`` I/O path)."""
+    """📥Import a JSON file kit (via the ``compose-gql`` I/O path)."""
     d = load_kit_via_io("io.importFromFile", {"path": path})
     return KitData(d)
 
 
 def export_file_kit(kit: KitData | dict, path: str) -> None:
-    """📤Export a JSON file kit (via ``compose-store``)."""
+    """📤Export a JSON file kit (via ``compose-gql``)."""
     dto = _kit_to_dict(kit)
     with StoreClient() as c:
         c.call("kit.create", {"dto": dto})
@@ -15966,7 +15966,7 @@ def export_file_kit(kit: KitData | dict, path: str) -> None:
 
 
 def import_folder_kit(folder_path: str) -> tuple[KitData, dict[str, bytes]]:
-    """🔖Import a folder kit backed by :file:`.compose/kit.db` (``compose-store`` + Rust SQLite)."""
+    """🔖Import a folder kit backed by :file:`.compose/kit.db` (``compose-gql`` + Rust SQLite)."""
     try:
         kit_dict = load_kit_via_io("io.importFromFolder", {"path": folder_path})
     except FileNotFoundError:
@@ -15987,7 +15987,7 @@ def import_folder_kit(folder_path: str) -> tuple[KitData, dict[str, bytes]]:
 def export_folder_kit(
     kit: KitData | dict, files: dict[str, bytes], folder_path: str
 ) -> None:
-    """🔖Export a folder kit (``compose-store`` + Rust SQLite on disk)."""
+    """🔖Export a folder kit (``compose-gql`` + Rust SQLite on disk)."""
     dto = _kit_to_dict(kit)
     asset_files = _collect_kit_asset_files(dto, files)
     os.makedirs(folder_path, exist_ok=True)
@@ -16131,7 +16131,7 @@ def edit_remote_kit(uri: str, diff: dict) -> KitData:
 
 
 def import_kit(path: str) -> tuple[KitData, dict[str, bytes]]:
-    """📦Import a kit from a ``.zip`` (``kit.json`` at archive root) via :program:`compose-store`."""
+    """📦Import a kit from a ``.zip`` (``kit.json`` at archive root) via :program:`compose-gql`."""
     if not os.path.exists(path):
         raise FileNotFoundError(f"File not found: {path}")
     kit_dict = load_kit_via_io("io.importFromZip", {"path": path})
@@ -16632,7 +16632,7 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
 
 
 def export_kit(kit: KitData, files: dict[str, bytes], path: str) -> None:
-    """📦Export a kit to a ``.zip`` (``kit.json`` at root) via :program:`compose-store`."""
+    """📦Export a kit to a ``.zip`` (``kit.json`` at root) via :program:`compose-gql`."""
     _ = files  # file blobs are carried on the DTO; external assets follow Rust inlining rules
     data = _kit_to_dict(kit)
     with StoreClient() as c:
@@ -16699,7 +16699,7 @@ class SyncKit:
         return self._kit
 
     def apply(self, commands: list[dict]) -> None:
-        """Apply ``ChangeKitCommand`` JSON via ``compose-store``."""
+        """Apply ``ChangeKitCommand`` JSON via ``compose-gql``."""
         d = _kit_to_dict(self._kit)
         with StoreClient() as c:
             c.call("kit.create", {"dto": d})
@@ -19761,7 +19761,7 @@ class TestRoundtrip:
             )
 
     @pytest.mark.skip(
-        reason="dict kit diffs removed from edit_*; port workflow tests to ChangeKitCommand JSON (compose-store)"
+        reason="dict kit diffs removed from edit_*; port workflow tests to ChangeKitCommand JSON (compose-gql)"
     )
     class TestKitWorkflows:
         def test_file_kit_import_export_edit_roundtrip(self):
@@ -20101,7 +20101,7 @@ class TestFlattenMerkle:
 
 
 @pytest.mark.skip(
-    reason="getKitChange/dict diffs: migrate to compose rs KitDiff/ChangeKitCommand (compose-store)"
+    reason="getKitChange/dict diffs: migrate to compose rs KitDiff/ChangeKitCommand (compose-gql)"
 )
 class TestChange:
     class TestMetabolism:
@@ -21546,7 +21546,7 @@ class TestMaxChildren:
 
 @pytest.mark.skipif(
     not os.path.isfile(resolve_compose_store_binary()),
-    reason="compose-store binary not found; set COMPOSE_STORE_BIN or cargo build -p compose-store",
+    reason="compose-gql binary not found; set COMPOSE_GQL_BIN or cargo build -p compose-gql",
 )
 def test_store_generate_id_roundtrip() -> None:
     with StoreClient() as c:

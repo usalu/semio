@@ -2092,8 +2092,8 @@ public sealed class StoreClientTests
 {
     public static bool StoreBinaryPresent() =>
         System.IO.File.Exists(StorePaths.ResolveStoreBinary()) ||
-        System.IO.File.Exists(Path.Combine("target", "release", "compose-store.exe")) ||
-        System.IO.File.Exists(Path.Combine("target", "release", "compose-store"));
+        System.IO.File.Exists(Path.Combine("target", "release", "compose-gql.exe")) ||
+        System.IO.File.Exists(Path.Combine("target", "release", "compose-gql"));
 
     [Fact]
     public void Compose_Store_Graphql_Entry_And_Wip_Read()

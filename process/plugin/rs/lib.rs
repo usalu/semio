@@ -20,7 +20,7 @@ use std::hash::{Hash, Hasher};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Mutex, OnceLock};
 use protocol::CollectionOperation;
-use vcs::DocumentDsl;
+use store::DocumentDsl;
 
 //#region 🔖Constants
 const PROCESS_3D_PLAY_APP_ID: &str = "process3d-play";

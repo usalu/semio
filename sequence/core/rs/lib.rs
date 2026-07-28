@@ -237,7 +237,7 @@ pub struct SequenceEdge {
 
 /// 🧾 Runtime fixture shape — kept plain `Serialize`/`Deserialize` only; see `SequenceFixtureDsl`
 /// (`🔖Dsl` region) for the `.sequence` DSL text mirror (SoA `steps`/`edges` tables, `edges` as
-/// `dsl::Wire` links) and the hand-written `impl vcs::DocumentDsl for SequenceFixture` that
+/// `dsl::Wire` links) and the hand-written `impl store::DocumentDsl for SequenceFixture` that
 /// converts through it.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -1452,8 +1452,8 @@ use protocol::{collection_diff_from_operation, invert_collection_operation, Coll
 
 pub const SEQUENCE_FIXTURE_SCHEMA: &str = "sequence.fixture";
 
-pub type SequenceEnvelope = vcs::DocumentVcsEnvelope<SequenceFixture, SequenceOperation>;
-pub type SequenceStore = vcs::DocumentVcsStore<SequenceFixture, SequenceOperation>;
+pub type SequenceEnvelope = store::DocumentEnvelope<SequenceFixture, SequenceOperation>;
+pub type SequenceStore = store::DocumentStore<SequenceFixture, SequenceOperation>;
 
 // #region 🔖Collections
 impl Identified<String> for SequenceStep {
@@ -1748,7 +1748,7 @@ pub fn sequence_fixture_operations(before: &SequenceFixture, after: &SequenceFix
 // #region 🔖Dsl
 /// 🔌 DSL-only mirror of `SequenceEdge` — models the `from`/`to` step-id pair as a single unified
 /// `dsl::Wire` literal (`from->to`) instead of two separate string fields, per the unified syntax
-/// law for graph edges/connections. Converts at the `vcs::DocumentDsl`/`vcs::OpText` boundary only
+/// law for graph edges/connections. Converts at the `store::DocumentDsl`/`store::OpText` boundary only
 /// (`sequence_fixture_to_dsl`/`sequence_operation_to_dsl` and their inverses); `SequenceEdge`
 /// itself (and every consumer matching on its `from`/`to` fields directly) is completely
 /// untouched. `SequenceEdgePatch` stays a plain sparse two-`Option<String>` patch rather than a
@@ -1799,31 +1799,31 @@ fn sequence_fixture_dsl_to_fixture(fixture: SequenceFixtureDsl) -> Result<Sequen
     Ok(SequenceFixture { schema: fixture.schema, camera: fixture.camera, steps: fixture.steps, edges: fixture.edges.into_iter().map(sequence_edge_from_dsl).collect::<Result<Vec<_>, _>>()? })
 }
 
-impl vcs::DocumentDsl for SequenceFixture {
+impl store::DocumentDsl for SequenceFixture {
     const EXTENSION: &'static str = "sequence";
 
-    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        let dsl_fixture = <SequenceFixtureDsl as vcs::DocumentDsl>::parse_dsl(text)?;
-        sequence_fixture_dsl_to_fixture(dsl_fixture).map_err(|message| vcs::TextError::new(message, vcs::TextSpan::at(1, 1)))
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        let dsl_fixture = <SequenceFixtureDsl as store::DocumentDsl>::parse_dsl(text)?;
+        sequence_fixture_dsl_to_fixture(dsl_fixture).map_err(|message| store::TextError::new(message, store::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        <SequenceFixtureDsl as vcs::DocumentDsl>::print_dsl(&sequence_fixture_to_dsl(self))
+        <SequenceFixtureDsl as store::DocumentDsl>::print_dsl(&sequence_fixture_to_dsl(self))
     }
 }
 
-/// 📦 Hand-written `vcs::DocumentPack` mirror of the `DocumentDsl` impl above — `SequenceFixture`
+/// 📦 Hand-written `store::DocumentPack` mirror of the `DocumentDsl` impl above — `SequenceFixture`
 /// itself doesn't derive `dsl::DslDocument` (see `SequenceFixtureDsl`'s doc comment), so it doesn't
 /// pick up the blanket derive-emitted `DocumentPack` impl either; this converts through the same
 /// `SequenceFixtureDsl` mirror, which does derive it.
-impl vcs::DocumentPack for SequenceFixture {
-    fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
-        <SequenceFixtureDsl as vcs::DocumentPack>::encode_pack_with(&sequence_fixture_to_dsl(self), options)
+impl store::DocumentPack for SequenceFixture {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        <SequenceFixtureDsl as store::DocumentPack>::encode_pack_with(&sequence_fixture_to_dsl(self), options)
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
-        let dsl_fixture = <SequenceFixtureDsl as vcs::DocumentPack>::decode_pack_with(bytes, options)?;
-        sequence_fixture_dsl_to_fixture(dsl_fixture).map_err(|message| vcs::text_error_to_pack_error(vcs::TextError::new(message, vcs::TextSpan::at(1, 1))))
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let dsl_fixture = <SequenceFixtureDsl as store::DocumentPack>::decode_pack_with(bytes, options)?;
+        sequence_fixture_dsl_to_fixture(dsl_fixture).map_err(|message| store::text_error_to_pack_error(store::TextError::new(message, store::TextSpan::at(1, 1))))
     }
 }
 // #endregion 🔖Dsl
@@ -1893,9 +1893,9 @@ fn sequence_operation_from_dsl(operation: SequenceOperationDsl) -> Result<Sequen
 }
 
 impl protocol::OpText for SequenceOperation {
-    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let dsl_operation = <SequenceOperationDsl as protocol::OpText>::parse_op(line)?;
-        sequence_operation_from_dsl(dsl_operation).map_err(|message| vcs::TextError::new(message, vcs::TextSpan::at(1, 1)))
+        sequence_operation_from_dsl(dsl_operation).map_err(|message| store::TextError::new(message, store::TextSpan::at(1, 1)))
     }
 
     fn print_op(&self) -> String {
@@ -1908,7 +1908,8 @@ impl protocol::OpText for SequenceOperation {
 #[cfg(test)]
 mod ops_tests {
     use super::*;
-    use vcs::{apply_operation, create_document_vcs_envelope, DocumentVcsCommand};
+    use vcs::apply_operation;
+use store::{create_document_envelope, DocumentCommand};
 
     fn round_trip(fixture: &SequenceFixture, operation: &SequenceOperation) -> SequenceFixture {
         let forward = apply_operation(fixture, operation);
@@ -1950,9 +1951,9 @@ mod ops_tests {
 
     #[test]
     fn store_applies_and_undoes_step_add() {
-        let mut store = SequenceStore::new(create_document_vcs_envelope(SEQUENCE_FIXTURE_SCHEMA, "sequence", default_fixture(), None));
+        let mut store = SequenceStore::new(create_document_envelope(SEQUENCE_FIXTURE_SCHEMA, "sequence", default_fixture(), None));
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![SequenceOperation::StepsAdd { index: 2, item: SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false } }],
                 description: None,
             })
@@ -1963,8 +1964,8 @@ mod ops_tests {
     // #region 🔖DslAndOpText
     #[test]
     fn dsl_round_trips_default_fixture() {
-        vcs::test_support::assert_dsl_round_trip(&default_fixture());
-        vcs::test_support::assert_dsl_pack_equivalence(&default_fixture());
+        store::test_support::assert_dsl_round_trip(&default_fixture());
+        store::test_support::assert_dsl_pack_equivalence(&default_fixture());
     }
 
     /// 📜 `sequence/example/default.sequence` is the handcrafted `.sequence` DSL-text fixture
@@ -1973,9 +1974,9 @@ mod ops_tests {
     #[test]
     fn default_sequence_example_dsl_round_trips() {
         let text = include_str!("../../example/default.sequence");
-        let fixture = <SequenceFixture as vcs::DocumentDsl>::parse_dsl(text).expect("default.sequence must parse");
-        vcs::test_support::assert_dsl_round_trip(&fixture);
-        vcs::test_support::assert_dsl_pack_equivalence(&fixture);
+        let fixture = <SequenceFixture as store::DocumentDsl>::parse_dsl(text).expect("default.sequence must parse");
+        store::test_support::assert_dsl_round_trip(&fixture);
+        store::test_support::assert_dsl_pack_equivalence(&fixture);
     }
 
     #[test]
@@ -2002,13 +2003,13 @@ mod ops_tests {
             slot: Some(SlotRef { owner: "step-3".into(), name: "then".into() }),
             collapsed: false,
         });
-        vcs::test_support::assert_dsl_round_trip(&fixture);
-        vcs::test_support::assert_dsl_pack_equivalence(&fixture);
+        store::test_support::assert_dsl_round_trip(&fixture);
+        store::test_support::assert_dsl_pack_equivalence(&fixture);
     }
 
     #[test]
     fn op_text_round_trips_steps_add() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::StepsAdd {
+        store::test_support::assert_op_line_round_trip(&SequenceOperation::StepsAdd {
             index: 2,
             item: SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: StepParams::new().insert("message", Value::Atom(Atom::String("hi there".into()))), x: 5.0, y: -6.5, slot: None, collapsed: false },
         });
@@ -2016,7 +2017,7 @@ mod ops_tests {
 
     #[test]
     fn op_text_round_trips_steps_add_with_slot() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::StepsAdd {
+        store::test_support::assert_op_line_round_trip(&SequenceOperation::StepsAdd {
             index: 0,
             item: SequenceStep { id: "step-98".into(), kind: "control.while".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: Some(SlotRef { owner: "step-3".into(), name: "body".into() }), collapsed: true },
         });
@@ -2024,17 +2025,17 @@ mod ops_tests {
 
     #[test]
     fn op_text_round_trips_steps_remove() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::StepsRemove { id: "step-99".into() });
+        store::test_support::assert_op_line_round_trip(&SequenceOperation::StepsRemove { id: "step-99".into() });
     }
 
     #[test]
     fn op_text_round_trips_steps_move() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::StepsMove { id: "step-99".into(), to_index: 3 });
+        store::test_support::assert_op_line_round_trip(&SequenceOperation::StepsMove { id: "step-99".into(), to_index: 3 });
     }
 
     #[test]
     fn op_text_round_trips_steps_patch() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::StepsPatch {
+        store::test_support::assert_op_line_round_trip(&SequenceOperation::StepsPatch {
             id: "step-99".into(),
             patch: SequenceStepPatch {
                 params: Some(StepParams::new().insert("value", Value::Atom(Atom::Decimal(120.0))).insert("meta", Value::Dictionary(Dictionary::new().insert("k", Value::Atom(Atom::Null))))),
@@ -2047,45 +2048,45 @@ mod ops_tests {
 
     #[test]
     fn op_text_round_trips_steps_patch_with_no_fields() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::StepsPatch { id: "step-99".into(), patch: SequenceStepPatch::default() });
+        store::test_support::assert_op_line_round_trip(&SequenceOperation::StepsPatch { id: "step-99".into(), patch: SequenceStepPatch::default() });
     }
 
     #[test]
     fn op_text_round_trips_edges_add() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::EdgesAdd { index: 1, item: SequenceEdge { id: "edge-2".into(), from: "step-2".into(), to: "step-3".into() } });
+        store::test_support::assert_op_line_round_trip(&SequenceOperation::EdgesAdd { index: 1, item: SequenceEdge { id: "edge-2".into(), from: "step-2".into(), to: "step-3".into() } });
     }
 
     #[test]
     fn op_text_round_trips_edges_remove() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::EdgesRemove { id: "edge-1".into() });
+        store::test_support::assert_op_line_round_trip(&SequenceOperation::EdgesRemove { id: "edge-1".into() });
     }
 
     #[test]
     fn op_text_round_trips_edges_move() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::EdgesMove { id: "edge-1".into(), to_index: 0 });
+        store::test_support::assert_op_line_round_trip(&SequenceOperation::EdgesMove { id: "edge-1".into(), to_index: 0 });
     }
 
     #[test]
     fn op_text_round_trips_edges_patch() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::EdgesPatch { id: "edge-1".into(), patch: SequenceEdgePatch { from: Some("step-3".into()), to: None } });
+        store::test_support::assert_op_line_round_trip(&SequenceOperation::EdgesPatch { id: "edge-1".into(), patch: SequenceEdgePatch { from: Some("step-3".into()), to: None } });
     }
 
     #[test]
     fn op_text_round_trips_set_camera() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::SetCamera { camera: SequenceCamera { x: 10.5, y: -20.25, zoom: 2.0 } });
+        store::test_support::assert_op_line_round_trip(&SequenceOperation::SetCamera { camera: SequenceCamera { x: 10.5, y: -20.25, zoom: 2.0 } });
     }
 
     #[test]
     fn document_text_round_trips_store_with_applied_operation() {
-        let mut store = SequenceStore::new(create_document_vcs_envelope(SEQUENCE_FIXTURE_SCHEMA, "sequence-text-test", default_fixture(), None));
+        let mut store = SequenceStore::new(create_document_envelope(SEQUENCE_FIXTURE_SCHEMA, "sequence-text-test", default_fixture(), None));
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![SequenceOperation::StepsAdd { index: 2, item: SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 12.0, y: 24.0, slot: None, collapsed: false } }],
                 description: None,
             })
             .expect("apply");
-        vcs::test_support::assert_document_text_round_trip(&store);
-        vcs::test_support::assert_document_pack_round_trip(&store);
+        store::test_support::assert_document_text_round_trip(&store);
+        store::test_support::assert_document_pack_round_trip(&store);
     }
     // #endregion 🔖DslAndOpText
 }

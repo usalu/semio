@@ -15,4 +15,5 @@ workspace = true
 trinity_jack = { path = "../../core/rs" }
 trinity_ram = { path = "../../../ram/rs" }
 vcs = { path = "../../../../vcs/rs" }
+store = { path = "../../../../store/rs" }
 thiserror = "2.0.12"

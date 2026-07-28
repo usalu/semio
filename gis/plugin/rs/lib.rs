@@ -9,7 +9,7 @@ pub(crate) mod domain {
     use protocol::{
         collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Identified, Operation, OperationDiff, Patchable,
     };
-    use vcs::{create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, TextError};
+    use store::{create_document_envelope, DocumentCommand, DocumentEnvelope, DocumentStore, TextError};
     use serde::{Deserialize, Serialize};
     
     pub const GIS_MAP_SCHEMA: &str = "gis.map";
@@ -170,8 +170,8 @@ pub(crate) mod domain {
         }
     }
     
-    pub type GisMapEnvelope = DocumentVcsEnvelope<GisMapDocument, GisMapOperation>;
-    pub type GisMapStore = DocumentVcsStore<GisMapDocument, GisMapOperation>;
+    pub type GisMapEnvelope = DocumentEnvelope<GisMapDocument, GisMapOperation>;
+    pub type GisMapStore = DocumentStore<GisMapDocument, GisMapOperation>;
     
     pub fn empty_gis_map_projection() -> GisMapDocument {
         GisMapDocument::default()
@@ -233,7 +233,7 @@ pub(crate) mod domain {
                             serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                         GisMapStore::new(envelope)
                     }
-                    None => GisMapStore::new(create_document_vcs_envelope(
+                    None => GisMapStore::new(create_document_envelope(
                         GIS_MAP_SCHEMA,
                         "gis",
                         empty_gis_map_projection(),
@@ -243,11 +243,19 @@ pub(crate) mod domain {
                 Ok(Self { store: RefCell::new(store) })
             }
     
-            #[wasm_bindgen(js_name = dispatchJson)]
-            pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
+            #[wasm_bindgen(js_name = dispatchText)]
+            pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
                 self.store
                     .borrow_mut()
-                    .dispatch_json(command_json)
+                    .dispatch_text(command_text)
+                    .map_err(|e| JsValue::from_str(&e.to_string()))
+            }
+
+            #[wasm_bindgen(js_name = dispatchBinary)]
+            pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+                self.store
+                    .borrow_mut()
+                    .dispatch_binary(command_bytes)
                     .map_err(|e| JsValue::from_str(&e.to_string()))
             }
     
@@ -320,9 +328,9 @@ pub(crate) mod domain {
     
         #[test]
         fn gis_map_document_vcs_replays_operations() {
-            let mut store = GisMapStore::new(create_document_vcs_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_projection(), None));
+            let mut store = GisMapStore::new(create_document_envelope(GIS_MAP_SCHEMA, "gis", empty_gis_map_projection(), None));
             store
-                .dispatch(DocumentVcsCommand::Apply {
+                .dispatch(DocumentCommand::Apply {
                     operations: vec![GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: feature("p1"), at: 0 })],
                     description: None,
                 })
@@ -333,7 +341,7 @@ pub(crate) mod domain {
     //#endregion 🔖DocumentVcs
 
     //#region 🔖Dsl
-    // `impl vcs::DocumentDsl for GisMapDocument` is emitted automatically by the
+    // `impl store::DocumentDsl for GisMapDocument` is emitted automatically by the
     // `#[derive(dsl::DslDocument)]` on `GisMapDocument` itself (see `🔖Feature`/document struct
     // above) — the former hand-rolled `mod gis_map_text` lexer/parser/printer (and the temporary
     // fixture-regeneration test that used it) have been removed now that the bundled
@@ -402,7 +410,7 @@ pub(crate) mod domain {
     }
 
     impl protocol::OpText for GisMapOperation {
-        fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+        fn parse_op(line: &str) -> Result<Self, store::TextError> {
             Ok(gis_map_operation_from_dsl(<GisMapOperationDsl as protocol::OpText>::parse_op(line)?))
         }
 
@@ -465,8 +473,8 @@ pub(crate) mod domain {
         }
     }
     
-    pub type Gis3dTerrainEnvelope = DocumentVcsEnvelope<Gis3dTerrainDocument, Gis3dTerrainOperation>;
-    pub type Gis3dTerrainStore = DocumentVcsStore<Gis3dTerrainDocument, Gis3dTerrainOperation>;
+    pub type Gis3dTerrainEnvelope = DocumentEnvelope<Gis3dTerrainDocument, Gis3dTerrainOperation>;
+    pub type Gis3dTerrainStore = DocumentStore<Gis3dTerrainDocument, Gis3dTerrainOperation>;
     
     pub fn empty_gis3d_terrain_projection() -> Gis3dTerrainDocument {
         Gis3dTerrainDocument { exaggeration: 1.0 }
@@ -474,7 +482,7 @@ pub(crate) mod domain {
     //#endregion 🔖DocumentVcs
 
     //#region 🔖Dsl
-    // `impl vcs::DocumentDsl for Gis3dTerrainDocument` / `impl vcs::OpText for Gis3dTerrainOperation`
+    // `impl store::DocumentDsl for Gis3dTerrainDocument` / `impl store::OpText for Gis3dTerrainOperation`
     // are emitted automatically by the `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslOps)]` above
     // (see `🔖DocumentVcs`) — the former hand-rolled `mod gis_terrain_text` reader/printer (and the
     // temporary fixture-regeneration test that used it) have been removed now that the bundled
@@ -619,7 +627,7 @@ pub mod app_2d {
     /// 🗺️ The default map document, seeded from the bundled reuse example (see `domain::GisMapDocument`'s
     /// derive-generated `.gismap` DSL).
     fn default_document() -> GisMapDocument {
-        <GisMapDocument as vcs::DocumentDsl>::parse_dsl(REUSE_MAP_EXAMPLE_TEXT).unwrap_or_else(|_| empty_gis_map_projection())
+        <GisMapDocument as store::DocumentDsl>::parse_dsl(REUSE_MAP_EXAMPLE_TEXT).unwrap_or_else(|_| empty_gis_map_projection())
     }
 
     /// 🎛️ The default runtime — every layer visible, camera framed to the seed document's world extent.
@@ -1846,14 +1854,14 @@ pub mod app_2d {
         //#region 🔖DslTests
         #[test]
         fn gis_map_document_dsl_round_trips_bundled_reuse_example() {
-            vcs::test_support::assert_dsl_round_trip(&default_document());
-            vcs::test_support::assert_dsl_pack_equivalence(&default_document());
+            store::test_support::assert_dsl_round_trip(&default_document());
+            store::test_support::assert_dsl_pack_equivalence(&default_document());
         }
 
         #[test]
         fn gis_map_document_dsl_round_trips_empty_document() {
-            vcs::test_support::assert_dsl_round_trip(&GisMapDocument::default());
-            vcs::test_support::assert_dsl_pack_equivalence(&GisMapDocument::default());
+            store::test_support::assert_dsl_round_trip(&GisMapDocument::default());
+            store::test_support::assert_dsl_pack_equivalence(&GisMapDocument::default());
         }
 
         /// 🧬 `MapFeature::data` is an opaque `serde_json::Value` — round-trips every shape (nested
@@ -1880,8 +1888,8 @@ pub mod app_2d {
                 routes: vec![MapFeature { id: "r1".into(), data: json!({ "id": "r1", "points": [[1.0, 2.0], [3.0, 4.0]] }) }],
                 regions: vec![MapFeature { id: "g1".into(), data: json!({ "id": "g1", "ring": [[0.0, 0.0], [1.0, 1.0], [1.0, 0.0]] }) }],
             };
-            vcs::test_support::assert_dsl_round_trip(&document);
-            vcs::test_support::assert_dsl_pack_equivalence(&document);
+            store::test_support::assert_dsl_round_trip(&document);
+            store::test_support::assert_dsl_pack_equivalence(&document);
         }
 
         fn sample_patch_feature() -> MapFeature {
@@ -1890,22 +1898,22 @@ pub mod app_2d {
 
         #[test]
         fn gis_map_positions_op_lines_round_trip() {
-            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 }));
-            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Remove { id: "p1".into() }));
-            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Move { id: "p1".into(), to: 3 }));
-            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Patch {
+            store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 }));
+            store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Remove { id: "p1".into() }));
+            store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Move { id: "p1".into(), to: 3 }));
+            store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Patch {
                 id: "p1".into(),
                 patch: MapFeaturePatch { data: Some(json!({ "label": "Home" })) },
             }));
-            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: None } }));
+            store::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: None } }));
         }
 
         #[test]
         fn gis_map_routes_op_lines_round_trip() {
-            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 }));
-            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Remove { id: "p1".into() }));
-            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Move { id: "p1".into(), to: 1 }));
-            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Patch {
+            store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 }));
+            store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Remove { id: "p1".into() }));
+            store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Move { id: "p1".into(), to: 1 }));
+            store::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Patch {
                 id: "p1".into(),
                 patch: MapFeaturePatch { data: Some(json!({ "kind": "reuse" })) },
             }));
@@ -1913,10 +1921,10 @@ pub mod app_2d {
 
         #[test]
         fn gis_map_regions_op_lines_round_trip() {
-            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 }));
-            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Remove { id: "p1".into() }));
-            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Move { id: "p1".into(), to: 2 }));
-            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Patch {
+            store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 }));
+            store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Remove { id: "p1".into() }));
+            store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Move { id: "p1".into(), to: 2 }));
+            store::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Patch {
                 id: "p1".into(),
                 patch: MapFeaturePatch { data: Some(json!({ "kind": "boundary" })) },
             }));
@@ -1924,22 +1932,22 @@ pub mod app_2d {
 
         #[test]
         fn gis_map_set_document_op_line_round_trips() {
-            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::SetDocument { document: default_document() });
+            store::test_support::assert_op_line_round_trip(&GisMapOperation::SetDocument { document: default_document() });
         }
 
         #[test]
         fn gis_map_document_text_round_trips_through_store() {
             let initial = empty_gis_map_projection();
-            let envelope = vcs::create_document_vcs_envelope(GIS_MAP_SCHEMA, "gis2d-demo", initial, None);
-            let mut store = vcs::DocumentVcsStore::new(envelope);
+            let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis2d-demo", initial, None);
+            let mut store = store::DocumentStore::new(envelope);
             store
-                .dispatch(vcs::DocumentVcsCommand::Apply {
+                .dispatch(store::DocumentCommand::Apply {
                     operations: vec![GisMapOperation::Positions(CollectionOperation::Add { id: "p1".into(), item: sample_patch_feature(), at: 0 })],
                     description: None,
                 })
                 .expect("apply");
-            vcs::test_support::assert_document_text_round_trip(&store);
-            vcs::test_support::assert_document_pack_round_trip(&store);
+            store::test_support::assert_document_text_round_trip(&store);
+            store::test_support::assert_document_pack_round_trip(&store);
         }
         //#endregion 🔖DslTests
     }
@@ -2100,7 +2108,7 @@ pub mod app_3d {
     /// 🗺️ The default terrain document, seeded from the bundled reuse example's `gisterrain
     /// exaggeration=...` header (see `domain::Gis3dTerrainDocument`'s derive-generated `.gisterrain` DSL).
     fn default_terrain_document() -> Gis3dTerrainDocument {
-        <Gis3dTerrainDocument as vcs::DocumentDsl>::parse_dsl(REUSE_TERRAIN_EXAMPLE_TEXT).unwrap_or_else(|_| crate::domain::empty_gis3d_terrain_projection())
+        <Gis3dTerrainDocument as store::DocumentDsl>::parse_dsl(REUSE_TERRAIN_EXAMPLE_TEXT).unwrap_or_else(|_| crate::domain::empty_gis3d_terrain_projection())
     }
 
     /// 🏔️ The full rendering descriptor (project origin + pins + exaggeration) for the current runtime's
@@ -2328,19 +2336,19 @@ pub mod app_3d {
         //#region 🔖DslTests
         #[test]
         fn gis3d_terrain_document_dsl_round_trips_bundled_reuse_example() {
-            vcs::test_support::assert_dsl_round_trip(&default_terrain_document());
-            vcs::test_support::assert_dsl_pack_equivalence(&default_terrain_document());
+            store::test_support::assert_dsl_round_trip(&default_terrain_document());
+            store::test_support::assert_dsl_pack_equivalence(&default_terrain_document());
         }
 
         #[test]
         fn gis3d_terrain_document_dsl_round_trips_arbitrary_exaggeration() {
-            vcs::test_support::assert_dsl_round_trip(&Gis3dTerrainDocument { exaggeration: 2.75 });
-            vcs::test_support::assert_dsl_pack_equivalence(&Gis3dTerrainDocument { exaggeration: 2.75 });
+            store::test_support::assert_dsl_round_trip(&Gis3dTerrainDocument { exaggeration: 2.75 });
+            store::test_support::assert_dsl_pack_equivalence(&Gis3dTerrainDocument { exaggeration: 2.75 });
         }
 
         #[test]
         fn gis3d_terrain_set_exaggeration_op_line_round_trips() {
-            vcs::test_support::assert_op_line_round_trip(&Gis3dTerrainOperation::SetExaggeration { exaggeration: 3.0 });
+            store::test_support::assert_op_line_round_trip(&Gis3dTerrainOperation::SetExaggeration { exaggeration: 3.0 });
         }
 
         /// 📜 The `.gisterrain` fixture's `gisterrain exaggeration=...` header is parsed twice for two
@@ -2359,16 +2367,16 @@ pub mod app_3d {
         #[test]
         fn gis3d_terrain_document_text_round_trips_through_store() {
             let initial = Gis3dTerrainDocument { exaggeration: 1.0 };
-            let envelope = vcs::create_document_vcs_envelope(GIS_3D_TERRAIN_SCHEMA, "gis3d-demo", initial, None);
-            let mut store = vcs::DocumentVcsStore::new(envelope);
+            let envelope = store::create_document_envelope(GIS_3D_TERRAIN_SCHEMA, "gis3d-demo", initial, None);
+            let mut store = store::DocumentStore::new(envelope);
             store
-                .dispatch(vcs::DocumentVcsCommand::Apply {
+                .dispatch(store::DocumentCommand::Apply {
                     operations: vec![Gis3dTerrainOperation::SetExaggeration { exaggeration: 2.0 }],
                     description: None,
                 })
                 .expect("apply");
-            vcs::test_support::assert_document_text_round_trip(&store);
-            vcs::test_support::assert_document_pack_round_trip(&store);
+            store::test_support::assert_document_text_round_trip(&store);
+            store::test_support::assert_document_pack_round_trip(&store);
         }
         //#endregion 🔖DslTests
     }

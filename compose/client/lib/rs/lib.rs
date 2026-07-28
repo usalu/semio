@@ -7812,8 +7812,8 @@ pub mod vcs {
         use crate::external_adapters::serde::{Deserialize, Serialize};
         use crate::external_adapters::serde_json::Value;
         #[cfg(test)]
-        use vcs::DocumentVcsCommand;
-        use vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentVcsEnvelope, DocumentVcsStore};
+        use store::DocumentCommand;
+        use store::{create_document_envelope, materialize_document_projection, DocumentEnvelope, DocumentStore};
         use protocol::{Operation as VcsOperation, OperationDiff};
 
         pub const KIT_SNAPSHOT_SCHEMA: &str = "compose.kit";
@@ -7827,16 +7827,16 @@ pub mod vcs {
         /// there is no plain serializable "whole kit" struct anywhere in this crate to derive
         /// `dsl::DslDocument` on; the wire boundary this VCS store actually replays against is, by
         /// design, `crate::kit_backbone::initial_kit_projection_value`'s JSON `Value`. The repo-wide
-        /// `vcs::DocumentDsl for serde_json::Value` escape hatch this used to delegate to was removed
+        /// `store::DocumentDsl for serde_json::Value` escape hatch this used to delegate to was removed
         /// (final DSL-syntax convergence gate); `parse_dsl`/`print_dsl` now round-trip through plain
         /// JSON directly, scoped locally to this one deliberately-untyped bridge instead of a repo-wide
         /// one (same local-bridge shape `puzzle-plugin`'s `Puzzle2dPlayApp`/`Puzzle3dPlayApp`/
         /// `Puzzle5dPlayApp` now use for keeping `Projection = serde_json::Value`).
-        impl vcs::DocumentDsl for KitSnapshot {
+        impl store::DocumentDsl for KitSnapshot {
             const EXTENSION: &'static str = "kit";
 
-            fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-                crate::external_adapters::serde_json::from_str(text).map(KitSnapshot).map_err(|error| vcs::TextError::new(error.to_string(), vcs::TextSpan::at(1, 1)))
+            fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+                crate::external_adapters::serde_json::from_str(text).map(KitSnapshot).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
             }
 
             fn print_dsl(&self) -> String {
@@ -7848,15 +7848,15 @@ pub mod vcs {
         //#region 🔖Pack
         /// @emoji 📦 Same schema-less bridge rationale as `KitSnapshot`'s `DocumentDsl` above:
         /// `encode_pack_with`/`decode_pack_with` round-trip straight through the still-standing
-        /// `vcs::DocumentPack for serde_json::Value` impl (JSON-bridge pack encoding), same
+        /// `store::DocumentPack for serde_json::Value` impl (JSON-bridge pack encoding), same
         /// local-bridge shape as `puzzle-plugin`'s `Puzzle2dPlayProjection`/`Puzzle3dPlayProjection`/
         /// `Puzzle5dPlayProjection`.
-        impl vcs::DocumentPack for KitSnapshot {
-            fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
+        impl store::DocumentPack for KitSnapshot {
+            fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
                 self.0.encode_pack_with(options)
             }
 
-            fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
+            fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
                 Value::decode_pack_with(bytes, options).map(KitSnapshot)
             }
         }
@@ -7907,8 +7907,8 @@ pub mod vcs {
         /// `OpText::print_op`'s one-line law). The richly-typed per-kind operation text format lives
         /// one level up, on the real `operation::Operation` enum (`operation::ComposeOperationDsl`).
         impl protocol::OpText for ComposeWireOperation {
-            fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-                crate::external_adapters::serde_json::from_str(line).map_err(|error| vcs::TextError::new(error.to_string(), vcs::TextSpan::at(1, 1)))
+            fn parse_op(line: &str) -> Result<Self, store::TextError> {
+                crate::external_adapters::serde_json::from_str(line).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
             }
 
             fn print_op(&self) -> String {
@@ -7970,29 +7970,29 @@ pub mod vcs {
             Some(diff)
         }
 
-        pub type KitSnapshotStore = DocumentVcsStore<KitSnapshot, ComposeWireOperation>;
-        pub type KitSnapshotEnvelope = DocumentVcsEnvelope<KitSnapshot, ComposeWireOperation>;
+        pub type KitSnapshotStore = DocumentStore<KitSnapshot, ComposeWireOperation>;
+        pub type KitSnapshotEnvelope = DocumentEnvelope<KitSnapshot, ComposeWireOperation>;
 
         //#region 🔖CodecRegistration
         /// 🗂️ Registers `KitSnapshot`'s pack<->dsl codec under its real `KIT_SNAPSHOT_SCHEMA` string
         /// so `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can
         /// print/parse kit documents. `compose` has no `framework/plugin`-style native setup hook (it
         /// is not a `DocumentApp`/plugin-bundle crate), so this registers directly via
-        /// `vcs::register_document_codec`/`vcs::DocumentCodec::of` instead of
+        /// `store::register_document_codec`/`store::DocumentCodec::of` instead of
         /// `register_document_codec_for_app`, gated by a `std::sync::Once` and called from
         /// `create_kit_snapshot_store` — the sole constructor of this document kind's store.
         static KIT_SNAPSHOT_CODEC_REGISTERED: std::sync::Once = std::sync::Once::new();
 
         fn register_kit_snapshot_codec() {
             KIT_SNAPSHOT_CODEC_REGISTERED.call_once(|| {
-                vcs::register_document_codec(vcs::DocumentCodec::of::<KitSnapshot, ComposeWireOperation>(KIT_SNAPSHOT_SCHEMA));
+                store::register_document_codec(store::DocumentCodec::of::<KitSnapshot, ComposeWireOperation>(KIT_SNAPSHOT_SCHEMA));
             });
         }
         //#endregion 🔖CodecRegistration
 
         pub fn create_kit_snapshot_store(id: &crate::id::Id, initial: Value) -> KitSnapshotStore {
             register_kit_snapshot_codec();
-            DocumentVcsStore::new(create_document_vcs_envelope(KIT_SNAPSHOT_SCHEMA, id.as_str(), KitSnapshot(initial), None))
+            DocumentStore::new(create_document_envelope(KIT_SNAPSHOT_SCHEMA, id.as_str(), KitSnapshot(initial), None))
         }
 
         pub fn materialize_kit_snapshot(envelope: &KitSnapshotEnvelope, applied: &[String]) -> Result<KitSnapshot, vcs::VcsError> {
@@ -8009,7 +8009,7 @@ pub mod vcs {
                 let baseline = Value::Object(Default::default());
                 let mut store = create_kit_snapshot_store(&crate::id::Id::from("ws-test"), baseline);
                 let operation = Operation::RenameKit { scope: Scope::Kit, input: Input::Name { name: "patched".into() } };
-                store.dispatch(DocumentVcsCommand::Apply { operations: vec![ComposeWireOperation::from_operation(&operation)], description: None }).expect("apply");
+                store.dispatch(DocumentCommand::Apply { operations: vec![ComposeWireOperation::from_operation(&operation)], description: None }).expect("apply");
                 let snap = store.projection().expect("projection");
                 assert_eq!(snap.0.get("name").and_then(|v| v.as_str()), Some("patched"));
             }
@@ -8304,7 +8304,7 @@ pub mod vcs {
                 self.the_kit_snapshot_store
                     .lock()
                     .unwrap_or_else(|poisoned| poisoned.into_inner())
-                    .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![wire], description: None })
+                    .dispatch(store::DocumentCommand::Apply { operations: vec![wire], description: None })
                     .map_err(|e| ComposeError::invalid(e.to_string()))?;
             } else if let Some(alt) = self.workspace_alternative(&ws).await {
                 alt.change_seq.fetch_add(1, Ordering::Relaxed);
@@ -10857,7 +10857,7 @@ pub mod operation {
     }
 
     impl protocol::OpText for Operation {
-        fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+        fn parse_op(line: &str) -> Result<Self, store::TextError> {
             Ok(compose_operation_from_dsl(<ComposeOperationDsl as protocol::OpText>::parse_op(line)?))
         }
 
@@ -19130,7 +19130,7 @@ pub mod wasm_bridge {
 
 //#region 📋 kit_store_comprehensive_e2e
 
-/// @emoji 📋 In-process runner for `kit-store.comprehensive.compose.json` (native hosts + compose-store E2E).
+/// @emoji 📋 In-process runner for `kit-store.comprehensive.compose.json` (native hosts + compose-gql E2E).
 #[cfg(not(target_arch = "wasm32"))]
 pub mod kit_store_comprehensive_e2e {
     use std::path::Path;
@@ -19531,7 +19531,7 @@ mod tests {
     #[test]
     fn vcs_typed_ops_materialize_projection() {
         use serde::{Deserialize, Serialize};
-        use vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentVcsCommand, DocumentVcsStore};
+        use store::{create_document_envelope, materialize_document_projection, DocumentCommand, DocumentStore};
         use protocol::{Operation, OperationDiff};
 
         #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -19576,9 +19576,9 @@ mod tests {
             }
         }
 
-        let envelope = create_document_vcs_envelope("compose.kit", "kit-test", KitProjection { id: "base".into() }, None);
-        let mut store = DocumentVcsStore::new(envelope);
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![KitOperation::SetId { id: "patched".into() }], description: None }).expect("apply");
+        let envelope = create_document_envelope("compose.kit", "kit-test", KitProjection { id: "base".into() }, None);
+        let mut store = DocumentStore::new(envelope);
+        store.dispatch(DocumentCommand::Apply { operations: vec![KitOperation::SetId { id: "patched".into() }], description: None }).expect("apply");
         assert_eq!(store.projection().expect("projection").id, "patched");
         let replayed = materialize_document_projection(store.envelope(), store.applied_edit_ids()).expect("materialize");
         assert_eq!(replayed.id, "patched");
@@ -19636,7 +19636,7 @@ mod tests {
     #[test]
     fn compose_operation_dsl_round_trips_representative_kinds() {
         for operation in representative_operations() {
-            vcs::test_support::assert_op_line_round_trip(&operation);
+            store::test_support::assert_op_line_round_trip(&operation);
         }
     }
 
@@ -19644,15 +19644,15 @@ mod tests {
     fn compose_wire_operation_op_text_round_trips() {
         for operation in representative_operations() {
             let wire = crate::vcs::kit_vcs::ComposeWireOperation::from_operation(&operation);
-            vcs::test_support::assert_op_line_round_trip(&wire);
+            store::test_support::assert_op_line_round_trip(&wire);
         }
     }
 
     #[test]
     fn kit_snapshot_dsl_round_trips() {
         let empty = crate::vcs::kit_vcs::KitSnapshot(json!({}));
-        vcs::test_support::assert_dsl_round_trip(&empty);
-        vcs::test_support::assert_dsl_pack_equivalence(&empty);
+        store::test_support::assert_dsl_round_trip(&empty);
+        store::test_support::assert_dsl_pack_equivalence(&empty);
 
         let populated = crate::vcs::kit_vcs::KitSnapshot(json!({
             "name": "Kitchen Sink Kit",
@@ -19660,15 +19660,15 @@ mod tests {
             "description": "line one\nline two — with a ' quote and a % sign",
             "types": [],
         }));
-        vcs::test_support::assert_dsl_round_trip(&populated);
-        vcs::test_support::assert_dsl_pack_equivalence(&populated);
+        store::test_support::assert_dsl_round_trip(&populated);
+        store::test_support::assert_dsl_pack_equivalence(&populated);
     }
 
     #[test]
     fn kit_snapshot_store_document_text_round_trip() {
         let store = crate::vcs::kit_vcs::create_kit_snapshot_store(&Id::from("ws-dsl-test"), json!({}));
-        vcs::test_support::assert_document_text_round_trip(&store);
-        vcs::test_support::assert_document_pack_round_trip(&store);
+        store::test_support::assert_document_text_round_trip(&store);
+        store::test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DslTests
 

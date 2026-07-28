@@ -32,10 +32,7 @@ use protocol::{Edit, Operation, OperationDiff, OperationMeta, OpText, ReconcileR
 // 🗃️ `store`'s facade over `vcs`'s version-graph algebra — apps that depend on `store` reach
 // `Author`/`Change`/`Checkpoint`/`Alternative`/`VcsError`/etc through this crate, never through
 // `vcs` directly (see the crate doc comment above).
-pub use vcs::{
-    absorb_diff, apply_collection_operation, apply_operation, collection_diff_from_operation, content_addressed_checkpoint_id, create_document_vcs_id, invert_collection_operation, Alternative,
-    Author, Change, Checkpoint, CollectionDiff, CollectionOperation, DocumentVcs, Identified, ItemPatch, Patchable, VcsError,
-};
+pub use vcs::{absorb_diff, apply_collection_operation, apply_operation, collection_diff_from_operation, content_addressed_checkpoint_id, create_document_vcs_id, invert_collection_operation, Alternative, Author, Change, Checkpoint, CollectionDiff, CollectionOperation, DocumentVcs, Identified, ItemPatch, Patchable, VcsError};
 
 //#region 🔖Schemas
 /// @emoji 🔗 Identifies the channel a document synchronizes through, when one is attached.
@@ -75,7 +72,7 @@ pub enum DocumentCommand<Operation> {
     UndoWithPolicy {
         policy: UndoPolicy,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        semantic_command: Option<String>,
+        semantic_command: Option<Box<DocumentCommand<Operation>>>,
     },
     CommitCheckpoint {
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -105,7 +102,7 @@ pub enum DocumentCommand<Operation> {
 //#region 🔖Text
 /// @emoji 📍 1-based line/column position inside DSL or op-log source text. Lives in `dsl_core`
 /// (the token-native DSL engine's foundation crate, which sits below `vcs`); re-exported here so
-/// every existing `vcs::TextSpan`/`vcs::TextError` import across the workspace keeps compiling.
+/// every existing `store::TextSpan`/`store::TextError` import across the workspace keeps compiling.
 pub use dsl_core::{TextError, TextSpan};
 
 /// @emoji 📜 Handcrafted textual representation of a document projection, implemented once per
@@ -130,12 +127,12 @@ pub trait DocumentDsl: Sized {
 /// `.repo/🎫/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/` for the full container-format
 /// contract. `pack`'s own `EncodeOptions`/`DecodeOptions`/`VerificationLevel` are re-exported under
 /// a `Pack`-prefixed name (not a plain re-export — `dsl_derive`'s emitted `DocumentPack` impl and
-/// every downstream caller spell them `vcs::PackEncodeOptions`/`vcs::PackDecodeOptions`/
-/// `vcs::PackVerificationLevel`, so there is exactly one spelling repo-wide).
+/// every downstream caller spell them `store::PackEncodeOptions`/`store::PackDecodeOptions`/
+/// `store::PackVerificationLevel`, so there is exactly one spelling repo-wide).
 pub use pack::{DecodeOptions as PackDecodeOptions, EncodeOptions as PackEncodeOptions, PackError, VerificationLevel as PackVerificationLevel};
 
 /// @emoji 🧵 Thin runtime bridge to `pack::{encode_document, decode_document}`, resolved as
-/// `::vcs::pack_rt::...` by `dsl_derive`'s generated `DocumentPack` impl (app crates depend on
+/// `::store::pack_rt::...` by `dsl_derive`'s generated `DocumentPack` impl (app crates depend on
 /// `vcs`, never on `pack` directly — same seam `::dsl::RecordSpec`/`RecordValue` already use). Also
 /// hosts the schema-less JSON bridge behind `impl DocumentPack for serde_json::Value` below.
 pub mod pack_rt {
@@ -190,7 +187,7 @@ pub mod pack_rt {
 /// encode_pack(p)) == parse_dsl(print_dsl(p))` — dsl and pack are two encodings of the identical
 /// `(RecordSpec, RecordValue)` pair keyed by the same stable `u16` field ids `dsl_derive` assigns,
 /// never two independent sources of truth. The `_with` methods are required (the seam
-/// `dsl_derive`'s generated impl calls through `::vcs::pack_rt`); the plain names are provided
+/// `dsl_derive`'s generated impl calls through `::store::pack_rt`); the plain names are provided
 /// defaults over `Pack{Encode,Decode}Options::default()`.
 pub trait DocumentPack: Sized {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError>;
@@ -237,6 +234,14 @@ pub fn text_error_to_pack_error(error: TextError) -> PackError {
     PackError::Schema(error.to_string())
 }
 //#endregion 🔖Pack
+
+//#region 🔖OpRt
+/// @emoji 🎯 Facade re-export of the `protocol::OpBinary` runtime (`format u8 | variant ordinal
+/// varint | record body`) — the op-level mirror of `pack_rt` behind `DocumentPack`. Hosted in
+/// `dsl` (the crate that owns the `DslVariants` bound) rather than here so `dsl`'s own test build
+/// binds the same trait instance; re-exported so apps keep the one-facade rule (`store::op_rt`).
+pub use dsl::op_rt;
+//#endregion 🔖OpRt
 
 //#region 🔖CodecRegistry
 //#region 🔖CodecRegistry
@@ -921,6 +926,388 @@ where
 }
 //#endregion 🔖TextFormat
 
+//#region 🔖CommandFormat
+/// @emoji 🕹️ One structural `DocumentCommand` line — `apply`/`undo`/`redo`/`commit-checkpoint`/
+/// `create-alternative`/`switch-alternative`/`checkout`/`amend` — the command-level twin of
+/// `OpsHeaderLine`, re-derived on the same `dsl_schema` grammar engine. `Apply`/`Amend` carry no
+/// operations here (those follow as 2-space-indented `Op::print_op` lines, exactly like
+/// `print_edit_lines`); `Undo`'s `policy` is `None` for the plain `undo` command and `Some(token)`
+/// for `UndoWithPolicy` (token = kebab of the `UndoPolicy` variant name), optionally followed by an
+/// indented nested command block for `semantic-undo`/`compensating-action`.
+#[derive(Clone, Debug, PartialEq, DslOps)]
+enum CommandHeaderLine {
+    Apply {
+        description: Option<String>,
+    },
+    Undo {
+        policy: Option<String>,
+    },
+    Redo,
+    CommitCheckpoint {
+        message: Option<String>,
+        by: Vec<OpsAuthor>,
+    },
+    CreateAlternative {
+        name: String,
+    },
+    SwitchAlternative {
+        #[dsl(positional)]
+        id: String,
+    },
+    Checkout {
+        #[dsl(positional)]
+        id: String,
+    },
+    Amend {
+        key: Option<String>,
+    },
+}
+
+fn undo_policy_to_token(policy: UndoPolicy) -> &'static str {
+    match policy {
+        UndoPolicy::ExactBaseOnly => "exact-base-only",
+        UndoPolicy::TransformAgainstConcurrent => "transform-against-concurrent",
+        UndoPolicy::SemanticUndo => "semantic-undo",
+        UndoPolicy::CompensatingAction => "compensating-action",
+    }
+}
+
+fn parse_undo_policy_token(token: &str) -> Result<UndoPolicy, TextError> {
+    match token {
+        "exact-base-only" => Ok(UndoPolicy::ExactBaseOnly),
+        "transform-against-concurrent" => Ok(UndoPolicy::TransformAgainstConcurrent),
+        "semantic-undo" => Ok(UndoPolicy::SemanticUndo),
+        "compensating-action" => Ok(UndoPolicy::CompensatingAction),
+        other => Err(dsl::__rt::field_error(format!("unknown undo policy token {other:?}"))),
+    }
+}
+
+fn undo_policy_ordinal(policy: UndoPolicy) -> u8 {
+    match policy {
+        UndoPolicy::ExactBaseOnly => 0,
+        UndoPolicy::TransformAgainstConcurrent => 1,
+        UndoPolicy::SemanticUndo => 2,
+        UndoPolicy::CompensatingAction => 3,
+    }
+}
+
+fn undo_policy_from_ordinal(ordinal: u8) -> Result<UndoPolicy, VcsError> {
+    match ordinal {
+        0 => Ok(UndoPolicy::ExactBaseOnly),
+        1 => Ok(UndoPolicy::TransformAgainstConcurrent),
+        2 => Ok(UndoPolicy::SemanticUndo),
+        3 => Ok(UndoPolicy::CompensatingAction),
+        other => Err(VcsError::Deserialize(format!("unknown undo policy ordinal {other}"))),
+    }
+}
+
+/// @emoji 📤 Prints every 2-space-indented `Op::print_op` line for one `apply`/`amend` body,
+/// erroring exactly like `print_edit_lines` if any op prints a line containing a newline.
+fn print_indented_ops<Op: OpText>(out: &mut String, operations: &[Op]) -> Result<(), VcsError> {
+    for operation in operations {
+        let printed = operation.print_op();
+        if printed.contains('\n') {
+            return Err(VcsError::Serialize("op-text print_op must not contain a newline".into()));
+        }
+        out.push_str("  ");
+        out.push_str(&printed);
+        out.push('\n');
+    }
+    Ok(())
+}
+
+/// @emoji 📥 Parses every already-2-space-indented body line of an `apply`/`amend` command as one
+/// operation each — the command-level twin of `replay_ops`'s indented-op-line branch.
+fn parse_indented_ops<Op: OpText>(body_lines: &[&str]) -> Result<Vec<Op>, TextError> {
+    let mut operations = Vec::with_capacity(body_lines.len());
+    for raw in body_lines {
+        if !raw.starts_with("  ") {
+            return Err(dsl::__rt::field_error(format!("expected a 2-space-indented op line, got: {raw:?}")));
+        }
+        operations.push(Op::parse_op(raw.trim())?);
+    }
+    Ok(operations)
+}
+
+/// @emoji 📥 Strips exactly one 2-space indent level from every line, joining them back into a
+/// standalone command text — used to recurse `parse_command` into a `semantic-undo`/
+/// `compensating-action` nested command block.
+fn dedent_command_lines(lines: &[&str]) -> Result<String, TextError> {
+    let mut out = String::new();
+    for raw in lines {
+        if !raw.starts_with("  ") {
+            return Err(dsl::__rt::field_error(format!("expected a 2-space-indented nested command line, got: {raw:?}")));
+        }
+        out.push_str(&raw[2..]);
+        out.push('\n');
+    }
+    Ok(out)
+}
+
+/// @emoji 📤 Prints a `DocumentCommand` as its one-line-per-structural-field header, plus any
+/// 2-space-indented operation lines (`Apply`/`AmendLast`) or a further-indented nested command
+/// block (`UndoWithPolicy`'s `semantic_command`) — the maximum-token-efficient textual twin of
+/// `encode_command`. `Author::avatar` is never printed, mirroring `OpsAuthor`'s `by=[...]` law.
+pub fn print_command<Op: OpText>(command: &DocumentCommand<Op>) -> Result<String, VcsError> {
+    let mut out = String::new();
+    match command {
+        DocumentCommand::Apply { operations, description } => {
+            out.push_str(&CommandHeaderLine::Apply { description: description.clone() }.print_op());
+            out.push('\n');
+            print_indented_ops(&mut out, operations)?;
+        }
+        DocumentCommand::Undo => {
+            out.push_str(&CommandHeaderLine::Undo { policy: None }.print_op());
+            out.push('\n');
+        }
+        DocumentCommand::Redo => {
+            out.push_str(&CommandHeaderLine::Redo.print_op());
+            out.push('\n');
+        }
+        DocumentCommand::UndoWithPolicy { policy, semantic_command } => {
+            out.push_str(&CommandHeaderLine::Undo { policy: Some(undo_policy_to_token(*policy).to_string()) }.print_op());
+            out.push('\n');
+            if let Some(nested) = semantic_command {
+                let nested_text = print_command(nested)?;
+                for line in nested_text.lines() {
+                    out.push_str("  ");
+                    out.push_str(line);
+                    out.push('\n');
+                }
+            }
+        }
+        DocumentCommand::CommitCheckpoint { message, authors } => {
+            let header = CommandHeaderLine::CommitCheckpoint { message: message.clone(), by: authors.iter().map(OpsAuthor::from).collect() };
+            out.push_str(&header.print_op());
+            out.push('\n');
+        }
+        DocumentCommand::CreateAlternative { name } => {
+            out.push_str(&CommandHeaderLine::CreateAlternative { name: name.clone() }.print_op());
+            out.push('\n');
+        }
+        DocumentCommand::SwitchAlternative { alternative_id } => {
+            out.push_str(&CommandHeaderLine::SwitchAlternative { id: alternative_id.clone() }.print_op());
+            out.push('\n');
+        }
+        DocumentCommand::CheckoutCheckpoint { checkpoint_id } => {
+            out.push_str(&CommandHeaderLine::Checkout { id: checkpoint_id.clone() }.print_op());
+            out.push('\n');
+        }
+        DocumentCommand::AmendLast { operations, coalesce_key } => {
+            out.push_str(&CommandHeaderLine::Amend { key: coalesce_key.clone() }.print_op());
+            out.push('\n');
+            print_indented_ops(&mut out, operations)?;
+        }
+    }
+    Ok(out)
+}
+
+/// @emoji 📥 Parses a `print_command`-produced (or hand-authored) command text back into a
+/// `DocumentCommand`. LAW: `parse_command(&print_command(c)?) == Ok(c)` for every `c`.
+pub fn parse_command<Op: OpText>(text: &str) -> Result<DocumentCommand<Op>, TextError> {
+    let all_lines: Vec<&str> = text.lines().collect();
+    let mut header: Option<(u32, &str)> = None;
+    let mut body_start = all_lines.len();
+    for (index, raw) in all_lines.iter().enumerate() {
+        let trimmed = raw.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+        header = Some((index as u32 + 1, trimmed));
+        body_start = index + 1;
+        break;
+    }
+    let (header_line_no, header_text) = header.ok_or_else(|| dsl::__rt::field_error("empty command text"))?;
+    let header_line = CommandHeaderLine::parse_op(header_text)
+        .map_err(|error| TextError::new(error.message, TextSpan::at(header_line_no, error.span.column)))?;
+    let body_lines: Vec<&str> = all_lines[body_start..].iter().filter(|line| !line.trim().is_empty() && !line.trim().starts_with('#')).copied().collect();
+
+    match header_line {
+        CommandHeaderLine::Apply { description } => {
+            let operations = parse_indented_ops(&body_lines)?;
+            if operations.is_empty() {
+                return Err(dsl::__rt::field_error("apply requires at least one operation line"));
+            }
+            Ok(DocumentCommand::Apply { operations, description })
+        }
+        CommandHeaderLine::Undo { policy: None } => Ok(DocumentCommand::Undo),
+        CommandHeaderLine::Undo { policy: Some(token) } => {
+            let policy = parse_undo_policy_token(&token)?;
+            let semantic_command = if body_lines.is_empty() {
+                None
+            } else {
+                let dedented = dedent_command_lines(&body_lines)?;
+                Some(Box::new(parse_command::<Op>(&dedented)?))
+            };
+            Ok(DocumentCommand::UndoWithPolicy { policy, semantic_command })
+        }
+        CommandHeaderLine::Redo => Ok(DocumentCommand::Redo),
+        CommandHeaderLine::CommitCheckpoint { message, by } => Ok(DocumentCommand::CommitCheckpoint { message, authors: by.into_iter().map(Author::from).collect() }),
+        CommandHeaderLine::CreateAlternative { name } => Ok(DocumentCommand::CreateAlternative { name }),
+        CommandHeaderLine::SwitchAlternative { id } => Ok(DocumentCommand::SwitchAlternative { alternative_id: id }),
+        CommandHeaderLine::Checkout { id } => Ok(DocumentCommand::CheckoutCheckpoint { checkpoint_id: id }),
+        CommandHeaderLine::Amend { key } => {
+            let operations = parse_indented_ops(&body_lines)?;
+            if operations.is_empty() {
+                return Err(dsl::__rt::field_error("amend requires at least one operation line"));
+            }
+            Ok(DocumentCommand::AmendLast { operations, coalesce_key: key })
+        }
+    }
+}
+
+/// @emoji 🎯 Format byte every encoded command starts with.
+pub const COMMAND_BINARY_FORMAT: u8 = 1;
+
+fn write_command_str(out: &mut Vec<u8>, s: &str) {
+    pack::write_varint_u64(out, s.len() as u64);
+    out.extend_from_slice(s.as_bytes());
+}
+
+fn read_command_str(reader: &mut pack::ByteReader<'_>) -> Result<String, VcsError> {
+    let len = reader.read_varint_u64().map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    let bytes = reader.read_bytes(len as usize).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    std::str::from_utf8(bytes).map(str::to_string).map_err(|error| VcsError::Deserialize(error.to_string()))
+}
+
+fn write_command_ops<Op: protocol::OpBinary>(out: &mut Vec<u8>, operations: &[Op]) -> Result<(), VcsError> {
+    pack::write_varint_u64(out, operations.len() as u64);
+    for operation in operations {
+        let bytes = operation.encode_op().map_err(|error| VcsError::Serialize(error.to_string()))?;
+        pack::write_varint_u64(out, bytes.len() as u64);
+        out.extend_from_slice(&bytes);
+    }
+    Ok(())
+}
+
+fn read_command_ops<Op: protocol::OpBinary>(reader: &mut pack::ByteReader<'_>) -> Result<Vec<Op>, VcsError> {
+    let count = reader.read_varint_u64().map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    let mut operations = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        let len = reader.read_varint_u64().map_err(|error| VcsError::Deserialize(error.to_string()))?;
+        let bytes = reader.read_bytes(len as usize).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+        operations.push(Op::decode_op(bytes).map_err(|error| VcsError::Deserialize(error.to_string()))?);
+    }
+    Ok(operations)
+}
+
+/// @emoji 🎯 Encodes a `DocumentCommand` deterministically: `format u8 (=1) | command tag u8
+/// (DocumentCommand declaration order) | body`. The binary twin of `print_command`. LAW:
+/// `decode_command(&encode_command(c)?) == Ok(c)`.
+pub fn encode_command<Op: protocol::OpBinary>(command: &DocumentCommand<Op>) -> Result<Vec<u8>, VcsError> {
+    let mut out = vec![COMMAND_BINARY_FORMAT];
+    match command {
+        DocumentCommand::Apply { operations, description } => {
+            out.push(0);
+            out.push(if description.is_some() { 0b01 } else { 0 });
+            if let Some(text) = description {
+                write_command_str(&mut out, text);
+            }
+            write_command_ops(&mut out, operations)?;
+        }
+        DocumentCommand::Undo => out.push(1),
+        DocumentCommand::Redo => out.push(2),
+        DocumentCommand::UndoWithPolicy { policy, semantic_command } => {
+            out.push(3);
+            out.push(undo_policy_ordinal(*policy));
+            out.push(if semantic_command.is_some() { 0b01 } else { 0 });
+            if let Some(nested) = semantic_command {
+                let nested_bytes = encode_command(nested)?;
+                pack::write_varint_u64(&mut out, nested_bytes.len() as u64);
+                out.extend_from_slice(&nested_bytes);
+            }
+        }
+        DocumentCommand::CommitCheckpoint { message, authors } => {
+            out.push(4);
+            out.push(if message.is_some() { 0b01 } else { 0 });
+            if let Some(text) = message {
+                write_command_str(&mut out, text);
+            }
+            pack::write_varint_u64(&mut out, authors.len() as u64);
+            for author in authors {
+                write_command_str(&mut out, &author.id);
+                write_command_str(&mut out, &author.name);
+            }
+        }
+        DocumentCommand::CreateAlternative { name } => {
+            out.push(5);
+            write_command_str(&mut out, name);
+        }
+        DocumentCommand::SwitchAlternative { alternative_id } => {
+            out.push(6);
+            write_command_str(&mut out, alternative_id);
+        }
+        DocumentCommand::CheckoutCheckpoint { checkpoint_id } => {
+            out.push(7);
+            write_command_str(&mut out, checkpoint_id);
+        }
+        DocumentCommand::AmendLast { operations, coalesce_key } => {
+            out.push(8);
+            out.push(if coalesce_key.is_some() { 0b01 } else { 0 });
+            if let Some(key) = coalesce_key {
+                write_command_str(&mut out, key);
+            }
+            write_command_ops(&mut out, operations)?;
+        }
+    }
+    Ok(out)
+}
+
+/// @emoji 🎯 Inverse of [`encode_command`].
+pub fn decode_command<Op: protocol::OpBinary>(bytes: &[u8]) -> Result<DocumentCommand<Op>, VcsError> {
+    let mut reader = pack::ByteReader::new(bytes);
+    let format = reader.read_u8().map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    if format != COMMAND_BINARY_FORMAT {
+        return Err(VcsError::Deserialize(format!("unsupported command format {format}")));
+    }
+    let tag = reader.read_u8().map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    match tag {
+        0 => {
+            let presence = reader.read_u8().map_err(|error| VcsError::Deserialize(error.to_string()))?;
+            let description = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
+            let operations = read_command_ops(&mut reader)?;
+            Ok(DocumentCommand::Apply { operations, description })
+        }
+        1 => Ok(DocumentCommand::Undo),
+        2 => Ok(DocumentCommand::Redo),
+        3 => {
+            let policy = undo_policy_from_ordinal(reader.read_u8().map_err(|error| VcsError::Deserialize(error.to_string()))?)?;
+            let presence = reader.read_u8().map_err(|error| VcsError::Deserialize(error.to_string()))?;
+            let semantic_command = if presence & 0b01 != 0 {
+                let len = reader.read_varint_u64().map_err(|error| VcsError::Deserialize(error.to_string()))?;
+                let nested_bytes = reader.read_bytes(len as usize).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+                Some(Box::new(decode_command::<Op>(nested_bytes)?))
+            } else {
+                None
+            };
+            Ok(DocumentCommand::UndoWithPolicy { policy, semantic_command })
+        }
+        4 => {
+            let presence = reader.read_u8().map_err(|error| VcsError::Deserialize(error.to_string()))?;
+            let message = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
+            let author_count = reader.read_varint_u64().map_err(|error| VcsError::Deserialize(error.to_string()))?;
+            let mut authors = Vec::with_capacity(author_count as usize);
+            for _ in 0..author_count {
+                let id = read_command_str(&mut reader)?;
+                let name = read_command_str(&mut reader)?;
+                authors.push(Author { id, name, avatar: None });
+            }
+            Ok(DocumentCommand::CommitCheckpoint { message, authors })
+        }
+        5 => Ok(DocumentCommand::CreateAlternative { name: read_command_str(&mut reader)? }),
+        6 => Ok(DocumentCommand::SwitchAlternative { alternative_id: read_command_str(&mut reader)? }),
+        7 => Ok(DocumentCommand::CheckoutCheckpoint { checkpoint_id: read_command_str(&mut reader)? }),
+        8 => {
+            let presence = reader.read_u8().map_err(|error| VcsError::Deserialize(error.to_string()))?;
+            let coalesce_key = if presence & 0b01 != 0 { Some(read_command_str(&mut reader)?) } else { None };
+            let operations = read_command_ops(&mut reader)?;
+            Ok(DocumentCommand::AmendLast { operations, coalesce_key })
+        }
+        other => Err(VcsError::Deserialize(format!("unknown command tag {other}"))),
+    }
+}
+//#endregion 🔖CommandFormat
+
 //#region 🔖History
 //#region 🔖History
 /// @emoji 📜 One row of a checkpoint history/ancestor graph.
@@ -1341,12 +1728,10 @@ where
                     Ok(())
                 }
                 UndoPolicy::SemanticUndo | UndoPolicy::CompensatingAction => {
-                    let command_json = semantic_command.ok_or_else(|| {
+                    let command = semantic_command.ok_or_else(|| {
                         VcsError::Backbone("semantic undo requires compensating command".into())
                     })?;
-                    let command: DocumentCommand<Operation> =
-                        serde_json::from_str(&command_json).map_err(|e| VcsError::Deserialize(e.to_string()))?;
-                    self.dispatch_inner(command)
+                    self.dispatch_inner(*command)
                 }
             },
             DocumentCommand::Redo => {
@@ -1614,9 +1999,24 @@ where
         (forwards, backwards, operation_meta, projection)
     }
 
-    pub fn dispatch_json(&mut self, command_json: &str) -> Result<(), VcsError> {
-        let command: DocumentCommand<Operation> =
-            serde_json::from_str(command_json).map_err(|e| VcsError::Deserialize(e.to_string()))?;
+    /// @emoji 🕹️ Parses `command_text` via [`parse_command`] and dispatches it — the op-line
+    /// textual entry point (op-efficient one-line-per-structural-field commands, indented op
+    /// lines for `Apply`/`AmendLast`).
+    pub fn dispatch_text(&mut self, command_text: &str) -> Result<(), VcsError>
+    where
+        Operation: OpText,
+    {
+        let command = parse_command(command_text).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+        self.dispatch(command)
+    }
+
+    /// @emoji 🕹️ Decodes `command_bytes` via [`decode_command`] and dispatches it — the binary
+    /// entry point used for both communication (backbone/hub) and storage (`.spr`).
+    pub fn dispatch_binary(&mut self, command_bytes: &[u8]) -> Result<(), VcsError>
+    where
+        Operation: protocol::OpBinary,
+    {
+        let command = decode_command(command_bytes)?;
         self.dispatch(command)
     }
 
@@ -2915,6 +3315,40 @@ pub mod test_support {
         assert_eq!(&parsed, operation, "op-text round trip diverged; printed: {printed:?}");
     }
 
+    /// @emoji ⚖️ Asserts op text and op binary are two projections of the SAME operation:
+    /// `decode_op(encode_op(op)) == parse_op(print_op(op)) == op`, and the binary encoding is
+    /// deterministic. The compile-time validation ground truth for every technology's `OpBinary`
+    /// impl — the op-level mirror of {@link assert_dsl_pack_equivalence}.
+    pub fn assert_op_text_binary_equivalence<Op>(operation: &Op)
+    where
+        Op: OpText + protocol::OpBinary + PartialEq + std::fmt::Debug,
+    {
+        assert_op_line_round_trip(operation);
+        let encoded = operation.encode_op().unwrap_or_else(|error| panic!("op encode failed: {error}"));
+        let encoded_again = operation.encode_op().unwrap_or_else(|error| panic!("op re-encode failed: {error}"));
+        assert_eq!(encoded, encoded_again, "op binary encoding is not deterministic");
+        let decoded = Op::decode_op(&encoded).unwrap_or_else(|error| panic!("op decode failed: {error}"));
+        assert_eq!(&decoded, operation, "op-binary round trip diverged from source operation");
+    }
+
+    /// @emoji ⚖️ Asserts command text and command binary are two projections of the SAME command:
+    /// `decode_command(encode_command(c)) == parse_command(print_command(c)) == c`, and the binary
+    /// encoding is deterministic. The compile-time validation ground truth for `DocumentCommand`'s
+    /// text/binary pair — the command-level mirror of `assert_op_text_binary_equivalence`.
+    pub fn assert_command_text_binary_equivalence<Op>(command: &DocumentCommand<Op>)
+    where
+        Op: OpText + protocol::OpBinary + Clone + PartialEq + std::fmt::Debug,
+    {
+        let printed = print_command(command).unwrap_or_else(|error| panic!("command print failed: {error}"));
+        let parsed: DocumentCommand<Op> = parse_command(&printed).unwrap_or_else(|error| panic!("command parse failed: {error}"));
+        assert_eq!(&parsed, command, "command text round trip diverged; printed:\n{printed}");
+        let encoded = encode_command(command).unwrap_or_else(|error| panic!("command encode failed: {error}"));
+        let encoded_again = encode_command(command).unwrap_or_else(|error| panic!("command re-encode failed: {error}"));
+        assert_eq!(encoded, encoded_again, "command binary encoding is not deterministic");
+        let decoded: DocumentCommand<Op> = decode_command(&encoded).unwrap_or_else(|error| panic!("command decode failed: {error}"));
+        assert_eq!(&decoded, command, "command binary round trip diverged from source command");
+    }
+
     /// @emoji 📄 Asserts that printing a store's envelope to text and parsing it back yields the same
     /// live projection the store already holds — the ground truth for {@link print_document_text}/
     /// {@link parse_document_text} on any technology once it implements `DocumentDsl` + `OpText`.
@@ -3035,9 +3469,9 @@ mod tests {
         n: i32,
     }
 
-    // `impl vcs::DocumentPack for DemoProjection` is now generated automatically by
+    // `impl store::DocumentPack for DemoProjection` is now generated automatically by
     // `#[derive(dsl::DslDocument)]` above (see dsl/derive/rs/lib.rs's `🔖DslDocument` region) —
-    // same seam as its `impl vcs::DocumentDsl for DemoProjection` sibling.
+    // same seam as its `impl store::DocumentDsl for DemoProjection` sibling.
 
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
     struct DemoDiff {
@@ -3738,15 +4172,14 @@ mod tests {
                 description: None,
             })
             .expect("apply");
-        let undo_apply = serde_json::to_string(&DocumentCommand::Apply {
+        let undo_apply = DocumentCommand::Apply {
             operations: vec![DemoOperation::SetN { n: 0 }],
             description: Some("compensate".into()),
-        })
-        .expect("serialize undo apply");
+        };
         store
             .dispatch(DocumentCommand::UndoWithPolicy {
                 policy: UndoPolicy::CompensatingAction,
-                semantic_command: Some(undo_apply),
+                semantic_command: Some(Box::new(undo_apply)),
             })
             .expect("compensating undo");
         assert_eq!(store.projection().expect("projection").n, 0);
@@ -3994,7 +4427,7 @@ mod tests {
         test_support::assert_command_envelope_round_trip::<DemoProjection, LossyOperation>(&edit, &DocumentId("doc-lossy".into()));
     }
 
-    // `DemoProjection`'s `vcs::DocumentDsl` impl and `DemoOperation`'s `vcs::OpText` impl are now
+    // `DemoProjection`'s `store::DocumentDsl` impl and `DemoOperation`'s `store::OpText` impl are now
     // generated by `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslOps)]` on the type definitions
     // themselves (see `DemoProjection`/`DemoOperation` above) — the `dsl_schema` grammar replaces
     // this crate's own hand-rolled `"n <value>"`/`"set-n <value>"` printer/parser.
@@ -4012,6 +4445,29 @@ mod tests {
     #[test]
     fn demo_op_text_round_trips() {
         test_support::assert_op_line_round_trip(&DemoOperation::SetN { n: 7 });
+    }
+
+    #[test]
+    fn demo_op_binary_round_trips_and_matches_text() {
+        let operation = DemoOperation::SetN { n: 7 };
+        let encoded = op_rt::encode_op(&operation).expect("op encode");
+        let encoded_again = op_rt::encode_op(&operation).expect("op re-encode");
+        assert_eq!(encoded, encoded_again, "op binary encoding must be deterministic");
+        assert_eq!(encoded[0], op_rt::OP_BINARY_FORMAT);
+        let decoded: DemoOperation = op_rt::decode_op(&encoded).expect("op decode");
+        assert_eq!(decoded, operation);
+        let via_text = DemoOperation::parse_op(&operation.print_op()).expect("op parse");
+        assert_eq!(via_text, decoded, "binary and text round trips diverged");
+    }
+
+    #[test]
+    fn demo_op_binary_rejects_unknown_format_and_ordinal() {
+        let operation = DemoOperation::SetN { n: 7 };
+        let mut wrong_format = op_rt::encode_op(&operation).expect("op encode");
+        wrong_format[0] = 9;
+        assert!(op_rt::decode_op::<DemoOperation>(&wrong_format).is_err(), "format 9 must be rejected");
+        let out_of_range = [op_rt::OP_BINARY_FORMAT, 0x7E];
+        assert!(op_rt::decode_op::<DemoOperation>(&out_of_range).is_err(), "ordinal beyond declared variants must be rejected");
     }
 
     #[test]
@@ -4721,20 +5177,64 @@ mod tests {
     }
 
     #[test]
-    fn dispatch_json_applies_a_serialized_command_and_projection_json_reflects_it() {
+    fn dispatch_text_applies_a_command_block_and_projection_json_reflects_it() {
         let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
             create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
-        let command_json = serde_json::to_string(&DocumentCommand::Apply {
+        let command_text = print_command(&DocumentCommand::Apply {
             operations: vec![DemoOperation::SetN { n: 7 }],
             description: None,
         })
-        .expect("serialize command");
-        store.dispatch_json(&command_json).expect("dispatch json");
+        .expect("print command");
+        store.dispatch_text(&command_text).expect("dispatch text");
         assert_eq!(store.projection_json().expect("projection json"), serde_json::to_string(&DemoProjection { n: 7 }).unwrap());
 
-        let error = store.dispatch_json("not json").unwrap_err();
+        let error = store.dispatch_text("not a command").unwrap_err();
         assert!(matches!(error, VcsError::Deserialize(_)), "got {error:?}");
+    }
+
+    #[test]
+    fn dispatch_binary_applies_an_encoded_command_and_rejects_wrong_format() {
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
+        let command_bytes = encode_command(&DocumentCommand::Apply {
+            operations: vec![DemoOperation::SetN { n: 7 }],
+            description: None,
+        })
+        .expect("encode command");
+        store.dispatch_binary(&command_bytes).expect("dispatch binary");
+        assert_eq!(store.projection_json().expect("projection json"), serde_json::to_string(&DemoProjection { n: 7 }).unwrap());
+
+        let mut wrong_format = command_bytes.clone();
+        wrong_format[0] = 9;
+        let error = store.dispatch_binary(&wrong_format).unwrap_err();
+        assert!(matches!(error, VcsError::Deserialize(_)), "got {error:?}");
+    }
+
+    #[test]
+    fn command_text_binary_equivalence_holds_for_every_document_command_variant() {
+        let commands: Vec<DocumentCommand<DemoOperation>> = vec![
+            DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 7 }], description: Some("set n".to_string()) },
+            DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 7 }], description: None },
+            DocumentCommand::Undo,
+            DocumentCommand::Redo,
+            DocumentCommand::UndoWithPolicy { policy: UndoPolicy::ExactBaseOnly, semantic_command: None },
+            DocumentCommand::UndoWithPolicy { policy: UndoPolicy::TransformAgainstConcurrent, semantic_command: None },
+            DocumentCommand::UndoWithPolicy {
+                policy: UndoPolicy::CompensatingAction,
+                semantic_command: Some(Box::new(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 0 }], description: None })),
+            },
+            DocumentCommand::CommitCheckpoint { message: Some("checkpoint".to_string()), authors: vec![Author { id: "u1".to_string(), name: "Ueli Saluz".to_string(), avatar: None }] },
+            DocumentCommand::CommitCheckpoint { message: None, authors: Vec::new() },
+            DocumentCommand::CreateAlternative { name: "branch".to_string() },
+            DocumentCommand::SwitchAlternative { alternative_id: "alt-1".to_string() },
+            DocumentCommand::CheckoutCheckpoint { checkpoint_id: "ck-1".to_string() },
+            DocumentCommand::AmendLast { operations: vec![DemoOperation::SetN { n: 3 }], coalesce_key: Some("drag".to_string()) },
+        ];
+        for command in &commands {
+            test_support::assert_command_text_binary_equivalence(command);
+        }
     }
 
     //#endregion 🔖CommandErrorPaths
@@ -4934,7 +5434,4 @@ mod tests {
     //#endregion 🔖BackbonePorts
 }
 //#endregion 🧪Tests
-
-
-}
 //#endregion 🧪Tests

@@ -1,6 +1,6 @@
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DocumentVcsEnvelope<P, Operation> {
+pub struct DocumentEnvelope<P, Operation> {
     pub schema: String,
     pub id: String,
     pub vcs: DocumentVcs<P, Operation>,
@@ -12,7 +12,7 @@ pub struct DocumentVcsEnvelope<P, Operation> {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
-pub enum DocumentVcsCommand<Operation> {
+pub enum DocumentCommand<Operation> {
     Apply {
         operations: Vec<Operation>,
         #[serde(skip_serializing_if = "Option::is_none")]

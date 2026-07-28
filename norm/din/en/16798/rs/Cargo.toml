@@ -15,3 +15,4 @@ dsl = { path = "../../../../../dsl/rs" }
 norm_core = { path = "../../../../core/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 vcs = { path = "../../../../../vcs/rs" }
+store = { path = "../../../../../store/rs" }

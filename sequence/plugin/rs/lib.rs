@@ -11,7 +11,7 @@ use sequence_core::{default_fixture, sequence_fixture_operations, SequenceFixtur
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
-use vcs::DocumentDsl;
+use store::DocumentDsl;
 
 //#region 🔖Constants
 const SEQUENCE_PLAY_APP_ID: &str = "sequence-play";

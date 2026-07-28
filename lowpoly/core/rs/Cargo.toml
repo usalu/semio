@@ -17,6 +17,7 @@ path = "lib.rs"
 [dependencies]
 kernel_3d_mesh = { path = "../../../kernel/3d/mesh/rs" }
 vcs = { path = "../../../vcs/rs" }
+store = { path = "../../../store/rs" }
 protocol = { path = "../../../protocol/rs" }
 dsl = { path = "../../../dsl/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

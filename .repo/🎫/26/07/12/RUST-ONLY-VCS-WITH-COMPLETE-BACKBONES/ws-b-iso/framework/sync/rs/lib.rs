@@ -17,10 +17,7 @@ use semio_framework_core::{HubClientFrame, HubServerFrame, OpEnvelope, PresenceP
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::sync::{broadcast, mpsc};
-use vcs::{
-    reconcile_alternative, BackboneMessage, ChannelBackbone, ChannelBackboneRemote, DocumentVcsStore,
-    Operation, StudioConflict,
-};
+use store::{reconcile_alternative, BackboneMessage, ChannelBackbone, ChannelBackboneRemote, DocumentStore, Operation, StudioConflict};
 
 //#region 🔖Errors
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
@@ -222,7 +219,7 @@ where
     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
 {
-    pub store: DocumentVcsStore<P, Op>,
+    pub store: DocumentStore<P, Op>,
     cmd_tx: Option<mpsc::UnboundedSender<DocumentActorMsg>>,
     events: Option<broadcast::Receiver<DocumentEvent>>,
     status: DocumentSyncStatus,
@@ -233,7 +230,7 @@ where
     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
 {
-    pub fn new(store: DocumentVcsStore<P, Op>) -> Self {
+    pub fn new(store: DocumentStore<P, Op>) -> Self {
         Self {
             store,
             cmd_tx: None,
@@ -319,7 +316,7 @@ where
 
 //#region 🔖Host
 /// @emoji 🎛️ The channels {@link DocumentHost::open} hands back to a caller: attach `channel_backbone`
-/// to your `DocumentVcsStore`, and send control messages (or wakes) on `cmd_tx`.
+/// to your `DocumentStore`, and send control messages (or wakes) on `cmd_tx`.
 pub struct DocumentChannels {
     pub cmd_tx: mpsc::UnboundedSender<DocumentActorMsg>,
     /// @emoji 🔗 The store-side backbone end. The caller owns store attachment:
@@ -442,12 +439,12 @@ mod native_actor {
     /// @emoji 📁 A folder/file binding's storage driver, keyed for multi-document sqlite or single blob.
     enum FolderEndpoint {
         Sqlite {
-            storage: vcs::FolderSqliteStorage,
+            storage: store::FolderSqliteStorage,
             document_id: String,
             schema: String,
         },
         Json {
-            storage: vcs::FileJsonStorage,
+            storage: store::FileJsonStorage,
         },
     }
 
@@ -945,11 +942,11 @@ mod native_actor {
     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
         if path.extension().and_then(|ext| ext.to_str()) == Some("json") {
             FolderEndpoint::Json {
-                storage: vcs::FileJsonStorage::new(path.to_path_buf()),
+                storage: store::FileJsonStorage::new(path.to_path_buf()),
             }
         } else {
             FolderEndpoint::Sqlite {
-                storage: vcs::FolderSqliteStorage::new(path.to_path_buf()),
+                storage: store::FolderSqliteStorage::new(path.to_path_buf()),
                 document_id: document_id.to_string(),
                 schema: schema.to_string(),
             }
@@ -1321,7 +1318,7 @@ pub fn load_fixtures(dir: &std::path::Path) -> Vec<ActorFixture> {
 mod tests {
     use super::*;
     use serde::{Deserialize, Serialize};
-    use vcs::{create_document_vcs_envelope, op_envelope_from_edit, Edit, OperationDiff};
+    use store::{create_document_envelope, op_envelope_from_edit, Edit, OperationDiff};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     struct DemoProjection {
@@ -1380,17 +1377,17 @@ mod tests {
             started_at: "0".into(),
             finished_at: None,
         };
-        let placeholder: vcs::DocumentVcsEnvelope<DemoProjection, DemoOp> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let placeholder: store::DocumentEnvelope<DemoProjection, DemoOp> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         op_envelope_from_edit(&placeholder, &edit, Vec::new()).expect("op envelope")
     }
 
     //#region 🧪SyncSession
     #[test]
     fn receive_materializes_remote_envelope_into_the_edit_timeline() {
-        let envelope: vcs::DocumentVcsEnvelope<DemoProjection, DemoOp> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let store = DocumentVcsStore::new(envelope);
+        let envelope: store::DocumentEnvelope<DemoProjection, DemoOp> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let store = DocumentStore::new(envelope);
         let mut session = SyncSession::new(store);
         session.receive(sample_op_envelope("edit-1", 5)).expect("receive");
         assert_eq!(session.store.projection().expect("projection").n, 5);
@@ -1399,9 +1396,9 @@ mod tests {
 
     #[test]
     fn receive_buffers_out_of_order_envelopes_until_dependencies_arrive() {
-        let envelope: vcs::DocumentVcsEnvelope<DemoProjection, DemoOp> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let store = DocumentVcsStore::new(envelope);
+        let envelope: store::DocumentEnvelope<DemoProjection, DemoOp> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let store = DocumentStore::new(envelope);
         let mut session = SyncSession::new(store);
         let mut second = sample_op_envelope("edit-2", 9);
         second.deps = vec![semio_framework_core::OperationId("edit-1".into())];
@@ -1459,8 +1456,8 @@ mod tests {
         use tokio::sync::{broadcast as tokio_broadcast, Mutex};
         use tokio_tungstenite::tungstenite::Message as WsMessage;
 
-        fn demo_envelope(document_id: &str) -> vcs::DocumentVcsEnvelope<DemoProjection, DemoOp> {
-            create_document_vcs_envelope("demo/v1", document_id, DemoProjection { n: 0 }, None)
+        fn demo_envelope(document_id: &str) -> store::DocumentEnvelope<DemoProjection, DemoOp> {
+            create_document_envelope("demo/v1", document_id, DemoProjection { n: 0 }, None)
         }
 
         async fn wait_for_event(
@@ -1494,12 +1491,12 @@ mod tests {
                 actor: "local".into(),
             });
             let mut events = host.subscribe("doc-a");
-            let mut store = DocumentVcsStore::new(demo_envelope("doc-a"));
+            let mut store = DocumentStore::new(demo_envelope("doc-a"));
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
 
             // A local apply establishes a persisted edit on disk.
             store
-                .dispatch(vcs::DocumentVcsCommand::Apply {
+                .dispatch(store::DocumentCommand::Apply {
                     operations: vec![DemoOp::SetN { n: 1 }],
                     description: None,
                 })
@@ -1507,7 +1504,7 @@ mod tests {
             channels.cmd_tx.send(DocumentActorMsg::LocalOps { envelopes: Vec::new() }).expect("wake");
 
             // Wait until the actor has persisted the local edit to the folder db.
-            let storage = vcs::FolderSqliteStorage::new(dir.path().to_path_buf());
+            let storage = store::FolderSqliteStorage::new(dir.path().to_path_buf());
             let stored = loop {
                 if let Some(json) = storage.read("doc-a").expect("read") {
                     if json.contains("\"edits\":[{") {
@@ -1675,7 +1672,7 @@ mod tests {
                 watch_external: false,
                 actor: "A".into(),
             });
-            let mut store_a = DocumentVcsStore::new(demo_envelope("shared"));
+            let mut store_a = DocumentStore::new(demo_envelope("shared"));
             store_a.attach_backbone(Box::new(channels_a.channel_backbone)).expect("attach a");
 
             let host_b = DocumentHost::new();
@@ -1687,14 +1684,14 @@ mod tests {
                 actor: "B".into(),
             });
             let mut events_b = host_b.subscribe("shared");
-            let mut store_b = DocumentVcsStore::new(demo_envelope("shared"));
+            let mut store_b = DocumentStore::new(demo_envelope("shared"));
             store_b.attach_backbone(Box::new(channels_b.channel_backbone)).expect("attach b");
 
             // Give both actors time to connect + Hello.
             tokio::time::sleep(Duration::from_millis(300)).await;
 
             store_a
-                .dispatch(vcs::DocumentVcsCommand::Apply {
+                .dispatch(store::DocumentCommand::Apply {
                     operations: vec![DemoOp::SetN { n: 7 }],
                     description: None,
                 })
@@ -1728,14 +1725,14 @@ mod tests {
                 watch_external: false,
                 actor: "A".into(),
             });
-            let mut store_a = DocumentVcsStore::new(demo_envelope("catchup"));
+            let mut store_a = DocumentStore::new(demo_envelope("catchup"));
             store_a.attach_backbone(Box::new(channels_a.channel_backbone)).expect("attach a");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
             // A applies two ops while nobody else is connected.
             for n in [3, 4] {
                 store_a
-                    .dispatch(vcs::DocumentVcsCommand::Apply {
+                    .dispatch(store::DocumentCommand::Apply {
                         operations: vec![DemoOp::SetN { n }],
                         description: None,
                     })
@@ -1754,7 +1751,7 @@ mod tests {
                 actor: "B".into(),
             });
             let mut events_b = host_b.subscribe("catchup");
-            let mut store_b = DocumentVcsStore::new(demo_envelope("catchup"));
+            let mut store_b = DocumentStore::new(demo_envelope("catchup"));
             store_b.attach_backbone(Box::new(channels_b.channel_backbone)).expect("attach b");
 
             let event = wait_for_event(&mut events_b, |event| matches!(event, DocumentEvent::RemoteOps { .. })).await;
@@ -1785,7 +1782,7 @@ mod tests {
                 actor: "B".into(),
             });
             let mut events_b = host_b.subscribe("drain");
-            let mut store_b = DocumentVcsStore::new(demo_envelope("drain"));
+            let mut store_b = DocumentStore::new(demo_envelope("drain"));
             store_b.attach_backbone(Box::new(channels_b.channel_backbone)).expect("attach b");
 
             let host_a = DocumentHost::new();
@@ -1796,12 +1793,12 @@ mod tests {
                 watch_external: false,
                 actor: "A".into(),
             });
-            let mut store_a = DocumentVcsStore::new(demo_envelope("drain"));
+            let mut store_a = DocumentStore::new(demo_envelope("drain"));
             store_a.attach_backbone(Box::new(channels_a.channel_backbone)).expect("attach a");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
             store_a
-                .dispatch(vcs::DocumentVcsCommand::Apply {
+                .dispatch(store::DocumentCommand::Apply {
                     operations: vec![DemoOp::SetN { n: 5 }],
                     description: None,
                 })
@@ -1841,14 +1838,14 @@ mod tests {
                 actor: "local".into(),
             });
             let mut events = host.subscribe(&fixture.document_id);
-            let mut store = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOp>(
+            let mut store = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOp>(
                 &fixture.schema,
                 &fixture.document_id,
                 DemoProjection { n: 0 },
                 None,
             ));
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
-            let storage = vcs::FolderSqliteStorage::new(dir.path().to_path_buf());
+            let storage = store::FolderSqliteStorage::new(dir.path().to_path_buf());
             // Wait for the seed snapshot to land on disk.
             loop {
                 if storage.read(&fixture.document_id).expect("read").is_some() {

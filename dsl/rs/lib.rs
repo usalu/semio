@@ -252,16 +252,16 @@ pub trait DslVariants: Sized {
     fn to_named_record(&self) -> (String, RecordValue);
     /// @emoji ⚠️ Returns `TextError` (not `String`, unlike [`DslField::from_value`]) so
     /// generated bodies can `?`-propagate it directly — this is the same error type
-    /// `vcs::OpText::parse_op`/`vcs::DocumentDsl::parse_dsl` already return, and the derive's
+    /// `protocol::OpText::parse_op`/`store::DocumentDsl::parse_dsl` already return, and the derive's
     /// `#[dsl(statements)]` field codegen composes it without any conversion at every nesting depth.
     fn from_named_record(keyword: &str, record: &RecordValue) -> Result<Self, TextError>;
 }
 //#endregion 🔖Variants
 
 //#region 🔖Runtime
-/// @emoji ⚙️ Thin wrappers the derive-generated `impl vcs::DocumentDsl`/`impl vcs::OpText` bodies
-/// call into — kept as free functions (not methods) so generated code never has to name this
-/// crate's internal types, only `dsl::__rt::*`.
+/// @emoji ⚙️ Thin wrappers the derive-generated `impl store::DocumentDsl`/`impl protocol::OpText`
+/// bodies call into — kept as free functions (not methods) so generated code never has to name
+/// this crate's internal types, only `dsl::__rt::*`.
 pub mod __rt {
     use super::*;
 
@@ -311,9 +311,65 @@ pub mod __rt {
 }
 //#endregion 🔖Runtime
 
+//#region 🔖OpRt
+/// @emoji 🎯 Runtime behind `protocol::OpBinary`, resolved as `::dsl::op_rt::...` by
+/// `#[derive(DslOps)]`'s emitted impl — the binary twin of `__rt`'s inline text path and the
+/// op-level mirror of the `DocumentDsl`/`DocumentPack` pairing. An operation enum lowers to
+/// `(variant keyword, RecordSpec, RecordValue)` via [`DslVariants`]; this module fixes the byte
+/// layout `format u8 (=1) | variant ordinal varint | record body` where the ordinal indexes
+/// `DslVariants::variants()` declaration order (reordering variants is a format break) and the
+/// body is `pack::encode_record_body`'s container-less encoding. Lives here rather than in
+/// `store` because the bound is this crate's own `DslVariants` — a `store`-hosted twin would be a
+/// distinct trait instance inside this crate's own test build (dev-dependency cycle). LAW:
+/// `decode_op(&encode_op(op)) == op == parse_op(&print_op(op))`, and encoding is deterministic.
+pub mod op_rt {
+    use super::DslVariants;
+    use protocol::ProtocolError;
+
+    /// @emoji 🎯 Format byte every encoded operation starts with.
+    pub const OP_BINARY_FORMAT: u8 = 1;
+
+    /// @emoji 🎯 Encodes one operation deterministically (byte-identical for equal ops).
+    pub fn encode_op<T: DslVariants>(op: &T) -> Result<Vec<u8>, ProtocolError> {
+        let (keyword, record) = op.to_named_record();
+        let variants = T::variants();
+        let ordinal = variants
+            .iter()
+            .position(|(k, _)| *k == keyword)
+            .ok_or(ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
+        let spec = (variants[ordinal].1)();
+        let body = pack::encode_record_body(&spec, &record, &pack::EncodeOptions::default())?;
+        let mut out = Vec::with_capacity(body.len() + 3);
+        out.push(OP_BINARY_FORMAT);
+        pack::write_varint_u64(&mut out, ordinal as u64);
+        out.extend_from_slice(&body);
+        Ok(out)
+    }
+
+    /// @emoji 🎯 Inverse of [`encode_op`].
+    pub fn decode_op<T: DslVariants>(bytes: &[u8]) -> Result<T, ProtocolError> {
+        let mut reader = pack::ByteReader::new(bytes);
+        let format = reader.read_u8()?;
+        if format != OP_BINARY_FORMAT {
+            return Err(ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
+        }
+        let ordinal = reader.read_varint_u64()?;
+        let variants = T::variants();
+        let (keyword, spec_fn) = variants
+            .get(ordinal as usize)
+            .ok_or(ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
+        let spec = spec_fn();
+        let body = &bytes[reader.position()..];
+        let (record, _report) = pack::decode_record_body(body, &spec, &pack::DecodeOptions::default())?;
+        T::from_named_record(keyword, &record)
+            .map_err(|error| ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
+    }
+}
+//#endregion 🔖OpRt
+
 //#region 🔖TestSupport
 /// @emoji 🧪 Round-trip/property helpers every derived (or hand-declared) grammar's own tests
-/// call — the facade-level analogue of `vcs::test_support`, scoped to the engine's own laws
+/// call — the facade-level analogue of `store::test_support`, scoped to the engine's own laws
 /// rather than the VCS store's.
 pub mod test_support {
     use super::*;
@@ -404,17 +460,17 @@ mod tests {
     #[test]
     fn derived_document_round_trips_through_vcs_document_dsl() {
         let doc = DerivedDocument { category: "external_wall".to_string(), climate: ClimateZone::Cold, airtightness_n50: 0.6, occupants: 4, note: None };
-        let printed = <DerivedDocument as vcs::DocumentDsl>::print_dsl(&doc);
+        let printed = <DerivedDocument as store::DocumentDsl>::print_dsl(&doc);
         assert!(!printed.contains("note"), "absent optional field must be omitted: {printed}");
-        let parsed = <DerivedDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
+        let parsed = <DerivedDocument as store::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
         assert_eq!(parsed, doc, "derived DocumentDsl round trip diverged;\nprinted:\n{printed}");
     }
 
     #[test]
     fn derived_document_round_trips_with_optional_field_present() {
         let doc = DerivedDocument { category: "roof".to_string(), climate: ClimateZone::Warm, airtightness_n50: 1.2, occupants: 2, note: Some("re-inspect in 2027".to_string()) };
-        let printed = <DerivedDocument as vcs::DocumentDsl>::print_dsl(&doc);
-        let parsed = <DerivedDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
+        let printed = <DerivedDocument as store::DocumentDsl>::print_dsl(&doc);
+        let parsed = <DerivedDocument as store::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
         assert_eq!(parsed, doc);
     }
 
@@ -448,13 +504,25 @@ mod tests {
     #[test]
     fn derived_document_dsl_satisfies_vcs_test_support_helpers() {
         let doc = DerivedDocument { category: "floor".to_string(), climate: ClimateZone::Temperate, airtightness_n50: 0.4, occupants: 3, note: None };
-        vcs::test_support::assert_dsl_round_trip(&doc);
-        vcs::test_support::assert_dsl_pack_equivalence(&doc);
+        store::test_support::assert_dsl_round_trip(&doc);
+        store::test_support::assert_dsl_pack_equivalence(&doc);
     }
 
     #[test]
     fn derived_op_satisfies_vcs_test_support_helpers() {
-        vcs::test_support::assert_op_line_round_trip(&DerivedOperation::SetCategory { category: "wall".to_string() });
+        store::test_support::assert_op_line_round_trip(&DerivedOperation::SetCategory { category: "wall".to_string() });
+    }
+
+    #[test]
+    fn derived_op_binary_round_trips_every_variant_and_matches_text() {
+        let ops = vec![
+            DerivedOperation::SetCategory { category: "roof".to_string() },
+            DerivedOperation::SetAirtightness { n50: 0.9 },
+            DerivedOperation::Reset,
+        ];
+        for op in ops {
+            store::test_support::assert_op_text_binary_equivalence(&op);
+        }
     }
 
     // --- end-to-end derive test: `#[derive(DslEnum)]` recursive block tree (the `note`/`draw`
@@ -505,10 +573,10 @@ mod tests {
             ],
             tags: std::collections::BTreeMap::from([("author".to_string(), "semio".to_string()), ("version".to_string(), "1".to_string())]),
         };
-        let printed = <SceneDocument as vcs::DocumentDsl>::print_dsl(&doc);
-        let parsed = <SceneDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
+        let printed = <SceneDocument as store::DocumentDsl>::print_dsl(&doc);
+        let parsed = <SceneDocument as store::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
         assert_eq!(parsed, doc, "recursive/nested-collection round trip diverged;\nprinted:\n{printed}");
-        vcs::test_support::assert_dsl_pack_equivalence(&doc);
+        store::test_support::assert_dsl_pack_equivalence(&doc);
     }
 
     // --- end-to-end derive test: single-field tuple ("newtype") variants (the `draw` pilot's
@@ -553,13 +621,13 @@ mod tests {
                 ShapeNode::Square(SquareBody { id: "s1".to_string(), side: 3.0 }),
             ],
         };
-        let printed = <ShapeDocument as vcs::DocumentDsl>::print_dsl(&doc);
+        let printed = <ShapeDocument as store::DocumentDsl>::print_dsl(&doc);
         // `"c1"` is bare-ident-shaped, so the unified "strings bare-preferred" law prints it
         // unquoted (`circle c1 r=2`, not `circle "c1" r=2`) — see `dsl_core::is_bare_ident`.
         assert!(printed.contains("circle c1 r=2"), "newtype variant must print via its own inner keyword/fields: {printed}");
-        let parsed = <ShapeDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
+        let parsed = <ShapeDocument as store::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
         assert_eq!(parsed, doc, "newtype tuple-variant round trip diverged;\nprinted:\n{printed}");
-        vcs::test_support::assert_dsl_pack_equivalence(&doc);
+        store::test_support::assert_dsl_pack_equivalence(&doc);
     }
 
     // --- end-to-end derive test: `#[dsl(statements, block)] Option<T>` (the `draw` pilot's
@@ -589,17 +657,17 @@ mod tests {
     #[test]
     fn derived_option_statements_field_round_trips_present_and_absent() {
         let with_fill = PaintDocument { attributes: PaintAttributes { fill: Some(PaintStyle::Solid { color: [1.0, 0.0, 0.0, 1.0] }) } };
-        let printed = <PaintDocument as vcs::DocumentDsl>::print_dsl(&with_fill);
-        let parsed = <PaintDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
+        let printed = <PaintDocument as store::DocumentDsl>::print_dsl(&with_fill);
+        let parsed = <PaintDocument as store::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
         assert_eq!(parsed, with_fill, "Some(..) round trip diverged;\nprinted:\n{printed}");
-        vcs::test_support::assert_dsl_pack_equivalence(&with_fill);
+        store::test_support::assert_dsl_pack_equivalence(&with_fill);
 
         let no_fill = PaintDocument { attributes: PaintAttributes { fill: None } };
-        let printed_none = <PaintDocument as vcs::DocumentDsl>::print_dsl(&no_fill);
+        let printed_none = <PaintDocument as store::DocumentDsl>::print_dsl(&no_fill);
         let parsed_none =
-            <PaintDocument as vcs::DocumentDsl>::parse_dsl(&printed_none).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed_none}"));
+            <PaintDocument as store::DocumentDsl>::parse_dsl(&printed_none).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed_none}"));
         assert_eq!(parsed_none, no_fill, "None round trip diverged;\nprinted:\n{printed_none}");
-        vcs::test_support::assert_dsl_pack_equivalence(&no_fill);
+        store::test_support::assert_dsl_pack_equivalence(&no_fill);
     }
 
     // --- regression: `#[dsl(block)] Option<PlainRecord>` (the `draw` pilot's `attributes.stroke:
@@ -622,18 +690,18 @@ mod tests {
     #[test]
     fn derived_option_block_record_field_omits_rather_than_printing_empty_braces_when_absent() {
         let with_brush = BrushDocument { brush: Some(BrushStyle { color: [0.0, 0.0, 0.0, 1.0], width: 2.5 }) };
-        let printed = <BrushDocument as vcs::DocumentDsl>::print_dsl(&with_brush);
-        let parsed = <BrushDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
+        let printed = <BrushDocument as store::DocumentDsl>::print_dsl(&with_brush);
+        let parsed = <BrushDocument as store::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
         assert_eq!(parsed, with_brush, "Some(..) round trip diverged;\nprinted:\n{printed}");
-        vcs::test_support::assert_dsl_pack_equivalence(&with_brush);
+        store::test_support::assert_dsl_pack_equivalence(&with_brush);
 
         let no_brush = BrushDocument { brush: None };
-        let printed_none = <BrushDocument as vcs::DocumentDsl>::print_dsl(&no_brush);
+        let printed_none = <BrushDocument as store::DocumentDsl>::print_dsl(&no_brush);
         assert!(!printed_none.contains("brush"), "an absent block-wrapped Option<Record> must be omitted entirely, not printed as empty braces: {printed_none:?}");
         let parsed_none =
-            <BrushDocument as vcs::DocumentDsl>::parse_dsl(&printed_none).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed_none}"));
+            <BrushDocument as store::DocumentDsl>::parse_dsl(&printed_none).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed_none}"));
         assert_eq!(parsed_none, no_brush, "None round trip diverged;\nprinted:\n{printed_none:?}");
-        vcs::test_support::assert_dsl_pack_equivalence(&no_brush);
+        store::test_support::assert_dsl_pack_equivalence(&no_brush);
     }
 
     // --- end-to-end derive test: `#[dsl(statements)] Box<T>` (the `draw` pilot's
@@ -692,10 +760,10 @@ mod tests {
                 )])),
             },
         };
-        let printed = <SelfRefDocument as vcs::DocumentDsl>::print_dsl(&doc);
-        let parsed = <SelfRefDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
+        let printed = <SelfRefDocument as store::DocumentDsl>::print_dsl(&doc);
+        let parsed = <SelfRefDocument as store::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
         assert_eq!(parsed, doc, "self-referential record round trip diverged;\nprinted:\n{printed}");
-        vcs::test_support::assert_dsl_pack_equivalence(&doc);
+        store::test_support::assert_dsl_pack_equivalence(&doc);
     }
 
     // --- end-to-end derive test: `#[dsl(table)] Vec<T>` (Structure-of-Arrays columnar field) ---
@@ -719,11 +787,11 @@ mod tests {
         let doc = TableDocument {
             nodes: vec![TableNodeRow { id: "a".to_string(), x: 1.0, y: 2.0 }, TableNodeRow { id: "b".to_string(), x: 3.0, y: 4.0 }],
         };
-        let printed = <TableDocument as vcs::DocumentDsl>::print_dsl(&doc);
+        let printed = <TableDocument as store::DocumentDsl>::print_dsl(&doc);
         assert!(printed.contains("nodes [id:TEXT x:NUM y:NUM]"), "#[dsl(table)] field must print compact SoA: {printed}");
-        let parsed = <TableDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
+        let parsed = <TableDocument as store::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
         assert_eq!(parsed, doc, "table round trip diverged;\nprinted:\n{printed}");
-        vcs::test_support::assert_dsl_pack_equivalence(&doc);
+        store::test_support::assert_dsl_pack_equivalence(&doc);
     }
 }
 //#endregion 🧪Tests

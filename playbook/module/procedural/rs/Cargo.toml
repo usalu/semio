@@ -20,6 +20,7 @@ path = "lib.rs"
 [dependencies]
 playbook = { path = "../../../rs" }
 vcs = { path = "../../../../vcs/rs" }
+store = { path = "../../../../store/rs" }
 protocol = { path = "../../../../protocol/rs" }
 flow_core = { path = "../../../../flow/core/rs" }
 flow_module_brep = { path = "../../../../flow/module/brep/rs", default-features = false }

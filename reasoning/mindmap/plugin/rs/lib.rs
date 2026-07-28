@@ -12,7 +12,7 @@ use semio_framework_plugin::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
-use vcs::DocumentDsl;
+use store::DocumentDsl;
 
 //#region 🔖Constants
 const WIRES_PLAY_APP_ID: &str = "reasoning-wires-play";
@@ -25,7 +25,7 @@ const WIRES_PLAY_BODY_PROPERTIES: &str = "reasoning.wires.properties";
 const WIRES_FIXTURE_SCHEMA: &str = "reasoning.wires.fixture";
 const WIRES_PLAY_EXAMPLE_METABOLISM_ID: &str = "metabolism";
 /// 📄 The `metabolism` example, handcrafted in the `.wires` DSL (see `reasoning_mindmap::mindmap_text`
-/// via {@link vcs::DocumentDsl}) instead of JSON — source of truth for every "metabolism" example call
+/// via {@link store::DocumentDsl}) instead of JSON — source of truth for every "metabolism" example call
 /// site (`setActiveExample`, `.example` manifest registration, tests).
 const METABOLISM_WIRES_EXAMPLE_TEXT: &str = include_str!("../../wires/example/metabolism.wires");
 
@@ -747,7 +747,7 @@ mod tests {
     use super::*;
     use semio_framework_plugin::testkit;
     use semio_framework_plugin::{PluginApp, VcsDocumentApp};
-    use vcs::MemoryBackbone;
+    use store::MemoryBackbone;
 
     fn new_app() -> VcsDocumentApp<ReasoningWiresPlayApp> {
         testkit::new_app::<ReasoningWiresPlayApp>()
@@ -757,7 +757,7 @@ mod tests {
         let mut app = new_app();
         let document = metabolism_wires_example_document();
         app.load_document(
-            &serde_json::to_string(&vcs::create_document_vcs_envelope::<MindmapWiresDocument, MindmapWiresOperation>(
+            &serde_json::to_string(&store::create_document_envelope::<MindmapWiresDocument, MindmapWiresOperation>(
                 WIRES_FIXTURE_SCHEMA,
                 "reasoning-wires",
                 document,
@@ -901,7 +901,7 @@ mod tests {
         let mut base = empty_mindmap_wires_document();
         base = vcs::apply_operation(&base, &MindmapWiresOperation::AddNode { node: seed_node("node-1") });
         base = vcs::apply_operation(&base, &MindmapWiresOperation::AddNode { node: seed_node("node-2") });
-        let base_envelope = serde_json::to_string(&vcs::create_document_vcs_envelope::<MindmapWiresDocument, MindmapWiresOperation>(
+        let base_envelope = serde_json::to_string(&store::create_document_envelope::<MindmapWiresDocument, MindmapWiresOperation>(
             WIRES_FIXTURE_SCHEMA,
             "reasoning-wires",
             base,

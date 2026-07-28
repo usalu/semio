@@ -1,0 +1,13 @@
+{
+  "title": "Fix Puzzle 3D Fill View Mismatch",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "The puzzle 3D fill tool is buggy: top view and perspective view show different objects when moving the fill amount slider. Both views must always show the same filled objects because they share one scene. Investigate and fix the root cause of the multi-viewport desync (likely revealCutoff / compose_fill_display / per-window interaction state).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2374"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪902def202748475f90f634db88e3ac45"
+  ]
+}

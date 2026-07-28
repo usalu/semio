@@ -119,7 +119,7 @@ impl Default for LowpolyProjection {
 const DEFAULT_PROJECTION_DSL: &str = include_str!("../../example/concrete-forest-left.lowpoly");
 
 pub fn default_projection() -> LowpolyProjection {
-    <LowpolyProjection as vcs::DocumentDsl>::parse_dsl(DEFAULT_PROJECTION_DSL).expect("default projection DSL parses")
+    <LowpolyProjection as store::DocumentDsl>::parse_dsl(DEFAULT_PROJECTION_DSL).expect("default projection DSL parses")
 }
 
 pub fn projection_from_mesh_json(mesh_json: &str, object_id: &str, object_name: &str) -> LowpolyProjection {
@@ -457,8 +457,8 @@ impl Operation<LowpolyProjection> for LowpolyOperation {
     }
 }
 
-pub type LowpolyEnvelope = vcs::DocumentVcsEnvelope<LowpolyProjection, LowpolyOperation>;
-pub type LowpolyStore = vcs::DocumentVcsStore<LowpolyProjection, LowpolyOperation>;
+pub type LowpolyEnvelope = store::DocumentEnvelope<LowpolyProjection, LowpolyOperation>;
+pub type LowpolyStore = store::DocumentStore<LowpolyProjection, LowpolyOperation>;
 //#endregion 🔖Operations
 
 //#region ⚠️ Errors
@@ -1459,8 +1459,8 @@ mod tests {
 
     #[test]
     fn dsl_round_trips_the_default_concrete_forest_projection() {
-        vcs::test_support::assert_dsl_round_trip(&default_projection());
-        vcs::test_support::assert_dsl_pack_equivalence(&default_projection());
+        store::test_support::assert_dsl_round_trip(&default_projection());
+        store::test_support::assert_dsl_pack_equivalence(&default_projection());
     }
 
     #[test]
@@ -1468,26 +1468,26 @@ mod tests {
         let mut projection = default_projection();
         projection.objects[0].paint_layers[0].pixels[0] = 7;
         projection.objects[0].paint_layers[0].pixels[1] = 9;
-        vcs::test_support::assert_dsl_round_trip(&projection);
-        vcs::test_support::assert_dsl_pack_equivalence(&projection);
+        store::test_support::assert_dsl_round_trip(&projection);
+        store::test_support::assert_dsl_pack_equivalence(&projection);
     }
 
     #[test]
     fn op_text_round_trip_objects_add() {
         let operation = LowpolyOperation::ObjectsAdd { index: 1, item: tiny_object("obj-100", "Box") };
-        vcs::test_support::assert_op_line_round_trip(&operation);
+        store::test_support::assert_op_line_round_trip(&operation);
     }
 
     #[test]
     fn op_text_round_trip_objects_remove() {
         let operation: LowpolyOperation = LowpolyOperation::ObjectsRemove { id: "obj-1".into() };
-        vcs::test_support::assert_op_line_round_trip(&operation);
+        store::test_support::assert_op_line_round_trip(&operation);
     }
 
     #[test]
     fn op_text_round_trip_objects_move() {
         let operation = LowpolyOperation::ObjectsMove { id: "obj-1".into(), to_index: 2 };
-        vcs::test_support::assert_op_line_round_trip(&operation);
+        store::test_support::assert_op_line_round_trip(&operation);
     }
 
     #[test]
@@ -1496,94 +1496,94 @@ mod tests {
             id: "obj-1".into(),
             patch: LowpolyObjectPatch { name: Some("Renamed".into()), smooth_shading: Some(true), transform: Some(LowpolyTransform { position: [1.0, 2.0, 3.0], ..LowpolyTransform::default() }), mesh_json: None },
         };
-        vcs::test_support::assert_op_line_round_trip(&operation);
+        store::test_support::assert_op_line_round_trip(&operation);
     }
 
     #[test]
     fn op_text_round_trip_objects_patch_with_mesh() {
         let operation = LowpolyOperation::ObjectsPatch { id: "obj-1".into(), patch: LowpolyObjectPatch { mesh_json: Some(tiny_mesh_json()), ..Default::default() } };
-        vcs::test_support::assert_op_line_round_trip(&operation);
+        store::test_support::assert_op_line_round_trip(&operation);
     }
 
     #[test]
     fn op_text_round_trip_add_paint_layer() {
         let operation = LowpolyOperation::AddPaintLayer { object_id: "obj-1".into(), index: 1, layer: LowpolyPaintLayer::new("Detail") };
-        vcs::test_support::assert_op_line_round_trip(&operation);
+        store::test_support::assert_op_line_round_trip(&operation);
     }
 
     #[test]
     fn op_text_round_trip_remove_paint_layer() {
         let operation = LowpolyOperation::RemovePaintLayer { object_id: "obj-1".into(), index: 0 };
-        vcs::test_support::assert_op_line_round_trip(&operation);
+        store::test_support::assert_op_line_round_trip(&operation);
     }
 
     #[test]
     fn op_text_round_trip_patch_paint_layer() {
         let operation = LowpolyOperation::PatchPaintLayer { object_id: "obj-1".into(), index: 0, patch: LowpolyPaintLayerPatch { name: Some("Top".into()), visible: Some(false), opacity: Some(0.5), blend_mode: Some("multiply".into()) } };
-        vcs::test_support::assert_op_line_round_trip(&operation);
+        store::test_support::assert_op_line_round_trip(&operation);
     }
 
     #[test]
     fn op_text_round_trip_paint_stroke() {
         let operation = LowpolyOperation::PaintStroke { object_id: "obj-1".into(), layer_index: 0, runs: vec![PixelRun { offset: 12, bytes: vec![255, 0, 0, 255] }, PixelRun { offset: 400, bytes: vec![0, 255, 0, 255, 0, 0, 0, 128] }] };
-        vcs::test_support::assert_op_line_round_trip(&operation);
+        store::test_support::assert_op_line_round_trip(&operation);
     }
 
     #[test]
     fn op_text_round_trip_set_projection() {
         let operation = LowpolyOperation::SetProjection { projection: default_projection() };
-        vcs::test_support::assert_op_line_round_trip(&operation);
+        store::test_support::assert_op_line_round_trip(&operation);
     }
 
     #[test]
     fn document_text_round_trip_after_applying_an_operation() {
         let projection = default_projection();
         let object_id = projection.objects[0].id.clone();
-        let envelope: LowpolyEnvelope = vcs::create_document_vcs_envelope(LOWPOLY_DOCUMENT_SCHEMA, "test-doc", projection, None);
-        let mut store: LowpolyStore = vcs::DocumentVcsStore::new(envelope);
+        let envelope: LowpolyEnvelope = store::create_document_envelope(LOWPOLY_DOCUMENT_SCHEMA, "test-doc", projection, None);
+        let mut store: LowpolyStore = store::DocumentStore::new(envelope);
         let operation = LowpolyOperation::PatchPaintLayer { object_id, index: 0, patch: LowpolyPaintLayerPatch { name: Some("Renamed Layer".into()), visible: None, opacity: None, blend_mode: None } };
-        store.dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![operation], description: None }).expect("apply");
-        vcs::test_support::assert_document_text_round_trip(&store);
-        vcs::test_support::assert_document_pack_round_trip(&store);
+        store.dispatch(store::DocumentCommand::Apply { operations: vec![operation], description: None }).expect("apply");
+        store::test_support::assert_document_text_round_trip(&store);
+        store::test_support::assert_document_pack_round_trip(&store);
     }
 
     #[test]
     fn dsl_parse_rejects_text_missing_required_schema_field() {
-        let result = <LowpolyProjection as vcs::DocumentDsl>::parse_dsl("objects=[]");
+        let result = <LowpolyProjection as store::DocumentDsl>::parse_dsl("objects=[]");
         assert!(result.is_err());
     }
 
     #[test]
     fn dsl_parse_rejects_unterminated_string_literal() {
-        let result = <LowpolyProjection as vcs::DocumentDsl>::parse_dsl("schema=\"unterminated");
+        let result = <LowpolyProjection as store::DocumentDsl>::parse_dsl("schema=\"unterminated");
         assert!(result.is_err());
     }
 
     #[test]
     fn dsl_parse_rejects_invalid_bool_value() {
         let text = "schema=\"lowpoly.document\" objects=[ id=\"o\" name=\"O\" transform { position=0,0,0 rotation=0,0,0 scale=1,1,1 } smooth-shading=notabool mesh-json=\"{}\" paint-layers=[] ]";
-        let result = <LowpolyProjection as vcs::DocumentDsl>::parse_dsl(text);
+        let result = <LowpolyProjection as store::DocumentDsl>::parse_dsl(text);
         assert!(result.is_err());
     }
 
     #[test]
     fn dsl_parse_rejects_object_missing_required_field() {
         let text = "schema=\"lowpoly.document\" objects=[ id=\"o\" ]";
-        let result = <LowpolyProjection as vcs::DocumentDsl>::parse_dsl(text);
+        let result = <LowpolyProjection as store::DocumentDsl>::parse_dsl(text);
         assert!(result.is_err());
     }
 
     #[test]
     fn dsl_parse_rejects_malformed_value_inside_a_nested_block() {
         let text = "schema=\"lowpoly.document\" objects=[ id=\"o\" name=\"O\" transform { position=notanumber,0,0 rotation=0,0,0 scale=1,1,1 } smooth-shading=false mesh-json=\"{}\" paint-layers=[] ]";
-        let result = <LowpolyProjection as vcs::DocumentDsl>::parse_dsl(text);
+        let result = <LowpolyProjection as store::DocumentDsl>::parse_dsl(text);
         assert!(result.is_err());
     }
 
     #[test]
     fn dsl_parse_skips_comment_lines() {
         let text = "# a leading comment\nschema=\"lowpoly.document\" objects=[] # trailing comment\n";
-        let projection = <LowpolyProjection as vcs::DocumentDsl>::parse_dsl(text).expect("comments are not significant");
+        let projection = <LowpolyProjection as store::DocumentDsl>::parse_dsl(text).expect("comments are not significant");
         assert_eq!(projection.schema, LOWPOLY_DOCUMENT_SCHEMA);
         assert!(projection.objects.is_empty());
     }
@@ -1591,7 +1591,7 @@ mod tests {
     #[test]
     fn dsl_parse_handles_escaped_characters_in_quoted_strings() {
         let text = "schema=\"lowpoly.document\" objects=[ id=\"o1\" name=\"Quote \\\" and \\\\ and newline\\ndone\" transform { position=0,0,0 rotation=0,0,0 scale=1,1,1 } smooth-shading=false mesh-json=\"{}\" paint-layers=[] ]";
-        let projection = <LowpolyProjection as vcs::DocumentDsl>::parse_dsl(text).expect("escapes must decode");
+        let projection = <LowpolyProjection as store::DocumentDsl>::parse_dsl(text).expect("escapes must decode");
         assert_eq!(projection.objects[0].name, "Quote \" and \\ and newline\ndone");
     }
 

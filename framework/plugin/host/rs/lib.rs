@@ -47,11 +47,11 @@ struct HostState {
     table: ResourceTable,
     granted_capabilities: Vec<CapabilityRequirement>,
     plugin_id: String,
-    backbones: HashMap<String, Box<dyn vcs::Backbone>>,
+    backbones: HashMap<String, Box<dyn store::Backbone>>,
     /// @emoji 📦 Backing store for `write-blob`/`read-blob`, injected via
     /// {@link WasmPluginRuntime::register_host_blob_store} — `None` until a caller registers one
     /// (mirrors `backbones`' explicit-registration convention, not a stub-forever like `read-asset`).
-    blob_store: Option<Arc<dyn vcs::BlobStore>>,
+    blob_store: Option<Arc<dyn store::BlobStore>>,
 }
 
 impl WasiView for HostState {
@@ -71,10 +71,10 @@ impl HostState {
 
     /// @emoji 🔌 Looks up the real, native-side backbone for a plugin-attached uri — the plugin only
     /// ever sees an opaque channel; this host process owns the actual sync endpoint. Native URI→IO
-    /// resolution left this crate with WS-A (`vcs::resolve_backbone` is wasm-only now); the endpoint
+    /// resolution left this crate with WS-A (`store::resolve_backbone` is wasm-only now); the endpoint
     /// must be registered up front via {@link WasmPluginRuntime::register_host_backbone}. WS-E wires a
     /// `sync::DocumentHost`-backed backbone in here; until then this is an explicit-registration map.
-    fn backbone_for(&mut self, uri: &str) -> Result<&mut Box<dyn vcs::Backbone>, String> {
+    fn backbone_for(&mut self, uri: &str) -> Result<&mut Box<dyn store::Backbone>, String> {
         self.backbones.get_mut(uri).ok_or_else(|| format!("no host backbone registered for {uri}; call register_host_backbone (WS-E wires DocumentHost here)"))
     }
 }
@@ -126,7 +126,7 @@ impl semio::framework::host::Host for HostState {
         if !self.has_backbone_access(Rights::Write) {
             return Err("backbone write capability missing".into());
         }
-        let message: vcs::BackboneMessage = serde_json::from_str(&message_json).map_err(|error| error.to_string())?;
+        let message: store::BackboneMessage = serde_json::from_str(&message_json).map_err(|error| error.to_string())?;
         self.backbone_for(&uri)?.send(message).map_err(|error| error.to_string())
     }
 
@@ -253,7 +253,7 @@ impl WasmPluginRuntime {
     /// `backbone-poll`/`backbone-status` host calls operate against, keyed by uri. WS-E calls this
     /// with a `sync::DocumentHost`-backed backbone once the actor layer is wired; until then it is an
     /// explicit in-process registration (there is no native URI→IO resolution in this crate anymore).
-    pub fn register_host_backbone(&self, uri: &str, backbone: Box<dyn vcs::Backbone>) -> Result<(), PluginHostError> {
+    pub fn register_host_backbone(&self, uri: &str, backbone: Box<dyn store::Backbone>) -> Result<(), PluginHostError> {
         let mut store = self.store_guard()?;
         store.data_mut().backbones.insert(uri.to_string(), backbone);
         Ok(())
@@ -270,7 +270,7 @@ impl WasmPluginRuntime {
     /// host calls operate against. Not granted by default (unlike backbones there is no capability
     /// gate on these two calls today — every plugin that links `write-blob`/`read-blob` gets them once
     /// a store is registered); callers that embed this runtime decide when/whether to call this.
-    pub fn register_host_blob_store(&self, store: Arc<dyn vcs::BlobStore>) -> Result<(), PluginHostError> {
+    pub fn register_host_blob_store(&self, store: Arc<dyn store::BlobStore>) -> Result<(), PluginHostError> {
         let mut plugin_store = self.store_guard()?;
         plugin_store.data_mut().blob_store = Some(store);
         Ok(())

@@ -2827,7 +2827,7 @@ impl Default for CadPlayRuntime {
 /// @emoji 🎛️ Ephemeral read/render view assembled per call from the store's materialized
 /// `CadScene` projection and the app's `CadPlayRuntime` view-state. Replaces the old persisted play
 /// envelope: its embedded history/undo stacks are now owned by the wrapping `VcsDocumentApp`'s
-/// `DocumentVcsStore`, and its runtime view-state lives directly on the `CadPlayApp` struct.
+/// `DocumentStore`, and its runtime view-state lives directly on the `CadPlayApp` struct.
 struct CadPlayView {
     document: CadScene,
     runtime: CadPlayRuntime,
@@ -2943,7 +2943,7 @@ fn forest_play_document(source_json: &str, id: &str) -> CadScene {
 }
 
 /// @emoji 🌲 The Concrete Forest Left example projection — a bare `CadScene` (no runtime/history),
-/// wrapped into a `DocumentVcsStore` by `VcsDocumentApp` when spawned.
+/// wrapped into a `DocumentStore` by `VcsDocumentApp` when spawned.
 fn forest_play_scene() -> CadScene {
     forest_play_document(FOREST_LEFT_MODEL_JSON, CAD_EXAMPLE_FOREST_LEFT)
 }
@@ -4991,7 +4991,7 @@ fn start_interaction_session(runtime: &mut CadPlayRuntime, pane: CadPaneId, inte
 
 //#region 🔖CadPlayApp
 /// @emoji 📐 The CAD play app. Document content lives in the wrapping `VcsDocumentApp`'s
-/// `DocumentVcsStore<CadScene, CadOperation>`; only ephemeral view-state (selection, hover, engagement
+/// `DocumentStore<CadScene, CadOperation>`; only ephemeral view-state (selection, hover, engagement
 /// session, transform utility, sun) lives here on `runtime`. History (undo/redo/checkpoint) is
 /// intercepted and dispatched by the wrapper — no manual arms or keybindings.
 #[derive(Default)]
@@ -5014,7 +5014,7 @@ impl CadPlayApp {
     /// 🚧 Deliberately unwired beyond this accessor — same gap as `draw-plugin`'s
     /// `draw_gesture_preview_payload` (see that doc for the full explanation): `framework/sync::
     /// SyncSession::publish_preview` is host-only and unreachable from this WASI-P2 sandboxed plugin
-    /// crate, and `vcs::BackboneMessage` has no preview-shaped variant to relay one through. See
+    /// crate, and `store::BackboneMessage` has no preview-shaped variant to relay one through. See
     /// `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw7-preview-law.txt`.
     /// `#[allow(dead_code)]`: exercised by `🧪Tests` only until a host bridge exists.
     #[allow(dead_code)]
@@ -6035,7 +6035,7 @@ mod tests {
     use cad_document::empty_cad_projection;
     use semio_framework_plugin::{ActionMeta, HistoryView, PluginApp, VcsDocumentApp};
     use protocol::{Operation, OperationDiff};
-    use vcs::{Backbone, BackboneMessage, MemoryBackbone};
+    use store::{Backbone, BackboneMessage, MemoryBackbone};
 
     //#region 🔖Harness
     fn meta(actor: &str) -> ActionMeta {
@@ -7085,7 +7085,7 @@ mod tests {
         ];
         let object_a = base.objects[0].id.clone();
         let object_b = base.objects[1].id.clone();
-        let base_envelope = serde_json::to_string(&vcs::create_document_vcs_envelope::<CadScene, CadOperation>(
+        let base_envelope = serde_json::to_string(&store::create_document_envelope::<CadScene, CadOperation>(
             CAD_DOCUMENT_SCHEMA,
             "cad-play",
             base,

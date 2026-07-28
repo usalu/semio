@@ -6,7 +6,7 @@ pub mod app_2d {
     use flow_core::{dag::DagFixture, flow_backed_node_graph_extras, flow_neuron_kind_infos_json, forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec}, CameraJson, FlowEvalDriver, FlowFixture, FlowHost, Widget};
     use flow_module_draw::render_scene_json;
     use procedural_2d::{procedural2d_fixture_operations, Procedural2dDocument, Procedural2dOperation, PROCEDURAL_2D_SCHEMA};
-    use vcs::DocumentDsl;
+    use store::DocumentDsl;
     use playbook::{
         apply_generation_operation, generation_operations, render_generation_form_body, render_generation_preview_text,
         render_generations_tree, select_generation, selected_generation, GenerationPlayState,
@@ -1317,7 +1317,7 @@ pub mod app_3d {
     };
     use flow_module_brep::tessellate_geometry_json;
     use procedural_3d::{procedural3d_fixture_operations, Procedural3dDocument, Procedural3dOperation, PROCEDURAL_3D_SCHEMA};
-    use vcs::DocumentDsl;
+    use store::DocumentDsl;
     use playbook::{
         apply_generation_operation, generation_operations, render_generation_form_body, render_generation_preview_text,
         render_generations_tree, select_generation, selected_generation, GenerationOperation, GenerationPlayState,

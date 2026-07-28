@@ -1127,7 +1127,7 @@ mod tests {
     /// contain BOTH via a `MemoryBackbone` — impossible with whole-document snapshots.
     #[test]
     fn two_instances_converge_disjoint_edits_via_backbone() {
-        use vcs::MemoryBackbone;
+        use store::MemoryBackbone;
         let mut instance_a = new_app();
         let mut instance_b = new_app();
         let base = instance_a.projection().expect("projection").nodes.len();

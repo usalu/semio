@@ -2,7 +2,7 @@
 
 use semio_framework_os::{register_os_fixture_json, OsDocument, OsProjection, OS_STUDIO_SCHEMA};
 use std::sync::LazyLock;
-use vcs::create_document_vcs_envelope;
+use store::create_document_envelope;
 
 //#region 🔖Constants
 const DEMO_STUDIO_ID: &str = "demo-studio";
@@ -19,7 +19,7 @@ const DEMO_STUDIO_DSL: &str = include_str!("../../example/demo.s");
 /// document that references them.
 fn ensure_studio_fixtures_registered() {
     static FIXTURES: LazyLock<()> = LazyLock::new(|| {
-        // 🩹 draw/writer migrated their fixtures from JSON to a handcrafted DSL (`vcs::DocumentDsl`);
+        // 🩹 draw/writer migrated their fixtures from JSON to a handcrafted DSL (`store::DocumentDsl`);
         // this registry is still JSON-shaped (framework/product/os hasn't migrated yet — tracked for
         // the Wave 6 lock step), so `materialize_os_app_instance_document_json`'s `serde_json::from_str`
         // will fall back to `json!({})` for these two slugs until then. Non-fatal: seed content is a
@@ -36,8 +36,8 @@ fn ensure_studio_fixtures_registered() {
 /// metadata (schema/id/name, freshly-minted history) is built the same way `create_empty_os_document`
 /// builds a blank one.
 fn parse_demo_studio_document() -> OsDocument {
-    let initial_projection = <OsProjection as vcs::DocumentDsl>::parse_dsl(DEMO_STUDIO_DSL).expect("bundled example/demo.s is valid OsProjection DSL text");
-    let envelope = create_document_vcs_envelope(OS_STUDIO_SCHEMA, DEMO_STUDIO_ID, initial_projection, None);
+    let initial_projection = <OsProjection as store::DocumentDsl>::parse_dsl(DEMO_STUDIO_DSL).expect("bundled example/demo.s is valid OsProjection DSL text");
+    let envelope = create_document_envelope(OS_STUDIO_SCHEMA, DEMO_STUDIO_ID, initial_projection, None);
     OsDocument {
         schema: OS_STUDIO_SCHEMA.into(),
         id: DEMO_STUDIO_ID.into(),
@@ -79,7 +79,7 @@ pub mod app_home {
     use serde_json::{json, Value};
     use std::collections::{HashMap, HashSet};
     use std::sync::{Arc, LazyLock, Mutex};
-    use vcs::LocalStorageBackbonePort;
+    use store::LocalStorageBackbonePort;
 
     //#region 🔖Constants
     const S_HOME_APP_ID: &str = "home";
@@ -144,7 +144,7 @@ pub mod app_home {
     //#endregion 🔖Types
 
     //#region 🔖Dsl
-    // `impl vcs::DocumentDsl for SHomeDocument` is emitted automatically by the
+    // `impl store::DocumentDsl for SHomeDocument` is emitted automatically by the
     // `#[derive(dsl::DslDocument)]` on `SHomeDocument` itself (see `🔖Types`) — no manual impl
     // needed here. The former hand-rolled `mod home_dsl` lexer/parser/printer has been removed now
     // that the DSL round trip runs through the derive-generated printer/parser.
@@ -768,28 +768,28 @@ pub mod app_home {
         //#region 🔖DslAndOpText
         #[test]
         fn home_dsl_round_trips_default_and_populated_documents() {
-            vcs::test_support::assert_dsl_round_trip(&SHomeDocument { schema: "s.home".into(), catalog_generation: 0 });
-            vcs::test_support::assert_dsl_round_trip(&SHomeDocument { schema: "s.home".into(), catalog_generation: 42 });
-            vcs::test_support::assert_dsl_pack_equivalence(&SHomeDocument { schema: "s.home".into(), catalog_generation: 0 });
-            vcs::test_support::assert_dsl_pack_equivalence(&SHomeDocument { schema: "s.home".into(), catalog_generation: 42 });
+            store::test_support::assert_dsl_round_trip(&SHomeDocument { schema: "s.home".into(), catalog_generation: 0 });
+            store::test_support::assert_dsl_round_trip(&SHomeDocument { schema: "s.home".into(), catalog_generation: 42 });
+            store::test_support::assert_dsl_pack_equivalence(&SHomeDocument { schema: "s.home".into(), catalog_generation: 0 });
+            store::test_support::assert_dsl_pack_equivalence(&SHomeDocument { schema: "s.home".into(), catalog_generation: 42 });
         }
 
         #[test]
         fn home_op_text_round_trips_every_variant() {
-            vcs::test_support::assert_op_line_round_trip(&SHomeOperation::NoOperation);
-            vcs::test_support::assert_op_line_round_trip(&SHomeOperation::SetCatalogGeneration { value: 7 });
+            store::test_support::assert_op_line_round_trip(&SHomeOperation::NoOperation);
+            store::test_support::assert_op_line_round_trip(&SHomeOperation::SetCatalogGeneration { value: 7 });
         }
 
         #[test]
         fn home_document_text_round_trips_through_the_store() {
             let projection = SHomeDocument { schema: "s.home".into(), catalog_generation: 0 };
-            let envelope = vcs::create_document_vcs_envelope::<SHomeDocument, SHomeOperation>("s.home", "home", projection, None);
-            let mut store: vcs::DocumentVcsStore<SHomeDocument, SHomeOperation> = vcs::DocumentVcsStore::new(envelope);
+            let envelope = store::create_document_envelope::<SHomeDocument, SHomeOperation>("s.home", "home", projection, None);
+            let mut store: store::DocumentStore<SHomeDocument, SHomeOperation> = store::DocumentStore::new(envelope);
             store
-                .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![SHomeOperation::SetCatalogGeneration { value: 3 }], description: None })
+                .dispatch(store::DocumentCommand::Apply { operations: vec![SHomeOperation::SetCatalogGeneration { value: 3 }], description: None })
                 .expect("apply");
-            vcs::test_support::assert_document_text_round_trip(&store);
-            vcs::test_support::assert_document_pack_round_trip(&store);
+            store::test_support::assert_document_text_round_trip(&store);
+            store::test_support::assert_document_pack_round_trip(&store);
         }
         //#endregion 🔖DslAndOpText
     }
@@ -3489,8 +3489,8 @@ pub mod app_studio {
         #[test]
         fn demo_document_dsl_text_round_trips() {
             let projection = demo_studio_projection();
-            vcs::test_support::assert_dsl_round_trip(&projection);
-            vcs::test_support::assert_dsl_pack_equivalence(&projection);
+            store::test_support::assert_dsl_round_trip(&projection);
+            store::test_support::assert_dsl_pack_equivalence(&projection);
         }
 
         #[test]

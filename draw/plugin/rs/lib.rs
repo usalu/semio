@@ -37,7 +37,7 @@ const DRAW_PLAY_BODY_CATALOGUE: &str = "draw.play.catalogue";
 const DRAW_PLAY_BODY_PROPERTIES: &str = "draw.play.properties";
 const DRAW_LAYER_KIND_DRAG_MIME: &str = "application/x-semio-draw-layer-kind";
 const DRAW_PLAY_EXAMPLE_DEFAULT_ID: &str = "semio";
-/// 🗄️ The Semio emblem example fixture, handcrafted in `draw`'s DSL (`vcs::DocumentDsl`) — see
+/// 🗄️ The Semio emblem example fixture, handcrafted in `draw`'s DSL (`store::DocumentDsl`) — see
 /// `semio_draw_example_document`/`semio_draw_example_json` for the two shapes downstream code needs.
 const SEMIO_DRAW_EXAMPLE_DSL: &str = include_str!("../../example/semio.draw");
 //#endregion 🔖Constants
@@ -457,7 +457,7 @@ fn gesture_context_from_input(_input: ()) -> GestureContext {
 /// `SyncSession::publish_preview`) documents itself as host-only — "WASI-P2 plugins never link this
 /// crate" — and this crate compiles as a WASI-P2 component (`crate-type = ["cdylib", "rlib"]`,
 /// `semio:draw`), so it cannot reach that API directly. The one cross-sandbox channel this crate can
-/// reach, `vcs::BackboneMessage` (via `host_backbone_send`), has no preview-shaped variant yet — adding
+/// reach, `store::BackboneMessage` (via `host_backbone_send`), has no preview-shaped variant yet — adding
 /// one is a `vcs`/WIT/`framework/plugin/host` change outside this ticket's plugin-crate-only file
 /// ownership. See `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw7-preview-law.txt`.
 fn draw_gesture_preview_payload(ctx: &GestureContext, is_idle: bool) -> Option<Value> {

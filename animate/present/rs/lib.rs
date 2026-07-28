@@ -335,9 +335,9 @@ pub use present::{compile_present_site, compile_scene_to_assets, PresentCompileE
 
 use serde::{Deserialize, Serialize};
 #[cfg(any(test, target_arch = "wasm32"))]
-use vcs::DocumentVcsCommand;
+use store::DocumentCommand;
 use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Identified, Operation, OperationDiff, Patchable};
-use vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentVcsEnvelope, DocumentVcsStore};
+use store::{create_document_envelope, materialize_document_projection, DocumentEnvelope, DocumentStore};
 
 pub const PRESENT_DECK_SCHEMA: &str = "animate.present.deck";
 
@@ -395,7 +395,7 @@ pub struct FigureTileDraft {
 }
 
 /// 📜 `.present` textual document: `schema=... \n source { ... } \n tiles [ ... ]` (see
-/// {@link vcs::DocumentDsl}).
+/// {@link store::DocumentDsl}).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[dsl(extension = "present", layout = "lines")]
 #[serde(rename_all = "camelCase")]
@@ -407,8 +407,8 @@ pub struct PresentDeck {
     pub tiles: Vec<FigureTileDraft>,
 }
 
-pub type PresentEnvelope = DocumentVcsEnvelope<PresentDeck, PresentOperation>;
-pub type PresentStore = DocumentVcsStore<PresentDeck, PresentOperation>;
+pub type PresentEnvelope = DocumentEnvelope<PresentDeck, PresentOperation>;
+pub type PresentStore = DocumentStore<PresentDeck, PresentOperation>;
 
 pub fn empty_present_deck() -> PresentDeck {
     PresentDeck { schema: PRESENT_DECK_SCHEMA.into(), source: default_figure_tile_source(), tiles: Vec::new() }
@@ -689,7 +689,7 @@ impl Operation<PresentDeck> for PresentOperation {
 //#region 🔖Dsl
 /// 📜 `PresentDeck`'s `.present` DSL grammar (`schema=... source { ... } tiles [ ... ]`) is declared
 /// directly on the struct definitions above via `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslRecord)]`
-/// (see {@link vcs::DocumentDsl}).
+/// (see {@link store::DocumentDsl}).
 //#endregion 🔖Dsl
 
 //#region 🔖OpText
@@ -760,7 +760,7 @@ impl From<PresentOperationDsl> for PresentOperation {
 /// (see its doc comment for why a direct `#[derive(dsl::DslOps)]` on `PresentOperation` itself isn't
 /// possible).
 impl protocol::OpText for PresentOperation {
-    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         PresentOperationDsl::parse_op(line).map(PresentOperationDsl::into)
     }
 
@@ -773,7 +773,7 @@ impl protocol::OpText for PresentOperation {
 //#region 🔖VcsEnvelope
 /// @emoji 📦 Creates an empty typed VCS envelope for a presentation deck document.
 pub fn create_present_envelope(id: &str) -> PresentEnvelope {
-    create_document_vcs_envelope(PRESENT_DECK_SCHEMA, id, empty_present_deck(), None)
+    create_document_envelope(PRESENT_DECK_SCHEMA, id, empty_present_deck(), None)
 }
 
 /// @emoji 📐 Replays every stored edit in `envelope_json` and returns the materialized deck projection.
@@ -816,14 +816,19 @@ mod wasm_bridge {
                     let envelope: PresentEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     PresentStore::new(envelope)
                 }
-                None => PresentStore::new(create_document_vcs_envelope(PRESENT_DECK_SCHEMA, "animate-present", empty_present_deck(), None)),
+                None => PresentStore::new(create_document_envelope(PRESENT_DECK_SCHEMA, "animate-present", empty_present_deck(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
 
-        #[wasm_bindgen(js_name = dispatchJson)]
-        pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
+        #[wasm_bindgen(js_name = dispatchText)]
+        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = dispatchBinary)]
+        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
@@ -838,7 +843,7 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vcs::test_support;
+    use store::test_support;
 
     #[test]
     fn envelope_helpers_round_trip() {
@@ -908,9 +913,9 @@ mod tests {
 
     #[test]
     fn present_deck_materializes() {
-        let mut store = PresentStore::new(create_document_vcs_envelope(PRESENT_DECK_SCHEMA, "animate-present", empty_present_deck(), None));
+        let mut store = PresentStore::new(create_document_envelope(PRESENT_DECK_SCHEMA, "animate-present", empty_present_deck(), None));
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![PresentOperation::Tiles(CollectionOperation::Add { id: "t1".into(), item: FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } }, at: 0 })],
                 description: None,
             })
@@ -990,9 +995,9 @@ mod tests {
     //#region 🔖DocumentTextTests
     #[test]
     fn document_text_round_trip_with_operation_applied() {
-        let mut store = PresentStore::new(create_document_vcs_envelope(PRESENT_DECK_SCHEMA, "animate-present", default_present_deck(), None));
+        let mut store = PresentStore::new(create_document_envelope(PRESENT_DECK_SCHEMA, "animate-present", default_present_deck(), None));
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![PresentOperation::Tiles(CollectionOperation::Add { id: "t1".into(), item: FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } }, at: 0 })],
                 description: None,
             })

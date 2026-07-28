@@ -5,7 +5,7 @@ use flow_core::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use playbook::{apply_generation_operation, invert_generation_operation, FormGeneration, GenerationOperation, GenerationPlayState};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
+use store::{DocumentEnvelope, DocumentStore};
 use protocol::{Operation, OperationDiff};
 
 pub const PROCEDURAL_2D_SCHEMA: &str = "procedural.2d";
@@ -446,7 +446,7 @@ fn widget_to_dsl(widget: &Widget) -> WidgetDsl {
     }
 }
 
-fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, vcs::TextError> {
+fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, store::TextError> {
     Ok(match widget {
         WidgetDsl::Neuron { id, neuron_kind, preview, input_ports, output_ports, params } => Widget::Neuron { id, neuron_kind, params: value_dsl_entries_to_dictionary(&params), input_ports, output_ports, preview },
         WidgetDsl::InputSlider { id, value, min, max, step } => Widget::InputSlider { id, value, min, max, step },
@@ -459,8 +459,8 @@ fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, vcs::TextError> {
         WidgetDsl::Cluster { id, name, tree, flow } => Widget::Cluster {
             id,
             name,
-            tree: serde_json::from_value(tree).map_err(|error| vcs::TextError::new(format!("invalid cluster tree JSON: {error}"), vcs::TextSpan::at(1, 1)))?,
-            flow: serde_json::from_value(flow).map_err(|error| vcs::TextError::new(format!("invalid cluster flow JSON: {error}"), vcs::TextSpan::at(1, 1)))?,
+            tree: serde_json::from_value(tree).map_err(|error| store::TextError::new(format!("invalid cluster tree JSON: {error}"), store::TextSpan::at(1, 1)))?,
+            flow: serde_json::from_value(flow).map_err(|error| store::TextError::new(format!("invalid cluster flow JSON: {error}"), store::TextSpan::at(1, 1)))?,
         },
     })
 }
@@ -518,7 +518,7 @@ fn procedural2d_document_to_dsl(document: &Procedural2dDocument) -> Procedural2d
     }
 }
 
-fn procedural2d_document_from_dsl(parsed: Procedural2dDocumentDsl) -> Result<Procedural2dDocument, vcs::TextError> {
+fn procedural2d_document_from_dsl(parsed: Procedural2dDocumentDsl) -> Result<Procedural2dDocument, store::TextError> {
     let widgets = parsed.widgets.into_iter().map(widget_from_dsl).collect::<Result<Vec<_>, _>>()?;
     let synapses = parsed.synapses.into_iter().map(synapse_from_dsl).collect();
     let layout = parsed.layout.into_iter().map(|(id, entry)| (id, layout_from_dsl(entry))).collect();
@@ -531,30 +531,30 @@ fn procedural2d_document_from_dsl(parsed: Procedural2dDocumentDsl) -> Result<Pro
 
 /// 📜 `.procedural2d` textual document — derive-engine grammar via `Procedural2dDocumentDsl`
 /// (see `🔖DslMirror`); `parse_dsl`/`print_dsl` convert at the boundary.
-impl vcs::DocumentDsl for Procedural2dDocument {
+impl store::DocumentDsl for Procedural2dDocument {
     const EXTENSION: &'static str = "procedural2d";
 
-    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        let parsed = <Procedural2dDocumentDsl as vcs::DocumentDsl>::parse_dsl(text)?;
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        let parsed = <Procedural2dDocumentDsl as store::DocumentDsl>::parse_dsl(text)?;
         procedural2d_document_from_dsl(parsed)
     }
 
     fn print_dsl(&self) -> String {
-        <Procedural2dDocumentDsl as vcs::DocumentDsl>::print_dsl(&procedural2d_document_to_dsl(self))
+        <Procedural2dDocumentDsl as store::DocumentDsl>::print_dsl(&procedural2d_document_to_dsl(self))
     }
 }
 
 /// 📦 `.procedural2d` binary pack — same `Procedural2dDocumentDsl` mirror as `DocumentDsl` above (see
 /// `🔖DslMirror`); `dsl::DslDocument`'s derive already gives `Procedural2dDocumentDsl` its own
 /// `DocumentPack` impl, so this just routes through the same to/from-dsl boundary functions.
-impl vcs::DocumentPack for Procedural2dDocument {
-    fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
-        <Procedural2dDocumentDsl as vcs::DocumentPack>::encode_pack_with(&procedural2d_document_to_dsl(self), options)
+impl store::DocumentPack for Procedural2dDocument {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        <Procedural2dDocumentDsl as store::DocumentPack>::encode_pack_with(&procedural2d_document_to_dsl(self), options)
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
-        let parsed = <Procedural2dDocumentDsl as vcs::DocumentPack>::decode_pack_with(bytes, options)?;
-        procedural2d_document_from_dsl(parsed).map_err(vcs::text_error_to_pack_error)
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let parsed = <Procedural2dDocumentDsl as store::DocumentPack>::decode_pack_with(bytes, options)?;
+        procedural2d_document_from_dsl(parsed).map_err(store::text_error_to_pack_error)
     }
 }
 //#endregion 🔖Dsl
@@ -622,7 +622,7 @@ fn procedural2d_operation_to_dsl(operation: &Procedural2dOperation) -> Procedura
     }
 }
 
-fn procedural2d_operation_from_dsl(operation: Procedural2dOperationDsl) -> Result<Procedural2dOperation, vcs::TextError> {
+fn procedural2d_operation_from_dsl(operation: Procedural2dOperationDsl) -> Result<Procedural2dOperation, store::TextError> {
     Ok(match operation {
         Procedural2dOperationDsl::SetWidget { index, widget } => Procedural2dOperation::SetWidget { index, widget: widget_from_dsl(*widget)? },
         Procedural2dOperationDsl::RemoveWidget { id } => Procedural2dOperation::RemoveWidget { id },
@@ -642,7 +642,7 @@ fn procedural2d_operation_from_dsl(operation: Procedural2dOperationDsl) -> Resul
 /// ⚡ `Procedural2dOperation`'s compact single-line op encoding — derive-engine grammar via
 /// `Procedural2dOperationDsl` (see above); `parse_op`/`print_op` convert at the boundary.
 impl protocol::OpText for Procedural2dOperation {
-    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let parsed = <Procedural2dOperationDsl as protocol::OpText>::parse_op(line)?;
         procedural2d_operation_from_dsl(parsed)
     }
@@ -653,8 +653,8 @@ impl protocol::OpText for Procedural2dOperation {
 }
 //#endregion 🔖OpText
 
-pub type Procedural2dEnvelope = DocumentVcsEnvelope<Procedural2dDocument, Procedural2dOperation>;
-pub type Procedural2dStore = DocumentVcsStore<Procedural2dDocument, Procedural2dOperation>;
+pub type Procedural2dEnvelope = DocumentEnvelope<Procedural2dDocument, Procedural2dOperation>;
+pub type Procedural2dStore = DocumentStore<Procedural2dDocument, Procedural2dOperation>;
 
 pub fn empty_procedural2d_projection() -> Procedural2dDocument {
     Procedural2dDocument::default()
@@ -665,7 +665,7 @@ pub fn empty_procedural2d_projection() -> Procedural2dDocument {
 mod wasm_bridge {
     use super::*;
     use std::cell::RefCell;
-    use vcs::create_document_vcs_envelope;
+    use store::create_document_envelope;
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
@@ -682,14 +682,19 @@ mod wasm_bridge {
                     let envelope: Procedural2dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     Procedural2dStore::new(envelope)
                 }
-                None => Procedural2dStore::new(create_document_vcs_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", empty_procedural2d_projection(), None)),
+                None => Procedural2dStore::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", empty_procedural2d_projection(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
 
-        #[wasm_bindgen(js_name = dispatchJson)]
-        pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
+        #[wasm_bindgen(js_name = dispatchText)]
+        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = dispatchBinary)]
+        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
@@ -714,7 +719,8 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vcs::{apply_operation, create_document_vcs_envelope, test_support, DocumentDsl, DocumentVcsCommand};
+    use vcs::apply_operation;
+use store::{create_document_envelope, test_support, DocumentDsl, DocumentCommand};
     use protocol::OpText;
 
     fn round_trip(projection: &Procedural2dDocument, operation: &Procedural2dOperation) -> Procedural2dDocument {
@@ -864,9 +870,9 @@ mod tests {
     //#region 🔖DocumentTextTests
     #[test]
     fn document_text_round_trip_with_operation_applied() {
-        let mut store = Procedural2dStore::new(create_document_vcs_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", empty_procedural2d_projection(), None));
+        let mut store = Procedural2dStore::new(create_document_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", empty_procedural2d_projection(), None));
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![Procedural2dOperation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }],
                 description: None,
             })

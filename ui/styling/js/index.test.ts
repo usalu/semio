@@ -28,6 +28,19 @@ describe("styling resolve", () => {
     expect(uiCss).toMatch(/::-moz-selection\s*\{\s*background-color:\s*var\(--accent\);\s*color:\s*var\(--border-emphasized-color\);/);
   });
 
+  it("keeps panel-tab toggle dividers normal even when the active fill recolors other borders", () => {
+    expect(uiCss).toMatch(/\[data-slot="panel-tabs"\] > \[data-slot="panel-tab-button"\]\s*\{\s*border-inline-end-color:\s*var\(--border-normal-color\) !important;/);
+  });
+
+  it("leaves flowing chips borderless while their silhouette owns the continuous outline", () => {
+    expect(uiCss).toMatch(
+      /\[data-window-silhouette-chip\],\s*\[data-window-silhouette-chip\] > \*\s*\{\s*border-width:\s*0 !important;\s*border-style:\s*none !important;\s*box-shadow:\s*none;/,
+    );
+    expect(uiCss).toMatch(
+      /\[data-window-silhouette-chip\] > :is\([\s\S]*?\[data-slot="button-group"\][\s\S]*?\)\s*\{\s*-webkit-backdrop-filter:\s*none !important;\s*backdrop-filter:\s*none !important;\s*background-color:\s*transparent !important;/,
+    );
+  });
+
   it("resolveColorHex resolves palette var refs headlessly", () => {
     clearColorResolveCache();
     expect(resolveColorHex("var(--color-secondary)", "gray")).toBe("#34d1bf");

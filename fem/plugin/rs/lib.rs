@@ -9,7 +9,7 @@ use semio_framework_plugin::{
 };
 use serde_json::{json, Value};
 use std::collections::HashMap;
-use vcs::DocumentDsl;
+use store::DocumentDsl;
 
 //#region 🔖Constants
 const FEM2D_APP_ID: &str = "fem2d-play";

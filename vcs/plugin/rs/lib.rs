@@ -10,7 +10,7 @@ use semio_framework_plugin::{SurfaceKind,
 use protocol::{Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use vcs::{DocumentVcsCommand, DocumentVcsStore};
+use store::{DocumentCommand, DocumentStore};
 
 //#region 🔖Constants
 const VCS_PLAY_APP_ID: &str = "vcs-play";
@@ -61,7 +61,7 @@ enum VcsDemoDiff {
     RemoveTag { tag: String },
 }
 
-type VcsDemoStore = DocumentVcsStore<VcsDemoProjection, VcsDemoOperation>;
+type VcsDemoStore = DocumentStore<VcsDemoProjection, VcsDemoOperation>;
 
 impl OperationDiff<VcsDemoProjection> for VcsDemoDiff {
     fn apply(&self, projection: &VcsDemoProjection) -> VcsDemoProjection {
@@ -215,123 +215,123 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
     let last_checkpoint_id =
         |store: &VcsDemoStore| -> String { store.envelope().vcs.checkpoints.last().expect("checkpoint just committed").id.clone() };
 
-    let _ = store.dispatch(DocumentVcsCommand::Apply {
+    let _ = store.dispatch(DocumentCommand::Apply {
         operations: vec![VcsDemoOperation::SetCounter { counter: 1 }, VcsDemoOperation::SetTitle { title: "VCS Demo".into() }],
         description: Some("bootstrap".into()),
     });
-    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+    let _ = store.dispatch(DocumentCommand::CommitCheckpoint {
         message: Some("Bootstrap".into()),
         authors: vec![alice.clone()],
     });
     let c1 = last_checkpoint_id(store);
 
-    let _ = store.dispatch(DocumentVcsCommand::Apply {
+    let _ = store.dispatch(DocumentCommand::Apply {
         operations: vec![VcsDemoOperation::SetNotes { notes: "main line".into() }, VcsDemoOperation::SetStatus { status: "draft".into() }],
         description: None,
     });
-    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+    let _ = store.dispatch(DocumentCommand::CommitCheckpoint {
         message: Some("Annotate main draft".into()),
         authors: vec![alice.clone(), bob.clone()],
     });
     let c2 = last_checkpoint_id(store);
 
-    let _ = store.dispatch(DocumentVcsCommand::Apply {
+    let _ = store.dispatch(DocumentCommand::Apply {
         operations: vec![VcsDemoOperation::SetCounter { counter: 2 }],
         description: None,
     });
-    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+    let _ = store.dispatch(DocumentCommand::CommitCheckpoint {
         message: Some("Main milestone".into()),
         authors: vec![alice.clone(), bob.clone(), carol.clone()],
     });
     let c3 = last_checkpoint_id(store);
 
-    let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c3.clone() });
-    let _ = store.dispatch(DocumentVcsCommand::CreateAlternative { name: "feature-a".into() });
-    let _ = store.dispatch(DocumentVcsCommand::Apply {
+    let _ = store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: c3.clone() });
+    let _ = store.dispatch(DocumentCommand::CreateAlternative { name: "feature-a".into() });
+    let _ = store.dispatch(DocumentCommand::Apply {
         operations: vec![VcsDemoOperation::SetTitle { title: "Feature A".into() }, VcsDemoOperation::AddTag { tag: "feature-a".into() }],
         description: None,
     });
-    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+    let _ = store.dispatch(DocumentCommand::CommitCheckpoint {
         message: Some("Start feature A".into()),
         authors: vec![alice.clone()],
     });
     let c4 = last_checkpoint_id(store);
     let feature_a_id = store.envelope().active_alternative_id.clone().expect("feature-a alternative id");
 
-    let _ = store.dispatch(DocumentVcsCommand::Apply {
+    let _ = store.dispatch(DocumentCommand::Apply {
         operations: vec![VcsDemoOperation::SetCounter { counter: 10 }],
         description: None,
     });
-    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+    let _ = store.dispatch(DocumentCommand::CommitCheckpoint {
         message: Some("Feature A progress".into()),
         authors: vec![alice.clone(), bob.clone()],
     });
 
-    let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c3.clone() });
-    let _ = store.dispatch(DocumentVcsCommand::CreateAlternative { name: "feature-b".into() });
-    let _ = store.dispatch(DocumentVcsCommand::Apply {
+    let _ = store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: c3.clone() });
+    let _ = store.dispatch(DocumentCommand::CreateAlternative { name: "feature-b".into() });
+    let _ = store.dispatch(DocumentCommand::Apply {
         operations: vec![VcsDemoOperation::SetTitle { title: "Feature B".into() }, VcsDemoOperation::SetNotes { notes: "branch b".into() }],
         description: None,
     });
-    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+    let _ = store.dispatch(DocumentCommand::CommitCheckpoint {
         message: Some("Start feature B".into()),
         authors: vec![bob.clone()],
     });
     let feature_b_id = store.envelope().active_alternative_id.clone().expect("feature-b alternative id");
 
-    let _ = store.dispatch(DocumentVcsCommand::Apply {
+    let _ = store.dispatch(DocumentCommand::Apply {
         operations: vec![VcsDemoOperation::SetCounter { counter: 20 }],
         description: None,
     });
-    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+    let _ = store.dispatch(DocumentCommand::CommitCheckpoint {
         message: Some("Feature B try".into()),
         authors: vec![bob.clone(), carol.clone()],
     });
 
-    let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c3.clone() });
-    let _ = store.dispatch(DocumentVcsCommand::Apply {
+    let _ = store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: c3.clone() });
+    let _ = store.dispatch(DocumentCommand::Apply {
         operations: vec![VcsDemoOperation::SetStatus { status: "active".into() }],
         description: None,
     });
-    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+    let _ = store.dispatch(DocumentCommand::CommitCheckpoint {
         message: Some("Resume main".into()),
         authors: vec![carol.clone()],
     });
     let c8 = last_checkpoint_id(store);
 
-    let _ = store.dispatch(DocumentVcsCommand::SwitchAlternative { alternative_id: feature_a_id.clone() });
-    let _ = store.dispatch(DocumentVcsCommand::Apply {
+    let _ = store.dispatch(DocumentCommand::SwitchAlternative { alternative_id: feature_a_id.clone() });
+    let _ = store.dispatch(DocumentCommand::Apply {
         operations: vec![VcsDemoOperation::SetCounter { counter: 11 }, VcsDemoOperation::AddTag { tag: "wip".into() }],
         description: None,
     });
-    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+    let _ = store.dispatch(DocumentCommand::CommitCheckpoint {
         message: Some("Feature A sprint".into()),
         authors: vec![alice.clone(), carol.clone()],
     });
 
-    let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c4 });
-    let _ = store.dispatch(DocumentVcsCommand::CreateAlternative { name: "feature-a-hotfix".into() });
-    let _ = store.dispatch(DocumentVcsCommand::Apply {
+    let _ = store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: c4 });
+    let _ = store.dispatch(DocumentCommand::CreateAlternative { name: "feature-a-hotfix".into() });
+    let _ = store.dispatch(DocumentCommand::Apply {
         operations: vec![VcsDemoOperation::SetStatus { status: "hotfix".into() }],
         description: None,
     });
-    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+    let _ = store.dispatch(DocumentCommand::CommitCheckpoint {
         message: Some("Hotfix off feature A".into()),
         authors: vec![bob.clone()],
     });
 
-    let _ = store.dispatch(DocumentVcsCommand::SwitchAlternative { alternative_id: feature_b_id });
-    let _ = store.dispatch(DocumentVcsCommand::Apply {
+    let _ = store.dispatch(DocumentCommand::SwitchAlternative { alternative_id: feature_b_id });
+    let _ = store.dispatch(DocumentCommand::Apply {
         operations: vec![VcsDemoOperation::AddTag { tag: "review".into() }],
         description: None,
     });
-    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+    let _ = store.dispatch(DocumentCommand::CommitCheckpoint {
         message: Some("Feature B review".into()),
         authors: vec![bob.clone()],
     });
 
-    let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c8 });
-    let _ = store.dispatch(DocumentVcsCommand::Apply {
+    let _ = store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: c8 });
+    let _ = store.dispatch(DocumentCommand::Apply {
         operations: vec![
             VcsDemoOperation::SetCounter { counter: 3 },
             VcsDemoOperation::SetNotes { notes: "main polish".into() },
@@ -339,38 +339,38 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
         ],
         description: None,
     });
-    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+    let _ = store.dispatch(DocumentCommand::CommitCheckpoint {
         message: Some("Main batch polish".into()),
         authors: vec![alice.clone(), bob.clone(), carol.clone()],
     });
 
-    let _ = store.dispatch(DocumentVcsCommand::Apply {
+    let _ = store.dispatch(DocumentCommand::Apply {
         operations: vec![VcsDemoOperation::SetStatus { status: "done".into() }],
         description: None,
     });
-    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+    let _ = store.dispatch(DocumentCommand::CommitCheckpoint {
         message: Some("Main release".into()),
         authors: vec![alice.clone()],
     });
 
-    let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c2 });
-    let _ = store.dispatch(DocumentVcsCommand::CreateAlternative { name: "docs".into() });
-    let _ = store.dispatch(DocumentVcsCommand::Apply {
+    let _ = store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: c2 });
+    let _ = store.dispatch(DocumentCommand::CreateAlternative { name: "docs".into() });
+    let _ = store.dispatch(DocumentCommand::Apply {
         operations: vec![VcsDemoOperation::SetNotes { notes: "documentation pass".into() }],
         description: None,
     });
-    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+    let _ = store.dispatch(DocumentCommand::CommitCheckpoint {
         message: Some("Docs branch".into()),
         authors: vec![carol.clone()],
     });
 
-    let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c1 });
-    let _ = store.dispatch(DocumentVcsCommand::CreateAlternative { name: "spike".into() });
-    let _ = store.dispatch(DocumentVcsCommand::Apply {
+    let _ = store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: c1 });
+    let _ = store.dispatch(DocumentCommand::CreateAlternative { name: "spike".into() });
+    let _ = store.dispatch(DocumentCommand::Apply {
         operations: vec![VcsDemoOperation::SetTitle { title: "Spike prototype".into() }],
         description: None,
     });
-    let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
+    let _ = store.dispatch(DocumentCommand::CommitCheckpoint {
         message: Some("Spike experiment".into()),
         authors: vec![bob, carol],
     });
@@ -659,7 +659,7 @@ impl DocumentApp for VcsPlayApp {
         empty_vcs_demo_projection()
     }
 
-    fn seed(&self, store: &mut DocumentVcsStore<VcsDemoProjection, VcsDemoOperation>) {
+    fn seed(&self, store: &mut DocumentStore<VcsDemoProjection, VcsDemoOperation>) {
         seed_vcs_demo_history(store);
     }
 
@@ -672,7 +672,7 @@ impl DocumentApp for VcsPlayApp {
     ) -> ActionEmit<VcsDemoOperation> {
         // "undo"/"redo"/"commitCheckpoint"/"createAlternative"/"switchAlternative"/"checkoutCheckpoint"
         // never reach here — `VcsDocumentApp` intercepts those six history actions before calling
-        // `handle_action`, dispatching them straight to `DocumentVcsCommand`.
+        // `handle_action`, dispatching them straight to `DocumentCommand`.
         match action {
             "setSelection" => {
                 self.selected_checkpoint_ids = selection_ids(args);
@@ -796,12 +796,12 @@ semio_framework_plugin::semio_plugin! {
 mod tests {
     use super::*;
     use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
-    use vcs::{DocumentVcsEnvelope, HistoryColumn};
+    use store::{DocumentEnvelope, HistoryColumn};
 
     /// 📦 Parses `document_json()` (the full envelope) for tests that need to inspect raw
     /// checkpoints/alternatives directly — safe here because none of these tests undo/redo, so every
     /// edit in the log is still applied.
-    fn seeded_envelope(app: &VcsDocumentApp<VcsPlayApp>) -> DocumentVcsEnvelope<VcsDemoProjection, VcsDemoOperation> {
+    fn seeded_envelope(app: &VcsDocumentApp<VcsPlayApp>) -> DocumentEnvelope<VcsDemoProjection, VcsDemoOperation> {
         serde_json::from_str(&app.document_json().expect("document json")).expect("envelope")
     }
 
@@ -841,7 +841,7 @@ mod tests {
         }
         assert!(children_by_parent.values().any(|count| *count >= 2), "seed must contain a real fork (a checkpoint with >=2 children)");
         let lanes: std::collections::HashSet<usize> =
-            vcs::build_history_columns(&envelope).into_iter().map(|column: HistoryColumn| column.lane).collect();
+            store::build_history_columns(&envelope).into_iter().map(|column: HistoryColumn| column.lane).collect();
         assert!(lanes.len() >= 3, "expected >=3 distinct swimlanes, got {lanes:?}");
     }
 
@@ -999,15 +999,15 @@ mod tests {
     //#region 🔖DslAndOpText
     #[test]
     fn vcs_demo_projection_dsl_round_trips() {
-        vcs::test_support::assert_dsl_round_trip(&empty_vcs_demo_projection());
-        vcs::test_support::assert_dsl_pack_equivalence(&empty_vcs_demo_projection());
+        store::test_support::assert_dsl_round_trip(&empty_vcs_demo_projection());
+        store::test_support::assert_dsl_pack_equivalence(&empty_vcs_demo_projection());
     }
 
     #[test]
     fn vcs_demo_operation_op_text_round_trips() {
-        vcs::test_support::assert_op_line_round_trip(&VcsDemoOperation::SetCounter { counter: 3 });
-        vcs::test_support::assert_op_line_round_trip(&VcsDemoOperation::SetTitle { title: "Untitled".into() });
-        vcs::test_support::assert_op_line_round_trip(&VcsDemoOperation::AddTag { tag: "draft".into() });
+        store::test_support::assert_op_line_round_trip(&VcsDemoOperation::SetCounter { counter: 3 });
+        store::test_support::assert_op_line_round_trip(&VcsDemoOperation::SetTitle { title: "Untitled".into() });
+        store::test_support::assert_op_line_round_trip(&VcsDemoOperation::AddTag { tag: "draft".into() });
     }
     //#endregion 🔖DslAndOpText
 }

@@ -1,0 +1,154 @@
+warning: pack/cli/rs/Cargo.toml: file `/Users/ueli/Documents/semio/pack/cli/rs/lib.rs` found to be present in multiple build targets:
+  * `lib` target `pack_cli`
+  * `bin` target `pack`
+warning: `pack_cli` (manifest) generated 1 warning
+warning: protocol/cli/rs/Cargo.toml: file `/Users/ueli/Documents/semio/protocol/cli/rs/lib.rs` found to be present in multiple build targets:
+  * `lib` target `protocol_cli`
+  * `bin` target `protocol`
+warning: `protocol_cli` (manifest) generated 1 warning
+warning: db/cli/rs/Cargo.toml: file `/Users/ueli/Documents/semio/db/cli/rs/lib.rs` found to be present in multiple build targets:
+  * `lib` target `db_cli`
+  * `bin` target `db`
+warning: `db_cli` (manifest) generated 1 warning
+    Finished `test` profile [unoptimized] target(s) in 0.47s
+     Running unittests lib.rs (target/debug/deps/mathematical_cas-62c2a22e9b578377)
+assume::tests::bound_for_deduces_sign_from_assumption_store: test
+assume::tests::close_propagates_even_to_integer_rational_real: test
+assume::tests::close_propagates_positive_to_real_nonnegative_nonzero: test
+assume::tests::close_rejects_even_and_odd: test
+assume::tests::close_rejects_positive_and_negative: test
+canon::tests::add_collects_like_terms: test
+canon::tests::add_drops_zero: test
+canon::tests::add_folds_numeric_literals: test
+canon::tests::canonicalization_is_idempotent_on_a_small_corpus: test
+canon::tests::func_special_values_fold: test
+canon::tests::i_power_cycles_with_period_four: test
+canon::tests::mul_by_zero_absorbs: test
+canon::tests::mul_combines_like_bases: test
+canon::tests::mul_folds_numeric_literals: test
+canon::tests::mul_nonzero_times_complex_infinity_is_complex_infinity: test
+canon::tests::mul_zero_times_complex_infinity_is_undefined: test
+canon::tests::nested_pow_combines_exponents_for_integer_outer_exponent: test
+canon::tests::pow_identities: test
+canon::tests::pow_integer_folds_exactly: test
+canon::tests::pow_negative_integer_exponent_gives_rational: test
+canon::tests::radical_exact_perfect_power_folds_fully: test
+canon::tests::radical_of_prime_stays_symbolic: test
+canon::tests::radical_partial_extraction_matches_plan_example: test
+diff::tests::bessel_j_recurrence_derivative: test
+diff::tests::chain_rule_sin_of_square: test
+diff::tests::diff_of_constant_is_zero: test
+diff::tests::diff_of_other_symbol_is_zero: test
+diff::tests::diff_of_x_is_one: test
+diff::tests::exp_of_x_is_itself: test
+diff::tests::general_power_logarithmic_differentiation: test
+diff::tests::gradient_computes_all_partials: test
+diff::tests::ln_derivative: test
+diff::tests::power_rule: test
+diff::tests::product_rule: test
+diff::tests::unknown_function_derivative_is_none: test
+expr::tests::hash_is_deterministic: test
+expr::tests::ord_is_consistent_and_total: test
+expr::tests::structural_equality_ignores_sharing: test
+expr::tests::symbols_with_different_assumptions_are_distinct: test
+fmt::tests::display_division: test
+fmt::tests::display_negative_term: test
+fmt::tests::display_simple_polynomial: test
+fmt::tests::latex_constant_pi: test
+fmt::tests::latex_fraction_and_power: test
+fnkind::tests::arity_hand_cases: test
+fnkind::tests::name_hand_cases: test
+fnkind::tests::parity_hand_cases: test
+integrate::tests::definite_integral_of_power: test
+integrate::tests::integrate_by_parts_x_times_exp: test
+integrate::tests::integrate_irreducible_quadratic_denominator: test
+integrate::tests::integrate_ln_by_parts: test
+integrate::tests::integrate_polynomial_sum: test
+integrate::tests::integrate_power_rule: test
+integrate::tests::integrate_reciprocal_gives_ln: test
+integrate::tests::integrate_simple_partial_fraction: test
+integrate::tests::integrate_sin_and_cos: test
+integrate::tests::integrate_u_substitution: test
+integrate::tests::residue_at_simple_pole: test
+limits::tests::classic_sin_x_over_x_at_zero: test
+limits::tests::direct_substitution_when_defined: test
+limits::tests::limit_at_infinity_of_rational_function: test
+limits::tests::one_plus_one_over_n_to_the_n_via_lhopital_on_log_form: test
+limits::tests::polynomial_ratio_at_removable_singularity: test
+matrix::tests::cayley_hamilton_holds_for_a_3x3_matrix: test
+matrix::tests::charpoly_and_eigenvalues_of_diagonal_matrix: test
+matrix::tests::det_2x2_hand_case: test
+matrix::tests::det_symbolic_2x2: test
+matrix::tests::inverse_times_original_is_identity: test
+matrix::tests::rank_of_numeric_matrix: test
+matrix::tests::rref_of_numeric_matrix: test
+matrix::tests::singular_matrix_has_no_inverse: test
+matrix::tests::solve_numeric_linear_system: test
+ode::tests::bernoulli_ode: test
+ode::tests::linear_constant_coefficient_complex_roots: test
+ode::tests::linear_constant_coefficient_repeated_root: test
+ode::tests::linear_constant_coefficient_second_order_distinct_real_roots: test
+ode::tests::linear_first_order_ode: test
+ode::tests::separable_ode_y_prime_equals_x_over_y: test
+pattern::tests::ac_match_finds_permuted_assignment: test
+pattern::tests::free_of_constraint_rejects_expressions_containing_the_symbol: test
+pattern::tests::pow_exponent_mismatch_fails: test
+pattern::tests::rule_rewrites_matching_expression: test
+pattern::tests::ruleset_bottom_up_rewrites_nested_occurrence: test
+pattern::tests::seq_wildcard_absorbs_remaining_terms: test
+pattern::tests::structural_match_on_pow: test
+pattern::tests::wildcard_any_matches_anything: test
+pattern::tests::wildcard_number_rejects_symbols: test
+polybridge::tests::as_poly_roundtrips_through_from_poly: test
+polybridge::tests::as_poly_uni_extracts_univariate_polynomial: test
+polybridge::tests::as_poly_uni_fails_for_other_generators: test
+polybridge::tests::as_ratfunc_auto_recovers_together_form: test
+polybridge::tests::build_ratio_folds_constant_denominator: test
+polybridge::tests::detect_gens_finds_symbols_and_functions: test
+polybridge::tests::factor_poly_u_recombines_to_the_original: test
+rootof::tests::real_roots_of_quadratic_gives_two_rootofs: test
+rootof::tests::root_of_sign_matches_isolation_interval: test
+series::tests::leading_term_skips_zero_coefficients: test
+series::tests::series_to_expr_round_trips_a_polynomial: test
+series::tests::taylor_series_fails_at_a_pole: test
+series::tests::taylor_series_of_exp_matches_known_coefficients: test
+series::tests::taylor_series_of_sin_around_zero_has_no_even_terms: test
+simplify::tests::apart_splits_simple_rational_function: test
+simplify::tests::cancel_removes_common_univariate_factor: test
+simplify::tests::collect_groups_like_powers: test
+simplify::tests::denest_sqrt_classic_example: test
+simplify::tests::expand_binomial_square: test
+simplify::tests::expand_distributes_over_function_argument_unchanged: test
+simplify::tests::factor_recovers_linear_factors: test
+simplify::tests::simplify_picks_the_smallest_candidate: test
+simplify::tests::together_combines_fractions: test
+solve::tests::solve_2x2_linear_system: test
+solve::tests::solve_exp_equation: test
+solve::tests::solve_high_degree_gives_rootof: test
+solve::tests::solve_inequality_simple_quadratic: test
+solve::tests::solve_linear_equation: test
+solve::tests::solve_quadratic_with_complex_roots: test
+solve::tests::solve_quadratic_with_real_roots: test
+solve::tests::solve_sin_equation_gives_parametric_family: test
+sums::tests::fourier_coefficients_of_a_polynomial_smoke_test: test
+sums::tests::sum_geometric_series_hand_case: test
+sums::tests::sum_of_k_from_1_to_n_is_gauss_formula: test
+sums::tests::sum_of_k_squared_matches_known_hand_values: test
+transforms::tests::laplace_and_inverse_round_trip_for_exp: test
+transforms::tests::laplace_linearity: test
+transforms::tests::laplace_of_exp: test
+transforms::tests::laplace_of_t_to_the_n: test
+trig::tests::expand_log_of_product_and_power: test
+trig::tests::expand_trig_sin_of_sum: test
+trig::tests::logcombine_merges_positive_logs: test
+trig::tests::logcombine_skips_unknown_sign_arguments: test
+trig::tests::powsimp_combines_same_exponent_factors: test
+trig::tests::trig_canon_applies_pythagorean_identity: test
+trig::tests::trig_canon_pythagorean_with_extra_terms: test
+trig::tests::trig_canon_rewrites_tan_to_sin_over_cos: test
+visit::tests::contains_symbol_detects_nested_occurrence: test
+visit::tests::free_symbols_deduplicates_and_sorts: test
+visit::tests::node_count_hand_case: test
+visit::tests::subs_replaces_matching_subtree: test
+
+138 tests, 0 benchmarks

@@ -25,22 +25,22 @@ pub mod test_support {
         P: Clone + Serialize + DeserializeOwned + PartialEq + std::fmt::Debug,
         Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P>,
     {
-        let envelope = create_document_vcs_envelope("test/v1", "test", initial.clone(), None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope = create_document_envelope("test/v1", "test", initial.clone(), None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![operation],
                 description: None,
             })
             .expect("apply");
         let post = store.projection().expect("post projection");
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        store.dispatch(DocumentCommand::Undo).expect("undo");
         assert_eq!(
             store.projection().expect("undo projection"),
             initial,
             "undo did not restore initial projection"
         );
-        store.dispatch(DocumentVcsCommand::Redo).expect("redo");
+        store.dispatch(DocumentCommand::Redo).expect("redo");
         assert_eq!(
             store.projection().expect("redo projection"),
             post,
@@ -103,7 +103,7 @@ pub mod test_support {
     /// @emoji 📄 Asserts that printing a store's envelope to text and parsing it back yields the same
     /// live projection the store already holds — the ground truth for {@link print_document_text}/
     /// {@link parse_document_text} on any technology once it implements `DocumentDsl` + `OpText`.
-    pub fn assert_document_text_round_trip<P, Operation>(store: &DocumentVcsStore<P, Operation>)
+    pub fn assert_document_text_round_trip<P, Operation>(store: &DocumentStore<P, Operation>)
     where
         P: Clone + DocumentDsl + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
         Operation: Clone + OpText + crate::Operation<P> + PartialEq + Serialize + DeserializeOwned,
@@ -119,7 +119,7 @@ pub mod test_support {
     /// `assert_document_text_round_trip` but via `print_document_pack`/`parse_document_pack`, and
     /// additionally asserts the pack path's parsed projection agrees with the text path's — the two
     /// storage formats must never diverge on the same store.
-    pub fn assert_document_pack_round_trip<P, Operation>(store: &DocumentVcsStore<P, Operation>)
+    pub fn assert_document_pack_round_trip<P, Operation>(store: &DocumentStore<P, Operation>)
     where
         P: Clone + DocumentDsl + DocumentPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
         Operation: Clone + OpText + crate::Operation<P> + PartialEq + Serialize + DeserializeOwned,
@@ -193,11 +193,11 @@ pub mod test_support {
     }
 
     /// @emoji 🩺 Asserts the store's incrementally-maintained live projection agrees with a
-    /// from-scratch full replay — the differential check for `DocumentVcsStore`'s stateful `current`
+    /// from-scratch full replay — the differential check for `DocumentStore`'s stateful `current`
     /// field. Call after arbitrary command sequences (apply/amend/undo/redo/checkpoint/switch
     /// interleavings) in a tech's own tests to confirm the incremental fast paths never diverge from
     /// the replay ground truth.
-    pub fn assert_live_equals_replay<P, Operation>(store: &DocumentVcsStore<P, Operation>)
+    pub fn assert_live_equals_replay<P, Operation>(store: &DocumentStore<P, Operation>)
     where
         P: Clone + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
         Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P>,

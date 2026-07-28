@@ -1,5 +1,5 @@
 //! 🧬 `dsl_derive` — compiles `#[dsl(...)]`-annotated struct/enum declarations into
-//! `vcs::DocumentDsl`/`vcs::OpText` implementations (and the `dsl::DslField`/`dsl::DslVariants`
+//! `store::DocumentDsl`/`protocol::OpText` implementations (and the `dsl::DslField`/`dsl::DslVariants`
 //! bindings nested usage composes through), so a technology declares its grammar instead of
 //! hand-writing a parser/printer. Analyze → IR → emit, per the repo's `fsm_macros` convention.
 
@@ -531,15 +531,15 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
                 #(#to_value_stmts)*
                 record
             }
-            pub fn __dsl_from_record(record: &::dsl::RecordValue) -> Result<Self, ::vcs::TextError> {
+            pub fn __dsl_from_record(record: &::dsl::RecordValue) -> Result<Self, ::store::TextError> {
                 #(#from_value_stmts)*
                 Ok(Self { #(#field_idents),* })
             }
         }
 
-        impl ::vcs::DocumentDsl for #name {
+        impl ::store::DocumentDsl for #name {
             const EXTENSION: &'static str = #extension;
-            fn parse_dsl(text: &str) -> Result<Self, ::vcs::TextError> {
+            fn parse_dsl(text: &str) -> Result<Self, ::store::TextError> {
                 let record = ::dsl::__rt::parse_document_record(text, &Self::__dsl_spec())?;
                 Self::__dsl_from_record(&record)
             }
@@ -549,7 +549,7 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
         }
 
         // A document type can also be nested as an ordinary field (e.g. a "whole document
-        // snapshot" operation variant), so it needs `DslField` too, not just `vcs::DocumentDsl`.
+        // snapshot" operation variant), so it needs `DslField` too, not just `store::DocumentDsl`.
         impl ::dsl::DslField for #name {
             fn shape() -> ::dsl::Shape {
                 ::dsl::Shape::Record(Self::__dsl_spec)
@@ -565,18 +565,18 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
             }
         }
 
-        // 📦 Binary counterpart of the `vcs::DocumentDsl` impl above — same `__dsl_spec`/
+        // 📦 Binary counterpart of the `store::DocumentDsl` impl above — same `__dsl_spec`/
         // `__dsl_to_record`/`__dsl_from_record` trio, routed through `pack` instead of the DSL
-        // grammar engine. `vcs::text_error_to_pack_error` (a free function, not `PackError: From
+        // grammar engine. `store::text_error_to_pack_error` (a free function, not `PackError: From
         // <TextError>` — that impl is an orphan-rule violation since neither type is local to
-        // `vcs`) bridges `__dsl_from_record`'s `TextError` into `PackError`.
-        impl ::vcs::DocumentPack for #name {
-            fn encode_pack_with(&self, options: &::vcs::PackEncodeOptions) -> Result<Vec<u8>, ::vcs::PackError> {
-                ::vcs::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)
+        // `store`) bridges `__dsl_from_record`'s `TextError` into `PackError`.
+        impl ::store::DocumentPack for #name {
+            fn encode_pack_with(&self, options: &::store::PackEncodeOptions) -> Result<Vec<u8>, ::store::PackError> {
+                ::store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)
             }
-            fn decode_pack_with(bytes: &[u8], options: &::vcs::PackDecodeOptions) -> Result<Self, ::vcs::PackError> {
-                let (record, _report) = ::vcs::pack_rt::decode_document(bytes, &Self::__dsl_spec(), options)?;
-                Self::__dsl_from_record(&record).map_err(::vcs::text_error_to_pack_error)
+            fn decode_pack_with(bytes: &[u8], options: &::store::PackDecodeOptions) -> Result<Self, ::store::PackError> {
+                let (record, _report) = ::store::pack_rt::decode_document(bytes, &Self::__dsl_spec(), options)?;
+                Self::__dsl_from_record(&record).map_err(::store::text_error_to_pack_error)
             }
         }
     };
@@ -634,7 +634,7 @@ pub fn derive_dsl_scalar(input: TokenStream) -> TokenStream {
 //#region 🔖DslOps
 /// @emoji 🌿 Builds the `impl ::dsl::DslVariants for #name` block shared by `DslEnum` (data-only
 /// tagged enums, e.g. a recursive block tree) and `DslOps` (operation enums, which additionally get
-/// `vcs::OpText` on top of this same `DslVariants` foundation).
+/// `store::OpText` on top of this same `DslVariants` foundation).
 fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum) -> proc_macro2::TokenStream {
     let mut variants_exprs = Vec::new();
     let mut to_named_arms = Vec::new();
@@ -727,15 +727,14 @@ pub fn derive_dsl_ops(input: TokenStream) -> TokenStream {
     let expanded = quote! {
         #variants_impl
 
-        // 🎞️ CW3 kernel cut-over: `OpText` now lives in `protocol_command`, re-exported as
-        // `protocol::OpText`. `vcs` carries a temporary `pub use protocol::{OpText, ...}` shim (see
-        // `vcs/rs/lib.rs`'s `🚧TEMPORARY protocol shim`), and virtually every `#[derive(dsl::DslOps)]`
-        // crate already depends on `vcs`, so this resolves without new Cargo.toml deps. The error
-        // type stays `::vcs::TextError` (a transparent re-export of `dsl_core::TextError`, the exact
-        // type `protocol::OpText::parse_op` declares) rather than switching to `::dsl_core::TextError`
+        // 🎞️ `OpText` lives in `protocol_command`, re-exported as `protocol::OpText` — every
+        // `#[derive(dsl::DslOps)]` crate depends on `protocol` directly for its `Operation` impl
+        // anyway, so this resolves without new Cargo.toml deps. The error type stays
+        // `::store::TextError` (a transparent re-export of `dsl_core::TextError`, the exact type
+        // `protocol::OpText::parse_op` declares) rather than switching to `::dsl_core::TextError`
         // directly, since not every deriving crate has `dsl_core` as a *direct* dependency.
         impl ::protocol::OpText for #name {
-            fn parse_op(line: &str) -> Result<Self, ::vcs::TextError> {
+            fn parse_op(line: &str) -> Result<Self, ::store::TextError> {
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 for (keyword, spec_fn) in &variants {
                     let probe = format!("{} ", keyword);
@@ -753,6 +752,19 @@ pub fn derive_dsl_ops(input: TokenStream) -> TokenStream {
                 ::dsl::__rt::print_inline_record(&record, &spec_fn())
             }
         }
+
+        // 🎞️ Binary twin of the `OpText` impl above — same `DslVariants` lowering, byte layout
+        // owned by `::dsl::op_rt` (`format u8 | variant ordinal varint | record body`), the op-level
+        // mirror of the `DocumentDsl`/`DocumentPack` pairing. Resolves through `dsl` (not `store`)
+        // because the runtime's bound is `dsl::DslVariants` itself — see `dsl::op_rt`'s doc.
+        impl ::protocol::OpBinary for #name {
+            fn encode_op(&self) -> Result<Vec<u8>, ::protocol::ProtocolError> {
+                ::dsl::op_rt::encode_op(self)
+            }
+            fn decode_op(bytes: &[u8]) -> Result<Self, ::protocol::ProtocolError> {
+                ::dsl::op_rt::decode_op(bytes)
+            }
+        }
     };
     expanded.into()
 }
@@ -762,7 +774,7 @@ pub fn derive_dsl_ops(input: TokenStream) -> TokenStream {
 /// @emoji 🌳 Tagged-record enum whose variants are plain data (a recursive block tree, a wire
 /// node kind, ...) rather than an `Operation` — implements `::dsl::DslVariants` only, so it can be
 /// used inside `#[dsl(statements)]`/`#[dsl(statements, block)]` collection fields without also
-/// gaining (and having to satisfy the bounds of) `vcs::OpText`.
+/// gaining (and having to satisfy the bounds of) `store::OpText`.
 #[proc_macro_derive(DslEnum, attributes(dsl))]
 pub fn derive_dsl_enum(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);

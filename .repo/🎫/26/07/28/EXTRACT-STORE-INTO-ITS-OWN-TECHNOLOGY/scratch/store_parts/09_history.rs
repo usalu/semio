@@ -16,7 +16,7 @@ pub struct HistoryColumn {
 }
 
 fn checkpoint_alternatives<'a, P, Operation>(
-    envelope: &'a DocumentVcsEnvelope<P, Operation>,
+    envelope: &'a DocumentEnvelope<P, Operation>,
     checkpoint_id: &str,
 ) -> Vec<&'a Alternative> {
     envelope
@@ -27,12 +27,12 @@ fn checkpoint_alternatives<'a, P, Operation>(
         .collect()
 }
 
-fn is_checkpoint_main_only<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>, checkpoint_id: &str) -> bool {
+fn is_checkpoint_main_only<P, Operation>(envelope: &DocumentEnvelope<P, Operation>, checkpoint_id: &str) -> bool {
     checkpoint_alternatives(envelope, checkpoint_id).is_empty()
 }
 
 fn has_main_only_descendant<P, Operation>(
-    envelope: &DocumentVcsEnvelope<P, Operation>,
+    envelope: &DocumentEnvelope<P, Operation>,
     children_of: &HashMap<String, Vec<String>>,
     checkpoint_id: &str,
     seen: &mut HashSet<String>,
@@ -52,7 +52,7 @@ fn has_main_only_descendant<P, Operation>(
 /// `0` is the main trunk. A checkpoint sits on lane 0 if it belongs to no alternative or has any
 /// main-only descendant (cycle-guarded DFS); otherwise it takes its single alternative's lane, or
 /// the minimum lane among several. Mirrors premigration `assignHistoryCheckpointLanes`.
-fn assign_history_checkpoint_lanes<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>) -> HashMap<String, usize> {
+fn assign_history_checkpoint_lanes<P, Operation>(envelope: &DocumentEnvelope<P, Operation>) -> HashMap<String, usize> {
     let mut lane_by_alternative: HashMap<String, usize> = HashMap::new();
     for (index, alternative) in envelope.vcs.alternatives.iter().enumerate() {
         lane_by_alternative.insert(alternative.id.clone(), index + 1);
@@ -94,7 +94,7 @@ fn assign_history_checkpoint_lanes<P, Operation>(envelope: &DocumentVcsEnvelope<
 /// @emoji 📜 Builds the ancestor-graph rows for a checkpoint history view: newest checkpoint first,
 /// each carrying its swimlane, labels (alternative names, `"main"` fallback on the newest unlabeled
 /// row), and authors. Mirrors premigration `buildHistoryColumns`.
-pub fn build_history_columns<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>) -> Vec<HistoryColumn> {
+pub fn build_history_columns<P, Operation>(envelope: &DocumentEnvelope<P, Operation>) -> Vec<HistoryColumn> {
     let lane_by_checkpoint_id = assign_history_checkpoint_lanes(envelope);
     envelope
         .vcs

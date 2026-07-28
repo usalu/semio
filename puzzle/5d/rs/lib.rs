@@ -112,10 +112,10 @@ pub fn puzzle5d_grip_kinds_compatible(source_kind: &str, target_kind: &str) -> b
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 #[cfg(any(test, target_arch = "wasm32"))]
-use vcs::{create_document_vcs_envelope, DocumentVcsCommand};
+use store::{create_document_envelope, DocumentCommand};
 #[cfg(test)]
-use vcs::DocumentDsl;
-use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
+use store::DocumentDsl;
+use store::{DocumentEnvelope, DocumentStore};
 use protocol::{Operation, OperationDiff};
 
 pub const PUZZLE_5D_SCHEMA: &str = "puzzle.5d";
@@ -429,8 +429,8 @@ impl Default for Puzzle5dProjection {
     }
 }
 
-pub type Puzzle5dEnvelope = DocumentVcsEnvelope<Puzzle5dProjection, Puzzle5dOperation>;
-pub type Puzzle5dStore = DocumentVcsStore<Puzzle5dProjection, Puzzle5dOperation>;
+pub type Puzzle5dEnvelope = DocumentEnvelope<Puzzle5dProjection, Puzzle5dOperation>;
+pub type Puzzle5dStore = DocumentStore<Puzzle5dProjection, Puzzle5dOperation>;
 
 pub fn empty_puzzle5d_projection() -> Puzzle5dProjection {
     Puzzle5dProjection::default()
@@ -871,7 +871,7 @@ pub fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 /// 🌱 `puzzle-plugin`'s `Puzzle5dPlayApp` predates the typed `Puzzle5dProjection` above and stays on
 /// this ad-hoc `serde_json::Value` fixture shape for its scene-mutation helpers (out of scope to
 /// retrofit onto the typed struct). This newtype exists only to satisfy `DocumentApp::Projection:
-/// vcs::DocumentDsl + vcs::DocumentPack` post the repo-wide `vcs::DocumentDsl for serde_json::Value`
+/// store::DocumentDsl + store::DocumentPack` post the repo-wide `store::DocumentDsl for serde_json::Value`
 /// bridge's removal (final DSL-syntax convergence gate); `parse_dsl`/`print_dsl`/`encode_pack_with`/
 /// `decode_pack_with` all round-trip straight through the still-standing `serde_json::Value` impls
 /// (JSON text / JSON-bridge pack encoding respectively), same local-bridge shape as `puzzle_2d`'s
@@ -880,11 +880,11 @@ pub fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Puzzle5dPlayProjection(pub Value);
 
-impl vcs::DocumentDsl for Puzzle5dPlayProjection {
+impl store::DocumentDsl for Puzzle5dPlayProjection {
     const EXTENSION: &'static str = "puzzle5d-play";
 
-    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        serde_json::from_str(text).map(Puzzle5dPlayProjection).map_err(|error| vcs::TextError::new(error.to_string(), vcs::TextSpan::at(1, 1)))
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        serde_json::from_str(text).map(Puzzle5dPlayProjection).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
@@ -892,12 +892,12 @@ impl vcs::DocumentDsl for Puzzle5dPlayProjection {
     }
 }
 
-impl vcs::DocumentPack for Puzzle5dPlayProjection {
-    fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
+impl store::DocumentPack for Puzzle5dPlayProjection {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         self.0.encode_pack_with(options)
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         Value::decode_pack_with(bytes, options).map(Puzzle5dPlayProjection)
     }
 }
@@ -936,7 +936,7 @@ mod wasm_bridge {
     /// 🔤 Parses `.puzzle5d` DSL text (`Puzzle5dProjection`'s `dsl::DslDocument` grammar) into the same camelCase JSON shape callers previously got from a hand-authored `*.5d.json` fixture — lets non-Rust consumers (e.g. Storybook stories) load the real example fixtures without duplicating the DSL grammar.
     #[wasm_bindgen(js_name = puzzle5dParseDslJson)]
     pub fn puzzle5d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
-        use vcs::DocumentDsl;
+        use store::DocumentDsl;
         let projection = Puzzle5dProjection::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
         serde_json::to_string(&projection).map_err(|error| JsValue::from_str(&error.to_string()))
     }
@@ -955,14 +955,19 @@ mod wasm_bridge {
                     let envelope: Puzzle5dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     Puzzle5dStore::new(envelope)
                 }
-                None => Puzzle5dStore::new(create_document_vcs_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_projection(), None)),
+                None => Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_projection(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
 
-        #[wasm_bindgen(js_name = dispatchJson)]
-        pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
+        #[wasm_bindgen(js_name = dispatchText)]
+        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = dispatchBinary)]
+        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
@@ -989,9 +994,9 @@ mod tests {
 
     #[test]
     fn puzzle5d_document_vcs_replays_granular_operations() {
-        let mut store = Puzzle5dStore::new(create_document_vcs_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_projection(), None));
+        let mut store = Puzzle5dStore::new(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_projection(), None));
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![Puzzle5dOperation::SetPart { index: 0, part: Puzzle5dPart { id: "p1".into(), part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() } }],
                 description: None,
             })
@@ -1049,8 +1054,8 @@ mod tests {
 
     #[test]
     fn puzzle5d_projection_dsl_round_trips() {
-        vcs::test_support::assert_dsl_round_trip(&empty_puzzle5d_projection());
-        vcs::test_support::assert_dsl_pack_equivalence(&empty_puzzle5d_projection());
+        store::test_support::assert_dsl_round_trip(&empty_puzzle5d_projection());
+        store::test_support::assert_dsl_pack_equivalence(&empty_puzzle5d_projection());
         let mut projection = empty_puzzle5d_projection();
         projection.label = Some("Concrete Forest".into());
         projection.camera2d = Puzzle5dCamera2d { x: 230.7, y: 93.5, zoom: 2.0 };
@@ -1070,8 +1075,8 @@ mod tests {
         });
         projection.fasteners.push(Puzzle5dFastener { id: "f1".into(), source: "seed-left-001:v0".into(), target: "seed-right-001:v0".into(), fastener_kind: None });
         projection.kind_compatibility.push(Puzzle5dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true });
-        vcs::test_support::assert_dsl_round_trip(&projection);
-        vcs::test_support::assert_dsl_pack_equivalence(&projection);
+        store::test_support::assert_dsl_round_trip(&projection);
+        store::test_support::assert_dsl_pack_equivalence(&projection);
     }
 
     /// 📜 Both real example fixtures (migrated from the legacy `.5d.json` shape — see ticket
@@ -1081,7 +1086,7 @@ mod tests {
     fn puzzle5d_example_fixtures_parse_and_round_trip_as_dsl() {
         for dsl_text in [include_str!("../example/concrete-forest.puzzle5d"), include_str!("../example/nakagin-capsule-tower.puzzle5d")] {
             let projection = Puzzle5dProjection::parse_dsl(dsl_text).expect("example fixture parses as dsl");
-            vcs::test_support::assert_dsl_round_trip(&projection);
+            store::test_support::assert_dsl_round_trip(&projection);
             // 🚧 `assert_dsl_pack_equivalence(&projection)` deliberately NOT added here: same
             // `pack/value/rs` table-column bug as `puzzle5d_projection_dsl_round_trips` above
             // (this fixture's `parts` rows have the identical shape). NOTE: as of this writing

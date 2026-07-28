@@ -13,7 +13,7 @@ use std::collections::{BTreeMap, HashMap};
 use trinity_jack::{execute, parse};
 use trinity_ram::{create_trinity_graph_envelope, dispatch_trinity_graph_operations, port_key, Graph, GraphFixture, Node, PortDirection, PropertyValue, TrinityGraphOperation, TrinityGraphStore};
 use protocol::OpText;
-use vcs::DocumentDsl;
+use store::DocumentDsl;
 
 pub use trinity_jack::{complete as complete_jack, parse as parse_jack, run as run_jack, run_json as run_jack_json, tokenize as tokenize_jack, Completion as JackCompletion, Pattern, QueryResult, QueryResultKind, TokenSpan as JackTokenSpan};
 pub use trinity_ram::{self, Camera, Manifest};
@@ -282,7 +282,7 @@ struct RuleQueryResult {
 
 // #region 🔖RuleVcs
 use protocol::{Operation, OperationDiff};
-use vcs::{create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore};
+use store::{create_document_envelope, DocumentCommand, DocumentEnvelope, DocumentStore};
 
 /// 📍 Local `{x, y}` twin for a bare `(f64, f64)` tuple — the DSL engine's `DslField` binding has no
 /// impl for raw Rust tuples (only named `DslRecord`/`DslScalar` types can bind), so `rule_layout`'s
@@ -367,13 +367,13 @@ impl Operation<RewriteRuleState> for RewriteRuleOperation {
     }
 }
 
-pub type RewriteRuleEnvelope = DocumentVcsEnvelope<RewriteRuleState, RewriteRuleOperation>;
-pub type RewriteRuleStore = DocumentVcsStore<RewriteRuleState, RewriteRuleOperation>;
+pub type RewriteRuleEnvelope = DocumentEnvelope<RewriteRuleState, RewriteRuleOperation>;
+pub type RewriteRuleStore = DocumentStore<RewriteRuleState, RewriteRuleOperation>;
 
 pub const REWRITE_RULE_SCHEMA: &str = "trinity.rewrite.rule";
 
 pub fn create_rewrite_rule_envelope(id: &str, state: RewriteRuleState) -> RewriteRuleEnvelope {
-    create_document_vcs_envelope(REWRITE_RULE_SCHEMA, id, state, None)
+    create_document_envelope(REWRITE_RULE_SCHEMA, id, state, None)
 }
 
 pub fn dispatch_rewrite_rule_state(store: &mut RewriteRuleStore, state: RewriteRuleState) -> Result<(), TrinityRewriteError> {
@@ -381,12 +381,12 @@ pub fn dispatch_rewrite_rule_state(store: &mut RewriteRuleStore, state: RewriteR
     if current == state {
         return Ok(());
     }
-    store.dispatch(DocumentVcsCommand::Apply { operations: vec![RewriteRuleOperation::SetState { state }], description: None }).map_err(TrinityRewriteError::from)
+    store.dispatch(DocumentCommand::Apply { operations: vec![RewriteRuleOperation::SetState { state }], description: None }).map_err(TrinityRewriteError::from)
 }
 // #endregion 🔖RuleVcs
 
 //#region 🔖Dsl
-/// 📜 `RewriteRuleState`/`RewriteRuleOperation` derive their `vcs::DocumentDsl`/`protocol::OpText` impls
+/// 📜 `RewriteRuleState`/`RewriteRuleOperation` derive their `store::DocumentDsl`/`protocol::OpText` impls
 /// directly (see `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslOps)]` on their own declarations in
 /// `🔖RuleVcs`) — every field already binds through the `dsl::` engine with no foreign types, so no
 /// hand-written parser/printer or twin type is needed here at all.
@@ -693,24 +693,24 @@ impl TrinityHost {
     }
 
     pub fn undo(&mut self) -> Result<(), TrinityRewriteError> {
-        use vcs::DocumentVcsCommand;
-        self.store.dispatch(DocumentVcsCommand::Undo)?;
+        use store::DocumentCommand;
+        self.store.dispatch(DocumentCommand::Undo)?;
         self.refresh_graph_from_store()?;
         self.rebuild_engine();
         Ok(())
     }
 
     pub fn redo(&mut self) -> Result<(), TrinityRewriteError> {
-        use vcs::DocumentVcsCommand;
-        self.store.dispatch(DocumentVcsCommand::Redo)?;
+        use store::DocumentCommand;
+        self.store.dispatch(DocumentCommand::Redo)?;
         self.refresh_graph_from_store()?;
         self.rebuild_engine();
         Ok(())
     }
 
     pub fn commit_checkpoint(&mut self, message: Option<String>) -> Result<(), TrinityRewriteError> {
-        use vcs::DocumentVcsCommand;
-        self.store.dispatch(DocumentVcsCommand::CommitCheckpoint { message, authors: Vec::new() }).map_err(TrinityRewriteError::from)
+        use store::DocumentCommand;
+        self.store.dispatch(DocumentCommand::CommitCheckpoint { message, authors: Vec::new() }).map_err(TrinityRewriteError::from)
     }
 
     pub fn store_generation(&self) -> u64 {
@@ -1059,9 +1059,14 @@ mod wasm_bridge {
             Ok(Self { store: RefCell::new(store) })
         }
 
-        #[wasm_bindgen(js_name = dispatchJson)]
-        pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
+        #[wasm_bindgen(js_name = dispatchText)]
+        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = dispatchBinary)]
+        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
@@ -1455,7 +1460,7 @@ mod tests {
     }
 
     //#region 🔖DslTests
-    use vcs::test_support::{assert_dsl_pack_equivalence, assert_dsl_round_trip, assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
+    use store::test_support::{assert_dsl_pack_equivalence, assert_dsl_round_trip, assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
 
     fn sample_rule_state() -> RewriteRuleState {
         let mut parameter_bindings = BTreeMap::new();

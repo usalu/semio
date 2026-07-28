@@ -1194,7 +1194,7 @@ mod export {
     mod tests {
         use super::*;
         use crate::document::LAYOUT_FIXTURE_SCHEMA;
-        use vcs::DocumentDsl;
+        use store::DocumentDsl;
 
         fn sample_document() -> LayoutDocument {
             LayoutDocument::parse_dsl(include_str!("../example/sample.layout")).expect("sample fixture parses")
@@ -1262,7 +1262,7 @@ mod operations {
     // #region operations
     //! 🧾 Typed VCS operation vocabulary for the layout document — the operations the layout plugin emits
     //! (page/story/link collections, per-page frame add/remove/patch, and camera). Each operation computes a
-    //! true pre-state inverse so undo/redo round-trips exactly. See {@link vcs::Operation}.
+    //! true pre-state inverse so undo/redo round-trips exactly. See {@link store::Operation}.
 
     use serde::{Deserialize, Serialize};
     use protocol::{apply_collection_operation, invert_collection_operation, CollectionOperation, Identified, Operation, OperationDiff, Patchable};
@@ -1762,7 +1762,7 @@ mod operations {
 
 mod dsl {
     //#region 🔖Dsl
-    //! 🔤 `LayoutDocument`'s `vcs::DocumentDsl` and `LayoutOperation`'s `vcs::OpText` are now generated
+    //! 🔤 `LayoutDocument`'s `store::DocumentDsl` and `LayoutOperation`'s `store::OpText` are now generated
     //! by the `dsl::` derive engine (see `dsl_derive`/`dsl_schema`) instead of a hand-rolled
     //! tokenizer/parser: every nested type in `crate::document` derives `dsl::DslRecord`/`dsl::DslEnum`
     //! directly, and `LayoutDocument` itself derives `dsl::DslDocument` (see `mod document`). Only
@@ -1778,7 +1778,7 @@ mod dsl {
     use crate::document::*;
     use crate::operations::*;
     use protocol::{CollectionOperation, OpText};
-    use vcs::TextError;
+    use store::TextError;
 
     //#region 🔖FramePatchDsl
     /// 🎨 3-state tag standing in for `FramePatch.fill`/`.stroke`'s `Option<Option<[f32;4]>>` — the DSL
@@ -1854,7 +1854,7 @@ mod dsl {
 
     //#region 🔖OpText
     /// ⚡ DSL-only mirror of `LayoutOperation` — see this module's opening doc comment. Converts at the
-    /// `vcs::OpText` boundary only; `LayoutOperation` itself (and every consumer matching on it, e.g.
+    /// `store::OpText` boundary only; `LayoutOperation` itself (and every consumer matching on it, e.g.
     /// `layout/plugin`) is completely untouched.
     #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
     enum LayoutOperationDsl {
@@ -1987,7 +1987,7 @@ mod dsl {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use vcs::{create_document_vcs_envelope, test_support, DocumentDsl, DocumentVcsCommand, DocumentVcsStore};
+        use store::{create_document_envelope, test_support, DocumentDsl, DocumentCommand, DocumentStore};
 
         fn sample_document() -> LayoutDocument {
             LayoutDocument::parse_dsl(include_str!("../example/sample.layout")).expect("sample fixture parses")
@@ -2087,13 +2087,13 @@ mod dsl {
         #[test]
         fn document_text_round_trips_a_store_with_applied_operations() {
             let initial = sample_document();
-            let envelope = create_document_vcs_envelope(LAYOUT_FIXTURE_SCHEMA, "layout-doc-text-test", initial, None);
-            let mut store: DocumentVcsStore<LayoutDocument, LayoutOperation> = DocumentVcsStore::new(envelope);
+            let envelope = create_document_envelope(LAYOUT_FIXTURE_SCHEMA, "layout-doc-text-test", initial, None);
+            let mut store: DocumentStore<LayoutDocument, LayoutOperation> = DocumentStore::new(envelope);
             store
-                .dispatch(DocumentVcsCommand::Apply { operations: vec![LayoutOperation::SetCamera { blueprint: true, camera: LayoutCamera { x: 10.0, y: 20.0, zoom: 1.5 } }], description: Some("pan camera".into()) })
+                .dispatch(DocumentCommand::Apply { operations: vec![LayoutOperation::SetCamera { blueprint: true, camera: LayoutCamera { x: 10.0, y: 20.0, zoom: 1.5 } }], description: Some("pan camera".into()) })
                 .expect("apply set camera");
             store
-                .dispatch(DocumentVcsCommand::Apply {
+                .dispatch(DocumentCommand::Apply {
                     operations: vec![LayoutOperation::Pages(CollectionOperation::Patch { id: "page-1".into(), patch: PagePatch { name: Some("Renamed".into()), ..Default::default() } })],
                     description: Some("rename page".into()),
                 })
@@ -2160,7 +2160,7 @@ mod dsl {
         fn parse_dsl_reports_engine_parser_errors() {
             // The hand-rolled lexer/parser (and its bespoke error messages) is gone — parsing now goes
             // through the `dsl::` derive engine directly, so these assert only on the public
-            // `vcs::DocumentDsl`/`vcs::OpText` surface, generically on failure rather than on exact
+            // `store::DocumentDsl`/`store::OpText` surface, generically on failure rather than on exact
             // internal wording that no longer exists.
             assert!(LayoutDocument::parse_dsl("").is_err(), "empty text must fail: a document has required fields");
             assert!(LayoutDocument::parse_dsl("not a document at all").is_err(), "unrecognized leading token must fail");

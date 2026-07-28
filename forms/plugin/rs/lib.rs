@@ -170,7 +170,7 @@ struct FormsPlayRuntime {
 /// generated `.forms` DSL text (see `playbook::PlaybookSpec`'s `dsl::DslDocument` derive). Used as
 /// `DocumentApp::initial_projection`.
 fn building_component_spec() -> FormSpec {
-    <FormSpec as vcs::DocumentDsl>::parse_dsl(BUILDING_COMPONENT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_projection())
+    <FormSpec as store::DocumentDsl>::parse_dsl(BUILDING_COMPONENT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_projection())
 }
 
 fn forms_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -1969,7 +1969,7 @@ impl DocumentApp for FormsPlayApp {
                 let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
                 let Some(next) = (match example_id {
                     "" => return ActionEmit::operations(replace_spec_operations(spec, &empty_forms_projection())),
-                    "building-component" => <FormSpec as vcs::DocumentDsl>::parse_dsl(BUILDING_COMPONENT_EXAMPLE_TEXT).ok(),
+                    "building-component" => <FormSpec as store::DocumentDsl>::parse_dsl(BUILDING_COMPONENT_EXAMPLE_TEXT).ok(),
                     "default" => serde_json::from_str::<FormSpec>(DEFAULT_EXAMPLE_JSON).ok(),
                     "onboarding" => serde_json::from_str::<FormSpec>(ONBOARDING_EXAMPLE_JSON).ok(),
                     _ => return ActionEmit::default(),

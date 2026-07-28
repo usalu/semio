@@ -1,0 +1,13 @@
+{
+  "title": "Fix Window Bottom Silhouette Around Nested Panes",
+  "emoji": "🪟",
+  "status": "open",
+  "description": "UI bug: windows wrongly flow around panes on the bottom. Projection pane sits on top of the window like top panes (window options), and the window bottom must stay a normal rectangular bottom — nested Pane WindowChrome chips (e.g. projection at bottom-right) must not be measured into the enclosing mode-dock / window silhouette. Fix measureWindowSilhouetteMetrics to only count chips/gaps/caps owned by the measured [data-window-silhouette] stack, not nested silhouettes. Extend existing tests; verify.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2375"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪188d79ae26f1454391ad023542f75f42"
+  ]
+}

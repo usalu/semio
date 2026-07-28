@@ -11,7 +11,7 @@ pub struct DocumentTextFiles {
 /// projection folded from every edit, so a caller never has to replay again after loading.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ParsedDocumentText<P, Operation> {
-    pub envelope: DocumentVcsEnvelope<P, Operation>,
+    pub envelope: DocumentEnvelope<P, Operation>,
     pub projection: P,
 }
 
@@ -126,7 +126,7 @@ pub fn print_edit_lines<Operation: OpText>(edit: &Edit<Operation>) -> Result<Str
 /// `print_document_text` and `print_document_pack`: the op-log grammar never touches
 /// `initial_projection`, so it is provably format-invariant and both printers thin out to this plus
 /// their own initial-projection encoding.
-fn print_ops_log<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>) -> Result<String, VcsError>
+fn print_ops_log<P, Operation>(envelope: &DocumentEnvelope<P, Operation>) -> Result<String, VcsError>
 where
     Operation: OpText,
 {
@@ -177,7 +177,7 @@ where
 /// @emoji 📤 Prints the full textual VCS document: the DSL text (initial projection) and the complete
 /// op log (`doc` header, every edit ever created as an `edit` block, then `change`/`checkpoint`/
 /// `alternative`/`active` records). Replaces the JSON envelope as the canonical persisted form.
-pub fn print_document_text<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>) -> Result<DocumentTextFiles, VcsError>
+pub fn print_document_text<P, Operation>(envelope: &DocumentEnvelope<P, Operation>) -> Result<DocumentTextFiles, VcsError>
 where
     P: DocumentDsl,
     Operation: OpText,
@@ -190,7 +190,7 @@ where
 /// @emoji 📤 Pack counterpart of `print_document_text`: identical op-log body (`print_ops_log`), but
 /// the initial projection is encoded to pack bytes (`DocumentPack::encode_pack`) instead of printed
 /// to DSL text.
-pub fn print_document_pack<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>) -> Result<DocumentPackFiles, VcsError>
+pub fn print_document_pack<P, Operation>(envelope: &DocumentEnvelope<P, Operation>) -> Result<DocumentPackFiles, VcsError>
 where
     P: DocumentPack,
     Operation: OpText,
@@ -320,7 +320,7 @@ where
     }
     flush_pending_edit(&mut pending_edit, &mut pending_forwards, &mut edits, &mut projection)?;
 
-    let envelope = DocumentVcsEnvelope {
+    let envelope = DocumentEnvelope {
         schema,
         id,
         vcs: DocumentVcs {

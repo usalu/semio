@@ -17,7 +17,7 @@ pub use protocol_io::{CompactOptions, HistoryFile, KeepSnapshots, ResumeState, T
 
 pub use protocol_core::{ActorId, ConflictRule, DocumentId, DocumentVersion, HybridLogicalTimestamp, MergeStrategyKind, OperationId, PayloadHash, SchemaId, SchemaVersion, StateClass, UndoPolicy};
 pub use protocol_command::{
-    CollectionDiff, CollectionOperation, CommandOutcome, Edit, Identified, ItemPatch, Operation, OperationDescriptor, OperationDiff, OperationEvent, OperationUpcaster, OpText, OperationMeta, Patchable,
+    CollectionDiff, CollectionOperation, CommandOutcome, Edit, Identified, ItemPatch, OpBinary, Operation, OperationDescriptor, OperationDiff, OperationEvent, OperationUpcaster, OpText, OperationMeta, Patchable,
     ReconcileReport, ReconcileSeverity, apply_collection_operation, collection_diff_from_operation, invert_collection_operation, operation_descriptor, register_operation_descriptor,
 };
 pub use protocol_causal::{

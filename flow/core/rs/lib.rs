@@ -1748,7 +1748,7 @@ pub struct FlowHost {
     viewport_dpr: f64,
     pan_anchor: Option<(f64, f64, f64, f64)>,
     ghost_node: Option<dag::DagNodeSpec>,
-    /// ↩️ Undo/redo, backed by the standard `vcs::DocumentVcsStore<FlowFixture, FlowOperation>`
+    /// ↩️ Undo/redo, backed by the standard `store::DocumentStore<FlowFixture, FlowOperation>`
     /// mechanism (see the `impl FlowHost`'s `🔖History` region) instead of a hand-rolled snapshot stack.
     history_store: FlowStore,
     /// 🚩 Armed by `begin_change`/`begin_gesture` for a discrete mutation not yet flushed into
@@ -1779,7 +1779,7 @@ impl FlowHost {
         // 🌱 A throwaway placeholder, same as `dag` below — `rebuild_dag` (via `sync_from_dag`)
         // settles auto-computed layout onto `self.fixture` before the real undo/redo baseline is
         // captured, so a fresh host never starts with a spurious undoable step.
-        let history_store = FlowStore::new(create_document_vcs_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", FlowFixture::default(), None));
+        let history_store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", FlowFixture::default(), None));
         let mut host = Self {
             fixture,
             dag: DagHost::from_fixture(DagFixture { schema: "dag.fixture".into(), camera: dag::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
@@ -1804,7 +1804,7 @@ impl FlowHost {
             gesture_active: false,
         };
         host.rebuild_dag();
-        host.history_store = FlowStore::new(create_document_vcs_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", host.fixture.clone(), None));
+        host.history_store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", host.fixture.clone(), None));
         host
     }
 
@@ -1843,7 +1843,7 @@ impl FlowHost {
         if reset_history {
             // 🌱 Captured AFTER `rebuild_dag` (see `from_fixture_with_cache`'s matching comment) so the
             // new undo/redo baseline is the settled, auto-laid-out fixture, not the raw input.
-            self.history_store = FlowStore::new(create_document_vcs_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", self.fixture.clone(), None));
+            self.history_store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", self.fixture.clone(), None));
             self.pending_change = false;
             self.gesture_active = false;
         }
@@ -3272,7 +3272,7 @@ impl FlowHost {
     }
 
     /// 🧾 Flushes an armed-but-not-yet-recorded discrete mutation into `history_store` as one
-    /// invertible `FlowOperation::SetFixture` edit — the standard `vcs::DocumentVcsStore`/`Operation`/
+    /// invertible `FlowOperation::SetFixture` edit — the standard `store::DocumentStore`/`Operation`/
     /// `OperationDiff` mechanism (see `🔖Operations`) driving undo/redo here instead of the old
     /// hand-rolled `Vec<FlowFixture>` snapshot stack. Unconditional once armed (no `content_changed`
     /// gate), mirroring the old stack's unconditional `past.push` on a discrete `begin_change` — only
@@ -3280,7 +3280,7 @@ impl FlowHost {
     fn flush_pending_change(&mut self) {
         if self.pending_change {
             self.pending_change = false;
-            let _ = self.history_store.dispatch(DocumentVcsCommand::Apply { operations: vec![FlowOperation::SetFixture { fixture: self.fixture.clone() }], description: None });
+            let _ = self.history_store.dispatch(DocumentCommand::Apply { operations: vec![FlowOperation::SetFixture { fixture: self.fixture.clone() }], description: None });
         }
     }
 
@@ -3305,7 +3305,7 @@ impl FlowHost {
             self.gesture_active = false;
             let committed = self.history_store.projection().unwrap_or_else(|_| self.fixture.clone());
             if Self::content_changed(&committed, &self.fixture) {
-                let _ = self.history_store.dispatch(DocumentVcsCommand::Apply { operations: vec![FlowOperation::SetFixture { fixture: self.fixture.clone() }], description: None });
+                let _ = self.history_store.dispatch(DocumentCommand::Apply { operations: vec![FlowOperation::SetFixture { fixture: self.fixture.clone() }], description: None });
             }
         }
     }
@@ -3314,7 +3314,7 @@ impl FlowHost {
     pub fn undo(&mut self) -> bool {
         self.flush_pending_change();
         let camera = self.fixture.camera.clone();
-        if self.history_store.dispatch(DocumentVcsCommand::Undo).is_err() {
+        if self.history_store.dispatch(DocumentCommand::Undo).is_err() {
             return false;
         }
         let Ok(mut restored) = self.history_store.projection() else {
@@ -3329,7 +3329,7 @@ impl FlowHost {
     /// ↪️ Re-applies a fixture content snapshot undone earlier, keeping the current camera.
     pub fn redo(&mut self) -> bool {
         let camera = self.fixture.camera.clone();
-        if self.history_store.dispatch(DocumentVcsCommand::Redo).is_err() {
+        if self.history_store.dispatch(DocumentCommand::Redo).is_err() {
             return false;
         }
         let Ok(mut restored) = self.history_store.projection() else {
@@ -4157,12 +4157,12 @@ pub fn dwg_decode_mesh_json(data_base64: &str) -> String {
 // #endregion 🔖WasmSession
 
 // #region 🔖DocumentVcs
-// 🧾 `create_document_vcs_envelope`/`DocumentVcsCommand` are unconditional (not test/wasm-only)
+// 🧾 `create_document_envelope`/`DocumentCommand` are unconditional (not test/wasm-only)
 // because `FlowHost`'s own undo/redo (see `impl FlowHost`'s `🔖History` region) dispatches through
 // them in every build.
-use vcs::create_document_vcs_envelope;
-use vcs::DocumentVcsCommand;
-use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
+use store::create_document_envelope;
+use store::DocumentCommand;
+use store::{DocumentEnvelope, DocumentStore};
 use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Identified, Operation, OperationDiff, Patchable};
 
 pub const FLOW_DOCUMENT_SCHEMA: &str = "flow.fixture";
@@ -4508,8 +4508,8 @@ enum NeuronNodeDsl {
 /// 🔌 DSL-only mirror of `SynapseSpec` (and of `neural::Synapse`, its foreign twin embedded in
 /// `Tree`) — models the `from`/`fromPort` -> `to`/`toPort` connection as a single unified
 /// `dsl::Wire` literal (`from@fromPort->to@toPort`) instead of four separate string fields, per
-/// the unified syntax law for graph edges/connections. Converts at the `vcs::DocumentDsl`/
-/// `vcs::OpText` boundary only (`flow_fixture_to_dsl`/`flow_operation_to_dsl` and their inverses,
+/// the unified syntax law for graph edges/connections. Converts at the `store::DocumentDsl`/
+/// `store::OpText` boundary only (`flow_fixture_to_dsl`/`flow_operation_to_dsl` and their inverses,
 /// plus `tree_to_tree_dsl`/`tree_dsl_to_tree` for the nested neural-tree case); `SynapseSpec`
 /// itself (JSON shape, `tree_from_fixture`, `flow_fixture_operations`, every other consumer
 /// matching on its `from`/`to`/`from_port`/`to_port` fields) is completely untouched.
@@ -4684,32 +4684,32 @@ fn flow_fixture_dsl_to_fixture(fixture: FlowFixtureDsl) -> Result<FlowFixture, S
     })
 }
 
-impl vcs::DocumentDsl for FlowFixture {
+impl store::DocumentDsl for FlowFixture {
     const EXTENSION: &'static str = "flow";
 
-    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        let dsl_fixture = <FlowFixtureDsl as vcs::DocumentDsl>::parse_dsl(text)?;
-        flow_fixture_dsl_to_fixture(dsl_fixture).map_err(|message| vcs::TextError::new(message, vcs::TextSpan::at(1, 1)))
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        let dsl_fixture = <FlowFixtureDsl as store::DocumentDsl>::parse_dsl(text)?;
+        flow_fixture_dsl_to_fixture(dsl_fixture).map_err(|message| store::TextError::new(message, store::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        <FlowFixtureDsl as vcs::DocumentDsl>::print_dsl(&flow_fixture_to_dsl(self))
+        <FlowFixtureDsl as store::DocumentDsl>::print_dsl(&flow_fixture_to_dsl(self))
     }
 }
 
 /// 🗜️ `FlowFixture` has no `#[derive(dsl::DslDocument)]` of its own (see `FlowFixtureDsl`'s doc
-/// comment above), so it doesn't automatically gain `vcs::DocumentPack` the way every derived type
-/// does — this hand-written twin of the `vcs::DocumentDsl` impl just above delegates through the
+/// comment above), so it doesn't automatically gain `store::DocumentPack` the way every derived type
+/// does — this hand-written twin of the `store::DocumentDsl` impl just above delegates through the
 /// same `flow_fixture_to_dsl`/`flow_fixture_dsl_to_fixture` mirror instead of `__dsl_to_record`/
 /// `__dsl_from_record`.
-impl vcs::DocumentPack for FlowFixture {
-    fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
-        <FlowFixtureDsl as vcs::DocumentPack>::encode_pack_with(&flow_fixture_to_dsl(self), options)
+impl store::DocumentPack for FlowFixture {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        <FlowFixtureDsl as store::DocumentPack>::encode_pack_with(&flow_fixture_to_dsl(self), options)
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
-        let dsl_fixture = <FlowFixtureDsl as vcs::DocumentPack>::decode_pack_with(bytes, options)?;
-        flow_fixture_dsl_to_fixture(dsl_fixture).map_err(|message| vcs::text_error_to_pack_error(vcs::TextError::new(message, vcs::TextSpan::at(1, 1))))
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let dsl_fixture = <FlowFixtureDsl as store::DocumentPack>::decode_pack_with(bytes, options)?;
+        flow_fixture_dsl_to_fixture(dsl_fixture).map_err(|message| store::text_error_to_pack_error(store::TextError::new(message, store::TextSpan::at(1, 1))))
     }
 }
 //#endregion 🔖Dsl
@@ -4803,9 +4803,9 @@ fn flow_operation_from_dsl(operation: FlowOperationDsl) -> Result<FlowOperation,
 }
 
 impl protocol::OpText for FlowOperation {
-    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let dsl_operation = <FlowOperationDsl as protocol::OpText>::parse_op(line)?;
-        flow_operation_from_dsl(dsl_operation).map_err(|message| vcs::TextError::new(message, vcs::TextSpan::at(1, 1)))
+        flow_operation_from_dsl(dsl_operation).map_err(|message| store::TextError::new(message, store::TextSpan::at(1, 1)))
     }
 
     fn print_op(&self) -> String {
@@ -4814,8 +4814,8 @@ impl protocol::OpText for FlowOperation {
 }
 //#endregion 🔖OpText
 
-pub type FlowEnvelope = DocumentVcsEnvelope<FlowFixture, FlowOperation>;
-pub type FlowStore = DocumentVcsStore<FlowFixture, FlowOperation>;
+pub type FlowEnvelope = DocumentEnvelope<FlowFixture, FlowOperation>;
+pub type FlowStore = DocumentStore<FlowFixture, FlowOperation>;
 
 pub fn empty_flow_projection() -> FlowFixture {
     FlowFixture::default()
@@ -4841,14 +4841,19 @@ mod flow_vcs_wasm {
                     let envelope: FlowEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     FlowStore::new(envelope)
                 }
-                None => FlowStore::new(create_document_vcs_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_projection(), None)),
+                None => FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_projection(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
 
-        #[wasm_bindgen(js_name = dispatchJson)]
-        pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
+        #[wasm_bindgen(js_name = dispatchText)]
+        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = dispatchBinary)]
+        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
@@ -5135,10 +5140,10 @@ mod flow_vcs_tests {
 
     #[test]
     fn coalesced_layout_drag_produces_one_edit() {
-        let mut store = FlowStore::new(create_document_vcs_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_projection(), None));
+        let mut store = FlowStore::new(create_document_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_projection(), None));
         for y in [10.0, 20.0, 30.0] {
             store
-                .dispatch(DocumentVcsCommand::AmendLast { operations: vec![FlowOperation::SetLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 0.0, y }) }] }], coalesce_key: Some("move-slider".into()) })
+                .dispatch(DocumentCommand::AmendLast { operations: vec![FlowOperation::SetLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 0.0, y }) }] }], coalesce_key: Some("move-slider".into()) })
                 .expect("drag tick");
         }
         assert_eq!(store.envelope().vcs.edits.len(), 1, "coalesced drag must produce exactly one edit");
@@ -5173,36 +5178,36 @@ mod flow_vcs_tests {
             preview: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(3.5))),
             expanded: BTreeSet::from(["a".to_string(), "b".to_string()]),
         });
-        vcs::test_support::assert_dsl_round_trip(&fixture);
-        vcs::test_support::assert_dsl_pack_equivalence(&fixture);
+        store::test_support::assert_dsl_round_trip(&fixture);
+        store::test_support::assert_dsl_pack_equivalence(&fixture);
     }
 
-    /// 📜 Exercises `vcs::OpText` for every `FlowOperation` variant — the ground-truth proof for the
+    /// 📜 Exercises `store::OpText` for every `FlowOperation` variant — the ground-truth proof for the
     /// `🔖OpText` region's `FlowOperationDsl` twin.
     #[test]
     fn flow_operation_op_text_round_trips_every_variant() {
-        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Add { id: "w1".into(), item: sample_widget("w1"), at: 0 }));
-        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Remove { id: "w1".into() }));
-        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Move { id: "w1".into(), to: 2 }));
-        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Patch { id: "w1".into(), patch: sample_widget("w1") }));
+        store::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Add { id: "w1".into(), item: sample_widget("w1"), at: 0 }));
+        store::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Remove { id: "w1".into() }));
+        store::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Move { id: "w1".into(), to: 2 }));
+        store::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Patch { id: "w1".into(), patch: sample_widget("w1") }));
         let synapse = SynapseSpec { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "x".into(), to_port: "y".into() };
-        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Add { id: "s1".into(), item: synapse.clone(), at: 0 }));
-        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Remove { id: "s1".into() }));
-        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Move { id: "s1".into(), to: 1 }));
-        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Patch { id: "s1".into(), patch: synapse }));
-        vcs::test_support::assert_op_line_round_trip(&FlowOperation::SetLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: Some(WidgetLayout { x: 1.0, y: 2.0 }) }] });
-        vcs::test_support::assert_op_line_round_trip(&FlowOperation::SetLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: None }] });
-        vcs::test_support::assert_op_line_round_trip(&FlowOperation::SetFixture { fixture: FlowFixture::default() });
+        store::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Add { id: "s1".into(), item: synapse.clone(), at: 0 }));
+        store::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Remove { id: "s1".into() }));
+        store::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Move { id: "s1".into(), to: 1 }));
+        store::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Patch { id: "s1".into(), patch: synapse }));
+        store::test_support::assert_op_line_round_trip(&FlowOperation::SetLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: Some(WidgetLayout { x: 1.0, y: 2.0 }) }] });
+        store::test_support::assert_op_line_round_trip(&FlowOperation::SetLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: None }] });
+        store::test_support::assert_op_line_round_trip(&FlowOperation::SetFixture { fixture: FlowFixture::default() });
     }
 
-    /// 📜 `vcs::test_support::assert_store_roundtrip` over a real `DocumentVcsStore<FlowFixture,
+    /// 📜 `store::test_support::assert_store_roundtrip` over a real `DocumentStore<FlowFixture,
     /// FlowOperation>` — proves the `Operation`/`OperationDiff` (`🔖Operations`) and `OpText`
     /// (`🔖OpText`) layers compose correctly end to end, matching every other converted crate's test.
     #[test]
     fn flow_fixture_satisfies_vcs_test_support_store_roundtrip() {
         let document = FlowFixture::default();
         let operation = FlowOperation::Widgets(CollectionOperation::Add { id: "w1".into(), item: sample_widget("w1"), at: 0 });
-        vcs::test_support::assert_store_roundtrip(document, operation);
+        store::test_support::assert_store_roundtrip(document, operation);
     }
 
     /// 📜 `flow/example/default.flow` is the handcrafted `.flow` DSL-text migration of what used to
@@ -5211,9 +5216,9 @@ mod flow_vcs_tests {
     #[test]
     fn default_flow_example_dsl_round_trips() {
         let text = include_str!("../../example/default.flow");
-        let fixture = <FlowFixture as vcs::DocumentDsl>::parse_dsl(text).expect("default.flow must parse");
-        vcs::test_support::assert_dsl_round_trip(&fixture);
-        vcs::test_support::assert_dsl_pack_equivalence(&fixture);
+        let fixture = <FlowFixture as store::DocumentDsl>::parse_dsl(text).expect("default.flow must parse");
+        store::test_support::assert_dsl_round_trip(&fixture);
+        store::test_support::assert_dsl_pack_equivalence(&fixture);
     }
 }
 // #endregion 🔖DocumentVcs
@@ -5923,7 +5928,7 @@ mod tests {
     fn flow_fixture_with_synapses_builds_dag_edges_and_ports() {
         let mut host = host_with_test_bridge();
         host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
-        host.replace_fixture(<FlowFixture as vcs::DocumentDsl>::parse_dsl(include_str!("../../example/default.flow")).expect("fixture"));
+        host.replace_fixture(<FlowFixture as store::DocumentDsl>::parse_dsl(include_str!("../../example/default.flow")).expect("fixture"));
         assert!(!host.dag.fixture.edges.is_empty(), "synapses should become dag edges");
         let add = host.dag.fixture.nodes.iter().find(|node| node.id == "add").expect("add node");
         assert_eq!(add.inputs().len(), 2);
@@ -5963,7 +5968,7 @@ mod tests {
         assert!(matches!(node.kind, DagNodeKind::Export { .. }));
     }
 
-    /// ↩️ Exercises the standard `vcs::DocumentVcsStore<FlowFixture, FlowOperation>` undo/redo
+    /// ↩️ Exercises the standard `store::DocumentStore<FlowFixture, FlowOperation>` undo/redo
     /// mechanism directly (the same one `FlowHost::undo`/`redo` are built on) — add a widget, undo,
     /// confirm it's gone, redo, confirm it's back — in place of the old test's direct assertions on a
     /// hand-rolled `Vec<FlowFixture>` snapshot stack.
@@ -5978,17 +5983,17 @@ mod tests {
         let operations = flow_fixture_operations(&fixture_before, &host.fixture);
         assert!(!operations.is_empty(), "add_widget must diff into vcs operations");
 
-        let envelope: FlowEnvelope = create_document_vcs_envelope(FLOW_DOCUMENT_SCHEMA, "test", fixture_before, None);
+        let envelope: FlowEnvelope = create_document_envelope(FLOW_DOCUMENT_SCHEMA, "test", fixture_before, None);
         let mut store = FlowStore::new(envelope);
-        store.dispatch(DocumentVcsCommand::Apply { operations, description: None }).expect("apply add-widget operations");
+        store.dispatch(DocumentCommand::Apply { operations, description: None }).expect("apply add-widget operations");
         assert_eq!(store.projection().expect("projection").widgets.len(), count_before + 1);
 
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        store.dispatch(DocumentCommand::Undo).expect("undo");
         let after_undo = store.projection().expect("projection");
         assert_eq!(after_undo.widgets.len(), count_before);
         assert!(!after_undo.widgets.iter().any(|w| widget_id_for(w) == id));
 
-        store.dispatch(DocumentVcsCommand::Redo).expect("redo");
+        store.dispatch(DocumentCommand::Redo).expect("redo");
         let after_redo = store.projection().expect("projection");
         assert!(after_redo.widgets.iter().any(|w| widget_id_for(w) == id));
     }
@@ -6813,7 +6818,7 @@ mod tests {
     fn rectangle_extrude_fixture_port_labels_follow_draw_lod() {
         let _guard = RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|error| error.into_inner());
         // 🩹 Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
-        // handcrafted DSL (`vcs::DocumentDsl`) — inlined the same flow-fixture JSON this test actually
+        // handcrafted DSL (`store::DocumentDsl`) — inlined the same flow-fixture JSON this test actually
         // parses (`FlowHost::parse_fixture_json`), decoupled from procedural's document format.
         let json = r#"{
   "schema": "flow.fixture",
@@ -6901,7 +6906,7 @@ mod tests {
     fn rectangle_extrude_fixture_evaluates_solid_output() {
         let _guard = RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|error| error.into_inner());
         // 🩹 Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
-        // handcrafted DSL (`vcs::DocumentDsl`) — inlined the same flow-fixture JSON this test actually
+        // handcrafted DSL (`store::DocumentDsl`) — inlined the same flow-fixture JSON this test actually
         // parses (`FlowHost::parse_fixture_json`), decoupled from procedural's document format.
         let json = r#"{
   "schema": "flow.fixture",
@@ -6975,7 +6980,7 @@ mod tests {
     #[test]
     fn hexagonal_mushroom_fixture_reports_extruded_solid_output() {
         // 🩹 Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
-        // handcrafted DSL (`vcs::DocumentDsl`) — inlined the same flow-fixture JSON this test actually
+        // handcrafted DSL (`store::DocumentDsl`) — inlined the same flow-fixture JSON this test actually
         // parses (`FlowHost::parse_fixture_json`), decoupled from procedural's document format.
         let json = r#"{
   "schema": "flow.fixture",

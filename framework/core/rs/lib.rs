@@ -1149,7 +1149,7 @@ pub struct Media {
     pub payload: MediaPayload,
 }
 
-/// 📦 Structured payloads stay inline as canonical JSON (small, diffable); binary payloads are content-addressed through `vcs::BlobStore` so a `Media` value never carries megabytes across a WIT boundary.
+/// 📦 Structured payloads stay inline as canonical JSON (small, diffable); binary payloads are content-addressed through `store::BlobStore` so a `Media` value never carries megabytes across a WIT boundary.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", tag = "kind")]
@@ -4354,7 +4354,7 @@ pub struct TutorialChapter {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TutorialBase {
-    /// 📂 Full `DocumentVcsEnvelope` JSON to sandbox-load; `None` falls back to `example_id`, and both
+    /// 📂 Full `DocumentEnvelope` JSON to sandbox-load; `None` falls back to `example_id`, and both
     /// `None` falls back to the app's default/empty document.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
@@ -4394,7 +4394,7 @@ pub struct TutorialTracks {
     pub gestures: Vec<TutorialGestureCue>,
 }
 
-/// @emoji 📦 Where a tutorial media asset's bytes live. `Blob` is wire-identical to `vcs::BlobRef`
+/// @emoji 📦 Where a tutorial media asset's bytes live. `Blob` is wire-identical to `store::BlobRef`
 /// (content-addressed Blake3 hash + size + media type) — `framework/core` does not depend on
 /// `semio-vcs`, so the shape is mirrored rather than reused; conversion between the two is
 /// field-for-field.
@@ -4647,7 +4647,7 @@ pub enum TutorialUiChange {
     },
 }
 
-/// @emoji 🖋️ One document-track entry — mirrors `vcs::DocumentVcsCommand` with `Operation =
+/// @emoji 🖋️ One document-track entry — mirrors `store::DocumentCommand` with `Operation =
 /// serde_json::Value` (opaque per-app operation JSON, already the wire shape of every `KernelOperation`
 /// diff). This is the SOLE source of document mutation during playback: recorded `TutorialEvent`s are
 /// annotational only, never re-dispatched, because re-dispatching a plugin action is non-deterministic
@@ -4692,7 +4692,7 @@ pub enum TutorialDocumentEventKind {
         alternative_id: String,
     },
     /// 📂 Wholesale document replacement (e.g. a mid-tutorial example switch) — full
-    /// `DocumentVcsEnvelope` JSON in both directions.
+    /// `DocumentEnvelope` JSON in both directions.
     Load {
         document_json: String,
         previous_json: String,

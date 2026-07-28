@@ -34,7 +34,7 @@ impl DocumentCodec {
             P: DocumentDsl + DocumentPack + Serialize + DeserializeOwned,
             Operation: OpText + Serialize + DeserializeOwned,
         {
-            let envelope: DocumentVcsEnvelope<P, Operation> =
+            let envelope: DocumentEnvelope<P, Operation> =
                 serde_json::from_str(envelope_json).map_err(|error| VcsError::Deserialize(error.to_string()))?;
             let pack_files = print_document_pack(&envelope)?;
             let dsl_mirror = envelope.vcs.initial_projection.print_dsl();

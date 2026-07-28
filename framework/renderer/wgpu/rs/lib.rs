@@ -10731,7 +10731,7 @@ mod event_feed_tests {
 //#endregion EventFeedTests
 
 //#region GraphTimeline
-/** @emoji 🗄️ Mirrors `vcs::HistoryColumn` / React `HistoryColumn` (`ui/js/react/index.tsx:19116`). */
+/** @emoji 🗄️ Mirrors `store::HistoryColumn` / React `HistoryColumn` (`ui/js/react/index.tsx:19116`). */
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct HistoryColumnAuthorJson {
@@ -23473,7 +23473,7 @@ impl ShellState {
         chrome_skip_introduction();
         let pre_sandbox_ui = tutorial_capture_ui_snapshot(self);
         // 🚧 `last_envelope_json` is this shell's own best-effort stand-in for "the live document's full
-        // `DocumentVcsEnvelope` JSON" — there is no other reachable accessor for it from here.
+        // `DocumentEnvelope` JSON" — there is no other reachable accessor for it from here.
         let pre_sandbox_document_json = self.last_envelope_json.clone();
         if let Some(document_json) = definition.base.document_json.clone() {
             self.tutorial_pending_document_ops.push(TutorialPendingDocOp::LoadDocumentJson(document_json));

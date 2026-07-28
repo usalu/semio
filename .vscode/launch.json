@@ -386,13 +386,13 @@
       }
     },
     {
-      "name": "🛠️dev🏘️compose🏪store📊graphiql",
+      "name": "🛠️dev🏘️compose📊gql",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/compose-store:dev",
+      "command": "bun nx run @semio-tech/compose-gql:dev",
       "env": {
         "RUST_LOG": "info",
-        "COMPOSE_STORE_PORT": "4010"
+        "COMPOSE_GQL_PORT": "4010"
       },
       "cwd": "${workspaceFolder}",
       "presentation": {
@@ -2696,7 +2696,7 @@
       "name": "🧪verify🔁os-sync",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo test -p semio-framework-sync -p vcs",
+      "command": "cargo test -p store_sync -p vcs",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -3422,6 +3422,28 @@
       }
     },
     {
+      "name": "🧪test🗃️store",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/store-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.95
+      }
+    },
+    {
+      "name": "🧪test🗃️store-sync",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/store-sync-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.951
+      }
+    },
+    {
       "name": "🛠️dev🏗️fem🩻2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
@@ -3590,10 +3612,10 @@
       }
     },
     {
-      "name": "📦build🗄️vcs",
+      "name": "📦build🗃️store",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/vcs-rs:wasm",
+      "command": "bun nx run @semio-tech/store-rs:wasm",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",

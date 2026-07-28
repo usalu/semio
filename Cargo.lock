@@ -110,6 +110,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -144,6 +145,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "vcs",
  "wasm-bindgen",
@@ -235,6 +237,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -247,6 +250,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "vcs",
 ]
@@ -1100,6 +1104,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "ui_wgpu",
  "vcs",
 ]
@@ -1112,6 +1117,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "vcs",
  "wasm-bindgen",
 ]
@@ -1476,6 +1482,7 @@ dependencies = [
  "serde-wasm-bindgen",
  "serde_json",
  "sha2",
+ "store",
  "tempfile",
  "thiserror 2.0.18",
  "ureq",
@@ -1490,7 +1497,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "compose-store"
+name = "compose-gql"
 version = "0.1.0"
 dependencies = [
  "async-broadcast",
@@ -1906,6 +1913,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "vcs",
 ]
@@ -2135,6 +2143,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -2544,6 +2553,7 @@ dependencies = [
  "semio-framework-core",
  "serde",
  "serde_json",
+ "store",
  "vcs",
  "wasm-bindgen",
 ]
@@ -2568,10 +2578,11 @@ dependencies = [
  "dsl_core",
  "dsl_derive",
  "dsl_schema",
+ "pack",
  "protocol",
  "serde",
  "serde_json",
- "vcs",
+ "store",
 ]
 
 [[package]]
@@ -2899,6 +2910,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -2911,6 +2923,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "vcs",
  "wasm-bindgen",
@@ -2925,6 +2938,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "vcs",
  "wasm-bindgen",
@@ -2989,6 +3003,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -3020,6 +3035,7 @@ dependencies = [
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "ui_styling",
  "vcs",
@@ -3327,6 +3343,7 @@ dependencies = [
  "playbook",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -3340,6 +3357,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -3361,6 +3379,7 @@ dependencies = [
  "js-sys",
  "serde",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "ui_styling",
  "vcs",
@@ -3756,6 +3775,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "vcs",
  "wasm-bindgen",
 ]
@@ -4804,6 +4824,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -4818,6 +4839,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "vcs",
  "wasm-bindgen",
@@ -4836,6 +4858,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -4975,6 +4998,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "ui_styling",
  "vcs",
@@ -5447,6 +5471,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -5466,6 +5491,7 @@ dependencies = [
  "serde-wasm-bindgen",
  "serde_json",
  "sha2",
+ "store",
  "swash",
  "thiserror 2.0.18",
  "vcs",
@@ -5620,6 +5646,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -5639,6 +5666,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "vcs",
 ]
@@ -5701,6 +5729,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -6619,6 +6648,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -6630,6 +6660,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "vcs",
 ]
@@ -6641,6 +6672,7 @@ dependencies = [
  "dsl",
  "norm_core",
  "serde",
+ "store",
  "vcs",
 ]
 
@@ -6651,6 +6683,7 @@ dependencies = [
  "dsl",
  "norm_core",
  "serde",
+ "store",
  "vcs",
 ]
 
@@ -6663,6 +6696,7 @@ dependencies = [
  "norm_din_4108",
  "norm_din_en_16798",
  "serde",
+ "store",
  "vcs",
 ]
 
@@ -6674,6 +6708,7 @@ dependencies = [
  "mathematical_algebra",
  "norm_core",
  "serde",
+ "store",
  "vcs",
 ]
 
@@ -6686,6 +6721,7 @@ dependencies = [
  "norm_core",
  "norm_en_1990",
  "serde",
+ "store",
  "vcs",
 ]
 
@@ -6700,6 +6736,7 @@ dependencies = [
  "norm_en_1990",
  "norm_en_1991",
  "serde",
+ "store",
  "vcs",
 ]
 
@@ -6714,6 +6751,7 @@ dependencies = [
  "norm_en_1990",
  "norm_en_1991",
  "serde",
+ "store",
  "vcs",
 ]
 
@@ -6728,6 +6766,7 @@ dependencies = [
  "norm_en_1990",
  "norm_en_1991",
  "serde",
+ "store",
  "vcs",
 ]
 
@@ -6742,6 +6781,7 @@ dependencies = [
  "norm_en_1990",
  "norm_en_1991",
  "serde",
+ "store",
  "vcs",
 ]
 
@@ -6756,6 +6796,7 @@ dependencies = [
  "norm_en_1990",
  "norm_en_1991",
  "serde",
+ "store",
  "vcs",
 ]
 
@@ -6770,6 +6811,7 @@ dependencies = [
  "norm_en_1990",
  "norm_en_1991",
  "serde",
+ "store",
  "vcs",
 ]
 
@@ -6784,6 +6826,7 @@ dependencies = [
  "norm_en_1990",
  "norm_en_1991",
  "serde",
+ "store",
  "vcs",
 ]
 
@@ -6798,6 +6841,7 @@ dependencies = [
  "norm_en_1990",
  "norm_en_1991",
  "serde",
+ "store",
  "vcs",
 ]
 
@@ -6810,6 +6854,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "vcs",
 ]
@@ -6823,6 +6868,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "vcs",
 ]
@@ -6837,6 +6883,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -7915,6 +7962,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "ui_wgpu",
  "vcs",
  "wasm-bindgen",
@@ -7934,6 +7982,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -7945,6 +7994,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -8135,6 +8185,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "ui_styling",
  "ui_wgpu",
  "vcs",
@@ -8150,6 +8201,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "vcs",
  "wasm-bindgen",
 ]
@@ -8164,6 +8216,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "vcs",
  "wasm-bindgen",
 ]
@@ -8182,6 +8235,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -8193,6 +8247,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "vcs",
  "wasm-bindgen",
 ]
@@ -8379,6 +8434,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "ui_wgpu",
  "vcs",
 ]
@@ -8402,6 +8458,7 @@ dependencies = [
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
+ "store",
  "typst",
  "typst-assets",
  "typst-svg",
@@ -8424,6 +8481,7 @@ dependencies = [
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "vcs",
  "wasm-bindgen",
@@ -8439,6 +8497,7 @@ dependencies = [
  "puzzle_3d",
  "serde",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "vcs",
  "wasm-bindgen",
@@ -8668,6 +8727,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "vcs",
  "wasm-bindgen",
 ]
@@ -8744,6 +8804,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -8757,6 +8818,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "vcs",
  "wasm-bindgen",
 ]
@@ -8770,6 +8832,7 @@ dependencies = [
  "reasoning_mindmap",
  "serde",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "vcs",
 ]
@@ -8916,6 +8979,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -8948,6 +9012,7 @@ dependencies = [
  "semio-framework-core",
  "serde",
  "serde_json",
+ "store",
  "vcs",
  "wasm-bindgen",
 ]
@@ -9429,6 +9494,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -9442,6 +9508,7 @@ dependencies = [
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "vcs",
  "wasm-bindgen",
@@ -9609,6 +9676,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "store_sync",
  "thiserror 2.0.18",
  "tiny-skia",
@@ -9642,6 +9710,7 @@ dependencies = [
  "semio-framework-core",
  "serde",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "ui_wgpu",
  "vcs",
@@ -9655,6 +9724,7 @@ dependencies = [
  "semio-framework-core",
  "serde",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "ui_wgpu",
  "vcs",
@@ -9685,6 +9755,7 @@ dependencies = [
  "semio-framework-plugin-host",
  "serde",
  "serde_json",
+ "store",
  "store_sync",
  "tiny-skia",
  "tokio",
@@ -9726,6 +9797,7 @@ dependencies = [
  "sequence_core",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -9744,6 +9816,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "vcs",
  "wasm-bindgen",
@@ -9959,6 +10032,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "vcs",
  "wasm-bindgen",
 ]
@@ -9974,6 +10048,7 @@ dependencies = [
  "serde",
  "serde_json",
  "shooting",
+ "store",
  "vcs",
 ]
 
@@ -10158,6 +10233,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sourcing_curate",
+ "store",
  "vcs",
  "wasm-bindgen",
 ]
@@ -10170,6 +10246,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "vcs",
  "wasm-bindgen",
 ]
@@ -10385,6 +10462,7 @@ checksum = "d7beae5182595e9a8b683fa98c4317f956c9a2dec3b9716990d20023cc60c766"
 name = "store"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "dsl",
  "dsl_core",
  "js-sys",
@@ -11199,6 +11277,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "trinity_jack",
  "trinity_ram",
  "trinity_rewrite",
@@ -11233,6 +11312,7 @@ dependencies = [
 name = "trinity_jack_shell"
 version = "0.1.0"
 dependencies = [
+ "store",
  "thiserror 2.0.18",
  "trinity_jack",
  "trinity_ram",
@@ -11248,6 +11328,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "vcs",
  "wasm-bindgen",
@@ -11265,6 +11346,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "thiserror 2.0.18",
  "trinity_jack",
  "trinity_ram",
@@ -12000,6 +12082,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "vcs",
 ]
 
@@ -13680,6 +13763,7 @@ dependencies = [
  "protocol",
  "serde",
  "serde_json",
+ "store",
  "vcs",
  "wasm-bindgen",
 ]
@@ -13692,6 +13776,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "store",
  "trinity_jack",
  "trinity_ram",
  "vcs",

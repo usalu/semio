@@ -243,7 +243,7 @@ pub trait OperationTransform<P>: protocol_command::Operation<P> {
 
 //#region 🔖Bridge
 // Moved from vcs/rs (was operation_envelope_from_edit). The original signature took a
-// `DocumentVcsEnvelope<P, Operation>` (for its `.id`/`.schema`) and a `deps: Vec<OperationId>` and
+// `DocumentEnvelope<P, Operation>` (for its `.id`/`.schema`) and a `deps: Vec<OperationId>` and
 // returned a single `Result<OperationEnvelope, VcsError>` whose diff/inverse payloads were the
 // *whole* `Edit` serialized once. The frozen contract's signature drops both the vcs envelope and
 // the `deps` parameter and returns `Vec<OperationEnvelope>` — one envelope per forward op — which

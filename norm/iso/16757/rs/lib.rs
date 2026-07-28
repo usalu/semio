@@ -1566,8 +1566,8 @@ impl Document {
 }
 
 /// 🧬 `SetDocumentOperation<Document>` (whole-document replace) already implements both
-/// `vcs::Operation<Document>` and, now that `Document` derives `dsl::DslDocument` (i.e.
-/// `vcs::DocumentDsl`), `vcs::OpText` too — see `norm_core`'s generic `impl<D: DocumentDsl + ...>
+/// `store::Operation<Document>` and, now that `Document` derives `dsl::DslDocument` (i.e.
+/// `store::DocumentDsl`), `store::OpText` too — see `norm_core`'s generic `impl<D: DocumentDsl + ...>
 /// OpText for SetDocumentOperation<D>`. A coarse, whole-value-replace operation is the legitimate,
 /// sufficient choice per the migration cheat sheet: this reference/lookup-table document has no
 /// existing interactive editor driving fine-grained field-level edits, so reusing this generic
@@ -1577,9 +1577,9 @@ pub type Operation = SetDocumentOperation<Document>;
 pub type Host = NormHost<Iso16757Family>;
 
 /// 📦 VCS envelope/store aliases for the ISO 16757 document, now that `Document`/`Operation` both
-/// satisfy `vcs::DocumentDsl`/`vcs::OpText`.
-pub type Iso16757Envelope = vcs::DocumentVcsEnvelope<Document, Operation>;
-pub type Iso16757Store = vcs::DocumentVcsStore<Document, Operation>;
+/// satisfy `store::DocumentDsl`/`store::OpText`.
+pub type Iso16757Envelope = store::DocumentEnvelope<Document, Operation>;
+pub type Iso16757Store = store::DocumentStore<Document, Operation>;
 
 fn clause(part: &str, section: &str) -> ClauseId {
     ClauseId::new("ISO 16757", part, section)
@@ -2435,7 +2435,7 @@ mod tests {
     // #region 🔖DslTests
     #[test]
     fn document_dsl_round_trips_the_reference_fixture() {
-        vcs::test_support::assert_dsl_round_trip(&Document::reference_fixture());
+        store::test_support::assert_dsl_round_trip(&Document::reference_fixture());
     }
 
     #[test]
@@ -2446,36 +2446,36 @@ mod tests {
     // sub-field of that nested record (here: `Names.short_name`, `None` on many rows of this fixture's
     // `#[dsl(table)]` catalogue tables — `ProductGroup`/`ProductClass`/`Product`/`Subject` etc. all
     fn document_dsl_pack_equivalence_the_reference_fixture() {
-        vcs::test_support::assert_dsl_pack_equivalence(&Document::reference_fixture());
+        store::test_support::assert_dsl_pack_equivalence(&Document::reference_fixture());
     }
 
     #[test]
     fn set_document_operation_op_text_round_trips_for_iso16757() {
-        vcs::test_support::assert_op_line_round_trip(&Operation::SetDocument { document: Document::reference_fixture() });
+        store::test_support::assert_op_line_round_trip(&Operation::SetDocument { document: Document::reference_fixture() });
     }
 
     #[test]
     fn document_text_round_trips_through_a_vcs_store() {
-        let envelope = vcs::create_document_vcs_envelope(ISO16757_EXTENSION, "iso16757.demo", Document::reference_fixture(), None);
+        let envelope = store::create_document_envelope(ISO16757_EXTENSION, "iso16757.demo", Document::reference_fixture(), None);
         let mut store = Iso16757Store::new(envelope);
         let mut mutated = Document::reference_fixture();
         mutated.exchange_process = part_5::ExchangeProcess::ProvideCatalogue;
         store
-            .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None })
+            .dispatch(store::DocumentCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None })
             .expect("apply");
-        vcs::test_support::assert_document_text_round_trip(&store);
+        store::test_support::assert_document_text_round_trip(&store);
     }
 
     #[test]
     fn document_pack_round_trips_through_a_vcs_store() {
-        let envelope = vcs::create_document_vcs_envelope(ISO16757_EXTENSION, "iso16757.demo", Document::reference_fixture(), None);
+        let envelope = store::create_document_envelope(ISO16757_EXTENSION, "iso16757.demo", Document::reference_fixture(), None);
         let mut store = Iso16757Store::new(envelope);
         let mut mutated = Document::reference_fixture();
         mutated.exchange_process = part_5::ExchangeProcess::ProvideCatalogue;
         store
-            .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None })
+            .dispatch(store::DocumentCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None })
             .expect("apply");
-        vcs::test_support::assert_document_pack_round_trip(&store);
+        store::test_support::assert_document_pack_round_trip(&store);
     }
 
     #[test]

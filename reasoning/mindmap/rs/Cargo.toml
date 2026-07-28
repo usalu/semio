@@ -18,6 +18,7 @@ path = "lib.rs"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 vcs = { path = "../../../vcs/rs" }
+store = { path = "../../../store/rs" }
 protocol = { path = "../../../protocol/rs" }
 dsl = { path = "../../../dsl/rs" }
 infinite_board_normal_directed = { path = "../../../infinite/board/normal/directed/rs" }

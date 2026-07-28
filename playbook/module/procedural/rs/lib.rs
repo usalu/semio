@@ -28,7 +28,7 @@ const SOLID_MEDIA_FORMATS: [&str; 4] = ["step", "obj", "stl", "glb"];
 const SOLID_EXPORT_DEFLECTION: f64 = 0.1;
 const SOLID_IMPORT_TOLERANCE: f64 = 0.1;
 // 🩹 Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
-// handcrafted DSL (`vcs::DocumentDsl`) that this module (which parses the content as a raw
+// handcrafted DSL (`store::DocumentDsl`) that this module (which parses the content as a raw
 // `FlowFixture`, not a `Procedural3dDocument`) doesn't read — inlined the same flow-fixture JSON
 // this module actually needs, decoupled from procedural's document format.
 const HEX_COLUMN_FIXTURE_JSON: &str = r#"{
@@ -783,13 +783,13 @@ mod tests {
     //#region 🔖DslAndOpText
     #[test]
     fn module_render_payload_dsl_round_trips() {
-        vcs::test_support::assert_dsl_round_trip(&default_payload());
-        vcs::test_support::assert_dsl_pack_equivalence(&default_payload());
+        store::test_support::assert_dsl_round_trip(&default_payload());
+        store::test_support::assert_dsl_pack_equivalence(&default_payload());
     }
 
     #[test]
     fn module_payload_operation_op_text_round_trips() {
-        vcs::test_support::assert_op_line_round_trip(&ModulePayloadOperation::SetPayload { payload: default_payload() });
+        store::test_support::assert_op_line_round_trip(&ModulePayloadOperation::SetPayload { payload: default_payload() });
     }
     //#endregion 🔖DslAndOpText
 }

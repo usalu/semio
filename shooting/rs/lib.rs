@@ -4,11 +4,11 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 #[cfg(any(test, target_arch = "wasm32"))]
-use vcs::create_document_vcs_envelope;
+use store::create_document_envelope;
 #[cfg(test)]
-use vcs::DocumentVcsCommand;
+use store::DocumentCommand;
 use protocol::{collection_diff_from_operation, CollectionDiff, CollectionOperation, Identified, ItemPatch, Operation, OperationDiff, Patchable};
-use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
+use store::{DocumentEnvelope, DocumentStore};
 
 pub const SHOOTING_FIXTURE_SCHEMA: &str = "shooting.fixture";
 
@@ -199,8 +199,8 @@ pub struct ShootingFixture {
     pub active_asset_id: String,
 }
 
-pub type ShootingEnvelope = DocumentVcsEnvelope<ShootingFixture, ShootingOperation>;
-pub type ShootingStore = DocumentVcsStore<ShootingFixture, ShootingOperation>;
+pub type ShootingEnvelope = DocumentEnvelope<ShootingFixture, ShootingOperation>;
+pub type ShootingStore = DocumentStore<ShootingFixture, ShootingOperation>;
 
 pub fn empty_shooting_fixture() -> ShootingFixture {
     ShootingFixture {
@@ -739,30 +739,30 @@ fn shooting_fixture_from_dsl(dsl_fixture: ShootingFixtureDsl) -> ShootingFixture
     }
 }
 
-impl vcs::DocumentDsl for ShootingFixture {
+impl store::DocumentDsl for ShootingFixture {
     const EXTENSION: &'static str = "shooting";
 
-    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        let parsed = <ShootingFixtureDsl as vcs::DocumentDsl>::parse_dsl(text)?;
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        let parsed = <ShootingFixtureDsl as store::DocumentDsl>::parse_dsl(text)?;
         Ok(shooting_fixture_from_dsl(parsed))
     }
 
     fn print_dsl(&self) -> String {
-        <ShootingFixtureDsl as vcs::DocumentDsl>::print_dsl(&shooting_fixture_to_dsl(self))
+        <ShootingFixtureDsl as store::DocumentDsl>::print_dsl(&shooting_fixture_to_dsl(self))
     }
 }
 
-/// 📦 Hand-written `vcs::DocumentPack` mirror of the `DocumentDsl` impl above — `ShootingFixture`
+/// 📦 Hand-written `store::DocumentPack` mirror of the `DocumentDsl` impl above — `ShootingFixture`
 /// itself doesn't derive `dsl::DslDocument` (see `ShootingFixtureDsl`'s doc comment), so it doesn't
 /// pick up the blanket derive-emitted `DocumentPack` impl either; this converts through the same
 /// `ShootingFixtureDsl` mirror, which does derive it.
-impl vcs::DocumentPack for ShootingFixture {
-    fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
-        <ShootingFixtureDsl as vcs::DocumentPack>::encode_pack_with(&shooting_fixture_to_dsl(self), options)
+impl store::DocumentPack for ShootingFixture {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        <ShootingFixtureDsl as store::DocumentPack>::encode_pack_with(&shooting_fixture_to_dsl(self), options)
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
-        let parsed = <ShootingFixtureDsl as vcs::DocumentPack>::decode_pack_with(bytes, options)?;
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let parsed = <ShootingFixtureDsl as store::DocumentPack>::decode_pack_with(bytes, options)?;
         Ok(shooting_fixture_from_dsl(parsed))
     }
 }
@@ -927,7 +927,7 @@ fn shooting_operation_from_dsl(dsl_op: ShootingOperationDsl) -> ShootingOperatio
 }
 
 impl protocol::OpText for ShootingOperation {
-    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(shooting_operation_from_dsl(<ShootingOperationDsl as protocol::OpText>::parse_op(line)?))
     }
 
@@ -958,14 +958,19 @@ mod wasm_bridge {
                     let envelope: ShootingEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     ShootingStore::new(envelope)
                 }
-                None => ShootingStore::new(create_document_vcs_envelope(SHOOTING_FIXTURE_SCHEMA, "shooting", empty_shooting_fixture(), None)),
+                None => ShootingStore::new(create_document_envelope(SHOOTING_FIXTURE_SCHEMA, "shooting", empty_shooting_fixture(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
 
-        #[wasm_bindgen(js_name = dispatchJson)]
-        pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
+        #[wasm_bindgen(js_name = dispatchText)]
+        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = dispatchBinary)]
+        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
@@ -980,7 +985,7 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vcs::DocumentDsl;
+    use store::DocumentDsl;
 
     fn sample_asset(id: &str) -> ShootingAsset {
         ShootingAsset { id: id.into(), name: format!("Asset {id}"), url: format!("/mesh/{id}.glb"), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None }
@@ -1003,8 +1008,8 @@ mod tests {
 
     #[test]
     fn shooting_projection_round_trip() {
-        let mut store = ShootingStore::new(create_document_vcs_envelope(SHOOTING_FIXTURE_SCHEMA, "shooting", empty_shooting_fixture(), None));
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![ShootingOperation::Assets(CollectionOperation::Add { id: "a1".into(), item: sample_asset("a1"), at: 0 })], description: None }).expect("apply");
+        let mut store = ShootingStore::new(create_document_envelope(SHOOTING_FIXTURE_SCHEMA, "shooting", empty_shooting_fixture(), None));
+        store.dispatch(DocumentCommand::Apply { operations: vec![ShootingOperation::Assets(CollectionOperation::Add { id: "a1".into(), item: sample_asset("a1"), at: 0 })], description: None }).expect("apply");
         assert_eq!(store.projection().expect("projection").assets.len(), 1);
     }
 
@@ -1124,9 +1129,9 @@ mod tests {
 
     #[test]
     fn coalesced_camera_drag_produces_one_edit() {
-        let mut store = ShootingStore::new(create_document_vcs_envelope(SHOOTING_FIXTURE_SCHEMA, "shooting", empty_shooting_fixture(), None));
-        store.dispatch(DocumentVcsCommand::AmendLast { operations: vec![ShootingOperation::SetCamera { camera: ShootingCamera { position: [1.0, 0.0, 0.0], ..Default::default() } }], coalesce_key: Some("camera".into()) }).expect("first drag tick");
-        store.dispatch(DocumentVcsCommand::AmendLast { operations: vec![ShootingOperation::SetCamera { camera: ShootingCamera { position: [2.0, 0.0, 0.0], ..Default::default() } }], coalesce_key: Some("camera".into()) }).expect("second drag tick");
+        let mut store = ShootingStore::new(create_document_envelope(SHOOTING_FIXTURE_SCHEMA, "shooting", empty_shooting_fixture(), None));
+        store.dispatch(DocumentCommand::AmendLast { operations: vec![ShootingOperation::SetCamera { camera: ShootingCamera { position: [1.0, 0.0, 0.0], ..Default::default() } }], coalesce_key: Some("camera".into()) }).expect("first drag tick");
+        store.dispatch(DocumentCommand::AmendLast { operations: vec![ShootingOperation::SetCamera { camera: ShootingCamera { position: [2.0, 0.0, 0.0], ..Default::default() } }], coalesce_key: Some("camera".into()) }).expect("second drag tick");
         assert_eq!(store.envelope().vcs.edits.len(), 1, "coalesced drag must produce exactly one edit");
         assert_eq!(store.projection().expect("projection").camera.position, [2.0, 0.0, 0.0]);
     }
@@ -1168,85 +1173,85 @@ mod tests {
 
     #[test]
     fn shooting_dsl_round_trips_representative_fixture() {
-        vcs::test_support::assert_dsl_round_trip(&representative_fixture());
-        vcs::test_support::assert_dsl_pack_equivalence(&representative_fixture());
+        store::test_support::assert_dsl_round_trip(&representative_fixture());
+        store::test_support::assert_dsl_pack_equivalence(&representative_fixture());
     }
 
     #[test]
     fn shooting_dsl_round_trips_empty_fixture() {
-        vcs::test_support::assert_dsl_round_trip(&empty_shooting_fixture());
-        vcs::test_support::assert_dsl_pack_equivalence(&empty_shooting_fixture());
+        store::test_support::assert_dsl_round_trip(&empty_shooting_fixture());
+        store::test_support::assert_dsl_pack_equivalence(&empty_shooting_fixture());
     }
 
     #[test]
     fn shooting_dsl_round_trips_base_icon_example() {
         const BASE_ICON_EXAMPLE_DSL: &str = include_str!("../example/base-icon.shooting");
         let fixture = ShootingFixture::parse_dsl(BASE_ICON_EXAMPLE_DSL).expect("base-icon example parses");
-        vcs::test_support::assert_dsl_round_trip(&fixture);
-        vcs::test_support::assert_dsl_pack_equivalence(&fixture);
+        store::test_support::assert_dsl_round_trip(&fixture);
+        store::test_support::assert_dsl_pack_equivalence(&fixture);
     }
 
     #[test]
     fn shooting_op_text_round_trips_collection_variants() {
         let asset = sample_asset("a1");
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Add { id: "a1".into(), item: asset.clone(), at: 0 }));
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Remove { id: "a1".into() }));
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Move { id: "a1".into(), to: 2 }));
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Patch {
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Add { id: "a1".into(), item: asset.clone(), at: 0 }));
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Remove { id: "a1".into() }));
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Move { id: "a1".into(), to: 2 }));
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::Assets(CollectionOperation::Patch {
             id: "a1".into(),
             patch: ShootingAssetPatch { name: Some("Renamed".into()), url: None, origin: Some([1.0, 2.0, 3.0]), orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: Some(serde_json::json!(2.5)) },
         }));
 
         let shot = sample_shot("s1");
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Add { id: "s1".into(), item: shot.clone(), at: 0 }));
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Remove { id: "s1".into() }));
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Move { id: "s1".into(), to: 1 }));
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Patch {
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Add { id: "s1".into(), item: shot.clone(), at: 0 }));
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Remove { id: "s1".into() }));
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Move { id: "s1".into(), to: 1 }));
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::Shots(CollectionOperation::Patch {
             id: "s1".into(),
             patch: ShootingShotPatch { label: Some("Hero".into()), width: Some(512), height: None, format: None, shape: Some("ellipse".into()) },
         }));
 
         let saved_camera = ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera::default() };
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Add { id: "cam1".into(), item: saved_camera.clone(), at: 0 }));
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Remove { id: "cam1".into() }));
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Move { id: "cam1".into(), to: 0 }));
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Patch {
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Add { id: "cam1".into(), item: saved_camera.clone(), at: 0 }));
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Remove { id: "cam1".into() }));
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Move { id: "cam1".into(), to: 0 }));
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Patch {
             id: "cam1".into(),
             patch: ShootingSavedCameraPatch { label: Some("Renamed".into()), camera: Some(ShootingCamera { position: [1.0, 2.0, 3.0], ..Default::default() }) },
         }));
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Patch { id: "cam1".into(), patch: ShootingSavedCameraPatch { label: None, camera: None } }));
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::SavedCameras(CollectionOperation::Patch { id: "cam1".into(), patch: ShootingSavedCameraPatch { label: None, camera: None } }));
     }
 
     #[test]
     fn shooting_op_text_round_trips_every_other_variant() {
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::SetActiveShot { shot_id: Some("s1".into()) });
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::SetActiveShot { shot_id: None });
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::SetActiveAsset { asset_id: Some("a1".into()) });
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::SetActiveAsset { asset_id: None });
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::SetCamera {
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::SetActiveShot { shot_id: Some("s1".into()) });
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::SetActiveShot { shot_id: None });
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::SetActiveAsset { asset_id: Some("a1".into()) });
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::SetActiveAsset { asset_id: None });
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::SetCamera {
             camera: ShootingCamera { position: [1.0, 2.0, 3.0], target: [4.0, 5.0, 6.0], zoom: 2.0, fov: 60.0, up: Some([0.0, 1.0, 0.0]), projection: Some("orthographic".into()) },
         });
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::SetShotCamera { shot_id: "s1".into(), camera: ShootingCamera::default() });
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::PatchScene {
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::SetShotCamera { shot_id: "s1".into(), camera: ShootingCamera::default() });
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::PatchScene {
             patch: ShootingScenePatch { sun_enabled: Some(true), sun_azimuth: Some(90.0), sun_elevation: None, sun_intensity: Some(1.0), ambient_intensity: None, shadow_enabled: Some(false), material_roughness: Some(0.4) },
         });
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::TranslateAssets { asset_ids: vec!["a1".into(), "a2".into()], dx: 1.0, dy: -2.0, dz: 3.5 });
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::RotateAssets { asset_ids: vec!["a1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 1.5 });
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::ScaleAssets { asset_ids: vec!["a1".into()], sx: 2.0, sy: 2.0, sz: 2.0 });
-        vcs::test_support::assert_op_line_round_trip(&ShootingOperation::SetFixture { fixture: representative_fixture() });
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::TranslateAssets { asset_ids: vec!["a1".into(), "a2".into()], dx: 1.0, dy: -2.0, dz: 3.5 });
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::RotateAssets { asset_ids: vec!["a1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 1.5 });
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::ScaleAssets { asset_ids: vec!["a1".into()], sx: 2.0, sy: 2.0, sz: 2.0 });
+        store::test_support::assert_op_line_round_trip(&ShootingOperation::SetFixture { fixture: representative_fixture() });
     }
 
     #[test]
     fn shooting_document_text_round_trips_store_with_applied_operation() {
-        let mut store = ShootingStore::new(create_document_vcs_envelope(SHOOTING_FIXTURE_SCHEMA, "shooting", empty_shooting_fixture(), None));
+        let mut store = ShootingStore::new(create_document_envelope(SHOOTING_FIXTURE_SCHEMA, "shooting", empty_shooting_fixture(), None));
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![ShootingOperation::Assets(CollectionOperation::Add { id: "a1".into(), item: sample_asset("a1"), at: 0 })],
                 description: None,
             })
             .expect("apply");
-        vcs::test_support::assert_document_text_round_trip(&store);
-        vcs::test_support::assert_document_pack_round_trip(&store);
+        store::test_support::assert_document_text_round_trip(&store);
+        store::test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DslAndOpText
 }

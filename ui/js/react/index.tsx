@@ -7371,9 +7371,13 @@ export const panelTabIconSlotClass = "inline-flex shrink-0 items-center justify-
 /** @emoji 📑 Panel tab label beside the icon. */
 export const panelTabLabelClass = "min-w-0 truncate text-xs leading-none";
 
-/** @emoji 📑 Panel tab button with icon and mandatory name (no per-tab borders — {@link panelTabBarClass} owns dividers). */
+/** @emoji 📏 Normal logical-end divider between sibling panel-tab toggles; the last toggle defers its outer edge to the hosting chrome silhouette. */
+export const panelTabButtonDividerClass = "border-e border-solid !border-normal last:border-e-0";
+
+/** @emoji 📑 Panel tab button with icon, mandatory name, and a normal divider between sibling toggles. */
 export const panelTabButtonClass = cn(
-  "inline-flex min-h-0 shrink-0 items-center gap-tiny border-e border-solid !border-normal last:border-e-0 bg-transparent p-0",
+  "inline-flex min-h-0 shrink-0 items-center gap-tiny bg-transparent p-0",
+  panelTabButtonDividerClass,
   "cursor-pointer whitespace-nowrap text-xs leading-none text-element transition-colors",
   "outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-active-base",
   "[&[data-active=true]:not(:first-child)]:border-s [&[data-active=true]:not(:first-child)]:-ms-px",
@@ -7381,9 +7385,9 @@ export const panelTabButtonClass = cn(
   hoverExcludingHandleTextEmphasizedClass,
 );
 
-/** @emoji 📑 Floating panel tab strip inside {@link WindowChrome} — hugs tabs; silhouette + per-tab pills own every stroke. */
-export function panelAnchorTabBarClass(_direction: "up" | "down"): string {
-  return cn(panelTabBarScrollClass, "h-medium");
+/** @emoji 📑 Floating panel tab strip inside {@link WindowChrome} — collapsed tabs defer every outer edge to the silhouette; expanded tabs restore the normal content-facing edge that separates their toggles from the panel body. */
+export function panelAnchorTabBarClass(direction: "up" | "down", expanded = false): string {
+  return cn(panelTabBarScrollClass, "h-medium", expanded && (direction === "up" ? borderNormalTopClass : borderNormalBottomClass));
 }
 
 /** @emoji 📑 Panel tab button padding. */
@@ -7942,6 +7946,7 @@ const PanelTabButton: React.FC<{
           windowTabChrome && !isActive && inactiveTabChromeClass,
           windowTabChrome && isActive && showActiveColor && modeDockActiveTabClass,
           !windowTabChrome && isActive && showActiveColor && modeDockActiveTabFillClass,
+          windowTabChrome && panelTabButtonDividerClass,
           isDragSource && "opacity-40",
           isChildDropTarget && "ring-2 ring-accent",
           isUnitDropReady && dropZoneReadyClass,
@@ -8010,7 +8015,7 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
   if (sortedTabs.length === 0) return null;
 
   const resolvedVariant = variant === "chrome" ? "panel" : variant;
-  const barClass = resolvedVariant === "panel" ? panelAnchorTabBarClass(direction) : mobilePanelTabBarClass;
+  const barClass = resolvedVariant === "panel" ? panelAnchorTabBarClass(direction, showActiveColor) : mobilePanelTabBarClass;
   const buttonClass = resolvedVariant === "mobile" ? mobilePanelTabButtonClass : panelAnchorTabButtonClass;
   const dropTarget = dock?.dropTarget;
   const isDropRow = Boolean(anchor && dropTarget?.kind === "insert" && dropTarget.anchor === anchor && dropTarget.parentPath.length === parentPath.length && dropTarget.parentPath.every((id, index) => id === parentPath[index]));
@@ -9089,9 +9094,9 @@ export interface WindowChromeControlAction {
   readonly onClick: () => void;
 }
 
-/** @emoji 🪟 Title chip in the window-chrome cap row (name + optional drag) — transparent so it
- * shows the painted chip-cap cell it sits inside, never a second opaque fill of its own. */
-export const windowChromeTitleChipClass = cn(modeDockTabClassName, "relative z-30 box-border min-h-medium shrink-0 border bg-transparent", borderNormalClass);
+/** @emoji 🪟 Title chip in the window-chrome cap row (name + optional drag) — transparent and
+ * borderless so the painted chip-cap cell shows through and the silhouette remains the sole outline. */
+export const windowChromeTitleChipClass = cn(modeDockTabClassName, "relative z-30 box-border min-h-medium shrink-0 border-0 bg-transparent");
 
 export interface WindowChromeProps {
   readonly active?: boolean;
@@ -28689,10 +28694,9 @@ if (import.meta.vitest) {
     });
 
     // 🪜 D2 regression: the title chip, close cell, body, and footer chips of one introduction step
-    // are all `data-level="dialog"` and must render the exact same fill — the bug report was three
-    // different backgrounds (opaque title chip / fully transparent close cell / glass body) inside
-    // this one WindowChrome.
-    it("renders the title chip, close cell, body, and footer chips as one uniform dialog-level glass surface", () => {
+    // are all `data-level="dialog"` and must render the exact same fill without piecewise borders —
+    // the WindowChrome silhouette owns their one continuous outline.
+    it("renders title, close, body, and footer chips as one borderless dialog-level glass silhouette", () => {
       const steps: IntroductionStepDefinition[] = [
         { id: "first", title: "First", body: "Step one.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
         { id: "second", title: "Second", body: "Step two.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
@@ -28705,6 +28709,8 @@ if (import.meta.vitest) {
       const stepChip = container.querySelector('[data-slot="introduction-step-chip"]') as HTMLElement;
       expect(titleChip.className).not.toContain("ui-surface");
       expect(stepChip.className).not.toContain("ui-surface");
+      expect(titleChip.className).toContain("border-0");
+      expect(stepChip.className).toContain("border-0");
 
       const chipCap = container.querySelector('[data-slot="window-chrome-chip-cap"]') as HTMLElement;
       const controls = container.querySelector('[data-slot="window-chrome-controls"]') as HTMLElement;
@@ -28717,6 +28723,15 @@ if (import.meta.vitest) {
         expect(cell.className).toContain("ui-glass");
         expect(cell.className).not.toContain("ui-surface");
         expect(cell.className).not.toContain("bg-transparent");
+      }
+
+      const backButtonGroup = container.querySelector('[id="ui.introduction.back"]')?.closest('[data-slot="button-group"]') as HTMLElement;
+      const nextButtonGroup = container.querySelector('[id="ui.introduction.next"]')?.closest('[data-slot="button-group"]') as HTMLElement;
+      const closeButton = container.querySelector('[data-slot="introduction-close"]') as HTMLElement;
+      for (const flowingChip of [titleChip, stepChip, backButtonGroup, nextButtonGroup, closeButton]) {
+        expect(flowingChip).toBeTruthy();
+        expect(flowingChip.parentElement?.hasAttribute("data-window-silhouette-chip")).toBe(true);
+        expect(flowingChip.getAttribute("data-level") ?? flowingChip.closest("[data-level]")?.getAttribute("data-level")).toBe("dialog");
       }
 
       const gap = container.querySelector('[data-slot="window-chrome-gap"]') as HTMLElement;
@@ -29060,7 +29075,13 @@ if (import.meta.vitest) {
       const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/ui.css"), "utf8");
       expect(css).toMatch(/\[data-slot="introduction-info-box"\]\s*\[data-slot="introduction-body-paragraph"\]:hover\s*\{\s*color:\s*var\(--border-emphasized-color\);/);
       expect(css).not.toMatch(/\[data-slot="introduction-info-box"\]\s*\[data-slot="window-chrome-body"\]:hover/);
-      expect(css).not.toMatch(/\[data-slot="introduction-info-box"\]:has\(\[data-slot="window-chrome-body"\]:hover\)/);
+      expect(css).toMatch(
+        /\[data-slot="introduction-info-box"\]:is\(\s*:has\(\[data-slot="window-chrome-body"\]:hover\)[\s\S]*?\)\s*\[data-slot="introduction-info-box-chip"\]:not\(\[data-handle-hovered="true"\]\)\s*\{\s*color:\s*var\(--border-emphasized-color\);/,
+      );
+      expect(css).toMatch(
+        /\[data-slot="introduction-info-box"\]:is\([\s\S]*?:has\(\[data-slot="introduction-info-box-chip"\]:hover\)[\s\S]*?\)\s*\[data-slot="introduction-info-box-chip"\]\s*\[data-slot="drag-handle"\]\s*\{\s*color:\s*var\(--border-emphasized-color\);/,
+      );
+      expect(css).not.toMatch(/\[data-slot="introduction-info-box"\]:hover\s*\[data-slot="introduction-step-chip"\]/);
       expect(css).not.toMatch(/\[data-slot="introduction-body-paragraph"\]:focus-within/);
       expect(splitIntroductionBodyParagraphs("One.\n\nTwo.\n\n\nThree.")).toEqual(["One.", "Two.", "Three."]);
       expect(splitIntroductionBodyParagraphs("  single  ")).toEqual(["single"]);
@@ -30567,10 +30588,13 @@ if (import.meta.vitest) {
     });
 
     // 🪟 D2 regression: the introduction/context-menu title chip must never re-paint an opaque fill
-    // over the already-painted chip-cap cell it sits inside (the "3 different backgrounds" bug).
-    it("windowChromeTitleChipClass never carries an opaque level fill of its own", () => {
+    // or rectangular border over the already-painted chip-cap cell it sits inside.
+    it("windowChromeTitleChipClass never carries an opaque fill or piecewise border of its own", () => {
       expect(windowChromeTitleChipClass).not.toContain("ui-surface");
       expect(windowChromeTitleChipClass).toContain("bg-transparent");
+      expect(windowChromeTitleChipClass).toContain("border-0");
+      expect(windowChromeTitleChipClass).not.toMatch(/(?:^|\s)border(?:\s|$)/);
+      expect(windowChromeTitleChipClass).not.toContain(borderNormalClass);
     });
 
     it("useSurface resolves the nearest Surface/SurfaceScope, or null outside any", () => {
@@ -31039,23 +31063,31 @@ if (import.meta.vitest) {
       expect(visibleActiveButton?.className).toContain("bg-active-base");
     });
 
-    it("Panel's tab strip divider sits on the content-facing side — bottom border for top corners, top border for bottom corners", () => {
+    it("Panel restores the tab strip's normal content-facing border only while uncollapsed", () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
-      const { container: topContainer } = render(<Panel anchor="top-left" visible={false} tabs={tabs} />);
-      const topTabs = topContainer.querySelector('[data-slot="panel-tabs"]');
-      expect(topTabs?.className).not.toContain("border-b");
-      expect(topTabs?.className).not.toContain("border-t");
+      const { container: topContainer, rerender: rerenderTop } = render(<Panel anchor="top-left" visible={false} tabs={tabs} />);
+      const foldedTopTabs = topContainer.querySelector('[data-slot="panel-tabs"]');
+      expect(foldedTopTabs?.className).not.toContain("border-b");
+      expect(foldedTopTabs?.className).not.toContain("border-t");
+      rerenderTop(<Panel anchor="top-left" visible tabs={tabs} />);
+      const expandedTopTabs = topContainer.querySelector('[data-slot="panel-tabs"]');
+      expect(expandedTopTabs?.className).toContain("border-b");
+      expect(expandedTopTabs?.className).toContain("!border-normal");
       const chromeMarkup = renderToStaticMarkup(
         <PanelChromeTabBar anchor="top-middle" tabs={tabs} visible={false} activeTabPath={["tab-a"]} onActiveTabPathChange={() => {}} />,
       );
       expect(chromeMarkup).toContain('data-slot="window-chrome-chip-cap"');
       expect(chromeMarkup).toContain("ui-glass");
       expect(chromeMarkup).not.toContain("rounded-sm");
-      const { container: bottomContainer } = render(<Panel anchor="bottom-left" visible={false} tabs={tabs} />);
-      const bottomTabs = bottomContainer.querySelector('[data-slot="panel-tabs"]');
-      expect(bottomTabs?.className).not.toContain("border-b");
-      expect(bottomTabs?.className).not.toContain("border-t");
+      const { container: bottomContainer, rerender: rerenderBottom } = render(<Panel anchor="bottom-left" visible={false} tabs={tabs} />);
+      const foldedBottomTabs = bottomContainer.querySelector('[data-slot="panel-tabs"]');
+      expect(foldedBottomTabs?.className).not.toContain("border-b");
+      expect(foldedBottomTabs?.className).not.toContain("border-t");
+      rerenderBottom(<Panel anchor="bottom-left" visible tabs={tabs} />);
+      const expandedBottomTabs = bottomContainer.querySelector('[data-slot="panel-tabs"]');
+      expect(expandedBottomTabs?.className).toContain("border-t");
+      expect(expandedBottomTabs?.className).toContain("!border-normal");
     });
 
     it("Panel keeps its tab button group mounted when folded, but drops content — the tabs are the panel's only chrome", () => {
@@ -36923,6 +36955,14 @@ if (treeVitest) {
       expect(css).not.toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):focus-within\s*\[data-slot="chrome-frame"\]/);
       expect(css).toContain('[data-hover-scope]:hover [data-slot="drag-handle"]');
       expect(css).toMatch(/\[data-hover-scope\]:hover\s*\[data-slot="drag-handle"\]\s*\{\s*color:\s*var\(--border-emphasized-color\);/);
+      expect(css).toMatch(
+        /\[data-window-silhouette\]:is\(\s*:has\(\[data-slot="mode-dock-stack-body"\]:hover\)[\s\S]*?\)\s*\[data-slot="mode-dock-tab"\]\[data-stack-active="true"\]:not\(\[data-handle-hovered="true"\]\)\s*\{\s*color:\s*var\(--border-emphasized-color\);/,
+      );
+      expect(css).toMatch(
+        /\[data-window-silhouette\]:is\([\s\S]*?:has\(\[data-slot="mode-dock-tab"\]\[data-stack-active="true"\]:hover\)[\s\S]*?\)\s*\[data-slot="mode-dock-tab"\]\[data-stack-active="true"\]\s*\[data-slot="drag-handle"\]\s*\{\s*color:\s*var\(--border-emphasized-color\);/,
+      );
+      expect(css).toMatch(/\[data-slot="window-chrome-stack"\]:is\([\s\S]*?:has\(\[data-slot="panel-content"\]:hover\)[\s\S]*?\)\s*\[data-slot\$="-tab-button"\]\[data-active="true"\]:not\(\[data-handle-hovered="true"\]\)\s*\{\s*color:\s*var\(--border-emphasized-color\);/);
+      expect(css).toMatch(/\[data-slot="window-chrome-stack"\]:is\([\s\S]*?:has\(\[data-slot="window-chrome-controls"\]:hover\)[\s\S]*?\)\s*\[data-slot\$="-tab-button"\]\[data-active="true"\]\s*\[data-slot="drag-handle"\]\s*\{\s*color:\s*var\(--border-emphasized-color\);/);
     });
 
     it("panel and pane silhouettes stay normal until the surface receives focus and expose fold controls", async () => {
@@ -36992,7 +37032,7 @@ if (treeVitest) {
       });
     });
 
-    it("panel window-variant tabs use mode-dock pill chrome and reserve a U-gap", () => {
+    it("panel window-variant tabs use mode-dock pill chrome, normal toggle dividers, and a U-gap", () => {
       const tabs = [
         singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }),
         singleTreeLeaf({ id: "tab-b", icon: PanelRightIcon, name: "Tab B", tree: { sections: [] } }),
@@ -37002,7 +37042,7 @@ if (treeVitest) {
       expect(markup).toContain("border-0");
       expect(markup).toContain("data-window-silhouette");
       expect(markup).toContain('data-slot="window-chrome-gap"');
-      expect(markup).not.toContain("border-e");
+      expect(markup).toContain(panelTabButtonDividerClass);
       expect(markup).toContain("ui-glass");
       expect(markup).not.toContain("ui-glass-chrome");
     });
@@ -37027,7 +37067,12 @@ if (treeVitest) {
       const active = container.querySelector('[data-slot="panel-tab-button"][data-active="true"]') as HTMLElement;
       expect(inactive.className).toContain("bg-transparent");
       expect(inactive.className).not.toContain("ui-surface");
+      expect(inactive.className).toContain("border-e");
+      expect(inactive.className).toContain("!border-normal");
       expect(active.className).toContain("bg-active-base");
+      expect(active.className).toContain("border-e");
+      expect(active.className).toContain("!border-normal");
+      expect(active.className).toContain("border-0");
       expect(body.className).toContain("z-[1]");
     });
 

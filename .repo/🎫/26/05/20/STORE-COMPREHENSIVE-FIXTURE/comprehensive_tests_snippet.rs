@@ -33,7 +33,7 @@
             .or_else(|| v.get("value").and_then(|inner| inner.as_str()).map(str::to_string))
     }
 
-    async fn kit_store_replay_golden_ops_on_graph(g: &std::sync::Arc<crate::vcs::Graph>, ops_json: &serde_json::Value, engine: &str) {
+    async fn kit_store_replay_golden_ops_on_graph(g: &std::sync::Arc<crate::store::Graph>, ops_json: &serde_json::Value, engine: &str) {
         let workspace_id = g.id.clone();
         let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
         let golden_ops = crate::kit_backbone::golden_operation_records_ref(ops_json).expect("operations|ops");
@@ -64,7 +64,7 @@
         }
     }
 
-    async fn kit_store_assert_golden_invariants(g: &std::sync::Arc<crate::vcs::Graph>, exp: &serde_json::Value) {
+    async fn kit_store_assert_golden_invariants(g: &std::sync::Arc<crate::store::Graph>, exp: &serde_json::Value) {
         let inv = &exp["invariants"];
         let workspace_id = g.id.clone();
         let kit = g.materialized_kit_for_workspace(&workspace_id).await;
@@ -179,7 +179,7 @@
             "devJson" => {
                 let dir = tempfile::tempdir().expect("temp dir");
                 let path = dir.path().join("dev-kit.json");
-                let g = crate::vcs::Graph::new().await;
+                let g = crate::store::Graph::new().await;
                 let legacy_workspace = ops_json["draftId"].as_str().expect("draftId");
                 let graph_workspace = g.id.as_str().to_string();
                 let mut stored = crate::kit_backbone::stored_operations_from_golden_operations_json(ops_json).expect("golden → stored operations");
@@ -203,9 +203,9 @@
                 let proj_canon = proj_root.canonicalize().expect("canonical workspace");
                 let uri_local = format!("local://{}", proj_canon.display());
                 let norm = crate::kit_backbone::normalize_connection_uri(&uri_local);
-                let g_bootstrap = crate::vcs::Graph::new().await;
+                let g_bootstrap = crate::store::Graph::new().await;
                 let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g_bootstrap).await.expect("bootstrap .compose layout");
-                let g2 = crate::vcs::Graph::new().await;
+                let g2 = crate::store::Graph::new().await;
                 let legacy_workspace = ops_json["draftId"].as_str().expect("draftId");
                 let graph_workspace = g2.id.as_str().to_string();
                 let mut stored = crate::kit_backbone::stored_operations_from_golden_operations_json(ops_json).expect("golden → stored operations");
@@ -300,7 +300,7 @@
             let exp: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(exp_path).expect("read expected")).expect("parse expected");
             for engine in fixture["replayEngines"].as_array().expect("replayEngines") {
                 let engine = engine.as_str().expect("engine name");
-                let g = crate::vcs::Graph::new().await;
+                let g = crate::store::Graph::new().await;
                 kit_store_replay_golden_ops_on_graph(&g, &ops_json, engine).await;
                 kit_store_assert_golden_invariants(&g, &exp).await;
             }

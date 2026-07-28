@@ -8,8 +8,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
 /// 🧬 `SetDocumentOperation<Document>` (whole-document replace) already implements both
-/// `vcs::Operation<Document>` and, now that `Document` derives `dsl::DslDocument` (i.e.
-/// `vcs::DocumentDsl`), `vcs::OpText` too — see `norm_core`'s generic `impl<D: DocumentDsl + ...>
+/// `store::Operation<Document>` and, now that `Document` derives `dsl::DslDocument` (i.e.
+/// `store::DocumentDsl`), `store::OpText` too — see `norm_core`'s generic `impl<D: DocumentDsl + ...>
 /// OpText for SetDocumentOperation<D>`. A coarse, whole-value-replace operation is the legitimate,
 /// sufficient choice per the migration cheat sheet: this reference/lookup-table document has no
 /// existing interactive editor driving fine-grained field-level edits, so reusing this generic
@@ -19,9 +19,9 @@ pub type Operation = SetDocumentOperation<Document>;
 pub type Host = NormHost<Vdi3805Family>;
 
 /// 📦 VCS envelope/store aliases for the VDI 3805 document, now that `Document`/`Operation` both
-/// satisfy `vcs::DocumentDsl`/`vcs::OpText`.
-pub type Vdi3805Envelope = vcs::DocumentVcsEnvelope<Document, Operation>;
-pub type Vdi3805Store = vcs::DocumentVcsStore<Document, Operation>;
+/// satisfy `store::DocumentDsl`/`store::OpText`.
+pub type Vdi3805Envelope = store::DocumentEnvelope<Document, Operation>;
+pub type Vdi3805Store = store::DocumentStore<Document, Operation>;
 
 const FAMILY: &str = "VDI 3805";
 const ANNEX: AnnexChoice = AnnexChoice::De;
@@ -3166,7 +3166,7 @@ mod tests {
     // #region 🔖DslTests
     #[test]
     fn document_dsl_round_trips_the_reference_fixture() {
-        vcs::test_support::assert_dsl_round_trip(&reference_fixture());
+        store::test_support::assert_dsl_round_trip(&reference_fixture());
     }
 
     #[test]
@@ -3175,36 +3175,36 @@ mod tests {
     // `pack/value/rs/lib.rs`'s `decode_table_soa` fallback branch drops the column's `Shape` (passes
     // `None` where `encode_table`'s matching branch passes `Some(&field.shape)`), so a `#[dsl(table)]`
     fn document_dsl_pack_equivalence_the_reference_fixture() {
-        vcs::test_support::assert_dsl_pack_equivalence(&reference_fixture());
+        store::test_support::assert_dsl_pack_equivalence(&reference_fixture());
     }
 
     #[test]
     fn set_document_operation_op_text_round_trips_for_vdi3805() {
-        vcs::test_support::assert_op_line_round_trip(&Operation::SetDocument { document: reference_fixture() });
+        store::test_support::assert_op_line_round_trip(&Operation::SetDocument { document: reference_fixture() });
     }
 
     #[test]
     fn document_text_round_trips_through_a_vcs_store() {
-        let envelope = vcs::create_document_vcs_envelope(VDI3805_EXTENSION, "vdi3805.demo", reference_fixture(), None);
+        let envelope = store::create_document_envelope(VDI3805_EXTENSION, "vdi3805.demo", reference_fixture(), None);
         let mut store = Vdi3805Store::new(envelope);
         let mut mutated = reference_fixture();
         mutated.strict_mode = true;
         store
-            .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None })
+            .dispatch(store::DocumentCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None })
             .expect("apply");
-        vcs::test_support::assert_document_text_round_trip(&store);
+        store::test_support::assert_document_text_round_trip(&store);
     }
 
     #[test]
     fn document_pack_round_trips_through_a_vcs_store() {
-        let envelope = vcs::create_document_vcs_envelope(VDI3805_EXTENSION, "vdi3805.demo", reference_fixture(), None);
+        let envelope = store::create_document_envelope(VDI3805_EXTENSION, "vdi3805.demo", reference_fixture(), None);
         let mut store = Vdi3805Store::new(envelope);
         let mut mutated = reference_fixture();
         mutated.strict_mode = true;
         store
-            .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None })
+            .dispatch(store::DocumentCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None })
             .expect("apply");
-        vcs::test_support::assert_document_pack_round_trip(&store);
+        store::test_support::assert_document_pack_round_trip(&store);
     }
     // #endregion 🔖DslTests
 }

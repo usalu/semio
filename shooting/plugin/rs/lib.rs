@@ -23,7 +23,7 @@ use shooting::{
     SHOOTING_FIXTURE_SCHEMA,
 };
 use protocol::CollectionOperation;
-use vcs::DocumentDsl;
+use store::DocumentDsl;
 use std::collections::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -48,7 +48,7 @@ const SHOOTING_TRANSFORM_UTILITY_DEFAULT: &str = "move";
 
 const SHOOTING_FALLBACK_MESH_KIND: &str = "box";
 
-/// 🗄️ The base-icon example fixture, handcrafted in `shooting`'s DSL (`vcs::DocumentDsl`) — see
+/// 🗄️ The base-icon example fixture, handcrafted in `shooting`'s DSL (`store::DocumentDsl`) — see
 /// `default_fixture`/`default_fixture_json` for the two shapes downstream code needs.
 const SHOOTING_EXAMPLE_DSL: &str = include_str!("../../example/base-icon.shooting");
 

@@ -9,9 +9,9 @@ mod tests {
         n: i32,
     }
 
-    // `impl vcs::DocumentPack for DemoProjection` is now generated automatically by
+    // `impl store::DocumentPack for DemoProjection` is now generated automatically by
     // `#[derive(dsl::DslDocument)]` above (see dsl/derive/rs/lib.rs's `🔖DslDocument` region) —
-    // same seam as its `impl vcs::DocumentDsl for DemoProjection` sibling.
+    // same seam as its `impl store::DocumentDsl for DemoProjection` sibling.
 
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
     struct DemoDiff {
@@ -56,13 +56,13 @@ mod tests {
     /// @emoji 🛰️ Builds a foreign {@link OperationEnvelope} (as if authored by `actor` on another peer) by
     /// applying `operation` in a throwaway peer store and stamping the envelope's actor id.
     fn foreign_operation_envelope(actor: &str, operation: DemoOperation) -> OperationEnvelope {
-        let mut peer = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOperation>(
+        let mut peer = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>(
             "demo/v1",
             "demo",
             DemoProjection { n: 0 },
             None,
         ));
-        peer.dispatch(DocumentVcsCommand::Apply {
+        peer.dispatch(DocumentCommand::Apply {
             operations: vec![operation],
             description: None,
         })
@@ -75,10 +75,10 @@ mod tests {
 
     #[test]
     fn materialize_replays_forward_operations() {
-        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
@@ -89,26 +89,26 @@ mod tests {
 
     #[test]
     fn undo_redo_round_trip() {
-        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply");
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        store.dispatch(DocumentCommand::Undo).expect("undo");
         assert_eq!(store.projection().expect("projection").n, 0);
-        store.dispatch(DocumentVcsCommand::Redo).expect("redo");
+        store.dispatch(DocumentCommand::Redo).expect("redo");
         assert_eq!(store.projection().expect("projection").n, 1);
     }
 
     #[test]
     fn apply_computes_backwards_from_pre_state() {
-        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 5 }],
                 description: None,
             })
@@ -119,16 +119,16 @@ mod tests {
 
     #[test]
     fn commit_checkpoint_wraps_edits_into_change() {
-        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply");
         store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+            .dispatch(DocumentCommand::CommitCheckpoint {
                 message: Some("init".into()),
                 authors: vec![Author {
                     id: "a1".into(),
@@ -144,30 +144,30 @@ mod tests {
 
     #[test]
     fn checkout_checkpoint_restores_applied_edits() {
-        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply");
         store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+            .dispatch(DocumentCommand::CommitCheckpoint {
                 message: Some("c1".into()),
                 authors: Vec::new(),
             })
             .expect("commit");
         let checkpoint_id = store.envelope().vcs.checkpoints[0].id.clone();
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 9 }],
                 description: None,
             })
             .expect("apply2");
         assert_eq!(store.projection().expect("projection").n, 9);
         store
-            .dispatch(DocumentVcsCommand::CheckoutCheckpoint {
+            .dispatch(DocumentCommand::CheckoutCheckpoint {
                 checkpoint_id,
             })
             .expect("checkout");
@@ -176,28 +176,28 @@ mod tests {
 
     #[test]
     fn alternatives_switch_restores_checkpoint_chain() {
-        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply");
         store
-            .dispatch(DocumentVcsCommand::CreateAlternative {
+            .dispatch(DocumentCommand::CreateAlternative {
                 name: "branch-a".into(),
             })
             .expect("create alternative");
         let alt_id = store.envelope().vcs.alternatives[0].id.clone();
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 2 }],
                 description: None,
             })
             .expect("apply on branch");
         store
-            .dispatch(DocumentVcsCommand::SwitchAlternative {
+            .dispatch(DocumentCommand::SwitchAlternative {
                 alternative_id: alt_id,
             })
             .expect("switch");
@@ -206,45 +206,45 @@ mod tests {
 
     #[test]
     fn checkout_old_checkpoint_then_commit_creates_a_fork() {
-        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply");
         store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+            .dispatch(DocumentCommand::CommitCheckpoint {
                 message: Some("c1".into()),
                 authors: Vec::new(),
             })
             .expect("commit c1");
         let c1 = store.envelope().vcs.checkpoints[0].id.clone();
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 2 }],
                 description: None,
             })
             .expect("apply");
         store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+            .dispatch(DocumentCommand::CommitCheckpoint {
                 message: Some("c2".into()),
                 authors: Vec::new(),
             })
             .expect("commit c2");
         store
-            .dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c1.clone() })
+            .dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: c1.clone() })
             .expect("checkout c1");
         assert_eq!(store.current_checkpoint_id(), Some(c1.as_str()));
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 9 }],
                 description: None,
             })
             .expect("apply");
         store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+            .dispatch(DocumentCommand::CommitCheckpoint {
                 message: Some("fork".into()),
                 authors: Vec::new(),
             })
@@ -261,31 +261,31 @@ mod tests {
 
     #[test]
     fn create_alternative_appends_commits_to_its_own_checkpoint_chain() {
-        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply");
         store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+            .dispatch(DocumentCommand::CommitCheckpoint {
                 message: Some("root".into()),
                 authors: Vec::new(),
             })
             .expect("commit root");
         store
-            .dispatch(DocumentVcsCommand::CreateAlternative { name: "feature-a".into() })
+            .dispatch(DocumentCommand::CreateAlternative { name: "feature-a".into() })
             .expect("create alternative");
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 2 }],
                 description: None,
             })
             .expect("apply");
         store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+            .dispatch(DocumentCommand::CommitCheckpoint {
                 message: Some("branch commit".into()),
                 authors: Vec::new(),
             })
@@ -296,28 +296,28 @@ mod tests {
 
     #[test]
     fn history_columns_orders_newest_first_and_labels_trunk_root() {
-        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply");
         store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+            .dispatch(DocumentCommand::CommitCheckpoint {
                 message: Some("c1".into()),
                 authors: Vec::new(),
             })
             .expect("commit c1");
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 2 }],
                 description: None,
             })
             .expect("apply");
         store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+            .dispatch(DocumentCommand::CommitCheckpoint {
                 message: Some("c2".into()),
                 authors: Vec::new(),
             })
@@ -334,16 +334,16 @@ mod tests {
 
     #[test]
     fn history_columns_assigns_distinct_lanes_and_pulls_main_only_descendants_to_trunk() {
-        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply");
         store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+            .dispatch(DocumentCommand::CommitCheckpoint {
                 message: Some("root".into()),
                 authors: Vec::new(),
             })
@@ -351,51 +351,51 @@ mod tests {
         let root = store.envelope().vcs.checkpoints[0].id.clone();
 
         store
-            .dispatch(DocumentVcsCommand::CreateAlternative { name: "feature-a".into() })
+            .dispatch(DocumentCommand::CreateAlternative { name: "feature-a".into() })
             .expect("create feature-a");
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 2 }],
                 description: None,
             })
             .expect("apply");
         store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+            .dispatch(DocumentCommand::CommitCheckpoint {
                 message: Some("a1".into()),
                 authors: Vec::new(),
             })
             .expect("commit a1");
 
         store
-            .dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: root.clone() })
+            .dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: root.clone() })
             .expect("checkout root");
         store
-            .dispatch(DocumentVcsCommand::CreateAlternative { name: "feature-b".into() })
+            .dispatch(DocumentCommand::CreateAlternative { name: "feature-b".into() })
             .expect("create feature-b");
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 3 }],
                 description: None,
             })
             .expect("apply");
         store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+            .dispatch(DocumentCommand::CommitCheckpoint {
                 message: Some("b1".into()),
                 authors: Vec::new(),
             })
             .expect("commit b1");
 
         store
-            .dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: root.clone() })
+            .dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: root.clone() })
             .expect("checkout root again");
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 4 }],
                 description: None,
             })
             .expect("apply");
         store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+            .dispatch(DocumentCommand::CommitCheckpoint {
                 message: Some("main resumed".into()),
                 authors: Vec::new(),
             })
@@ -424,27 +424,27 @@ mod tests {
 
     #[test]
     fn no_backbone_by_default() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         assert!(envelope.backbone.is_none(), "a fresh document has no attached backbone");
-        let store = DocumentVcsStore::new(envelope);
+        let store = DocumentStore::new(envelope);
         assert!(store.backbone_ref().is_none());
     }
 
     #[test]
     fn memory_backbone_pair_propagates_edits_bidirectionally() {
         let (backbone_a, backbone_b) = MemoryBackbone::pair("peer-a", "peer-b");
-        let envelope_a: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let envelope_b: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store_a = DocumentVcsStore::new(envelope_a);
-        let mut store_b = DocumentVcsStore::new(envelope_b);
+        let envelope_a: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope_b: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store_a = DocumentStore::new(envelope_a);
+        let mut store_b = DocumentStore::new(envelope_b);
         store_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
         store_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
 
         store_a
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
@@ -453,7 +453,7 @@ mod tests {
         assert_eq!(store_b.projection().expect("projection b").n, 1, "b receives a's edit");
 
         store_b
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 2 }],
                 description: None,
             })
@@ -465,17 +465,17 @@ mod tests {
     #[test]
     fn detach_backbone_stops_synchronizing_but_keeps_the_wip_graph() {
         let (backbone_a, backbone_b) = MemoryBackbone::pair("peer-a", "peer-b");
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store_a = DocumentVcsStore::new(envelope.clone());
-        let mut store_b = DocumentVcsStore::new(envelope);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store_a = DocumentStore::new(envelope.clone());
+        let mut store_b = DocumentStore::new(envelope);
         store_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
         store_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
         store_a.detach_backbone();
         assert!(store_a.backbone_ref().is_none());
 
         store_a
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 9 }],
                 description: None,
             })
@@ -487,21 +487,21 @@ mod tests {
 
     #[test]
     fn deserialized_envelope_with_stale_backbone_ref_never_auto_attaches() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut stale_json: serde_json::Value =
             serde_json::to_value(&envelope).expect("serialize envelope");
         stale_json["backbone"] = serde_json::json!({ "uri": "folder:///nonexistent/path" });
-        let stale_envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
+        let stale_envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
             serde_json::from_value(stale_json).expect("deserialize envelope with stale backbone ref");
 
-        let mut store = DocumentVcsStore::new(stale_envelope.clone());
+        let mut store = DocumentStore::new(stale_envelope.clone());
         assert!(
             store.tick().expect("tick with no live backbone is a no-operation") == false,
             "no backbone was ever attached, so there is nothing to pump"
         );
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
@@ -520,29 +520,29 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
         assert_eq!(storage.read("doc-a").expect("read empty"), None, "absent document reads as None");
-        let env_a: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "doc-a", DemoProjection { n: 3 }, None);
-        let env_b: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "doc-b", DemoProjection { n: 7 }, None);
+        let env_a: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "doc-a", DemoProjection { n: 3 }, None);
+        let env_b: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "doc-b", DemoProjection { n: 7 }, None);
         storage
             .write("doc-a", "demo/v1", &serde_json::to_string(&env_a).expect("json a"))
             .expect("write a");
         storage
             .write("doc-b", "demo/v1", &serde_json::to_string(&env_b).expect("json b"))
             .expect("write b");
-        let loaded_a: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
+        let loaded_a: DocumentEnvelope<DemoProjection, DemoOperation> =
             serde_json::from_str(&storage.read("doc-a").expect("read a").expect("some a")).expect("parse a");
-        let loaded_b: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
+        let loaded_b: DocumentEnvelope<DemoProjection, DemoOperation> =
             serde_json::from_str(&storage.read("doc-b").expect("read b").expect("some b")).expect("parse b");
         assert_eq!(loaded_a.vcs.initial_projection.n, 3, "documents are keyed independently");
         assert_eq!(loaded_b.vcs.initial_projection.n, 7);
 
-        let env_a2: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "doc-a", DemoProjection { n: 5 }, None);
+        let env_a2: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "doc-a", DemoProjection { n: 5 }, None);
         storage
             .write("doc-a", "demo/v1", &serde_json::to_string(&env_a2).expect("json a2"))
             .expect("upsert a");
-        let reloaded_a: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
+        let reloaded_a: DocumentEnvelope<DemoProjection, DemoOperation> =
             serde_json::from_str(&storage.read("doc-a").expect("reread a").expect("some a2")).expect("parse a2");
         assert_eq!(reloaded_a.vcs.initial_projection.n, 5, "writing the same id upserts in place");
 
@@ -557,10 +557,10 @@ mod tests {
         let storage = FolderTextStorage::new(dir.path().to_path_buf());
         assert_eq!(storage.read("demo", "demo").expect("read empty"), None, "absent document reads as None");
 
-        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
@@ -569,7 +569,7 @@ mod tests {
         storage.write("demo", "demo", &files).expect("write");
 
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 2 }],
                 description: None,
             })
@@ -593,10 +593,10 @@ mod tests {
         let storage = FolderTextStorage::new(dir.path().to_path_buf());
         assert_eq!(storage.read_pack("demo", "demo").expect("read empty"), None, "absent pack reads as None");
 
-        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
@@ -606,7 +606,7 @@ mod tests {
         storage.write_pack("demo", "demo", &files, &dsl_mirror).expect("write pack");
 
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 2 }],
                 description: None,
             })
@@ -632,8 +632,8 @@ mod tests {
         let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
         assert_eq!(storage.read_pack("doc-a").expect("read empty"), None, "absent pack reads as None");
 
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "doc-a", DemoProjection { n: 3 }, None);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "doc-a", DemoProjection { n: 3 }, None);
         let pack_bytes = envelope.vcs.initial_projection.encode_pack();
         storage
             .write_pack("doc-a", "demo/v1", &serde_json::to_string(&envelope).expect("json"), &pack_bytes)
@@ -659,19 +659,19 @@ mod tests {
         assert_eq!(codec.schema, "demo/v1");
         assert_eq!(codec.extension, "demo");
 
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 4 }, None);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 4 }, None);
         let envelope_json = serde_json::to_string(&envelope).expect("envelope json");
 
         let (pack_files, dsl_mirror) = (codec.print)(&envelope_json).expect("codec print");
         assert_eq!(dsl_mirror, DemoProjection { n: 4 }.print_dsl(), "dsl mirror matches the initial projection's print_dsl");
 
         let parsed_json = (codec.parse)(&pack_files.pack, &pack_files.ops).expect("codec parse");
-        let parsed: DocumentVcsEnvelope<DemoProjection, DemoOperation> = serde_json::from_str(&parsed_json).expect("parse envelope json");
+        let parsed: DocumentEnvelope<DemoProjection, DemoOperation> = serde_json::from_str(&parsed_json).expect("parse envelope json");
         assert_eq!(parsed.vcs.initial_projection.n, 4, "codec.parse round trips through pack bytes");
 
         let parsed_dsl_json = (codec.parse_dsl)(&dsl_mirror, &pack_files.ops).expect("codec parse_dsl");
-        let parsed_dsl: DocumentVcsEnvelope<DemoProjection, DemoOperation> = serde_json::from_str(&parsed_dsl_json).expect("parse envelope json (dsl path)");
+        let parsed_dsl: DocumentEnvelope<DemoProjection, DemoOperation> = serde_json::from_str(&parsed_dsl_json).expect("parse envelope json (dsl path)");
         assert_eq!(
             parsed.vcs.initial_projection, parsed_dsl.vcs.initial_projection,
             "codec.parse and codec.parse_dsl agree on the same document"
@@ -710,11 +710,11 @@ mod tests {
     #[test]
     fn attach_reconciles_a_pushed_snapshot() {
         let (channel, remote) = ChannelBackbone::pair("chan");
-        let seeded: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut seed_store = DocumentVcsStore::new(seeded);
+        let seeded: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut seed_store = DocumentStore::new(seeded);
         seed_store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 5 }],
                 description: None,
             })
@@ -725,9 +725,9 @@ mod tests {
             })
             .expect("push snapshot");
 
-        let fresh: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(fresh);
+        let fresh: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(fresh);
         store.attach_backbone(Box::new(channel)).expect("attach reconciles the pushed snapshot");
         assert_eq!(store.projection().expect("projection").n, 5, "adopted the pushed snapshot's edit");
     }
@@ -735,9 +735,9 @@ mod tests {
     #[test]
     fn channel_backbone_round_trips_between_store_and_actor() {
         let (channel, remote) = ChannelBackbone::pair("chan");
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store.attach_backbone(Box::new(channel)).expect("attach");
         let attach_flush = remote.drain().expect("drain attach");
         assert!(
@@ -746,7 +746,7 @@ mod tests {
         );
 
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 4 }],
                 description: None,
             })
@@ -769,9 +769,9 @@ mod tests {
     #[test]
     fn pump_acks_ingested_operations() {
         let (channel, remote) = ChannelBackbone::pair("chan");
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store.attach_backbone(Box::new(channel)).expect("attach");
         let _ = remote.drain().expect("drain attach snapshot");
 
@@ -794,11 +794,11 @@ mod tests {
 
     #[test]
     fn exact_base_only_undo_refuses_a_foreign_tail() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
@@ -809,7 +809,7 @@ mod tests {
         assert_eq!(store.projection().expect("projection").n, 2, "foreign edit sits at the tail");
 
         let error = store
-            .dispatch(DocumentVcsCommand::UndoWithPolicy {
+            .dispatch(DocumentCommand::UndoWithPolicy {
                 policy: UndoPolicy::ExactBaseOnly,
                 semantic_command: None,
             })
@@ -820,11 +820,11 @@ mod tests {
 
     #[test]
     fn transform_against_concurrent_undo_skips_over_a_foreign_tail() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
@@ -836,7 +836,7 @@ mod tests {
         assert_eq!(store.applied_edit_ids().len(), 2, "local + foreign are both applied");
 
         store
-            .dispatch(DocumentVcsCommand::UndoWithPolicy {
+            .dispatch(DocumentCommand::UndoWithPolicy {
                 policy: UndoPolicy::TransformAgainstConcurrent,
                 semantic_command: None,
             })
@@ -853,29 +853,29 @@ mod tests {
         );
         assert_eq!(store.projection().expect("projection").n, 2, "projection re-materializes from the foreign edit alone");
 
-        store.dispatch(DocumentVcsCommand::Redo).expect("redo brings the local edit back");
+        store.dispatch(DocumentCommand::Redo).expect("redo brings the local edit back");
         assert_eq!(store.applied_edit_ids().len(), 2);
         assert_eq!(store.projection().expect("projection").n, 1, "redo re-applies the local edit at the tail");
     }
 
     #[test]
     fn compensating_undo_dispatches_semantic_command() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 5 }],
                 description: None,
             })
             .expect("apply");
-        let undo_apply = serde_json::to_string(&DocumentVcsCommand::Apply {
+        let undo_apply = serde_json::to_string(&DocumentCommand::Apply {
             operations: vec![DemoOperation::SetN { n: 0 }],
             description: Some("compensate".into()),
         })
         .expect("serialize undo apply");
         store
-            .dispatch(DocumentVcsCommand::UndoWithPolicy {
+            .dispatch(DocumentCommand::UndoWithPolicy {
                 policy: UndoPolicy::CompensatingAction,
                 semantic_command: Some(undo_apply),
             })
@@ -920,12 +920,12 @@ mod tests {
 
     #[test]
     fn edit_operations_exposes_the_latest_edit() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         assert!(store.edit_operations().is_none(), "no edits yet");
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 5 }],
                 description: None,
             })
@@ -938,24 +938,24 @@ mod tests {
 
     #[test]
     fn amend_last_absorbs_into_matching_coalesce_key() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::AmendLast {
+            .dispatch(DocumentCommand::AmendLast {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 coalesce_key: Some("drag".into()),
             })
             .expect("first amend");
         store
-            .dispatch(DocumentVcsCommand::AmendLast {
+            .dispatch(DocumentCommand::AmendLast {
                 operations: vec![DemoOperation::SetN { n: 2 }],
                 coalesce_key: Some("drag".into()),
             })
             .expect("second amend");
         assert_eq!(store.envelope().vcs.edits.len(), 1, "coalesced into a single edit");
         assert_eq!(store.projection().expect("projection").n, 2);
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        store.dispatch(DocumentCommand::Undo).expect("undo");
         assert_eq!(
             store.projection().expect("projection after undo").n,
             0,
@@ -969,12 +969,12 @@ mod tests {
         // amends into the same coalesced edit — e.g. a long slider drag — must still produce exactly the
         // same edit (forwards/backwards/operation_meta length, final projection, one-step undo) as the
         // previous full-replay-every-time implementation, just without re-replaying history each time.
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         for n in 1..=50 {
             store
-                .dispatch(DocumentVcsCommand::AmendLast {
+                .dispatch(DocumentCommand::AmendLast {
                     operations: vec![DemoOperation::SetN { n }],
                     coalesce_key: Some("drag".into()),
                 })
@@ -986,7 +986,7 @@ mod tests {
         assert_eq!(edit.backwards.len(), 50);
         assert_eq!(edit.operation_meta.len(), 50);
         assert_eq!(store.projection().expect("projection").n, 50);
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        store.dispatch(DocumentCommand::Undo).expect("undo");
         assert_eq!(
             store.projection().expect("projection after undo").n,
             0,
@@ -999,42 +999,42 @@ mod tests {
         // 🪢 Undo/redo only move edit ids between `applied_edit_ids`/`redo_edit_ids` — they never mutate
         // an edit's own `forwards`, so a cached post-projection keyed by `(edit_id, forwards_len)` stays
         // valid across an undo immediately followed by a redo of the very same coalesced edit.
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::AmendLast {
+            .dispatch(DocumentCommand::AmendLast {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 coalesce_key: Some("drag".into()),
             })
             .expect("first amend");
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
-        store.dispatch(DocumentVcsCommand::Redo).expect("redo");
+        store.dispatch(DocumentCommand::Undo).expect("undo");
+        store.dispatch(DocumentCommand::Redo).expect("redo");
         store
-            .dispatch(DocumentVcsCommand::AmendLast {
+            .dispatch(DocumentCommand::AmendLast {
                 operations: vec![DemoOperation::SetN { n: 2 }],
                 coalesce_key: Some("drag".into()),
             })
             .expect("amend after undo/redo");
         assert_eq!(store.envelope().vcs.edits.len(), 1, "still coalesced into the original edit");
         assert_eq!(store.projection().expect("projection").n, 2);
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo again");
+        store.dispatch(DocumentCommand::Undo).expect("undo again");
         assert_eq!(store.projection().expect("projection after undo").n, 0);
     }
 
     #[test]
     fn amend_last_starts_new_edit_when_coalesce_key_differs() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::AmendLast {
+            .dispatch(DocumentCommand::AmendLast {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 coalesce_key: Some("drag-a".into()),
             })
             .expect("first drag");
         store
-            .dispatch(DocumentVcsCommand::AmendLast {
+            .dispatch(DocumentCommand::AmendLast {
                 operations: vec![DemoOperation::SetN { n: 2 }],
                 coalesce_key: Some("drag-b".into()),
             })
@@ -1044,23 +1044,23 @@ mod tests {
 
     #[test]
     fn amend_last_does_not_absorb_into_committed_edit() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::AmendLast {
+            .dispatch(DocumentCommand::AmendLast {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 coalesce_key: Some("drag".into()),
             })
             .expect("amend");
         store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+            .dispatch(DocumentCommand::CommitCheckpoint {
                 message: None,
                 authors: Vec::new(),
             })
             .expect("commit");
         store
-            .dispatch(DocumentVcsCommand::AmendLast {
+            .dispatch(DocumentCommand::AmendLast {
                 operations: vec![DemoOperation::SetN { n: 2 }],
                 coalesce_key: Some("drag".into()),
             })
@@ -1258,7 +1258,7 @@ mod tests {
         test_support::assert_command_envelope_round_trip::<DemoProjection, LossyOperation>(&edit, &DocumentId("doc-lossy".into()));
     }
 
-    // `DemoProjection`'s `vcs::DocumentDsl` impl and `DemoOperation`'s `vcs::OpText` impl are now
+    // `DemoProjection`'s `store::DocumentDsl` impl and `DemoOperation`'s `store::OpText` impl are now
     // generated by `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslOps)]` on the type definitions
     // themselves (see `DemoProjection`/`DemoOperation` above) — the `dsl_schema` grammar replaces
     // this crate's own hand-rolled `"n <value>"`/`"set-n <value>"` printer/parser.
@@ -1280,10 +1280,10 @@ mod tests {
 
     #[test]
     fn print_edit_lines_emits_one_indented_line_per_forward_op() {
-        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
@@ -1296,16 +1296,16 @@ mod tests {
 
     #[test]
     fn document_text_round_trips_after_apply_and_checkpoint() {
-        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 3 }],
                 description: Some("bump".into()),
             })
             .expect("apply");
         store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+            .dispatch(DocumentCommand::CommitCheckpoint {
                 message: Some("c1".into()),
                 authors: vec![Author {
                     id: "a1".into(),
@@ -1334,12 +1334,12 @@ mod tests {
     /// from-scratch replay fails loudly here rather than surfacing as a silent projection bug later.
     #[test]
     fn stateful_current_matches_full_replay_across_interleaved_commands() {
-        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
 
         // Multi-operation edit: current must fold both ops, matching a from-scratch replay.
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }, DemoOperation::SetN { n: 2 }],
                 description: None,
             })
@@ -1352,13 +1352,13 @@ mod tests {
         // second `AmendLast` shares that edit's key and merges into it — two edits total, the second
         // one carrying two coalesced increments (3 then 4).
         store
-            .dispatch(DocumentVcsCommand::AmendLast {
+            .dispatch(DocumentCommand::AmendLast {
                 operations: vec![DemoOperation::SetN { n: 3 }],
                 coalesce_key: Some("drag".into()),
             })
             .expect("amend 1");
         store
-            .dispatch(DocumentVcsCommand::AmendLast {
+            .dispatch(DocumentCommand::AmendLast {
                 operations: vec![DemoOperation::SetN { n: 4 }],
                 coalesce_key: Some("drag".into()),
             })
@@ -1369,29 +1369,29 @@ mod tests {
 
         // Undo the whole amended edit (O(1) tail-cache path) restores the `Apply`-edit's state, not
         // the initial projection — only the amend gesture's edit is undone here.
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        store.dispatch(DocumentCommand::Undo).expect("undo");
         test_support::assert_live_equals_replay(&store);
         assert_eq!(store.projection().expect("projection").n, 2);
-        store.dispatch(DocumentVcsCommand::Redo).expect("redo");
+        store.dispatch(DocumentCommand::Redo).expect("redo");
         test_support::assert_live_equals_replay(&store);
         assert_eq!(store.projection().expect("projection").n, 4);
 
         // Checkpoint (cold path through `checkout_checkpoint_internal` is NOT exercised by commit
         // itself, but a following apply + a second, older undo still must agree with replay).
         store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+            .dispatch(DocumentCommand::CommitCheckpoint {
                 message: Some("c1".into()),
                 authors: Vec::new(),
             })
             .expect("commit");
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 5 }],
                 description: None,
             })
             .expect("apply after checkpoint");
         test_support::assert_live_equals_replay(&store);
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo after checkpoint");
+        store.dispatch(DocumentCommand::Undo).expect("undo after checkpoint");
         test_support::assert_live_equals_replay(&store);
         assert_eq!(store.projection().expect("projection").n, 4);
     }
@@ -1430,52 +1430,52 @@ mod tests {
 
     /// @emoji 🪄 Downcasts a registered `dyn StudioMember` back to its concrete demo store.
     fn demo_member<'a, Operation: crate::Operation<DemoProjection> + 'static>(
-        host: &'a mut StudioVcsHost,
+        host: &'a mut StudioHost,
         document_id: &str,
-    ) -> &'a mut DocumentVcsStore<DemoProjection, Operation> {
+    ) -> &'a mut DocumentStore<DemoProjection, Operation> {
         host.member_mut(document_id)
             .expect("member registered")
             .as_any_mut()
-            .downcast_mut::<DocumentVcsStore<DemoProjection, Operation>>()
+            .downcast_mut::<DocumentStore<DemoProjection, Operation>>()
             .expect("concrete member type matches")
     }
 
     #[test]
     fn studio_checkpoint_commits_dirty_members_and_pins_their_checkpoints() {
-        let mut member_a = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOperation>(
+        let mut member_a = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>(
             "demo/v1",
             "member-a",
             DemoProjection { n: 0 },
             None,
         ));
         member_a
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply a");
 
-        let mut member_b = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOperation>(
+        let mut member_b = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>(
             "demo/v1",
             "member-b",
             DemoProjection { n: 0 },
             None,
         ));
         member_b
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 5 }],
                 description: None,
             })
             .expect("apply b");
         member_b
-            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+            .dispatch(DocumentCommand::CommitCheckpoint {
                 message: Some("b-init".into()),
                 authors: Vec::new(),
             })
             .expect("commit b upfront, so it starts clean");
         let member_b_checkpoint = member_b.current_checkpoint_id().expect("b checkpoint").to_string();
 
-        let mut host = StudioVcsHost::new(create_document_vcs_envelope(
+        let mut host = StudioHost::new(create_document_envelope(
             "os.studio.history/v1",
             "studio",
             StudioHistoryProjection::default(),
@@ -1511,24 +1511,24 @@ mod tests {
     #[test]
     fn studio_vcs_host_meta_document_is_backbone_attachable_and_detachable() {
         let (backbone_a, backbone_b) = MemoryBackbone::pair("studio-a", "studio-b");
-        let meta_envelope: DocumentVcsEnvelope<StudioHistoryProjection, StudioHistoryOperation> =
-            create_document_vcs_envelope("os.studio.history/v1", "studio", StudioHistoryProjection::default(), None);
-        let mut host_a = StudioVcsHost::new(meta_envelope.clone());
-        let mut host_b = StudioVcsHost::new(meta_envelope);
-        assert!(host_a.backbone_ref().is_none(), "default is unattached, like any other DocumentVcsStore");
+        let meta_envelope: DocumentEnvelope<StudioHistoryProjection, StudioHistoryOperation> =
+            create_document_envelope("os.studio.history/v1", "studio", StudioHistoryProjection::default(), None);
+        let mut host_a = StudioHost::new(meta_envelope.clone());
+        let mut host_b = StudioHost::new(meta_envelope);
+        assert!(host_a.backbone_ref().is_none(), "default is unattached, like any other DocumentStore");
 
         host_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
         host_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
         assert!(host_a.backbone_ref().is_some());
 
-        let mut member = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOperation>(
+        let mut member = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>(
             "demo/v1",
             "member-a",
             DemoProjection { n: 0 },
             None,
         ));
         member
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
@@ -1560,13 +1560,13 @@ mod tests {
 
     #[test]
     fn studio_checkout_checkpoint_fans_out_and_restores_pinned_member_state() {
-        let member_a = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOperation>(
+        let member_a = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>(
             "demo/v1",
             "member-a",
             DemoProjection { n: 0 },
             None,
         ));
-        let mut host = StudioVcsHost::new(create_document_vcs_envelope(
+        let mut host = StudioHost::new(create_document_envelope(
             "os.studio.history/v1",
             "studio",
             StudioHistoryProjection::default(),
@@ -1575,7 +1575,7 @@ mod tests {
         host.register_member(Box::new(member_a));
 
         demo_member::<DemoOperation>(&mut host, "member-a")
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
@@ -1583,7 +1583,7 @@ mod tests {
         let studio_checkpoint_1 = host.commit_studio_checkpoint("first".into(), Vec::new()).expect("commit 1");
 
         demo_member::<DemoOperation>(&mut host, "member-a")
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 2 }],
                 description: None,
             })
@@ -1605,13 +1605,13 @@ mod tests {
 
     #[test]
     fn studio_switch_alternative_fans_out_and_restores_pinned_member_state() {
-        let member_a = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOperation>(
+        let member_a = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>(
             "demo/v1",
             "member-a",
             DemoProjection { n: 0 },
             None,
         ));
-        let mut host = StudioVcsHost::new(create_document_vcs_envelope(
+        let mut host = StudioHost::new(create_document_envelope(
             "os.studio.history/v1",
             "studio",
             StudioHistoryProjection::default(),
@@ -1620,7 +1620,7 @@ mod tests {
         host.register_member(Box::new(member_a));
 
         demo_member::<DemoOperation>(&mut host, "member-a")
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
@@ -1630,7 +1630,7 @@ mod tests {
         let alt_id = host.create_studio_alternative("branch-a".into()).expect("create alternative");
 
         demo_member::<DemoOperation>(&mut host, "member-a")
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 2 }],
                 description: None,
             })
@@ -1651,33 +1651,33 @@ mod tests {
 
     #[test]
     fn studio_undo_and_redo_target_the_member_with_the_most_recent_local_edit_by_hlt() {
-        let mut member_early = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, TimestampedOperation>(
+        let mut member_early = DocumentStore::new(create_document_envelope::<DemoProjection, TimestampedOperation>(
             "demo-ts/v1",
             "member-early",
             DemoProjection { n: 0 },
             None,
         ));
         member_early
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![TimestampedOperation::SetN { n: 1, physical_ms: 1_000 }],
                 description: None,
             })
             .expect("apply early");
 
-        let mut member_late = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, TimestampedOperation>(
+        let mut member_late = DocumentStore::new(create_document_envelope::<DemoProjection, TimestampedOperation>(
             "demo-ts/v1",
             "member-late",
             DemoProjection { n: 0 },
             None,
         ));
         member_late
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![TimestampedOperation::SetN { n: 9, physical_ms: 2_000 }],
                 description: None,
             })
             .expect("apply late");
 
-        let mut host = StudioVcsHost::new(create_document_vcs_envelope(
+        let mut host = StudioHost::new(create_document_envelope(
             "os.studio.history/v1",
             "studio",
             StudioHistoryProjection::default(),
@@ -1713,10 +1713,10 @@ mod tests {
         assert_eq!(reconciled, projection, "default reconcile leaves the projection untouched");
         assert!(conflicts.is_empty(), "default reconcile reports no conflicts");
 
-        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 3 }],
                 description: None,
             })
@@ -1853,16 +1853,16 @@ mod tests {
 
     #[test]
     fn document_text_round_trips_with_an_active_alternative_and_a_quoted_description() {
-        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![DemoOperation::SetN { n: 1 }],
                 description: Some("said \"hi\" and used a \\ backslash".into()),
             })
             .expect("apply");
         store
-            .dispatch(DocumentVcsCommand::CreateAlternative { name: "branch \"a\"".into() })
+            .dispatch(DocumentCommand::CreateAlternative { name: "branch \"a\"".into() })
             .expect("create alternative (auto-commits and activates it)");
         assert!(store.envelope().active_alternative_id.is_some(), "precondition: an alternative is active");
         let files = print_document_text(store.envelope()).expect("print document text");
@@ -1875,119 +1875,119 @@ mod tests {
     //#region 🔖CommandErrorPaths
     #[test]
     fn apply_with_no_operations_is_rejected() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         let error = store
-            .dispatch(DocumentVcsCommand::Apply { operations: Vec::new(), description: None })
+            .dispatch(DocumentCommand::Apply { operations: Vec::new(), description: None })
             .unwrap_err();
         assert_eq!(error, VcsError::EmptyApply);
     }
 
     #[test]
     fn amend_last_with_no_operations_is_rejected() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         let error = store
-            .dispatch(DocumentVcsCommand::AmendLast { operations: Vec::new(), coalesce_key: None })
+            .dispatch(DocumentCommand::AmendLast { operations: Vec::new(), coalesce_key: None })
             .unwrap_err();
         assert_eq!(error, VcsError::EmptyApply);
     }
 
     #[test]
     fn undo_with_nothing_applied_is_rejected() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
-        assert_eq!(store.dispatch(DocumentVcsCommand::Undo).unwrap_err(), VcsError::NothingToUndo);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
+        assert_eq!(store.dispatch(DocumentCommand::Undo).unwrap_err(), VcsError::NothingToUndo);
     }
 
     #[test]
     fn redo_with_nothing_undone_is_rejected() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
-        assert_eq!(store.dispatch(DocumentVcsCommand::Redo).unwrap_err(), VcsError::NothingToRedo);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
+        assert_eq!(store.dispatch(DocumentCommand::Redo).unwrap_err(), VcsError::NothingToRedo);
     }
 
     #[test]
     fn checkout_of_an_unknown_checkpoint_is_rejected() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         let error = store
-            .dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: "nope".into() })
+            .dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: "nope".into() })
             .unwrap_err();
         assert_eq!(error, VcsError::UnknownChange("nope".into()));
     }
 
     #[test]
     fn switch_to_an_unknown_alternative_is_rejected() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         let error = store
-            .dispatch(DocumentVcsCommand::SwitchAlternative { alternative_id: "nope".into() })
+            .dispatch(DocumentCommand::SwitchAlternative { alternative_id: "nope".into() })
             .unwrap_err();
         assert_eq!(error, VcsError::UnknownAlternative("nope".into()));
     }
 
     #[test]
     fn switch_to_an_alternative_whose_pinned_checkpoint_is_missing_is_rejected() {
-        let mut envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         envelope.vcs.alternatives.push(Alternative {
             id: "alt-dangling".into(),
             name: "dangling".into(),
             checkpoint_ids: vec!["checkpoint-that-was-never-recorded".into()],
         });
-        let mut store = DocumentVcsStore::new(envelope);
+        let mut store = DocumentStore::new(envelope);
         let error = store
-            .dispatch(DocumentVcsCommand::SwitchAlternative { alternative_id: "alt-dangling".into() })
+            .dispatch(DocumentCommand::SwitchAlternative { alternative_id: "alt-dangling".into() })
             .unwrap_err();
         assert_eq!(error, VcsError::NoCheckpoint, "the alternative's pinned checkpoint id must actually exist");
     }
 
     #[test]
     fn create_alternative_with_no_edits_and_no_checkpoints_is_rejected() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         let error = store
-            .dispatch(DocumentVcsCommand::CreateAlternative { name: "x".into() })
+            .dispatch(DocumentCommand::CreateAlternative { name: "x".into() })
             .unwrap_err();
         assert_eq!(error, VcsError::NoCheckpoint, "the auto-commit has nothing pending, so there is still no checkpoint to branch from");
     }
 
     #[test]
     fn compensating_undo_without_a_semantic_command_is_rejected() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None })
+            .dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None })
             .expect("apply");
         let error = store
-            .dispatch(DocumentVcsCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: None })
+            .dispatch(DocumentCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: None })
             .unwrap_err();
         assert!(matches!(error, VcsError::Backbone(_)), "got {error:?}");
     }
 
     #[test]
     fn materialize_document_projection_rejects_an_unknown_edit_id() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let error = materialize_document_projection(&envelope, &["missing-edit".to_string()]).unwrap_err();
         assert_eq!(error, VcsError::UnknownEdit("missing-edit".into()));
     }
 
     #[test]
     fn dispatch_json_applies_a_serialized_command_and_projection_json_reflects_it() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
-        let command_json = serde_json::to_string(&DocumentVcsCommand::Apply {
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
+        let command_json = serde_json::to_string(&DocumentCommand::Apply {
             operations: vec![DemoOperation::SetN { n: 7 }],
             description: None,
         })
@@ -2003,22 +2003,22 @@ mod tests {
     //#region 🔖ReconcileAlternative
     #[test]
     fn reconcile_alternative_requires_an_existing_checkpoint() {
-        let mut envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let error = reconcile_alternative(&mut envelope, "reconciled", None, Vec::new()).unwrap_err();
         assert_eq!(error, VcsError::NoCheckpoint);
     }
 
     #[test]
     fn reconcile_alternative_pins_the_latest_checkpoint_and_optionally_records_a_reconciliation_checkpoint() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None })
+            .dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None })
             .expect("apply");
         store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() })
+            .dispatch(DocumentCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() })
             .expect("commit");
         let base_checkpoint_id = store.envelope().vcs.checkpoints[0].id.clone();
 
@@ -2070,12 +2070,12 @@ mod tests {
 
     #[test]
     fn commit_checkpoint_mints_distinct_content_addressed_ids_for_distinct_commits() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply 1");
-        store.dispatch(DocumentVcsCommand::CommitCheckpoint { message: Some("first".into()), authors: Vec::new() }).expect("commit 1");
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None }).expect("apply 2");
-        store.dispatch(DocumentVcsCommand::CommitCheckpoint { message: Some("second".into()), authors: Vec::new() }).expect("commit 2");
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
+        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply 1");
+        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("first".into()), authors: Vec::new() }).expect("commit 1");
+        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None }).expect("apply 2");
+        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("second".into()), authors: Vec::new() }).expect("commit 2");
 
         let ids: Vec<&str> = store.envelope().vcs.checkpoints.iter().map(|checkpoint| checkpoint.id.as_str()).collect();
         assert_eq!(ids.len(), 2);
@@ -2085,21 +2085,21 @@ mod tests {
 
     #[test]
     fn merge_base_finds_the_nearest_common_ancestor_across_a_fork() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply root");
-        store.dispatch(DocumentVcsCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit root");
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
+        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply root");
+        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit root");
         let root_id = store.envelope().vcs.checkpoints[0].id.clone();
 
-        store.dispatch(DocumentVcsCommand::CreateAlternative { name: "feature-a".into() }).expect("create feature-a");
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None }).expect("apply a");
-        store.dispatch(DocumentVcsCommand::CommitCheckpoint { message: Some("a1".into()), authors: Vec::new() }).expect("commit a1");
+        store.dispatch(DocumentCommand::CreateAlternative { name: "feature-a".into() }).expect("create feature-a");
+        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None }).expect("apply a");
+        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("a1".into()), authors: Vec::new() }).expect("commit a1");
         let a1_id = store.envelope().vcs.checkpoints.last().unwrap().id.clone();
 
-        store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: root_id.clone() }).expect("checkout root");
-        store.dispatch(DocumentVcsCommand::CreateAlternative { name: "feature-b".into() }).expect("create feature-b");
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 3 }], description: None }).expect("apply b");
-        store.dispatch(DocumentVcsCommand::CommitCheckpoint { message: Some("b1".into()), authors: Vec::new() }).expect("commit b1");
+        store.dispatch(DocumentCommand::CheckoutCheckpoint { checkpoint_id: root_id.clone() }).expect("checkout root");
+        store.dispatch(DocumentCommand::CreateAlternative { name: "feature-b".into() }).expect("create feature-b");
+        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 3 }], description: None }).expect("apply b");
+        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("b1".into()), authors: Vec::new() }).expect("commit b1");
         let b1_id = store.envelope().vcs.checkpoints.last().unwrap().id.clone();
 
         assert_eq!(merge_base(store.envelope(), &a1_id, &b1_id), Some(root_id.clone()), "a1 and b1 forked at root");
@@ -2109,10 +2109,10 @@ mod tests {
 
     #[test]
     fn merge_base_is_none_for_a_dangling_unknown_checkpoint_id() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply");
-        store.dispatch(DocumentVcsCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit");
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
+        store.dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply");
+        store.dispatch(DocumentCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit");
         let root_id = store.envelope().vcs.checkpoints[0].id.clone();
 
         assert_eq!(merge_base(store.envelope(), &root_id, "unknown-checkpoint"), None, "an id absent from the checkpoint list shares no ancestry with anything");
@@ -2122,23 +2122,23 @@ mod tests {
     //#region 🔖RemoteSnapshotMerge
     #[test]
     fn snapshot_merge_into_a_nonempty_store_adds_only_the_new_remote_edits_and_records() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None })
+            .dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None })
             .expect("local apply");
         store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint { message: Some("local".into()), authors: Vec::new() })
+            .dispatch(DocumentCommand::CommitCheckpoint { message: Some("local".into()), authors: Vec::new() })
             .expect("local commit");
 
-        let mut remote_store = DocumentVcsStore::new(store.envelope().clone());
+        let mut remote_store = DocumentStore::new(store.envelope().clone());
         remote_store.set_state(store.envelope().clone(), store.applied_edit_ids().to_vec(), Vec::new());
         remote_store
-            .dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None })
+            .dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None })
             .expect("remote apply");
         remote_store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint { message: Some("remote".into()), authors: Vec::new() })
+            .dispatch(DocumentCommand::CommitCheckpoint { message: Some("remote".into()), authors: Vec::new() })
             .expect("remote commit");
 
         let (channel, remote_end) = ChannelBackbone::pair("chan");
@@ -2158,14 +2158,14 @@ mod tests {
     //#region 🔖StudioMemberCheckoutRouting
     #[test]
     fn studio_member_checkout_switches_at_the_alternative_tip_and_falls_back_to_checkout_when_stale() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let mut store = DocumentVcsStore::new(envelope);
+        let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
+            create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None })
+            .dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None })
             .expect("apply");
         store
-            .dispatch(DocumentVcsCommand::CreateAlternative { name: "feature".into() })
+            .dispatch(DocumentCommand::CreateAlternative { name: "feature".into() })
             .expect("create alternative (auto-commits since no checkpoint existed yet)");
         let alt_id = store.envelope().vcs.alternatives[0].id.clone();
         let tip = store.envelope().vcs.alternatives[0].checkpoint_ids.last().expect("alt has a tip").clone();
@@ -2174,10 +2174,10 @@ mod tests {
         assert_eq!(store.envelope().active_alternative_id, Some(alt_id.clone()), "switching to the tip keeps it active");
 
         store
-            .dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None })
+            .dispatch(DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None })
             .expect("apply on branch");
         store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() })
+            .dispatch(DocumentCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() })
             .expect("commit c2, advancing the alt's tip past `tip`");
 
         StudioMember::checkout(&mut store, &tip, &alt_id).expect("checkout of the now-stale tip falls back to CheckoutCheckpoint");

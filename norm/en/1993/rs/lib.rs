@@ -1272,28 +1272,28 @@ mod tests {
 
     #[test]
     fn document_dsl_round_trips() {
-        vcs::test_support::assert_dsl_round_trip(&Document::default());
-        vcs::test_support::assert_dsl_pack_equivalence(&Document::default());
+        store::test_support::assert_dsl_round_trip(&Document::default());
+        store::test_support::assert_dsl_pack_equivalence(&Document::default());
     }
 
     #[test]
     fn set_document_op_text_round_trips() {
-        vcs::test_support::assert_op_line_round_trip(&Operation::SetDocument { document: Document::default() });
+        store::test_support::assert_op_line_round_trip(&Operation::SetDocument { document: Document::default() });
     }
 
     #[test]
     fn document_text_round_trips_through_store() {
-        let envelope = vcs::create_document_vcs_envelope("norm.en1993/v1", "en1993", Document::default(), None);
-        let mut store = vcs::DocumentVcsStore::new(envelope);
+        let envelope = store::create_document_envelope("norm.en1993/v1", "en1993", Document::default(), None);
+        let mut store = store::DocumentStore::new(envelope);
         let mut next = Document::default();
         next.n_ed_kn = 600.0;
         store
-            .dispatch(vcs::DocumentVcsCommand::Apply {
+            .dispatch(store::DocumentCommand::Apply {
                 operations: vec![Operation::SetDocument { document: next }],
                 description: None,
             })
             .expect("apply");
-        vcs::test_support::assert_document_text_round_trip(&store);
-        vcs::test_support::assert_document_pack_round_trip(&store);
+        store::test_support::assert_document_text_round_trip(&store);
+        store::test_support::assert_document_pack_round_trip(&store);
     }
 }

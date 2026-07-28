@@ -1,6 +1,6 @@
 //! 🗄️ Generic document VCS engine — Operation/Edit/Change/Checkpoint/Alternative, materialize-by-replay, backbone.
 
-// The `dsl::DslDocument`/`dsl::DslOps` derive macros emit `::vcs::DocumentDsl`/`::vcs::OpText` paths
+// The `dsl::DslDocument`/`dsl::DslOps` derive macros emit `::store::DocumentDsl`/`::store::OpText` paths
 // (see `dsl/derive/rs/lib.rs`), which only resolve for crates that depend on `vcs` as an external
 // crate — every real consumer, INCLUDING this crate's own `.ops` header grammar (`OpsHeaderLine` in
 // `🔖TextFormat` below, derived on the engine directly) as well as its in-crate `🔖Dsl`/`🔖OpText`
@@ -30,7 +30,7 @@ use thiserror::Error;
 
 // 🎞️ CW8: the temporary public `pub use protocol::{...}` shim (CW3-CW8) is gone — every dependent
 // crate now imports `protocol::{Operation, OperationDiff, OpText, OperationMeta, Edit,
-// ReconcileReport, ...}` directly, so `vcs::Operation`/`vcs::OpText`/etc no longer resolve
+// ReconcileReport, ...}` directly, so `store::Operation`/`store::OpText`/etc no longer resolve
 // externally. This crate's OWN body still spells these names bare throughout (generic bounds like
 // `Operation: OpText`, `Edit<Operation>` struct literals, `crate::Operation<P>` disambiguating the
 // trait from the same-named generic parameter, etc.) — a private (non-`pub`) import keeps that

@@ -5,7 +5,7 @@ use std::fs;
 use std::io::{self, BufRead, Write};
 use trinity_jack::{run, QueryResult};
 use trinity_ram::{Graph, GraphFixture, PropertyValue};
-use vcs::DocumentDsl;
+use store::DocumentDsl;
 
 //#region ⚠️ Errors
 /// ⚠️ Trinity jack shell errors.
@@ -14,7 +14,7 @@ enum TrinityJackShellError {
     #[error("read {path}: {source}")]
     ReadFixture { path: String, source: std::io::Error },
     #[error("parse {path}: {source}")]
-    Dsl { path: String, source: vcs::TextError },
+    Dsl { path: String, source: store::TextError },
     #[error(transparent)]
     Graph(#[from] trinity_ram::TrinityRamError),
     #[error("{0}")]

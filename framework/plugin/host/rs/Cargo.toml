@@ -14,6 +14,7 @@ path = "lib.rs"
 semio-framework-core = { path = "../../../core/rs" }
 ui_wgpu = { path = "../../../../ui/wgpu/rs" }
 vcs = { path = "../../../../vcs/rs" }
+store = { path = "../../../../store/rs" }
 wasmtime = { version = "22.0.1", features = ["cranelift", "component-model"] }
 wasmtime-wasi = "22.0.1"
 serde = { version = "1.0.219", features = ["derive"] }

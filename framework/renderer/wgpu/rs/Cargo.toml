@@ -51,6 +51,7 @@ required-features = ["native-bin"]
 semio-framework-plugin-host = { path = "../../../plugin/host/rs" }
 store_sync = { path = "../../../../store/sync/rs" }
 vcs = { path = "../../../../vcs/rs" }
+store = { path = "../../../../store/rs" }
 tokio = { version = "1", features = ["sync"], default-features = false }
 ureq = "2.12.1"
 rfd = "0.15.4"

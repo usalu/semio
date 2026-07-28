@@ -6803,8 +6803,9 @@
   transition: stroke 120ms ease;
 }
 
-/* 🎓 Introduction step body: emphasize only the paragraph under the pointer — never the
- * whole body, sibling paragraphs, chips, or checklist. */
+/* 🎓 Introduction step body: emphasize only the paragraph under the pointer — never sibling
+ * paragraphs, footer step-count chip, or checklist. Title chip + drag handle emphasize via
+ * parent info-box hover (see rules below). */
 [data-slot="introduction-info-box"] [data-slot="introduction-body-paragraph"]:hover {
   color: var(--border-emphasized-color);
   transition: color 120ms ease;
@@ -6819,20 +6820,35 @@
   box-shadow: none !important;
 }
 
-/* 🪟 Docked chips: no piecewise borders or inset separators — the silhouette SVG owns every
- * stroke, and chip glass must meet the body glass with no hairline gap between them. */
-[data-window-silhouette-chip] {
-  border-width: 0;
-  border-style: none;
+/* 🪟 Docked chips: no piecewise outer borders or inset separators — the silhouette SVG owns
+ * every stroke. The immediate flowing control also drops its generic control-group frame while
+ * deliberate dividers nested inside multi-tab/multi-button groups remain intact. */
+[data-window-silhouette-chip],
+[data-window-silhouette-chip] > * {
+  border-width: 0 !important;
+  border-style: none !important;
   box-shadow: none;
+}
+
+/* 🎛️ The silhouette chip already paints this level's glass. Immediate control-group shells must
+ * stay transparent so Back/Next and equivalent controls do not paint the same level twice. */
+[data-window-silhouette-chip] > :is(
+  [data-slot="button-group"],
+  [data-slot="toggle-group"],
+  [data-slot="action-group"],
+  [data-slot="app-panel-toggle-group"]
+) {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background-color: transparent !important;
 }
 
 [data-slot="mode-dock-tabs"] > [data-slot="mode-dock-tab"] + [data-slot="mode-dock-tab"] {
   box-shadow: inset var(--stroke-hairline) 0 0 0 var(--border-normal-color);
 }
 
-[data-slot="panel-tabs"] > [data-slot="panel-tab-button"] + [data-slot="panel-tab-button"] {
-  box-shadow: inset var(--stroke-hairline) 0 0 0 var(--border-normal-color);
+[data-slot="panel-tabs"] > [data-slot="panel-tab-button"] {
+  border-inline-end-color: var(--border-normal-color) !important;
 }
 
 [data-slot="window-chrome-stack"],
@@ -6852,6 +6868,70 @@
 [data-slot="introduction-info-box"]:hover,
 [data-slot="dialog-box"]:hover {
   border-color: transparent !important;
+}
+
+/* 🪟 Window unit hover: emphasize active tab name/icon + drag handle when pointer is in body/gap/controls/active tab. */
+[data-window-silhouette]:is(
+  :has([data-slot="mode-dock-stack-body"]:hover),
+  :has([data-slot="mode-dock-tab-gap"]:hover),
+  :has([data-slot="mode-dock-controls-cap"]:hover),
+  :has([data-slot="mode-dock-tab"][data-stack-active="true"]:hover)
+) [data-slot="mode-dock-tab"][data-stack-active="true"]:not([data-handle-hovered="true"]) {
+  color: var(--border-emphasized-color);
+  transition: color 120ms ease;
+}
+
+[data-window-silhouette]:is(
+  :has([data-slot="mode-dock-stack-body"]:hover),
+  :has([data-slot="mode-dock-tab-gap"]:hover),
+  :has([data-slot="mode-dock-controls-cap"]:hover),
+  :has([data-slot="mode-dock-tab"][data-stack-active="true"]:hover)
+) [data-slot="mode-dock-tab"][data-stack-active="true"] [data-slot="drag-handle"] {
+  color: var(--border-emphasized-color);
+}
+
+/* 🪟 WindowChrome / panel / pane: same parent-unit identity emphasis for active tab button. */
+[data-slot="window-chrome-stack"]:is(
+  :has([data-slot="window-chrome-body"]:hover),
+  :has([data-slot="panel-content"]:hover),
+  :has([data-slot="pane-body"]:hover),
+  :has([data-slot="window-chrome-gap"]:hover),
+  :has([data-slot="window-chrome-controls"]:hover),
+  :has([data-slot$="-tab-button"][data-active="true"]:hover)
+) [data-slot$="-tab-button"][data-active="true"]:not([data-handle-hovered="true"]) {
+  color: var(--border-emphasized-color);
+  transition: color 120ms ease;
+}
+
+[data-slot="window-chrome-stack"]:is(
+  :has([data-slot="window-chrome-body"]:hover),
+  :has([data-slot="panel-content"]:hover),
+  :has([data-slot="pane-body"]:hover),
+  :has([data-slot="window-chrome-gap"]:hover),
+  :has([data-slot="window-chrome-controls"]:hover),
+  :has([data-slot$="-tab-button"][data-active="true"]:hover)
+) [data-slot$="-tab-button"][data-active="true"] [data-slot="drag-handle"] {
+  color: var(--border-emphasized-color);
+}
+
+/* 🎓 Introduction step unit hover: title + drag handle — not footer step-count chip. */
+[data-slot="introduction-info-box"]:is(
+  :has([data-slot="window-chrome-body"]:hover),
+  :has([data-slot="window-chrome-gap"]:hover),
+  :has([data-slot="window-chrome-controls"]:hover),
+  :has([data-slot="introduction-info-box-chip"]:hover)
+) [data-slot="introduction-info-box-chip"]:not([data-handle-hovered="true"]) {
+  color: var(--border-emphasized-color);
+  transition: color 120ms ease;
+}
+
+[data-slot="introduction-info-box"]:is(
+  :has([data-slot="window-chrome-body"]:hover),
+  :has([data-slot="window-chrome-gap"]:hover),
+  :has([data-slot="window-chrome-controls"]:hover),
+  :has([data-slot="introduction-info-box-chip"]:hover)
+) [data-slot="introduction-info-box-chip"] [data-slot="drag-handle"] {
+  color: var(--border-emphasized-color);
 }
 
 /* #endregion 🪟ShellParentHover */

@@ -24,6 +24,7 @@ path = "lib.rs"
 [dependencies]
 forms = { path = "../../rs" }
 vcs = { path = "../../../vcs/rs" }
+store = { path = "../../../store/rs" }
 playbook = { path = "../../../playbook/rs" }
 semio-framework-plugin = { path = "../../../framework/plugin/rs" }
 semio-framework-core = { path = "../../../framework/core/rs" }

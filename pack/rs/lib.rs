@@ -85,6 +85,27 @@ pub fn decode_document(
     pack_value::decode_document(bytes, spec, options)
 }
 
+/// @emoji 🎯 Encodes one record as a container-less binary body (symbol table + fields, no
+/// header/manifest/footer, no chunking) — the payload form for operation/command records. Thin
+/// forward onto `pack_value::encode_record_body`; same determinism law as `encode_document`.
+pub fn encode_record_body(
+    spec: &dsl_schema::RecordSpec,
+    record: &dsl_schema::RecordValue,
+    options: &EncodeOptions,
+) -> Result<Vec<u8>, PackError> {
+    pack_value::encode_record_body(spec, record, options)
+}
+
+/// @emoji 🎯 Decodes an `encode_record_body` payload back into a `RecordValue` plus its
+/// `DecodeReport`. Thin forward onto `pack_value::decode_record_body`.
+pub fn decode_record_body(
+    bytes: &[u8],
+    spec: &dsl_schema::RecordSpec,
+    options: &DecodeOptions,
+) -> Result<(dsl_schema::RecordValue, DecodeReport), PackError> {
+    pack_value::decode_record_body(bytes, spec, options)
+}
+
 /// @emoji #️⃣ Reads only the trailing footer of an encoded pack file and returns its stored
 /// `content_hash` — no header/manifest/document decode needed. Thin forward onto
 /// `pack_format::read_footer_only`.

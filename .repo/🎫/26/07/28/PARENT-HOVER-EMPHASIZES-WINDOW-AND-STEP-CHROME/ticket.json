@@ -1,0 +1,21 @@
+{
+  "title": "Parent Hover Emphasizes Window and Step Chrome",
+  "emoji": "🖱️",
+  "status": "open",
+  "description": "When hovering a window or introduction step unit, emphasize identity chrome (name/icon/drag handle) via CSS parent rules—matching tree-row hover scope—without changing leaf data-hover-scope behavior for direct chip hover.",
+  "summary": "Follow-up fixed piecewise borders on chips flowing along WindowChrome silhouettes. The shared title chip primitive is intrinsically borderless, and the silhouette-chip CSS boundary now removes outer borders and inset shadows from immediate nested controls such as Button groups while preserving deliberate dividers inside multi-tab and multi-button groups. Extended the existing React appearance tests and styling contract test. Verified ui-styling 24/24, focused ui-react 2/2, and the live Aggregator introduction: name, step count, Next, and Close all compute to 0px borders, border-style none, box-shadow none, with no browser console warnings/errors. The full React quick suite remains at 470/479 with nine unrelated pre-existing failures; typecheck remains blocked by unrelated existing generated-manifest, icon, node/tree, and stale fixture errors.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2371"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "517da4cd",
+    "local": "parent_hover_chrome_517da4cd.plan.md"
+  },
+  "sessions": [
+    "⚪9c6a2c873ed44425b3eb282a27fd2bec",
+    "⚪ac449686eff940f9a6aafa43a49d447c",
+    "⚪944fe8fede3049b88c569504787ce059"
+  ]
+}

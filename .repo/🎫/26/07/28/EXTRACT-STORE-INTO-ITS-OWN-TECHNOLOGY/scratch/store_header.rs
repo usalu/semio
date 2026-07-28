@@ -32,8 +32,5 @@ use protocol::{Edit, Operation, OperationDiff, OperationMeta, OpText, ReconcileR
 // 🗃️ `store`'s facade over `vcs`'s version-graph algebra — apps that depend on `store` reach
 // `Author`/`Change`/`Checkpoint`/`Alternative`/`VcsError`/etc through this crate, never through
 // `vcs` directly (see the crate doc comment above).
-pub use vcs::{
-    absorb_diff, apply_collection_operation, apply_operation, collection_diff_from_operation, content_addressed_checkpoint_id, create_document_vcs_id, invert_collection_operation, Alternative,
-    Author, Change, Checkpoint, CollectionDiff, CollectionOperation, DocumentVcs, Identified, ItemPatch, Patchable, VcsError,
-};
+pub use vcs::{absorb_diff, apply_collection_operation, apply_operation, collection_diff_from_operation, content_addressed_checkpoint_id, create_document_vcs_id, invert_collection_operation, Alternative, Author, Change, Checkpoint, CollectionDiff, CollectionOperation, DocumentVcs, Identified, ItemPatch, Patchable, VcsError};
 

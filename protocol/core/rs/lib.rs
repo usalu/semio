@@ -705,7 +705,7 @@ impl PartialOrd for HybridLogicalTimestamp {
 //#region 🔖Policies
 // UndoPolicy moved from vcs/rs (unchanged variants); MergeStrategyKind moved from framework/core
 // L6636-6668 (unchanged variants). New: ConflictRule, the per-operation conflict declaration
-// surface today's code lacks (vcs::merge_concurrent_diffs collapses everything to absorb
+// surface today's code lacks (store::merge_concurrent_diffs collapses everything to absorb
 // regardless of declared strategy — protocol_crdt fixes this using ConflictRule).
 //
 // Note: the contract's prose also mentions `DocumentKind` moving alongside `MergeStrategyKind`,

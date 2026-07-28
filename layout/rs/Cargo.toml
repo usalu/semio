@@ -17,6 +17,7 @@ path = "lib.rs"
 [dependencies]
 infinite_cavas = { path = "../../infinite/cavas/rs" }
 vcs = { path = "../../vcs/rs" }
+store = { path = "../../store/rs" }
 protocol = { path = "../../protocol/rs" }
 dsl = { path = "../../dsl/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

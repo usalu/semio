@@ -20,7 +20,7 @@ pub mod app_jack {
     use std::collections::{BTreeMap, HashMap};
     use trinity_jack::{complete, execute, format as jack_format, lint, parse, semantic_tokens, QueryResult, QueryResultKind};
     use trinity_ram::{Camera, Graph, GraphFixture, Node, PortDirection, PropertyValue, TrinityGraphOperation, TRINITY_GRAPH_SCHEMA};
-    use vcs::DocumentDsl;
+    use store::DocumentDsl;
 
     //#region 🔖Constants
     const TRINITY_JACK_PLAY_APP_ID: &str = "trinity-jack-play";
@@ -1434,7 +1434,7 @@ pub mod app_rewrite {
         AssignmentJson, Lhs, LayoutPoint, ParameterKind, ParameterSpec, Rhs, Rule,
         PatternJson, RewriteRuleOperation, RewriteRuleState, REWRITE_RULE_SCHEMA,
     };
-    use vcs::DocumentDsl;
+    use store::DocumentDsl;
 
     //#region 🔖Constants
     const TRINITY_REWRITE_PLAY_APP_ID: &str = "trinity-rewrite-play";

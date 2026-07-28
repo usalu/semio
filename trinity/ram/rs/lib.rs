@@ -421,7 +421,8 @@ pub fn port_key(node_id: &str, port_id: &str) -> String {
 
 // #region 🔖GraphOperations
 use protocol::{Operation, OperationDiff};
-use vcs::{apply_operation, create_document_vcs_envelope, CollectionDiff, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, ItemPatch};
+use vcs::{apply_operation, CollectionDiff, ItemPatch};
+use store::{create_document_envelope, DocumentCommand, DocumentEnvelope, DocumentStore};
 
 pub const TRINITY_GRAPH_SCHEMA: &str = GraphFixture::SCHEMA;
 
@@ -600,11 +601,11 @@ pub enum TrinityGraphOperation {
     },
 }
 
-pub type TrinityGraphEnvelope = DocumentVcsEnvelope<GraphFixture, TrinityGraphOperation>;
-pub type TrinityGraphStore = DocumentVcsStore<GraphFixture, TrinityGraphOperation>;
+pub type TrinityGraphEnvelope = DocumentEnvelope<GraphFixture, TrinityGraphOperation>;
+pub type TrinityGraphStore = DocumentStore<GraphFixture, TrinityGraphOperation>;
 
 pub fn create_trinity_graph_envelope(id: &str, fixture: GraphFixture) -> TrinityGraphEnvelope {
-    create_document_vcs_envelope(TRINITY_GRAPH_SCHEMA, id, fixture, None)
+    create_document_envelope(TRINITY_GRAPH_SCHEMA, id, fixture, None)
 }
 
 pub fn validate_trinity_graph_operation(operation: &TrinityGraphOperation, fixture: &GraphFixture) -> Result<(), TrinityRamError> {
@@ -682,7 +683,7 @@ pub fn dispatch_trinity_graph_operations(store: &mut TrinityGraphStore, operatio
         validate_trinity_graph_operation(operation, &projection)?;
         projection = apply_operation(&projection, operation);
     }
-    store.dispatch(DocumentVcsCommand::Apply { operations: operations, description: None }).map_err(TrinityRamError::from)
+    store.dispatch(DocumentCommand::Apply { operations: operations, description: None }).map_err(TrinityRamError::from)
 }
 
 fn validate_clear_data_property(fixture: &GraphFixture, entity: &EntityRef, key: &str) -> Result<(), TrinityRamError> {
@@ -908,7 +909,7 @@ impl Operation<GraphFixture> for TrinityGraphOperation {
 
 //#region 🔖Dsl
 use protocol::OpText;
-use vcs::{DocumentDsl, DocumentPack, PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};
+use store::{DocumentDsl, DocumentPack, PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};
 
 //#region 🔖DslMirrors
 /// 🔒 Local twin of `PortDirection` (foreign, re-exported from `mathematical_graph_manifest` and
@@ -1151,7 +1152,7 @@ fn trinity_graph_operation_from_dsl(operation: TrinityGraphOperationDsl) -> Trin
 //#endregion 🔖DslMirrors
 
 //#region 🔖DslDocument
-/// 📜 `.trinity` textual notation for a whole [`GraphFixture`] (`vcs::DocumentDsl`), delegating to
+/// 📜 `.trinity` textual notation for a whole [`GraphFixture`] (`store::DocumentDsl`), delegating to
 /// the derive-generated `GraphFixtureDsl` mirror (see `🔖DslMirrors`). Also hand-implements
 /// `dsl::DslField` (normally auto-emitted alongside `#[derive(dsl::DslDocument)]`) so `GraphFixture`
 /// can be nested as an ordinary field too — `TrinityGraphOperation::SetFixture` embeds a whole
@@ -1186,7 +1187,7 @@ impl dsl::DslField for GraphFixture {
 //#endregion 🔖DslDocument
 
 //#region 🔖Pack
-/// 📦 Binary pack notation for a whole [`GraphFixture`] (`vcs::DocumentPack`), hand-implemented
+/// 📦 Binary pack notation for a whole [`GraphFixture`] (`store::DocumentPack`), hand-implemented
 /// exactly like `impl DocumentDsl for GraphFixture` above (`GraphFixture` itself does not derive
 /// `dsl::DslDocument`, only the `GraphFixtureDsl` mirror does — see `🔖DslMirrors`), delegating
 /// through the same mirror + `graph_fixture_to_dsl`/`graph_fixture_dsl_to_graph_fixture` pair.
@@ -1198,7 +1199,7 @@ impl DocumentPack for GraphFixture {
     fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
         let parsed = <GraphFixtureDsl as DocumentPack>::decode_pack_with(bytes, options)?;
         graph_fixture_dsl_to_graph_fixture(parsed)
-            .map_err(|error| vcs::text_error_to_pack_error(TextError::new(error.to_string(), TextSpan::at(1, 1))))
+            .map_err(|error| store::text_error_to_pack_error(TextError::new(error.to_string(), TextSpan::at(1, 1))))
     }
 }
 //#endregion 🔖Pack
@@ -1248,9 +1249,14 @@ mod wasm_bridge {
             Ok(Self { store: RefCell::new(store) })
         }
 
-        #[wasm_bindgen(js_name = dispatchJson)]
-        pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
+        #[wasm_bindgen(js_name = dispatchText)]
+        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = dispatchBinary)]
+        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
@@ -1477,7 +1483,7 @@ mod tests {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", fixture));
         dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::CreateNode { id: "new".into(), kind: "Piece".into(), name: "new-piece".into(), x: 200.0, y: 40.0, width: 80.0, height: 40.0, ports: vec![] }]).expect("create");
         assert_eq!(store.projection().expect("projection").nodes.len(), 3);
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        store.dispatch(DocumentCommand::Undo).expect("undo");
         assert_eq!(store.projection().expect("projection").nodes.len(), 2);
     }
 
@@ -1535,7 +1541,7 @@ mod tests {
     }
 
     //#region 🔖DslTests
-    use vcs::test_support::{assert_dsl_pack_equivalence, assert_dsl_round_trip, assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
+    use store::test_support::{assert_dsl_pack_equivalence, assert_dsl_round_trip, assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
 
     #[test]
     fn dsl_round_trip_mini_fixture() {
@@ -1887,11 +1893,11 @@ mod tests {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::Reposition { id: "root".into(), x: 50.0, y: 60.0 }]).expect("reposition");
         assert_eq!(store.projection().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().x, 50.0);
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo reposition");
+        store.dispatch(DocumentCommand::Undo).expect("undo reposition");
         assert_eq!(store.projection().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().x, 0.0);
 
         dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::Rename { id: "root".into(), name: "renamed".into() }]).expect("rename");
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo rename");
+        store.dispatch(DocumentCommand::Undo).expect("undo rename");
         assert_eq!(store.projection().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().name, "core");
     }
 
@@ -1900,7 +1906,7 @@ mod tests {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::DeleteEdge { id: "e1".into() }]).expect("delete edge");
         assert!(store.projection().unwrap().edges.is_empty());
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo delete edge");
+        store.dispatch(DocumentCommand::Undo).expect("undo delete edge");
         assert_eq!(store.projection().unwrap().edges.len(), 1);
     }
 
@@ -1911,7 +1917,7 @@ mod tests {
         let projection = store.projection().unwrap();
         assert_eq!(projection.nodes.len(), 1);
         assert!(projection.edges.is_empty());
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo delete node");
+        store.dispatch(DocumentCommand::Undo).expect("undo delete node");
         let projection = store.projection().unwrap();
         assert_eq!(projection.nodes.len(), 2);
         assert_eq!(projection.edges.len(), 1);
@@ -1922,13 +1928,13 @@ mod tests {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::SetDataProperty { entity: EntityRef::Node("root".into()), key: "label".into(), value: PropertyValue::String("first".into()) }]).expect("set");
         dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::SetDataProperty { entity: EntityRef::Node("root".into()), key: "label".into(), value: PropertyValue::String("second".into()) }]).expect("set again");
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo second set");
+        store.dispatch(DocumentCommand::Undo).expect("undo second set");
         let value = store.projection().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().properties.get("label").cloned();
         assert_eq!(value, Some(PropertyValue::String("first".into())));
 
         dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::ClearDataProperty { entity: EntityRef::Node("root".into()), key: "label".into() }]).expect("clear");
         assert!(store.projection().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().properties.get("label").is_none());
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo clear");
+        store.dispatch(DocumentCommand::Undo).expect("undo clear");
         let value = store.projection().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().properties.get("label").cloned();
         assert_eq!(value, Some(PropertyValue::String("first".into())));
     }
@@ -1938,13 +1944,13 @@ mod tests {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::SetCamera { camera: Camera { x: 5.0, y: 5.0, zoom: 2.0 } }]).expect("set camera");
         assert_eq!(store.projection().unwrap().camera, Camera { x: 5.0, y: 5.0, zoom: 2.0 });
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo camera");
+        store.dispatch(DocumentCommand::Undo).expect("undo camera");
         assert_eq!(store.projection().unwrap().camera, Camera::default());
 
         let replacement = GraphFixture { name: "replacement".into(), ..mini_fixture() };
         dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::SetFixture { fixture: replacement }]).expect("set fixture");
         assert_eq!(store.projection().unwrap().name, "replacement");
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo set fixture");
+        store.dispatch(DocumentCommand::Undo).expect("undo set fixture");
         assert_eq!(store.projection().unwrap().name, "mini");
     }
     //#endregion 🔖GraphOperationUndoTests

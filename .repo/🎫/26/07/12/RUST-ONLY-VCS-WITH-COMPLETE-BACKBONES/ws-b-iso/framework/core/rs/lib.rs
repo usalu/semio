@@ -4971,7 +4971,7 @@ impl NoteCanvasScene {
 }
 
 /** @emoji 🗄️ A checkpoint ancestor-graph history view. `columns_json` is a `HistoryColumn[]` array
- * (see `vcs::HistoryColumn`), newest checkpoint first. */
+ * (see `store::HistoryColumn`), newest checkpoint first. */
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct VcsHistoryScene {

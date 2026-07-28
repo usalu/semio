@@ -587,11 +587,19 @@ fn encode_wire_node(ctx: &mut EncCtx<'_>, node: &WireNode, out: &mut Vec<u8>) {
 //#endregion 🔖Encode
 
 //#region 🔖Decode
-/// @emoji 📖 Mutable state threaded through one `decode_document` call: the opened `PackFile`
-/// (for symref/chunk resolution), the caller's limits/verification/preserve-unknown choices, and
+/// @emoji 🧭 Where symrefs and chunk ids resolve during one decode: a full opened `PackFile`
+/// (the `decode_document` path) or a container-less inline symbol table (the
+/// `decode_record_body` path, which has no chunk table by construction).
+enum DecSource<'a> {
+    File(&'a pack_format::PackFile<&'a [u8]>),
+    Inline { symbols: Vec<String> },
+}
+
+/// @emoji 📖 Mutable state threaded through one `decode_document`/`decode_record_body` call: the
+/// symref/chunk resolution source, the caller's limits/verification/preserve-unknown choices, and
 /// the accumulated unknown-field-id report.
 struct DecCtx<'a> {
-    pack_file: &'a pack_format::PackFile<&'a [u8]>,
+    source: DecSource<'a>,
     limits: PackLimits,
     verification: pack_format::VerificationLevel,
     preserve_unknown: bool,
@@ -608,7 +616,13 @@ impl DecCtx<'_> {
 }
 
 fn resolve_symref(ctx: &DecCtx<'_>, symref: u64) -> Result<String, PackError> {
-    ctx.pack_file.symbol(symref).map(str::to_string)
+    match &ctx.source {
+        DecSource::File(pack_file) => pack_file.symbol(symref).map(str::to_string),
+        DecSource::Inline { symbols } => symbols
+            .get(symref as usize)
+            .cloned()
+            .ok_or_else(|| PackError::Malformed { what: "symref", offset: 0, detail: format!("symref {symref} out of range for inline table of {}", symbols.len()) }),
+    }
 }
 
 /// @emoji 📏 Reads a `varint` length then that many raw bytes, rejecting an oversized length
@@ -643,7 +657,12 @@ fn read_chunked_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<V
         if id > u32::MAX as u64 {
             return Err(PackError::Malformed { what: "chunk_id", offset: reader.position() as u64, detail: "chunk id exceeds u32".to_string() });
         }
-        let piece = ctx.pack_file.read_chunk(ChunkId(id as u32), ctx.verification)?;
+        let piece = match &ctx.source {
+            DecSource::File(pack_file) => pack_file.read_chunk(ChunkId(id as u32), ctx.verification)?,
+            DecSource::Inline { .. } => {
+                return Err(PackError::Malformed { what: "chunk_id", offset: reader.position() as u64, detail: "chunked bytes are not representable in a container-less record body".to_string() });
+            }
+        };
         out.extend_from_slice(&piece);
     }
     Ok(out)
@@ -1296,7 +1315,7 @@ pub fn decode_document(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions)
 
     let mut reader = ByteReader::new(&body);
     let mut dec_ctx = DecCtx {
-        pack_file: &pack_file,
+        source: DecSource::File(&pack_file),
         limits: options.limits.clone(),
         verification: options.verification,
         preserve_unknown: options.preserve_unknown,
@@ -1305,6 +1324,67 @@ pub fn decode_document(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions)
     let record = decode_record_fields(&mut reader, Some(spec), &mut dec_ctx, 0)?;
 
     let report = DecodeReport { unknown_field_ids: dec_ctx.unknown_field_ids, unknown_segments: Vec::new(), schema_drift, verified: options.verification };
+    Ok((record, report))
+}
+
+/// @emoji 🎯 Container-less twin of [`encode_document`] for small payloads (operation/command
+/// records): `symbol_count varint, (len varint, utf8)*, record fields` — no header, segments,
+/// manifest, or footer, and never any `Bytes64` chunking (oversized bytes stay inline via
+/// `TAG_BYTES`). Deterministic by the same purity rules as the document path: byte-identical
+/// output for equal `(spec, record)` regardless of map iteration order.
+pub fn encode_record_body(spec: &RecordSpec, record: &RecordValue, options: &EncodeOptions) -> Result<Vec<u8>, PackError> {
+    let symbols = build_symbols(spec, record);
+    let mut symbol_index = HashMap::with_capacity(symbols.len());
+    for (i, s) in symbols.iter().enumerate() {
+        symbol_index.insert(s.clone(), i as u64);
+    }
+    let mut out = Vec::new();
+    write_varint_u64(&mut out, symbols.len() as u64);
+    for s in &symbols {
+        write_varint_u64(&mut out, s.len() as u64);
+        out.extend_from_slice(s.as_bytes());
+    }
+    let mut body_options = options.clone();
+    body_options.chunk_threshold = u64::MAX;
+    let write_options = pack_format::WriteOptions { required_flags: 0, optional_flags: 0, codec: CodecId(0) };
+    let mut writer = pack_format::PackWriter::begin(Vec::new(), &write_options)?;
+    let fields = {
+        let mut enc_ctx = EncCtx { symbol_index, writer: &mut writer, options: &body_options };
+        encode_record_fields(&mut enc_ctx, Some(spec), record, 0)?
+    };
+    out.extend_from_slice(&fields);
+    Ok(out)
+}
+
+/// @emoji 🎯 Decodes an [`encode_record_body`] payload against `spec`. Unknown fields decode,
+/// are preserved (subject to `options.preserve_unknown`), and are reported exactly like the
+/// document path; a `TAG_BYTES_CHUNKED` value is malformed here by construction.
+pub fn decode_record_body(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions) -> Result<(RecordValue, DecodeReport), PackError> {
+    let mut reader = ByteReader::new(bytes);
+    let symbol_count = reader.read_varint_u64()?;
+    if symbol_count > u64::from(options.limits.max_symbols) {
+        return Err(PackError::LimitExceeded("record-body symbol count exceeds max_symbols"));
+    }
+    let mut symbols = Vec::with_capacity(symbol_count as usize);
+    for _ in 0..symbol_count {
+        let len = reader.read_varint_u64()?;
+        if len > options.limits.max_segment_len {
+            return Err(PackError::LimitExceeded("record-body symbol length exceeds max_segment_len"));
+        }
+        let raw = reader.read_bytes(len as usize)?;
+        let s = std::str::from_utf8(raw)
+            .map_err(|_| PackError::Malformed { what: "symbol", offset: reader.position() as u64, detail: "invalid utf8".to_string() })?;
+        symbols.push(s.to_string());
+    }
+    let mut dec_ctx = DecCtx {
+        source: DecSource::Inline { symbols },
+        limits: options.limits.clone(),
+        verification: options.verification,
+        preserve_unknown: options.preserve_unknown,
+        unknown_field_ids: Vec::new(),
+    };
+    let record = decode_record_fields(&mut reader, Some(spec), &mut dec_ctx, 0)?;
+    let report = DecodeReport { unknown_field_ids: dec_ctx.unknown_field_ids, unknown_segments: Vec::new(), schema_drift: false, verified: options.verification };
     Ok((record, report))
 }
 //#endregion 🔖Document
@@ -1748,5 +1828,59 @@ mod tests {
         assert_eq!(decoded.get(1), record.get(1));
     }
     //#endregion 🔖Chunking
+
+    //#region 🔖RecordBody
+    #[test]
+    fn record_body_round_trips_every_shape() {
+        let spec = full_spec();
+        let record = full_record();
+        let bytes = encode_record_body(&spec, &record, &EncodeOptions::default()).expect("encode");
+        let (decoded, report) = decode_record_body(&bytes, &spec, &DecodeOptions::default()).expect("decode");
+        assert_eq!(decoded, record);
+        assert!(report.unknown_field_ids.is_empty());
+    }
+
+    #[test]
+    fn record_body_is_deterministic_for_equal_inputs() {
+        let spec = full_spec();
+        let a = encode_record_body(&spec, &full_record(), &EncodeOptions::default()).expect("encode a");
+        let b = encode_record_body(&spec, &full_record(), &EncodeOptions::default()).expect("encode b");
+        assert_eq!(a, b);
+    }
+
+    #[test]
+    fn record_body_keeps_oversized_bytes_inline_instead_of_chunking() {
+        let spec = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "blob", Shape::Bytes64)]);
+        let payload: Vec<u8> = (0..600_000u32).map(|i| (i % 256) as u8).collect();
+        let mut fields = HashMap::new();
+        fields.insert(1, FieldValue::Bytes64(payload.clone()));
+        let record = RecordValue { fields };
+
+        let mut options = EncodeOptions::default();
+        options.chunk_threshold = 1024;
+        let bytes = encode_record_body(&spec, &record, &options).expect("encode");
+        let (decoded, _) = decode_record_body(&bytes, &spec, &DecodeOptions::default()).expect("decode");
+        assert_eq!(decoded.get(1), Some(&FieldValue::Bytes64(payload)));
+    }
+
+    #[test]
+    fn record_body_preserves_and_reports_unknown_fields() {
+        let wide = RecordSpec::new(
+            None,
+            RecordLayout::Inline,
+            vec![FieldSpec::new(1, "a", Shape::Int), FieldSpec::new(9, "extra", Shape::Text)],
+        );
+        let narrow = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "a", Shape::Int)]);
+        let mut fields = HashMap::new();
+        fields.insert(1, FieldValue::Int(3));
+        fields.insert(9, FieldValue::Text("kept".to_string()));
+        let record = RecordValue { fields };
+
+        let bytes = encode_record_body(&wide, &record, &EncodeOptions::default()).expect("encode");
+        let (decoded, report) = decode_record_body(&bytes, &narrow, &DecodeOptions::default()).expect("decode");
+        assert_eq!(decoded.get(9), Some(&FieldValue::Text("kept".to_string())));
+        assert_eq!(report.unknown_field_ids, vec![9]);
+    }
+    //#endregion 🔖RecordBody
 }
 //#endregion 🧪Tests

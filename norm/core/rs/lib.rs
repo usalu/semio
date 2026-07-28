@@ -4,7 +4,7 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use protocol::{Operation, OperationDiff, OpText};
-use vcs::{DocumentDsl, TextError, TextSpan};
+use store::{DocumentDsl, TextError, TextSpan};
 
 // #region 🔖Quantity
 /// 📐 Physical quantity kind for SI-normalized norm computations.
@@ -616,7 +616,7 @@ fn unescape_op_text_field(value: &str) -> String {
 /// ⚡ One `OpText` implementation shared by every norm family: `SetDocumentOperation<D>`'s only variant
 /// replaces the whole document, so the op line is `set-document "<escaped D::print_dsl() text>"` — the
 /// (possibly multi-line) DSL text folded onto one physical line via {@link escape_op_text_field}, and
-/// recovered via `D::parse_dsl` after {@link unescape_op_text_field}. Bounded on `vcs::DocumentDsl` (for
+/// recovered via `D::parse_dsl` after {@link unescape_op_text_field}. Bounded on `store::DocumentDsl` (for
 /// `print_dsl`/`parse_dsl`) plus the same bounds `SetDocumentOperation<D>`'s own `Operation<D>` impl
 /// already requires, so every one of the 15 family `Document` types gets this for free the moment it
 /// implements `DocumentDsl`.
@@ -706,13 +706,13 @@ mod tests {
 
     #[test]
     fn demo_document_dsl_round_trips() {
-        vcs::test_support::assert_dsl_round_trip(&DemoDocument { value: 4.5 });
-        vcs::test_support::assert_dsl_pack_equivalence(&DemoDocument { value: 4.5 });
+        store::test_support::assert_dsl_round_trip(&DemoDocument { value: 4.5 });
+        store::test_support::assert_dsl_pack_equivalence(&DemoDocument { value: 4.5 });
     }
 
     #[test]
     fn set_document_operation_op_text_round_trips() {
-        vcs::test_support::assert_op_line_round_trip(&SetDocumentOperation::SetDocument { document: DemoDocument { value: 4.5 } });
+        store::test_support::assert_op_line_round_trip(&SetDocumentOperation::SetDocument { document: DemoDocument { value: 4.5 } });
     }
 
     #[test]
@@ -728,15 +728,15 @@ mod tests {
 
     #[test]
     fn document_text_round_trips_for_a_norm_family_document() {
-        let envelope = vcs::create_document_vcs_envelope("norm.demo/v1", "demo", DemoDocument { value: 1.0 }, None);
-        let mut store = vcs::DocumentVcsStore::new(envelope);
+        let envelope = store::create_document_envelope("norm.demo/v1", "demo", DemoDocument { value: 1.0 }, None);
+        let mut store = store::DocumentStore::new(envelope);
         store
-            .dispatch(vcs::DocumentVcsCommand::Apply {
+            .dispatch(store::DocumentCommand::Apply {
                 operations: vec![SetDocumentOperation::SetDocument { document: DemoDocument { value: 3.0 } }],
                 description: None,
             })
             .expect("apply");
-        vcs::test_support::assert_document_text_round_trip(&store);
-        vcs::test_support::assert_document_pack_round_trip(&store);
+        store::test_support::assert_document_text_round_trip(&store);
+        store::test_support::assert_document_pack_round_trip(&store);
     }
 }

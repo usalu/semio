@@ -1865,7 +1865,7 @@ impl Default for DagFixture {
     fn default() -> Self {
         // 📜 the demo board is handcrafted `.dag` DSL text (see `//#region 🔖Dsl`), not JSON — it is
         // compiled into the binary, so a parse failure here is a bug in the bundled fixture itself.
-        let document = <DagDocument as vcs::DocumentDsl>::parse_dsl(include_str!("../example/demo.dag")).expect("bundled example/demo.dag is valid DagDocument DSL text");
+        let document = <DagDocument as store::DocumentDsl>::parse_dsl(include_str!("../example/demo.dag")).expect("bundled example/demo.dag is valid DagDocument DSL text");
         Self { schema: document.schema, camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: document.nodes, edges: document.edges }
     }
 }
@@ -6883,11 +6883,11 @@ mod tests {
 
 // #region 🔖DocumentVcs
 use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Identified, Operation, OperationDiff, OpText, Patchable};
-use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
+use store::{DocumentEnvelope, DocumentStore};
 #[cfg(any(test, target_arch = "wasm32"))]
-use vcs::create_document_vcs_envelope;
+use store::create_document_envelope;
 #[cfg(test)]
-use vcs::DocumentVcsCommand;
+use store::DocumentCommand;
 
 pub const DAG_DOCUMENT_SCHEMA: &str = "dag.fixture";
 
@@ -7138,8 +7138,8 @@ impl Operation<DagDocument> for DagOperation {
     }
 }
 
-pub type DagEnvelope = DocumentVcsEnvelope<DagDocument, DagOperation>;
-pub type DagStore = DocumentVcsStore<DagDocument, DagOperation>;
+pub type DagEnvelope = DocumentEnvelope<DagDocument, DagOperation>;
+pub type DagStore = DocumentStore<DagDocument, DagOperation>;
 
 //#region 🔖Dsl
 // 🧬 `.dag` document DSL via the `dsl::` derive engine (see `🔖DslMirror` below) — every persisted
@@ -7331,28 +7331,28 @@ fn dag_document_from_dsl(mirror: DagDocumentDsl) -> DagDocument {
     DagDocument { schema: mirror.schema, nodes: mirror.nodes.into_iter().map(dag_node_spec_from_dsl).collect(), edges: mirror.edges }
 }
 
-impl vcs::DocumentDsl for DagDocument {
+impl store::DocumentDsl for DagDocument {
     const EXTENSION: &'static str = "dag";
 
-    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        Ok(dag_document_from_dsl(<DagDocumentDsl as vcs::DocumentDsl>::parse_dsl(text)?))
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        Ok(dag_document_from_dsl(<DagDocumentDsl as store::DocumentDsl>::parse_dsl(text)?))
     }
 
     fn print_dsl(&self) -> String {
-        <DagDocumentDsl as vcs::DocumentDsl>::print_dsl(&dag_document_to_dsl(self))
+        <DagDocumentDsl as store::DocumentDsl>::print_dsl(&dag_document_to_dsl(self))
     }
 }
 
 /// 📦 Binary counterpart of the `DocumentDsl` impl above — `DagDocument` can't `#[derive(dsl::
 /// DslDocument)]` directly (see this region's opening doc comment), so `DocumentPack` is hand-routed
 /// through the same `DagDocumentDsl` mirror, which does derive it.
-impl vcs::DocumentPack for DagDocument {
-    fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
-        <DagDocumentDsl as vcs::DocumentPack>::encode_pack_with(&dag_document_to_dsl(self), options)
+impl store::DocumentPack for DagDocument {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+        <DagDocumentDsl as store::DocumentPack>::encode_pack_with(&dag_document_to_dsl(self), options)
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
-        Ok(dag_document_from_dsl(<DagDocumentDsl as vcs::DocumentPack>::decode_pack_with(bytes, options)?))
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        Ok(dag_document_from_dsl(<DagDocumentDsl as store::DocumentPack>::decode_pack_with(bytes, options)?))
     }
 }
 //#endregion 🔖DslMirror
@@ -7427,7 +7427,7 @@ fn dag_operation_from_dsl(mirror: DagOperationDsl) -> DagOperation {
 }
 
 impl OpText for DagOperation {
-    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(dag_operation_from_dsl(<DagOperationDsl as OpText>::parse_op(line)?))
     }
 
@@ -7459,14 +7459,19 @@ mod wasm_bridge {
                     let envelope: DagEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     DagStore::new(envelope)
                 }
-                None => DagStore::new(create_document_vcs_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None)),
+                None => DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
 
-        #[wasm_bindgen(js_name = dispatchJson)]
-        pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
+        #[wasm_bindgen(js_name = dispatchText)]
+        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = dispatchBinary)]
+        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
@@ -7507,8 +7512,8 @@ mod dag_vcs_tests {
 
     #[test]
     fn dag_document_vcs_replays_node_operations() {
-        let mut store = DagStore::new(create_document_vcs_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None));
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![DagOperation::Nodes(CollectionOperation::Add { id: "n1".into(), item: sample_node("n1"), at: 0 })], description: None }).expect("apply");
+        let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None));
+        store.dispatch(DocumentCommand::Apply { operations: vec![DagOperation::Nodes(CollectionOperation::Add { id: "n1".into(), item: sample_node("n1"), at: 0 })], description: None }).expect("apply");
         assert_eq!(store.projection().expect("projection").nodes.len(), 1);
     }
 
@@ -7563,40 +7568,40 @@ mod dag_vcs_tests {
 
     #[test]
     fn dag_document_dsl_round_trips_the_demo_fixture() {
-        vcs::test_support::assert_dsl_round_trip(&default_dag_document());
-        vcs::test_support::assert_dsl_pack_equivalence(&default_dag_document());
+        store::test_support::assert_dsl_round_trip(&default_dag_document());
+        store::test_support::assert_dsl_pack_equivalence(&default_dag_document());
     }
 
     #[test]
     fn dag_document_dsl_round_trips_every_node_kind() {
-        vcs::test_support::assert_dsl_round_trip(&kitchen_sink_document());
-        vcs::test_support::assert_dsl_pack_equivalence(&kitchen_sink_document());
+        store::test_support::assert_dsl_round_trip(&kitchen_sink_document());
+        store::test_support::assert_dsl_pack_equivalence(&kitchen_sink_document());
     }
 
     #[test]
     fn dag_document_dsl_round_trips_the_empty_document() {
-        vcs::test_support::assert_dsl_round_trip(&empty_dag_document());
-        vcs::test_support::assert_dsl_pack_equivalence(&empty_dag_document());
+        store::test_support::assert_dsl_round_trip(&empty_dag_document());
+        store::test_support::assert_dsl_pack_equivalence(&empty_dag_document());
     }
 
     #[test]
     fn op_text_round_trips_nodes_add() {
-        vcs::test_support::assert_op_line_round_trip(&DagOperation::Nodes(CollectionOperation::Add { id: "n1".into(), item: sample_node("n1"), at: 0 }));
+        store::test_support::assert_op_line_round_trip(&DagOperation::Nodes(CollectionOperation::Add { id: "n1".into(), item: sample_node("n1"), at: 0 }));
     }
 
     #[test]
     fn op_text_round_trips_nodes_remove() {
-        vcs::test_support::assert_op_line_round_trip(&DagOperation::Nodes(CollectionOperation::Remove { id: "n1".into() }));
+        store::test_support::assert_op_line_round_trip(&DagOperation::Nodes(CollectionOperation::Remove { id: "n1".into() }));
     }
 
     #[test]
     fn op_text_round_trips_nodes_move() {
-        vcs::test_support::assert_op_line_round_trip(&DagOperation::Nodes(CollectionOperation::Move { id: "n1".into(), to: 2 }));
+        store::test_support::assert_op_line_round_trip(&DagOperation::Nodes(CollectionOperation::Move { id: "n1".into(), to: 2 }));
     }
 
     #[test]
     fn op_text_round_trips_nodes_patch() {
-        vcs::test_support::assert_op_line_round_trip(&DagOperation::Nodes(CollectionOperation::Patch {
+        store::test_support::assert_op_line_round_trip(&DagOperation::Nodes(CollectionOperation::Patch {
             id: "n1".into(),
             patch: DagNodePatch { name: Some("Renamed".into()), x: Some(42.0), y: None, width: None, height: Some(10.0), kind: Some(DagNodeKind::Slider { min: 0.0, max: 1.0, step: 0.1, value: 0.5, output: IoPortSpec::simple("out", "value") }) },
         }));
@@ -7605,48 +7610,48 @@ mod dag_vcs_tests {
     #[test]
     fn op_text_round_trips_edges_add() {
         let edge = DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() };
-        vcs::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Add { id: "e1".into(), item: edge, at: 0 }));
+        store::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Add { id: "e1".into(), item: edge, at: 0 }));
     }
 
     #[test]
     fn op_text_round_trips_edges_remove() {
-        vcs::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Remove { id: "e1".into() }));
+        store::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Remove { id: "e1".into() }));
     }
 
     #[test]
     fn op_text_round_trips_edges_move() {
-        vcs::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Move { id: "e1".into(), to: 3 }));
+        store::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Move { id: "e1".into(), to: 3 }));
     }
 
     #[test]
     fn op_text_round_trips_edges_patch() {
-        vcs::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Patch { id: "e1".into(), patch: DagEdgePatch { source: Some("a@out".into()), target: None } }));
+        store::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Patch { id: "e1".into(), patch: DagEdgePatch { source: Some("a@out".into()), target: None } }));
     }
 
     #[test]
     fn op_text_round_trips_set_nodes() {
-        vcs::test_support::assert_op_line_round_trip(&DagOperation::SetNodes { nodes: vec![sample_node("n1"), sample_node("n2")] });
+        store::test_support::assert_op_line_round_trip(&DagOperation::SetNodes { nodes: vec![sample_node("n1"), sample_node("n2")] });
     }
 
     #[test]
     fn op_text_round_trips_set_edges() {
         let edge = DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() };
-        vcs::test_support::assert_op_line_round_trip(&DagOperation::SetEdges { edges: vec![edge] });
+        store::test_support::assert_op_line_round_trip(&DagOperation::SetEdges { edges: vec![edge] });
     }
 
     #[test]
     fn op_text_round_trips_set_document() {
-        vcs::test_support::assert_op_line_round_trip(&DagOperation::SetDocument { document: kitchen_sink_document() });
+        store::test_support::assert_op_line_round_trip(&DagOperation::SetDocument { document: kitchen_sink_document() });
     }
 
     #[test]
     fn document_text_round_trips_a_store_with_an_applied_operation() {
-        let mut store = DagStore::new(create_document_vcs_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_document(), None));
+        let mut store = DagStore::new(create_document_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_document(), None));
         store
-            .dispatch(DocumentVcsCommand::Apply { operations: vec![DagOperation::Nodes(CollectionOperation::Add { id: "extra".into(), item: sample_node("extra"), at: 0 })], description: None })
+            .dispatch(DocumentCommand::Apply { operations: vec![DagOperation::Nodes(CollectionOperation::Add { id: "extra".into(), item: sample_node("extra"), at: 0 })], description: None })
             .expect("apply");
-        vcs::test_support::assert_document_text_round_trip(&store);
-        vcs::test_support::assert_document_pack_round_trip(&store);
+        store::test_support::assert_document_text_round_trip(&store);
+        store::test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DslTests
 }

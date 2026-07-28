@@ -1,6 +1,6 @@
 //#region 🔖Studio
 //#region StudioMember
-/// @emoji 🧑‍🤝‍🧑 Object-safe façade over a `DocumentVcsStore<P, Operation>` so a studio host can hold a
+/// @emoji 🧑‍🤝‍🧑 Object-safe façade over a `DocumentStore<P, Operation>` so a studio host can hold a
 /// heterogeneous registry of documents (`HashMap<String, Box<dyn StudioMember>>`) without knowing
 /// each member's concrete `P`/`Operation`. Blanket-implemented below by delegating to `dispatch` — never
 /// reimplement the underlying VCS mechanics here.
@@ -21,13 +21,13 @@ pub trait StudioMember {
     fn undo(&mut self) -> Result<(), VcsError>;
     fn redo(&mut self) -> Result<(), VcsError>;
     /// @emoji 🪄 Downcast escape hatch: a studio host UI (or a test) needs the concrete
-    /// `DocumentVcsStore<P, Operation>` back out of a `Box<dyn StudioMember>` — e.g. to `Apply` a
+    /// `DocumentStore<P, Operation>` back out of a `Box<dyn StudioMember>` — e.g. to `Apply` a
     /// technology-specific `Operation`, which can't appear in this object-safe trait. `Self: 'static` is
     /// implied by every real `P`/`Operation` pair, so this never fails for a genuine member.
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
 }
 
-impl<P, Operation> StudioMember for DocumentVcsStore<P, Operation>
+impl<P, Operation> StudioMember for DocumentStore<P, Operation>
 where
     P: Clone + Serialize + DeserializeOwned + 'static,
     Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P> + 'static,
@@ -41,7 +41,7 @@ where
     }
 
     fn commit_checkpoint(&mut self, message: String, authors: Vec<Author>) -> Result<String, VcsError> {
-        self.dispatch(DocumentVcsCommand::CommitCheckpoint {
+        self.dispatch(DocumentCommand::CommitCheckpoint {
             message: Some(message),
             authors,
         })?;
@@ -69,18 +69,18 @@ where
                 .map(|alternative| alternative.checkpoint_ids.last().map(String::as_str) == Some(checkpoint_id))
                 .unwrap_or(false);
             if is_alternative_tip {
-                return self.dispatch(DocumentVcsCommand::SwitchAlternative {
+                return self.dispatch(DocumentCommand::SwitchAlternative {
                     alternative_id: alternative_id.to_string(),
                 });
             }
         }
-        self.dispatch(DocumentVcsCommand::CheckoutCheckpoint {
+        self.dispatch(DocumentCommand::CheckoutCheckpoint {
             checkpoint_id: checkpoint_id.to_string(),
         })
     }
 
     fn create_alternative(&mut self, name: String) -> Result<String, VcsError> {
-        self.dispatch(DocumentVcsCommand::CreateAlternative { name })?;
+        self.dispatch(DocumentCommand::CreateAlternative { name })?;
         self.envelope().active_alternative_id.clone().ok_or(VcsError::NoCheckpoint)
     }
 
@@ -115,11 +115,11 @@ where
     }
 
     fn undo(&mut self) -> Result<(), VcsError> {
-        self.dispatch(DocumentVcsCommand::Undo)
+        self.dispatch(DocumentCommand::Undo)
     }
 
     fn redo(&mut self) -> Result<(), VcsError> {
-        self.dispatch(DocumentVcsCommand::Redo)
+        self.dispatch(DocumentCommand::Redo)
     }
 
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
@@ -164,7 +164,7 @@ pub struct StudioAlternative {
 
 /// @emoji 🗄️ Projection of the `"os.studio.history"` meta-document: itself an ordinary `DocumentVcs`
 /// document kind (dogfooded — no bespoke transport), holding the studio-level checkpoint/alternative
-/// graph that `StudioVcsHost` composes on top of every registered member's own history.
+/// graph that `StudioHost` composes on top of every registered member's own history.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StudioHistoryProjection {
@@ -181,7 +181,7 @@ pub enum StudioHistoryOperation {
     CreateStudioAlternative { alternative: StudioAlternative },
     SwitchStudioAlternative { alternative_id: String },
     /// @emoji ↩️ Mechanical inverse of `CommitStudioCheckpoint`; never dispatched directly by
-    /// `StudioVcsHost` (studio undo is derived and member-local, see `StudioVcsHost::undo`), only
+    /// `StudioHost` (studio undo is derived and member-local, see `StudioHost::undo`), only
     /// produced by `backwards` for VCS round-trip correctness.
     RemoveStudioCheckpoint { checkpoint_id: String },
     /// @emoji ↩️ Mechanical inverse of `CreateStudioAlternative`; see `RemoveStudioCheckpoint`.
@@ -316,19 +316,19 @@ impl Operation<StudioHistoryProjection> for StudioHistoryOperation {
 }
 //#endregion StudioHistoryDocument
 
-//#region StudioVcsHost
+//#region StudioHost
 /// @emoji 🏛️ Composes many `StudioMember` documents under one studio-wide checkpoint/alternative
 /// timeline, itself stored in a dogfooded `"os.studio.history"` meta-document. App-agnostic: this
 /// crate has no notion of what a member document *is*, only that it satisfies `StudioMember`.
-pub struct StudioVcsHost {
-    meta: DocumentVcsStore<StudioHistoryProjection, StudioHistoryOperation>,
+pub struct StudioHost {
+    meta: DocumentStore<StudioHistoryProjection, StudioHistoryOperation>,
     members: HashMap<String, Box<dyn StudioMember>>,
 }
 
-impl StudioVcsHost {
-    pub fn new(meta_envelope: DocumentVcsEnvelope<StudioHistoryProjection, StudioHistoryOperation>) -> Self {
+impl StudioHost {
+    pub fn new(meta_envelope: DocumentEnvelope<StudioHistoryProjection, StudioHistoryOperation>) -> Self {
         Self {
-            meta: DocumentVcsStore::new(meta_envelope),
+            meta: DocumentStore::new(meta_envelope),
             members: HashMap::new(),
         }
     }
@@ -357,7 +357,7 @@ impl StudioVcsHost {
     }
 
     /// @emoji 🔗 Attaches a backbone to the studio-wide meta-document, same runtime-attach/detach
-    /// contract as any other `DocumentVcsStore` — default is unattached, this is always an
+    /// contract as any other `DocumentStore` — default is unattached, this is always an
     /// explicit call.
     pub fn attach_backbone(&mut self, backbone: Box<dyn Backbone>) -> Result<(), VcsError> {
         self.meta.attach_backbone(backbone)
@@ -412,11 +412,11 @@ impl StudioVcsHost {
             timestamp: HybridLogicalTimestamp::new(0, now_ms()),
             members: pins,
         };
-        self.meta.dispatch(DocumentVcsCommand::Apply {
+        self.meta.dispatch(DocumentCommand::Apply {
             operations: vec![StudioHistoryOperation::CommitStudioCheckpoint { checkpoint }],
             description: Some(message),
         })?;
-        self.meta.dispatch(DocumentVcsCommand::CommitCheckpoint {
+        self.meta.dispatch(DocumentCommand::CommitCheckpoint {
             message: None,
             authors: Vec::new(),
         })?;
@@ -433,7 +433,7 @@ impl StudioVcsHost {
             name,
             checkpoint_ids: checkpoint_id.into_iter().collect(),
         };
-        self.meta.dispatch(DocumentVcsCommand::Apply {
+        self.meta.dispatch(DocumentCommand::Apply {
             operations: vec![StudioHistoryOperation::CreateStudioAlternative { alternative }],
             description: None,
         })?;
@@ -466,7 +466,7 @@ impl StudioVcsHost {
             .find(|alternative| alternative.id == alternative_id)
             .ok_or_else(|| VcsError::UnknownAlternative(alternative_id.to_string()))?;
         let checkpoint_id = alternative.checkpoint_ids.last().cloned().ok_or(VcsError::NoCheckpoint)?;
-        self.meta.dispatch(DocumentVcsCommand::Apply {
+        self.meta.dispatch(DocumentCommand::Apply {
             operations: vec![StudioHistoryOperation::SwitchStudioAlternative {
                 alternative_id: alternative_id.to_string(),
             }],
@@ -509,5 +509,5 @@ impl StudioVcsHost {
         self.members.get_mut(&document_id).ok_or(VcsError::NothingToRedo)?.redo()
     }
 }
-//#endregion StudioVcsHost
+//#endregion StudioHost
 //#endregion 🔖Studio

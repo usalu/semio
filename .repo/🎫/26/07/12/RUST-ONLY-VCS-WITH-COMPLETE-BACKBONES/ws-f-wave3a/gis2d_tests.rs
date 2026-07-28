@@ -3,7 +3,7 @@
     mod tests {
         use super::*;
         use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
-        use vcs::MemoryBackbone;
+        use store::MemoryBackbone;
 
         fn meta(actor: &str) -> ActionMeta {
             ActionMeta { actor: actor.into(), instance_id: 1 }

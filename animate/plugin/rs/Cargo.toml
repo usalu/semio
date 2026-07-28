@@ -25,6 +25,7 @@ animate_present = { path = "../../present/rs" }
 animate_video = { path = "../../video/rs" }
 protocol = { path = "../../../protocol/rs" }
 vcs = { path = "../../../vcs/rs" }
+store = { path = "../../../store/rs" }
 semio-framework-core = { path = "../../../framework/core/rs" }
 semio-framework-os = { path = "../../../framework/product/os/core/rs" }
 semio-framework-plugin = { path = "../../../framework/plugin/rs" }

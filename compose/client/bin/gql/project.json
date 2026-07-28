@@ -1,11 +1,11 @@
 {
-  "name": "@semio-tech/compose-store",
+  "name": "@semio-tech/compose-gql",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "compose/client/bin/store",
+        "cwd": "compose/client/bin/gql",
         "command": "bun script.ts build",
         "forwardAllArgs": true
       }
@@ -13,7 +13,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "compose/client/bin/store",
+        "cwd": "compose/client/bin/gql",
         "command": "bun script.ts dev",
         "forwardAllArgs": true
       }
@@ -21,7 +21,7 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "compose/client/bin/store",
+        "cwd": "compose/client/bin/gql",
         "command": "bun script.ts test",
         "forwardAllArgs": true
       }
@@ -29,7 +29,7 @@
     "test-quick": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "compose/client/bin/store",
+        "cwd": "compose/client/bin/gql",
         "command": "bun script.ts test quick",
         "forwardAllArgs": true
       }
@@ -37,7 +37,7 @@
     "test-long": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "compose/client/bin/store",
+        "cwd": "compose/client/bin/gql",
         "command": "bun script.ts test long",
         "forwardAllArgs": true
       }
@@ -45,7 +45,7 @@
     "test-exhaustive": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "compose/client/bin/store",
+        "cwd": "compose/client/bin/gql",
         "command": "bun script.ts test exhaustive",
         "forwardAllArgs": true
       }

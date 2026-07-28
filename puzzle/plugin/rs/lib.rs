@@ -38,9 +38,9 @@ pub mod d2 {
     /// fixtures are parsed once into the typed `Puzzle2dProjection` and re-serialized to the JSON
     /// string this module's `serde_json::from_str`/`.example(...)` call sites expect.
     static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> =
-        LazyLock::new(|| serde_json::to_string(&<Puzzle2dProjection as vcs::DocumentDsl>::parse_dsl(CONCRETE_FOREST_EXAMPLE_DSL).expect("concrete-forest example fixture parses as dsl")).expect("serialize concrete-forest example fixture"));
+        LazyLock::new(|| serde_json::to_string(&<Puzzle2dProjection as store::DocumentDsl>::parse_dsl(CONCRETE_FOREST_EXAMPLE_DSL).expect("concrete-forest example fixture parses as dsl")).expect("serialize concrete-forest example fixture"));
     static NAKAGIN_EXAMPLE_JSON: LazyLock<String> =
-        LazyLock::new(|| serde_json::to_string(&<Puzzle2dProjection as vcs::DocumentDsl>::parse_dsl(NAKAGIN_EXAMPLE_DSL).expect("nakagin example fixture parses as dsl")).expect("serialize nakagin example fixture"));
+        LazyLock::new(|| serde_json::to_string(&<Puzzle2dProjection as store::DocumentDsl>::parse_dsl(NAKAGIN_EXAMPLE_DSL).expect("nakagin example fixture parses as dsl")).expect("serialize nakagin example fixture"));
     /// 🧰 The three canvas utilities declared to the framework utility bar (host-owned active utility, never a doc field).
     const PUZZLE2D_UTILITY_SELECT: &str = "select";
     const PUZZLE2D_UTILITY_BRUSH: &str = "brush";
@@ -2331,7 +2331,7 @@ pub mod d2 {
     mod tests {
         use super::*;
         use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
-        use vcs::{Backbone, BackboneMessage, MemoryBackbone};
+        use store::{Backbone, BackboneMessage, MemoryBackbone};
 
         /// 🧰 A registry-backed app so kind discipline (View/Shell actions must emit no operations) and the utility
         /// contract are enforced exactly as in production (`VcsDocumentApp::with_registry`).
@@ -2378,7 +2378,7 @@ pub mod d2 {
         #[test]
         fn puzzle2d_play_projection_pack_round_trips() {
             let app = concrete_forest_app();
-            vcs::test_support::assert_dsl_pack_equivalence(&app.projection().expect("projection"));
+            store::test_support::assert_dsl_pack_equivalence(&app.projection().expect("projection"));
         }
 
         #[test]
@@ -2807,9 +2807,9 @@ pub mod d3 {
     /// the typed `puzzle_3d::Puzzle3dProjection` and re-serialized to the JSON string this module's
     /// `serde_json::from_str::<Puzzle3dFixture>`/`.example(...)` call sites expect.
     static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> =
-        LazyLock::new(|| serde_json::to_string(&<Puzzle3dProjection as vcs::DocumentDsl>::parse_dsl(CONCRETE_FOREST_EXAMPLE_DSL).expect("concrete-forest example fixture parses as dsl")).expect("serialize concrete-forest example fixture"));
+        LazyLock::new(|| serde_json::to_string(&<Puzzle3dProjection as store::DocumentDsl>::parse_dsl(CONCRETE_FOREST_EXAMPLE_DSL).expect("concrete-forest example fixture parses as dsl")).expect("serialize concrete-forest example fixture"));
     static NAKAGIN_EXAMPLE_JSON: LazyLock<String> =
-        LazyLock::new(|| serde_json::to_string(&<Puzzle3dProjection as vcs::DocumentDsl>::parse_dsl(NAKAGIN_EXAMPLE_DSL).expect("nakagin example fixture parses as dsl")).expect("serialize nakagin example fixture"));
+        LazyLock::new(|| serde_json::to_string(&<Puzzle3dProjection as store::DocumentDsl>::parse_dsl(NAKAGIN_EXAMPLE_DSL).expect("nakagin example fixture parses as dsl")).expect("serialize nakagin example fixture"));
     //#endregion 🔖Constants
 
     //#region 🔖Document
@@ -6425,7 +6425,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
         ///
         /// 🚧 Deliberately unwired beyond this accessor — same gap as `draw-plugin`'s
         /// `draw_gesture_preview_payload`: `framework/sync::SyncSession::publish_preview` is host-only
-        /// and unreachable from this WASI-P2 sandboxed plugin crate, and `vcs::BackboneMessage` has no
+        /// and unreachable from this WASI-P2 sandboxed plugin crate, and `store::BackboneMessage` has no
         /// preview-shaped variant to relay one through. See `.repo/🎫/26/07/27/
         /// INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw7-preview-law.txt`.
         /// `#[allow(dead_code)]`: exercised by `🧪Tests` only until a host bridge exists.
@@ -7940,7 +7940,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
         #[test]
         fn puzzle3d_play_projection_pack_round_trips() {
             let app = testkit::new_app::<Puzzle3dPlayApp>();
-            vcs::test_support::assert_dsl_pack_equivalence(&app.projection().expect("projection"));
+            store::test_support::assert_dsl_pack_equivalence(&app.projection().expect("projection"));
         }
 
         #[test]
@@ -9609,9 +9609,9 @@ pub mod d5 {
     /// example fixtures are parsed once into the typed `puzzle_5d::Puzzle5dProjection` and
     /// re-serialized to the JSON string this module's `document_from_json`/`.example(...)` call sites expect.
     static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> =
-        LazyLock::new(|| serde_json::to_string(&<Puzzle5dProjection as vcs::DocumentDsl>::parse_dsl(CONCRETE_FOREST_EXAMPLE_DSL).expect("concrete-forest example fixture parses as dsl")).expect("serialize concrete-forest example fixture"));
+        LazyLock::new(|| serde_json::to_string(&<Puzzle5dProjection as store::DocumentDsl>::parse_dsl(CONCRETE_FOREST_EXAMPLE_DSL).expect("concrete-forest example fixture parses as dsl")).expect("serialize concrete-forest example fixture"));
     static NAKAGIN_EXAMPLE_JSON: LazyLock<String> =
-        LazyLock::new(|| serde_json::to_string(&<Puzzle5dProjection as vcs::DocumentDsl>::parse_dsl(NAKAGIN_EXAMPLE_DSL).expect("nakagin example fixture parses as dsl")).expect("serialize nakagin example fixture"));
+        LazyLock::new(|| serde_json::to_string(&<Puzzle5dProjection as store::DocumentDsl>::parse_dsl(NAKAGIN_EXAMPLE_DSL).expect("nakagin example fixture parses as dsl")).expect("serialize nakagin example fixture"));
 
     static PUZZLE5D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
     //#endregion 🔖Constants
@@ -12586,7 +12586,7 @@ pub mod d5 {
         #[test]
         fn puzzle5d_play_projection_pack_round_trips() {
             let app = testkit::new_app::<Puzzle5dPlayApp>();
-            vcs::test_support::assert_dsl_pack_equivalence(&app.projection().expect("projection"));
+            store::test_support::assert_dsl_pack_equivalence(&app.projection().expect("projection"));
         }
 
         #[test]

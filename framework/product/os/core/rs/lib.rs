@@ -17,7 +17,8 @@ pub mod host {
     use std::sync::{Arc, LazyLock, Mutex};
     use ui_wgpu::{ui_recovery_panel, UiNode};
     use protocol::{Operation, OperationDiff};
-    use vcs::{create_document_vcs_envelope, document_backbone_ref, materialize_document_projection, DocumentBackboneRef, DocumentVcs, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, StudioConflict, VcsError};
+    use vcs::{DocumentVcs, VcsError};
+use store::{create_document_envelope, document_backbone_ref, materialize_document_projection, DocumentBackboneRef, DocumentCommand, DocumentEnvelope, DocumentStore, StudioConflict};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -518,14 +519,14 @@ pub mod host {
         pub backbone: Option<DocumentBackboneRef>,
     }
 
-    pub type OsEnvelope = DocumentVcsEnvelope<OsProjection, OsOperation>;
+    pub type OsEnvelope = DocumentEnvelope<OsProjection, OsOperation>;
 
     pub fn default_os_projection() -> OsProjection {
         OsProjection { programs: Vec::new(), active_program_id: None, active_alternative_id: None, app_instances: Vec::new(), media_graph: empty_media_graph(), parameters: Vec::new(), parameter_bindings: Vec::new() }
     }
 
     pub fn create_empty_os_document(id: &str, name: &str) -> OsDocument {
-        OsDocument { schema: OS_STUDIO_SCHEMA.into(), id: id.into(), name: name.into(), vcs: create_document_vcs_envelope(OS_STUDIO_SCHEMA, id, default_os_projection(), None).vcs, applied_edit_ids: Vec::new(), backbone: None }
+        OsDocument { schema: OS_STUDIO_SCHEMA.into(), id: id.into(), name: name.into(), vcs: create_document_envelope(OS_STUDIO_SCHEMA, id, default_os_projection(), None).vcs, applied_edit_ids: Vec::new(), backbone: None }
     }
 
     pub fn apply_os_operation(projection: &OsProjection, operation: &OsOperation) -> OsProjection {
@@ -927,7 +928,7 @@ pub mod host {
     /// `OsProjection` itself (see its declaration above, in `🔖OsDocument`) — none of its own fields
     /// need boxing (no bare nested tagged-enum field), so the real type derives the grammar directly,
     /// no local mirror type needed. `MediaContract` (`media_graph` module, `🔖MediaContractDsl` region)
-    /// is the one exception, hand-bridged instead of derived. `vcs::DocumentDsl for OsProjection` is
+    /// is the one exception, hand-bridged instead of derived. `store::DocumentDsl for OsProjection` is
     /// therefore generated entirely by the derive macro; nothing further to implement here.
     //#endregion 🔖Dsl
 
@@ -1031,12 +1032,24 @@ pub mod host {
     }
 
     impl protocol::OpText for OsOperation {
-        fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+        fn parse_op(line: &str) -> Result<Self, store::TextError> {
             Ok(os_operation_from_dsl(<OsOperationDsl as protocol::OpText>::parse_op(line)?))
         }
 
         fn print_op(&self) -> String {
             <OsOperationDsl as protocol::OpText>::print_op(&os_operation_to_dsl(self))
+        }
+    }
+
+    /// @emoji 🎞️ Binary mirror of the `OpText` bridge above — `OsOperationDsl` already derives
+    /// `OpBinary` via `#[derive(dsl::DslOps)]`, so this is a pure to/from-dsl forward.
+    impl protocol::OpBinary for OsOperation {
+        fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+            os_operation_to_dsl(self).encode_op()
+        }
+
+        fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+            Ok(os_operation_from_dsl(OsOperationDsl::decode_op(bytes)?))
         }
     }
     //#endregion 🔖OpTextMirror
@@ -1051,7 +1064,7 @@ pub mod host {
         serde_json::to_string_pretty(document).map_err(|error| VcsError::Serialize(error.to_string()))
     }
 
-    /// @emoji 📦 Serializes an `OsDocument` as the bare `DocumentVcsEnvelope` JSON `loadAppDocument` expects.
+    /// @emoji 📦 Serializes an `OsDocument` as the bare `DocumentEnvelope` JSON `loadAppDocument` expects.
     pub fn os_document_to_envelope_json(document: &OsDocument) -> Result<String, VcsError> {
         let envelope = OsEnvelope {
             schema: document.schema.clone(),
@@ -1074,7 +1087,7 @@ pub mod host {
 
     //#region 🔖OsStore
     pub struct OsStore {
-        inner: DocumentVcsStore<OsProjection, OsOperation>,
+        inner: DocumentStore<OsProjection, OsOperation>,
         name: String,
     }
 
@@ -1082,7 +1095,7 @@ pub mod host {
         pub fn new(document: OsDocument) -> Self {
             let applied_edit_ids = document.applied_edit_ids.clone();
             let envelope = OsEnvelope { schema: document.schema, id: document.id, vcs: document.vcs, backbone: document.backbone, active_alternative_id: None };
-            let mut inner = DocumentVcsStore::new(envelope);
+            let mut inner = DocumentStore::new(envelope);
             if !applied_edit_ids.is_empty() {
                 let snapshot = inner.envelope().clone();
                 inner.set_envelope(snapshot, applied_edit_ids);
@@ -1099,7 +1112,7 @@ pub mod host {
         }
 
         /// @emoji 🤝 Fresh replay plus whatever `OsOperation::reconcile`'s media-graph pass reports. See
-        /// `vcs::DocumentVcsStore::projection_with_conflicts`.
+        /// `store::DocumentStore::projection_with_conflicts`.
         pub fn projection_with_conflicts(&self) -> Result<(OsProjection, Vec<StudioConflict>), VcsError> {
             self.inner.projection_with_conflicts()
         }
@@ -1109,12 +1122,16 @@ pub mod host {
             OsDocument { schema: envelope.schema.clone(), id: envelope.id.clone(), name: self.name.clone(), vcs: envelope.vcs.clone(), applied_edit_ids: self.inner.applied_edit_ids().to_vec(), backbone: envelope.backbone.clone() }
         }
 
-        pub fn dispatch_json(&mut self, command_json: &str) -> Result<(), VcsError> {
-            self.inner.dispatch_json(command_json)
+        pub fn dispatch_text(&mut self, command_text: &str) -> Result<(), VcsError> {
+            self.inner.dispatch_text(command_text)
+        }
+
+        pub fn dispatch_binary(&mut self, command_bytes: &[u8]) -> Result<(), VcsError> {
+            self.inner.dispatch_binary(command_bytes)
         }
 
         pub fn dispatch_apply(&mut self, operations: Vec<OsOperation>) -> Result<(), VcsError> {
-            self.inner.dispatch(DocumentVcsCommand::Apply { operations, description: None })
+            self.inner.dispatch(DocumentCommand::Apply { operations, description: None })
         }
 
         pub fn set_studio_name(&mut self, name: &str) {
@@ -1164,7 +1181,7 @@ pub mod host {
         /// @emoji 🔗 Resolves and attaches a backbone by uri. Only available inside the wasm sandbox
         /// (every scheme forwards to the host over the injected `BackboneChannelPort`, a pure queue) —
         /// see {@link attach_backbone} for the native counterpart, which takes an explicit
-        /// `Box<dyn vcs::Backbone>` since native has no URI→IO auto-resolution anymore (`framework/sync`'s
+        /// `Box<dyn store::Backbone>` since native has no URI→IO auto-resolution anymore (`framework/sync`'s
         /// `host_runtime` module owns constructing the real endpoint via `DocumentHost`).
         #[cfg(target_arch = "wasm32")]
         pub fn attach_backbone(&mut self, uri: &str) -> Result<(), VcsError> {
@@ -1174,7 +1191,7 @@ pub mod host {
         /// @emoji 🔗 Attaches an explicit native backbone channel (typically a `channel_backbone` handed
         /// out by `framework/sync`'s `DocumentHost::open`, per `host_runtime`'s canonical sequence).
         #[cfg(not(target_arch = "wasm32"))]
-        pub fn attach_backbone(&mut self, backbone: Box<dyn vcs::Backbone>) -> Result<(), VcsError> {
+        pub fn attach_backbone(&mut self, backbone: Box<dyn store::Backbone>) -> Result<(), VcsError> {
             self.inner.attach_backbone(backbone)
         }
 
@@ -1194,13 +1211,13 @@ pub mod host {
         fn write(&self, uri: &str, payload: &str) -> Result<(), VcsError>;
     }
 
-    impl<T: vcs::BackbonePort> OsBackbonePort for T {
+    impl<T: store::BackbonePort> OsBackbonePort for T {
         fn read(&self, uri: &str) -> Result<String, VcsError> {
-            vcs::BackbonePort::read(self, uri)
+            store::BackbonePort::read(self, uri)
         }
 
         fn write(&self, uri: &str, payload: &str) -> Result<(), VcsError> {
-            vcs::BackbonePort::write(self, uri, payload)
+            store::BackbonePort::write(self, uri, payload)
         }
     }
 
@@ -1315,11 +1332,11 @@ pub mod host {
     }
 
     /// @emoji 📦 Pack counterpart of `import_os_studio_from_json`: decodes `pack`+`ops` through the
-    /// `OS_STUDIO_SCHEMA` codec (`vcs::document_codec`, registered by `s/plugin`'s
+    /// `OS_STUDIO_SCHEMA` codec (`store::document_codec`, registered by `s/plugin`'s
     /// `register_document_codec_for_app::<StudioApp>` — wave 2) into the same envelope JSON shape,
     /// then follows the identical admission flow.
     pub fn import_os_studio_from_pack(pack: &[u8], ops: &str, port: Arc<dyn OsBackbonePort>) -> Result<OsStudioCatalogEntry, VcsError> {
-        let codec = vcs::document_codec(OS_STUDIO_SCHEMA).ok_or_else(|| VcsError::Deserialize(format!("no document codec registered for schema {OS_STUDIO_SCHEMA}")))?;
+        let codec = store::document_codec(OS_STUDIO_SCHEMA).ok_or_else(|| VcsError::Deserialize(format!("no document codec registered for schema {OS_STUDIO_SCHEMA}")))?;
         let json = (codec.parse)(pack, ops)?;
         import_os_studio_from_json(&json, port)
     }
@@ -1331,8 +1348,8 @@ pub mod host {
     /// `export_os_app_instance_media`'s data-returning shape so `s/plugin`'s `handle_action` can wrap
     /// the result into a `HostEffect::DownloadMediaExport` exactly the way `exportMedia` already wraps
     /// `export_os_app_instance_media`'s `OsMediaExportResult`.
-    pub fn export_os_studio_pack(document: &OsDocument) -> Result<vcs::DocumentPackFiles, VcsError> {
-        let codec = vcs::document_codec(OS_STUDIO_SCHEMA).ok_or_else(|| VcsError::Deserialize(format!("no document codec registered for schema {OS_STUDIO_SCHEMA}")))?;
+    pub fn export_os_studio_pack(document: &OsDocument) -> Result<store::DocumentPackFiles, VcsError> {
+        let codec = store::document_codec(OS_STUDIO_SCHEMA).ok_or_else(|| VcsError::Deserialize(format!("no document codec registered for schema {OS_STUDIO_SCHEMA}")))?;
         let json = os_document_to_envelope_json(document)?;
         let (pack_files, _dsl_mirror) = (codec.print)(&json)?;
         Ok(pack_files)
@@ -1341,11 +1358,11 @@ pub mod host {
     /// @emoji 📤 DSL-text counterpart of `export_os_studio_pack` — exercises the text export path
     /// (`exportDocumentDsl`) via the same codec's `print` (which already computes the DSL mirror
     /// alongside the pack bytes).
-    pub fn export_os_studio_dsl(document: &OsDocument) -> Result<vcs::DocumentTextFiles, VcsError> {
-        let codec = vcs::document_codec(OS_STUDIO_SCHEMA).ok_or_else(|| VcsError::Deserialize(format!("no document codec registered for schema {OS_STUDIO_SCHEMA}")))?;
+    pub fn export_os_studio_dsl(document: &OsDocument) -> Result<store::DocumentTextFiles, VcsError> {
+        let codec = store::document_codec(OS_STUDIO_SCHEMA).ok_or_else(|| VcsError::Deserialize(format!("no document codec registered for schema {OS_STUDIO_SCHEMA}")))?;
         let json = os_document_to_envelope_json(document)?;
         let (pack_files, dsl_mirror) = (codec.print)(&json)?;
-        Ok(vcs::DocumentTextFiles { dsl: dsl_mirror, ops: pack_files.ops })
+        Ok(store::DocumentTextFiles { dsl: dsl_mirror, ops: pack_files.ops })
     }
 
     /// @emoji 📂 Loads a studio document from the dev backbone.
@@ -1381,7 +1398,7 @@ pub mod host {
         use semio_framework_core::{ActionId, ActorId, AppInstanceId, InvocationId, MediaClass, MediaForm, MediaType, MediaWireFormat, ModeDefinition, OsMediaFormat, PluginManifest, WindowKindDefinition};
         use std::sync::Arc;
         use ui_wgpu::SurfaceKind;
-        use vcs::{MemoryBackbone, MemoryBackbonePort};
+        use store::{MemoryBackbone, MemoryBackbonePort};
 
         #[test]
         fn loads_plugin_apps_into_registry() {
@@ -1805,7 +1822,7 @@ pub mod host {
             let mut store = OsStore::new(create_empty_os_document("studio", "Studio"));
             store.spawn_app_instance("draw", "draw", None, MediaGraphPosition { x: 40.0, y: 40.0 }).expect("spawn");
             assert_eq!(store.projection().expect("projection").app_instances.len(), 1);
-            store.dispatch_json(r#"{"kind":"undo"}"#).expect("undo");
+            store.dispatch_text("undo").expect("undo");
             assert_eq!(store.projection().expect("projection").app_instances.len(), 0);
         }
 
@@ -1960,31 +1977,31 @@ pub mod host {
 
         #[test]
         fn dsl_round_trips_default_projection() {
-            vcs::test_support::assert_dsl_round_trip(&default_os_projection());
-            vcs::test_support::assert_dsl_pack_equivalence(&default_os_projection());
+            store::test_support::assert_dsl_round_trip(&default_os_projection());
+            store::test_support::assert_dsl_pack_equivalence(&default_os_projection());
         }
 
         #[test]
         fn dsl_round_trips_projection_with_media_graph_and_parameters() {
-            vcs::test_support::assert_dsl_round_trip(&sample_os_projection());
-            vcs::test_support::assert_dsl_pack_equivalence(&sample_os_projection());
+            store::test_support::assert_dsl_round_trip(&sample_os_projection());
+            store::test_support::assert_dsl_pack_equivalence(&sample_os_projection());
         }
 
         #[test]
         fn op_text_round_trips_set_active_program() {
-            vcs::test_support::assert_op_line_round_trip(&OsOperation::SetActiveProgram { program_id: Some("puzzle".into()) });
-            vcs::test_support::assert_op_line_round_trip(&OsOperation::SetActiveProgram { program_id: None });
+            store::test_support::assert_op_line_round_trip(&OsOperation::SetActiveProgram { program_id: Some("puzzle".into()) });
+            store::test_support::assert_op_line_round_trip(&OsOperation::SetActiveProgram { program_id: None });
         }
 
         #[test]
         fn op_text_round_trips_set_active_alternative() {
-            vcs::test_support::assert_op_line_round_trip(&OsOperation::SetActiveAlternative { alternative_id: Some("alt-1".into()) });
-            vcs::test_support::assert_op_line_round_trip(&OsOperation::SetActiveAlternative { alternative_id: None });
+            store::test_support::assert_op_line_round_trip(&OsOperation::SetActiveAlternative { alternative_id: Some("alt-1".into()) });
+            store::test_support::assert_op_line_round_trip(&OsOperation::SetActiveAlternative { alternative_id: None });
         }
 
         #[test]
         fn op_text_round_trips_spawn_app_instance() {
-            vcs::test_support::assert_op_line_round_trip(&OsOperation::SpawnAppInstance {
+            store::test_support::assert_op_line_round_trip(&OsOperation::SpawnAppInstance {
                 instance: OsAppInstance {
                     id: "app-1".into(),
                     program_id: "puzzle".into(),
@@ -2000,12 +2017,12 @@ pub mod host {
 
         #[test]
         fn op_text_round_trips_remove_app_instance() {
-            vcs::test_support::assert_op_line_round_trip(&OsOperation::RemoveAppInstance { instance_id: "app-1".into() });
+            store::test_support::assert_op_line_round_trip(&OsOperation::RemoveAppInstance { instance_id: "app-1".into() });
         }
 
         #[test]
         fn op_text_round_trips_connect_media_ports() {
-            vcs::test_support::assert_op_line_round_trip(&OsOperation::ConnectMediaPorts {
+            store::test_support::assert_op_line_round_trip(&OsOperation::ConnectMediaPorts {
                 edge: OsMediaGraphEdge {
                     id: "edge-1".into(),
                     source_node_id: "node-1".into(),
@@ -2024,62 +2041,62 @@ pub mod host {
 
         #[test]
         fn op_text_round_trips_disconnect_media_edge() {
-            vcs::test_support::assert_op_line_round_trip(&OsOperation::DisconnectMediaEdge { edge_id: "edge-1".into() });
+            store::test_support::assert_op_line_round_trip(&OsOperation::DisconnectMediaEdge { edge_id: "edge-1".into() });
         }
 
         #[test]
         fn op_text_round_trips_move_media_node() {
-            vcs::test_support::assert_op_line_round_trip(&OsOperation::MoveMediaNode { node_id: "node-1".into(), x: 5.5, y: -6.25 });
+            store::test_support::assert_op_line_round_trip(&OsOperation::MoveMediaNode { node_id: "node-1".into(), x: 5.5, y: -6.25 });
         }
 
         #[test]
         fn op_text_round_trips_patch_app_instance() {
-            vcs::test_support::assert_op_line_round_trip(&OsOperation::PatchAppInstance { instance_id: "app-1".into(), label: Some("Renamed \"Board\"".into()) });
-            vcs::test_support::assert_op_line_round_trip(&OsOperation::PatchAppInstance { instance_id: "app-1".into(), label: None });
+            store::test_support::assert_op_line_round_trip(&OsOperation::PatchAppInstance { instance_id: "app-1".into(), label: Some("Renamed \"Board\"".into()) });
+            store::test_support::assert_op_line_round_trip(&OsOperation::PatchAppInstance { instance_id: "app-1".into(), label: None });
         }
 
         #[test]
         fn op_text_round_trips_add_parameter() {
-            vcs::test_support::assert_op_line_round_trip(&OsOperation::AddParameter { parameter: OsParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: Some(0.0), max: Some(100.0), step: Some(1.0) } });
-            vcs::test_support::assert_op_line_round_trip(&OsOperation::AddParameter { parameter: OsParameter::Categorical { id: "p2".into(), name: "Mode".into(), value: "Option A".into(), options: vec!["Option A".into(), "Option B".into()] } });
-            vcs::test_support::assert_op_line_round_trip(&OsOperation::AddParameter { parameter: OsParameter::Toggle { id: "p3".into(), name: "Flag".into(), value: false } });
-            vcs::test_support::assert_op_line_round_trip(&OsOperation::AddParameter { parameter: OsParameter::Text { id: "p4".into(), name: "Label".into(), value: "hi there".into() } });
+            store::test_support::assert_op_line_round_trip(&OsOperation::AddParameter { parameter: OsParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: Some(0.0), max: Some(100.0), step: Some(1.0) } });
+            store::test_support::assert_op_line_round_trip(&OsOperation::AddParameter { parameter: OsParameter::Categorical { id: "p2".into(), name: "Mode".into(), value: "Option A".into(), options: vec!["Option A".into(), "Option B".into()] } });
+            store::test_support::assert_op_line_round_trip(&OsOperation::AddParameter { parameter: OsParameter::Toggle { id: "p3".into(), name: "Flag".into(), value: false } });
+            store::test_support::assert_op_line_round_trip(&OsOperation::AddParameter { parameter: OsParameter::Text { id: "p4".into(), name: "Label".into(), value: "hi there".into() } });
         }
 
         #[test]
         fn op_text_round_trips_remove_parameter() {
-            vcs::test_support::assert_op_line_round_trip(&OsOperation::RemoveParameter { parameter_id: "p1".into() });
+            store::test_support::assert_op_line_round_trip(&OsOperation::RemoveParameter { parameter_id: "p1".into() });
         }
 
         #[test]
         fn op_text_round_trips_patch_parameter() {
-            vcs::test_support::assert_op_line_round_trip(&OsOperation::PatchParameter { parameter_id: "p1".into(), parameter: OsParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 20.0, min: None, max: None, step: None } });
+            store::test_support::assert_op_line_round_trip(&OsOperation::PatchParameter { parameter_id: "p1".into(), parameter: OsParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 20.0, min: None, max: None, step: None } });
         }
 
         #[test]
         fn op_text_round_trips_bind_parameter_field() {
-            vcs::test_support::assert_op_line_round_trip(&OsOperation::BindParameterField { binding: OsParameterFieldBinding { parameter_id: "p1".into(), instance_id: "app-1".into(), field_path: "/zoom".into() } });
+            store::test_support::assert_op_line_round_trip(&OsOperation::BindParameterField { binding: OsParameterFieldBinding { parameter_id: "p1".into(), instance_id: "app-1".into(), field_path: "/zoom".into() } });
         }
 
         #[test]
         fn op_text_round_trips_unbind_parameter_field() {
-            vcs::test_support::assert_op_line_round_trip(&OsOperation::UnbindParameterField { instance_id: "app-1".into(), field_path: "/zoom".into() });
+            store::test_support::assert_op_line_round_trip(&OsOperation::UnbindParameterField { instance_id: "app-1".into(), field_path: "/zoom".into() });
         }
 
         #[test]
         fn op_text_round_trips_sync_parameter_ports() {
-            vcs::test_support::assert_op_line_round_trip(&OsOperation::SyncParameterPorts);
+            store::test_support::assert_op_line_round_trip(&OsOperation::SyncParameterPorts);
         }
 
         #[test]
         fn document_text_round_trips_store_with_applied_operation() {
-            let envelope = create_document_vcs_envelope(OS_STUDIO_SCHEMA, "studio-text-test", default_os_projection(), None);
-            let mut store = DocumentVcsStore::new(envelope);
+            let envelope = create_document_envelope(OS_STUDIO_SCHEMA, "studio-text-test", default_os_projection(), None);
+            let mut store = DocumentStore::new(envelope);
             store
-                .dispatch(DocumentVcsCommand::Apply { operations: vec![OsOperation::SetActiveProgram { program_id: Some("puzzle".into()) }], description: None })
+                .dispatch(DocumentCommand::Apply { operations: vec![OsOperation::SetActiveProgram { program_id: Some("puzzle".into()) }], description: None })
                 .expect("apply");
-            vcs::test_support::assert_document_text_round_trip(&store);
-            vcs::test_support::assert_document_pack_round_trip(&store);
+            store::test_support::assert_document_text_round_trip(&store);
+            store::test_support::assert_document_pack_round_trip(&store);
         }
         // #endregion 🔖DslAndOpText
     }
@@ -2096,7 +2113,10 @@ pub mod backbone {
     use crate::media_graph::OS_STUDIO_SCHEMA;
     #[cfg(not(target_arch = "wasm32"))]
     use std::sync::Arc;
-    use vcs::{MemoryBackbonePort, VcsError};
+    use vcs::VcsError;
+    use store::MemoryBackbonePort;
+    #[cfg(not(target_arch = "wasm32"))]
+    use store_sync::{FolderSqliteStorage, FolderTextStorage};
 
     /// @emoji 🗂️ Conventional single-document id used inside a folder-backed studio backbone — a studio
     /// folder holds exactly one os document at its root (app documents get their own document ids once
@@ -2107,13 +2127,13 @@ pub mod backbone {
     enum StudioPortKind {
         /// @emoji 🗃️ A single document's pack blob addressed by an arbitrary `file://` path —
         /// `<folder>/<document_id>.<extension>.pack` (authoritative) + `.ops` + a DSL mirror, via
-        /// `FolderTextStorage::write_pack`/`read_pack` and the `vcs::document_codec(OS_STUDIO_SCHEMA)`
+        /// `FolderTextStorage::write_pack`/`read_pack` and the `store::document_codec(OS_STUDIO_SCHEMA)`
         /// registered codec (same fix as `framework/sync`'s `FolderEndpoint::Pack` — see there for the
         /// rationale: a missing codec is a hard error, never a silent JSON-in-`.dsl` dump).
         #[cfg(not(target_arch = "wasm32"))]
-        File { uri: String, storage: vcs::FolderTextStorage, document_id: String, extension: String },
+        File { uri: String, storage: FolderTextStorage, document_id: String, extension: String },
         #[cfg(not(target_arch = "wasm32"))]
-        Folder(String, vcs::FolderSqliteStorage),
+        Folder(String, FolderSqliteStorage),
     }
 
     pub struct StudioBackbonePort {
@@ -2129,13 +2149,13 @@ pub mod backbone {
             let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or("txt").to_string();
             let document_id = path.file_stem().and_then(|stem| stem.to_str()).unwrap_or("document").to_string();
             let folder = path.parent().map(|parent| parent.to_path_buf()).unwrap_or_else(|| std::path::PathBuf::from("."));
-            Ok(Self { kind: Some(StudioPortKind::File { uri, storage: vcs::FolderTextStorage::new(folder), document_id, extension }), memory: MemoryBackbonePort::new() })
+            Ok(Self { kind: Some(StudioPortKind::File { uri, storage: FolderTextStorage::new(folder), document_id, extension }), memory: MemoryBackbonePort::new() })
         }
 
         #[cfg(not(target_arch = "wasm32"))]
         pub fn folder(folder_path: &str) -> Result<Self, VcsError> {
             let uri = format!("folder://{folder_path}");
-            Ok(Self { kind: Some(StudioPortKind::Folder(uri, vcs::FolderSqliteStorage::new(std::path::PathBuf::from(folder_path)))), memory: MemoryBackbonePort::new() })
+            Ok(Self { kind: Some(StudioPortKind::Folder(uri, FolderSqliteStorage::new(std::path::PathBuf::from(folder_path)))), memory: MemoryBackbonePort::new() })
         }
     }
 
@@ -2145,7 +2165,7 @@ pub mod backbone {
                 match kind {
                     #[cfg(not(target_arch = "wasm32"))]
                     StudioPortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
-                        let Some(codec) = vcs::document_codec(OS_STUDIO_SCHEMA) else {
+                        let Some(codec) = store::document_codec(OS_STUDIO_SCHEMA) else {
                             return Err(VcsError::Backbone(format!("no document codec registered for schema {OS_STUDIO_SCHEMA:?}")));
                         };
                         if let Some(pack_files) = storage.read_pack(document_id, extension)? {
@@ -2171,7 +2191,7 @@ pub mod backbone {
                 match kind {
                     #[cfg(not(target_arch = "wasm32"))]
                     StudioPortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
-                        let Some(codec) = vcs::document_codec(OS_STUDIO_SCHEMA) else {
+                        let Some(codec) = store::document_codec(OS_STUDIO_SCHEMA) else {
                             return Err(VcsError::Backbone(format!("no document codec registered for schema {OS_STUDIO_SCHEMA:?}")));
                         };
                         let (pack_files, dsl_mirror) = (codec.print)(payload)?;
@@ -2243,7 +2263,7 @@ pub mod host_runtime {
     use store_sync::{DocumentActorConfig, DocumentActorMsg, DocumentChannels, DocumentEvent, DocumentHost, PersistenceBinding};
 
     /// @emoji 📌 The local persistence binding for a folder-backed document (one row per `document_id`
-    /// in the folder's `.semio` sqlite store — see `vcs::FolderSqliteStorage`).
+    /// in the folder's `.semio` sqlite store — see `FolderSqliteStorage`).
     pub fn folder_binding(folder_path: std::path::PathBuf) -> PersistenceBinding {
         PersistenceBinding::Folder { path: folder_path }
     }
@@ -3381,7 +3401,7 @@ pub mod media_graph {
         record
     }
 
-    fn media_contract_from_record(record: &dsl::RecordValue) -> Result<MediaContract, vcs::TextError> {
+    fn media_contract_from_record(record: &dsl::RecordValue) -> Result<MediaContract, store::TextError> {
         let kind_id = match record.get(0) {
             Some(dsl::FieldValue::Text(s)) => s.clone(),
             other => return Err(dsl::__rt::field_error(format!("expected kind_id, found {other:?}"))),
@@ -5155,4 +5175,5 @@ pub use registry::{
 };
 pub use semio_framework_core::*;
 pub use ui_wgpu::*;
-pub use vcs::{document_backbone_ref, set_host_backbone_port, Author, Checkpoint, DocumentBackboneRef, DocumentVcsCommand, LocalStorageBackbonePort, MemoryBackbonePort, VcsError};
+pub use vcs::{Author, Checkpoint, VcsError};
+pub use store::{document_backbone_ref, set_host_backbone_port, DocumentBackboneRef, DocumentCommand, LocalStorageBackbonePort, MemoryBackbonePort};

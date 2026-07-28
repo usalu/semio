@@ -3,7 +3,8 @@
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
 use protocol::{Operation, OperationDiff};
-use vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentBackboneRef, DocumentVcs, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, VcsError};
+use vcs::{DocumentVcs, VcsError};
+use store::{create_document_envelope, materialize_document_projection, DocumentBackboneRef, DocumentCommand, DocumentEnvelope, DocumentStore};
 
 pub const S_STUDIO_SCHEMA: &str = "s.studio";
 pub const S_MEDIA_GRAPH_SCHEMA: &str = "s.media-graph";
@@ -125,7 +126,7 @@ pub enum StudioOperation {
 }
 
 pub type SStudioVcs = DocumentVcs<SStudioProjection, StudioOperation>;
-pub type SStudioEnvelope = DocumentVcsEnvelope<SStudioProjection, StudioOperation>;
+pub type SStudioEnvelope = DocumentEnvelope<SStudioProjection, StudioOperation>;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -156,7 +157,7 @@ pub fn default_studio_projection() -> SStudioProjection {
 }
 
 pub fn create_empty_studio_document(id: &str, name: &str) -> SStudioDocument {
-    SStudioDocument { schema: S_STUDIO_SCHEMA.into(), id: id.into(), name: name.into(), vcs: create_document_vcs_envelope(S_STUDIO_SCHEMA, id, default_studio_projection(), None).vcs, backbone: None }
+    SStudioDocument { schema: S_STUDIO_SCHEMA.into(), id: id.into(), name: name.into(), vcs: create_document_envelope(S_STUDIO_SCHEMA, id, default_studio_projection(), None).vcs, backbone: None }
 }
 
 pub fn apply_studio_operation(projection: &SStudioProjection, operation: &StudioOperation) -> SStudioProjection {
@@ -300,7 +301,7 @@ pub fn materialize_studio_projection(document: &SStudioDocument, applied_edit_id
 //#endregion 🔖Projection
 
 //#region 🔖Dsl
-// `impl vcs::DocumentDsl for SStudioProjection` is emitted automatically by the
+// `impl store::DocumentDsl for SStudioProjection` is emitted automatically by the
 // `#[derive(dsl::DslDocument)]` on `SStudioProjection` itself (see `🔖Schemas`) — no manual impl
 // needed here. The former hand-rolled `mod studio_dsl` lexer/parser/printer has been removed now
 // that the DSL round trip runs through the derive-generated printer/parser.
@@ -314,14 +315,14 @@ pub fn materialize_studio_projection(document: &SStudioDocument, applied_edit_id
 
 //#region 🔖StudioStore
 pub struct StudioStore {
-    inner: DocumentVcsStore<SStudioProjection, StudioOperation>,
+    inner: DocumentStore<SStudioProjection, StudioOperation>,
     name: String,
 }
 
 impl StudioStore {
     pub fn new(document: SStudioDocument) -> Self {
         let envelope = SStudioEnvelope { schema: document.schema, id: document.id, vcs: document.vcs, backbone: document.backbone, active_alternative_id: None };
-        Self { inner: DocumentVcsStore::new(envelope), name: document.name }
+        Self { inner: DocumentStore::new(envelope), name: document.name }
     }
 
     pub fn generation(&self) -> u64 {
@@ -337,12 +338,16 @@ impl StudioStore {
         SStudioDocument { schema: envelope.schema.clone(), id: envelope.id.clone(), name: self.name.clone(), vcs: envelope.vcs.clone(), backbone: envelope.backbone.clone() }
     }
 
-    pub fn dispatch_json(&mut self, command_json: &str) -> Result<(), VcsError> {
-        self.inner.dispatch_json(command_json)
+    pub fn dispatch_text(&mut self, command_text: &str) -> Result<(), VcsError> {
+        self.inner.dispatch_text(command_text)
+    }
+
+    pub fn dispatch_binary(&mut self, command_bytes: &[u8]) -> Result<(), VcsError> {
+        self.inner.dispatch_binary(command_bytes)
     }
 
     pub fn dispatch_apply(&mut self, operations: Vec<StudioOperation>) -> Result<(), VcsError> {
-        self.inner.dispatch(DocumentVcsCommand::Apply { operations, description: None })
+        self.inner.dispatch(DocumentCommand::Apply { operations, description: None })
     }
 
     /// @emoji 📡 Pumps any queued inbound backbone messages into the edit timeline.
@@ -391,10 +396,16 @@ pub mod wasm_bridge {
             Ok(Self { store: Mutex::new(StudioStore::new(document)) })
         }
 
-        #[wasm_bindgen(js_name = dispatchJson)]
-        pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
+        #[wasm_bindgen(js_name = dispatchText)]
+        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
             let mut store = self.store.lock().map_err(|_| JsValue::from_str("lock poisoned"))?;
-            store.dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
+            store.dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = dispatchBinary)]
+        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+            let mut store = self.store.lock().map_err(|_| JsValue::from_str("lock poisoned"))?;
+            store.dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
@@ -433,7 +444,7 @@ mod tests {
         let mut store = StudioStore::new(create_empty_studio_document("studio", "Studio"));
         let instance = SAppInstance { id: "app-1".into(), program_id: "draw".into(), app_id: "draw".into(), label: "Draw".into(), yields: "graph.dag".into(), document: SDocumentRef { document_id: "doc-1".into(), schema: "draw.document".into() } };
         store.dispatch_apply(vec![StudioOperation::SpawnAppInstance { instance, position: MediaGraphPosition { x: 0.0, y: 0.0 } }]).expect("spawn");
-        store.dispatch_json(r#"{"kind":"undo"}"#).expect("undo");
+        store.dispatch_text("undo").expect("undo");
         assert_eq!(store.projection().expect("projection").app_instances.len(), 0);
     }
 
@@ -475,18 +486,18 @@ mod tests {
 
     #[test]
     fn studio_dsl_round_trips_empty_and_sample_projections() {
-        vcs::test_support::assert_dsl_round_trip(&default_studio_projection());
-        vcs::test_support::assert_dsl_round_trip(&sample_studio_projection());
-        vcs::test_support::assert_dsl_pack_equivalence(&default_studio_projection());
-        vcs::test_support::assert_dsl_pack_equivalence(&sample_studio_projection());
+        store::test_support::assert_dsl_round_trip(&default_studio_projection());
+        store::test_support::assert_dsl_round_trip(&sample_studio_projection());
+        store::test_support::assert_dsl_pack_equivalence(&default_studio_projection());
+        store::test_support::assert_dsl_pack_equivalence(&sample_studio_projection());
     }
 
     #[test]
     fn studio_op_text_round_trips_every_variant() {
-        vcs::test_support::assert_op_line_round_trip(&StudioOperation::SetActiveProgram { program_id: Some("draw".into()) });
-        vcs::test_support::assert_op_line_round_trip(&StudioOperation::SetActiveProgram { program_id: None });
-        vcs::test_support::assert_op_line_round_trip(&StudioOperation::SetActiveAlternative { alternative_id: Some("alt-1".into()) });
-        vcs::test_support::assert_op_line_round_trip(&StudioOperation::SetActiveAlternative { alternative_id: None });
+        store::test_support::assert_op_line_round_trip(&StudioOperation::SetActiveProgram { program_id: Some("draw".into()) });
+        store::test_support::assert_op_line_round_trip(&StudioOperation::SetActiveProgram { program_id: None });
+        store::test_support::assert_op_line_round_trip(&StudioOperation::SetActiveAlternative { alternative_id: Some("alt-1".into()) });
+        store::test_support::assert_op_line_round_trip(&StudioOperation::SetActiveAlternative { alternative_id: None });
         let instance = SAppInstance {
             id: "app-2".into(),
             program_id: "writer".into(),
@@ -495,20 +506,20 @@ mod tests {
             yields: "text.document".into(),
             document: SDocumentRef { document_id: "doc-2".into(), schema: "writer.document".into() },
         };
-        vcs::test_support::assert_op_line_round_trip(&StudioOperation::SpawnAppInstance { instance, position: MediaGraphPosition { x: 12.0, y: 24.0 } });
-        vcs::test_support::assert_op_line_round_trip(&StudioOperation::RemoveAppInstance { instance_id: "app-1".into() });
+        store::test_support::assert_op_line_round_trip(&StudioOperation::SpawnAppInstance { instance, position: MediaGraphPosition { x: 12.0, y: 24.0 } });
+        store::test_support::assert_op_line_round_trip(&StudioOperation::RemoveAppInstance { instance_id: "app-1".into() });
         let edge = SMediaGraphEdge { id: "edge-2".into(), source_node_id: "node-1".into(), source_port_id: "p-out".into(), target_node_id: "node-2".into(), target_port_id: "p-in".into() };
-        vcs::test_support::assert_op_line_round_trip(&StudioOperation::ConnectMediaPorts { edge });
-        vcs::test_support::assert_op_line_round_trip(&StudioOperation::DisconnectMediaEdge { edge_id: "edge-1".into() });
-        vcs::test_support::assert_op_line_round_trip(&StudioOperation::MoveMediaNode { node_id: "node-1".into(), x: 5.0, y: 6.0 });
+        store::test_support::assert_op_line_round_trip(&StudioOperation::ConnectMediaPorts { edge });
+        store::test_support::assert_op_line_round_trip(&StudioOperation::DisconnectMediaEdge { edge_id: "edge-1".into() });
+        store::test_support::assert_op_line_round_trip(&StudioOperation::MoveMediaNode { node_id: "node-1".into(), x: 5.0, y: 6.0 });
     }
 
     #[test]
     fn studio_document_text_round_trips_through_the_store() {
-        let envelope = create_document_vcs_envelope::<SStudioProjection, StudioOperation>(S_STUDIO_SCHEMA, "studio", sample_studio_projection(), None);
-        let store: DocumentVcsStore<SStudioProjection, StudioOperation> = DocumentVcsStore::new(envelope);
-        vcs::test_support::assert_document_text_round_trip(&store);
-        vcs::test_support::assert_document_pack_round_trip(&store);
+        let envelope = create_document_envelope::<SStudioProjection, StudioOperation>(S_STUDIO_SCHEMA, "studio", sample_studio_projection(), None);
+        let store: DocumentStore<SStudioProjection, StudioOperation> = DocumentStore::new(envelope);
+        store::test_support::assert_document_text_round_trip(&store);
+        store::test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DslAndOpText
 }

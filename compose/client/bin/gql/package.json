@@ -1,5 +1,5 @@
 {
-  "name": "@semio-tech/compose-store",
+  "name": "@semio-tech/compose-gql",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": ".",

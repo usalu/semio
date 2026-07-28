@@ -459,7 +459,7 @@ class WorkerStringTransport {
 }
 
 //#region 🌐HttpStoreTransport
-/** @emoji 🌐 GraphQL-over-HTTP to native `compose-store` (no WASM); subscriptions are no-operations until the sidecar exposes a stream. */
+/** @emoji 🌐 GraphQL-over-HTTP to native `compose-gql` (no WASM); subscriptions are no-operations until the sidecar exposes a stream. */
 class HttpStringTransport {
   constructor(private readonly baseUrl: string) {}
 
@@ -600,7 +600,7 @@ export type SessionOpenOptions = Readonly<{
   workerFactory?: () => Worker;
 }>;
 
-/** @emoji 🌐 Options for {@link Session.openHttp} against `compose-store` (POST `/install` + POST `/graphql`). */
+/** @emoji 🌐 Options for {@link Session.openHttp} against `compose-gql` (POST `/install` + POST `/graphql`). */
 export type SessionHttpOpenOptions = Readonly<SessionOpenOptions & { readonly installCreateDto?: JsonObject }>;
 
 /** @emoji 🧪 Canonical bootstrap URI for an empty in-memory RS kit store (host lifecycle only). */
@@ -2162,7 +2162,7 @@ export class Session {
     return Session.open(COMPOSE_IN_MEMORY_KIT_URI, opts);
   }
 
-  /** @emoji 🌐 Opens a {@link Session} against native `compose-store` HTTP GraphQL at {@code baseUrl} (optional server `/install` only). */
+  /** @emoji 🌐 Opens a {@link Session} against native `compose-gql` HTTP GraphQL at {@code baseUrl} (optional server `/install` only). */
   static async openHttp(baseUrl: string, opts?: SessionHttpOpenOptions): Promise<Session> {
     const timeoutMs = opts?.timeoutMs ?? 60_000;
     const root = baseUrl.replace(/\/$/, "");
@@ -2172,7 +2172,7 @@ export class Session {
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({ create: { dto: opts.installCreateDto } }),
       });
-      if (!r.ok) throw new Error(`compose-store install ${r.status}: ${await r.text()}`);
+      if (!r.ok) throw new Error(`compose-gql install ${r.status}: ${await r.text()}`);
     }
     const inner = new HttpStringTransport(root);
     const k = new Session(timeoutMs, inner);
@@ -5113,7 +5113,7 @@ export async function openSession(uri: string, opts?: SessionOpenOptions): Promi
   return Session.open(uri, opts);
 }
 
-/** @emoji 🚀 Opens a {@link Session} against native `compose-store` HTTP GraphQL. */
+/** @emoji 🚀 Opens a {@link Session} against native `compose-gql` HTTP GraphQL. */
 export async function openSessionHttp(baseUrl: string, opts?: SessionHttpOpenOptions): Promise<Session> {
   return Session.openHttp(baseUrl, opts);
 }

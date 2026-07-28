@@ -20,7 +20,7 @@ use semio_framework_plugin::{SurfaceKind,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use protocol::CollectionOperation;
-use vcs::DocumentDsl;
+use store::DocumentDsl;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -1248,7 +1248,7 @@ fn render_preview(doc: &LayoutDocument, runtime: &LayoutPlayRuntime) -> UiNode {
 /// 🚧 Deliberately unwired beyond `LayoutPlayApp::gesture_preview` below — same gap as `draw-plugin`'s
 /// `draw_gesture_preview_payload` (see that doc for the full explanation): `framework/sync::
 /// SyncSession::publish_preview` is host-only and unreachable from this WASI-P2 sandboxed plugin
-/// crate, and `vcs::BackboneMessage` has no preview-shaped variant to relay one through. See
+/// crate, and `store::BackboneMessage` has no preview-shaped variant to relay one through. See
 /// `.repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw7-preview-law.txt`.
 fn layout_drag_preview_payload(state: &LayoutDropPreviewState) -> Value {
     serde_json::to_value(state).unwrap_or(Value::Null)

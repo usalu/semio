@@ -253,11 +253,11 @@ struct ImperativeDocumentDsl {
     steps: Vec<StepNodeDsl>,
 }
 
-impl vcs::DocumentDsl for ImperativeDocument {
+impl store::DocumentDsl for ImperativeDocument {
     const EXTENSION: &'static str = "imperative";
 
-    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        let parsed = <ImperativeDocumentDsl as vcs::DocumentDsl>::parse_dsl(text)?;
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        let parsed = <ImperativeDocumentDsl as store::DocumentDsl>::parse_dsl(text)?;
         Ok(ImperativeDocument {
             schema: parsed.schema,
             path: Path { steps: parsed.steps.into_iter().map(step_node_dsl_to_step).collect() },
@@ -271,30 +271,30 @@ impl vcs::DocumentDsl for ImperativeDocument {
             seed: dictionary_to_option_dsl_map(&self.seed),
             steps: self.path.steps.iter().map(step_to_step_node_dsl).collect(),
         };
-        <ImperativeDocumentDsl as vcs::DocumentDsl>::print_dsl(&mirror)
+        <ImperativeDocumentDsl as store::DocumentDsl>::print_dsl(&mirror)
     }
 }
 
 //#region 🔖Pack
-/// 📦 Binary counterpart of the `vcs::DocumentDsl` impl above. `ImperativeDocument` carries a manual
+/// 📦 Binary counterpart of the `store::DocumentDsl` impl above. `ImperativeDocument` carries a manual
 /// `DocumentDsl` impl (not `#[derive(dsl::DslDocument)]` itself — see the region's opening doc comment)
-/// so it did NOT automatically gain `vcs::DocumentPack` from `dsl_derive`'s expansion in wave 1. This
+/// so it did NOT automatically gain `store::DocumentPack` from `dsl_derive`'s expansion in wave 1. This
 /// mirrors the derive-emitted shape (wave1-report.txt §2) exactly, substituting `ImperativeDocumentDsl`'s
 /// `__dsl_spec`/`__dsl_to_record`/`__dsl_from_record` trio for `Self`'s (unavailable here) and routing
 /// the same mirror-struct conversion `parse_dsl`/`print_dsl` already use.
-impl vcs::DocumentPack for ImperativeDocument {
-    fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
+impl store::DocumentPack for ImperativeDocument {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let mirror = ImperativeDocumentDsl {
             schema: self.schema.clone(),
             seed: dictionary_to_option_dsl_map(&self.seed),
             steps: self.path.steps.iter().map(step_to_step_node_dsl).collect(),
         };
-        vcs::pack_rt::encode_document(&ImperativeDocumentDsl::__dsl_spec(), &mirror.__dsl_to_record(), options)
+        store::pack_rt::encode_document(&ImperativeDocumentDsl::__dsl_spec(), &mirror.__dsl_to_record(), options)
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
-        let (record, _report) = vcs::pack_rt::decode_document(bytes, &ImperativeDocumentDsl::__dsl_spec(), options)?;
-        let parsed = ImperativeDocumentDsl::__dsl_from_record(&record).map_err(vcs::text_error_to_pack_error)?;
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+        let (record, _report) = store::pack_rt::decode_document(bytes, &ImperativeDocumentDsl::__dsl_spec(), options)?;
+        let parsed = ImperativeDocumentDsl::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?;
         Ok(ImperativeDocument {
             schema: parsed.schema,
             path: Path { steps: parsed.steps.into_iter().map(step_node_dsl_to_step).collect() },
@@ -308,7 +308,7 @@ impl vcs::DocumentPack for ImperativeDocument {
 //#region 🔖OpText
 /// ✂️ Local mirror of `ImperativeOperation` — flattens `PathRef` into bare `owner`/`slot`
 /// `Option<String>` fields (printed bare when the value lexes as a bare ident, per the engine's
-/// default `Shape::Text` behavior — no per-field opt-in needed) since a `vcs::Operation` grammar is
+/// default `Shape::Text` behavior — no per-field opt-in needed) since a `store::Operation` grammar is
 /// a genuinely tagged enum (`#[derive(dsl::DslOps)]` requires an enum), not the single generic-struct
 /// shape `ImperativeOperation`/`vcs::CollectionOperation` use at the Rust level.
 #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
@@ -362,7 +362,7 @@ fn imperative_operation_from_dsl(dsl_op: ImperativeOperationDsl) -> ImperativeOp
 }
 
 impl protocol::OpText for ImperativeOperation {
-    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(imperative_operation_from_dsl(<ImperativeOperationDsl as protocol::OpText>::parse_op(line)?))
     }
 
@@ -398,7 +398,7 @@ pub enum ImperativeCoreError {
 const DEFAULT_IMPERATIVE_DOCUMENT_TEXT: &str = include_str!("../../example/default.imperative");
 
 pub fn default_document() -> ImperativeDocument {
-    <ImperativeDocument as vcs::DocumentDsl>::parse_dsl(DEFAULT_IMPERATIVE_DOCUMENT_TEXT)
+    <ImperativeDocument as store::DocumentDsl>::parse_dsl(DEFAULT_IMPERATIVE_DOCUMENT_TEXT)
         .expect("default.imperative is a static, hand-authored fixture that must always parse")
 }
 // #endregion 🔖Document
@@ -649,36 +649,36 @@ mod tests {
     fn add_step_op_round_trips() {
         let document = default_document();
         let operation = ImperativeOperation { path_ref: PathRef::default(), collection: protocol::CollectionOperation::Add { id: "step-x".to_string(), item: step("step-x", "log.print"), at: 0 } };
-        vcs::test_support::assert_operation_round_trip(&document, operation.clone());
-        vcs::test_support::assert_op_line_round_trip(&operation);
-        vcs::test_support::assert_store_roundtrip(document, operation);
+        store::test_support::assert_operation_round_trip(&document, operation.clone());
+        store::test_support::assert_op_line_round_trip(&operation);
+        store::test_support::assert_store_roundtrip(document, operation);
     }
 
     #[test]
     fn remove_step_op_round_trips() {
         let document = default_document();
         let operation = ImperativeOperation { path_ref: PathRef::default(), collection: protocol::CollectionOperation::Remove { id: "step-1".into() } };
-        vcs::test_support::assert_operation_round_trip(&document, operation.clone());
-        vcs::test_support::assert_op_line_round_trip(&operation);
-        vcs::test_support::assert_store_roundtrip(document, operation);
+        store::test_support::assert_operation_round_trip(&document, operation.clone());
+        store::test_support::assert_op_line_round_trip(&operation);
+        store::test_support::assert_store_roundtrip(document, operation);
     }
 
     #[test]
     fn move_step_op_round_trips() {
         let document = default_document();
         let operation = ImperativeOperation { path_ref: PathRef::default(), collection: protocol::CollectionOperation::Move { id: "step-1".into(), to: 1 } };
-        vcs::test_support::assert_operation_round_trip(&document, operation.clone());
-        vcs::test_support::assert_op_line_round_trip(&operation);
-        vcs::test_support::assert_store_roundtrip(document, operation);
+        store::test_support::assert_operation_round_trip(&document, operation.clone());
+        store::test_support::assert_op_line_round_trip(&operation);
+        store::test_support::assert_store_roundtrip(document, operation);
     }
 
     #[test]
     fn patch_step_params_op_round_trips() {
         let document = default_document();
         let operation = ImperativeOperation { path_ref: PathRef::default(), collection: protocol::CollectionOperation::Patch { id: "step-1".into(), patch: Dictionary::new().insert("key", Value::Atom(Atom::String("renamed".into()))) } };
-        vcs::test_support::assert_operation_round_trip(&document, operation.clone());
-        vcs::test_support::assert_op_line_round_trip(&operation);
-        vcs::test_support::assert_store_roundtrip(document, operation);
+        store::test_support::assert_operation_round_trip(&document, operation.clone());
+        store::test_support::assert_op_line_round_trip(&operation);
+        store::test_support::assert_store_roundtrip(document, operation);
     }
 
     #[test]
@@ -687,31 +687,31 @@ mod tests {
         document.path.steps.push(step("step-if", "control.if"));
         let path_ref = PathRef { owner: Some("step-if".into()), slot: Some("then".into()) };
         let operation = ImperativeOperation { path_ref, collection: protocol::CollectionOperation::Add { id: "step-nested".to_string(), item: step("step-nested", "log.print"), at: 0 } };
-        vcs::test_support::assert_operation_round_trip(&document, operation.clone());
-        vcs::test_support::assert_op_line_round_trip(&operation);
+        store::test_support::assert_operation_round_trip(&document, operation.clone());
+        store::test_support::assert_op_line_round_trip(&operation);
         let post = vcs::apply_operation(&document, &operation);
         let owner_step = post.path.steps.iter().find(|entry| entry.id == "step-if").expect("owner step");
         assert_eq!(owner_step.bodies.get("then").map(|body| body.steps.len()), Some(1));
-        vcs::test_support::assert_store_roundtrip(document, operation);
+        store::test_support::assert_store_roundtrip(document, operation);
     }
 
     #[test]
     fn default_document_dsl_round_trips() {
-        vcs::test_support::assert_dsl_round_trip(&default_document());
-        vcs::test_support::assert_dsl_pack_equivalence(&default_document());
+        store::test_support::assert_dsl_round_trip(&default_document());
+        store::test_support::assert_dsl_pack_equivalence(&default_document());
     }
 
     #[test]
     fn document_text_round_trip_with_applied_operation() {
         let document = default_document();
-        let envelope = vcs::create_document_vcs_envelope::<ImperativeDocument, ImperativeOperation>("imperative.document/v1", "test", document, None);
-        let mut store = vcs::DocumentVcsStore::new(envelope);
+        let envelope = store::create_document_envelope::<ImperativeDocument, ImperativeOperation>("imperative.document/v1", "test", document, None);
+        let mut store = store::DocumentStore::new(envelope);
         let operation = ImperativeOperation { path_ref: PathRef::default(), collection: protocol::CollectionOperation::Add { id: "step-x".to_string(), item: step("step-x", "log.print"), at: 0 } };
         store
-            .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![operation], description: None })
+            .dispatch(store::DocumentCommand::Apply { operations: vec![operation], description: None })
             .expect("apply");
-        vcs::test_support::assert_document_text_round_trip(&store);
-        vcs::test_support::assert_document_pack_round_trip(&store);
+        store::test_support::assert_document_text_round_trip(&store);
+        store::test_support::assert_document_pack_round_trip(&store);
     }
 
     //#region resolve_steps / resolve_steps_mut / prune_empty_slot
@@ -813,8 +813,8 @@ mod tests {
         assert_eq!(document.seed.get("counter"), Some(&Value::Atom(Atom::Integer(1))));
         let owner = &document.path.steps[0];
         assert_eq!(owner.bodies.get("then").map(|body| body.steps.len()), Some(1));
-        vcs::test_support::assert_dsl_round_trip(&document);
-        vcs::test_support::assert_dsl_pack_equivalence(&document);
+        store::test_support::assert_dsl_round_trip(&document);
+        store::test_support::assert_dsl_pack_equivalence(&document);
     }
 
     #[test]
@@ -834,26 +834,26 @@ mod tests {
         assert_eq!(document.seed.get("d"), Some(&Value::Atom(Atom::Decimal(1.5))));
         assert_eq!(document.seed.get("e"), Some(&Value::Atom(Atom::Decimal(f64::NEG_INFINITY))));
         assert_eq!(document.seed.get("f"), Some(&Value::Dictionary(Dictionary::new())));
-        vcs::test_support::assert_dsl_round_trip(&document);
-        vcs::test_support::assert_dsl_pack_equivalence(&document);
+        store::test_support::assert_dsl_round_trip(&document);
+        store::test_support::assert_dsl_pack_equivalence(&document);
     }
 
     #[test]
     fn dsl_rejects_unterminated_string() {
         let text = r#"imperative schema="unterminated"#;
-        assert!(<ImperativeDocument as vcs::DocumentDsl>::parse_dsl(text).is_err());
+        assert!(<ImperativeDocument as store::DocumentDsl>::parse_dsl(text).is_err());
     }
 
     #[test]
     fn dsl_rejects_wrong_leading_keyword() {
         let text = r#"notimperative schema="x""#;
-        assert!(<ImperativeDocument as vcs::DocumentDsl>::parse_dsl(text).is_err());
+        assert!(<ImperativeDocument as store::DocumentDsl>::parse_dsl(text).is_err());
     }
 
     #[test]
     fn dsl_rejects_invalid_number_literal() {
         let text = r#"imperative schema="imperative.document" seed={ n=1.2.3 }"#;
-        assert!(<ImperativeDocument as vcs::DocumentDsl>::parse_dsl(text).is_err());
+        assert!(<ImperativeDocument as store::DocumentDsl>::parse_dsl(text).is_err());
     }
 
     #[test]

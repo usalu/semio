@@ -351,6 +351,25 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+The target architecture is:
+- app defines
+  - document
+    - entities
+    - diff
+    - two-way conversion to document from documents to packs
+  - commands
+    - protocol (binary protocol for commands that are used for communication and storage)
+      - two-way conversion to dsl from ops to protocols
+    - dsl (maximum token efficent and consistent textual representation of a document)
+    - op (maximum token efficient and consistent textual representation of a command)
+    - operations (yield diff)
+      - inverse (calls to other operations to invert the operation)
+The apps use store for local-first in-memory state managment with optional hot-swappable backbone.
+Make sure to identify all gaps and plan all mechanisms and refactor to achieve this architecture.
+End to end for a workforce of agents
+
+---
+
 Extract/Extend/Refactor store into its own technology. store is a local first, non-blocking client side in memory store in rust. All the backbones (file, folder, remote) are hot-swappable at runtime to store.
 Make sure that it works perfectly with vcs, pack (along with dsl), protocol (along with op) and hub (along with db).
 

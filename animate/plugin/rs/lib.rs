@@ -15,7 +15,7 @@ use serde_json::{json, Value};
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicU32, Ordering};
 use protocol::CollectionOperation;
-use vcs::DocumentDsl;
+use store::DocumentDsl;
 
 //#region 🔖Constants
 const ANIMATE_PRESENT_PLAY_APP_ID: &str = "animate-present-play";
@@ -1288,7 +1288,7 @@ mod tests {
     /// impossible with whole-document snapshots, which would clobber one another.
     #[test]
     fn two_instances_converge_disjoint_edits_via_backbone() {
-        use vcs::MemoryBackbone;
+        use store::MemoryBackbone;
         let mut instance_a = new_app();
         let mut instance_b = new_app();
         let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://animate-present-convergence", "mem://animate-present-convergence");

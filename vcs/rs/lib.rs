@@ -11,7 +11,7 @@ use thiserror::Error;
 // `absorb_diff` below, disambiguating the trait from the same-named generic parameter) — a private
 // (non-`pub`) import keeps that ergonomics without re-exposing `protocol::Operation` on `vcs`'s own
 // public API (dependents import `protocol::Operation` directly).
-use protocol::{Edit, Operation};
+use protocol::{Edit, Operation, OperationDiff};
 
 static ID_COUNTER: AtomicU64 = AtomicU64::new(0);
 

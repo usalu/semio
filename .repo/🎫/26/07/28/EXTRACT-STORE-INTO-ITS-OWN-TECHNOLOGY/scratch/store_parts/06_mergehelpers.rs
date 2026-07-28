@@ -2,7 +2,7 @@
 /// (`checkpoint_id` itself is the first entry). Cycle-guarded (a malformed/adversarial parent chain
 /// stops instead of looping forever) — every well-formed chain built by `reconcile_alternative`/
 /// `CommitCheckpoint` is already acyclic, this is defense in depth, not a documented invariant break.
-fn checkpoint_ancestors<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>, checkpoint_id: &str) -> Vec<String> {
+fn checkpoint_ancestors<P, Operation>(envelope: &DocumentEnvelope<P, Operation>, checkpoint_id: &str) -> Vec<String> {
     let mut chain = Vec::new();
     let mut seen = HashSet::new();
     let mut current = Some(checkpoint_id.to_string());
@@ -22,13 +22,13 @@ fn checkpoint_ancestors<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operatio
 /// Supports branch-merge tooling that needs to know "everything since the fork point" on either
 /// side. `b`'s chain is walked nearest-to-farthest so the FIRST hit in `a`'s ancestor set is the
 /// nearest (not merely *a*) common ancestor.
-pub fn merge_base<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>, a: &str, b: &str) -> Option<String> {
+pub fn merge_base<P, Operation>(envelope: &DocumentEnvelope<P, Operation>, a: &str, b: &str) -> Option<String> {
     let ancestors_a: HashSet<String> = checkpoint_ancestors(envelope, a).into_iter().collect();
     checkpoint_ancestors(envelope, b).into_iter().find(|id| ancestors_a.contains(id))
 }
 
 pub fn reconcile_alternative<P, Operation>(
-    envelope: &mut DocumentVcsEnvelope<P, Operation>,
+    envelope: &mut DocumentEnvelope<P, Operation>,
     alternative_name: &str,
     checkpoint_message: Option<String>,
     authors: Vec<Author>,

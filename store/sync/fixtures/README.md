@@ -34,7 +34,7 @@ tolerated (skipped) while matching the expected tag.
 
 - `externalEdits { edits: Edit[] }` — append these `Edit` JSON objects to the stored envelope's
   `vcs.edits` out-of-band (append-only → `remoteOperations`).
-- `replaceEnvelope { envelope: DocumentVcsEnvelope }` — rewrite the whole stored envelope (divergent
+- `replaceEnvelope { envelope: DocumentEnvelope }` — rewrite the whole stored envelope (divergent
   history → `snapshotReplaced`, or `conflict` when local operations are pending).
 - `hubFrame { frame: HubServerFrame }` — a raw hub server frame. Driven by the TS twin; the folder-only
   Rust harness rejects these, so keep them out of Rust-replayed fixtures for now.

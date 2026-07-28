@@ -1,7 +1,7 @@
 //#region 🔖Text
 /// @emoji 📍 1-based line/column position inside DSL or op-log source text. Lives in `dsl_core`
 /// (the token-native DSL engine's foundation crate, which sits below `vcs`); re-exported here so
-/// every existing `vcs::TextSpan`/`vcs::TextError` import across the workspace keeps compiling.
+/// every existing `store::TextSpan`/`store::TextError` import across the workspace keeps compiling.
 pub use dsl_core::{TextError, TextSpan};
 
 /// @emoji 📜 Handcrafted textual representation of a document projection, implemented once per

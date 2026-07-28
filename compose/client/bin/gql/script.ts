@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
-/** 🏪 `@semio-tech/compose-store` router: `bun script.ts <build|dev|test>`. `compose-store/rs` is a standalone Cargo workspace, kept out of the repo-root workspace. */
+/** 📊 `@semio-tech/compose-gql` router: `bun script.ts <build|dev|test>`. `compose-gql/rs` is a
+ * regular root-workspace member (not a standalone Cargo workspace — that was a stale claim). */
 import { execFileSync } from "node:child_process";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, resolveTestLevel } from "../../../../repo/lib/js/index.ts";
 import { join } from "node:path";
 
-const crate = "compose-store";
+const crate = "compose-gql";
 
 class BuildScript extends BundleScript {
   run(segments: string[]): void {

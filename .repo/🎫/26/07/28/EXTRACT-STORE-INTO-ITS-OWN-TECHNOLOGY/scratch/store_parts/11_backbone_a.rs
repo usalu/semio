@@ -40,7 +40,7 @@ pub enum BackboneMessage {
     Ack { op_ids: Vec<String> },
 }
 
-/// @emoji 🧵 Non-blocking, IO-free in-memory queue contract between a `DocumentVcsStore` and its
+/// @emoji 🧵 Non-blocking, IO-free in-memory queue contract between a `DocumentStore` and its
 /// sync actor. `send`/`receive` MUST return immediately: implementations only enqueue/dequeue
 /// `BackboneMessage`s — never HTTP, never filesystem, never a blocking wait. All IO (persistence,
 /// hub sync, file watching, presence) lives behind this queue in `framework/sync`'s actor layer,

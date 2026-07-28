@@ -137,7 +137,7 @@ const WRITER_PANEL_TAB_DOCUMENT_OUTLINE_ID: &str = "framework.panel.document.out
 const WRITER_PLAY_WINDOW_KIND: &str = "writer-main";
 const WRITER_DOCUMENT_SCHEMA: &str = "writer.document";
 
-/// 📄 The `jack` example document, handcrafted in the `.writer` DSL (see `vcs::DocumentDsl`) instead
+/// 📄 The `jack` example document, handcrafted in the `.writer` DSL (see `store::DocumentDsl`) instead
 /// of JSON — {@link jack_example_document}/{@link jack_example_json} are the only ways it should be
 /// consumed.
 const JACK_EXAMPLE_TEXT: &str = include_str!("../../example/jack.writer");
@@ -149,7 +149,7 @@ const DAG_JACK_EXAMPLE_TEXT: &str = include_str!("../../example/dag.jack.writer"
 /// 📄 The `jack` example, parsed once from {@link JACK_EXAMPLE_TEXT} — the source of truth for every
 /// call site below (`setActiveExample`, `.example("jack", ...)`, tests); never re-embed the raw text.
 fn jack_example_document() -> WriterProjection {
-    <WriterProjection as vcs::DocumentDsl>::parse_dsl(JACK_EXAMPLE_TEXT).unwrap_or_else(|_| empty_writer_projection())
+    <WriterProjection as store::DocumentDsl>::parse_dsl(JACK_EXAMPLE_TEXT).unwrap_or_else(|_| empty_writer_projection())
 }
 
 /// 📄 JSON re-serialization of {@link jack_example_document}, for the framework-generic call sites
@@ -160,7 +160,7 @@ fn jack_example_json() -> String {
 
 /// 📄 The `dag.jack` example, parsed once from {@link DAG_JACK_EXAMPLE_TEXT} — see {@link jack_example_document}.
 fn dag_jack_example_document() -> WriterProjection {
-    <WriterProjection as vcs::DocumentDsl>::parse_dsl(DAG_JACK_EXAMPLE_TEXT).unwrap_or_else(|_| empty_writer_projection())
+    <WriterProjection as store::DocumentDsl>::parse_dsl(DAG_JACK_EXAMPLE_TEXT).unwrap_or_else(|_| empty_writer_projection())
 }
 
 /// 📄 JSON re-serialization of {@link dag_jack_example_document} — see {@link jack_example_json}.

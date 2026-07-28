@@ -153,7 +153,7 @@ pub fn board_redraw_handles_fixture_json(fixture_json: &str) -> Result<String, J
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen(js_name = puzzle2dParseDslJson)]
 pub fn puzzle2d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
-    use vcs::DocumentDsl;
+    use store::DocumentDsl;
     let projection = Puzzle2dProjection::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
     serde_json::to_string(&projection).map_err(|error| JsValue::from_str(&error.to_string()))
 }
@@ -744,8 +744,8 @@ impl Default for Puzzle2dProjection {
     }
 }
 
-pub type Puzzle2dEnvelope = vcs::DocumentVcsEnvelope<Puzzle2dProjection, Puzzle2dOperation>;
-pub type Puzzle2dStore = vcs::DocumentVcsStore<Puzzle2dProjection, Puzzle2dOperation>;
+pub type Puzzle2dEnvelope = store::DocumentEnvelope<Puzzle2dProjection, Puzzle2dOperation>;
+pub type Puzzle2dStore = store::DocumentStore<Puzzle2dProjection, Puzzle2dOperation>;
 
 pub fn empty_puzzle2d_projection() -> Puzzle2dProjection {
     Puzzle2dProjection::default()
@@ -1162,8 +1162,8 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 /// 🌱 `puzzle-plugin`'s `Puzzle2dPlayApp` predates the typed `Puzzle2dProjection` above and stays on
 /// this ad-hoc `serde_json::Value` fixture shape for its hundreds of Value-manipulating scene-mutation
 /// helpers (see `puzzle-plugin`'s own module docs) — out of scope to retrofit onto the typed struct.
-/// This newtype exists only to satisfy `DocumentApp::Projection: vcs::DocumentDsl + vcs::DocumentPack`
-/// post the repo-wide `vcs::DocumentDsl for serde_json::Value` bridge's removal (final DSL-syntax
+/// This newtype exists only to satisfy `DocumentApp::Projection: store::DocumentDsl + store::DocumentPack`
+/// post the repo-wide `store::DocumentDsl for serde_json::Value` bridge's removal (final DSL-syntax
 /// convergence gate); `parse_dsl`/`print_dsl`/`encode_pack_with`/`decode_pack_with` all round-trip
 /// straight through the still-standing `serde_json::Value` impls (JSON text / JSON-bridge pack
 /// encoding respectively), same local-bridge shape as `compose`'s `KitSnapshot`. `Operation`/
@@ -1171,11 +1171,11 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Puzzle2dPlayProjection(pub Value);
 
-impl vcs::DocumentDsl for Puzzle2dPlayProjection {
+impl store::DocumentDsl for Puzzle2dPlayProjection {
     const EXTENSION: &'static str = "puzzle2d-play";
 
-    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        serde_json::from_str(text).map(Puzzle2dPlayProjection).map_err(|error| vcs::TextError::new(error.to_string(), vcs::TextSpan::at(1, 1)))
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        serde_json::from_str(text).map(Puzzle2dPlayProjection).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
@@ -1183,12 +1183,12 @@ impl vcs::DocumentDsl for Puzzle2dPlayProjection {
     }
 }
 
-impl vcs::DocumentPack for Puzzle2dPlayProjection {
-    fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
+impl store::DocumentPack for Puzzle2dPlayProjection {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         self.0.encode_pack_with(options)
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         Value::decode_pack_with(bytes, options).map(Puzzle2dPlayProjection)
     }
 }
@@ -3966,7 +3966,7 @@ mod host_tests {
         let mut h = BoardHost::new();
         h.set_suggestion_offset(80.0);
         h.set_brush_node_size(40.0);
-        use vcs::DocumentDsl;
+        use store::DocumentDsl;
         let fixture: serde_json::Value = serde_json::to_value(crate::Puzzle2dProjection::parse_dsl(include_str!("../example/nakagin-capsule-tower.puzzle2d")).unwrap()).unwrap();
         let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map(|v| v.to_string()).unwrap_or_else(|| "[]".to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
@@ -4058,7 +4058,7 @@ mod host_tests {
         h.set_active_utility("brush");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
-        use vcs::DocumentDsl;
+        use store::DocumentDsl;
         let fixture: serde_json::Value = serde_json::to_value(crate::Puzzle2dProjection::parse_dsl(include_str!("../example/nakagin-capsule-tower.puzzle2d")).unwrap()).unwrap();
         let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map(|v| v.to_string()).unwrap_or_else(|| "[]".to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
@@ -5084,11 +5084,11 @@ mod force_graph_tests {
     #[test]
     fn puzzle2d_document_vcs_replays_granular_operations() {
         use crate::{empty_puzzle2d_projection, Puzzle2dNode, Puzzle2dOperation, Puzzle2dStore, PUZZLE_2D_SCHEMA};
-        use vcs::{create_document_vcs_envelope, DocumentVcsCommand};
+        use store::{create_document_envelope, DocumentCommand};
 
-        let mut store = Puzzle2dStore::new(create_document_vcs_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", empty_puzzle2d_projection(), None));
+        let mut store = Puzzle2dStore::new(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", empty_puzzle2d_projection(), None));
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![Puzzle2dOperation::SetNode {
                     index: 0,
                     node: Puzzle2dNode { id: "n1".into(), node_kind: None, shape: None, x: 0.0, y: 0.0, radius: None, width: None, height: None, text: None, icon_kind: None, root: None, scale: None, visible: None, locked: None, handles: Vec::new() },
@@ -5132,8 +5132,8 @@ mod force_graph_tests {
     fn puzzle2d_projection_dsl_round_trips() {
         use crate::{empty_puzzle2d_projection, Puzzle2dCamera, Puzzle2dCompatSpecificity, Puzzle2dEdge, Puzzle2dHandle, Puzzle2dKindCompatibility, Puzzle2dMeta, Puzzle2dNode};
 
-        vcs::test_support::assert_dsl_round_trip(&empty_puzzle2d_projection());
-        vcs::test_support::assert_dsl_pack_equivalence(&empty_puzzle2d_projection());
+        store::test_support::assert_dsl_round_trip(&empty_puzzle2d_projection());
+        store::test_support::assert_dsl_pack_equivalence(&empty_puzzle2d_projection());
         let mut with_content = empty_puzzle2d_projection();
         with_content.camera = Puzzle2dCamera { x: 12.0, y: -4.0, zoom: 2.5 };
         with_content.nodes.push(Puzzle2dNode {
@@ -5176,8 +5176,8 @@ mod force_graph_tests {
             kind_compatibility: vec![Puzzle2dKindCompatibility { bidirectional: true, specificity: Puzzle2dCompatSpecificity::Vortex, source: "b-l".into(), target: "b-l".into() }],
             kind_catalogs: None,
         };
-        vcs::test_support::assert_dsl_round_trip(&with_content);
-        vcs::test_support::assert_dsl_pack_equivalence(&with_content);
+        store::test_support::assert_dsl_round_trip(&with_content);
+        store::test_support::assert_dsl_pack_equivalence(&with_content);
     }
 
     /// 📜 Both real example fixtures (migrated from the legacy `.2d.json` shape — see ticket
@@ -5186,12 +5186,12 @@ mod force_graph_tests {
     #[test]
     fn puzzle2d_example_fixtures_parse_and_round_trip_as_dsl() {
         use crate::Puzzle2dProjection;
-        use vcs::DocumentDsl;
+        use store::DocumentDsl;
 
         for dsl_text in [include_str!("../example/concrete-forest.puzzle2d"), include_str!("../example/nakagin-capsule-tower.puzzle2d")] {
             let projection = Puzzle2dProjection::parse_dsl(dsl_text).expect("example fixture parses as dsl");
-            vcs::test_support::assert_dsl_round_trip(&projection);
-            vcs::test_support::assert_dsl_pack_equivalence(&projection);
+            store::test_support::assert_dsl_round_trip(&projection);
+            store::test_support::assert_dsl_pack_equivalence(&projection);
         }
     }
 }

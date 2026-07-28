@@ -4715,6 +4715,12 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
     groupLabels: {},
   };
 
+  it("does not infer focus when an app has no explicit layout", () => {
+    const seed = resolveFrameworkLayoutSeed(undefined, [{ id: "main", label: "Main" }], emptyLabels);
+    expect(seed.modeLayout).toEqual({ kind: "stack", children: [{ kind: "window", id: "main" }] });
+    expect(seed).not.toHaveProperty("activeWindowId");
+  });
+
   it("hydrates Top (1/3) + Perspective (2/3) instances and projection templates", () => {
     const topTemplate = encodeWorldProjectionTemplateId({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } });
     const perspectiveTemplate = encodeWorldProjectionTemplateId({ mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } });
@@ -4750,7 +4756,7 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
       { id: "puzzle3d-main-top", windowKindId: "puzzle3d-main", title: "Top" },
       { id: "puzzle3d-main-perspective", windowKindId: "puzzle3d-main", title: "Perspective" },
     ]);
-    expect(seed.activeWindowId).toBe("puzzle3d-main-perspective");
+    expect(seed).not.toHaveProperty("activeWindowId");
     expect(seed.pendingProjections).toEqual([
       { windowId: "puzzle3d-main-top", templateId: topTemplate },
       { windowId: "puzzle3d-main-perspective", templateId: perspectiveTemplate },

@@ -2817,7 +2817,7 @@ function retitleWindowLayoutNode(node: WindowLayoutNode, appLabelsOverlay: Plugi
   return { ...node, children: node.children.map((child) => retitleWindowLayoutNode(child, appLabelsOverlay)) } as WindowLayoutNode;
 }
 
-/** @emoji 🪟 Resolves a framework layout into the live mode tree, extra instances, active pane, and pending projection templates (no side effects). */
+/** @emoji 🪟 Resolves a framework layout into the live mode tree, extra instances, and pending projection templates without inferring window focus (no side effects). */
 export function resolveFrameworkLayoutSeed(
   layout: WindowLayout | undefined,
   windowKinds: readonly { readonly id: string; readonly label: string }[],
@@ -2825,7 +2825,6 @@ export function resolveFrameworkLayoutSeed(
 ): {
   readonly modeLayout: WindowLayoutNode;
   readonly extraInstances: readonly ExtraWindowInstance[];
-  readonly activeWindowId: string | null;
   readonly pendingProjections: readonly { readonly windowId: string; readonly templateId: string }[];
 } {
   const windowIds = windowKinds.map((kind) => kind.id);
@@ -2833,7 +2832,6 @@ export function resolveFrameworkLayoutSeed(
     return {
       modeLayout: createEvenWindowLayout(windowIds.length ? windowIds : ["main"]),
       extraInstances: [],
-      activeWindowId: windowIds[0] ?? null,
       pendingProjections: [],
     };
   }
@@ -2841,8 +2839,6 @@ export function resolveFrameworkLayoutSeed(
   const kindById = new Map(windowKinds.map((kind) => [kind.id, kind] as const));
   const extraInstances: ExtraWindowInstance[] = [];
   const pendingProjections: { readonly windowId: string; readonly templateId: string }[] = [];
-  let activeWindowId: string | null = null;
-  let activeSize = -1;
   for (const seed of seeds) {
     const kind = kindById.get(seed.windowKindId);
     if (!kind) continue;
@@ -2854,15 +2850,10 @@ export function resolveFrameworkLayoutSeed(
       });
     }
     if (seed.templateId) pendingProjections.push({ windowId: seed.windowId, templateId: seed.templateId });
-    if (seed.size > activeSize) {
-      activeSize = seed.size;
-      activeWindowId = seed.windowId;
-    }
   }
   return {
     modeLayout: convertFrameworkLayoutNodeToModeLayout(layout.root, appLabelsOverlay),
     extraInstances,
-    activeWindowId: activeWindowId ?? windowIds[0] ?? null,
     pendingProjections,
   };
 }
@@ -2875,14 +2866,13 @@ function applyFrameworkLayoutSeed(
 ): {
   readonly modeLayout: WindowLayoutNode;
   readonly extraInstances: readonly ExtraWindowInstance[];
-  readonly activeWindowId: string | null;
 } {
   const seed = resolveFrameworkLayoutSeed(layout, windowKinds, appLabelsOverlay);
   for (const pending of seed.pendingProjections) {
     const projectionSpec = decodeWorldProjectionTemplateId(pending.templateId);
     if (projectionSpec) registerPendingWorldProjection(pending.windowId, projectionSpec);
   }
-  return { modeLayout: seed.modeLayout, extraInstances: seed.extraInstances, activeWindowId: seed.activeWindowId };
+  return { modeLayout: seed.modeLayout, extraInstances: seed.extraInstances };
 }
 
 function modeLayoutNodeToFramework(node: WindowLayoutNode, kindByInstanceId: ReadonlyMap<string, string>): WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode {
@@ -3387,7 +3377,7 @@ function applyTutorialUiSnapshotToShell(dispatch: (action: ShellAction) => void,
   dispatch({
     type: "APPLY_TUTORIAL_UI_SNAPSHOT",
     snapshot: {
-      activeWindowId: snapshot.focusedWindowId ?? seed.activeWindowId,
+      activeWindowId: snapshot.focusedWindowId ?? null,
       shellLayout: seed.modeLayout,
       extraWindowInstances: seed.extraInstances,
       panelPatches,
@@ -3438,7 +3428,6 @@ function applyTutorialUiChangeToShell(dispatch: (action: ShellAction) => void, c
       const seed = applyFrameworkLayoutSeed(change.layout, windowKinds, ctx.appLabelsOverlay);
       dispatch({ type: "SET_SHELL_LAYOUT", value: seed.modeLayout });
       dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seed.extraInstances });
-      if (seed.activeWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seed.activeWindowId });
       return;
     }
     case "panelTab": {
@@ -5514,7 +5503,6 @@ export function FrameworkOsShell({
           const instanceId = await sPlugin.handle.createApp(sApp.id);
           const viewState: ViewState = {
             activeModeId: sApp.defaultModeId ?? sApp.modes[0]?.id,
-            activeWindowKindId: sApp.windowKinds[0]?.id,
             panelJson: panelJsonFromState(panelState),
           };
           // 🪟 Seed default-layout panes (Top/Perspective) before any effect can fire actions — otherwise
@@ -5525,7 +5513,7 @@ export function FrameworkOsShell({
           dispatch({ type: "SET_SESSION", value: { pluginId: sPlugin.handle.pluginId, instanceId, app: sApp, viewState } });
           dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
           dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
-          dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seeded.activeWindowId ?? sApp.windowKinds[0]?.id ?? null });
+          dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
           return;
         }
 
@@ -5554,13 +5542,12 @@ export function FrameworkOsShell({
               app: primaryApp,
               viewState: {
                 activeModeId: primaryApp.defaultModeId ?? primaryApp.modes[0]?.id,
-                activeWindowKindId: primaryApp.windowKinds[0]?.id,
               },
             },
           });
           dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
           dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
-          dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seeded.activeWindowId ?? primaryApp.windowKinds[0]?.id ?? null });
+          dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
         }
       } catch (bootError) {
         if (!cancelled) {
@@ -5687,8 +5674,7 @@ export function FrameworkOsShell({
         extraWindowCounterRef.current = layoutSeed.extraInstances.length;
         dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: layoutSeed.extraInstances });
         dispatch({ type: "SET_SHELL_LAYOUT", value: layoutSeed.modeLayout });
-        if (layoutSeed.activeWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: layoutSeed.activeWindowId });
-        else if (nextSession.app.windowKinds[0]) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: nextSession.app.windowKinds[0].id });
+        dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
       }
     },
     // 🐢 `applyHostEffects` is declared later in this component (its own deps need `updateStudioPanel`/
@@ -5820,7 +5806,6 @@ export function FrameworkOsShell({
       const programs = buildStudioPrograms(loadedPlugins);
       const nextViewState: ViewState = viewState ?? {
         activeModeId: app.defaultModeId ?? app.modes[0]?.id,
-        activeWindowKindId: app.windowKinds[0]?.id,
         panelJson: panelJsonFromState(buildStudioPanelState(programs, [])),
       };
       const nextSession: ActiveSession = { pluginId: sPlugin.handle.pluginId, instanceId, app, viewState: nextViewState };
@@ -5830,7 +5815,7 @@ export function FrameworkOsShell({
       extraWindowCounterRef.current = seeded.extraInstances.length;
       dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
       dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
-      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seeded.activeWindowId ?? app.windowKinds[0]?.id ?? null });
+      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
       if (appId === landingAppId) {
         openStudioIdRef.current = null;
         openInstanceIdRef.current = null;
@@ -6539,7 +6524,7 @@ export function FrameworkOsShell({
   /** ⏱️ Playhead (ms) the director/seek last applied document/UI tracks up to — the "from" side of the
    * next `tutorialSlice(def, from, to)` call. Reset to 0 on sandbox (re)start. */
   const tutorialLastAppliedMsRef = useRef(0);
-  /** 🎬 Sandboxed-out live document (full `DocumentVcsEnvelope` JSON), restored on stop/exit. */
+  /** 🎬 Sandboxed-out live document (full `DocumentEnvelope` JSON), restored on stop/exit. */
   const tutorialDocumentSnapshotRef = useRef<string | null>(null);
 
   // 🎬 Sandbox start/stop (design point 3): on activation, snapshot the live document, load `base`, apply
@@ -6925,7 +6910,7 @@ export function FrameworkOsShell({
       extraWindowCounterRef.current = seeded.extraInstances.length;
       dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
       dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
-      if (seeded.activeWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seeded.activeWindowId });
+      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
       // 🪟 Hand the just-computed instance list straight to the fetch rather than reading `extraWindowInstances`
       // state (which wouldn't reflect this dispatch until the next render) — every newly-seeded pane's own
       // body/measures/engagement gets fetched immediately instead of showing "missing window" until later.
@@ -6951,7 +6936,7 @@ export function FrameworkOsShell({
             extraWindowCounterRef.current = seeded.extraInstances.length;
             dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
             dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
-            if (seeded.activeWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seeded.activeWindowId });
+            dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
             void refreshUi(nextSession, { kind: "full" }, seeded.extraInstances);
           }
           return nextSession;

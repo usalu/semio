@@ -22,6 +22,7 @@ path = "lib.rs"
 
 [dependencies]
 vcs = { path = "../../rs" }
+store = { path = "../../../store/rs" }
 protocol = { path = "../../../protocol/rs" }
 dsl = { path = "../../../dsl/rs" }
 semio-framework-plugin = { path = "../../../framework/plugin/rs" }

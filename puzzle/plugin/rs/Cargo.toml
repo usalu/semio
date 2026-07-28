@@ -62,6 +62,7 @@ semio-framework-os = { path = "../../../framework/product/os/core/rs" }
 semio-framework-plugin = { path = "../../../framework/plugin/rs" }
 ui_wgpu = { path = "../../../ui/wgpu/rs" }
 vcs = { path = "../../../vcs/rs" }
+store = { path = "../../../store/rs" }
 puzzle_2d = { path = "../../2d/rs" }
 puzzle_3d = { path = "../../3d/rs" }
 puzzle_5d = { path = "../../5d/rs" }

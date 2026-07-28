@@ -280,8 +280,8 @@ impl Operation<MindmapWiresDocument> for MindmapWiresOperation {
     }
 }
 
-pub type MindmapWiresEnvelope = vcs::DocumentVcsEnvelope<MindmapWiresDocument, MindmapWiresOperation>;
-pub type MindmapWiresStore = vcs::DocumentVcsStore<MindmapWiresDocument, MindmapWiresOperation>;
+pub type MindmapWiresEnvelope = store::DocumentEnvelope<MindmapWiresDocument, MindmapWiresOperation>;
+pub type MindmapWiresStore = store::DocumentStore<MindmapWiresDocument, MindmapWiresOperation>;
 // #endregion 🔖Operations
 // #endregion 🔖DocumentVcs
 
@@ -292,7 +292,7 @@ pub type MindmapWiresStore = vcs::DocumentVcsStore<MindmapWiresDocument, Mindmap
 /// (and the `Value`/`serde_json::Map<String, Value>` operation payload fields) bind directly through
 /// `dsl`'s built-in `Shape::Value` escape hatch for opaque/freeform JSON (see `dsl/rs/lib.rs`) — no
 /// local mirror type or hand-rolled tokenizer needed. This region intentionally holds no additional
-/// code; the generated `impl vcs::DocumentDsl for MindmapWiresDocument`/`impl vcs::OpText for
+/// code; the generated `impl store::DocumentDsl for MindmapWiresDocument`/`impl store::OpText for
 /// MindmapWiresOperation` live entirely in the derive expansion.
 ///
 /// 🕸️ The unified `a:Kind@port->b@port` wire syntax (`dsl::Wire`/`Shape::Wire`) does NOT apply here:
@@ -312,7 +312,8 @@ pub type MindmapWiresStore = vcs::DocumentVcsStore<MindmapWiresDocument, Mindmap
 mod tests {
     use super::*;
     use serde_json::json;
-    use vcs::{apply_operation, create_document_vcs_envelope, test_support, DocumentVcsCommand, DocumentDsl};
+    use vcs::apply_operation;
+use store::{create_document_envelope, test_support, DocumentCommand, DocumentDsl};
 
     fn node(id: &str, text: &str) -> Value {
         json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": text, "handles": [] })
@@ -358,14 +359,14 @@ mod tests {
 
     #[test]
     fn store_applies_node_add() {
-        let mut store = MindmapWiresStore::new(create_document_vcs_envelope(
+        let mut store = MindmapWiresStore::new(create_document_envelope(
             MINDMAP_WIRES_SCHEMA,
             "mindmap-wires",
             empty_mindmap_wires_document(),
             None,
         ));
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![MindmapWiresOperation::AddNode { node: node("node-1", "Alpha") }],
                 description: None,
             })
@@ -438,14 +439,14 @@ mod tests {
     //#region 🔖DocumentTextTests
     #[test]
     fn document_text_round_trip_with_operation_applied() {
-        let mut store = MindmapWiresStore::new(create_document_vcs_envelope(
+        let mut store = MindmapWiresStore::new(create_document_envelope(
             MINDMAP_WIRES_SCHEMA,
             "mindmap-wires",
             empty_mindmap_wires_document(),
             None,
         ));
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![MindmapWiresOperation::AddNode { node: node("node-1", "Alpha") }],
                 description: None,
             })

@@ -4432,7 +4432,11 @@ pub fn real_roots_of(poly: &PolyU<Integer>) -> Vec<Expr> {
 // #region 🔖Queries
 pub fn root_of_to_f64(e: &Expr) -> Option<f64> {
     let Kind::RootOf { coeffs, index } = e.kind() else { return None };
-    to_algebraic(coeffs, *index).map(|a| a.to_f64())
+    let mut a = to_algebraic(coeffs, *index)?;
+    // 🎯 The raw isolating interval can be as wide as the Cauchy root bound — refine to f64 precision
+    // before taking its midpoint, or the result only reflects the isolation step, not the root itself.
+    a.refine(&Rational::from_i64(1, 1_000_000_000_000_000).unwrap());
+    Some(a.to_f64())
 }
 
 pub fn root_of_sign(e: &Expr) -> Option<std::cmp::Ordering> {
@@ -5404,6 +5408,15 @@ fn integrate_ratfunc(num: &PolyU<Rational>, den: &PolyU<Rational>, x: &Expr) -> 
 fn integrate_partial_fraction_term(term: &Expr, x: &Expr) -> Option<Expr> {
     if !crate::visit::contains_symbol(term, x) {
         return Some(term.clone() * x.clone());
+    }
+    // ➗ A unit numerator (e.g. `(x^2+1)^-1`) canonicalizes to a bare `Pow`, not a `Mul` of factors.
+    if let Kind::Pow(factor_base, neg_exp) = term.kind() {
+        if let Kind::Integer(neg_n) = neg_exp.kind() {
+            if neg_n.is_negative() {
+                let j = -neg_n.to_i64()?;
+                return integrate_over_factor_power(&Expr::integer(1), factor_base, j, x);
+            }
+        }
     }
     let Kind::Mul(factors) = term.kind() else { return None };
     let pow_idx = factors.iter().position(|f| matches!(f.kind(), Kind::Pow(_, e) if matches!(e.kind(), Kind::Integer(n) if n.is_negative())))?;

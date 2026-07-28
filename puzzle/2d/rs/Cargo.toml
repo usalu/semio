@@ -20,6 +20,7 @@ serde_json = "1.0.140"
 
 [dependencies]
 vcs = { path = "../../../vcs/rs" }
+store = { path = "../../../store/rs" }
 protocol = { path = "../../../protocol/rs" }
 dsl = { path = "../../../dsl/rs" }
 mathematical_geometry = { path = "../../../mathematical/geometry/rs" }

@@ -1,4 +1,4 @@
-//! 🏪 `compose-store`: HTTP GraphQL sidecar over native [`compose::worker::ParentStore`] (same schema as WASM `KitStoreHandle`). `POST /graphql` accepts JSON `{ "query", "variables?", "operationName?" }` and serves the same kit materialization fields as the golden schema (`initialKit`, `theKit.kit`, `checkpoints.node.initial` / `kit`).
+//! 🏪 `compose-gql`: HTTP GraphQL sidecar over native [`compose::worker::ParentStore`] (same schema as WASM `KitStoreHandle`). `POST /graphql` accepts JSON `{ "query", "variables?", "operationName?" }` and serves the same kit materialization fields as the golden schema (`initialKit`, `theKit.kit`, `checkpoints.node.initial` / `kit`).
 
 //#region 🏪State
 
@@ -31,12 +31,12 @@ mod errors {
     use std::net::SocketAddr;
     use thiserror::Error;
 
-    /// ⚠️ compose-store install/request/serve failure.
+    /// ⚠️ compose-gql install/request/serve failure.
     #[derive(Debug, Error)]
     pub enum StoreError {
         #[error("expected exactly one of: create, importFile, importFromFolder, importFromZip, importFromRemote")]
         AmbiguousInstallSource,
-        #[error("{0}: not wired in compose-store yet")]
+        #[error("{0}: not wired in compose-gql yet")]
         NotWired(&'static str),
         #[error("no install field")]
         NoInstallField,
@@ -210,12 +210,12 @@ async fn post_graphql(State(state): State<Arc<AppState>>, body: String) -> impl 
 }
 
 async fn get_graphiql() -> Html<String> {
-    let html: String = GraphiQLSource::build().title("compose-store GraphiQL").endpoint("/graphql").finish();
+    let html: String = GraphiQLSource::build().title("compose-gql GraphiQL").endpoint("/graphql").finish();
     Html(html)
 }
 
 async fn get_health() -> impl IntoResponse {
-    "compose-store\n"
+    "compose-gql\n"
 }
 
 async fn post_shutdown() -> StatusCode {
@@ -252,7 +252,7 @@ async fn serve(listener: TcpListener, app: Router) {
     {
         use std::io::Write;
         let ready: serde_json::Value = serde_json::json!({
-            "composeStoreReady": true,
+            "composeGqlReady": true,
             "port": actual_port,
             "graphiql": format!("http://127.0.0.1:{}/graphiql", actual_port),
         });
@@ -260,17 +260,17 @@ async fn serve(listener: TcpListener, app: Router) {
         let _ = std::io::stdout().lock().flush();
     }
     let base = format!("http://127.0.0.1:{}", actual_port);
-    tracing::info!(target: "compose_store", "┌ post /install, post /graphql, get /graphiql, get /healthz, post /server/shutdown");
-    tracing::info!(target: "compose_store", "└ {base}/graphiql  (GraphiQL)  →  POST {base}/graphql", base = base);
+    tracing::info!(target: "compose_gql", "┌ post /install, post /graphql, get /graphiql, get /healthz, post /server/shutdown");
+    tracing::info!(target: "compose_gql", "└ {base}/graphiql  (GraphiQL)  →  POST {base}/graphql", base = base);
 
     if let Err(e) = axum::serve(listener, app.into_make_service()).with_graceful_shutdown(shutdown_signal()).await {
-        tracing::error!(target: "compose_store", "server: {e}");
+        tracing::error!(target: "compose_gql", "server: {e}");
     }
 }
 
-/// 🌐 Axum + GraphQL; binds `0.0.0.0` on `COMPOSE_STORE_PORT` (default `4000`).
+/// 🌐 Axum + GraphQL; binds `0.0.0.0` on `COMPOSE_GQL_PORT` (default `4000`).
 async fn run() -> Result<(), StoreError> {
-    let port: u16 = std::env::var("COMPOSE_STORE_PORT").ok().and_then(|s| s.parse().ok()).unwrap_or(4000);
+    let port: u16 = std::env::var("COMPOSE_GQL_PORT").ok().and_then(|s| s.parse().ok()).unwrap_or(4000);
     let addr: SocketAddr = format!("0.0.0.0:{}", port).parse().expect("a u16 port always parses into a valid 0.0.0.0:<port> socket addr");
     let listener: TcpListener = TcpListener::bind(&addr).await.map_err(|source| StoreError::BindFailed { addr, source })?;
     let state = Arc::new(build_state().await);
@@ -286,7 +286,7 @@ async fn shutdown_signal() {
 #[tokio::main]
 async fn main() -> std::process::ExitCode {
     let _ = tracing_subscriber::fmt()
-        .with_env_filter(std::env::var("RUST_LOG").or_else(|_| std::env::var("RUST_TRACING")).unwrap_or_else(|_| "error,compose_store=info,compose_store_event=off".to_string()))
+        .with_env_filter(std::env::var("RUST_LOG").or_else(|_| std::env::var("RUST_TRACING")).unwrap_or_else(|_| "error,compose_gql=info,compose_gql_event=off".to_string()))
         .with_target(false)
         .with_writer(io::stderr)
         .try_init();
@@ -294,7 +294,7 @@ async fn main() -> std::process::ExitCode {
     match run().await {
         Ok(()) => std::process::ExitCode::SUCCESS,
         Err(e) => {
-            tracing::error!(target: "compose_store", "{e}");
+            tracing::error!(target: "compose_gql", "{e}");
             std::process::ExitCode::FAILURE
         }
     }
@@ -315,7 +315,7 @@ mod tests {
         let state = Arc::new(build_state().await);
         let handle = tokio::spawn(async move {
             if let Err(e) = axum::serve(listener, app_with_state(state).into_make_service()).await {
-                tracing::error!(target: "compose_store", "test server: {e}");
+                tracing::error!(target: "compose_gql", "test server: {e}");
             }
         });
         Ok((handle, format!("http://127.0.0.1:{port}")))
@@ -346,7 +346,7 @@ mod tests {
         let client = reqwest::Client::new();
         let html = client.get(format!("{base}/graphiql")).send().await?.error_for_status()?.text().await?;
 
-        assert!(html.contains("compose-store GraphiQL"));
+        assert!(html.contains("compose-gql GraphiQL"));
         assert!(html.contains("/graphql"));
         assert!(html.contains("graphiql@4"));
         assert!(!html.contains("catch(() => response.text())"));
@@ -609,7 +609,7 @@ mod tests {
         Ok(())
     }
 
-    /// @emoji 🧪 Full catalog E2E: in-process GraphQL + backbone replay, then live compose-store HTTP sidecar steps.
+    /// @emoji 🧪 Full catalog E2E: in-process GraphQL + backbone replay, then live compose-gql HTTP sidecar steps.
     #[tokio::test]
     async fn comprehensive_fixture_end_to_end() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let Some(path) = comprehensive_fixture_path() else {

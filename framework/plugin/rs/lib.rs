@@ -118,7 +118,7 @@ pub mod component {
 
         fn load_app_document_text(instance_id: u32, document_text: DocumentTextFiles) -> Result<(), PluginError> {
             ensure_plugin_initialized();
-            let files = vcs::DocumentTextFiles { dsl: document_text.dsl, ops: document_text.ops };
+            let files = store::DocumentTextFiles { dsl: document_text.dsl, ops: document_text.ops };
             plugin_load_document_text(instance_id, &files).map_err(PluginError::Message)
         }
 
@@ -130,7 +130,7 @@ pub mod component {
 
         fn load_app_document_pack(instance_id: u32, document_pack: DocumentPackFiles) -> Result<(), PluginError> {
             ensure_plugin_initialized();
-            let files = vcs::DocumentPackFiles { pack: document_pack.pack, ops: document_pack.ops };
+            let files = store::DocumentPackFiles { pack: document_pack.pack, ops: document_pack.ops };
             plugin_load_document_pack(instance_id, &files).map_err(PluginError::Message)
         }
 
@@ -214,10 +214,7 @@ use serde::de::DeserializeOwned;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use protocol::OpText;
-use vcs::{
-    build_history_columns, create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope,
-    DocumentVcsStore, HistoryColumn, StudioConflict,
-};
+use store::{build_history_columns, create_document_envelope, DocumentCommand, DocumentEnvelope, DocumentStore, HistoryColumn, StudioConflict};
 
 pub struct ModeSpec {
     pub id: String,
@@ -1946,7 +1943,7 @@ pub mod testkit {
 
 use super::{ActionMeta, App, AppActionRegistry, DocumentApp, PluginApp, VcsDocumentApp};
 use semio_framework_core::ViewState;
-use vcs::{Backbone, BackboneMessage, MemoryBackbone, StudioConflict};
+use store::{Backbone, BackboneMessage, MemoryBackbone, StudioConflict};
 
 /// 🪪 A local-actor `ActionMeta` for test dispatch (`instance_id: 1`).
 pub fn meta(actor: &str) -> ActionMeta {
@@ -2991,7 +2988,7 @@ impl App {
 //#region 🔖DocumentContract
 /// @emoji 🧾 Read-only view of an app's document handed to `DocumentApp::handle_action`/`render`:
 /// the materialized projection plus the history metadata (checkpoints/alternatives/undo state)
-/// derived from the owning {@link VcsDocumentApp}'s persistent {@link DocumentVcsStore}.
+/// derived from the owning {@link VcsDocumentApp}'s persistent {@link DocumentStore}.
 pub struct DocumentView<'a, P> {
     pub projection: &'a P,
     pub history: &'a HistoryView,
@@ -3010,7 +3007,7 @@ pub struct HistoryView {
     pub can_redo: bool,
     pub active_alternative_id: Option<String>,
     pub current_checkpoint_id: Option<String>,
-    /// @emoji 📜 The most recent applied operations' printed op-text lines (via `vcs::OpText::print_op`),
+    /// @emoji 📜 The most recent applied operations' printed op-text lines (via `store::OpText::print_op`),
     /// newest first, capped at {@link HISTORY_VIEW_RECENT_OPS_LIMIT} — a text-DSL timeline surface can
     /// show these directly instead of/alongside the JSON envelope. Empty for every hand-built test
     /// fixture `HistoryView` across the workspace (only {@link VcsDocumentApp::build_history_view}
@@ -3119,8 +3116,8 @@ macro_rules! app_action_enum {
 }
 
 /// @emoji 🧩 Typed, per-app author surface. An app declares its `Projection` and `Operation` (a
-/// `vcs::Operation<Projection>`), mutates nothing directly, and returns an {@link ActionEmit} whose
-/// operations flow through a persistent `DocumentVcsStore` owned by {@link VcsDocumentApp}. Ephemeral
+/// `store::Operation<Projection>`), mutates nothing directly, and returns an {@link ActionEmit} whose
+/// operations flow through a persistent `DocumentStore` owned by {@link VcsDocumentApp}. Ephemeral
 /// view state (selection/camera/active utility) lives in the app struct itself, not in the document.
 ///
 /// # 🔖UtilityPreviewContract
@@ -3142,7 +3139,7 @@ macro_rules! app_action_enum {
 /// - The pointer vocabulary (`canvasPointerDown/Move/Up`, `worldPointerDown/Move/Up`,
 ///   `paintStrokeBegin/End`) are `View`-kind internal action ids driving the above.
 pub trait DocumentApp: Send + 'static {
-    type Projection: Clone + PartialEq + Serialize + DeserializeOwned + Send + vcs::DocumentDsl + vcs::DocumentPack;
+    type Projection: Clone + PartialEq + Serialize + DeserializeOwned + Send + store::DocumentDsl + store::DocumentPack;
     // 🎞️ CW3 kernel cut-over: bound now references `protocol::Operation`/`protocol::OpText` directly
     // (the new canonical home — see `vcs/rs/lib.rs`'s `🚧TEMPORARY protocol shim`) rather than
     // through vcs's temporary re-export, since this file is small/contained and fully owned this
@@ -3221,7 +3218,7 @@ pub trait DocumentApp: Send + 'static {
     /// constructed, via direct `store.dispatch(...)` calls. Default no-operation; only apps whose fixture is
     /// itself a rich history (e.g. a history-UI demo/exerciser) need this — every plugin driven purely
     /// by user actions leaves it untouched.
-    fn seed(&self, _store: &mut DocumentVcsStore<Self::Projection, Self::Operation>) {}
+    fn seed(&self, _store: &mut DocumentStore<Self::Projection, Self::Operation>) {}
 
     /// 🎞️ Declares this app's media-graph ports (empty by default — an app with no ports simply
     /// cannot be wired into a media graph; every other capability is unaffected).
@@ -3329,29 +3326,29 @@ pub trait PluginApp: Send {
     fn document_json(&self) -> Result<String, String>;
     fn load_document(&mut self, document_json: &str) -> Result<(), String>;
     /// @emoji 📜 Text-DSL counterpart to {@link Self::ingest_operations}: applies one already-authored
-    /// `Self::Operation` per non-blank line (via `vcs::OpText::parse_op`) as a fresh local edit — unlike
+    /// `Self::Operation` per non-blank line (via `store::OpText::parse_op`) as a fresh local edit — unlike
     /// the JSON path (which ingests already-caused remote `OperationEnvelope`s into the causal DAG
     /// via `store.ingest_remote`, preserving their original ids/deps), each parsed line here goes
-    /// through the normal `DocumentVcsCommand::Apply` path (a fresh id/timestamp, a real computed
+    /// through the normal `DocumentCommand::Apply` path (a fresh id/timestamp, a real computed
     /// inverse) — the natural mapping for hand-authored or externally-generated op-text, which carries
     /// no envelope metadata of its own.
     fn ingest_operations_text(&mut self, operations_text: &str) -> Result<(), String>;
     /// @emoji 📜 Text-DSL counterpart to {@link Self::document_json}: the whole document as
-    /// {@link vcs::DocumentTextFiles} (the `dsl` initial-projection text plus the full `ops` op-log
-    /// text) via `vcs::print_document_text` — returned as the established two-file struct rather than
+    /// {@link store::DocumentTextFiles} (the `dsl` initial-projection text plus the full `ops` op-log
+    /// text) via `store::print_document_text` — returned as the established two-file struct rather than
     /// a single concatenated string, since that struct (not an ad hoc delimiter format) is already the
     /// canonical text representation everywhere else in this codebase (`FolderTextStorage`,
     /// `parse_document_text`).
-    fn document_text(&self) -> Result<vcs::DocumentTextFiles, String>;
+    fn document_text(&self) -> Result<store::DocumentTextFiles, String>;
     /// @emoji 📜 Text-DSL counterpart to {@link Self::load_document}.
-    fn load_document_text(&mut self, files: &vcs::DocumentTextFiles) -> Result<(), String>;
+    fn load_document_text(&mut self, files: &store::DocumentTextFiles) -> Result<(), String>;
     /// @emoji 📦 Binary-pack counterpart to {@link Self::document_text}: the whole document as
-    /// {@link vcs::DocumentPackFiles} (pack-encoded initial projection plus the same `ops` op-log
-    /// text — the op grammar is format-invariant) via `vcs::print_document_pack`.
-    fn document_pack(&self) -> Result<vcs::DocumentPackFiles, String>;
+    /// {@link store::DocumentPackFiles} (pack-encoded initial projection plus the same `ops` op-log
+    /// text — the op grammar is format-invariant) via `store::print_document_pack`.
+    fn document_pack(&self) -> Result<store::DocumentPackFiles, String>;
     /// @emoji 📦 Binary-pack counterpart to {@link Self::load_document_text}.
-    fn load_document_pack(&mut self, files: &vcs::DocumentPackFiles) -> Result<(), String>;
-    fn attach_backbone(&mut self, backbone: Box<dyn vcs::Backbone>) -> Result<(), String>;
+    fn load_document_pack(&mut self, files: &store::DocumentPackFiles) -> Result<(), String>;
+    fn attach_backbone(&mut self, backbone: Box<dyn store::Backbone>) -> Result<(), String>;
     fn detach_backbone(&mut self);
     fn render(
         &mut self,
@@ -3382,7 +3379,7 @@ pub trait PluginApp: Send {
         Err(MediaError::NotImplemented)
     }
     /// 🎞️ Object-safe counterpart to `DocumentApp::import_media` — dispatches through the same
-    /// `DocumentVcsStore` as `handle_action`, so a headless import is an ordinary, undoable edit.
+    /// `DocumentStore` as `handle_action`, so a headless import is an ordinary, undoable edit.
     fn import_media(&mut self, _port: &str, _media: &Media, _meta: &ActionMeta) -> Result<InvocationResult, String> {
         Err(MediaError::NotImplemented.to_string())
     }
@@ -3460,15 +3457,15 @@ impl AppActionRegistry {
 }
 
 /// @emoji 🧬 Generic wrapper turning any typed {@link DocumentApp} into the object-safe runtime
-/// {@link PluginApp}. Owns a persistent `DocumentVcsStore<Projection, Operation>` — the single source of
+/// {@link PluginApp}. Owns a persistent `DocumentStore<Projection, Operation>` — the single source of
 /// truth for the app's document across every call — intercepts the six injected history actions into
-/// `DocumentVcsCommand`s, dispatches `Apply`/`AmendLast` for typed operations, and builds an
+/// `DocumentCommand`s, dispatches `Apply`/`AmendLast` for typed operations, and builds an
 /// `InvocationResult` whose inverses come from the just-recorded `Edit.backwards`. A projection cache
 /// keyed on the store's generation counter keeps renders O(1). Holds an {@link AppActionRegistry} to
 /// enforce the actions contract before/after delegating to the app.
 pub struct VcsDocumentApp<A: DocumentApp> {
     app: A,
-    store: DocumentVcsStore<A::Projection, A::Operation>,
+    store: DocumentStore<A::Projection, A::Operation>,
     cache: Option<(u64, A::Projection, HistoryView)>,
     registry: AppActionRegistry,
 }
@@ -3492,13 +3489,13 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     /// @emoji 🧬 Constructs a wrapper carrying the app's {@link AppActionRegistry} so `handle_action`
     /// enforces default materialization, required-arg validation, and kind discipline.
     pub fn with_registry(app: A, registry: AppActionRegistry) -> Self {
-        let envelope = create_document_vcs_envelope::<A::Projection, A::Operation>(
+        let envelope = create_document_envelope::<A::Projection, A::Operation>(
             app.document_schema(),
             app.app_id(),
             app.initial_projection(),
             None,
         );
-        let mut store = DocumentVcsStore::new(envelope);
+        let mut store = DocumentStore::new(envelope);
         app.seed(&mut store);
         Self {
             app,
@@ -3521,13 +3518,13 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     }
 
     /// @emoji 🤝 Fresh replay plus whatever `Operation::reconcile` reports for the result — the typed
-    /// counterpart to `vcs::DocumentVcsStore::projection_with_conflicts`.
+    /// counterpart to `store::DocumentStore::projection_with_conflicts`.
     pub fn projection_with_conflicts(&self) -> Result<(A::Projection, Vec<StudioConflict>), String> {
         self.store.projection_with_conflicts().map_err(|error| error.to_string())
     }
 
     /// @emoji 🔗 The store's current backbone descriptor, `None` when unattached (the default).
-    pub fn backbone_ref(&self) -> Option<&vcs::DocumentBackboneRef> {
+    pub fn backbone_ref(&self) -> Option<&store::DocumentBackboneRef> {
         self.store.backbone_ref()
     }
 
@@ -3562,23 +3559,23 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         Ok(())
     }
 
-    /// @emoji 🕰️ Maps one of the six injected history action ids to its `DocumentVcsCommand`.
-    fn history_command(action: &str, args: Option<&Value>) -> Option<DocumentVcsCommand<A::Operation>> {
+    /// @emoji 🕰️ Maps one of the six injected history action ids to its `DocumentCommand`.
+    fn history_command(action: &str, args: Option<&Value>) -> Option<DocumentCommand<A::Operation>> {
         let arg_str = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         match action {
-            "undo" => Some(DocumentVcsCommand::Undo),
-            "redo" => Some(DocumentVcsCommand::Redo),
-            "commitCheckpoint" => Some(DocumentVcsCommand::CommitCheckpoint {
+            "undo" => Some(DocumentCommand::Undo),
+            "redo" => Some(DocumentCommand::Redo),
+            "commitCheckpoint" => Some(DocumentCommand::CommitCheckpoint {
                 message: arg_str("message"),
                 authors: Vec::new(),
             }),
-            "createAlternative" => Some(DocumentVcsCommand::CreateAlternative {
+            "createAlternative" => Some(DocumentCommand::CreateAlternative {
                 name: arg_str("name").unwrap_or_else(|| "Alternative".into()),
             }),
             "switchAlternative" => arg_str("alternativeId")
-                .map(|alternative_id| DocumentVcsCommand::SwitchAlternative { alternative_id }),
+                .map(|alternative_id| DocumentCommand::SwitchAlternative { alternative_id }),
             "checkoutCheckpoint" => arg_str("checkpointId")
-                .map(|checkpoint_id| DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id }),
+                .map(|checkpoint_id| DocumentCommand::CheckoutCheckpoint { checkpoint_id }),
             _ => None,
         }
     }
@@ -3726,11 +3723,11 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         let before_edit_id = self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone());
         let (before_forwards_len, before_backwards_len) = self.store.edit_operations().map(|(f, b, _)| (f.len(), b.len())).unwrap_or((0, 0));
         let vcs_command = match coalesce_key {
-            Some(key) => DocumentVcsCommand::AmendLast {
+            Some(key) => DocumentCommand::AmendLast {
                 operations: operations,
                 coalesce_key: Some(key),
             },
-            None => DocumentVcsCommand::Apply {
+            None => DocumentCommand::Apply {
                 operations: operations,
                 description,
             },
@@ -3846,7 +3843,7 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
     }
 
     fn load_document(&mut self, document_json: &str) -> Result<(), String> {
-        let envelope: DocumentVcsEnvelope<A::Projection, A::Operation> =
+        let envelope: DocumentEnvelope<A::Projection, A::Operation> =
             serde_json::from_str(document_json).map_err(|error| error.to_string())?;
         let applied: Vec<String> = envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
         self.store.set_envelope(envelope, applied);
@@ -3865,39 +3862,39 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
             return Ok(());
         }
         self.store
-            .dispatch(DocumentVcsCommand::Apply { operations, description: None })
+            .dispatch(DocumentCommand::Apply { operations, description: None })
             .map_err(|error| error.to_string())?;
         self.cache = None;
         Ok(())
     }
 
-    fn document_text(&self) -> Result<vcs::DocumentTextFiles, String> {
-        vcs::print_document_text(self.store.envelope()).map_err(|error| error.to_string())
+    fn document_text(&self) -> Result<store::DocumentTextFiles, String> {
+        store::print_document_text(self.store.envelope()).map_err(|error| error.to_string())
     }
 
-    fn load_document_text(&mut self, files: &vcs::DocumentTextFiles) -> Result<(), String> {
-        let parsed: vcs::ParsedDocumentText<A::Projection, A::Operation> =
-            vcs::parse_document_text(&files.dsl, &files.ops).map_err(|error| error.to_string())?;
+    fn load_document_text(&mut self, files: &store::DocumentTextFiles) -> Result<(), String> {
+        let parsed: store::ParsedDocumentText<A::Projection, A::Operation> =
+            store::parse_document_text(&files.dsl, &files.ops).map_err(|error| error.to_string())?;
         let applied: Vec<String> = parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
         self.store.set_envelope(parsed.envelope, applied);
         self.cache = None;
         Ok(())
     }
 
-    fn document_pack(&self) -> Result<vcs::DocumentPackFiles, String> {
-        vcs::print_document_pack(self.store.envelope()).map_err(|error| error.to_string())
+    fn document_pack(&self) -> Result<store::DocumentPackFiles, String> {
+        store::print_document_pack(self.store.envelope()).map_err(|error| error.to_string())
     }
 
-    fn load_document_pack(&mut self, files: &vcs::DocumentPackFiles) -> Result<(), String> {
-        let parsed: vcs::ParsedDocumentText<A::Projection, A::Operation> =
-            vcs::parse_document_pack(&files.pack, &files.ops).map_err(|error| error.to_string())?;
+    fn load_document_pack(&mut self, files: &store::DocumentPackFiles) -> Result<(), String> {
+        let parsed: store::ParsedDocumentText<A::Projection, A::Operation> =
+            store::parse_document_pack(&files.pack, &files.ops).map_err(|error| error.to_string())?;
         let applied: Vec<String> = parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
         self.store.set_envelope(parsed.envelope, applied);
         self.cache = None;
         Ok(())
     }
 
-    fn attach_backbone(&mut self, backbone: Box<dyn vcs::Backbone>) -> Result<(), String> {
+    fn attach_backbone(&mut self, backbone: Box<dyn store::Backbone>) -> Result<(), String> {
         self.store.attach_backbone(backbone).map_err(|error| error.to_string())?;
         self.cache = None;
         Ok(())
@@ -4072,7 +4069,7 @@ impl PluginBundle {
         })
     }
 
-    /// @emoji 🔒 Private: every app must be state-backed by a `DocumentVcsStore`, so the only
+    /// @emoji 🔒 Private: every app must be state-backed by a `DocumentStore`, so the only
     /// public entry point is {@link register_document_app}, which wraps `factory` in a
     /// `VcsDocumentApp` before calling this.
     fn register_app(
@@ -4097,7 +4094,7 @@ impl PluginBundle {
     /// @emoji 🧬 Registers a typed {@link DocumentApp}, wrapping each instance in a
     /// {@link VcsDocumentApp} so it satisfies the object-safe runtime {@link PluginApp} contract with
     /// a persistent operation store. The only public app-registration entry point — this structurally
-    /// guarantees every app's state lives in a `DocumentVcsStore`.
+    /// guarantees every app's state lives in a `DocumentStore`.
     pub fn register_document_app<A>(
         self,
         app: App,
@@ -4333,7 +4330,7 @@ pub fn plugin_ingest_operations(instance_id: u32, operations_json: &str) -> Resu
     })
 }
 
-/// @emoji 📖 Serializes the instance's full persistent document (the `DocumentVcsEnvelope`).
+/// @emoji 📖 Serializes the instance's full persistent document (the `DocumentEnvelope`).
 pub fn plugin_document(instance_id: u32) -> Result<String, String> {
     with_instances_mut(|list| {
         let instance = find_instance(list, instance_id)?;
@@ -4341,7 +4338,7 @@ pub fn plugin_document(instance_id: u32) -> Result<String, String> {
     })
 }
 
-/// @emoji 📂 Replaces the instance's document from a serialized `DocumentVcsEnvelope`.
+/// @emoji 📂 Replaces the instance's document from a serialized `DocumentEnvelope`.
 pub fn plugin_load_document(instance_id: u32, document_json: &str) -> Result<(), String> {
     with_instances_mut(|list| {
         let instance = find_instance(list, instance_id)?;
@@ -4359,7 +4356,7 @@ pub fn plugin_ingest_operations_text(instance_id: u32, operations_text: &str) ->
 }
 
 /// @emoji 📜 Text-DSL counterpart of {@link plugin_document}.
-pub fn plugin_document_text(instance_id: u32) -> Result<vcs::DocumentTextFiles, String> {
+pub fn plugin_document_text(instance_id: u32) -> Result<store::DocumentTextFiles, String> {
     with_instances_mut(|list| {
         let instance = find_instance(list, instance_id)?;
         instance.app.document_text()
@@ -4367,7 +4364,7 @@ pub fn plugin_document_text(instance_id: u32) -> Result<vcs::DocumentTextFiles, 
 }
 
 /// @emoji 📜 Text-DSL counterpart of {@link plugin_load_document}.
-pub fn plugin_load_document_text(instance_id: u32, files: &vcs::DocumentTextFiles) -> Result<(), String> {
+pub fn plugin_load_document_text(instance_id: u32, files: &store::DocumentTextFiles) -> Result<(), String> {
     with_instances_mut(|list| {
         let instance = find_instance(list, instance_id)?;
         instance.app.load_document_text(files)
@@ -4375,7 +4372,7 @@ pub fn plugin_load_document_text(instance_id: u32, files: &vcs::DocumentTextFile
 }
 
 /// @emoji 📦 Binary-pack counterpart of {@link plugin_document}.
-pub fn plugin_document_pack(instance_id: u32) -> Result<vcs::DocumentPackFiles, String> {
+pub fn plugin_document_pack(instance_id: u32) -> Result<store::DocumentPackFiles, String> {
     with_instances_mut(|list| {
         let instance = find_instance(list, instance_id)?;
         instance.app.document_pack()
@@ -4383,7 +4380,7 @@ pub fn plugin_document_pack(instance_id: u32) -> Result<vcs::DocumentPackFiles, 
 }
 
 /// @emoji 📦 Binary-pack counterpart of {@link plugin_load_document}.
-pub fn plugin_load_document_pack(instance_id: u32, files: &vcs::DocumentPackFiles) -> Result<(), String> {
+pub fn plugin_load_document_pack(instance_id: u32, files: &store::DocumentPackFiles) -> Result<(), String> {
     with_instances_mut(|list| {
         let instance = find_instance(list, instance_id)?;
         instance.app.load_document_pack(files)
@@ -4391,18 +4388,18 @@ pub fn plugin_load_document_pack(instance_id: u32, files: &vcs::DocumentPackFile
 }
 
 /// @emoji 🗂️ Registers `A::Projection`'s pack↔dsl codec under `schema` in the process-wide
-/// `vcs::DocumentCodec` registry — the one-liner every app's own native registration fn
+/// `store::DocumentCodec` registry — the one-liner every app's own native registration fn
 /// (`register_<app>_exports()`-style) calls once per document kind so `framework/sync`'s
 /// `FolderEndpoint` (and any other schema-string-keyed caller) can print/parse that kind without
 /// depending on its concrete `Projection`/`Operation` types.
 pub fn register_document_codec_for_app<A: DocumentApp>(schema: impl Into<String>) {
-    vcs::register_document_codec(vcs::DocumentCodec::of::<A::Projection, A::Operation>(schema));
+    store::register_document_codec(store::DocumentCodec::of::<A::Projection, A::Operation>(schema));
 }
 
-/// @emoji 🔗 Attaches a backbone channel by URI. The URI is resolved to a `vcs::PortBackbone`
+/// @emoji 🔗 Attaches a backbone channel by URI. The URI is resolved to a `store::PortBackbone`
 /// (a pure queue relayed across the wasm sandbox to the host); the host owns the real IO endpoint.
 pub fn plugin_attach_backbone(instance_id: u32, uri: &str) -> Result<(), String> {
-    let backbone: Box<dyn vcs::Backbone> = Box::new(vcs::PortBackbone::new(uri));
+    let backbone: Box<dyn store::Backbone> = Box::new(store::PortBackbone::new(uri));
     with_instances_mut(|list| {
         let instance = find_instance(list, instance_id)?;
         instance.app.attach_backbone(backbone)
@@ -4735,7 +4732,7 @@ mod semio_plugin_macro_tests {
     use semio_framework_core::ActionArgDef;
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
-    use vcs::{Backbone, BackboneMessage, MemoryBackbone};
+    use store::{Backbone, BackboneMessage, MemoryBackbone};
     use protocol::{Operation, OperationDiff};
 
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
@@ -6061,7 +6058,7 @@ pub fn host_now_ms() -> f64 {
 /** @emoji 🔌 vcs backbone channel backed by the component host's duplex capability. */
 pub struct HostBackboneChannel;
 
-impl vcs::BackboneChannelPort for HostBackboneChannel {
+impl store::BackboneChannelPort for HostBackboneChannel {
     fn send(&self, uri: &str, message_json: &str) -> Result<(), vcs::VcsError> {
         host_backbone_send(uri, message_json).map_err(vcs::VcsError::Backbone)
     }
@@ -6074,7 +6071,7 @@ impl vcs::BackboneChannelPort for HostBackboneChannel {
 /** @emoji 🧷 Installs the component host as the vcs backbone channel so the plugin's document store
     can synchronize across the wasm sandbox boundary. */
 pub fn register_host_backbone_channel() {
-    vcs::set_host_backbone_channel(std::sync::Arc::new(HostBackboneChannel));
+    store::set_host_backbone_channel(std::sync::Arc::new(HostBackboneChannel));
 }
 // #endregion host_port
 }

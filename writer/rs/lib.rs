@@ -17,7 +17,7 @@ mod document_vcs {
     use wasm_bindgen::prelude::*;
 
     use protocol::{Operation, OperationDiff};
-    use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
+    use store::{DocumentEnvelope, DocumentStore};
 
     /// 📷 Editor viewport transform persisted in the document projection. No `#[dsl(keyword = ...)]`:
     /// every field that embeds it (`WriterProjection::camera`, `WriterOperation::SetCamera::camera`)
@@ -129,15 +129,15 @@ mod document_vcs {
     }
 
     // #region 🔖Dsl
-    // `vcs::DocumentDsl for WriterProjection` and `protocol::OpText for WriterOperation` are now generated
+    // `store::DocumentDsl for WriterProjection` and `protocol::OpText for WriterOperation` are now generated
     // by `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslOps)]` on the type definitions above — the
     // engine's `dsl_schema` grammar replaces this crate's own hand-rolled kv printer (the old
     // `writer_dsl` lexer/parser/printer module was deleted after regenerating `writer-plugin`'s two
     // fixture files to the new canonical format).
     // #endregion 🔖Dsl
 
-    pub type WriterEnvelope = DocumentVcsEnvelope<WriterProjection, WriterOperation>;
-    pub type WriterStore = DocumentVcsStore<WriterProjection, WriterOperation>;
+    pub type WriterEnvelope = DocumentEnvelope<WriterProjection, WriterOperation>;
+    pub type WriterStore = DocumentStore<WriterProjection, WriterOperation>;
 
     pub fn empty_writer_projection() -> WriterProjection {
         WriterProjection { schema: "writer.document".into(), id: "empty".into(), language_id: "plaintext".into(), uri: "writer://empty".into(), text: String::new(), camera: default_camera() }
@@ -158,9 +158,14 @@ mod document_vcs {
             Ok(Self { store: RefCell::new(WriterStore::new(envelope)) })
         }
 
-        #[wasm_bindgen(js_name = dispatchJson)]
-        pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
+        #[wasm_bindgen(js_name = dispatchText)]
+        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = dispatchBinary)]
+        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
@@ -182,29 +187,29 @@ mod document_vcs {
     #[cfg(test)]
     mod writer_vcs_tests {
         use super::*;
-        use vcs::{create_document_vcs_envelope, DocumentDsl, DocumentVcsCommand};
+        use store::{create_document_envelope, DocumentDsl, DocumentCommand};
 
         fn seeded_store() -> WriterStore {
-            WriterStore::new(create_document_vcs_envelope("writer.document", "writer", empty_writer_projection(), None))
+            WriterStore::new(create_document_envelope("writer.document", "writer", empty_writer_projection(), None))
         }
 
         #[test]
         fn writer_document_vcs_replays_text_operations() {
             let mut store = seeded_store();
-            store.dispatch(DocumentVcsCommand::Apply { operations: vec![WriterOperation::SetText { text: "hello".into() }], description: None }).expect("apply");
+            store.dispatch(DocumentCommand::Apply { operations: vec![WriterOperation::SetText { text: "hello".into() }], description: None }).expect("apply");
             assert_eq!(store.projection().expect("projection").text, "hello");
         }
 
         #[test]
         fn writer_document_vcs_replays_camera_and_document_operations() {
             let mut store = seeded_store();
-            store.dispatch(DocumentVcsCommand::Apply { operations: vec![WriterOperation::SetCamera { camera: WriterCamera { x: 4.0, y: 5.0, zoom: 2.0 } }], description: None }).expect("apply camera");
+            store.dispatch(DocumentCommand::Apply { operations: vec![WriterOperation::SetCamera { camera: WriterCamera { x: 4.0, y: 5.0, zoom: 2.0 } }], description: None }).expect("apply camera");
             let projection = store.projection().expect("projection");
             assert_eq!(projection.camera.x, 4.0);
             assert_eq!(projection.camera.zoom, 2.0);
 
             let replacement = WriterProjection { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a) RETURN a".into(), camera: default_camera() };
-            store.dispatch(DocumentVcsCommand::Apply { operations: vec![WriterOperation::SetDocument { document: replacement }], description: None }).expect("apply document");
+            store.dispatch(DocumentCommand::Apply { operations: vec![WriterOperation::SetDocument { document: replacement }], description: None }).expect("apply document");
             let projection = store.projection().expect("projection");
             assert_eq!(projection.id, "jack");
             assert_eq!(projection.text, "MATCH (a) RETURN a");
@@ -213,8 +218,8 @@ mod document_vcs {
         #[test]
         fn writer_document_vcs_undoes_text_operation() {
             let mut store = seeded_store();
-            store.dispatch(DocumentVcsCommand::Apply { operations: vec![WriterOperation::SetText { text: "hello".into() }], description: None }).expect("apply");
-            store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+            store.dispatch(DocumentCommand::Apply { operations: vec![WriterOperation::SetText { text: "hello".into() }], description: None }).expect("apply");
+            store.dispatch(DocumentCommand::Undo).expect("undo");
             assert_eq!(store.projection().expect("projection").text, "");
         }
 
@@ -232,10 +237,10 @@ mod document_vcs {
 
         #[test]
         fn writer_dsl_round_trips_empty_and_jack_projections() {
-            vcs::test_support::assert_dsl_round_trip(&empty_writer_projection());
-            vcs::test_support::assert_dsl_round_trip(&jack_projection());
-            vcs::test_support::assert_dsl_pack_equivalence(&empty_writer_projection());
-            vcs::test_support::assert_dsl_pack_equivalence(&jack_projection());
+            store::test_support::assert_dsl_round_trip(&empty_writer_projection());
+            store::test_support::assert_dsl_round_trip(&jack_projection());
+            store::test_support::assert_dsl_pack_equivalence(&empty_writer_projection());
+            store::test_support::assert_dsl_pack_equivalence(&jack_projection());
         }
 
         #[test]
@@ -256,19 +261,19 @@ mod document_vcs {
 
         #[test]
         fn writer_op_text_round_trips_every_variant() {
-            vcs::test_support::assert_op_line_round_trip(&WriterOperation::SetText { text: "line one\nline two".into() });
-            vcs::test_support::assert_op_line_round_trip(&WriterOperation::SetCamera { camera: WriterCamera { x: 4.0, y: 5.0, zoom: 2.0 } });
-            vcs::test_support::assert_op_line_round_trip(&WriterOperation::SetDocument { document: jack_projection() });
+            store::test_support::assert_op_line_round_trip(&WriterOperation::SetText { text: "line one\nline two".into() });
+            store::test_support::assert_op_line_round_trip(&WriterOperation::SetCamera { camera: WriterCamera { x: 4.0, y: 5.0, zoom: 2.0 } });
+            store::test_support::assert_op_line_round_trip(&WriterOperation::SetDocument { document: jack_projection() });
         }
 
         #[test]
         fn writer_document_text_round_trips_through_the_store() {
             let mut store = seeded_store();
             store
-                .dispatch(DocumentVcsCommand::Apply { operations: vec![WriterOperation::SetDocument { document: jack_projection() }], description: None })
+                .dispatch(DocumentCommand::Apply { operations: vec![WriterOperation::SetDocument { document: jack_projection() }], description: None })
                 .expect("apply");
-            vcs::test_support::assert_document_text_round_trip(&store);
-            vcs::test_support::assert_document_pack_round_trip(&store);
+            store::test_support::assert_document_text_round_trip(&store);
+            store::test_support::assert_document_pack_round_trip(&store);
         }
         //#endregion 🔖DslAndOpText
     }

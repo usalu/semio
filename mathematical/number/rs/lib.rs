@@ -2284,9 +2284,12 @@ pub fn primitive_root(m: u64) -> Option<u64> {
 
 // #region 🔖ModInt
 /// 🧷 Element of `Z/mZ` with a runtime `u64` modulus. `modulus == 0` marks the "unbound" neutral
-/// element produced by `Ring::zero()/one()/from_i64` before any modulus is known from context; binary
-/// operations unify an unbound operand onto the other side's (bound) modulus, and `debug_assert` that
-/// two differently-bound operands never meet (that would be a caller bug, not a valid computation).
+/// element produced by `Ring::zero()/one()/neg()/from_i64` before any modulus is known from context —
+/// `value` then holds the `u64` bit pattern of a signed `i64` (so an unbound negation stays exact,
+/// reduced correctly by `unify`'s `reduce_unbound` once a real modulus is known via signed
+/// `rem_euclid`, never plain `% m`). Binary operations unify an unbound operand onto the other side's
+/// (bound) modulus, and `debug_assert` that two differently-bound operands never meet (that would be a
+/// caller bug, not a valid computation).
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct ModInt {
     value: u64,
@@ -2307,11 +2310,21 @@ impl ModInt {
         self.modulus
     }
 
+    /// 🧮 Reduces an "unbound" `value` (stored as the `u64` bit pattern of a signed `i64` — see
+    /// [`Ring::neg`]/[`Ring::from_i64`]) into a proper non-negative residue mod `m`. Distinct from
+    /// `value % m`: a negative-signed bit pattern must go through signed `rem_euclid`, not unsigned
+    /// remainder, or e.g. the bit pattern for `-1` (`u64::MAX`) would reduce to a value far from `m - 1`.
+    fn reduce_unbound(value: u64, m: u64) -> u64 {
+        ((value as i64 as i128).rem_euclid(m as i128)) as u64
+    }
+
     fn unify(self, other: Self) -> (u64, u64, u64) {
-        if self.modulus == 0 {
-            (self.value, other.value, other.modulus)
+        if self.modulus == 0 && other.modulus == 0 {
+            (self.value, other.value, 0)
+        } else if self.modulus == 0 {
+            (Self::reduce_unbound(self.value, other.modulus), other.value, other.modulus)
         } else if other.modulus == 0 {
-            (self.value, other.value, self.modulus)
+            (self.value, Self::reduce_unbound(other.value, self.modulus), self.modulus)
         } else {
             debug_assert_eq!(self.modulus, other.modulus, "ModInt: operands bound to different moduli");
             (self.value, other.value, self.modulus)
@@ -2329,14 +2342,16 @@ impl Ring for ModInt {
     fn add(&self, rhs: &Self) -> Self {
         let (a, b, m) = self.unify(*rhs);
         if m == 0 {
-            Self { value: a + b, modulus: 0 }
+            // 🧮 Both unbound: defer reduction, so combine the signed bit patterns with wrapping add.
+            Self { value: a.wrapping_add(b), modulus: 0 }
         } else {
             Self { value: mod_add(a, b, m), modulus: m }
         }
     }
     fn neg(&self) -> Self {
         if self.modulus == 0 {
-            Self { value: self.value, modulus: 0 }
+            // 🧮 Unbound: negate the signed `i64` bit pattern (see `reduce_unbound`), not the raw `u64`.
+            Self { value: self.value.wrapping_neg(), modulus: 0 }
         } else if self.value == 0 {
             *self
         } else {
@@ -2346,7 +2361,8 @@ impl Ring for ModInt {
     fn mul(&self, rhs: &Self) -> Self {
         let (a, b, m) = self.unify(*rhs);
         if m == 0 {
-            Self { value: a * b, modulus: 0 }
+            // 🧮 Both unbound: defer reduction, so combine the signed bit patterns with wrapping mul.
+            Self { value: a.wrapping_mul(b), modulus: 0 }
         } else {
             Self { value: mod_mul(a, b, m), modulus: m }
         }
@@ -2355,7 +2371,7 @@ impl Ring for ModInt {
         self.value == 0
     }
     fn from_i64(value: i64) -> Self {
-        Self { value: value.unsigned_abs(), modulus: 0 }
+        Self { value: value as u64, modulus: 0 }
     }
     fn characteristic(&self) -> u64 {
         self.modulus

@@ -79,13 +79,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\..\..\..\..\target\release\compose-store.exe" Link="runtimes\win-x64\native\compose-store.exe" Condition="Exists('..\..\..\..\..\target\release\compose-store.exe')">
+    <Content Include="..\..\..\..\..\target\release\compose-gql.exe" Link="runtimes\win-x64\native\compose-gql.exe" Condition="Exists('..\..\..\..\..\target\release\compose-gql.exe')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\..\..\..\target\release\compose-store" Link="runtimes\linux-x64\native\compose-store" Condition="Exists('..\..\..\..\..\target\release\compose-store')">
+    <Content Include="..\..\..\..\..\target\release\compose-gql" Link="runtimes\linux-x64\native\compose-gql" Condition="Exists('..\..\..\..\..\target\release\compose-gql')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\..\..\..\target\release\compose-store.exe" Link="compose-store.exe" Condition="Exists('..\..\..\..\..\target\release\compose-store.exe')">
+    <Content Include="..\..\..\..\..\target\release\compose-gql.exe" Link="compose-gql.exe" Condition="Exists('..\..\..\..\..\target\release\compose-gql.exe')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

@@ -228,7 +228,7 @@ members = [
     "framework/product/os/hub/directory/sqlite/rs",
     "compose/client/lib/rs",
     "compose/client/lib/query/rs",
-    "compose/client/bin/store/rs",
+    "compose/client/bin/gql/rs",
     "animate/core/rs",
     "animate/video/rs",
     "animate/present/rs",

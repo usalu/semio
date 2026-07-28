@@ -7598,7 +7598,7 @@ text {
 /// <remarks>
 /// Specs: Exactly five kit kinds exist:
 /// - Dev: Self-contained JSON file
-/// - Local: Local folder layout on disk (imported/exported via compose-store)
+/// - Local: Local folder layout on disk (imported/exported via compose-gql)
 /// - Archive: ZIP file packaging a LocalKit structure
 /// - Remote: URL-addressable kit served over HTTP(S)
 /// - Transport: In-memory ephemeral kit transport payload
@@ -13648,7 +13648,7 @@ public class DevKit : ISyncKit
 #region 🏡LocalKit
 // Callers MUST use LocalKit for synchronized local folder kit workflows.
 
-/// <summary>📂 Synchronized local folder kit (materialized via compose-store).</summary>
+/// <summary>📂 Synchronized local folder kit (materialized via compose-gql).</summary>
 public class LocalKit : ISyncKit
 {
     private readonly Kit _kit;
@@ -15366,7 +15366,7 @@ public static class StoreGraphqlJson
     //#endregion StoreGraphql
 
     //#region StoreClient
-/// <summary>🌐 Thin HTTP GraphQL client to <c>compose-store</c> (<c>POST /install</c>, <c>POST /graphql</c>); same wire as <c>compose/js</c> <see cref="StoreSession.OpenHttp"/>.</summary>
+/// <summary>🌐 Thin HTTP GraphQL client to <c>compose-gql</c> (<c>POST /install</c>, <c>POST /graphql</c>); same wire as <c>compose/js</c> <see cref="StoreSession.OpenHttp"/>.</summary>
 public sealed class StoreClient : IDisposable
 {
     private readonly string _binaryPath;
@@ -15389,7 +15389,7 @@ public sealed class StoreClient : IDisposable
         if (_baseUrl != null) return;
         if (_process != null) return;
         if (!System.IO.File.Exists(_binaryPath))
-            throw new FileNotFoundException("compose-store binary not found", _binaryPath);
+            throw new FileNotFoundException("compose-gql binary not found", _binaryPath);
 
         var port = AllocateFreeTcpPort();
         var psi = new ProcessStartInfo
@@ -15401,11 +15401,11 @@ public sealed class StoreClient : IDisposable
             RedirectStandardError = true,
             CreateNoWindow = true,
         };
-        psi.Environment["COMPOSE_STORE_PORT"] = port.ToString();
+        psi.Environment["COMPOSE_GQL_PORT"] = port.ToString();
         var rl = Environment.GetEnvironmentVariable("RUST_LOG");
         psi.Environment["RUST_LOG"] = string.IsNullOrEmpty(rl) ? "error" : rl!;
 
-        _process = Process.Start(psi) ?? throw new IOException("compose-store: start failed");
+        _process = Process.Start(psi) ?? throw new IOException("compose-gql: start failed");
         _baseUrl = ReadReadyBaseUrl(_process, port);
     }
 
@@ -15429,7 +15429,7 @@ public sealed class StoreClient : IDisposable
         while (DateTime.UtcNow < deadline)
         {
             if (process.HasExited)
-                throw new IOException("compose-store exited before ready");
+                throw new IOException("compose-gql exited before ready");
             var line = process.StandardOutput.ReadLine();
             if (line == null)
             {
@@ -15440,7 +15440,7 @@ public sealed class StoreClient : IDisposable
             try
             {
                 var o = ComposeJson.Codec.ParseJsonRoot(line) as JObject;
-                if (o["composeStoreReady"]?.Value<bool>() == true)
+                if (o["composeGqlReady"]?.Value<bool>() == true)
                 {
                     var port = o["port"]?.Value<int?>() ?? fallbackPort;
                     return $"http://127.0.0.1:{port}";
@@ -15451,7 +15451,7 @@ public sealed class StoreClient : IDisposable
                 /* not the ready line */
             }
         }
-        throw new TimeoutException("compose-store: ready line timeout");
+        throw new TimeoutException("compose-gql: ready line timeout");
     }
 
     private string BaseUrl
@@ -15459,11 +15459,11 @@ public sealed class StoreClient : IDisposable
         get
         {
             Start();
-            return _baseUrl ?? throw new InvalidOperationException("compose-store: no base url");
+            return _baseUrl ?? throw new InvalidOperationException("compose-gql: no base url");
         }
     }
 
-    /// <summary>📦 <c>POST /install</c> — exactly one install field per <c>compose-store</c>.</summary>
+    /// <summary>📦 <c>POST /install</c> — exactly one install field per <c>compose-gql</c>.</summary>
     internal void Install(JObject body)
     {
         var json = body.ToString(Formatting.None);
@@ -15471,7 +15471,7 @@ public sealed class StoreClient : IDisposable
         var r = _http.PostAsync($"{BaseUrl}/install", content).GetAwaiter().GetResult();
         var t = r.Content.ReadAsStringAsync().GetAwaiter().GetResult();
         if (!r.IsSuccessStatusCode)
-            throw new IOException($"compose-store install {(int)r.StatusCode}: {t}");
+            throw new IOException($"compose-gql install {(int)r.StatusCode}: {t}");
         WarmGraphqlSession();
     }
 
@@ -15569,7 +15569,7 @@ public sealed class StoreSession : IDisposable
     /// <summary>📦 WIP kit under <c>session.stores → wip.theKit.kit</c>.</summary>
     public WipKit Kit => _kit ??= new WipKit(this);
 
-    /// <summary>🌐 Opens against an existing <c>compose-store</c> base URL (optional install-create first).</summary>
+    /// <summary>🌐 Opens against an existing <c>compose-gql</c> base URL (optional install-create first).</summary>
     public static StoreSession OpenHttp(string baseUrl, JObject? installCreateDto = null)
     {
         var c = new StoreClient(baseUrl: baseUrl);
@@ -15653,22 +15653,22 @@ public static class StorePaths
 {
     public static string ResolveStoreBinary()
     {
-        var env = Environment.GetEnvironmentVariable("COMPOSE_STORE_BIN");
+        var env = Environment.GetEnvironmentVariable("COMPOSE_GQL_BIN");
         if (!string.IsNullOrWhiteSpace(env) && System.IO.File.Exists(env)) return env!.Trim();
-        var nextTo = Path.Combine(AppContext.BaseDirectory, "compose-store.exe");
+        var nextTo = Path.Combine(AppContext.BaseDirectory, "compose-gql.exe");
         if (System.IO.File.Exists(nextTo)) return nextTo;
-        var nextToNix = Path.Combine(AppContext.BaseDirectory, "compose-store");
+        var nextToNix = Path.Combine(AppContext.BaseDirectory, "compose-gql");
         if (System.IO.File.Exists(nextToNix)) return nextToNix;
         for (var here = new DirectoryInfo(AppContext.BaseDirectory); here != null; here = here.Parent)
         {
-            var win = Path.Combine(here.FullName, "target", "release", "compose-store.exe");
+            var win = Path.Combine(here.FullName, "target", "release", "compose-gql.exe");
             if (System.IO.File.Exists(win)) return win;
-            var unix = Path.Combine(here.FullName, "target", "release", "compose-store");
+            var unix = Path.Combine(here.FullName, "target", "release", "compose-gql");
             if (System.IO.File.Exists(unix)) return unix;
         }
-        if (System.IO.File.Exists("compose-store.exe")) return "compose-store.exe";
-        if (System.IO.File.Exists("compose-store")) return "compose-store";
-        return "compose-store";
+        if (System.IO.File.Exists("compose-gql.exe")) return "compose-gql.exe";
+        if (System.IO.File.Exists("compose-gql")) return "compose-gql";
+        return "compose-gql";
     }
 }
     //#endregion StoreClient
@@ -15799,12 +15799,12 @@ public sealed class WipKit
     //#endregion StoreKit
 
     //#region StoreKitIO
-/// <summary>📦 Load/save kits through <c>compose-store</c> GraphQL (<c>POST /install</c> + <c>POST /graphql</c>); equality via normalized JSON compare.</summary>
+/// <summary>📦 Load/save kits through <c>compose-gql</c> GraphQL (<c>POST /install</c> + <c>POST /graphql</c>); equality via normalized JSON compare.</summary>
 public static class StoreKitIO
 {
     public static JObject KitToJObject(Kit kit) => JObject.Parse(Utility.Serialize(kit));
 
-    /// <summary>📥 <c>POST /install</c> projection JSON: design pieces use <c>pose.plane</c> + <c>pose.center</c> (<c>u</c>/<c>v</c>) for compose-store hydration.</summary>
+    /// <summary>📥 <c>POST /install</c> projection JSON: design pieces use <c>pose.plane</c> + <c>pose.center</c> (<c>u</c>/<c>v</c>) for compose-gql hydration.</summary>
     public static JObject KitToInstallProjection(Kit kit)
     {
         var dto = KitToJObject(kit);

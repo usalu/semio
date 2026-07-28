@@ -3,12 +3,12 @@
 /// `.repo/🎫/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/` for the full container-format
 /// contract. `pack`'s own `EncodeOptions`/`DecodeOptions`/`VerificationLevel` are re-exported under
 /// a `Pack`-prefixed name (not a plain re-export — `dsl_derive`'s emitted `DocumentPack` impl and
-/// every downstream caller spell them `vcs::PackEncodeOptions`/`vcs::PackDecodeOptions`/
-/// `vcs::PackVerificationLevel`, so there is exactly one spelling repo-wide).
+/// every downstream caller spell them `store::PackEncodeOptions`/`store::PackDecodeOptions`/
+/// `store::PackVerificationLevel`, so there is exactly one spelling repo-wide).
 pub use pack::{DecodeOptions as PackDecodeOptions, EncodeOptions as PackEncodeOptions, PackError, VerificationLevel as PackVerificationLevel};
 
 /// @emoji 🧵 Thin runtime bridge to `pack::{encode_document, decode_document}`, resolved as
-/// `::vcs::pack_rt::...` by `dsl_derive`'s generated `DocumentPack` impl (app crates depend on
+/// `::store::pack_rt::...` by `dsl_derive`'s generated `DocumentPack` impl (app crates depend on
 /// `vcs`, never on `pack` directly — same seam `::dsl::RecordSpec`/`RecordValue` already use). Also
 /// hosts the schema-less JSON bridge behind `impl DocumentPack for serde_json::Value` below.
 pub mod pack_rt {
@@ -63,7 +63,7 @@ pub mod pack_rt {
 /// encode_pack(p)) == parse_dsl(print_dsl(p))` — dsl and pack are two encodings of the identical
 /// `(RecordSpec, RecordValue)` pair keyed by the same stable `u16` field ids `dsl_derive` assigns,
 /// never two independent sources of truth. The `_with` methods are required (the seam
-/// `dsl_derive`'s generated impl calls through `::vcs::pack_rt`); the plain names are provided
+/// `dsl_derive`'s generated impl calls through `::store::pack_rt`); the plain names are provided
 /// defaults over `Pack{Encode,Decode}Options::default()`.
 pub trait DocumentPack: Sized {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError>;

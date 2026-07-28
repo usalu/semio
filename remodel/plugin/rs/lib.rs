@@ -22,7 +22,7 @@ use semio_framework_plugin::{
 };
 use serde_json::{json, Value};
 use std::collections::VecDeque;
-use vcs::DocumentDsl;
+use store::DocumentDsl;
 
 //#region 🔖Constants
 const REMODEL_PLAY_APP_ID: &str = "remodel-play";
@@ -1296,7 +1296,7 @@ impl RemodelPlayApp {
     /// ⚙️ Advances the pipeline by one bounded chunk, mirrors `EngineStatus` into an amended `SetJob`,
     /// distills result operations once `Done`, and re-dispatches itself unless terminal. Every emit here
     /// (including the terminal one) uses `ActionEmit::amend` with the SAME `remodel-reconstruction:{id}`
-    /// coalesce key: `DocumentVcsCommand::AmendLast` (see `vcs`) only folds a new edit into the
+    /// coalesce key: `DocumentCommand::AmendLast` (see `vcs`) only folds a new edit into the
     /// previous one when both its coalesce key AND its position (still the last, still-uncommitted
     /// edit) match, so keeping the key identical end-to-end is what makes the whole multi-tick run
     /// collapse into exactly one undo step — using `ActionEmit::commit` on the terminal tick instead

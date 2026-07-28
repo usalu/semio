@@ -1600,8 +1600,8 @@ mod operations {
     /// touching any of that call-site surface, mirroring the same escape-hatch spirit the dsl engine's own
     /// `serde_json::Value`/`Shape::Value` binding already uses for genuinely untyped fields.
     impl protocol::OpText for ProgramOperation {
-        fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-            serde_json::from_str(line.trim()).map_err(|e| vcs::TextError::new(format!("invalid program operation: {e}"), vcs::TextSpan::at(1, 1)))
+        fn parse_op(line: &str) -> Result<Self, store::TextError> {
+            serde_json::from_str(line.trim()).map_err(|e| store::TextError::new(format!("invalid program operation: {e}"), store::TextSpan::at(1, 1)))
         }
 
         fn print_op(&self) -> String {
@@ -2786,7 +2786,7 @@ mod operations {
         // #region 🔖OpText
         #[test]
         fn update_meta_op_text_round_trips() {
-            vcs::test_support::assert_op_line_round_trip(&ProgramOperation::UpdateMeta { patch: ProgramMetaPatch { title: Some("Clinic".into()), ..Default::default() } });
+            store::test_support::assert_op_line_round_trip(&ProgramOperation::UpdateMeta { patch: ProgramMetaPatch { title: Some("Clinic".into()), ..Default::default() } });
         }
 
         #[test]
@@ -2819,26 +2819,26 @@ mod operations {
                 success_metrics: Vec::new(),
             };
             let operation = ProgramOperation::Stakeholders(CollectionOperation::Add { id: stakeholder.header.id.clone(), item: stakeholder, at: 0 });
-            vcs::test_support::assert_op_line_round_trip(&operation);
+            store::test_support::assert_op_line_round_trip(&operation);
         }
 
         #[test]
         fn remove_and_move_op_text_round_trip() {
-            vcs::test_support::assert_op_line_round_trip(&ProgramOperation::Stakeholders(CollectionOperation::Remove { id: EntityId::new_serial("stakeholder") }));
-            vcs::test_support::assert_op_line_round_trip(&ProgramOperation::Stakeholders(CollectionOperation::Move { id: EntityId::new_serial("stakeholder"), to: 2 }));
+            store::test_support::assert_op_line_round_trip(&ProgramOperation::Stakeholders(CollectionOperation::Remove { id: EntityId::new_serial("stakeholder") }));
+            store::test_support::assert_op_line_round_trip(&ProgramOperation::Stakeholders(CollectionOperation::Move { id: EntityId::new_serial("stakeholder"), to: 2 }));
         }
 
         #[test]
         fn set_adjacency_and_clear_adjacency_op_text_round_trip() {
             let program = sample_program();
             let adjacency = program.adjacencies[0].clone();
-            vcs::test_support::assert_op_line_round_trip(&ProgramOperation::SetAdjacency { adjacency });
-            vcs::test_support::assert_op_line_round_trip(&ProgramOperation::ClearAdjacency { id: EntityId::new_serial("adjacency") });
+            store::test_support::assert_op_line_round_trip(&ProgramOperation::SetAdjacency { adjacency });
+            store::test_support::assert_op_line_round_trip(&ProgramOperation::ClearAdjacency { id: EntityId::new_serial("adjacency") });
         }
 
         #[test]
         fn set_program_op_text_round_trips() {
-            vcs::test_support::assert_op_line_round_trip(&ProgramOperation::SetProgram { program: Box::new(sample_program()) });
+            store::test_support::assert_op_line_round_trip(&ProgramOperation::SetProgram { program: Box::new(sample_program()) });
         }
 
         #[test]
@@ -3073,7 +3073,7 @@ mod program {
     use crate::registers::*;
     use serde::{Deserialize, Serialize};
     #[cfg(test)]
-    use vcs::DocumentDsl;
+    use store::DocumentDsl;
 
     /// @emoji 📜 Persisted architect program document schema identifier.
     pub const ARCHITECT_PROGRAM_SCHEMA: &str = "architect.program";
@@ -3522,20 +3522,20 @@ mod program {
         // #region 🔖DslDocument
         #[test]
         fn empty_program_dsl_round_trips() {
-            vcs::test_support::assert_dsl_round_trip(&empty_program());
-            vcs::test_support::assert_dsl_pack_equivalence(&empty_program());
+            store::test_support::assert_dsl_round_trip(&empty_program());
+            store::test_support::assert_dsl_pack_equivalence(&empty_program());
         }
 
         #[test]
         fn sample_program_dsl_round_trips() {
-            vcs::test_support::assert_dsl_round_trip(&sample_program());
+            store::test_support::assert_dsl_round_trip(&sample_program());
         }
 
         #[test]
         // 🪲 Blocked on a confirmed upstream `pack` crate bug, NOT an architect defect: table
         // rows (`#[dsl(table)] Vec<Stakeholder>` etc.) decode via `pack::value`'s self-describing
         fn sample_program_dsl_pack_equivalence() {
-            vcs::test_support::assert_dsl_pack_equivalence(&sample_program());
+            store::test_support::assert_dsl_pack_equivalence(&sample_program());
         }
 
         #[test]

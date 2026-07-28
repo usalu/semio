@@ -11,19 +11,19 @@
 
 //#region 🔖Operation
 /// @emoji 📦 Centralized projection mutation — one `apply` per technology. Moved from
-/// `vcs::OperationDiff` verbatim (only the parameter name `projection` → `base`).
+/// `store::OperationDiff` verbatim (only the parameter name `projection` → `base`).
 pub trait OperationDiff<P>: Clone + Default + serde::Serialize + serde::de::DeserializeOwned {
     fn apply(&self, base: &P) -> P;
     fn absorb(&mut self, other: Self);
 }
 
 /// @emoji 🔁 Stored operation: emits a diff and computes backwards from pre-state. Moved from
-/// `vcs::Operation` verbatim except: `operation_id`/`dependencies`/`author_id` now return the
+/// `store::Operation` verbatim except: `operation_id`/`dependencies`/`author_id` now return the
 /// `protocol_core` id newtypes (were bare `String`) and `base_version` now returns
 /// `Option<protocol_core::DocumentVersion>` (was a bare `u64` defaulting to `0`, which conflated
 /// "no base" with "based on version 0" — `None` fixes that); `conflict_rule`/`state_class` are new
 /// defaulted methods so every existing `impl` recompiles unchanged; `reconcile` becomes an instance
-/// method (`&self`) returning this crate's own `ReconcileReport` instead of `vcs::StudioConflict`,
+/// method (`&self`) returning this crate's own `ReconcileReport` instead of `store::StudioConflict`,
 /// so `vcs` maps `ReconcileReport -> StudioConflict` at its own edge instead of this crate knowing
 /// about studio types.
 pub trait Operation<P>: Clone + serde::Serialize + serde::de::DeserializeOwned {
@@ -92,7 +92,7 @@ pub enum ReconcileSeverity {
 
 //#region 🔖OpText
 /// @emoji ⚡ Handcrafted ONE-LINE textual representation of an operation, implemented once per
-/// technology next to its `Operation` enum. Moved verbatim from `vcs::OpText` (method order
+/// technology next to its `Operation` enum. Moved verbatim from `store::OpText` (method order
 /// flipped to match the frozen contract; behavior unchanged). LAWS: `print_op` output never
 /// contains `\n`; `Op::parse_op` recovers an equal operation from `op.print_op()`.
 pub trait OpText: Sized {
@@ -101,9 +101,23 @@ pub trait OpText: Sized {
 }
 //#endregion 🔖OpText
 
+//#region 🔖OpBinary
+/// @emoji 🎞️ Binary twin of [`OpText`]: the maximum-token-efficient one-line grammar and this
+/// byte encoding are two renderings of the same operation, implemented per technology next to its
+/// `Operation` enum (in practice emitted by `#[derive(dsl::DslOps)]` through `dsl::op_rt`, the
+/// exact mirror of the `DocumentDsl`/`DocumentPack` pairing). Layout (owned by the runtime, not
+/// by implementors): `format u8 (=1) | variant ordinal varint | record body`. LAWS:
+/// `Op::decode_op(op.encode_op()) == op == Op::parse_op(op.print_op())`, and encoding is
+/// deterministic — byte-identical output for equal operations.
+pub trait OpBinary: Sized {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol_core::ProtocolError>;
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol_core::ProtocolError>;
+}
+//#endregion 🔖OpBinary
+
 //#region 🔖Meta
 /// @emoji 🧾 Per-operation causal/undo metadata attached to one `Edit` slot. Moved from
-/// `vcs::OperationMeta` (was `vcs/rs/lib.rs` L59) with the id-flavored fields upgraded from bare
+/// `store::OperationMeta` (was `vcs/rs/lib.rs` L59) with the id-flavored fields upgraded from bare
 /// `String`/`Option<String>` to the `protocol_core` newtypes and `timestamp` upgraded from
 /// `Option<HybridLogicalTimestamp>` to a required field (an edit's op always has a tick by the time
 /// it is durable).
@@ -124,7 +138,7 @@ pub struct OperationMeta {
 }
 
 /// @emoji 📝 One coalesced batch of operations, forward and backward, plus their causal metadata.
-/// Moved verbatim from `vcs::Edit` (was `vcs/rs/lib.rs` L73).
+/// Moved verbatim from `store::Edit` (was `vcs/rs/lib.rs` L73).
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Edit<Op> {
@@ -331,7 +345,7 @@ fn operation_descriptor_registry() -> &'static std::sync::RwLock<std::collection
 }
 
 /// @emoji 📝 Registers (or overwrites) a descriptor by `descriptor.id`. Mirrors
-/// `vcs::CodecRegistry`'s `OnceLock<RwLock<HashMap>>` pattern; idempotent, safe to call repeatedly.
+/// `store::CodecRegistry`'s `OnceLock<RwLock<HashMap>>` pattern; idempotent, safe to call repeatedly.
 pub fn register_operation_descriptor(descriptor: OperationDescriptor) {
     let mut registry = operation_descriptor_registry().write().unwrap_or_else(|poisoned| poisoned.into_inner());
     registry.insert(descriptor.id.0.clone(), descriptor);

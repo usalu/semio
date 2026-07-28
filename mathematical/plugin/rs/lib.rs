@@ -7,7 +7,7 @@ use semio_framework_plugin::{
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use protocol::{Operation, OperationDiff};
-use vcs::DocumentDsl;
+use store::DocumentDsl;
 
 //#region 🔖Constants
 const MATH_APP_ID: &str = "mathematical-play";
@@ -125,7 +125,7 @@ impl Default for MathGeometry {
 }
 
 /// 📄 JSON-facing document projection — DSL text round-trips through `MathProjectionDsl` (see
-/// `🔖Dsl`), a manual `vcs::DocumentDsl` impl instead of the direct derive, since `MathGraph`'s
+/// `🔖Dsl`), a manual `store::DocumentDsl` impl instead of the direct derive, since `MathGraph`'s
 /// edges need the `dsl::Wire` shape that a plain-`String` `MathEdge` can't itself carry alongside
 /// `Serialize`/`Deserialize`.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -202,7 +202,7 @@ impl Operation<MathProjection> for MathOperation {
 
 /// 🔌 DSL-only mirror of `MathEdge` — folds `source`/`target` into one unified `dsl::Wire` literal
 /// (`source->target`) instead of two separate string fields, per the unified syntax law for graph
-/// edges/connections. Converts at the `vcs::DocumentDsl`/`protocol::OpText` boundary only
+/// edges/connections. Converts at the `store::DocumentDsl`/`protocol::OpText` boundary only
 /// (`math_edge_to_dsl`/`math_edge_from_dsl`); `MathEdge` itself (JSON shape, `algorithm_overlay`,
 /// `media_graph_json`, the `nodeGraphEdit` action) is completely untouched.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
@@ -281,9 +281,9 @@ fn math_projection_from_dsl(projection: MathProjectionDsl) -> Result<MathProject
 impl DocumentDsl for MathProjection {
     const EXTENSION: &'static str = "mathematical";
 
-    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let dsl_projection = <MathProjectionDsl as DocumentDsl>::parse_dsl(text)?;
-        math_projection_from_dsl(dsl_projection).map_err(|message| vcs::TextError::new(message, vcs::TextSpan::at(1, 1)))
+        math_projection_from_dsl(dsl_projection).map_err(|message| store::TextError::new(message, store::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
@@ -291,18 +291,18 @@ impl DocumentDsl for MathProjection {
     }
 }
 
-/// 📦 Manual `vcs::DocumentPack` mirror of the manual `DocumentDsl` impl above — `MathProjectionDsl`
+/// 📦 Manual `store::DocumentPack` mirror of the manual `DocumentDsl` impl above — `MathProjectionDsl`
 /// (which derives `dsl::DslDocument`) gets `DocumentPack` for free from `dsl_derive`; `MathProjection`
 /// itself doesn't derive it (its `edges` need the `MathEdgeDsl`/`dsl::Wire` folding), so this delegates
 /// through the same `math_projection_to_dsl`/`math_projection_from_dsl` conversions as `parse_dsl`/`print_dsl`.
-impl vcs::DocumentPack for MathProjection {
-    fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
+impl store::DocumentPack for MathProjection {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         math_projection_to_dsl(self).encode_pack_with(options)
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let dsl_projection = MathProjectionDsl::decode_pack_with(bytes, options)?;
-        math_projection_from_dsl(dsl_projection).map_err(|message| vcs::text_error_to_pack_error(vcs::TextError::new(message, vcs::TextSpan::at(1, 1))))
+        math_projection_from_dsl(dsl_projection).map_err(|message| store::text_error_to_pack_error(store::TextError::new(message, store::TextSpan::at(1, 1))))
     }
 }
 //#endregion 🔖Dsl
@@ -337,9 +337,9 @@ fn math_operation_from_dsl(operation: MathOperationDsl) -> Result<MathOperation,
 }
 
 impl protocol::OpText for MathOperation {
-    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         let dsl_operation = <MathOperationDsl as protocol::OpText>::parse_op(line)?;
-        math_operation_from_dsl(dsl_operation).map_err(|message| vcs::TextError::new(message, vcs::TextSpan::at(1, 1)))
+        math_operation_from_dsl(dsl_operation).map_err(|message| store::TextError::new(message, store::TextSpan::at(1, 1)))
     }
 
     fn print_op(&self) -> String {
@@ -782,8 +782,8 @@ mod tests {
     //#region 🔖DslTests
     #[test]
     fn math_projection_dsl_round_trips_default() {
-        vcs::test_support::assert_dsl_round_trip(&MathProjection::default());
-        vcs::test_support::assert_dsl_pack_equivalence(&MathProjection::default());
+        store::test_support::assert_dsl_round_trip(&MathProjection::default());
+        store::test_support::assert_dsl_pack_equivalence(&MathProjection::default());
     }
 
     #[test]
@@ -794,32 +794,32 @@ mod tests {
         graph.nodes.clear();
         graph.edges.clear();
         let projection = MathProjection { graph, geometry: MathGeometry { points: Vec::new() } };
-        vcs::test_support::assert_dsl_round_trip(&projection);
-        vcs::test_support::assert_dsl_pack_equivalence(&projection);
+        store::test_support::assert_dsl_round_trip(&projection);
+        store::test_support::assert_dsl_pack_equivalence(&projection);
     }
 
     #[test]
     fn math_set_graph_op_round_trips() {
-        vcs::test_support::assert_op_line_round_trip(&MathOperation::SetGraph { graph: MathGraph::default() });
+        store::test_support::assert_op_line_round_trip(&MathOperation::SetGraph { graph: MathGraph::default() });
     }
 
     #[test]
     fn math_set_geometry_op_round_trips() {
-        vcs::test_support::assert_op_line_round_trip(&MathOperation::SetGeometry { geometry: MathGeometry::default() });
+        store::test_support::assert_op_line_round_trip(&MathOperation::SetGeometry { geometry: MathGeometry::default() });
     }
 
     #[test]
     fn math_document_text_round_trips_through_store() {
         let initial = MathProjection::default();
-        let envelope = vcs::create_document_vcs_envelope("semio.mathematical/v1", "math-demo", initial, None);
-        let mut store = vcs::DocumentVcsStore::new(envelope);
+        let envelope = store::create_document_envelope("semio.mathematical/v1", "math-demo", initial, None);
+        let mut store = store::DocumentStore::new(envelope);
         let mut graph = MathGraph::default();
         graph.algorithm = "components".into();
         store
-            .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![MathOperation::SetGraph { graph }], description: None })
+            .dispatch(store::DocumentCommand::Apply { operations: vec![MathOperation::SetGraph { graph }], description: None })
             .expect("apply");
-        vcs::test_support::assert_document_text_round_trip(&store);
-        vcs::test_support::assert_document_pack_round_trip(&store);
+        store::test_support::assert_document_text_round_trip(&store);
+        store::test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DslTests
 }

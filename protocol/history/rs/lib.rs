@@ -15,7 +15,7 @@ use protocol_format::{Blake3Hasher, FrameCursor, HEADER_SIZE, RecoveryMode, Reve
 use std::collections::HashMap;
 
 //#region 🔖Model
-// Every field of vcs::OpsHeaderLine (Doc/Edit/Change/Checkpoint/Alternative/Active) has exactly
+// Every field of store::OpsHeaderLine (Doc/Edit/Change/Checkpoint/Alternative/Active) has exactly
 // one slot below. Op lines are opaque exact `print_op` strings (one per line, no '\n' inside).
 // Derived data (backwards, sequence_number, unless explicitly captured via `meta`) is excluded.
 #[derive(Clone, Debug, PartialEq, Default)]
@@ -96,7 +96,7 @@ pub struct HistoryAlternative {
 //#endregion 🔖Model
 
 //#region 🔖TextGrammar
-// Own twin of vcs::OpsHeaderLine's grammar, built directly against `dsl_schema` (never `vcs`,
+// Own twin of store::OpsHeaderLine's grammar, built directly against `dsl_schema` (never `vcs`,
 // never `dsl_derive` — this crate has no path dep on either). Field declaration order below
 // mirrors vcs's struct field order exactly: `dsl_schema::print_record` reorders keyed fields
 // scalar-before-composite (stable sort, ties broken by declaration order), so matching vcs's
@@ -236,7 +236,7 @@ fn text_error_to_protocol(err: dsl_core::TextError) -> ProtocolError {
 
 /// @emoji 📥 Parses the full `.ops` text into a `HistoryLog`. Blank lines and `#`-comments
 /// normalize away; a two-space-indented line under a pending `edit` header is an opaque forward
-/// op line (never interpreted). Unlike `vcs::replay_ops`, this never replays operation semantics
+/// op line (never interpreted). Unlike `store::replay_ops`, this never replays operation semantics
 /// (ops are opaque here) — `HistoryEdit::meta`/backwards are simply never populated from text.
 pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
     struct PendingEdit {
@@ -339,7 +339,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
 
 /// @emoji 📤 Prints a `HistoryLog` back to `.ops` text: `doc`, every edit (header + two-space
 /// indented forward op lines), then `change`/`checkpoint`/`alternative`/`active` records — the
-/// same section order `vcs::print_ops_log` uses.
+/// same section order `store::print_ops_log` uses.
 pub fn print_ops_text(log: &HistoryLog) -> String {
     let mut out = String::new();
 

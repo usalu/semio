@@ -1,14 +1,14 @@
 //#region 🔖Materialize
-pub fn create_document_vcs_envelope<P, Operation>(
+pub fn create_document_envelope<P, Operation>(
     schema: &str,
     id: &str,
     initial_projection: P,
     backbone: Option<DocumentBackboneRef>,
-) -> DocumentVcsEnvelope<P, Operation>
+) -> DocumentEnvelope<P, Operation>
 where
     P: Clone,
 {
-    DocumentVcsEnvelope {
+    DocumentEnvelope {
         schema: schema.into(),
         id: id.into(),
         vcs: DocumentVcs {
@@ -23,7 +23,7 @@ where
     }
 }
 
-pub fn edit_ids_for_changes<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>, change_ids: &[String]) -> Vec<String>
+pub fn edit_ids_for_changes<P, Operation>(envelope: &DocumentEnvelope<P, Operation>, change_ids: &[String]) -> Vec<String>
 where
     Operation: Clone,
     P: Clone,
@@ -38,7 +38,7 @@ where
 }
 
 pub fn materialize_document_projection<P, Operation>(
-    envelope: &DocumentVcsEnvelope<P, Operation>,
+    envelope: &DocumentEnvelope<P, Operation>,
     applied_edit_ids: &[String],
 ) -> Result<P, VcsError>
 where
@@ -74,10 +74,10 @@ fn reconcile_with_last<P, Op: Operation<P>>(last_operation: Option<&Op>, project
 /// @emoji 🤝 Same replay as {@link materialize_document_projection}, additionally surfacing whatever
 /// {@link Operation::reconcile} reports for the resulting projection. Kept as a twin function (rather
 /// than changing `materialize_document_projection`'s signature) so every existing caller across the
-/// workspace is unaffected; call sites that care about conflicts (e.g. `DocumentVcsStore`) opt into
+/// workspace is unaffected; call sites that care about conflicts (e.g. `DocumentStore`) opt into
 /// this one instead.
 pub fn materialize_document_projection_with_conflicts<P, Operation>(
-    envelope: &DocumentVcsEnvelope<P, Operation>,
+    envelope: &DocumentEnvelope<P, Operation>,
     applied_edit_ids: &[String],
 ) -> Result<(P, Vec<StudioConflict>), VcsError>
 where
@@ -120,7 +120,7 @@ fn now_ms() -> u64 {
     }
 }
 
-fn uncommitted_edit_ids<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>, applied_edit_ids: &[String]) -> Vec<String>
+fn uncommitted_edit_ids<P, Operation>(envelope: &DocumentEnvelope<P, Operation>, applied_edit_ids: &[String]) -> Vec<String>
 where
     Operation: Clone,
     P: Clone,

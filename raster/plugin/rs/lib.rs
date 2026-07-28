@@ -533,8 +533,8 @@ pub(crate) mod domain {
         }
     }
     
-    pub type RasterEnvelope = vcs::DocumentVcsEnvelope<RasterProjection, RasterOperation>;
-    pub type RasterStore = vcs::DocumentVcsStore<RasterProjection, RasterOperation>;
+    pub type RasterEnvelope = store::DocumentEnvelope<RasterProjection, RasterOperation>;
+    pub type RasterStore = store::DocumentStore<RasterProjection, RasterOperation>;
     //#endregion 🔖Operations
 
     //#region 🔖Dsl
@@ -567,11 +567,19 @@ pub(crate) mod domain {
             })
         }
     
-        #[wasm_bindgen(js_name = dispatchJson)]
-        pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
+        #[wasm_bindgen(js_name = dispatchText)]
+        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
             self.store
                 .borrow_mut()
-                .dispatch_json(command_json)
+                .dispatch_text(command_text)
+                .map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = dispatchBinary)]
+        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+            self.store
+                .borrow_mut()
+                .dispatch_binary(command_bytes)
                 .map_err(|e| JsValue::from_str(&e.to_string()))
         }
     
@@ -602,7 +610,8 @@ pub(crate) mod domain {
     #[cfg(test)]
     mod raster_vcs_tests {
         use super::*;
-        use vcs::{apply_operation, create_document_vcs_envelope, DocumentVcsCommand};
+        use vcs::apply_operation;
+use store::{create_document_envelope, DocumentCommand};
     
         fn pixel_layer(id: &str, name: &str) -> RasterLayerNode {
             RasterLayerNode::Pixel {
@@ -677,14 +686,14 @@ pub(crate) mod domain {
     
         #[test]
         fn store_applies_layer_add() {
-            let mut store = RasterStore::new(create_document_vcs_envelope(
+            let mut store = RasterStore::new(create_document_envelope(
                 RASTER_DOCUMENT_SCHEMA,
                 "raster",
                 empty_raster_projection(),
                 None,
             ));
             store
-                .dispatch(DocumentVcsCommand::Apply {
+                .dispatch(DocumentCommand::Apply {
                     operations: vec![RasterOperation::AddLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }],
                     description: None,
                 })
@@ -843,7 +852,7 @@ fn empty_raster_document() -> RasterDocument {
 /// every "semio" example call site (`setActiveExample`, tests). Falls back to the empty document if the
 /// fixture ever fails to parse, matching the old JSON fixture's failure behavior.
 fn semio_example_document() -> RasterDocument {
-    <RasterDocument as vcs::DocumentDsl>::parse_dsl(SEMIO_RASTER_EXAMPLE_TEXT).unwrap_or_else(|_| empty_raster_document())
+    <RasterDocument as store::DocumentDsl>::parse_dsl(SEMIO_RASTER_EXAMPLE_TEXT).unwrap_or_else(|_| empty_raster_document())
 }
 
 /// 📄 JSON re-serialization of {@link semio_example_document}, for the framework-generic call sites that
@@ -1707,13 +1716,13 @@ semio_framework_plugin::semio_plugin! {
 mod tests {
     use super::*;
     use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
-    use vcs::MemoryBackbone;
+    use store::MemoryBackbone;
 
     fn semio_app() -> VcsDocumentApp<RasterPlayApp> {
         let mut app = testkit::new_app::<RasterPlayApp>();
         let document = semio_example_document();
         app.load_document(
-            &serde_json::to_string(&vcs::create_document_vcs_envelope::<RasterDocument, RasterOperation>(
+            &serde_json::to_string(&store::create_document_envelope::<RasterDocument, RasterOperation>(
                 RASTER_DOCUMENT_SCHEMA,
                 "raster",
                 document,
@@ -1957,7 +1966,7 @@ mod tests {
             height: Some(512),
             image_key: None,
         }];
-        let base_envelope = serde_json::to_string(&vcs::create_document_vcs_envelope::<RasterDocument, RasterOperation>(
+        let base_envelope = serde_json::to_string(&store::create_document_envelope::<RasterDocument, RasterOperation>(
             RASTER_DOCUMENT_SCHEMA,
             "raster",
             base,
@@ -2107,19 +2116,19 @@ mod tests {
 
     #[test]
     fn raster_dsl_round_trips_representative_document() {
-        vcs::test_support::assert_dsl_round_trip(&representative_raster_document());
-        vcs::test_support::assert_dsl_pack_equivalence(&representative_raster_document());
+        store::test_support::assert_dsl_round_trip(&representative_raster_document());
+        store::test_support::assert_dsl_pack_equivalence(&representative_raster_document());
     }
 
     #[test]
     fn raster_dsl_round_trips_semio_example_document() {
-        vcs::test_support::assert_dsl_round_trip(&semio_example_document());
-        vcs::test_support::assert_dsl_pack_equivalence(&semio_example_document());
+        store::test_support::assert_dsl_round_trip(&semio_example_document());
+        store::test_support::assert_dsl_pack_equivalence(&semio_example_document());
     }
 
     #[test]
     fn raster_op_text_round_trips_every_variant() {
-        vcs::test_support::assert_op_line_round_trip(&RasterOperation::AddLayer {
+        store::test_support::assert_op_line_round_trip(&RasterOperation::AddLayer {
             parent_id: None,
             index: 0,
             layer: Box::new(RasterLayerNode::Pixel {
@@ -2135,7 +2144,7 @@ mod tests {
                 image_key: None,
             }),
         });
-        vcs::test_support::assert_op_line_round_trip(&RasterOperation::AddLayer {
+        store::test_support::assert_op_line_round_trip(&RasterOperation::AddLayer {
             parent_id: Some("group-1".into()),
             index: 3,
             layer: Box::new(RasterLayerNode::Group {
@@ -2149,27 +2158,27 @@ mod tests {
                 children: vec![],
             }),
         });
-        vcs::test_support::assert_op_line_round_trip(&RasterOperation::RemoveLayer { layer_id: "l1".into() });
-        vcs::test_support::assert_op_line_round_trip(&RasterOperation::PatchLayer {
+        store::test_support::assert_op_line_round_trip(&RasterOperation::RemoveLayer { layer_id: "l1".into() });
+        store::test_support::assert_op_line_round_trip(&RasterOperation::PatchLayer {
             layer_id: "l1".into(),
             patch: RasterLayerPatch { name: Some("Renamed".into()), visible: Some(false), ..Default::default() },
         });
-        vcs::test_support::assert_op_line_round_trip(&RasterOperation::PatchLayer {
+        store::test_support::assert_op_line_round_trip(&RasterOperation::PatchLayer {
             layer_id: "adjust-1".into(),
             patch: RasterLayerPatch::default(),
         });
-        vcs::test_support::assert_op_line_round_trip(&RasterOperation::MoveLayer { layer_id: "l1".into(), parent_id: Some("g2".into()), index: 1 });
-        vcs::test_support::assert_op_line_round_trip(&RasterOperation::MoveLayer { layer_id: "l1".into(), parent_id: None, index: 0 });
-        vcs::test_support::assert_op_line_round_trip(&RasterOperation::SetCamera { camera: RasterCamera { x: 1.0, y: -2.5, zoom: 2.0 } });
-        vcs::test_support::assert_op_line_round_trip(&RasterOperation::ReplaceDocument { document: representative_raster_document() });
+        store::test_support::assert_op_line_round_trip(&RasterOperation::MoveLayer { layer_id: "l1".into(), parent_id: Some("g2".into()), index: 1 });
+        store::test_support::assert_op_line_round_trip(&RasterOperation::MoveLayer { layer_id: "l1".into(), parent_id: None, index: 0 });
+        store::test_support::assert_op_line_round_trip(&RasterOperation::SetCamera { camera: RasterCamera { x: 1.0, y: -2.5, zoom: 2.0 } });
+        store::test_support::assert_op_line_round_trip(&RasterOperation::ReplaceDocument { document: representative_raster_document() });
     }
 
     #[test]
     fn raster_document_text_round_trips_store_with_applied_operation() {
-        let envelope = vcs::create_document_vcs_envelope::<RasterDocument, RasterOperation>(RASTER_DOCUMENT_SCHEMA, "doc-text-test", empty_raster_document(), None);
-        let mut store = vcs::DocumentVcsStore::new(envelope);
+        let envelope = store::create_document_envelope::<RasterDocument, RasterOperation>(RASTER_DOCUMENT_SCHEMA, "doc-text-test", empty_raster_document(), None);
+        let mut store = store::DocumentStore::new(envelope);
         store
-            .dispatch(vcs::DocumentVcsCommand::Apply {
+            .dispatch(store::DocumentCommand::Apply {
                 operations: vec![RasterOperation::AddLayer {
                     parent_id: None,
                     index: 1,
@@ -2187,8 +2196,8 @@ mod tests {
                 description: None,
             })
             .expect("apply");
-        vcs::test_support::assert_document_text_round_trip(&store);
-        vcs::test_support::assert_document_pack_round_trip(&store);
+        store::test_support::assert_document_text_round_trip(&store);
+        store::test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DslAndOpText
 }

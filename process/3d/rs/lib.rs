@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 use protocol::{apply_collection_operation, invert_collection_operation, CollectionOperation, Identified, Operation, OperationDiff, OpText, Patchable};
-use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
+use store::{DocumentEnvelope, DocumentStore};
 
 pub const PROCESS_3D_SCHEMA: &str = "process.3d";
 
@@ -326,12 +326,12 @@ impl Operation<Process3dDocument> for Process3dOperation {
     }
 }
 
-pub type Process3dEnvelope = DocumentVcsEnvelope<Process3dDocument, Process3dOperation>;
-pub type Process3dStore = DocumentVcsStore<Process3dDocument, Process3dOperation>;
+pub type Process3dEnvelope = DocumentEnvelope<Process3dDocument, Process3dOperation>;
+pub type Process3dStore = DocumentStore<Process3dDocument, Process3dOperation>;
 //#endregion 🔖Operations
 
 //#region 🔖Dsl
-// `impl vcs::DocumentDsl for Process3dDocument` is emitted automatically by the
+// `impl store::DocumentDsl for Process3dDocument` is emitted automatically by the
 // `#[derive(dsl::DslDocument)]` on `Process3dDocument` itself (see `🔖Document`) — no manual impl
 // needed here. The former hand-rolled `mod process3d_text` lexer/parser/printer (and the temporary
 // fixture-regeneration test that used it) have been removed now that both example fixtures have
@@ -399,7 +399,7 @@ fn process_step_patch_from_dsl(patch: ProcessStepPatchDsl) -> ProcessStepPatch {
 /// binding here (orphan rule: neither the trait nor the type is local to this crate). This twin
 /// flattens the `Steps { collection }` wrapper into its own four keyworded variants — mirroring
 /// `imperative_core::ImperativeOperationDsl`'s identical fix for the same foreign-`CollectionOperation`
-/// problem — and converts at the `vcs::OpText` boundary only; `Process3dOperation` itself, and every
+/// problem — and converts at the `store::OpText` boundary only; `Process3dOperation` itself, and every
 /// consumer matching on it, is completely untouched.
 #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
 enum Process3dOperationDsl {
@@ -460,7 +460,7 @@ fn process3d_operation_from_dsl(operation: Process3dOperationDsl) -> Process3dOp
 }
 
 impl OpText for Process3dOperation {
-    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
         Ok(process3d_operation_from_dsl(<Process3dOperationDsl as OpText>::parse_op(line)?))
     }
 
@@ -475,7 +475,7 @@ impl OpText for Process3dOperation {
 mod wasm_bridge {
     use super::*;
     use std::cell::RefCell;
-    use vcs::create_document_vcs_envelope;
+    use store::create_document_envelope;
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
@@ -492,14 +492,19 @@ mod wasm_bridge {
                     let envelope: Process3dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     Process3dStore::new(envelope)
                 }
-                None => Process3dStore::new(create_document_vcs_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_projection(), None)),
+                None => Process3dStore::new(create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_projection(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
 
-        #[wasm_bindgen(js_name = dispatchJson)]
-        pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
+        #[wasm_bindgen(js_name = dispatchText)]
+        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = dispatchBinary)]
+        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
@@ -524,57 +529,58 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vcs::{create_document_vcs_envelope, test_support, Author, DocumentDsl, DocumentVcsCommand};
+    use vcs::Author;
+use store::{create_document_envelope, test_support, DocumentDsl, DocumentCommand};
 
     fn cut_step(id: &str) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: SolidSpec::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
     }
 
     fn new_store() -> Process3dStore {
-        Process3dStore::new(create_document_vcs_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_projection(), None))
+        Process3dStore::new(create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_projection(), None))
     }
 
     #[test]
     fn adds_and_removes_steps() {
         let mut store = new_store();
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Add { id: "cut-1".into(), item: cut_step("cut-1"), at: 0 } }], description: None }).expect("add step");
+        store.dispatch(DocumentCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Add { id: "cut-1".into(), item: cut_step("cut-1"), at: 0 } }], description: None }).expect("add step");
         let projection = store.projection().expect("projection");
         assert_eq!(projection.steps.len(), 1);
         assert_eq!(projection.steps[0].id, "cut-1");
 
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Remove { id: "cut-1".into() } }], description: None }).expect("remove step");
+        store.dispatch(DocumentCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Remove { id: "cut-1".into() } }], description: None }).expect("remove step");
         assert!(store.projection().expect("projection").steps.is_empty());
     }
 
     #[test]
     fn patches_a_step_and_undo_restores_it() {
         let mut store = new_store();
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Add { id: "cut-1".into(), item: cut_step("cut-1"), at: 0 } }], description: None }).expect("add step");
+        store.dispatch(DocumentCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Add { id: "cut-1".into(), item: cut_step("cut-1"), at: 0 } }], description: None }).expect("add step");
         store
-            .dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Patch { id: "cut-1".into(), patch: ProcessStepPatch { enabled: Some(false), ..Default::default() } } }], description: None })
+            .dispatch(DocumentCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Patch { id: "cut-1".into(), patch: ProcessStepPatch { enabled: Some(false), ..Default::default() } } }], description: None })
             .expect("patch step");
         assert!(!store.projection().expect("projection").steps[0].enabled);
 
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        store.dispatch(DocumentCommand::Undo).expect("undo");
         assert!(store.projection().expect("projection").steps[0].enabled);
     }
 
     #[test]
     fn patches_origin_and_undo_restores_it() {
         let mut store = new_store();
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Add { id: "cut-1".into(), item: cut_step("cut-1"), at: 0 } }], description: None }).expect("add step");
+        store.dispatch(DocumentCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Add { id: "cut-1".into(), item: cut_step("cut-1"), at: 0 } }], description: None }).expect("add step");
         assert!(store.projection().expect("projection").steps[0].origin.is_none());
 
         let origin = StepOrigin { module_id: "wood".into(), machine_id: "circularSaw".into(), modification_kind_id: "crosscut".into() };
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Patch { id: "cut-1".into(), patch: ProcessStepPatch { origin: Some(Some(origin.clone())), ..Default::default() } } }],
                 description: None,
             })
             .expect("patch origin");
         assert_eq!(store.projection().expect("projection").steps[0].origin, Some(origin));
 
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        store.dispatch(DocumentCommand::Undo).expect("undo");
         assert!(store.projection().expect("projection").steps[0].origin.is_none());
     }
 
@@ -590,7 +596,7 @@ mod tests {
     fn moves_and_clamps_cursor() {
         let mut store = new_store();
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![
                     Process3dOperation::Steps { collection: CollectionOperation::Add { id: "a".into(), item: cut_step("a"), at: 0 } },
                     Process3dOperation::Steps { collection: CollectionOperation::Add { id: "b".into(), item: cut_step("b"), at: 1 } },
@@ -601,7 +607,7 @@ mod tests {
             .expect("build steps + cursor");
         assert_eq!(store.projection().expect("projection").resolved_up_to, Some(2));
 
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Remove { id: "b".into() } }], description: None }).expect("remove step clamps cursor");
+        store.dispatch(DocumentCommand::Apply { operations: vec![Process3dOperation::Steps { collection: CollectionOperation::Remove { id: "b".into() } }], description: None }).expect("remove step clamps cursor");
         let projection = store.projection().expect("projection");
         assert_eq!(projection.steps.len(), 1);
         assert_eq!(projection.resolved_up_to, Some(1));
@@ -612,10 +618,10 @@ mod tests {
         let mut store = new_store();
         let original_stock = store.projection().expect("projection").stock;
         let new_stock = Stock { id: "beam".into(), label: "Beam".into(), solid: SolidSpec::Cylinder { radius: 0.2, height: 2.0 }, pose: Pose::default() };
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOperation::SetStock { stock: new_stock.clone() }], description: None }).expect("set stock");
+        store.dispatch(DocumentCommand::Apply { operations: vec![Process3dOperation::SetStock { stock: new_stock.clone() }], description: None }).expect("set stock");
         assert_eq!(store.projection().expect("projection").stock, new_stock);
 
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        store.dispatch(DocumentCommand::Undo).expect("undo");
         assert_eq!(store.projection().expect("projection").stock, original_stock);
     }
 
@@ -644,10 +650,10 @@ mod tests {
         let mut store = new_store();
         let original_stock = store.projection().expect("projection").stock;
         let imported_stock = Stock { id: "stock".into(), label: "Imported STEP".into(), solid: SolidSpec::ImportedSolid { solid_handle: "solid-7".into() }, pose: Pose::default() };
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOperation::SetStock { stock: imported_stock.clone() }], description: None }).expect("set imported stock");
+        store.dispatch(DocumentCommand::Apply { operations: vec![Process3dOperation::SetStock { stock: imported_stock.clone() }], description: None }).expect("set imported stock");
         assert_eq!(store.projection().expect("projection").stock, imported_stock);
 
-        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        store.dispatch(DocumentCommand::Undo).expect("undo");
         assert_eq!(store.projection().expect("projection").stock, original_stock);
     }
 
@@ -795,10 +801,10 @@ mod tests {
     //#region 🔖DocumentTextTests
     #[test]
     fn process3d_document_text_round_trips_after_apply_and_checkpoint() {
-        let envelope = create_document_vcs_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_projection(), None);
+        let envelope = create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_projection(), None);
         let mut store = Process3dStore::new(envelope);
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![
                     Process3dOperation::SetStock { stock: Stock { id: "beam".into(), label: "Timber Beam".into(), solid: SolidSpec::Box { width: 2.4, depth: 0.12, height: 0.24 }, pose: Pose::default() } },
                     Process3dOperation::Steps { collection: CollectionOperation::Add { id: "cut-1".into(), item: cut_step("cut-1"), at: 0 } },
@@ -809,7 +815,7 @@ mod tests {
             })
             .expect("apply");
         store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+            .dispatch(DocumentCommand::CommitCheckpoint {
                 message: Some("c1".into()),
                 authors: vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }],
             })

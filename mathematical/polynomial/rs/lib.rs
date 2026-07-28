@@ -183,12 +183,13 @@ impl<C: CommutativeRing> PolyU<C> {
             if rn < dn {
                 break;
             }
-            r = r.mul_scalar(&lc_d);
-            q = q.mul_scalar(&lc_d);
+            // 🎯 `term` must come from r's leading coeff *before* the d_lc scale-up below, or it's
+            // d_lc times too large to cancel the (then-scaled) leading term — degree never drops.
             let coeff = r.leading_coeff().unwrap().clone();
             let shift = rn - dn;
             let term = Self::monomial(coeff, shift);
-            q = q.add(&term);
+            r = r.mul_scalar(&lc_d);
+            q = q.mul_scalar(&lc_d).add(&term);
             r = r.sub(&term.mul(d));
             e += 1;
         }

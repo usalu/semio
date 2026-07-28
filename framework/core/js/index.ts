@@ -1542,7 +1542,7 @@ export type TutorialUiSample =
 
 export type TutorialUiKeyframe = { readonly at: number; readonly sample: TutorialUiSample };
 
-/** 🖋️ Mirrors `vcs::DocumentVcsCommand` with `Operation = unknown` (opaque per-app operation JSON) — the
+/** 🖋️ Mirrors `store::DocumentCommand` with `Operation = unknown` (opaque per-app operation JSON) — the
  * SOLE source of document mutation during playback; `TutorialEvent`s are annotational only. */
 export type TutorialDocumentEventKind =
   | { readonly kind: "edit"; readonly forwards: readonly unknown[]; readonly backwards: readonly unknown[]; readonly description?: string; readonly coalesceKey?: string }

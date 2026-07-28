@@ -1740,7 +1740,7 @@ fn js_sys_time_now() -> f64 {
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 #[wasm_bindgen(js_name = puzzle3dParseDslJson)]
 pub fn puzzle3d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
-    use vcs::DocumentDsl;
+    use store::DocumentDsl;
     let projection = Puzzle3dProjection::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
     serde_json::to_string(&projection).map_err(|error| JsValue::from_str(&error.to_string()))
 }
@@ -1855,7 +1855,7 @@ mod tests {
     /// 🔗 Keeps the example fixture's scene-authored kind catalog in sync with the compile-time `puzzle3d-default` manifest.
     #[test]
     fn concrete_forest_kind_catalog_matches_puzzle3d_default_manifest() {
-        use vcs::DocumentDsl;
+        use store::DocumentDsl;
         let fixture = Puzzle3dProjection::parse_dsl(include_str!("../example/concrete-forest.puzzle3d")).unwrap();
         let catalogs: KindCatalogBundle = serde_json::from_value(serde_json::to_value(&fixture.meta.kind_catalogs).unwrap()).unwrap();
         let manifest = mathematical_graph_manifest::manifest_by_id("puzzle3d-default").expect("puzzle3d-default manifest must be registered");
@@ -3034,10 +3034,10 @@ impl Puzzle3dPrecomputeSession {
 // `Puzzle2dOperation` shape; ground truth for field shapes is `puzzle/3d/example/*.3d.json` plus
 // `puzzle-plugin`'s own (until now duplicated) `Puzzle3dFixture`/`Puzzle3dObject`/… local mirror.
 #[cfg(any(test, all(target_arch = "wasm32", not(target_env = "p2"))))]
-use vcs::{create_document_vcs_envelope, DocumentVcsCommand};
+use store::{create_document_envelope, DocumentCommand};
 #[cfg(test)]
-use vcs::DocumentDsl;
-use vcs::{DocumentVcsEnvelope, DocumentVcsStore};
+use store::DocumentDsl;
+use store::{DocumentEnvelope, DocumentStore};
 use protocol::{Operation, OperationDiff};
 
 pub const PUZZLE_3D_SCHEMA: &str = "puzzle.3d";
@@ -3324,8 +3324,8 @@ impl Default for Puzzle3dProjection {
     }
 }
 
-pub type Puzzle3dEnvelope = DocumentVcsEnvelope<Puzzle3dProjection, Puzzle3dOperation>;
-pub type Puzzle3dStore = DocumentVcsStore<Puzzle3dProjection, Puzzle3dOperation>;
+pub type Puzzle3dEnvelope = DocumentEnvelope<Puzzle3dProjection, Puzzle3dOperation>;
+pub type Puzzle3dStore = DocumentStore<Puzzle3dProjection, Puzzle3dOperation>;
 
 pub fn empty_puzzle3d_projection() -> Puzzle3dProjection {
     Puzzle3dProjection::default()
@@ -3815,8 +3815,8 @@ pub fn puzzle3d_document_delta_operations(before: &serde_json::Value, after: &se
 /// 🌱 `puzzle-plugin`'s `Puzzle3dPlayApp` predates the typed `Puzzle3dProjection` above and stays on
 /// this ad-hoc `serde_json::Value` fixture shape for its scene-mutation helpers (out of scope to
 /// retrofit onto the typed struct). This newtype exists only to satisfy
-/// `DocumentApp::Projection: vcs::DocumentDsl + vcs::DocumentPack` post the repo-wide
-/// `vcs::DocumentDsl for serde_json::Value` bridge's removal (final DSL-syntax convergence gate);
+/// `DocumentApp::Projection: store::DocumentDsl + store::DocumentPack` post the repo-wide
+/// `store::DocumentDsl for serde_json::Value` bridge's removal (final DSL-syntax convergence gate);
 /// `parse_dsl`/`print_dsl`/`encode_pack_with`/`decode_pack_with` all round-trip straight through the
 /// still-standing `serde_json::Value` impls (JSON text / JSON-bridge pack encoding respectively),
 /// same local-bridge shape as `puzzle_2d`'s `Puzzle2dPlayProjection` and `compose`'s `KitSnapshot`.
@@ -3824,11 +3824,11 @@ pub fn puzzle3d_document_delta_operations(before: &serde_json::Value, after: &se
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Puzzle3dPlayProjection(pub serde_json::Value);
 
-impl vcs::DocumentDsl for Puzzle3dPlayProjection {
+impl store::DocumentDsl for Puzzle3dPlayProjection {
     const EXTENSION: &'static str = "puzzle3d-play";
 
-    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        serde_json::from_str(text).map(Puzzle3dPlayProjection).map_err(|error| vcs::TextError::new(error.to_string(), vcs::TextSpan::at(1, 1)))
+    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
+        serde_json::from_str(text).map(Puzzle3dPlayProjection).map_err(|error| store::TextError::new(error.to_string(), store::TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
@@ -3836,12 +3836,12 @@ impl vcs::DocumentDsl for Puzzle3dPlayProjection {
     }
 }
 
-impl vcs::DocumentPack for Puzzle3dPlayProjection {
-    fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
+impl store::DocumentPack for Puzzle3dPlayProjection {
+    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         self.0.encode_pack_with(options)
     }
 
-    fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
+    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         serde_json::Value::decode_pack_with(bytes, options).map(Puzzle3dPlayProjection)
     }
 }
@@ -3892,14 +3892,19 @@ mod wasm_bridge {
                     let envelope: Puzzle3dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     Puzzle3dStore::new(envelope)
                 }
-                None => Puzzle3dStore::new(create_document_vcs_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_projection(), None)),
+                None => Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_projection(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
 
-        #[wasm_bindgen(js_name = dispatchJson)]
-        pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
+        #[wasm_bindgen(js_name = dispatchText)]
+        pub fn dispatch_text(&self, command_text: &str) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_text(command_text).map_err(|e| JsValue::from_str(&e.to_string()))
+        }
+
+        #[wasm_bindgen(js_name = dispatchBinary)]
+        pub fn dispatch_binary(&self, command_bytes: &[u8]) -> Result<(), JsValue> {
+            self.store.borrow_mut().dispatch_binary(command_bytes).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
@@ -3926,9 +3931,9 @@ mod puzzle3d_vcs_tests {
 
     #[test]
     fn puzzle3d_document_vcs_replays_granular_operations() {
-        let mut store = Puzzle3dStore::new(create_document_vcs_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_projection(), None));
+        let mut store = Puzzle3dStore::new(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_projection(), None));
         store
-            .dispatch(DocumentVcsCommand::Apply {
+            .dispatch(DocumentCommand::Apply {
                 operations: vec![Puzzle3dOperation::SetObject { index: 0, object: Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false } }],
                 description: None,
             })
@@ -4011,8 +4016,8 @@ mod puzzle3d_vcs_tests {
     /// through `print_dsl`/`parse_dsl` exactly.
     #[test]
     fn puzzle3d_projection_dsl_round_trips() {
-        vcs::test_support::assert_dsl_round_trip(&empty_puzzle3d_projection());
-        vcs::test_support::assert_dsl_pack_equivalence(&empty_puzzle3d_projection());
+        store::test_support::assert_dsl_round_trip(&empty_puzzle3d_projection());
+        store::test_support::assert_dsl_pack_equivalence(&empty_puzzle3d_projection());
         let mut projection = empty_puzzle3d_projection();
         projection.camera = Puzzle3dCamera { position: [30.0, -30.0, 20.0], target: [7.0, 0.0, 3.0], zoom: 3.0, up: Some([0.0, 0.0, 1.0]), projection: None };
         projection.objects.push(Puzzle3dObject {
@@ -4034,8 +4039,8 @@ mod puzzle3d_vcs_tests {
         projection.target_volumes.push(Puzzle3dTargetVolume { id: "tv1".into(), origin: [1.0, 2.0, 3.0], orientation: None, scale: None, hidden: false, locked: false });
         projection.references.push(Puzzle3dReference { id: "r1".into(), source: Puzzle3dReferenceSource { url: "https://example.com/plan.png".into(), media_kind: Some("image".into()) }, origin: [0.0, 0.0, 0.0], width_world: 12.0, locked: false, hidden: false });
         projection.meta = Puzzle3dMeta { kind_catalogs: None, kind_compatibility: vec![Puzzle3dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: Some("vortex".into()) }] };
-        vcs::test_support::assert_dsl_round_trip(&projection);
-        vcs::test_support::assert_dsl_pack_equivalence(&projection);
+        store::test_support::assert_dsl_round_trip(&projection);
+        store::test_support::assert_dsl_pack_equivalence(&projection);
     }
 
     /// 📜 Both real example fixtures (migrated from the legacy `.3d.json` shape — see ticket
@@ -4045,8 +4050,8 @@ mod puzzle3d_vcs_tests {
     fn puzzle3d_example_fixtures_parse_and_round_trip_as_dsl() {
         for dsl_text in [include_str!("../example/concrete-forest.puzzle3d"), include_str!("../example/nakagin-capsule-tower.puzzle3d")] {
             let projection = Puzzle3dProjection::parse_dsl(dsl_text).expect("example fixture parses as dsl");
-            vcs::test_support::assert_dsl_round_trip(&projection);
-            vcs::test_support::assert_dsl_pack_equivalence(&projection);
+            store::test_support::assert_dsl_round_trip(&projection);
+            store::test_support::assert_dsl_pack_equivalence(&projection);
         }
     }
 }

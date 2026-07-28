@@ -658,10 +658,10 @@ mod tests {
     //#region 🔖Dsl
     #[test]
     fn curate_document_dsl_round_trips_sample_and_empty() {
-        vcs::test_support::assert_dsl_round_trip(&sample_document());
-        vcs::test_support::assert_dsl_round_trip(&CurateDocument::default());
-        vcs::test_support::assert_dsl_pack_equivalence(&sample_document());
-        vcs::test_support::assert_dsl_pack_equivalence(&CurateDocument::default());
+        store::test_support::assert_dsl_round_trip(&sample_document());
+        store::test_support::assert_dsl_round_trip(&CurateDocument::default());
+        store::test_support::assert_dsl_pack_equivalence(&sample_document());
+        store::test_support::assert_dsl_pack_equivalence(&CurateDocument::default());
     }
 
     #[test]
@@ -684,31 +684,31 @@ mod tests {
         document.filters.query = "steel \"ipe\"".into();
         document.filters.sort = Some(TableSort { column_id: "availability".into(), direction: SortDirection::Desc });
         document.runtime.selected_object_id = Some("beam-mesh-custom".into());
-        vcs::test_support::assert_dsl_round_trip(&document);
-        vcs::test_support::assert_dsl_pack_equivalence(&document);
+        store::test_support::assert_dsl_round_trip(&document);
+        store::test_support::assert_dsl_pack_equivalence(&document);
     }
     //#endregion 🔖Dsl
 
     //#region 🔖OpText
     #[test]
     fn set_document_op_text_round_trips() {
-        vcs::test_support::assert_op_line_round_trip(&SourcingOperation::SetDocument { document: sample_document() });
-        vcs::test_support::assert_op_line_round_trip(&SourcingOperation::SetDocument { document: CurateDocument::default() });
+        store::test_support::assert_op_line_round_trip(&SourcingOperation::SetDocument { document: sample_document() });
+        store::test_support::assert_op_line_round_trip(&SourcingOperation::SetDocument { document: CurateDocument::default() });
     }
     //#endregion 🔖OpText
 
     //#region 🔖DslAndOpTextStore
     #[test]
     fn curate_document_text_round_trips_through_a_vcs_store() {
-        let envelope = vcs::create_document_vcs_envelope(SOURCING_CURATE_SCHEMA, "sourcing-curate-test", sample_document(), None);
-        let mut store = vcs::DocumentVcsStore::new(envelope);
+        let envelope = store::create_document_envelope(SOURCING_CURATE_SCHEMA, "sourcing-curate-test", sample_document(), None);
+        let mut store = store::DocumentStore::new(envelope);
         let mut next = store.projection().expect("projection").clone();
         next.curate_delta("beam-glulam-gl24h", 3);
         store
-            .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![SourcingOperation::SetDocument { document: next }], description: None })
+            .dispatch(store::DocumentCommand::Apply { operations: vec![SourcingOperation::SetDocument { document: next }], description: None })
             .expect("apply");
-        vcs::test_support::assert_document_text_round_trip(&store);
-        vcs::test_support::assert_document_pack_round_trip(&store);
+        store::test_support::assert_document_text_round_trip(&store);
+        store::test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DslAndOpTextStore
 }

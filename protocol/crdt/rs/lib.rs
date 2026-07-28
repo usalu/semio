@@ -1,5 +1,5 @@
 //! 🎞️ Protocol CRDT merge strategies: real per-`MergeStrategyKind` conflict resolution for
-//! concurrent `protocol_command::OperationDiff` pairs, replacing `vcs::merge_concurrent_diffs`
+//! concurrent `protocol_command::OperationDiff` pairs, replacing `store::merge_concurrent_diffs`
 //! (`vcs/rs/lib.rs`'s `🔖MergeStrategy` region), which today collapses all five declared
 //! strategies to a blind `absorb()` regardless of what the operation actually declared. Frozen
 //! contract: `.repo/🎫/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` `## Amendment` §
@@ -16,7 +16,7 @@
 //!   actor-tiebroken so a strict winner always exists.
 //! - **chronological compose**: order the two sides by `OperationMeta.timestamp` and call
 //!   `earlier.absorb(later)` — every real `absorb` impl in this codebase (see
-//!   `vcs::DocumentVcsEnvelopeDiff::absorb` and friends) is "per-field overwrite iff the other
+//!   `store::DocumentVcsEnvelopeDiff::absorb` and friends) is "per-field overwrite iff the other
 //!   side set that field", i.e. later-in-time already wins per-field when absorbed in order. This
 //!   single combinator implements `OrderedSequence`/`TextSequence`'s compose behavior *and*
 //!   `TombstonedGraphSet`'s "tombstone outranks add only if its timestamp is greater, else the add
@@ -27,7 +27,7 @@
 //! before falling back to winner-take-all, per the contract.
 
 //#region 🔖Merge
-/// @emoji 🧩 Replaces `vcs::merge_concurrent_diffs` (`vcs/rs/lib.rs` L680), which collapsed every
+/// @emoji 🧩 Replaces `store::merge_concurrent_diffs` (`vcs/rs/lib.rs` L680), which collapsed every
 /// `MergeStrategyKind` to plain `absorb()`. Dispatches to a real per-strategy combinator instead.
 pub fn merge_concurrent_diffs<P, D: protocol_command::OperationDiff<P>>(
     strategy: protocol_core::MergeStrategyKind,

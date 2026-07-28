@@ -1742,14 +1742,14 @@ mod tests {
 
     #[test]
     fn default_scene_roundtrips_through_dsl() {
-        vcs::test_support::assert_dsl_round_trip(&default_remodel_scene());
-        vcs::test_support::assert_dsl_pack_equivalence(&default_remodel_scene());
+        store::test_support::assert_dsl_round_trip(&default_remodel_scene());
+        store::test_support::assert_dsl_pack_equivalence(&default_remodel_scene());
     }
 
     #[test]
     fn populated_scene_roundtrips_through_dsl() {
-        vcs::test_support::assert_dsl_round_trip(&populated_scene_fixture());
-        vcs::test_support::assert_dsl_pack_equivalence(&populated_scene_fixture());
+        store::test_support::assert_dsl_round_trip(&populated_scene_fixture());
+        store::test_support::assert_dsl_pack_equivalence(&populated_scene_fixture());
     }
 
     /// ⚡ One `assert_op_line_round_trip` per `RemodelOperation` variant, per the mechanism contract.
@@ -1757,48 +1757,48 @@ mod tests {
     fn every_operation_variant_roundtrips_through_op_text() {
         let scene = populated_scene_fixture();
 
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetStreams { streams: scene.streams.clone() });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetAsset { key: "asset-1".into(), value: scene.assets.get("asset-1").cloned() });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetAsset { key: "asset-2".into(), value: None });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetCalibration { calibration: scene.calibration.clone() });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetGcps { gcps: scene.gcps.clone() });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetIngestParams { params: scene.params.ingest.clone() });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetFeatureParams { params: scene.params.feature.clone() });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetMatchParams { params: scene.params.matching.clone() });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetSfmParams { params: scene.params.sfm.clone() });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetDenseParams { params: scene.params.dense.clone() });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetMeshParams { params: scene.params.mesh.clone() });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetMotionParams { params: scene.params.motion.clone() });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetGeoParams { params: scene.params.geo.clone() });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetJob { job: scene.job.clone() });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetSparse { sparse: scene.results.sparse.clone() });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetSparse { sparse: None });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetDense { dense: scene.results.dense.clone() });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetDense { dense: None });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetMeshResult { mesh: Box::new(scene.results.mesh.clone()) });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetTrajectory { trajectory: scene.results.trajectory.clone() });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetTrajectory { trajectory: None });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetTracks { tracks: scene.results.tracks.clone() });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetGeoProducts { geo: scene.results.geo.clone() });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetGeoProducts { geo: None });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetQc { qc: scene.results.qc.clone() });
-        vcs::test_support::assert_op_line_round_trip(&RemodelOperation::SetQc { qc: None });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetStreams { streams: scene.streams.clone() });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetAsset { key: "asset-1".into(), value: scene.assets.get("asset-1").cloned() });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetAsset { key: "asset-2".into(), value: None });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetCalibration { calibration: scene.calibration.clone() });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetGcps { gcps: scene.gcps.clone() });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetIngestParams { params: scene.params.ingest.clone() });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetFeatureParams { params: scene.params.feature.clone() });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetMatchParams { params: scene.params.matching.clone() });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetSfmParams { params: scene.params.sfm.clone() });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetDenseParams { params: scene.params.dense.clone() });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetMeshParams { params: scene.params.mesh.clone() });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetMotionParams { params: scene.params.motion.clone() });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetGeoParams { params: scene.params.geo.clone() });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetJob { job: scene.job.clone() });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetSparse { sparse: scene.results.sparse.clone() });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetSparse { sparse: None });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetDense { dense: scene.results.dense.clone() });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetDense { dense: None });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetMeshResult { mesh: Box::new(scene.results.mesh.clone()) });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetTrajectory { trajectory: scene.results.trajectory.clone() });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetTrajectory { trajectory: None });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetTracks { tracks: scene.results.tracks.clone() });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetGeoProducts { geo: scene.results.geo.clone() });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetGeoProducts { geo: None });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetQc { qc: scene.results.qc.clone() });
+        store::test_support::assert_op_line_round_trip(&RemodelOperation::SetQc { qc: None });
     }
 
-    /// 📄 Full `print_document_text`/`parse_document_text` round trip through a live `DocumentVcsStore`
+    /// 📄 Full `print_document_text`/`parse_document_text` round trip through a live `DocumentStore`
     /// with an applied edit, the ground-truth contract for replacing the JSON envelope with text files.
     #[test]
     fn store_roundtrips_through_document_text() {
         let initial = default_remodel_scene();
-        let envelope = vcs::create_document_vcs_envelope("test/v1", "test", initial, None);
-        let mut store = vcs::DocumentVcsStore::new(envelope);
+        let envelope = store::create_document_envelope("test/v1", "test", initial, None);
+        let mut store = store::DocumentStore::new(envelope);
         let mut feature_params = store.projection().expect("initial projection").params.feature.clone();
         feature_params.target_count = 12345;
         store
-            .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![RemodelOperation::SetFeatureParams { params: feature_params }], description: None })
+            .dispatch(store::DocumentCommand::Apply { operations: vec![RemodelOperation::SetFeatureParams { params: feature_params }], description: None })
             .expect("apply");
-        vcs::test_support::assert_document_text_round_trip(&store);
-        vcs::test_support::assert_document_pack_round_trip(&store);
+        store::test_support::assert_document_text_round_trip(&store);
+        store::test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DslAndOpText
 }
