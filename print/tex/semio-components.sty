@@ -133,7 +133,7 @@
         \cs_if_exist:cTF { zukunftbau@type } {
           \str_if_eq:eeTF { \use:c { zukunftbau@type } } { zwischenbericht } {
             \bool_set_true:N \l_semio_is_zwischenbericht_bool
-            \tl_set:Nn \l_semio_cover_institution_weight_tl { 4 }
+            \tl_set:Nn \l_semio_cover_institution_weight_tl { 6.5 }
             \tl_set:Nn \l_semio_cover_logo_weight_tl { 6.5 }
             \seq_set_split:Nnx \l_semio_title_seq { --- } { \@title }
             \tl_set:Nx \l_semio_clean_title_tl { \seq_item:Nn \l_semio_title_seq { 2 } }
@@ -155,7 +155,7 @@
                 }
               \end{WindowRow}
             }
-            \WindowItem[1.15]{
+            \WindowItem[2.3]{
               \begin{Window}[title={Untertitel}, anchor=center, text-size=fit]
                 \SemioSans \tl_use:N \l_semio_subtitle_tl
               \end{Window}
@@ -183,7 +183,7 @@
           }
         }
         \tl_if_blank:eF { \semio@cover@arbeitsprobe@image } {
-          \WindowItem[10.8]{
+          \WindowItem[7.15]{
             \begin{Window}[title=Arbeitsprobe, anchor=center]
               \begin{minipage}[c]{\linewidth}
                 \centering

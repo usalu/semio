@@ -210,6 +210,20 @@
 \newcommand{\semio@table@padendL}{{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+2\semio@table@long@cellpad\relax}\hspace{-\semio@table@long@cellpad}}
 \newcommand{\semio@table@padendR}{\hspace{-\semio@table@long@cellpad}{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+2\semio@table@long@cellpad\relax}}
 
+% 🎨 Per-ROW canvas switch for the GENERIC \SemioTableLong colspec. Those tables
+% have a canvas header but a transparent body, and header+body share one colspec,
+% so the inter-column pads can't be statically canvas (that would stripe the
+% body) nor static \hspace (that would seam the header). Instead the pad is
+% conditional: canvas \vrule in a header row, plain \hspace in a body row. The
+% flag is raised by \semio@table@header@cell (which every header cell calls, so
+% it is true by the time the pads to its right are typeset) and lowered on the
+% header→body boundary inside the head macro's \noalign. Register/glossary/
+% project use their own always-canvas colspecs and ignore this flag.
+\newif\ifsemio@table@rowcanvas
+\semio@table@rowcanvasfalse
+\newcommand{\semio@table@genpadcp}{\ifsemio@table@rowcanvas\semio@table@padcp\else\hspace{\semio@table@long@cellpad}\fi}
+\newcommand{\semio@table@genpadendR}{\ifsemio@table@rowcanvas\semio@table@padendR\else\hspace{\semio@chrome@padding}\fi}
+
 \newcommand{\semio@table@colspec@register@long}{|@{\semio@table@padendL}>{\semio@cell@pre}m{\dimexpr0.12\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@pre}m{\dimexpr0.78\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@preR}m{\dimexpr0.10\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padendR}|}
 
 \newcommand{\semio@table@colspec@glossary@long}{|@{\semio@table@padendL}>{\semio@cell@pre}m{\dimexpr0.22\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@pre}m{\dimexpr0.56\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@preR}m{\dimexpr0.22\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padendR}|}
@@ -268,6 +282,12 @@
 }
 
 \newcommand{\semio@table@header@cell}[1]{%
+  % Mark this as a canvas row so the generic colspec's conditional pads
+  % (\semio@table@genpadcp) fill with canvas between the header columns. Set
+  % here (not in the row template) so it is already true when the pad to the
+  % right of this cell is typeset; harmless for tables whose colspec pads are
+  % unconditional. Reset to false on the header→body boundary.
+  \global\semio@table@rowcanvastrue
   \cellcolor{semio-chrome-canvas}%
   \SemioSans\semio@table@fontsize@apply
   \semio@text@emphasized{\bfseries #1}%
@@ -287,9 +307,8 @@
 \semio@table@headerfillfalse
 \newcommand{\semio@table@long@header@left@cell}[2]{%
   \ifsemio@table@headerfill
-    % Structurally identical to a body col-1: canvas edge fill + width−2cellpad +
-    % two canvas pads bridging to col-2, so the header title aligns with the body
-    % cells AND the fill is continuous.
+    % Canvas edge fill + width−2cellpad + two canvas pads bridging to col-2, so
+    % the header col-1 fills seamlessly AND its title lines up with the body cells.
     \multicolumn{1}{|@{\semio@table@padendL}>{\semio@cell@pre}m{\dimexpr#1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}}{%
       \semio@table@header@cell{#2}%
     }%
@@ -528,13 +547,18 @@
 \newcommand{\semio@table@long@head@continuation@current}{}
 
 \cs_new_protected:Npn \semio_table_long_colspec_build:n #1 {
+  % Left edge stays plain \hspace (body col-1 has a transparent left inset; the
+  % header's col-1 is a \multicolumn that supplies its own canvas edge). Every
+  % inter-column pad and the right edge are conditional (\semio@table@genpadcp /
+  % genpadendR): canvas in a header row, transparent in a body row. Both branches
+  % are the same width, so column geometry is identical either way.
   \tl_set:Nn \l_semio_table_long_colspec_tl { | @ { \hspace{\semio@chrome@padding} } @ { } }
   \clist_map_inline:nn {#1} {
     \tl_put_right:Nn \l_semio_table_long_colspec_tl {
-      @{\hspace{\semio@table@long@cellpad}}>{\semio@cell@pre}m{\dimexpr##1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\hspace{\semio@table@long@cellpad}}
+      @{\semio@table@genpadcp}>{\semio@cell@pre}m{\dimexpr##1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@genpadcp}
     }
   }
-  \tl_put_right:Nn \l_semio_table_long_colspec_tl { @ { \hspace{\semio@chrome@padding} } | }
+  \tl_put_right:Nn \l_semio_table_long_colspec_tl { @ { \semio@table@genpadendR } | }
 }
 
 \cs_new_protected:Npn \semio_table_long_header_build:nn #1#2 {
@@ -569,9 +593,9 @@
   % \cellcolor{semio-chrome-canvas} in its >{...} prefix. \noalign runs the
   % assignment on the row boundary without opening that row, so the column-header
   % rule sits flush on the first body row (no gap) with an unbroken fill.
-  \global\long\expandafter\def\expandafter\semio@table@long@head@current\expandafter{\l_semio_table_long_head_tl\noalign{\global\semio@table@row@startedfalse}}
+  \global\long\expandafter\def\expandafter\semio@table@long@head@current\expandafter{\l_semio_table_long_head_tl\noalign{\global\semio@table@row@startedfalse\global\semio@table@rowcanvasfalse}}
   \tl_put_right:Nn \l_semio_table_long_head_tl {
-    \noalign{\vskip\z@\global\semio@table@row@startedfalse}% head->body transition (no negative pull) + row-started reset, both on the row boundary so neither opens a phantom band
+    \noalign{\vskip\z@\global\semio@table@row@startedfalse\global\semio@table@rowcanvasfalse}% head->body transition (no negative pull) + row-started + rowcanvas resets, all on the row boundary so none opens a phantom band
   }
   % 🩹 Not \tl_gset_eq:NN: that \let-aliases \semio@table@long@head@current to
   % an expl3 tl variable, which l3 always defines as a non-\long macro. A
@@ -802,19 +826,19 @@
 % identical to the standard builder. (Uses \color+\vrule rather than
 % \columncolor, which misbehaves in this document's package stack.)
 % Pad fills: interior gaps get one cellpad-wide canvas rule from each side (they
-% abut → 2·cellpad, matching the two \hspace pads they replace); the two outer
-% edges get one combined (chrome+cellpad)-wide rule so the fill reaches the
-% border in a single stroke (no seam between abutting rules).
+% abut → 2·cellpad, matching the two \hspace pads they replace).
 \newcommand{\semio@project@padcp}{{\color{semio-chrome-canvas}\vrule width \semio@table@long@cellpad}}
-% Edge fills overlap one cellpad INTO the first/last cell (net width still
-% chrome+cellpad) so they cover the cell↔pad seam and meet the border cleanly.
+% Edge fills: a (chrome+cellpad)-wide canvas rule with a -cellpad kern, so the
+% vrule starts one cellpad INSIDE the first/last cell (covering the cell↔pad seam)
+% yet the NET advance is only chrome@padding. That net-chrome advance is the fix
+% for the open top-right corner: with the former +2cellpad vrule the net advance
+% was chrome+cellpad, which pushed the outer borders one cellpad PAST where the
+% horizontal rules end (the top \hrule spans \linewidth, the band↔component divider
+% and every row separator span to the border) — so the rules stopped a cellpad
+% short of the right border. At net chrome the whole card is exactly \linewidth
+% wide, so borders land where the rules end and the fill still reaches them
+% seamlessly. padendL and padendR must stay symmetric or the card goes off-centre.
 \newcommand{\semio@project@padendL}{{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+\semio@table@long@cellpad\relax}\hspace{-\semio@table@long@cellpad}}
-% Net advance chrome (not chrome+cellpad): the wider +2cellpad vrule pushed the
-% right border one cellpad PAST where the horizontal rules end, so the top rule,
-% the band↔component divider and every row separator stopped a cellpad short of
-% the right border (an open top-right corner). At +cellpad the vrule still starts
-% one cellpad inside the last cell (the \hspace{-cellpad}) so the fill reaches the
-% border seamlessly, but the border now lands exactly where the rules end.
 \newcommand{\semio@project@padendR}{\hspace{-\semio@table@long@cellpad}{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+\semio@table@long@cellpad\relax}}
 % Data cells are vertically centred (m) with the same symmetric strut padding as
 % every other table; the top strut rides in the cell-fill prefix, the bottom
@@ -937,8 +961,44 @@
   \noalign{\global\semio@table@row@startedfalse}%
 }
 
+% Non-breaking card render. A project card is at most ~8 component rows tall, so
+% it always fits within one text column — it never needs longtable's page-break /
+% repeated-header machinery. Rendering it as a plain \tabular (an unbreakable box)
+% instead means a card that does not fit in the space left on the page is carried
+% to the next page AS ONE UNIT, at the inter-card glue. That removes the orphaned
+% continuation head longtable stamped whenever \SemioCardKeep's soft \needspace
+% break pushed a card after \begin{longtable} had already claimed the current page
+% (a stray "title + column header" band floating above the real card). Same setup,
+% colspec, title chrome, band, header and rows as the longtable render — only the
+% outer container and the (now unnecessary) firsthead/endhead slots differ.
+\newcommand{\semio@project@render}[3]{% #1 colspec  #2 firsthead(band+header)  #3 rows
+  \global\semio@table@long@mode=1\relax
+  \global\semio@table@row@startedfalse
+  \par\addvspace{\semio@spacing@table@outer}%
+  \begingroup
+  \SemioSans
+  \semio@table@fontsize@apply
+  \semio@table@setup@long
+  \color{semio-chrome-text-normal}%
+  \semio@table@long@inner@w@set
+  \semio@table@long@title@chrome@prepare
+  \nointerlineskip
+  \raggedright
+  \noindent
+  \begin{tabular}{#1}%
+  \semio@table@long@continuation@chrome{6}%
+  #2%
+  \noalign{\vskip\z@}%
+  #3%
+  \end{tabular}%
+  \endgroup
+  \par\addvspace{\semio@spacing@table@outer}%
+  \global\semio@table@long@mode=0\relax
+  \global\semio@table@row@startedfalse
+}
+
 \newcommand{\semio@project@long@render@call}[2]{%
-  \semio@table@long@render{#1}{\semio@project@firsthead}{\semio@project@head}{#2}{6}%
+  \semio@project@render{#1}{\semio@project@firsthead}{#2}%
 }
 
 % \SemioProject{name}{label}{image}{ort & land & jahr & typ & status & quelle}{rows}

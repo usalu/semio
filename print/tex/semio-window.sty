@@ -447,10 +447,12 @@
     % \semio_window_appendix_register_render: — is affected.
     \renewcommand{\semio@table@vtop}{\semio@table@vtop@toc}%
     \renewcommand{\semio@table@vbot}{\semio@table@vbot@toc}%
+    \global\semio@invert@tabtrue% LR-invert-tab: Inhaltsverzeichnis only — DELETE this line + the false reset below to revert
     \semio@register@window@open{\SemioTocTitle}%
     \SemioTableRegister{\semio@register@table@body}%
     \semio@register@window@close
     \clearpage
+    \global\semio@invert@tabfalse% LR-invert-tab end (global: the longtable firsthead typesets during \clearpage, after the group)
     \makeatother
     \group_end:
   }
@@ -2820,6 +2822,50 @@
 % instead of the default outline tab. Default off; scoped on per table via the
 % toggle. Remove this \newif + the \ifsemio@invert@tab branch below to revert.
 \newif\ifsemio@invert@tab
+% The register/TOC title tab is actually built in the LONGTABLE path
+% (\semio@table@long@title@chrome@prepare, semio-table.sty). Override it here the
+% same way — window.sty loads after the table file, so this wins without editing
+% it. Identical body, with only the title-tab sbox branched on the toggle.
+\renewcommand{\semio@table@long@title@chrome@prepare}{%
+  \ifsemio@invert@tab
+    \sbox{\semio@window@tab@box}{\semio@heading@chip{semio-chrome-foreground}{semio-chrome-canvas}{\semio@window@header@title}}%
+  \else
+    \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{\textcolor{semio-chrome-foreground}{\semio@window@header@title}}}%
+  \fi
+  \edef\semio@table@long@title@number{\semio@window@header@number}%
+  \ifx\semio@table@long@title@number\@empty
+    \semio@table@long@title@numberfalse
+    \setlength{\semio@window@gap@w}{\dimexpr\linewidth-\wd\semio@window@tab@box\relax}%
+  \else
+    \semio@table@long@title@numbertrue
+    \sbox{\semio@window@ctrl@box}{\semio@heading@cap@muted{\semio@table@long@title@number}}%
+    \setlength{\semio@window@gap@w}{%
+      \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
+    }%
+  \fi
+}
+% LR-invert-tab: double the OUTER frame of the register/TOC longtable — the
+% left/right |…| border rules become 2×-width \vrule when the toggle is on
+% (inner column pads and per-row rules are untouched). Same body as
+% \semio@table@colspec@register@long in semio-table.sty; the \if resolves as the
+% preamble is built at \begin{longtable}. Toggle off ⇒ identical to the original.
+\renewcommand{\semio@table@colspec@register@long}{\ifsemio@invert@tab!{\vrule width 2\arrayrulewidth}\else|\fi@{\semio@table@padendL}>{\semio@cell@pre}m{\dimexpr0.12\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@pre}m{\dimexpr0.78\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@preR}m{\dimexpr0.10\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padendR}\ifsemio@invert@tab!{\vrule width 2\arrayrulewidth}\else|\fi}
+% LR-invert-tab: double the OUTER frame TOP rule. Same body as
+% \semio@table@long@title@chrome@row (semio-table.sty), only the closing \hrule
+% height branched on the toggle.
+\renewcommand{\semio@table@long@title@chrome@row}[1]{%
+  \multicolumn{#1}{@{}l@{}}{%
+    \hskip-\semio@stroke@hairline\relax
+    \hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
+      \usebox{\semio@window@tab@box}%
+      \hfil
+      \ifsemio@table@long@title@number\usebox{\semio@window@ctrl@box}\fi
+    }%
+  }%
+  \\%
+  \noalign{\vskip\dimexpr-\extrarowheight-\dp\@arstrutbox\relax}%
+  \noalign{{\color{semio-chrome-border-normal}\hrule height\ifsemio@invert@tab2\fi\semio@stroke@hairline}}%
+}
 \newcommand{\semio@window@header@muted}[2]{%
   \ifsemio@invert@tab
     \sbox{\semio@window@tab@box}{\semio@heading@chip{semio-chrome-foreground}{semio-chrome-canvas}{#2}}%

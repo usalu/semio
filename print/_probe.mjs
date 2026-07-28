@@ -13,14 +13,16 @@ const data = ctx.getImageData(0,0,c.width,c.height).data;
 const at = (x,y)=>{const i=(y*c.width+x)*4;return [data[i],data[i+1],data[i+2]];};
 const isDark = ([r,g,b])=> r<170 && g<170 && b<170;
 const isPage = ([r,g])=> r>=245 && g>=241;
-const rightBorderAt = (y)=>{ for(let x=c.width-1;x>3000;x--){ if(isDark(at(x,y))) return x; } return null; };
-const leftBorderAt = (y)=>{ for(let x=600;x<1400;x++){ if(isDark(at(x,y))) return x; } return null; };
-const hExtent=(y)=>{let xs=null,xe=null;for(let x=700;x<4300;x++){if(isDark(at(x,y))||isDark(at(x,y-1))||isDark(at(x,y+1))){if(xs===null)xs=x;xe=x;}}return[xs,xe];};
-const findRule=(y0,y1)=>{for(let y=y0;y<y1;y++){let n=0;for(let x=800;x<4000;x+=50)if(isDark(at(x,y)))n++;if(n>50)return y;}return null;};
-const topRuleY=findRule(1600,1780);
-const divY=findRule(2150,2400);
-console.log("topRuleY",topRuleY,"extent",topRuleY&&hExtent(topRuleY));
-console.log("dividerY",divY,"extent",divY&&hExtent(divY));
-for (const [lbl,y] of [["band",1900],["header",2400],["comp",2750]]) console.log(lbl.padEnd(7),"L=",leftBorderAt(y),"R=",rightBorderAt(y));
-// TR corner intrusion: rectangle just inside right border, just below top rule
-if(topRuleY){const rb=rightBorderAt(1900);let intr=0,tot=0;for(let y=topRuleY+2;y<topRuleY+30;y++)for(let x=rb-30;x<rb;x++){tot++;if(isPage(at(x,y)))intr++;}console.log("TRcorner page-bg intrusion",intr,"/",tot);}
+const isCanvas = ([r,g,b])=> Math.abs(r-240)<4 && Math.abs(g-236)<4 && Math.abs(b-221)<4;
+const L=748,R=4194;
+// scan just-inside-left and just-inside-right fill for page-bg or seam, across many rows
+let leftBad=0,rightBad=0,tot=0;
+for(let y=1720;y<3050;y+=3){
+  for(let dx=3;dx<=10;dx++){ tot++; if(isPage(at(L+dx,y)))leftBad++; if(isPage(at(R-dx,y)))rightBad++; }
+}
+console.log("edge page-bg pixels  left",leftBad,"right",rightBad,"of",tot);
+// corners: page-bg just inside both borders below/above rules
+const corner=(x0,x1,y0,y1)=>{let n=0,t=0;for(let y=y0;y<y1;y++)for(let x=x0;x<x1;x++){t++;if(isPage(at(x,y)))n++;}return `${n}/${t}`;};
+// top rule y ~1650, bottom of card ~ find last dark long rule
+console.log("TL corner", corner(L+2,L+34,1656,1686));
+console.log("TR corner", corner(R-34,R-2,1656,1686));
