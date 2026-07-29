@@ -17,12 +17,12 @@ path = "lib.rs"
 [dependencies]
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-vcs = { path = "../../../vcs/rs" }
-store = { path = "../../../store/rs" }
-protocol = { path = "../../../protocol/rs" }
-dsl = { path = "../../../dsl/rs" }
-infinite_board_normal_directed = { path = "../../../infinite/board/normal/directed/rs" }
-infinite_cavas = { path = "../../../infinite/cavas/rs" }
+vcs = { path = "../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+store = { path = "../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
+protocol = { path = "../../../s/kernel/protocol/rs", package = "semio-s-kernel-protocol" }
+dsl = { path = "../../../s/kernel/dsl/rs", package = "semio-s-kernel-dsl" }
+infinite_board_normal_directed = { path = "../../../s/kernel/infinite/board/normal/directed/rs", package = "semio-s-kernel-infinite-board-normal-directed" }
+infinite_cavas = { path = "../../../s/kernel/infinite/canvas/rs", package = "semio-s-kernel-infinite-canvas" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.106"

@@ -13,7 +13,7 @@ path = "lib.rs"
 [dependencies]
 norm_core = { path = "../../../core/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
-vcs = { path = "../../../../vcs/rs" }
-store = { path = "../../../../store/rs" }
-dsl = { path = "../../../../dsl/rs" }
+vcs = { path = "../../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+store = { path = "../../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
+dsl = { path = "../../../../s/kernel/dsl/rs", package = "semio-s-kernel-dsl" }
 

@@ -1037,8 +1037,13 @@ class PluginBuildScript extends BundleScript {
  * built wasm lands in `framework/product/os/dev/program-modules`, so widening the watch root here
  * cannot cause a rebuild to re-trigger itself. */
 function pluginWatchRoot(target: ProgramRegistryEntry): string {
-  const topLevel = target.cratePath.split("/")[0];
-  return join(repoRoot, topLevel === "framework" ? target.cratePath : topLevel);
+  const segments = target.cratePath.split("/");
+  const topLevel = segments[0];
+  if (topLevel === "framework") return join(repoRoot, target.cratePath);
+  // 🏛️ Post-restructure: sibling crate families live under `s/plugin/<p>/...`, not directly
+  // under `s/`. Widening to `s/` would watch every plugin's tree on every crate's edit.
+  if (topLevel === "s" && segments[1] === "plugin") return join(repoRoot, segments.slice(0, 3).join("/"));
+  return join(repoRoot, topLevel);
 }
 
 class PluginWatchScript extends BundleScript {

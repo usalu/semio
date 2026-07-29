@@ -1,0 +1,25 @@
+[package]
+name = "semio-s-kernel-pack-http"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Pack binary document format HTTP layer — range-request transport trait, HTTP source, chunk LRU cache"
+
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+pack_core = { path = "../../core/rs", package = "semio-s-kernel-pack-core" }
+pack_format = { path = "../../format/rs", package = "semio-s-kernel-pack-format" }
+pack_async = { path = "../../async/rs", package = "semio-s-kernel-pack-async" }
+async-trait = "0.1"
+ureq = { version = "2", optional = true }
+
+[dev-dependencies]
+futures-lite = "2"
+
+[features]
+ureq = ["dep:ureq"]

@@ -1,0 +1,17 @@
+[package]
+name = "semio-s-kernel-mathematical-graph-connectivity"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+mathematical_graph = { path = "../../rs", package = "semio-s-kernel-mathematical-graph" }
+mathematical_graph_flow = { path = "../../flow/rs", package = "semio-s-kernel-mathematical-graph-flow" }
+mathematical_graph_components = { path = "../../components/rs", package = "semio-s-kernel-mathematical-graph-components" }

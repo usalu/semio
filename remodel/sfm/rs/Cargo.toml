@@ -15,8 +15,8 @@ path = "lib.rs"
 remodel_camera = { path = "../../camera/rs" }
 remodel_feature = { path = "../../feature/rs" }
 remodel_image = { path = "../../image/rs" }
-mathematical_algebra = { path = "../../../mathematical/algebra/rs" }
-mathematical_lie = { path = "../../../mathematical/lie/rs" }
-mathematical_optimize = { path = "../../../mathematical/optimize/rs" }
-mathematical_spatial = { path = "../../../mathematical/spatial/rs" }
-mathematical_random = { path = "../../../mathematical/random/rs" }
+mathematical_algebra = { path = "../../../s/kernel/mathematical/algebra/rs", package = "semio-s-kernel-mathematical-algebra" }
+mathematical_lie = { path = "../../../s/kernel/mathematical/lie/rs", package = "semio-s-kernel-mathematical-lie" }
+mathematical_optimize = { path = "../../../s/kernel/mathematical/optimize/rs", package = "semio-s-kernel-mathematical-optimize" }
+mathematical_spatial = { path = "../../../s/kernel/mathematical/spatial/rs", package = "semio-s-kernel-mathematical-spatial" }
+mathematical_random = { path = "../../../s/kernel/mathematical/random/rs", package = "semio-s-kernel-mathematical-random" }

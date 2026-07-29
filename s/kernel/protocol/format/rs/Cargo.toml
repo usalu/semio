@@ -1,0 +1,22 @@
+[package]
+name = "semio-s-kernel-protocol-format"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Protocol .spr binary container — record framing, commit chain, recovery, zero-copy cursors"
+
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[features]
+default = ["deflate"]
+deflate = ["pack_format/deflate"]
+
+[dependencies]
+protocol_core = { path = "../../core/rs", package = "semio-s-kernel-protocol-core" }
+pack_core = { path = "../../../pack/core/rs", package = "semio-s-kernel-pack-core" }
+pack_format = { path = "../../../pack/format/rs", package = "semio-s-kernel-pack-format" }
+blake3 = "1"

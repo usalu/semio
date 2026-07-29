@@ -256,7 +256,17 @@ pub mod catalog {
                             && segs[segs.len() - 2] == "rs"
                             && segs[segs.len() - 4] == "module"
                     };
-                    if is_program || is_module {
+                    // 🏛️ Post-restructure plugin bundle crate: `s/plugin/<p>/rs/Cargo.toml` absorbs the
+                    // former `<tech>/program/rs`. Kept alongside the legacy patterns during the migration.
+                    let is_plugin_bundle = {
+                        let segs: Vec<&str> = path_str.split('/').collect();
+                        segs.len() >= 5
+                            && segs[segs.len() - 1] == "Cargo.toml"
+                            && segs[segs.len() - 2] == "rs"
+                            && segs[segs.len() - 4] == "plugin"
+                            && segs[segs.len() - 5] == "s"
+                    };
+                    if is_program || is_module || is_plugin_bundle {
                         out.push(path);
                     }
                 }
@@ -352,8 +362,15 @@ pub mod catalog {
             }
         }
         if let Some(suffix) = variant.strip_prefix(program_id).filter(|s| !s.is_empty()) {
-            if let Some(tech_root) = trimmed.split('/').next() {
-                let dir = root.join(tech_root).join(suffix).join("example");
+            let segs: Vec<&str> = trimmed.split('/').collect();
+            // 🏛️ Under `s/plugin/<p>/...` the tech root is the plugin folder (3 segments), not `s` itself.
+            let tech_root = if segs.first() == Some(&"s") && segs.get(1) == Some(&"plugin") && segs.len() >= 3 {
+                Some(segs[..3].join("/"))
+            } else {
+                segs.first().map(|s| s.to_string())
+            };
+            if let Some(tech_root) = tech_root {
+                let dir = root.join(&tech_root).join(suffix).join("example");
                 if dir.is_dir() {
                     return example_ids_in(&dir);
                 }

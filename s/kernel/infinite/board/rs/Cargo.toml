@@ -1,0 +1,22 @@
+[package]
+name = "semio-s-kernel-infinite-board"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+ui_styling = { path = "../../../../../ui/styling/rs" }
+infinite_cavas = { path = "../../canvas/rs", package = "semio-s-kernel-infinite-canvas" }
+mathematical_graph = { path = "../../../mathematical/graph/rs", package = "semio-s-kernel-mathematical-graph" }
+mathematical_graph_drawing = { path = "../../../mathematical/graph/drawing/rs", package = "semio-s-kernel-mathematical-graph-drawing" }
+mathematical_geometry = { path = "../../../mathematical/geometry/rs", package = "semio-s-kernel-mathematical-geometry" }
+mathematical_graph_manifest = { path = "../../../mathematical/graph/manifest/rs", package = "semio-s-kernel-mathematical-graph-manifest" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

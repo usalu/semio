@@ -17,7 +17,7 @@ pub mod component {
         path: "../../wit",
     });
 
-    use exports::semio::framework::plugin::Guest;
+    use exports::semio::framework::program::Guest;
     use semio::framework::types::{
         ActionInvocationJson, CommandInvocationJson, DocumentPackFiles, DocumentTextFiles, InvocationContextJson, InvocationResponseJson,
         MediaArtifact, MigrateDocumentInput, MigrateDocumentOutput, ProgramError, ProgramManifestJson, UiRefreshRequestJson,

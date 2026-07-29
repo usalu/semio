@@ -1,0 +1,14 @@
+[package]
+name = "semio-s-kernel-geometry-3d-spatial"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+kernel_3d_engine = { path = "../../brep/engine/rs", package = "semio-s-kernel-geometry-3d-brep-engine" }

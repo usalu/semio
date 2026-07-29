@@ -104,14 +104,14 @@ version = "0.1.0"
 dependencies = [
  "animate_present",
  "animate_video",
- "protocol",
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-program",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
 ]
 
 [[package]]
@@ -124,8 +124,8 @@ dependencies = [
  "fontdb",
  "image",
  "kurbo 0.13.1",
- "mathematical_geometry",
  "semio-framework-hash",
+ "semio-s-kernel-mathematical-geometry",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -141,13 +141,13 @@ version = "0.1.0"
 dependencies = [
  "animate_core",
  "animate_video",
- "dsl",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "thiserror 2.0.18",
- "vcs",
  "wasm-bindgen",
 ]
 
@@ -157,9 +157,9 @@ version = "0.1.0"
 dependencies = [
  "animate_core",
  "image",
- "mathematical_geometry",
  "pollster",
  "semio-framework-hash",
+ "semio-s-kernel-mathematical-geometry",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -231,14 +231,14 @@ dependencies = [
 name = "architect_spine"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "mathematical_graph",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "thiserror 2.0.18",
- "vcs",
 ]
 
 [[package]]
@@ -1082,29 +1082,29 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "cad_document",
- "kernel_3d_brepkit",
- "kernel_3d_engine",
- "protocol",
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-program",
+ "semio-s-kernel-geometry-3d-brep",
+ "semio-s-kernel-geometry-3d-brep-engine",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "ui_wgpu",
- "vcs",
 ]
 
 [[package]]
 name = "cad_document"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
  "wasm-bindgen",
 ]
 
@@ -1452,7 +1452,6 @@ dependencies = [
  "blake3",
  "chrono",
  "console_error_panic_hook",
- "dsl",
  "futures-channel",
  "futures-lite",
  "futures-util",
@@ -1462,18 +1461,19 @@ dependencies = [
  "js-sys",
  "nalgebra 0.34.2",
  "paste",
- "protocol",
  "rusqlite",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
  "sha2",
- "store",
  "tempfile",
  "thiserror 2.0.18",
  "ureq",
  "uuid",
- "vcs",
  "walkdir",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -1511,9 +1511,9 @@ dependencies = [
  "console_error_panic_hook",
  "futures-util",
  "js-sys",
- "mathematical_graph_dsl",
- "mathematical_graph_manifest",
  "pin-project-lite",
+ "semio-s-kernel-mathematical-graph-dsl",
+ "semio-s-kernel-mathematical-graph-manifest",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -1894,14 +1894,14 @@ checksum = "f27ae1dd37df86211c42e150270f82743308803d90a6f6e6651cd730d5e1732f"
 name = "dag-program"
 version = "0.1.0"
 dependencies = [
- "infinite_board_port_directed_dag",
- "protocol",
  "semio-framework-program",
+ "semio-s-kernel-infinite-board-port-directed-dag",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "thiserror 2.0.18",
- "vcs",
 ]
 
 [[package]]
@@ -1998,307 +1998,6 @@ name = "data-url"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "be1e0bca6c3637f992fc1cc7cbc52a78c1ef6db076dbf1059c4323d6a2048376"
-
-[[package]]
-name = "db"
-version = "0.1.0"
-dependencies = [
- "db_actor",
- "db_cluster",
- "db_compact",
- "db_conflict",
- "db_core",
- "db_document",
- "db_engine",
- "db_index",
- "db_observe",
- "db_preview",
- "db_projection",
- "db_query",
- "db_security",
- "db_snapshot",
- "db_state",
- "db_storage",
- "db_storage_neo4j",
- "db_storage_postgres",
- "db_storage_sqlite",
- "db_sync",
- "db_wal",
- "pack",
- "protocol",
- "serde_json",
-]
-
-[[package]]
-name = "db_actor"
-version = "0.1.0"
-dependencies = [
- "db_core",
-]
-
-[[package]]
-name = "db_cli"
-version = "0.1.0"
-dependencies = [
- "db",
- "pack",
- "protocol",
- "serde_json",
-]
-
-[[package]]
-name = "db_cluster"
-version = "0.1.0"
-dependencies = [
- "db_actor",
- "db_core",
- "db_storage",
- "db_sync",
- "db_wal",
- "protocol",
- "serde_json",
-]
-
-[[package]]
-name = "db_compact"
-version = "0.1.0"
-dependencies = [
- "db_core",
- "db_index",
- "db_snapshot",
- "db_state",
- "db_storage",
- "db_wal",
-]
-
-[[package]]
-name = "db_conflict"
-version = "0.1.0"
-dependencies = [
- "db_core",
- "db_state",
- "protocol",
-]
-
-[[package]]
-name = "db_core"
-version = "0.1.0"
-dependencies = [
- "pack_core",
- "serde",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "db_document"
-version = "0.1.0"
-dependencies = [
- "db_actor",
- "db_conflict",
- "db_core",
- "db_index",
- "db_preview",
- "db_projection",
- "db_query",
- "db_security",
- "db_snapshot",
- "db_state",
- "db_storage",
- "db_wal",
- "pack",
- "protocol",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "db_engine"
-version = "0.1.0"
-dependencies = [
- "db_actor",
- "db_cluster",
- "db_compact",
- "db_core",
- "db_document",
- "db_observe",
- "db_security",
- "db_storage",
- "db_sync",
- "db_wal",
- "pack_core",
- "protocol",
- "serde",
- "serde_json",
- "store",
- "vcs",
-]
-
-[[package]]
-name = "db_index"
-version = "0.1.0"
-dependencies = [
- "db_core",
- "db_storage",
- "pack_core",
-]
-
-[[package]]
-name = "db_observe"
-version = "0.1.0"
-dependencies = [
- "db_core",
- "pack_core",
-]
-
-[[package]]
-name = "db_preview"
-version = "0.1.0"
-dependencies = [
- "db_conflict",
- "db_core",
- "db_state",
- "protocol",
- "serde_json",
-]
-
-[[package]]
-name = "db_projection"
-version = "0.1.0"
-dependencies = [
- "db_core",
- "db_index",
- "db_state",
- "db_storage",
- "protocol",
-]
-
-[[package]]
-name = "db_query"
-version = "0.1.0"
-dependencies = [
- "db_core",
- "db_index",
- "db_projection",
- "db_state",
-]
-
-[[package]]
-name = "db_security"
-version = "0.1.0"
-dependencies = [
- "db_core",
- "protocol",
- "serde_json",
-]
-
-[[package]]
-name = "db_snapshot"
-version = "0.1.0"
-dependencies = [
- "db_core",
- "db_state",
- "db_storage",
- "pack",
-]
-
-[[package]]
-name = "db_state"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "db_core",
- "pack_core",
-]
-
-[[package]]
-name = "db_storage"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "db_core",
- "pack",
-]
-
-[[package]]
-name = "db_storage_neo4j"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "blake3",
- "db_core",
- "db_storage",
- "neo4rs",
- "pack",
- "serde",
- "tokio",
-]
-
-[[package]]
-name = "db_storage_postgres"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "db_core",
- "db_storage",
- "pack",
- "sqlx",
- "tokio",
-]
-
-[[package]]
-name = "db_storage_sqlite"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "db_core",
- "db_storage",
- "pack",
- "rusqlite",
-]
-
-[[package]]
-name = "db_sync"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "db_core",
- "db_storage",
- "db_wal",
- "protocol",
-]
-
-[[package]]
-name = "db_testkit"
-version = "0.1.0"
-dependencies = [
- "criterion",
- "db",
- "db_actor",
- "db_core",
- "db_document",
- "db_engine",
- "db_projection",
- "db_state",
- "db_storage",
- "db_sync",
- "pack",
- "pack_testkit",
- "protocol",
- "serde_json",
-]
-
-[[package]]
-name = "db_wal"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "db_core",
- "db_storage",
- "pack_core",
- "protocol",
- "protocol_core",
- "protocol_format",
-]
 
 [[package]]
 name = "deadpool"
@@ -2530,16 +2229,16 @@ name = "draw"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
- "dsl",
  "image",
- "kernel_2d_engine",
- "kernel_2d_rs",
- "protocol",
  "semio-framework-core",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-geometry-2d",
+ "semio-s-kernel-geometry-2d-engine",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
  "wasm-bindgen",
 ]
 
@@ -2554,62 +2253,6 @@ dependencies = [
  "semio-framework-program",
  "serde",
  "serde_json",
-]
-
-[[package]]
-name = "dsl"
-version = "0.1.0"
-dependencies = [
- "dsl_core",
- "dsl_derive",
- "dsl_schema",
- "pack",
- "protocol",
- "serde",
- "serde_json",
- "store",
-]
-
-[[package]]
-name = "dsl_core"
-version = "0.1.0"
-dependencies = [
- "serde",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "dsl_derive"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.117",
-]
-
-[[package]]
-name = "dsl_editor"
-version = "0.1.0"
-dependencies = [
- "dsl_core",
- "dsl_schema",
- "dsl_token",
-]
-
-[[package]]
-name = "dsl_schema"
-version = "0.1.0"
-dependencies = [
- "dsl_core",
- "serde_json",
-]
-
-[[package]]
-name = "dsl_token"
-version = "0.1.0"
-dependencies = [
- "dsl_core",
- "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -2695,7 +2338,7 @@ checksum = "66b7e2430c6dff6a955451e2cfc438f09cea1965a9d6f87f7e3b90decc014099"
 name = "energy_engine"
 version = "0.1.0"
 dependencies = [
- "mathematical_algebra",
+ "semio-s-kernel-mathematical-algebra",
  "serde",
  "serde_json",
 ]
@@ -2893,24 +2536,24 @@ dependencies = [
  "fem_3d",
  "fem_core",
  "semio-framework-program",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "fem_2d"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "fem_core",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "thiserror 2.0.18",
- "vcs",
  "wasm-bindgen",
 ]
 
@@ -2918,14 +2561,14 @@ dependencies = [
 name = "fem_3d"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "fem_core",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "thiserror 2.0.18",
- "vcs",
  "wasm-bindgen",
 ]
 
@@ -2933,7 +2576,7 @@ dependencies = [
 name = "fem_core"
 version = "0.1.0"
 dependencies = [
- "mathematical_algebra",
+ "semio-s-kernel-mathematical-algebra",
  "serde",
  "serde_json",
  "spade",
@@ -2983,169 +2626,11 @@ checksum = "8bf7cc16383c4b8d58b9905a8509f02926ce3058053c056376248d958c9df1e8"
 name = "flow-program"
 version = "0.1.0"
 dependencies = [
- "flow_core",
- "playbook",
  "semio-framework-program",
- "serde",
- "serde_json",
- "store",
- "vcs",
-]
-
-[[package]]
-name = "flow_core"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "dsl",
- "flow_module_bim",
- "flow_module_brep",
- "flow_module_core",
- "flow_module_dictionary",
- "flow_module_draw",
- "flow_module_list",
- "flow_module_logic",
- "flow_module_math",
- "flow_module_text",
- "infinite_board_port_directed_dag",
- "infinite_cavas",
- "js-sys",
- "kernel_3d_engine",
- "mathematical_graph_manifest",
- "neural_dag",
- "neural_engine",
- "playbook",
- "protocol",
- "semio-framework-core",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "store",
- "thiserror 2.0.18",
- "ui_styling",
- "vcs",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "flow_module_bim"
-version = "0.1.0"
-dependencies = [
- "flow_module_wasm",
- "getrandom 0.3.4",
- "js-sys",
- "neural_engine",
- "serde",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "flow_module_brep"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "flow_module_wasm",
- "getrandom 0.3.4",
- "js-sys",
- "kernel_3d_brepkit",
- "kernel_3d_engine",
- "neural_engine",
- "semio-framework-core",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "flow_module_core"
-version = "0.1.0"
-dependencies = [
- "flow_module_wasm",
- "neural_engine",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "flow_module_dictionary"
-version = "0.1.0"
-dependencies = [
- "flow_module_wasm",
- "getrandom 0.3.4",
- "neural_engine",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "flow_module_draw"
-version = "0.1.0"
-dependencies = [
- "flow_module_wasm",
- "getrandom 0.3.4",
- "kernel_2d_engine",
- "kernel_2d_rs",
- "neural_engine",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "flow_module_list"
-version = "0.1.0"
-dependencies = [
- "flow_module_wasm",
- "getrandom 0.3.4",
- "neural_engine",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "flow_module_logic"
-version = "0.1.0"
-dependencies = [
- "flow_module_wasm",
- "getrandom 0.3.4",
- "neural_engine",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "flow_module_math"
-version = "0.1.0"
-dependencies = [
- "flow_module_wasm",
- "getrandom 0.3.4",
- "js-sys",
- "neural_engine",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "flow_module_text"
-version = "0.1.0"
-dependencies = [
- "flow_module_wasm",
- "getrandom 0.3.4",
- "neural_engine",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "flow_module_wasm"
-version = "0.1.0"
-dependencies = [
- "neural_engine",
+ "semio-s-kernel-flow-core",
+ "semio-s-kernel-playbook",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
 ]
@@ -3325,11 +2810,11 @@ dependencies = [
 name = "forms"
 version = "0.1.0"
 dependencies = [
- "playbook",
+ "semio-s-kernel-playbook",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
 ]
 
 [[package]]
@@ -3337,13 +2822,13 @@ name = "forms-program"
 version = "0.1.0"
 dependencies = [
  "forms",
- "playbook",
  "semio-framework-core",
  "semio-framework-program",
+ "semio-s-kernel-playbook",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
 ]
 
 [[package]]
@@ -3360,14 +2845,14 @@ dependencies = [
 name = "framework_editor"
 version = "0.1.0"
 dependencies = [
- "infinite_cavas",
  "js-sys",
+ "semio-s-kernel-infinite-canvas",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "thiserror 2.0.18",
  "ui_styling",
- "vcs",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -3377,9 +2862,9 @@ dependencies = [
 name = "framework_surface_node_graph"
 version = "0.1.0"
 dependencies = [
- "infinite_board_port_directed_dag",
- "infinite_cavas",
  "js-sys",
+ "semio-s-kernel-infinite-board-port-directed-dag",
+ "semio-s-kernel-infinite-canvas",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -3394,8 +2879,8 @@ name = "framework_surface_paint"
 version = "0.1.0"
 dependencies = [
  "image",
- "infinite_cavas",
  "js-sys",
+ "semio-s-kernel-infinite-canvas",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -3426,9 +2911,9 @@ name = "framework_surface_tiled_map"
 version = "0.1.0"
 dependencies = [
  "image",
- "infinite_cavas",
  "js-sys",
  "prost",
+ "semio-s-kernel-infinite-canvas",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -3752,16 +3237,16 @@ dependencies = [
 name = "gis-program"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "framework_surface_terrain",
  "framework_surface_tiled_map",
- "protocol",
  "semio-framework-os",
  "semio-framework-program",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
  "wasm-bindgen",
 ]
 
@@ -4805,28 +4290,28 @@ version = "0.1.0"
 dependencies = [
  "imperative_core",
  "imperative_engine",
- "protocol",
  "semio-framework-program",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "imperative_core"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "imperative_engine",
  "imperative_module_core",
- "neural_engine",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-neural-engine",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "thiserror 2.0.18",
- "vcs",
  "wasm-bindgen",
 ]
 
@@ -4839,12 +4324,12 @@ dependencies = [
  "imperative_module_logic",
  "imperative_module_math",
  "imperative_module_text",
- "neural_engine",
- "protocol",
+ "semio-s-kernel-neural-engine",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
 ]
 
 [[package]]
@@ -4858,7 +4343,7 @@ dependencies = [
 name = "imperative_module_core"
 version = "0.1.0"
 dependencies = [
- "neural_engine",
+ "semio-s-kernel-neural-engine",
  "serde_json",
 ]
 
@@ -4866,7 +4351,7 @@ dependencies = [
 name = "imperative_module_logic"
 version = "0.1.0"
 dependencies = [
- "neural_engine",
+ "semio-s-kernel-neural-engine",
  "serde_json",
 ]
 
@@ -4874,7 +4359,7 @@ dependencies = [
 name = "imperative_module_math"
 version = "0.1.0"
 dependencies = [
- "neural_engine",
+ "semio-s-kernel-neural-engine",
  "serde_json",
 ]
 
@@ -4882,7 +4367,7 @@ dependencies = [
 name = "imperative_module_text"
 version = "0.1.0"
 dependencies = [
- "neural_engine",
+ "semio-s-kernel-neural-engine",
  "serde_json",
 ]
 
@@ -4907,153 +4392,6 @@ dependencies = [
  "hashbrown 0.17.1",
  "serde",
  "serde_core",
-]
-
-[[package]]
-name = "infinite_board"
-version = "0.1.0"
-dependencies = [
- "infinite_cavas",
- "mathematical_geometry",
- "mathematical_graph",
- "mathematical_graph_drawing",
- "mathematical_graph_manifest",
- "serde",
- "serde_json",
- "ui_styling",
-]
-
-[[package]]
-name = "infinite_board_normal_directed"
-version = "0.1.0"
-dependencies = [
- "infinite_board",
-]
-
-[[package]]
-name = "infinite_board_normal_undirected"
-version = "0.1.0"
-dependencies = [
- "infinite_board",
- "infinite_cavas",
- "mathematical_geometry",
- "mathematical_graph",
- "mathematical_graph_drawing",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "infinite_board_port"
-version = "0.1.0"
-dependencies = [
- "infinite_board",
- "mathematical_graph",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "infinite_board_port_directed"
-version = "0.1.0"
-dependencies = [
- "infinite_board",
- "infinite_board_normal_undirected",
- "infinite_board_port",
- "infinite_cavas",
- "mathematical_graph",
- "serde",
- "serde_json",
- "ui_styling",
-]
-
-[[package]]
-name = "infinite_board_port_directed_dag"
-version = "0.1.0"
-dependencies = [
- "dsl",
- "infinite_board_port_directed",
- "infinite_cavas",
- "js-sys",
- "mathematical_graph",
- "mathematical_graph_drawing",
- "mathematical_graph_dsl",
- "mathematical_graph_manifest",
- "protocol",
- "serde",
- "serde_json",
- "store",
- "thiserror 2.0.18",
- "ui_styling",
- "vcs",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "infinite_board_port_directed_normal"
-version = "0.1.0"
-dependencies = [
- "infinite_board_normal_undirected",
- "infinite_board_port_directed",
- "infinite_cavas",
- "mathematical_graph_drawing",
- "mathematical_graph_manifest",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "ui_styling",
-]
-
-[[package]]
-name = "infinite_board_port_undirected"
-version = "0.1.0"
-dependencies = [
- "infinite_board_port",
-]
-
-[[package]]
-name = "infinite_cavas"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "fontdb",
- "image",
- "js-sys",
- "mathematical_geometry",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "typst",
- "typst-assets",
- "typst-svg",
- "ui_styling",
- "vello",
- "vello_encoding",
- "vello_svg",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "infinite_world"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "framework_surface_terrain",
- "image",
- "js-sys",
- "kernel_3d_scene",
- "semio-framework-core",
- "serde",
- "serde_json",
- "ui_wgpu",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
 ]
 
 [[package]]
@@ -5294,86 +4632,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "kernel_2d_engine"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "futures",
- "pollster",
- "rayon",
- "serde",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "kernel_2d_rs"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "geo",
- "kernel_2d_engine",
- "semio-framework-core",
- "serde",
-]
-
-[[package]]
-name = "kernel_3d_brepkit"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "base64 0.22.1",
- "brepkit-check",
- "brepkit-geometry",
- "brepkit-io",
- "brepkit-math",
- "brepkit-operations",
- "brepkit-topology",
- "criterion",
- "kernel_3d_engine",
- "mathematical_number",
- "mathematical_random",
- "rayon",
- "semio-framework-core",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "kernel_3d_engine"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "futures",
- "pollster",
- "rayon",
- "serde",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "kernel_3d_mesh"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "kernel_3d_scene"
-version = "0.1.0"
-dependencies = [
- "mathematical_algebra",
-]
-
-[[package]]
-name = "kernel_3d_spatial"
-version = "0.1.0"
-dependencies = [
- "kernel_3d_engine",
-]
-
-[[package]]
 name = "khronos-egl"
 version = "6.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5450,36 +4708,36 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "layout_rs",
- "protocol",
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-program",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "layout_rs"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "fontique 0.4.0",
  "image",
- "infinite_cavas",
  "js-sys",
  "parley",
  "png 0.17.16",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-infinite-canvas",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
  "sha2",
- "store",
  "swash",
  "thiserror 2.0.18",
- "vcs",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -5624,15 +4882,15 @@ name = "lowpoly-program"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
- "kernel_3d_mesh",
  "lowpoly_core",
  "png 0.17.16",
  "semio-framework-os",
  "semio-framework-program",
+ "semio-s-kernel-geometry-3d-mesh",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
 ]
 
 [[package]]
@@ -5642,18 +4900,18 @@ dependencies = [
  "base64 0.22.1",
  "cad-program",
  "cad_document",
- "dsl",
- "kernel_3d_brepkit",
- "kernel_3d_engine",
- "kernel_3d_mesh",
- "protocol",
  "semio-framework-core",
  "semio-framework-program",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-geometry-3d-brep",
+ "semio-s-kernel-geometry-3d-brep-engine",
+ "semio-s-kernel-geometry-3d-mesh",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "thiserror 2.0.18",
- "vcs",
 ]
 
 [[package]]
@@ -5705,566 +4963,15 @@ checksum = "47e1ffaa40ddd1f3ed91f717a33c8c0ee23fff369e3aa8772b9605cc1d22f4c3"
 name = "mathematical-program"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "mathematical_algebra",
- "mathematical_geometry",
- "mathematical_graph",
- "mathematical_graph_drawing",
- "protocol",
  "semio-framework-program",
- "serde",
- "serde_json",
- "store",
- "vcs",
-]
-
-[[package]]
-name = "mathematical_algebra"
-version = "0.1.0"
-dependencies = [
- "mathematical_number",
-]
-
-[[package]]
-name = "mathematical_cas"
-version = "0.1.0"
-dependencies = [
- "mathematical_algebra",
- "mathematical_number",
- "mathematical_polynomial",
- "mathematical_random",
-]
-
-[[package]]
-name = "mathematical_causal"
-version = "0.1.0"
-dependencies = [
- "mathematical_algebra",
- "mathematical_graph",
- "mathematical_probability",
- "mathematical_random",
- "mathematical_statistics",
- "mathematical_tabular",
- "serde",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "mathematical_entropy"
-version = "0.1.0"
-
-[[package]]
-name = "mathematical_fuzzy"
-version = "0.1.0"
-dependencies = [
- "mathematical_algebra",
- "mathematical_random",
- "serde",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "mathematical_geometry"
-version = "0.1.0"
-dependencies = [
- "kurbo 0.13.1",
-]
-
-[[package]]
-name = "mathematical_graph"
-version = "0.1.0"
-dependencies = [
- "mathematical_geometry",
- "mathematical_graph_manifest",
- "serde_json",
-]
-
-[[package]]
-name = "mathematical_graph_approximation"
-version = "0.1.0"
-dependencies = [
- "mathematical_graph",
- "mathematical_graph_cliques",
- "mathematical_graph_matching",
- "mathematical_graph_paths",
- "mathematical_graph_trees",
- "mathematical_random",
-]
-
-[[package]]
-name = "mathematical_graph_bipartite"
-version = "0.1.0"
-dependencies = [
- "mathematical_algebra",
- "mathematical_graph",
- "mathematical_graph_matching",
- "mathematical_random",
-]
-
-[[package]]
-name = "mathematical_graph_centrality"
-version = "0.1.0"
-dependencies = [
- "mathematical_algebra",
- "mathematical_graph",
- "mathematical_graph_paths",
- "mathematical_random",
-]
-
-[[package]]
-name = "mathematical_graph_cliques"
-version = "0.1.0"
-dependencies = [
- "mathematical_graph",
- "mathematical_graph_components",
- "mathematical_graph_traversal",
-]
-
-[[package]]
-name = "mathematical_graph_clustering"
-version = "0.1.0"
-dependencies = [
- "mathematical_graph",
-]
-
-[[package]]
-name = "mathematical_graph_coloring"
-version = "0.1.0"
-dependencies = [
- "mathematical_graph",
- "mathematical_graph_traversal",
- "mathematical_random",
-]
-
-[[package]]
-name = "mathematical_graph_community"
-version = "0.1.0"
-dependencies = [
- "mathematical_graph",
- "mathematical_graph_centrality",
- "mathematical_graph_cliques",
- "mathematical_random",
-]
-
-[[package]]
-name = "mathematical_graph_components"
-version = "0.1.0"
-dependencies = [
- "mathematical_graph",
- "mathematical_graph_traversal",
-]
-
-[[package]]
-name = "mathematical_graph_connectivity"
-version = "0.1.0"
-dependencies = [
- "mathematical_graph",
- "mathematical_graph_components",
- "mathematical_graph_flow",
-]
-
-[[package]]
-name = "mathematical_graph_cycles"
-version = "0.1.0"
-dependencies = [
- "mathematical_graph",
- "mathematical_graph_components",
- "mathematical_graph_traversal",
-]
-
-[[package]]
-name = "mathematical_graph_dag"
-version = "0.1.0"
-dependencies = [
- "mathematical_graph",
- "mathematical_graph_traversal",
-]
-
-[[package]]
-name = "mathematical_graph_distance"
-version = "0.1.0"
-dependencies = [
- "mathematical_algebra",
- "mathematical_graph",
- "mathematical_graph_paths",
- "mathematical_graph_structure",
- "mathematical_random",
-]
-
-[[package]]
-name = "mathematical_graph_drawing"
-version = "0.1.0"
-dependencies = [
- "mathematical_geometry",
- "mathematical_graph",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "mathematical_graph_dsl"
-version = "0.1.0"
-dependencies = [
- "dsl_core",
- "dsl_schema",
- "mathematical_graph_manifest",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "mathematical_graph_flow"
-version = "0.1.0"
-dependencies = [
- "mathematical_graph",
- "mathematical_graph_components",
- "mathematical_graph_paths",
-]
-
-[[package]]
-name = "mathematical_graph_generate"
-version = "0.1.0"
-dependencies = [
- "mathematical_graph",
-]
-
-[[package]]
-name = "mathematical_graph_generate_random"
-version = "0.1.0"
-dependencies = [
- "mathematical_algebra",
- "mathematical_graph",
- "mathematical_graph_generate",
- "mathematical_graph_structure",
- "mathematical_random",
-]
-
-[[package]]
-name = "mathematical_graph_io"
-version = "0.1.0"
-dependencies = [
- "mathematical_graph",
-]
-
-[[package]]
-name = "mathematical_graph_isomorphism"
-version = "0.1.0"
-dependencies = [
- "mathematical_graph",
-]
-
-[[package]]
-name = "mathematical_graph_manifest"
-version = "0.1.0"
-dependencies = [
- "dsl",
- "neural_engine",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "mathematical_graph_matching"
-version = "0.1.0"
-dependencies = [
- "mathematical_graph",
-]
-
-[[package]]
-name = "mathematical_graph_normal_directed"
-version = "0.1.0"
-dependencies = [
- "mathematical_algebra",
- "mathematical_graph",
- "mathematical_graph_approximation",
- "mathematical_graph_bipartite",
- "mathematical_graph_centrality",
- "mathematical_graph_cliques",
- "mathematical_graph_clustering",
- "mathematical_graph_coloring",
- "mathematical_graph_community",
- "mathematical_graph_components",
- "mathematical_graph_connectivity",
- "mathematical_graph_cycles",
- "mathematical_graph_dag",
- "mathematical_graph_distance",
- "mathematical_graph_flow",
- "mathematical_graph_generate",
- "mathematical_graph_generate_random",
- "mathematical_graph_io",
- "mathematical_graph_isomorphism",
- "mathematical_graph_matching",
- "mathematical_graph_operators",
- "mathematical_graph_paths",
- "mathematical_graph_planarity",
- "mathematical_graph_similarity",
- "mathematical_graph_spectral",
- "mathematical_graph_structure",
- "mathematical_graph_traversal",
- "mathematical_graph_trees",
- "mathematical_random",
-]
-
-[[package]]
-name = "mathematical_graph_normal_undirected"
-version = "0.1.0"
-dependencies = [
- "mathematical_algebra",
- "mathematical_graph",
- "mathematical_graph_approximation",
- "mathematical_graph_bipartite",
- "mathematical_graph_centrality",
- "mathematical_graph_cliques",
- "mathematical_graph_clustering",
- "mathematical_graph_coloring",
- "mathematical_graph_community",
- "mathematical_graph_components",
- "mathematical_graph_connectivity",
- "mathematical_graph_cycles",
- "mathematical_graph_dag",
- "mathematical_graph_distance",
- "mathematical_graph_flow",
- "mathematical_graph_generate",
- "mathematical_graph_generate_random",
- "mathematical_graph_io",
- "mathematical_graph_isomorphism",
- "mathematical_graph_matching",
- "mathematical_graph_operators",
- "mathematical_graph_paths",
- "mathematical_graph_planarity",
- "mathematical_graph_similarity",
- "mathematical_graph_spectral",
- "mathematical_graph_structure",
- "mathematical_graph_traversal",
- "mathematical_graph_trees",
- "mathematical_random",
-]
-
-[[package]]
-name = "mathematical_graph_operators"
-version = "0.1.0"
-dependencies = [
- "mathematical_graph",
-]
-
-[[package]]
-name = "mathematical_graph_paths"
-version = "0.1.0"
-dependencies = [
- "mathematical_graph",
- "mathematical_graph_traversal",
- "mathematical_random",
-]
-
-[[package]]
-name = "mathematical_graph_planarity"
-version = "0.1.0"
-dependencies = [
- "mathematical_graph",
- "mathematical_graph_traversal",
-]
-
-[[package]]
-name = "mathematical_graph_port_directed_normal"
-version = "0.1.0"
-dependencies = [
- "mathematical_algebra",
- "mathematical_graph",
- "mathematical_graph_approximation",
- "mathematical_graph_bipartite",
- "mathematical_graph_centrality",
- "mathematical_graph_cliques",
- "mathematical_graph_clustering",
- "mathematical_graph_coloring",
- "mathematical_graph_community",
- "mathematical_graph_components",
- "mathematical_graph_connectivity",
- "mathematical_graph_cycles",
- "mathematical_graph_dag",
- "mathematical_graph_distance",
- "mathematical_graph_flow",
- "mathematical_graph_generate",
- "mathematical_graph_generate_random",
- "mathematical_graph_io",
- "mathematical_graph_isomorphism",
- "mathematical_graph_matching",
- "mathematical_graph_operators",
- "mathematical_graph_paths",
- "mathematical_graph_planarity",
- "mathematical_graph_similarity",
- "mathematical_graph_spectral",
- "mathematical_graph_structure",
- "mathematical_graph_traversal",
- "mathematical_graph_trees",
- "mathematical_random",
-]
-
-[[package]]
-name = "mathematical_graph_port_undirected"
-version = "0.1.0"
-dependencies = [
- "mathematical_algebra",
- "mathematical_graph",
- "mathematical_graph_approximation",
- "mathematical_graph_bipartite",
- "mathematical_graph_centrality",
- "mathematical_graph_cliques",
- "mathematical_graph_clustering",
- "mathematical_graph_coloring",
- "mathematical_graph_community",
- "mathematical_graph_components",
- "mathematical_graph_connectivity",
- "mathematical_graph_cycles",
- "mathematical_graph_dag",
- "mathematical_graph_distance",
- "mathematical_graph_flow",
- "mathematical_graph_generate",
- "mathematical_graph_generate_random",
- "mathematical_graph_io",
- "mathematical_graph_isomorphism",
- "mathematical_graph_matching",
- "mathematical_graph_operators",
- "mathematical_graph_paths",
- "mathematical_graph_planarity",
- "mathematical_graph_similarity",
- "mathematical_graph_spectral",
- "mathematical_graph_structure",
- "mathematical_graph_traversal",
- "mathematical_graph_trees",
- "mathematical_random",
-]
-
-[[package]]
-name = "mathematical_graph_similarity"
-version = "0.1.0"
-dependencies = [
- "mathematical_graph",
- "mathematical_graph_paths",
- "mathematical_random",
-]
-
-[[package]]
-name = "mathematical_graph_spectral"
-version = "0.1.0"
-dependencies = [
- "mathematical_algebra",
- "mathematical_graph",
-]
-
-[[package]]
-name = "mathematical_graph_structure"
-version = "0.1.0"
-dependencies = [
- "mathematical_graph",
- "mathematical_graph_traversal",
- "mathematical_random",
-]
-
-[[package]]
-name = "mathematical_graph_traversal"
-version = "0.1.0"
-dependencies = [
- "mathematical_graph",
-]
-
-[[package]]
-name = "mathematical_graph_trees"
-version = "0.1.0"
-dependencies = [
- "mathematical_algebra",
- "mathematical_graph",
- "mathematical_graph_components",
- "mathematical_random",
-]
-
-[[package]]
-name = "mathematical_lie"
-version = "0.1.0"
-dependencies = [
- "mathematical_algebra",
-]
-
-[[package]]
-name = "mathematical_number"
-version = "0.1.0"
-
-[[package]]
-name = "mathematical_optimize"
-version = "0.1.0"
-dependencies = [
- "mathematical_algebra",
- "mathematical_random",
-]
-
-[[package]]
-name = "mathematical_polynomial"
-version = "0.1.0"
-dependencies = [
- "mathematical_number",
- "mathematical_random",
-]
-
-[[package]]
-name = "mathematical_probability"
-version = "0.1.0"
-dependencies = [
- "mathematical_random",
- "serde",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "mathematical_random"
-version = "0.1.0"
-
-[[package]]
-name = "mathematical_sampling"
-version = "0.1.0"
-dependencies = [
- "mathematical_random",
-]
-
-[[package]]
-name = "mathematical_signal"
-version = "0.1.0"
-dependencies = [
- "mathematical_algebra",
-]
-
-[[package]]
-name = "mathematical_spatial"
-version = "0.1.0"
-
-[[package]]
-name = "mathematical_statistics"
-version = "0.1.0"
-dependencies = [
- "mathematical_algebra",
- "mathematical_probability",
- "mathematical_tabular",
- "serde",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "mathematical_tabular"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "mathematical_wfc"
-version = "0.1.0"
-dependencies = [
- "mathematical_entropy",
- "mathematical_graph",
- "mathematical_random",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-geometry",
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-drawing",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
 ]
@@ -6590,27 +5297,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "neural_dag"
-version = "0.1.0"
-dependencies = [
- "mathematical_graph_dsl",
- "mathematical_graph_manifest",
- "neural_engine",
- "serde_json",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "neural_engine"
-version = "0.1.0"
-dependencies = [
- "rayon",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
-]
-
-[[package]]
 name = "norm-program"
 version = "0.1.0"
 dependencies = [
@@ -6631,245 +5317,245 @@ dependencies = [
  "norm_iso_16757",
  "norm_vdi_3805",
  "semio-framework-program",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "norm_core"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "thiserror 2.0.18",
- "vcs",
 ]
 
 [[package]]
 name = "norm_din_4108"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "norm_core",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "norm_din_en_16798"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "norm_core",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "norm_din_v_18599"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "norm_core",
  "norm_din_4108",
  "norm_din_en_16798",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "norm_en_1990"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "mathematical_algebra",
  "norm_core",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "norm_en_1991"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "mathematical_algebra",
  "norm_core",
  "norm_en_1990",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "norm_en_1992"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "fem_core",
- "mathematical_algebra",
  "norm_core",
  "norm_en_1990",
  "norm_en_1991",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "norm_en_1993"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "fem_core",
- "mathematical_algebra",
  "norm_core",
  "norm_en_1990",
  "norm_en_1991",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "norm_en_1994"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "fem_core",
- "mathematical_algebra",
  "norm_core",
  "norm_en_1990",
  "norm_en_1991",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "norm_en_1995"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "fem_core",
- "mathematical_algebra",
  "norm_core",
  "norm_en_1990",
  "norm_en_1991",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "norm_en_1996"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "fem_core",
- "mathematical_algebra",
  "norm_core",
  "norm_en_1990",
  "norm_en_1991",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "norm_en_1997"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "fem_core",
- "mathematical_algebra",
  "norm_core",
  "norm_en_1990",
  "norm_en_1991",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "norm_en_1998"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "fem_core",
- "mathematical_algebra",
  "norm_core",
  "norm_en_1990",
  "norm_en_1991",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "norm_en_1999"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "fem_core",
- "mathematical_algebra",
  "norm_core",
  "norm_en_1990",
  "norm_en_1991",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "norm_iso_16757"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "norm_core",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "thiserror 2.0.18",
- "vcs",
 ]
 
 [[package]]
 name = "norm_vdi_3805"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "norm_core",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "thiserror 2.0.18",
- "vcs",
 ]
 
 [[package]]
 name = "note-program"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "protocol",
  "semio-framework-os",
  "semio-framework-program",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
 ]
 
 [[package]]
@@ -7431,13 +6117,13 @@ version = "0.1.0"
 dependencies = [
  "axum 0.8.9",
  "dashmap",
- "db",
  "futures",
  "os-hub-directory",
  "os-hub-directory-neo4j",
  "os-hub-directory-postgres",
  "os-hub-directory-sqlite",
- "protocol",
+ "semio-s-kernel-db",
+ "semio-s-kernel-protocol",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -7501,103 +6187,6 @@ name = "outref"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a80800c0488c3a21695ea981a54918fbb37abf04f4d0720c453632255e2ff0e"
-
-[[package]]
-name = "pack"
-version = "0.1.0"
-dependencies = [
- "dsl_schema",
- "pack_async",
- "pack_core",
- "pack_format",
- "pack_http",
- "pack_index",
- "pack_io",
- "pack_value",
-]
-
-[[package]]
-name = "pack_async"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "futures-lite",
- "pack_core",
- "pack_format",
-]
-
-[[package]]
-name = "pack_cli"
-version = "0.1.0"
-dependencies = [
- "dsl_schema",
- "pack",
-]
-
-[[package]]
-name = "pack_core"
-version = "0.1.0"
-dependencies = [
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "pack_format"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "miniz_oxide",
- "pack_core",
-]
-
-[[package]]
-name = "pack_http"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "futures-lite",
- "pack_async",
- "pack_core",
- "pack_format",
- "ureq",
-]
-
-[[package]]
-name = "pack_index"
-version = "0.1.0"
-dependencies = [
- "pack_core",
- "pack_format",
- "pack_value",
-]
-
-[[package]]
-name = "pack_io"
-version = "0.1.0"
-dependencies = [
- "pack_core",
- "pack_format",
-]
-
-[[package]]
-name = "pack_testkit"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "dsl_core",
- "dsl_schema",
- "pack",
-]
-
-[[package]]
-name = "pack_value"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "dsl_schema",
- "pack_core",
- "pack_format",
-]
 
 [[package]]
 name = "palette"
@@ -7940,47 +6529,33 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4596b6d070b27117e987119b4dac604f3c58cfb0b191112e24771b2faeac1a6"
 
 [[package]]
-name = "playbook"
-version = "0.1.0"
-dependencies = [
- "dsl",
- "protocol",
- "serde",
- "serde_json",
- "store",
- "ui_wgpu",
- "vcs",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "playbook-module-procedural"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "flow_core",
- "flow_module_brep",
- "kernel_3d_engine",
- "playbook",
- "protocol",
  "semio-framework-core",
  "semio-framework-program",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-flow-core",
+ "semio-s-kernel-flow-module-brep",
+ "semio-s-kernel-geometry-3d-brep-engine",
+ "semio-s-kernel-playbook",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "playbook-program"
 version = "0.1.0"
 dependencies = [
- "playbook",
  "semio-framework-program",
+ "semio-s-kernel-playbook",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
 ]
 
 [[package]]
@@ -8157,37 +6732,37 @@ name = "procedural-program"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
- "flow_core",
- "flow_module_brep",
- "flow_module_draw",
- "kernel_3d_engine",
- "kernel_3d_scene",
- "playbook",
  "procedural_2d",
  "procedural_3d",
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-program",
+ "semio-s-kernel-flow-core",
+ "semio-s-kernel-flow-module-brep",
+ "semio-s-kernel-flow-module-draw",
+ "semio-s-kernel-geometry-3d-brep-engine",
+ "semio-s-kernel-geometry-3d-scene",
+ "semio-s-kernel-playbook",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "ui_styling",
  "ui_wgpu",
- "vcs",
 ]
 
 [[package]]
 name = "procedural_2d"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "flow_core",
- "playbook",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-flow-core",
+ "semio-s-kernel-playbook",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
  "wasm-bindgen",
 ]
 
@@ -8195,14 +6770,14 @@ dependencies = [
 name = "procedural_3d"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "flow_core",
- "playbook",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-flow-core",
+ "semio-s-kernel-playbook",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
  "wasm-bindgen",
 ]
 
@@ -8211,29 +6786,29 @@ name = "process-program"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
- "kernel_3d_brepkit",
- "kernel_3d_engine",
  "process_3d",
- "protocol",
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-program",
+ "semio-s-kernel-geometry-3d-brep",
+ "semio-s-kernel-geometry-3d-brep-engine",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "process_3d"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
  "wasm-bindgen",
 ]
 
@@ -8267,134 +6842,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "protocol"
-version = "0.1.0"
-dependencies = [
- "protocol_causal",
- "protocol_command",
- "protocol_core",
- "protocol_crdt",
- "protocol_format",
- "protocol_history",
- "protocol_io",
- "protocol_materialize",
- "protocol_wire",
-]
-
-[[package]]
-name = "protocol_causal"
-version = "0.1.0"
-dependencies = [
- "protocol_command",
- "protocol_core",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "protocol_cli"
-version = "0.1.0"
-dependencies = [
- "protocol",
-]
-
-[[package]]
-name = "protocol_command"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "dsl_core",
- "protocol_core",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "protocol_core"
-version = "0.1.0"
-dependencies = [
- "pack_core",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
-]
-
-[[package]]
-name = "protocol_crdt"
-version = "0.1.0"
-dependencies = [
- "protocol_command",
- "protocol_core",
- "serde",
-]
-
-[[package]]
-name = "protocol_format"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "pack_core",
- "pack_format",
- "protocol_core",
-]
-
-[[package]]
-name = "protocol_history"
-version = "0.1.0"
-dependencies = [
- "dsl_core",
- "dsl_schema",
- "pack_core",
- "protocol_core",
- "protocol_format",
-]
-
-[[package]]
-name = "protocol_io"
-version = "0.1.0"
-dependencies = [
- "pack_core",
- "pack_io",
- "protocol_core",
- "protocol_format",
- "protocol_history",
-]
-
-[[package]]
-name = "protocol_materialize"
-version = "0.1.0"
-dependencies = [
- "pack_core",
- "protocol_core",
- "protocol_format",
- "protocol_history",
-]
-
-[[package]]
-name = "protocol_testkit"
-version = "0.1.0"
-dependencies = [
- "criterion",
- "dsl_core",
- "pack_testkit",
- "protocol",
- "protocol_core",
- "protocol_format",
- "protocol_history",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "protocol_wire"
-version = "0.1.0"
-dependencies = [
- "protocol_causal",
- "protocol_command",
- "protocol_core",
-]
-
-[[package]]
 name = "psm"
 version = "0.1.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8409,18 +6856,18 @@ name = "puzzle-program"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
- "protocol",
  "puzzle_2d",
  "puzzle_3d",
  "puzzle_5d",
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-program",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "ui_wgpu",
- "vcs",
 ]
 
 [[package]]
@@ -8430,23 +6877,23 @@ dependencies = [
  "base64 0.22.1",
  "comemo",
  "data-url",
- "dsl",
  "ecow",
  "fontdb",
  "image",
- "infinite_board_port_directed_normal",
  "js-sys",
- "mathematical_geometry",
- "protocol",
  "reasoning_mindmap",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-infinite-board-port-directed-normal",
+ "semio-s-kernel-mathematical-geometry",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
- "store",
  "typst",
  "typst-assets",
  "typst-svg",
- "vcs",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -8456,18 +6903,18 @@ dependencies = [
 name = "puzzle_3d"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "js-sys",
- "mathematical_graph_manifest",
  "nalgebra 0.33.3",
  "parry3d",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-mathematical-graph-manifest",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
- "store",
  "thiserror 2.0.18",
- "vcs",
  "wasm-bindgen",
 ]
 
@@ -8475,15 +6922,15 @@ dependencies = [
 name = "puzzle_5d"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "mathematical_graph_manifest",
- "protocol",
  "puzzle_3d",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-mathematical-graph-manifest",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "thiserror 2.0.18",
- "vcs",
  "wasm-bindgen",
 ]
 
@@ -8705,14 +7152,14 @@ checksum = "ca45419789ae5a7899559e9512e58ca889e41f04f1f2445e9f4b290ceccd1d08"
 name = "raster-program"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "protocol",
  "semio-framework-os",
  "semio-framework-program",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
  "wasm-bindgen",
 ]
 
@@ -8782,28 +7229,28 @@ dependencies = [
 name = "reasoning-mindmap-program"
 version = "0.1.0"
 dependencies = [
- "infinite_board_port_directed",
  "reasoning_mindmap",
  "reasoning_mindmap_wires",
  "semio-framework-program",
+ "semio-s-kernel-infinite-board-port-directed",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "reasoning_mindmap"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "infinite_board_normal_directed",
- "infinite_cavas",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-infinite-board-normal-directed",
+ "semio-s-kernel-infinite-canvas",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
  "wasm-bindgen",
 ]
 
@@ -8811,14 +7258,14 @@ dependencies = [
 name = "reasoning_mindmap_wires"
 version = "0.1.0"
 dependencies = [
- "infinite_board_normal_undirected",
- "infinite_cavas",
  "reasoning_mindmap",
+ "semio-s-kernel-infinite-board-normal-undirected",
+ "semio-s-kernel-infinite-canvas",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "thiserror 2.0.18",
- "vcs",
 ]
 
 [[package]]
@@ -8961,29 +7408,29 @@ dependencies = [
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-program",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "remodel_camera"
 version = "0.1.0"
 dependencies = [
- "mathematical_algebra",
- "mathematical_lie",
- "mathematical_optimize",
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-lie",
+ "semio-s-kernel-mathematical-optimize",
 ]
 
 [[package]]
 name = "remodel_dense"
 version = "0.1.0"
 dependencies = [
- "mathematical_algebra",
- "mathematical_spatial",
  "remodel_camera",
  "remodel_image",
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-spatial",
 ]
 
 [[package]]
@@ -8991,13 +7438,13 @@ name = "remodel_document"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
- "dsl",
- "protocol",
  "semio-framework-core",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
  "wasm-bindgen",
 ]
 
@@ -9005,9 +7452,6 @@ dependencies = [
 name = "remodel_engine"
 version = "0.1.0"
 dependencies = [
- "mathematical_algebra",
- "mathematical_lie",
- "mathematical_random",
  "remodel_camera",
  "remodel_dense",
  "remodel_feature",
@@ -9018,31 +7462,34 @@ dependencies = [
  "remodel_sfm",
  "remodel_video",
  "semio-framework-core",
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-lie",
+ "semio-s-kernel-mathematical-random",
 ]
 
 [[package]]
 name = "remodel_feature"
 version = "0.1.0"
 dependencies = [
- "mathematical_random",
- "mathematical_spatial",
  "remodel_image",
+ "semio-s-kernel-mathematical-random",
+ "semio-s-kernel-mathematical-spatial",
 ]
 
 [[package]]
 name = "remodel_geo"
 version = "0.1.0"
 dependencies = [
- "mathematical_algebra",
- "mathematical_lie",
- "mathematical_optimize",
- "mathematical_random",
- "mathematical_spatial",
  "remodel_camera",
  "remodel_dense",
  "remodel_image",
  "remodel_mesh",
  "remodel_sfm",
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-lie",
+ "semio-s-kernel-mathematical-optimize",
+ "semio-s-kernel-mathematical-random",
+ "semio-s-kernel-mathematical-spatial",
 ]
 
 [[package]]
@@ -9057,43 +7504,43 @@ name = "remodel_mesh"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
- "mathematical_algebra",
- "mathematical_graph",
- "mathematical_lie",
- "mathematical_spatial",
  "remodel_camera",
  "remodel_dense",
  "remodel_image",
  "semio-framework-core",
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-lie",
+ "semio-s-kernel-mathematical-spatial",
 ]
 
 [[package]]
 name = "remodel_motion"
 version = "0.1.0"
 dependencies = [
- "mathematical_algebra",
- "mathematical_lie",
- "mathematical_optimize",
- "mathematical_signal",
- "mathematical_spatial",
  "remodel_camera",
  "remodel_feature",
  "remodel_image",
  "remodel_sfm",
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-lie",
+ "semio-s-kernel-mathematical-optimize",
+ "semio-s-kernel-mathematical-signal",
+ "semio-s-kernel-mathematical-spatial",
 ]
 
 [[package]]
 name = "remodel_sfm"
 version = "0.1.0"
 dependencies = [
- "mathematical_algebra",
- "mathematical_lie",
- "mathematical_optimize",
- "mathematical_random",
- "mathematical_spatial",
  "remodel_camera",
  "remodel_feature",
  "remodel_image",
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-lie",
+ "semio-s-kernel-mathematical-optimize",
+ "semio-s-kernel-mathematical-random",
+ "semio-s-kernel-mathematical-spatial",
 ]
 
 [[package]]
@@ -9470,31 +7917,31 @@ name = "s-program"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
- "dsl",
- "infinite_board_port_directed_dag",
- "protocol",
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-program",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-infinite-board-port-directed-dag",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "s_studio"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "js-sys",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
- "store",
  "thiserror 2.0.18",
- "vcs",
  "wasm-bindgen",
 ]
 
@@ -9627,9 +8074,9 @@ version = "0.1.0"
 dependencies = [
  "gltf",
  "pretty_assertions",
- "protocol",
- "protocol_core",
  "semio-framework-hash",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-protocol-core",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -9649,27 +8096,27 @@ name = "semio-framework-os"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
- "dsl",
- "kernel_3d_brepkit",
- "kernel_3d_engine",
  "png 0.17.16",
  "pretty_assertions",
- "protocol",
  "resvg",
  "rusqlite",
  "semio-framework-core",
  "semio-framework-program",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-geometry-3d-brep",
+ "semio-s-kernel-geometry-3d-brep-engine",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-store-sync",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "store_sync",
  "thiserror 2.0.18",
  "tiny-skia",
  "tokio",
  "ui_wgpu",
  "usvg 0.45.1",
  "uuid",
- "vcs",
 ]
 
 [[package]]
@@ -9681,9 +8128,9 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-os",
  "semio-framework-program-host",
+ "semio-s-kernel-store",
  "serde",
  "serde_json",
- "store",
  "thiserror 2.0.18",
 ]
 
@@ -9691,15 +8138,15 @@ dependencies = [
 name = "semio-framework-program"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "protocol",
  "semio-framework-core",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "thiserror 2.0.18",
  "ui_wgpu",
- "vcs",
  "wit-bindgen 0.36.0",
 ]
 
@@ -9708,12 +8155,12 @@ name = "semio-framework-program-host"
 version = "0.1.0"
 dependencies = [
  "semio-framework-core",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "thiserror 2.0.18",
  "ui_wgpu",
- "vcs",
  "wasmtime",
  "wasmtime-wasi",
 ]
@@ -9723,33 +8170,33 @@ name = "semio-framework-renderer-wgpu"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
- "flow_core",
  "framework_editor",
  "framework_surface_node_graph",
  "framework_surface_tiled_map",
  "image",
- "infinite_cavas",
- "infinite_world",
  "js-sys",
- "kernel_3d_scene",
  "pollster",
- "protocol",
  "puzzle_2d",
  "resvg",
  "rfd",
  "semio-framework-core",
  "semio-framework-program",
  "semio-framework-program-host",
+ "semio-s-kernel-flow-core",
+ "semio-s-kernel-geometry-3d-scene",
+ "semio-s-kernel-infinite-canvas",
+ "semio-s-kernel-infinite-world",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-store-sync",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "store_sync",
  "tiny-skia",
  "tokio",
  "ui_wgpu",
  "ureq",
  "usvg 0.45.1",
- "vcs",
  "vello",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -9770,6 +8217,1632 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-kernel-db"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-db-actor",
+ "semio-s-kernel-db-cluster",
+ "semio-s-kernel-db-compact",
+ "semio-s-kernel-db-conflict",
+ "semio-s-kernel-db-core",
+ "semio-s-kernel-db-document",
+ "semio-s-kernel-db-engine",
+ "semio-s-kernel-db-index",
+ "semio-s-kernel-db-observe",
+ "semio-s-kernel-db-preview",
+ "semio-s-kernel-db-projection",
+ "semio-s-kernel-db-query",
+ "semio-s-kernel-db-security",
+ "semio-s-kernel-db-snapshot",
+ "semio-s-kernel-db-state",
+ "semio-s-kernel-db-storage",
+ "semio-s-kernel-db-storage-neo4j",
+ "semio-s-kernel-db-storage-postgres",
+ "semio-s-kernel-db-storage-sqlite",
+ "semio-s-kernel-db-sync",
+ "semio-s-kernel-db-wal",
+ "semio-s-kernel-pack",
+ "semio-s-kernel-protocol",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-kernel-db-actor"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-db-core",
+]
+
+[[package]]
+name = "semio-s-kernel-db-cli"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-db",
+ "semio-s-kernel-pack",
+ "semio-s-kernel-protocol",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-kernel-db-cluster"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-db-actor",
+ "semio-s-kernel-db-core",
+ "semio-s-kernel-db-storage",
+ "semio-s-kernel-db-sync",
+ "semio-s-kernel-db-wal",
+ "semio-s-kernel-protocol",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-kernel-db-compact"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-db-core",
+ "semio-s-kernel-db-index",
+ "semio-s-kernel-db-snapshot",
+ "semio-s-kernel-db-state",
+ "semio-s-kernel-db-storage",
+ "semio-s-kernel-db-wal",
+]
+
+[[package]]
+name = "semio-s-kernel-db-conflict"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-db-core",
+ "semio-s-kernel-db-state",
+ "semio-s-kernel-protocol",
+]
+
+[[package]]
+name = "semio-s-kernel-db-core"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-pack-core",
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-s-kernel-db-document"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-db-actor",
+ "semio-s-kernel-db-conflict",
+ "semio-s-kernel-db-core",
+ "semio-s-kernel-db-index",
+ "semio-s-kernel-db-preview",
+ "semio-s-kernel-db-projection",
+ "semio-s-kernel-db-query",
+ "semio-s-kernel-db-security",
+ "semio-s-kernel-db-snapshot",
+ "semio-s-kernel-db-state",
+ "semio-s-kernel-db-storage",
+ "semio-s-kernel-db-wal",
+ "semio-s-kernel-pack",
+ "semio-s-kernel-protocol",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-kernel-db-engine"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-db-actor",
+ "semio-s-kernel-db-cluster",
+ "semio-s-kernel-db-compact",
+ "semio-s-kernel-db-core",
+ "semio-s-kernel-db-document",
+ "semio-s-kernel-db-observe",
+ "semio-s-kernel-db-security",
+ "semio-s-kernel-db-storage",
+ "semio-s-kernel-db-sync",
+ "semio-s-kernel-db-wal",
+ "semio-s-kernel-pack-core",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-kernel-db-index"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-db-core",
+ "semio-s-kernel-db-storage",
+ "semio-s-kernel-pack-core",
+]
+
+[[package]]
+name = "semio-s-kernel-db-observe"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-db-core",
+ "semio-s-kernel-pack-core",
+]
+
+[[package]]
+name = "semio-s-kernel-db-preview"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-db-conflict",
+ "semio-s-kernel-db-core",
+ "semio-s-kernel-db-state",
+ "semio-s-kernel-protocol",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-kernel-db-projection"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-db-core",
+ "semio-s-kernel-db-index",
+ "semio-s-kernel-db-state",
+ "semio-s-kernel-db-storage",
+ "semio-s-kernel-protocol",
+]
+
+[[package]]
+name = "semio-s-kernel-db-query"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-db-core",
+ "semio-s-kernel-db-index",
+ "semio-s-kernel-db-projection",
+ "semio-s-kernel-db-state",
+]
+
+[[package]]
+name = "semio-s-kernel-db-security"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-db-core",
+ "semio-s-kernel-protocol",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-kernel-db-snapshot"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-db-core",
+ "semio-s-kernel-db-state",
+ "semio-s-kernel-db-storage",
+ "semio-s-kernel-pack",
+]
+
+[[package]]
+name = "semio-s-kernel-db-state"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "semio-s-kernel-db-core",
+ "semio-s-kernel-pack-core",
+]
+
+[[package]]
+name = "semio-s-kernel-db-storage"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "semio-s-kernel-db-core",
+ "semio-s-kernel-pack",
+]
+
+[[package]]
+name = "semio-s-kernel-db-storage-neo4j"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "blake3",
+ "neo4rs",
+ "semio-s-kernel-db-core",
+ "semio-s-kernel-db-storage",
+ "semio-s-kernel-pack",
+ "serde",
+ "tokio",
+]
+
+[[package]]
+name = "semio-s-kernel-db-storage-postgres"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "semio-s-kernel-db-core",
+ "semio-s-kernel-db-storage",
+ "semio-s-kernel-pack",
+ "sqlx",
+ "tokio",
+]
+
+[[package]]
+name = "semio-s-kernel-db-storage-sqlite"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "rusqlite",
+ "semio-s-kernel-db-core",
+ "semio-s-kernel-db-storage",
+ "semio-s-kernel-pack",
+]
+
+[[package]]
+name = "semio-s-kernel-db-sync"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "semio-s-kernel-db-core",
+ "semio-s-kernel-db-storage",
+ "semio-s-kernel-db-wal",
+ "semio-s-kernel-protocol",
+]
+
+[[package]]
+name = "semio-s-kernel-db-testkit"
+version = "0.1.0"
+dependencies = [
+ "criterion",
+ "semio-s-kernel-db",
+ "semio-s-kernel-db-actor",
+ "semio-s-kernel-db-core",
+ "semio-s-kernel-db-document",
+ "semio-s-kernel-db-engine",
+ "semio-s-kernel-db-projection",
+ "semio-s-kernel-db-state",
+ "semio-s-kernel-db-storage",
+ "semio-s-kernel-db-sync",
+ "semio-s-kernel-pack",
+ "semio-s-kernel-pack-testkit",
+ "semio-s-kernel-protocol",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-kernel-db-wal"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "semio-s-kernel-db-core",
+ "semio-s-kernel-db-storage",
+ "semio-s-kernel-pack-core",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-protocol-core",
+ "semio-s-kernel-protocol-format",
+]
+
+[[package]]
+name = "semio-s-kernel-dsl"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-dsl-core",
+ "semio-s-kernel-dsl-derive",
+ "semio-s-kernel-dsl-schema",
+ "semio-s-kernel-pack",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-kernel-dsl-core"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-s-kernel-dsl-derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
+name = "semio-s-kernel-dsl-editor"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-dsl-core",
+ "semio-s-kernel-dsl-schema",
+ "semio-s-kernel-dsl-token",
+]
+
+[[package]]
+name = "semio-s-kernel-dsl-schema"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-dsl-core",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-kernel-dsl-token"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-dsl-core",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-s-kernel-flow-core"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "js-sys",
+ "semio-framework-core",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-flow-module-bim",
+ "semio-s-kernel-flow-module-brep",
+ "semio-s-kernel-flow-module-core",
+ "semio-s-kernel-flow-module-dictionary",
+ "semio-s-kernel-flow-module-draw",
+ "semio-s-kernel-flow-module-list",
+ "semio-s-kernel-flow-module-logic",
+ "semio-s-kernel-flow-module-math",
+ "semio-s-kernel-flow-module-text",
+ "semio-s-kernel-geometry-3d-brep-engine",
+ "semio-s-kernel-infinite-board-port-directed-dag",
+ "semio-s-kernel-infinite-canvas",
+ "semio-s-kernel-mathematical-graph-manifest",
+ "semio-s-kernel-neural-dag",
+ "semio-s-kernel-neural-engine",
+ "semio-s-kernel-playbook",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "thiserror 2.0.18",
+ "ui_styling",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "semio-s-kernel-flow-module-bim"
+version = "0.1.0"
+dependencies = [
+ "getrandom 0.3.4",
+ "js-sys",
+ "semio-s-kernel-flow-module-wasm",
+ "semio-s-kernel-neural-engine",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-kernel-flow-module-brep"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "getrandom 0.3.4",
+ "js-sys",
+ "semio-framework-core",
+ "semio-s-kernel-flow-module-wasm",
+ "semio-s-kernel-geometry-3d-brep",
+ "semio-s-kernel-geometry-3d-brep-engine",
+ "semio-s-kernel-neural-engine",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-kernel-flow-module-core"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-flow-module-wasm",
+ "semio-s-kernel-neural-engine",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-kernel-flow-module-dictionary"
+version = "0.1.0"
+dependencies = [
+ "getrandom 0.3.4",
+ "semio-s-kernel-flow-module-wasm",
+ "semio-s-kernel-neural-engine",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-kernel-flow-module-draw"
+version = "0.1.0"
+dependencies = [
+ "getrandom 0.3.4",
+ "semio-s-kernel-flow-module-wasm",
+ "semio-s-kernel-geometry-2d",
+ "semio-s-kernel-geometry-2d-engine",
+ "semio-s-kernel-neural-engine",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-kernel-flow-module-list"
+version = "0.1.0"
+dependencies = [
+ "getrandom 0.3.4",
+ "semio-s-kernel-flow-module-wasm",
+ "semio-s-kernel-neural-engine",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-kernel-flow-module-logic"
+version = "0.1.0"
+dependencies = [
+ "getrandom 0.3.4",
+ "semio-s-kernel-flow-module-wasm",
+ "semio-s-kernel-neural-engine",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-kernel-flow-module-math"
+version = "0.1.0"
+dependencies = [
+ "getrandom 0.3.4",
+ "js-sys",
+ "semio-s-kernel-flow-module-wasm",
+ "semio-s-kernel-neural-engine",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-kernel-flow-module-text"
+version = "0.1.0"
+dependencies = [
+ "getrandom 0.3.4",
+ "semio-s-kernel-flow-module-wasm",
+ "semio-s-kernel-neural-engine",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-kernel-flow-module-wasm"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-neural-engine",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-kernel-geometry-2d"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "geo",
+ "semio-framework-core",
+ "semio-s-kernel-geometry-2d-engine",
+ "serde",
+]
+
+[[package]]
+name = "semio-s-kernel-geometry-2d-engine"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "futures",
+ "pollster",
+ "rayon",
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-s-kernel-geometry-3d-brep"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "base64 0.22.1",
+ "brepkit-check",
+ "brepkit-geometry",
+ "brepkit-io",
+ "brepkit-math",
+ "brepkit-operations",
+ "brepkit-topology",
+ "criterion",
+ "rayon",
+ "semio-framework-core",
+ "semio-s-kernel-geometry-3d-brep-engine",
+ "semio-s-kernel-mathematical-number",
+ "semio-s-kernel-mathematical-random",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-kernel-geometry-3d-brep-engine"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "futures",
+ "pollster",
+ "rayon",
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-s-kernel-geometry-3d-mesh"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-s-kernel-geometry-3d-scene"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-algebra",
+]
+
+[[package]]
+name = "semio-s-kernel-geometry-3d-spatial"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-geometry-3d-brep-engine",
+]
+
+[[package]]
+name = "semio-s-kernel-infinite-board"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-infinite-canvas",
+ "semio-s-kernel-mathematical-geometry",
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-drawing",
+ "semio-s-kernel-mathematical-graph-manifest",
+ "serde",
+ "serde_json",
+ "ui_styling",
+]
+
+[[package]]
+name = "semio-s-kernel-infinite-board-normal-directed"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-infinite-board",
+]
+
+[[package]]
+name = "semio-s-kernel-infinite-board-normal-undirected"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-infinite-board",
+ "semio-s-kernel-infinite-canvas",
+ "semio-s-kernel-mathematical-geometry",
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-drawing",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-s-kernel-infinite-board-port"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-infinite-board",
+ "semio-s-kernel-mathematical-graph",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-kernel-infinite-board-port-directed"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-infinite-board",
+ "semio-s-kernel-infinite-board-normal-undirected",
+ "semio-s-kernel-infinite-board-port",
+ "semio-s-kernel-infinite-canvas",
+ "semio-s-kernel-mathematical-graph",
+ "serde",
+ "serde_json",
+ "ui_styling",
+]
+
+[[package]]
+name = "semio-s-kernel-infinite-board-port-directed-dag"
+version = "0.1.0"
+dependencies = [
+ "js-sys",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-infinite-board-port-directed",
+ "semio-s-kernel-infinite-canvas",
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-drawing",
+ "semio-s-kernel-mathematical-graph-dsl",
+ "semio-s-kernel-mathematical-graph-manifest",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "ui_styling",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "semio-s-kernel-infinite-board-port-directed-normal"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-infinite-board-normal-undirected",
+ "semio-s-kernel-infinite-board-port-directed",
+ "semio-s-kernel-infinite-canvas",
+ "semio-s-kernel-mathematical-graph-drawing",
+ "semio-s-kernel-mathematical-graph-manifest",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "ui_styling",
+]
+
+[[package]]
+name = "semio-s-kernel-infinite-board-port-undirected"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-infinite-board-port",
+]
+
+[[package]]
+name = "semio-s-kernel-infinite-canvas"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "fontdb",
+ "image",
+ "js-sys",
+ "semio-s-kernel-mathematical-geometry",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "typst",
+ "typst-assets",
+ "typst-svg",
+ "ui_styling",
+ "vello",
+ "vello_encoding",
+ "vello_svg",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "semio-s-kernel-infinite-world"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "framework_surface_terrain",
+ "image",
+ "js-sys",
+ "semio-framework-core",
+ "semio-s-kernel-geometry-3d-scene",
+ "serde",
+ "serde_json",
+ "ui_wgpu",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-algebra"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-number",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-cas"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-number",
+ "semio-s-kernel-mathematical-polynomial",
+ "semio-s-kernel-mathematical-random",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-causal"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-probability",
+ "semio-s-kernel-mathematical-random",
+ "semio-s-kernel-mathematical-statistics",
+ "semio-s-kernel-mathematical-tabular",
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-entropy"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-kernel-mathematical-fuzzy"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-random",
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-geometry"
+version = "0.1.0"
+dependencies = [
+ "kurbo 0.13.1",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-geometry",
+ "semio-s-kernel-mathematical-graph-manifest",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-approximation"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-cliques",
+ "semio-s-kernel-mathematical-graph-matching",
+ "semio-s-kernel-mathematical-graph-paths",
+ "semio-s-kernel-mathematical-graph-trees",
+ "semio-s-kernel-mathematical-random",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-bipartite"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-matching",
+ "semio-s-kernel-mathematical-random",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-centrality"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-paths",
+ "semio-s-kernel-mathematical-random",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-cliques"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-components",
+ "semio-s-kernel-mathematical-graph-traversal",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-clustering"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-graph",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-coloring"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-traversal",
+ "semio-s-kernel-mathematical-random",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-community"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-centrality",
+ "semio-s-kernel-mathematical-graph-cliques",
+ "semio-s-kernel-mathematical-random",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-components"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-traversal",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-connectivity"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-components",
+ "semio-s-kernel-mathematical-graph-flow",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-cycles"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-components",
+ "semio-s-kernel-mathematical-graph-traversal",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-dag"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-traversal",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-distance"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-paths",
+ "semio-s-kernel-mathematical-graph-structure",
+ "semio-s-kernel-mathematical-random",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-drawing"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-geometry",
+ "semio-s-kernel-mathematical-graph",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-dsl"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-dsl-core",
+ "semio-s-kernel-dsl-schema",
+ "semio-s-kernel-mathematical-graph-manifest",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-flow"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-components",
+ "semio-s-kernel-mathematical-graph-paths",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-generate"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-graph",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-generate-random"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-generate",
+ "semio-s-kernel-mathematical-graph-structure",
+ "semio-s-kernel-mathematical-random",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-io"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-graph",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-isomorphism"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-graph",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-manifest"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-neural-engine",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-matching"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-graph",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-normal-directed"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-approximation",
+ "semio-s-kernel-mathematical-graph-bipartite",
+ "semio-s-kernel-mathematical-graph-centrality",
+ "semio-s-kernel-mathematical-graph-cliques",
+ "semio-s-kernel-mathematical-graph-clustering",
+ "semio-s-kernel-mathematical-graph-coloring",
+ "semio-s-kernel-mathematical-graph-community",
+ "semio-s-kernel-mathematical-graph-components",
+ "semio-s-kernel-mathematical-graph-connectivity",
+ "semio-s-kernel-mathematical-graph-cycles",
+ "semio-s-kernel-mathematical-graph-dag",
+ "semio-s-kernel-mathematical-graph-distance",
+ "semio-s-kernel-mathematical-graph-flow",
+ "semio-s-kernel-mathematical-graph-generate",
+ "semio-s-kernel-mathematical-graph-generate-random",
+ "semio-s-kernel-mathematical-graph-io",
+ "semio-s-kernel-mathematical-graph-isomorphism",
+ "semio-s-kernel-mathematical-graph-matching",
+ "semio-s-kernel-mathematical-graph-operators",
+ "semio-s-kernel-mathematical-graph-paths",
+ "semio-s-kernel-mathematical-graph-planarity",
+ "semio-s-kernel-mathematical-graph-similarity",
+ "semio-s-kernel-mathematical-graph-spectral",
+ "semio-s-kernel-mathematical-graph-structure",
+ "semio-s-kernel-mathematical-graph-traversal",
+ "semio-s-kernel-mathematical-graph-trees",
+ "semio-s-kernel-mathematical-random",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-normal-undirected"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-approximation",
+ "semio-s-kernel-mathematical-graph-bipartite",
+ "semio-s-kernel-mathematical-graph-centrality",
+ "semio-s-kernel-mathematical-graph-cliques",
+ "semio-s-kernel-mathematical-graph-clustering",
+ "semio-s-kernel-mathematical-graph-coloring",
+ "semio-s-kernel-mathematical-graph-community",
+ "semio-s-kernel-mathematical-graph-components",
+ "semio-s-kernel-mathematical-graph-connectivity",
+ "semio-s-kernel-mathematical-graph-cycles",
+ "semio-s-kernel-mathematical-graph-dag",
+ "semio-s-kernel-mathematical-graph-distance",
+ "semio-s-kernel-mathematical-graph-flow",
+ "semio-s-kernel-mathematical-graph-generate",
+ "semio-s-kernel-mathematical-graph-generate-random",
+ "semio-s-kernel-mathematical-graph-io",
+ "semio-s-kernel-mathematical-graph-isomorphism",
+ "semio-s-kernel-mathematical-graph-matching",
+ "semio-s-kernel-mathematical-graph-operators",
+ "semio-s-kernel-mathematical-graph-paths",
+ "semio-s-kernel-mathematical-graph-planarity",
+ "semio-s-kernel-mathematical-graph-similarity",
+ "semio-s-kernel-mathematical-graph-spectral",
+ "semio-s-kernel-mathematical-graph-structure",
+ "semio-s-kernel-mathematical-graph-traversal",
+ "semio-s-kernel-mathematical-graph-trees",
+ "semio-s-kernel-mathematical-random",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-operators"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-graph",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-paths"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-traversal",
+ "semio-s-kernel-mathematical-random",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-planarity"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-traversal",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-port-directed-normal"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-approximation",
+ "semio-s-kernel-mathematical-graph-bipartite",
+ "semio-s-kernel-mathematical-graph-centrality",
+ "semio-s-kernel-mathematical-graph-cliques",
+ "semio-s-kernel-mathematical-graph-clustering",
+ "semio-s-kernel-mathematical-graph-coloring",
+ "semio-s-kernel-mathematical-graph-community",
+ "semio-s-kernel-mathematical-graph-components",
+ "semio-s-kernel-mathematical-graph-connectivity",
+ "semio-s-kernel-mathematical-graph-cycles",
+ "semio-s-kernel-mathematical-graph-dag",
+ "semio-s-kernel-mathematical-graph-distance",
+ "semio-s-kernel-mathematical-graph-flow",
+ "semio-s-kernel-mathematical-graph-generate",
+ "semio-s-kernel-mathematical-graph-generate-random",
+ "semio-s-kernel-mathematical-graph-io",
+ "semio-s-kernel-mathematical-graph-isomorphism",
+ "semio-s-kernel-mathematical-graph-matching",
+ "semio-s-kernel-mathematical-graph-operators",
+ "semio-s-kernel-mathematical-graph-paths",
+ "semio-s-kernel-mathematical-graph-planarity",
+ "semio-s-kernel-mathematical-graph-similarity",
+ "semio-s-kernel-mathematical-graph-spectral",
+ "semio-s-kernel-mathematical-graph-structure",
+ "semio-s-kernel-mathematical-graph-traversal",
+ "semio-s-kernel-mathematical-graph-trees",
+ "semio-s-kernel-mathematical-random",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-port-undirected"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-approximation",
+ "semio-s-kernel-mathematical-graph-bipartite",
+ "semio-s-kernel-mathematical-graph-centrality",
+ "semio-s-kernel-mathematical-graph-cliques",
+ "semio-s-kernel-mathematical-graph-clustering",
+ "semio-s-kernel-mathematical-graph-coloring",
+ "semio-s-kernel-mathematical-graph-community",
+ "semio-s-kernel-mathematical-graph-components",
+ "semio-s-kernel-mathematical-graph-connectivity",
+ "semio-s-kernel-mathematical-graph-cycles",
+ "semio-s-kernel-mathematical-graph-dag",
+ "semio-s-kernel-mathematical-graph-distance",
+ "semio-s-kernel-mathematical-graph-flow",
+ "semio-s-kernel-mathematical-graph-generate",
+ "semio-s-kernel-mathematical-graph-generate-random",
+ "semio-s-kernel-mathematical-graph-io",
+ "semio-s-kernel-mathematical-graph-isomorphism",
+ "semio-s-kernel-mathematical-graph-matching",
+ "semio-s-kernel-mathematical-graph-operators",
+ "semio-s-kernel-mathematical-graph-paths",
+ "semio-s-kernel-mathematical-graph-planarity",
+ "semio-s-kernel-mathematical-graph-similarity",
+ "semio-s-kernel-mathematical-graph-spectral",
+ "semio-s-kernel-mathematical-graph-structure",
+ "semio-s-kernel-mathematical-graph-traversal",
+ "semio-s-kernel-mathematical-graph-trees",
+ "semio-s-kernel-mathematical-random",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-similarity"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-paths",
+ "semio-s-kernel-mathematical-random",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-spectral"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-graph",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-structure"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-traversal",
+ "semio-s-kernel-mathematical-random",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-traversal"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-graph",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-graph-trees"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-graph-components",
+ "semio-s-kernel-mathematical-random",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-lie"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-algebra",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-number"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-kernel-mathematical-optimize"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-random",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-polynomial"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-number",
+ "semio-s-kernel-mathematical-random",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-probability"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-random",
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-random"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-kernel-mathematical-sampling"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-random",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-signal"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-algebra",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-spatial"
+version = "0.1.0"
+
+[[package]]
+name = "semio-s-kernel-mathematical-statistics"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-algebra",
+ "semio-s-kernel-mathematical-probability",
+ "semio-s-kernel-mathematical-tabular",
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-tabular"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-s-kernel-mathematical-wfc"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-entropy",
+ "semio-s-kernel-mathematical-graph",
+ "semio-s-kernel-mathematical-random",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-kernel-neural-dag"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-mathematical-graph-dsl",
+ "semio-s-kernel-mathematical-graph-manifest",
+ "semio-s-kernel-neural-engine",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-s-kernel-neural-engine"
+version = "0.1.0"
+dependencies = [
+ "rayon",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-s-kernel-pack"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-dsl-schema",
+ "semio-s-kernel-pack-async",
+ "semio-s-kernel-pack-core",
+ "semio-s-kernel-pack-format",
+ "semio-s-kernel-pack-http",
+ "semio-s-kernel-pack-index",
+ "semio-s-kernel-pack-io",
+ "semio-s-kernel-pack-value",
+]
+
+[[package]]
+name = "semio-s-kernel-pack-async"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "futures-lite",
+ "semio-s-kernel-pack-core",
+ "semio-s-kernel-pack-format",
+]
+
+[[package]]
+name = "semio-s-kernel-pack-cli"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-dsl-schema",
+ "semio-s-kernel-pack",
+]
+
+[[package]]
+name = "semio-s-kernel-pack-core"
+version = "0.1.0"
+dependencies = [
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-s-kernel-pack-format"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "miniz_oxide",
+ "semio-s-kernel-pack-core",
+]
+
+[[package]]
+name = "semio-s-kernel-pack-http"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "futures-lite",
+ "semio-s-kernel-pack-async",
+ "semio-s-kernel-pack-core",
+ "semio-s-kernel-pack-format",
+ "ureq",
+]
+
+[[package]]
+name = "semio-s-kernel-pack-index"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-pack-core",
+ "semio-s-kernel-pack-format",
+ "semio-s-kernel-pack-value",
+]
+
+[[package]]
+name = "semio-s-kernel-pack-io"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-pack-core",
+ "semio-s-kernel-pack-format",
+]
+
+[[package]]
+name = "semio-s-kernel-pack-testkit"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "semio-s-kernel-dsl-core",
+ "semio-s-kernel-dsl-schema",
+ "semio-s-kernel-pack",
+]
+
+[[package]]
+name = "semio-s-kernel-pack-value"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "semio-s-kernel-dsl-schema",
+ "semio-s-kernel-pack-core",
+ "semio-s-kernel-pack-format",
+]
+
+[[package]]
+name = "semio-s-kernel-playbook"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
+ "serde",
+ "serde_json",
+ "ui_wgpu",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-kernel-protocol"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-protocol-causal",
+ "semio-s-kernel-protocol-command",
+ "semio-s-kernel-protocol-core",
+ "semio-s-kernel-protocol-crdt",
+ "semio-s-kernel-protocol-format",
+ "semio-s-kernel-protocol-history",
+ "semio-s-kernel-protocol-io",
+ "semio-s-kernel-protocol-materialize",
+ "semio-s-kernel-protocol-wire",
+]
+
+[[package]]
+name = "semio-s-kernel-protocol-causal"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-protocol-command",
+ "semio-s-kernel-protocol-core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-kernel-protocol-cli"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-protocol",
+]
+
+[[package]]
+name = "semio-s-kernel-protocol-command"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "semio-s-kernel-dsl-core",
+ "semio-s-kernel-protocol-core",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-kernel-protocol-core"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-pack-core",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-s-kernel-protocol-crdt"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-protocol-command",
+ "semio-s-kernel-protocol-core",
+ "serde",
+]
+
+[[package]]
+name = "semio-s-kernel-protocol-format"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "semio-s-kernel-pack-core",
+ "semio-s-kernel-pack-format",
+ "semio-s-kernel-protocol-core",
+]
+
+[[package]]
+name = "semio-s-kernel-protocol-history"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-dsl-core",
+ "semio-s-kernel-dsl-schema",
+ "semio-s-kernel-pack-core",
+ "semio-s-kernel-protocol-core",
+ "semio-s-kernel-protocol-format",
+]
+
+[[package]]
+name = "semio-s-kernel-protocol-io"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-pack-core",
+ "semio-s-kernel-pack-io",
+ "semio-s-kernel-protocol-core",
+ "semio-s-kernel-protocol-format",
+ "semio-s-kernel-protocol-history",
+]
+
+[[package]]
+name = "semio-s-kernel-protocol-materialize"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-pack-core",
+ "semio-s-kernel-protocol-core",
+ "semio-s-kernel-protocol-format",
+ "semio-s-kernel-protocol-history",
+]
+
+[[package]]
+name = "semio-s-kernel-protocol-testkit"
+version = "0.1.0"
+dependencies = [
+ "criterion",
+ "semio-s-kernel-dsl-core",
+ "semio-s-kernel-pack-testkit",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-protocol-core",
+ "semio-s-kernel-protocol-format",
+ "semio-s-kernel-protocol-history",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-kernel-protocol-wire"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-protocol-causal",
+ "semio-s-kernel-protocol-command",
+ "semio-s-kernel-protocol-core",
+]
+
+[[package]]
+name = "semio-s-kernel-store"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "js-sys",
+ "semio-framework-core",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-dsl-core",
+ "semio-s-kernel-pack",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-vcs",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.18",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "semio-s-kernel-store-sync"
+version = "0.1.0"
+dependencies = [
+ "futures-util",
+ "js-sys",
+ "notify",
+ "rusqlite",
+ "semio-framework-core",
+ "semio-framework-hash",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.18",
+ "tokio",
+ "tokio-tungstenite 0.26.2",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "semio-s-kernel-store-worker"
+version = "0.1.0"
+dependencies = [
+ "js-sys",
+ "semio-s-kernel-store-sync",
+ "serde",
+ "serde_json",
+ "tokio",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
+name = "semio-s-kernel-vcs"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "semio-s-kernel-protocol",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "semver"
 version = "1.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9779,33 +9852,33 @@ checksum = "8a7852d02fc848982e0c167ef163aaff9cd91dc640ba85e263cb1ce46fae51cd"
 name = "sequence-program"
 version = "0.1.0"
 dependencies = [
- "infinite_board_port_directed_dag",
  "semio-framework-program",
+ "semio-s-kernel-infinite-board-port-directed-dag",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "sequence_core",
  "serde",
  "serde_json",
- "store",
- "vcs",
 ]
 
 [[package]]
 name = "sequence_core"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "imperative_engine",
  "imperative_module_core",
- "infinite_board_port_directed_dag",
- "infinite_cavas",
  "js-sys",
- "mathematical_graph_manifest",
- "neural_engine",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-infinite-board-port-directed-dag",
+ "semio-s-kernel-infinite-canvas",
+ "semio-s-kernel-mathematical-graph-manifest",
+ "semio-s-kernel-neural-engine",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "thiserror 2.0.18",
- "vcs",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -10015,12 +10088,12 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 name = "shooting"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
  "wasm-bindgen",
 ]
 
@@ -10028,15 +10101,15 @@ dependencies = [
 name = "shooting-program"
 version = "0.1.0"
 dependencies = [
- "protocol",
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-program",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
  "shooting",
- "store",
- "vcs",
 ]
 
 [[package]]
@@ -10217,11 +10290,11 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-core",
  "semio-framework-program",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
  "sourcing_curate",
- "store",
- "vcs",
  "wasm-bindgen",
 ]
 
@@ -10229,12 +10302,12 @@ dependencies = [
 name = "sourcing_curate"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
  "wasm-bindgen",
 ]
 
@@ -10444,67 +10517,6 @@ name = "static_assertions_next"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d7beae5182595e9a8b683fa98c4317f956c9a2dec3b9716990d20023cc60c766"
-
-[[package]]
-name = "store"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "dsl",
- "dsl_core",
- "js-sys",
- "pack",
- "protocol",
- "semio-framework-core",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "tempfile",
- "thiserror 2.0.18",
- "vcs",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "store_sync"
-version = "0.1.0"
-dependencies = [
- "dsl",
- "futures-util",
- "js-sys",
- "notify",
- "protocol",
- "rusqlite",
- "semio-framework-core",
- "semio-framework-hash",
- "serde",
- "serde_json",
- "store",
- "tempfile",
- "thiserror 2.0.18",
- "tokio",
- "tokio-tungstenite 0.26.2",
- "vcs",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
-
-[[package]]
-name = "store_worker"
-version = "0.1.0"
-dependencies = [
- "js-sys",
- "serde",
- "serde_json",
- "store_sync",
- "tokio",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
-]
 
 [[package]]
 name = "strict-num"
@@ -11258,24 +11270,24 @@ dependencies = [
 name = "trinity-program"
 version = "0.1.0"
 dependencies = [
- "mathematical_geometry",
- "mathematical_graph_drawing",
  "semio-framework-program",
+ "semio-s-kernel-mathematical-geometry",
+ "semio-s-kernel-mathematical-graph-drawing",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "trinity_jack",
  "trinity_ram",
  "trinity_rewrite",
- "vcs",
 ]
 
 [[package]]
 name = "trinity_jack"
 version = "0.1.0"
 dependencies = [
- "mathematical_graph_dsl",
- "mathematical_graph_manifest",
+ "semio-s-kernel-mathematical-graph-dsl",
+ "semio-s-kernel-mathematical-graph-manifest",
  "serde",
  "serde_json",
  "trinity_ram",
@@ -11285,7 +11297,7 @@ dependencies = [
 name = "trinity_jack_lsp"
 version = "0.1.0"
 dependencies = [
- "mathematical_graph_dsl",
+ "semio-s-kernel-mathematical-graph-dsl",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -11298,25 +11310,25 @@ dependencies = [
 name = "trinity_jack_shell"
 version = "0.1.0"
 dependencies = [
- "store",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "thiserror 2.0.18",
  "trinity_jack",
  "trinity_ram",
- "vcs",
 ]
 
 [[package]]
 name = "trinity_ram"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "mathematical_graph_manifest",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-mathematical-graph-manifest",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "thiserror 2.0.18",
- "vcs",
  "wasm-bindgen",
 ]
 
@@ -11324,20 +11336,20 @@ dependencies = [
 name = "trinity_rewrite"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "infinite_board_port_directed",
- "infinite_board_port_directed_normal",
- "infinite_cavas",
  "js-sys",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-infinite-board-port-directed",
+ "semio-s-kernel-infinite-board-port-directed-normal",
+ "semio-s-kernel-infinite-canvas",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "thiserror 2.0.18",
  "trinity_jack",
  "trinity_ram",
  "ui_styling",
- "vcs",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -11750,9 +11762,9 @@ dependencies = [
  "arboard",
  "bytemuck",
  "js-sys",
- "kernel_3d_scene",
  "parley",
  "pollster",
+ "semio-s-kernel-geometry-3d-scene",
  "serde",
  "serde_json",
  "swash",
@@ -12048,28 +12060,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 
 [[package]]
-name = "vcs"
-version = "0.1.0"
-dependencies = [
- "blake3",
- "protocol",
- "serde",
- "serde_json",
- "tempfile",
- "thiserror 2.0.18",
-]
-
-[[package]]
 name = "vcs-program"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "protocol",
  "semio-framework-program",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
 ]
 
 [[package]]
@@ -13744,13 +13744,13 @@ checksum = "1ffae5123b2d3fc086436f8834ae3ab053a283cfac8fe0a0b8eaae044768a4c4"
 name = "writer"
 version = "0.1.0"
 dependencies = [
- "dsl",
  "framework_editor",
- "protocol",
+ "semio-s-kernel-dsl",
+ "semio-s-kernel-protocol",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
- "vcs",
  "wasm-bindgen",
 ]
 
@@ -13760,12 +13760,12 @@ version = "0.1.0"
 dependencies = [
  "regex",
  "semio-framework-program",
+ "semio-s-kernel-store",
+ "semio-s-kernel-vcs",
  "serde",
  "serde_json",
- "store",
  "trinity_jack",
  "trinity_ram",
- "vcs",
  "writer",
 ]
 

@@ -1,0 +1,29 @@
+[package]
+name = "semio-s-kernel-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Protocol facade — command/collaboration semantics and binary op-log format, re-exporting the full protocol_* family"
+
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[features]
+default = ["deflate"]
+deflate = ["protocol_format/deflate"]
+
+[dependencies]
+protocol_core = { path = "../core/rs", package = "semio-s-kernel-protocol-core" }
+protocol_command = { path = "../command/rs", package = "semio-s-kernel-protocol-command" }
+protocol_causal = { path = "../causal/rs", package = "semio-s-kernel-protocol-causal" }
+protocol_crdt = { path = "../crdt/rs", package = "semio-s-kernel-protocol-crdt" }
+protocol_format = { path = "../format/rs", package = "semio-s-kernel-protocol-format" }
+protocol_history = { path = "../history/rs", package = "semio-s-kernel-protocol-history" }
+protocol_materialize = { path = "../materialize/rs", package = "semio-s-kernel-protocol-materialize" }
+protocol_wire = { path = "../wire/rs", package = "semio-s-kernel-protocol-wire" }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+protocol_io = { path = "../io/rs", package = "semio-s-kernel-protocol-io" }

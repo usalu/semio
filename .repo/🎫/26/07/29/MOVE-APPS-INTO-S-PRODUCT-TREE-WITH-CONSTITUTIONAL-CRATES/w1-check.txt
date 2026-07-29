@@ -1,0 +1,75 @@
+warning: s/kernel/protocol/cli/rs/Cargo.toml: file `/Users/ueli/Documents/semio/s/kernel/protocol/cli/rs/lib.rs` found to be present in multiple build targets:
+  * `lib` target `semio_s_kernel_protocol_cli`
+  * `bin` target `protocol`
+warning: `semio-s-kernel-protocol-cli` (manifest) generated 1 warning
+warning: s/kernel/db/cli/rs/Cargo.toml: file `/Users/ueli/Documents/semio/s/kernel/db/cli/rs/lib.rs` found to be present in multiple build targets:
+  * `lib` target `semio_s_kernel_db_cli`
+  * `bin` target `db`
+warning: `semio-s-kernel-db-cli` (manifest) generated 1 warning
+warning: s/kernel/pack/cli/rs/Cargo.toml: file `/Users/ueli/Documents/semio/s/kernel/pack/cli/rs/lib.rs` found to be present in multiple build targets:
+  * `lib` target `semio_s_kernel_pack_cli`
+  * `bin` target `pack`
+warning: `semio-s-kernel-pack-cli` (manifest) generated 1 warning
+    Checking semio-s-kernel-pack-core v0.1.0 (/Users/ueli/Documents/semio/s/kernel/pack/core/rs)
+    Checking semio-s-kernel-dsl-core v0.1.0 (/Users/ueli/Documents/semio/s/kernel/dsl/core/rs)
+   Compiling semio-s-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/s/kernel/dsl/derive/rs)
+    Checking semio-s-kernel-mathematical-number v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/number/rs)
+    Checking semio-s-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/s/kernel/neural/engine/rs)
+    Checking semio-s-kernel-mathematical-geometry v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/geometry/rs)
+   Compiling semio-s-kernel-mathematical-graph-manifest v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/manifest/rs)
+   Compiling semio-s-kernel-infinite-canvas v0.1.0 (/Users/ueli/Documents/semio/s/kernel/infinite/canvas/rs)
+    Checking semio-s-kernel-mathematical-random v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/random/rs)
+    Checking semio-s-kernel-geometry-3d-brep-engine v0.1.0 (/Users/ueli/Documents/semio/s/kernel/geometry/3d/brep/engine/rs)
+    Checking semio-s-kernel-geometry-2d-engine v0.1.0 (/Users/ueli/Documents/semio/s/kernel/geometry/2d/engine/rs)
+    Checking semio-s-kernel-pack-format v0.1.0 (/Users/ueli/Documents/semio/s/kernel/pack/format/rs)
+    Checking semio-s-kernel-protocol-core v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/core/rs)
+    Checking semio-s-kernel-mathematical-algebra v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/algebra/rs)
+    Checking semio-s-kernel-dsl-schema v0.1.0 (/Users/ueli/Documents/semio/s/kernel/dsl/schema/rs)
+    Checking semio-s-kernel-db-core v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/core/rs)
+    Checking semio-s-kernel-pack-io v0.1.0 (/Users/ueli/Documents/semio/s/kernel/pack/io/rs)
+    Checking semio-s-kernel-pack-async v0.1.0 (/Users/ueli/Documents/semio/s/kernel/pack/async/rs)
+    Checking semio-s-kernel-flow-module-wasm v0.1.0 (/Users/ueli/Documents/semio/s/kernel/flow/module/wasm/rs)
+    Checking semio-s-kernel-protocol-format v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/format/rs)
+    Checking semio-s-kernel-protocol-command v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/command/rs)
+    Checking semio-s-kernel-pack-value v0.1.0 (/Users/ueli/Documents/semio/s/kernel/pack/value/rs)
+    Checking semio-s-kernel-geometry-3d-scene v0.1.0 (/Users/ueli/Documents/semio/s/kernel/geometry/3d/scene/rs)
+    Checking semio-s-kernel-db-state v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/state/rs)
+    Checking semio-s-kernel-pack-http v0.1.0 (/Users/ueli/Documents/semio/s/kernel/pack/http/rs)
+    Checking fem_core v0.1.0 (/Users/ueli/Documents/semio/fem/core/rs)
+    Checking semio-s-kernel-protocol-history v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/history/rs)
+    Checking ui_wgpu v0.1.0 (/Users/ueli/Documents/semio/ui/wgpu/rs)
+    Checking semio-s-kernel-pack-index v0.1.0 (/Users/ueli/Documents/semio/s/kernel/pack/index/rs)
+    Checking semio-s-kernel-db-actor v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/actor/rs)
+    Checking semio-s-kernel-protocol-causal v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/causal/rs)
+    Checking semio-s-kernel-protocol-crdt v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/crdt/rs)
+    Checking semio-s-kernel-pack v0.1.0 (/Users/ueli/Documents/semio/s/kernel/pack/rs)
+    Checking semio-s-kernel-protocol-io v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/io/rs)
+error: failed to run custom build command for `semio-s-kernel-mathematical-graph-manifest v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/manifest/rs)`
+
+Caused by:
+  process didn't exit successfully: `/Users/ueli/Documents/semio/target/debug/build/semio-s-kernel-mathematical-graph-manifest-f25e741b47f87545/build-script-build` (exit status: 1)
+  --- stdout
+  cargo:rerun-if-changed=/Users/ueli/Documents/semio/s/kernel/mathematical/graph/manifest/rs/../generated/registry.rs
+  cargo:rerun-if-changed=/Users/ueli/Documents/semio/s/kernel/mathematical/graph/manifest/rs/script.ts
+
+  --- stderr
+  Error: "missing /Users/ueli/Documents/semio/s/kernel/mathematical/graph/manifest/rs/../generated/registry.rs — run `bun nx run @semio-tech/graph-manifest:generate` first"
+warning: build failed, waiting for other jobs to finish...
+ui/wgpu/rs/lib.rs:6202:32: warning: unused import: `Level`
+ui/wgpu/rs/lib.rs:14093:5: warning: unused import: `crate::IconName`
+ui/wgpu/rs/lib.rs:16891:52: warning: unnecessary qualification
+error: failed to run custom build command for `semio-s-kernel-infinite-canvas v0.1.0 (/Users/ueli/Documents/semio/s/kernel/infinite/canvas/rs)`
+
+Caused by:
+  process didn't exit successfully: `/Users/ueli/Documents/semio/target/debug/build/semio-s-kernel-infinite-canvas-67d356a73e44b086/build-script-build` (exit status: 101)
+  --- stdout
+  cargo:rerun-if-changed=/Users/ueli/Documents/semio/s/kernel/infinite/canvas/rs/../../../ui/asset/icon/generated/shortcodes.json
+  cargo:rerun-if-changed=/Users/ueli/Documents/semio/s/kernel/infinite/canvas/rs/../../../ui/asset/icon
+  cargo:rerun-if-changed=/Users/ueli/Documents/semio/s/kernel/infinite/canvas/rs/../../../asset/metabolism/icon
+
+  --- stderr
+
+  thread 'main' (5133918) panicked at s/kernel/infinite/canvas/rs/build.rs:34:71:
+  read /Users/ueli/Documents/semio/s/kernel/infinite/canvas/rs/../../../ui/asset/icon/generated/shortcodes.json: No such file or directory (os error 2). Run `bun nx run @ui/asset:generate` first.
+  note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+warning: `ui_wgpu` (lib) generated 3 warnings (run `cargo fix --lib -p ui_wgpu` to apply 3 suggestions)

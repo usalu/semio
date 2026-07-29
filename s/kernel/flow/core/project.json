@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/flow-core",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "s/kernel/flow/core",
+        "command": "bun ./script.ts wasm"
+      }
+    }
+  }
+}

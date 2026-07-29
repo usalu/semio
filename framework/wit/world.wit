@@ -5,6 +5,14 @@ interface types {
     json: string,
   }
 
+  // 🚧 B5 attempted a real pack-`Shape::Value` binary flip of these 4 records (matching the plan's
+  // Decision-1 invocation-wrapper binarization), but reverted: `framework/product/os/dev/script.ts`'s
+  // `pluginApiSource()` hand-written JS glue constructs these records directly (`{ json: actionJson }`
+  // etc.) to call into the wasm component, and a correct fix needs a real pack-document JS/wasm codec
+  // (pack_core's spec-driven document format, not a simple LEB128 twin like the other wire codecs) —
+  // out of scope to rush. Left as JSON-string records; re-attempt once a JS-callable
+  // `store::pack_rt::encode_json_value`/`decode_json_value` exists (e.g. via a wasm export), so
+  // `os/dev/script.ts` can build real bytes instead of a hand-rolled TLV encoder.
   record action-invocation-json {
     json: string,
   }

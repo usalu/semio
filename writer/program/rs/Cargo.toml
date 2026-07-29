@@ -23,8 +23,8 @@ path = "lib.rs"
 [dependencies]
 semio-framework-program = { path = "../../../framework/program/rs" }
 writer = { path = "../../rs" }
-vcs = { path = "../../../vcs/rs" }
-store = { path = "../../../store/rs" }
+vcs = { path = "../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+store = { path = "../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
 trinity_jack = { path = "../../../trinity/jack/core/rs" }
 trinity_ram = { path = "../../../trinity/ram/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

@@ -22,8 +22,8 @@ remodel_mesh = { path = "../../mesh/rs" }
 remodel_motion = { path = "../../motion/rs" }
 remodel_geo = { path = "../../geo/rs" }
 semio-framework-core = { path = "../../../framework/core/rs" }
-mathematical_random = { path = "../../../mathematical/random/rs" }
+mathematical_random = { path = "../../../s/kernel/mathematical/random/rs", package = "semio-s-kernel-mathematical-random" }
 
 [dev-dependencies]
-mathematical_lie = { path = "../../../mathematical/lie/rs" }
-mathematical_algebra = { path = "../../../mathematical/algebra/rs" }
+mathematical_lie = { path = "../../../s/kernel/mathematical/lie/rs", package = "semio-s-kernel-mathematical-lie" }
+mathematical_algebra = { path = "../../../s/kernel/mathematical/algebra/rs", package = "semio-s-kernel-mathematical-algebra" }

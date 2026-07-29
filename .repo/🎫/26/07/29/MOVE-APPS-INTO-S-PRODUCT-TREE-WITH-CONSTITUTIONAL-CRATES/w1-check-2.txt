@@ -1,0 +1,67 @@
+warning: s/kernel/protocol/cli/rs/Cargo.toml: file `/Users/ueli/Documents/semio/s/kernel/protocol/cli/rs/lib.rs` found to be present in multiple build targets:
+  * `lib` target `semio_s_kernel_protocol_cli`
+  * `bin` target `protocol`
+warning: `semio-s-kernel-protocol-cli` (manifest) generated 1 warning
+warning: s/kernel/db/cli/rs/Cargo.toml: file `/Users/ueli/Documents/semio/s/kernel/db/cli/rs/lib.rs` found to be present in multiple build targets:
+  * `lib` target `semio_s_kernel_db_cli`
+  * `bin` target `db`
+warning: `semio-s-kernel-db-cli` (manifest) generated 1 warning
+warning: s/kernel/pack/cli/rs/Cargo.toml: file `/Users/ueli/Documents/semio/s/kernel/pack/cli/rs/lib.rs` found to be present in multiple build targets:
+  * `lib` target `semio_s_kernel_pack_cli`
+  * `bin` target `pack`
+warning: `semio-s-kernel-pack-cli` (manifest) generated 1 warning
+    Checking semio-s-kernel-protocol-wire v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/wire/rs)
+    Checking semio-s-kernel-protocol-materialize v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/materialize/rs)
+   Compiling semio-s-kernel-mathematical-graph-manifest v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/manifest/rs)
+ui/wgpu/rs/lib.rs:6202:32: warning: unused import: `Level`
+ui/wgpu/rs/lib.rs:14093:5: warning: unused import: `crate::IconName`
+ui/wgpu/rs/lib.rs:16891:52: warning: unnecessary qualification
+warning: `ui_wgpu` (lib) generated 3 warnings (run `cargo fix --lib -p ui_wgpu` to apply 3 suggestions)
+   Compiling semio-s-kernel-infinite-canvas v0.1.0 (/Users/ueli/Documents/semio/s/kernel/infinite/canvas/rs)
+    Checking semio-s-kernel-db-storage v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/storage/rs)
+    Checking semio-s-kernel-mathematical-optimize v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/optimize/rs)
+    Checking semio-s-kernel-mathematical-lie v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/lie/rs)
+    Checking semio-s-kernel-mathematical-spatial v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/spatial/rs)
+    Checking semio-s-kernel-flow-module-core v0.1.0 (/Users/ueli/Documents/semio/s/kernel/flow/module/core/rs)
+    Checking semio-s-kernel-flow-module-math v0.1.0 (/Users/ueli/Documents/semio/s/kernel/flow/module/math/rs)
+    Checking semio-s-kernel-flow-module-logic v0.1.0 (/Users/ueli/Documents/semio/s/kernel/flow/module/logic/rs)
+    Checking semio-s-kernel-flow-module-dictionary v0.1.0 (/Users/ueli/Documents/semio/s/kernel/flow/module/dictionary/rs)
+    Checking semio-s-kernel-flow-module-text v0.1.0 (/Users/ueli/Documents/semio/s/kernel/flow/module/text/rs)
+    Checking semio-s-kernel-flow-module-list v0.1.0 (/Users/ueli/Documents/semio/s/kernel/flow/module/list/rs)
+    Checking semio-s-kernel-flow-module-bim v0.1.0 (/Users/ueli/Documents/semio/s/kernel/flow/module/bim/rs)
+    Checking semio-s-kernel-protocol v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/rs)
+    Checking remodel_camera v0.1.0 (/Users/ueli/Documents/semio/remodel/camera/rs)
+    Checking semio-s-kernel-db-observe v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/observe/rs)
+    Checking semio-s-kernel-db-index v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/index/rs)
+    Checking semio-s-kernel-db-snapshot v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/snapshot/rs)
+    Checking semio-s-kernel-db-storage-postgres v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/storage/postgres/rs)
+    Checking semio-s-kernel-db-storage-neo4j v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/storage/neo4j/rs)
+    Checking semio-s-kernel-db-storage-sqlite v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/storage/sqlite/rs)
+    Checking remodel_feature v0.1.0 (/Users/ueli/Documents/semio/remodel/feature/rs)
+    Checking semio-s-kernel-dsl v0.1.0 (/Users/ueli/Documents/semio/s/kernel/dsl/rs)
+    Checking semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/framework/core/rs)
+    Checking semio-s-kernel-vcs v0.1.0 (/Users/ueli/Documents/semio/s/kernel/vcs/rs)
+    Checking semio-s-kernel-db-wal v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/wal/rs)
+    Checking semio-s-kernel-db-projection v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/projection/rs)
+    Checking semio-s-kernel-db-conflict v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/conflict/rs)
+    Checking semio-s-kernel-db-security v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/security/rs)
+    Checking semio-s-kernel-db-query v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/query/rs)
+    Checking imperative_module_text v0.1.0 (/Users/ueli/Documents/semio/imperative/module/text/rs)
+    Checking imperative_module_math v0.1.0 (/Users/ueli/Documents/semio/imperative/module/math/rs)
+    Checking imperative_module_core v0.1.0 (/Users/ueli/Documents/semio/imperative/module/core/rs)
+    Checking semio-s-kernel-db-preview v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/preview/rs)
+    Checking semio-s-kernel-db-sync v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/sync/rs)
+    Checking semio-s-kernel-db-compact v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/compact/rs)
+framework/core/rs/lib.rs:1803:42: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+framework/core/rs/lib.rs:1816:43: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+framework/core/rs/lib.rs:1931:53: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+    Checking imperative_module_logic v0.1.0 (/Users/ueli/Documents/semio/imperative/module/logic/rs)
+    Checking remodel_sfm v0.1.0 (/Users/ueli/Documents/semio/remodel/sfm/rs)
+    Checking remodel_dense v0.1.0 (/Users/ueli/Documents/semio/remodel/dense/rs)
+    Checking semio-s-kernel-db-document v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/document/rs)
+    Checking semio-s-kernel-db-cluster v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/cluster/rs)
+   Compiling framework_surface_tiled_map v0.1.0 (/Users/ueli/Documents/semio/framework/surface/tiled-map/rs)
+s/kernel/infinite/canvas/rs/lib.rs:1216:1: error: couldn't read `s/kernel/infinite/canvas/rs/../../../asset/metabolism/icon/generated/metabolism_icon_name.rs`: No such file or directory (os error 2)
+error: could not compile `semio-s-kernel-infinite-canvas` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+warning: `semio-framework-core` (lib) generated 3 warnings

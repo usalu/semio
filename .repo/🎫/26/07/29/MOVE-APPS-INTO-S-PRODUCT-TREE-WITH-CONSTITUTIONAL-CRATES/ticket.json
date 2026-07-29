@@ -1,0 +1,13 @@
+{
+  "title": "Move Apps into S Product Tree with Constitutional Crates",
+  "emoji": "🏛️",
+  "status": "open",
+  "description": "Restructure the repo so every app technology lives under s/, with shared domain-logic libraries factored into s/kernel/\u003ctech\u003e and each app's constitutional parts (document, engine, pack, dsl, op, protocol, ui) enforced as real crates under s/plugin/\u003cplugin\u003e/app/\u003capp\u003e/\u003cslot\u003e/rs/lib.rs. Plugin bundle crate absorbs today's \u003ctech\u003e/program/rs. Kernel excludes ui/ and framework/ (stay top-level). See approved plan at /Users/ueli/.claude/plans/make-sure-to-move-twinkling-lightning.md for full wave breakdown (W0 pre-wiring, W1 kernel sweep ~139 crates, W2-30 plugin moves, W31+ per-app constitutional splits, W-final enforcement gates).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2377"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪8259e09c2f4d477ba225cb0ed27e2fbd"
+  ]
+}

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
@@ -27,10 +28,14 @@ const uiAssetsRoot = path.join(repoRoot, "ui/asset");
  * build in `os/dev/script.ts`'s `buildEngineWasm`. */
 const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = ["@semio-tech/framework-surface-node-graph-rs", "@semio-tech/framework-editor-rs"];
 
-/** @emoji 📦 Maps a registry `engines` crate path (e.g. `framework/surface/tiled-map/rs`) to its wasm-pack npm package name. */
+/** @emoji 📦 Maps a registry `engines` crate path (e.g. `framework/surface/tiled-map/rs`) to its wasm-pack
+ * npm package name — read from the crate's own sibling `package.json`, not derived from its path, so a
+ * crate keeps optimizing correctly across restructures/moves without touching this file. */
 function engineNpmPackage(cratePath: string): string {
-  const slug = (cratePath.endsWith("/rs") ? cratePath.slice(0, -"/rs".length) : cratePath).replace(/\//g, "-");
-  return `@semio-tech/${slug}-rs`;
+  const manifestPath = path.join(repoRoot, cratePath, "package.json");
+  const name = JSON.parse(readFileSync(manifestPath, "utf8")).name as string | undefined;
+  if (!name) throw new Error(`missing "name" in ${manifestPath}`);
+  return name;
 }
 
 const registryEngineOptimizeDepsExclude = [...new Set(PLAYGROUND_BUILD_TARGETS.flatMap((target) => target.engines))].map(engineNpmPackage);

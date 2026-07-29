@@ -31,7 +31,7 @@ fem_2d = { path = "../../2d/rs" }
 fem_3d = { path = "../../3d/rs" }
 fem_core = { path = "../../core/rs" }
 semio-framework-program = { path = "../../../framework/program/rs" }
-vcs = { path = "../../../vcs/rs" }
-store = { path = "../../../store/rs" }
+vcs = { path = "../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+store = { path = "../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

@@ -1,0 +1,17 @@
+[package]
+name = "semio-s-kernel-protocol-wire"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Protocol hub wire frames — lane-tagged client/server frame types shared by native and wasm sync clients"
+
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+protocol_core = { path = "../../core/rs", package = "semio-s-kernel-protocol-core" }
+protocol_causal = { path = "../../causal/rs", package = "semio-s-kernel-protocol-causal" }
+protocol_command = { path = "../../command/rs", package = "semio-s-kernel-protocol-command" }

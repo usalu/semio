@@ -1,0 +1,28 @@
+[package]
+name = "semio-s-kernel-db-cluster"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db clustering — sharding, ownership leases, epoch failover, follower replication, quorum durability"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+db_core = { path = "../../core/rs", package = "semio-s-kernel-db-core" }
+db_actor = { path = "../../actor/rs", package = "semio-s-kernel-db-actor" }
+db_wal = { path = "../../wal/rs", package = "semio-s-kernel-db-wal" }
+db_storage = { path = "../../storage/rs", package = "semio-s-kernel-db-storage" }
+db_sync = { path = "../../sync/rs", package = "semio-s-kernel-db-sync" }
+
+[dev-dependencies]
+# 🎯 Genuinely missing additions (not in the stub's dependency list), noted per the wave's
+# instructions: this crate's tests need to seed a leader `DocumentWal` with real
+# `protocol::OperationEnvelope` commands (via `db_sync::encode_command_envelope`) to exercise
+# `replicate_document` end to end — the same fixture shape `db_sync`'s own tests already use.
+# Neither crate is a runtime dependency of `db_cluster` itself (see the module doc's "no `blake3`"
+# note for the parallel reasoning on why the ring hash doesn't pull in a real dependency either).
+protocol = { path = "../../../protocol/rs", package = "semio-s-kernel-protocol" }
+serde_json = "1"

@@ -15,16 +15,16 @@ crate-type = ["rlib", "cdylib"]
 path = "lib.rs"
 
 [dependencies]
-dsl = { path = "../../../dsl/rs" }
+dsl = { path = "../../../s/kernel/dsl/rs", package = "semio-s-kernel-dsl" }
 imperative_engine = { path = "../../engine/rs" }
 imperative_module_core = { path = "../../module/core/rs" }
-neural_engine = { path = "../../../neural/engine/rs" }
+neural_engine = { path = "../../../s/kernel/neural/engine/rs", package = "semio-s-kernel-neural-engine" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"
-vcs = { path = "../../../vcs/rs" }
-store = { path = "../../../store/rs" }
-protocol = { path = "../../../protocol/rs" }
+vcs = { path = "../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+store = { path = "../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
+protocol = { path = "../../../s/kernel/protocol/rs", package = "semio-s-kernel-protocol" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.106"

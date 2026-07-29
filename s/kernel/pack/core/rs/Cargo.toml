@@ -1,0 +1,15 @@
+[package]
+name = "semio-s-kernel-pack-core"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Pack binary document format foundation — ids, errors, limits, varints, byte reader/writer, source/sink traits, codec trait"
+
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+thiserror = "2.0.12"

@@ -1,0 +1,132 @@
+JSON-FREE DOCUMENT PIPELINE — B6 (PARTIAL) REPORT
+====================================================
+See b1-b3-report.txt, b4-partial-report.txt, b5-report.txt for prior waves (all closed). This
+covers the start of B6 (TS + os/core last JSON boundaries): one real fix landed and verified, plus
+scope-defining reconnaissance that materially changes B6's size estimate — read the "Scope found"
+section before picking this back up.
+
+## Done (verified: cargo test 38/38 unaffected, tsc clean on the changed files)
+
+- **`ClientFrame::Presence`/`ServerFrame::Presence` TS twin was stale JSON, not real binary** — the
+  Rust side (`protocol_wire`) already carries `peer: Vec<u8>` / `peers: Vec<Vec<u8>>` (opaque binary
+  blobs, real `encode_presence_peer`/`decode_presence_peer` content from
+  `semio_framework_core`), but `framework/product/os/core/js/index.ts`'s hand-written `ClientFrame`/
+  `ServerFrame` TS types still had the pre-binary shape `Presence: { peer_json: string }` /
+  `Presence: { peers_json: readonly string[] }`, and `backbone-worker.ts` called
+  `JSON.stringify(message.peer)` to fill it — i.e. real `Vec<u8>` wire fields on the Rust side,
+  JSON text on the TS side. This is exactly the "disguised JSON" pattern the mandate forbids, and
+  it was a genuine, live mismatch (not just a style nit) — `backbone-worker.ts`'s hub `WebSocket`
+  path talks real binary `protocol_wire` frames, so this TS code was sending byte-for-byte wrong
+  frames for the `Presence` variant specifically (tag was fine, payload encoding was not).
+  - Added a byte-identical TS twin of `semio_framework_core::encode_presence_peer`/
+    `decode_presence_peer` to `index.ts` (`encodePresencePeer`/`decodePresencePeer`, exported):
+    `actor str | presence bitmask u8 | connected_at_ms varint | fields present per bitmask (label
+    str? | selection_json str? | user_id str? | role str? | cursor f64,f64? | viewport
+    f64,f64,f64? | drag_ghost_json str?)`. Added the two missing primitives it needed
+    (`writeF64`/`readF64`, 8-byte little-endian via `DataView`) and `writeVecBytes`/`readVecBytes`
+    (for `ServerFrame::Presence.peers`), extending the same LEB128 primitive kit
+    (`writeVarintU64`/`writeStr`/`writeBytes`/etc.) already used for every other wire type here.
+  - `ClientFrame`/`ServerFrame` types: `Presence: { peer_json: string }` →
+    `Presence: { peer: readonly number[] }`; `Presence: { peers_json: readonly string[] }` →
+    `Presence: { peers: readonly (readonly number[])[] }`. Updated all 4
+    `encodeClientFrame`/`decodeClientFrame`/`encodeServerFrame`/`decodeServerFrame` call sites.
+  - `backbone-worker.ts`: `presenceHeartbeat` now sends `{ Presence: { peer:
+    encodePresencePeer(message.peer) } }` instead of `JSON.stringify`; the hub-frame `Presence`
+    handler now `decodePresencePeer`s each `peers[]` entry instead of `JSON.parse`ing
+    `peers_json[]`, with the same graceful per-peer drop-on-malformed behavior as before. Removed
+    the now-unused `DocumentPresencePeer` type import.
+  - Fixed the 2 vitest fixture-round-trip assertions that referenced `peer_json`/`peers_json` by
+    field name (`client-presence.bin`/`server-presence.bin` fixtures) — their actual byte *content*
+    is arbitrary opaque test data (the Rust `protocol_wire` test suite uses the same
+    JSON-looking-but-opaque bytes as its own fixture content, e.g.
+    `ClientFrame::Presence { peer: b"{\"cursor\":[1,2]}".to_vec() }` — proving the wire *framing*
+    round-trips for arbitrary bytes, not that production content is JSON), so the fixtures
+    themselves did not need regenerating — only the TS assertions' field names and the
+    "decode as UTF-8 text, not as a real PresencePeer" comment.
+  - Verified: `bun ./script.ts test quick` in `framework/product/os/core` — 38/38 passing (1
+    unrelated pre-existing unhandled-rejection warning from `ensureRustHost()`'s wasm-module-load
+    fallback in the vitest/node environment, untouched by this change). `bunx tsc --noEmit -p .`
+    from the repo root: zero new errors introduced (the one pre-existing error, `backbone-worker.ts`
+    `putCachedBlob`'s `fetch` body-type mismatch, is in the untouched `BlobCache` region).
+
+## Scope found (materially larger than the plan's own B6 text suggests — read before continuing)
+
+Investigating the next natural B6 item (the `/semio-backbone` dev endpoint's `application/json`
+content-type) surfaced that **this whole area is bigger than "flip a content-type header."**
+
+1. **`DocumentEvent::snapshotReplaced`/`DocumentActorMsg::localSnapshot` are a live Rust/TS type
+   mismatch, likely a real regression from the B3 wave**: Rust's `DocumentActorMsg` no longer has a
+   `LocalSnapshot` variant at all (deleted in B3 — "no production sender", per that wave's own
+   report) and `DocumentEvent::SnapshotReplaced` carries real `{ pack: Vec<u8>, spr: Vec<u8> }`. But
+   the **TS** `DocumentActorMsg`/`DocumentEvent` types (`framework/product/os/core/js/index.ts`)
+   still declare `localSnapshot: { envelopeJson: string }` / `snapshotReplaced: { envelopeJson:
+   string }`, `backbone-worker.ts`'s TS-fallback actor still handles `case "localSnapshot"`, AND —
+   the part that makes this live, not dead — **`framework/renderer/react/index.tsx:5454` still
+   constructs `{ kind: "localSnapshot", envelopeJson: ... }`** and posts it to the worker. When the
+   real wasm actor (not the TS fallback) is active, this message's `kind` no longer matches any
+   Rust `DocumentActorMsg` variant, so `serde_json::from_str::<WorkerRequest>` in
+   `store/worker/rs/lib.rs`'s `handle_request_json` would fail to deserialize the whole request —
+   the message is silently lost (an `Err` returned to a JS call site, `handleRequestJson`, that
+   isn't awaited: `void rustHost.handleRequestJson(json)` — the error self-swallows). NOT fixed
+   this pass (scoping only — see below for why); needs its own investigation into whether
+   `react/index.tsx`'s producer is itself dead code (its `messageJson`'s `parsed.kind === "snapshot"`
+   branch — check whether anything upstream still emits a `kind: "snapshot"` `BackboneMessage` in
+   JS) or whether `LocalSnapshot`/`SnapshotReplaced`'s pack+spr shape needs restoring on the TS
+   actor-message side to match.
+2. **The dev server's `file://`/`folder://` backbone persistence (`os/dev/script.ts`'s
+   `readBackbonePayload`/`writeBackbonePayload`) is a wholly separate, JSON-only storage
+   implementation from the Rust store's binary one** — `folder://` writes a SQLite `documents.db`
+   with a `json TEXT NOT NULL` column, `file://` writes a raw JSON text file — neither matches
+   `store::sync`'s real `FolderSqliteStorage`/`FolderTextStorage` (pack+spr BLOB columns / `.pack`+
+   `.spr`+`.dsl`+`.ops` files). Flipping this to real binary needs: the SQLite schema (BLOB columns,
+   probably `pack`+`spr` not `json`), `readBackbonePayload`/`writeBackbonePayload`'s signatures
+   (`string` → `{pack, spr}` or a single encoded blob), the HTTP endpoint's content-type
+   (`application/json` → `application/octet-stream`, GET/PUT/SSE), AND item 1 above
+   (`localSnapshot`/`snapshotReplaced`) at the same time, since they're the same data flowing
+   through — these aren't independent sub-items, they're one connected change.
+3. **A second, entirely separate plugin-hosting bridge exists and is untouched by all of B5's WIT
+   work**: `framework/core/js/index.ts`'s `PluginWorkerClient`/`loadPluginModuleViaWorker` (backing
+   `plugin-worker.js`/`host-shim.js`, generated by `framework/product/os/dev/script.ts`'s
+   `pluginWorkerSource()`/`pluginApiSource()`) is a **browser-native, JS-component-binding path**
+   (likely `jco`-transpiled from `world.wit`) — completely separate from the native wasmtime
+   `WasmProgramRuntime` (`framework/program/host/rs`) B5 worked on. Its `handleAction`/
+   `handleCommand`/`render`/`refreshUi` all still pass plain JSON strings end-to-end
+   (`actionJson`/`contextJson`/`viewStateJson`), and — critically — `os/dev/script.ts`'s
+   `pluginApiSource()` constructs the WIT-level `action-invocation-json`/`command-invocation-json`/
+   `invocation-context-json` records **directly** (`program.handleAction(instanceId, { json:
+   actionJson }, { json: context })`). This is exactly what caught the B5 invocation-wrapper
+   binarization attempt (see b5-report.txt's revert note) — I hadn't grepped for this bridge before
+   editing `world.wit`. **Any future WIT record shape change to `handle-action`/`handle-command`/
+   `update-window`/`refresh-ui`/`manifest` MUST grep `framework/product/os/dev/script.ts` and
+   `framework/core/js/index.ts`'s `PluginWorkerClient` first** — these are live, hand-written JS
+   callers with no compiler to catch a WIT/JS mismatch (the generated `.d.ts` bindings only
+   regenerate on a real build, not on `cargo check`).
+4. **`framework/core/js/index.ts` (1169+ lines) has an extensive, separate JSON-envelope surface**
+   not audited this pass: `BackboneMessage` (a *local TS type*, distinct from Rust's
+   `store::BackboneMessage` — same name, different shape: `{ kind: "snapshot", envelopeJson }` /
+   `{ kind: "operations", envelopes }`), `writeBackboneEnvelope`, `documentFromEnvelopeJson`,
+   `wrapDocumentEnvelope`. Whether each of these is live production code or has already been
+   superseded (like `DocumentActorMsg::LocalSnapshot` half was) needs the same "trace every real
+   caller before touching the type" discipline items 1-3 above needed — not attempted this pass.
+
+## Why this wave stopped here rather than pushing through 1-4 above
+
+Every item above requires either (a) a new byte-identical JS/TS codec for a format not yet ported
+(pack's spec-driven document encoding — much larger than the LEB128 primitive kit reused
+successfully for the presence-peer fix), or (b) tracing whether a producer/consumer is live or dead
+across `react/index.tsx` (30000+ lines) and `framework/core/js/index.ts` (1169+ lines) without a
+running browser to confirm — both carry real regression risk if rushed (as the B5
+invocation-wrapper attempt itself demonstrated). The presence-peer fix above was worth landing on
+its own (self-contained, real bug, fully verified). The rest is scoped and written up here so the
+next pass can start from findings instead of rediscovery — recommend tackling item 1
+(`localSnapshot`/`snapshotReplaced`) first since it's the most likely to be an active, silent data-
+loss bug rather than a hygiene issue, then item 2 (they're coupled), leaving items 3/4 (the second
+plugin bridge, and `index.ts`'s wider envelope surface) as their own dedicated sub-waves given their
+size.
+
+## Verification summary
+
+`bun ./script.ts test quick` (framework/product/os/core): 38/38. `bunx tsc --noEmit -p .` (repo
+root): 0 new errors. `cargo check --workspace --all-targets`: unchanged from B5's closing state (2
+pre-existing unrelated errors in `playbook/module/procedural`, itself downstream of an in-flight
+concurrent plugin→program rename, not this ticket).

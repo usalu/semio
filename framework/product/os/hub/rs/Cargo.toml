@@ -29,8 +29,8 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 futures = "0.3"
 dashmap = "6"
-protocol = { path = "../../../../../protocol/rs" }
-db = { path = "../../../../../db/rs", features = ["sqlite", "postgres", "neo4j"] }
+protocol = { path = "../../../../../s/kernel/protocol/rs", package = "semio-s-kernel-protocol" }
+db = { path = "../../../../../s/kernel/db/rs", features = ["sqlite", "postgres", "neo4j"], package = "semio-s-kernel-db" }
 os-hub-directory = { path = "../directory/rs" }
 os-hub-directory-sqlite = { path = "../directory/sqlite/rs" }
 os-hub-directory-postgres = { path = "../directory/postgres/rs" }

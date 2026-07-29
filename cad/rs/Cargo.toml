@@ -15,10 +15,10 @@ crate-type = ["rlib", "cdylib"]
 path = "lib.rs"
 
 [dependencies]
-vcs = { path = "../../vcs/rs" }
-store = { path = "../../store/rs" }
-protocol = { path = "../../protocol/rs" }
-dsl = { path = "../../dsl/rs" }
+vcs = { path = "../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+store = { path = "../../s/kernel/store/rs", package = "semio-s-kernel-store" }
+protocol = { path = "../../s/kernel/protocol/rs", package = "semio-s-kernel-protocol" }
+dsl = { path = "../../s/kernel/dsl/rs", package = "semio-s-kernel-dsl" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 

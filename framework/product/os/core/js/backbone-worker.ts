@@ -6,8 +6,8 @@
  */
 // #endregion Header
 
-import type { BackboneWorkerRequest, BackboneWorkerResponse, ClientFrame, CommandAckOutcome, DocumentActorConfig, DocumentActorMsg, DocumentEvent, DocumentPresencePeer, DocumentSyncStatus, OperationEnvelope, PersistenceBinding, RemoteState, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireOperationEnvelope } from "./index";
-import { decodeClientFrame, decodeServerFrame, encodeClientFrame, encodeServerFrame } from "./index";
+import type { BackboneWorkerRequest, BackboneWorkerResponse, ClientFrame, CommandAckOutcome, DocumentActorConfig, DocumentActorMsg, DocumentEvent, DocumentSyncStatus, OperationEnvelope, PersistenceBinding, RemoteState, ServerFrame, WireAckStage, WireFrontierSummary, WireLane, WireOperationEnvelope } from "./index";
+import { decodeClientFrame, decodePresencePeer, decodeServerFrame, encodeClientFrame, encodePresencePeer, encodeServerFrame } from "./index";
 
 type RustWorkerHost = {
   handleRequestJson(json: string): void;
@@ -415,13 +415,13 @@ function handleHubFrame(state: DocumentState, frame: ServerFrame): void {
     return;
   }
   if ("Presence" in frame) {
-    // 📡 `ServerFrame::Presence.peers_json` is a `Vec<String>` of pre-serialized JSON peer blobs on
-    // the wire now (W5: was opaque JSON `Vec<Value>`) — parsed and trusted-cast to the locally-known
-    // peer shape, same trust boundary the Rust actor's `presence_from_json` (`serde_json::from_str`)
-    // crosses. A malformed entry is dropped rather than failing the whole roster.
-    const peers = frame.Presence.peers_json.flatMap((json) => {
+    // 📡 `ServerFrame::Presence.peers` is `Vec<Vec<u8>>` of `encode_presence_peer` blobs on the wire
+    // (real binary — see `decodePresencePeer`'s doc). A malformed entry is dropped rather than
+    // failing the whole roster, mirroring the Rust actor's `presence_from_bytes` (`Option`-returning,
+    // never panics on a bad peer) at the same trust boundary.
+    const peers = frame.Presence.peers.flatMap((bytes) => {
       try {
-        return [JSON.parse(json) as DocumentPresencePeer];
+        return [decodePresencePeer(new Uint8Array(bytes), [0])];
       } catch {
         return [];
       }
@@ -655,7 +655,7 @@ async function handleLocalMsg(state: DocumentState, message: DocumentActorMsg): 
       break;
     }
     case "presenceHeartbeat":
-      sendWireFrame(state, { Presence: { peer_json: JSON.stringify(message.peer) } }, "preview");
+      sendWireFrame(state, { Presence: { peer: encodePresencePeer(message.peer) } }, "preview");
       break;
     case "publishPreview":
       sendWireFrame(state, { PreviewPublish: { key: message.key, seq: message.seq, payload: message.payload } }, "preview");
@@ -794,7 +794,11 @@ if (import.meta.vitest) {
 
       const presence = loadClient("client-presence.bin");
       if (typeof presence.frame === "string" || !("Presence" in presence.frame)) throw new Error("expected a Presence frame");
-      expect(JSON.parse(presence.frame.Presence.peer_json)).toEqual({ cursor: [1, 2] });
+      // 🎞️ The fixture's `peer` bytes are arbitrary opaque test content (not a real
+      // `encode_presence_peer` blob) — see `protocol_wire::tests`'s identical fixture — so this only
+      // proves the wire framing (tag + length-prefixed bytes) round-trips byte-for-byte, same as
+      // `PreviewPublish.payload` above.
+      expect(JSON.parse(new TextDecoder().decode(new Uint8Array(presence.frame.Presence.peer)))).toEqual({ cursor: [1, 2] });
 
       const creditGrant = loadClient("client-credit-grant.bin");
       if (typeof creditGrant.frame === "string" || !("CreditGrant" in creditGrant.frame)) throw new Error("expected a CreditGrant frame");
@@ -844,7 +848,8 @@ if (import.meta.vitest) {
 
       const serverPresence = loadServer("server-presence.bin");
       if (typeof serverPresence.frame === "string" || !("Presence" in serverPresence.frame)) throw new Error("expected a Presence frame");
-      expect(serverPresence.frame.Presence.peers_json.map((json) => JSON.parse(json)))
+      // 🎞️ Same opaque-test-content caveat as the client `Presence` fixture above.
+      expect(serverPresence.frame.Presence.peers.map((bytes) => JSON.parse(new TextDecoder().decode(new Uint8Array(bytes)))))
         .toEqual([{ id: "a" }, { id: "b" }]);
 
       const creditGrantServer = loadServer("server-credit-grant.bin");

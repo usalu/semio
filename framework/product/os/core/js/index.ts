@@ -355,7 +355,7 @@ export type ClientFrame =
   | { readonly Commands: { readonly batch_id: number; readonly envelopes: readonly WireOperationEnvelope[] } }
   | { readonly FrontierAdvertise: { readonly frontier: WireFrontierSummary } }
   | { readonly PreviewPublish: { readonly key: string; readonly seq: number; readonly payload: readonly number[] } }
-  | { readonly Presence: { readonly peer_json: string } }
+  | { readonly Presence: { readonly peer: readonly number[] } }
   | { readonly CreditGrant: { readonly n: number } }
   | "Bye";
 
@@ -368,7 +368,7 @@ export type ServerFrame =
   | { readonly Commands: { readonly envelopes: readonly WireOperationEnvelope[]; readonly origin: string; readonly frontier: WireFrontierSummary } }
   | { readonly Ack: { readonly batch_id: number; readonly stages: readonly WireAckStage[]; readonly frontier: WireFrontierSummary } }
   | { readonly Preview: { readonly actor: string; readonly key: string; readonly seq: number; readonly payload: readonly number[] } }
-  | { readonly Presence: { readonly peers_json: readonly string[] } }
+  | { readonly Presence: { readonly peers: readonly (readonly number[])[] } }
   | { readonly CreditGrant: { readonly n: number } }
   | { readonly Error: { readonly code: string; readonly message: string } };
 
@@ -459,6 +459,88 @@ function readBool(bytes: Uint8Array, pos: [number]): boolean {
   if (byte === undefined) throw new Error("wire bool: truncated");
   pos[0] += 1;
   return byte !== 0;
+}
+
+/** 🎞️ 8 raw little-endian bytes — the TS twin of `protocol_core::write_f64`. */
+function writeF64(out: number[], value: number): void {
+  const buffer = new ArrayBuffer(8);
+  new DataView(buffer).setFloat64(0, value, true);
+  for (const byte of new Uint8Array(buffer)) out.push(byte);
+}
+
+/** 🎞️ The inverse of {@link writeF64} — the TS twin of `protocol_core::read_f64`. */
+function readF64(bytes: Uint8Array, pos: [number]): number {
+  const slice = bytes.subarray(pos[0], pos[0] + 8);
+  if (slice.length !== 8) throw new Error("wire f64: truncated");
+  pos[0] += 8;
+  return new DataView(slice.buffer, slice.byteOffset, 8).getFloat64(0, true);
+}
+
+/** 🎞️ `varint-u64 len | raw bytes` per entry — the TS twin of `protocol_wire::write_vec_bytes`. */
+function writeVecBytes(out: number[], values: readonly (readonly number[])[]): void {
+  writeVarintU64(out, values.length);
+  for (const value of values) writeBytes(out, value);
+}
+
+/** 🎞️ The inverse of {@link writeVecBytes} — the TS twin of `protocol_wire::read_vec_bytes`. */
+function readVecBytes(bytes: Uint8Array, pos: [number]): number[][] {
+  const count = readVarintU64(bytes, pos);
+  const result: number[][] = [];
+  for (let i = 0; i < count; i++) result.push(readBytes(bytes, pos));
+  return result;
+}
+
+/** 🎯 `actor str | presence bitmask u8 | connected_at_ms varint | fields present per bitmask
+ * (label str? | selection_json str? | user_id str? | role str? | cursor f64,f64? | viewport
+ * f64,f64,f64? | drag_ghost_json str?)` — the TS twin of `semio_framework_core::encode_presence_peer`
+ * (`framework/core/rs/lib.rs`). This is what `ClientFrame::Presence.peer`/`ServerFrame::Presence.
+ * peers[]` actually carry — real binary, not JSON bytes. */
+export function encodePresencePeer(peer: DocumentPresencePeer): number[] {
+  const out: number[] = [];
+  writeStr(out, peer.actor);
+  let presence = 0;
+  if (peer.label !== undefined) presence |= 1 << 0;
+  if (peer.selectionJson !== undefined) presence |= 1 << 1;
+  if (peer.userId !== undefined) presence |= 1 << 2;
+  if (peer.role !== undefined) presence |= 1 << 3;
+  if (peer.cursor !== undefined) presence |= 1 << 4;
+  if (peer.viewport !== undefined) presence |= 1 << 5;
+  if (peer.dragGhostJson !== undefined) presence |= 1 << 6;
+  out.push(presence);
+  writeVarintU64(out, peer.connectedAtMs);
+  if (peer.label !== undefined) writeStr(out, peer.label);
+  if (peer.selectionJson !== undefined) writeStr(out, peer.selectionJson);
+  if (peer.userId !== undefined) writeStr(out, peer.userId);
+  if (peer.role !== undefined) writeStr(out, peer.role);
+  if (peer.cursor !== undefined) {
+    writeF64(out, peer.cursor.x);
+    writeF64(out, peer.cursor.y);
+  }
+  if (peer.viewport !== undefined) {
+    writeF64(out, peer.viewport.x);
+    writeF64(out, peer.viewport.y);
+    writeF64(out, peer.viewport.zoom);
+  }
+  if (peer.dragGhostJson !== undefined) writeStr(out, peer.dragGhostJson);
+  return out;
+}
+
+/** 🎯 The inverse of {@link encodePresencePeer} — the TS twin of
+ * `semio_framework_core::decode_presence_peer`. */
+export function decodePresencePeer(bytes: Uint8Array, pos: [number]): DocumentPresencePeer {
+  const actor = readStr(bytes, pos);
+  const presence = bytes[pos[0]];
+  if (presence === undefined) throw new Error("presence peer: truncated");
+  pos[0] += 1;
+  const connectedAtMs = readVarintU64(bytes, pos);
+  const label = presence & (1 << 0) ? readStr(bytes, pos) : undefined;
+  const selectionJson = presence & (1 << 1) ? readStr(bytes, pos) : undefined;
+  const userId = presence & (1 << 2) ? readStr(bytes, pos) : undefined;
+  const role = presence & (1 << 3) ? readStr(bytes, pos) : undefined;
+  const cursor = presence & (1 << 4) ? { x: readF64(bytes, pos), y: readF64(bytes, pos) } : undefined;
+  const viewport = presence & (1 << 5) ? { x: readF64(bytes, pos), y: readF64(bytes, pos), zoom: readF64(bytes, pos) } : undefined;
+  const dragGhostJson = presence & (1 << 6) ? readStr(bytes, pos) : undefined;
+  return { actor, label, selectionJson, connectedAtMs, userId, role, cursor, viewport, dragGhostJson };
 }
 
 //#region 🔖Combinators
@@ -687,7 +769,7 @@ export function encodeClientFrame(frame: ClientFrame, lane: WireLane): Uint8Arra
     writeBytes(out, frame.PreviewPublish.payload);
   } else if ("Presence" in frame) {
     out.push(4);
-    writeStr(out, frame.Presence.peer_json);
+    writeBytes(out, frame.Presence.peer);
   } else if ("CreditGrant" in frame) {
     out.push(5);
     writeVarintU64(out, frame.CreditGrant.n);
@@ -730,7 +812,7 @@ export function decodeClientFrame(bytes: Uint8Array): { readonly lane: WireLane;
       frame = { PreviewPublish: { key: readStr(bytes, pos), seq: readVarintU64(bytes, pos), payload: readBytes(bytes, pos) } };
       break;
     case 4:
-      frame = { Presence: { peer_json: readStr(bytes, pos) } };
+      frame = { Presence: { peer: readBytes(bytes, pos) } };
       break;
     case 5:
       frame = { CreditGrant: { n: readVarintU64(bytes, pos) } };
@@ -779,7 +861,7 @@ export function encodeServerFrame(frame: ServerFrame, lane: WireLane): Uint8Arra
     writeBytes(out, frame.Preview.payload);
   } else if ("Presence" in frame) {
     out.push(6);
-    writeVecStr(out, frame.Presence.peers_json);
+    writeVecBytes(out, frame.Presence.peers);
   } else if ("CreditGrant" in frame) {
     out.push(7);
     writeVarintU64(out, frame.CreditGrant.n);
@@ -823,7 +905,7 @@ export function decodeServerFrame(bytes: Uint8Array): { readonly lane: WireLane;
       frame = { Preview: { actor: readStr(bytes, pos), key: readStr(bytes, pos), seq: readVarintU64(bytes, pos), payload: readBytes(bytes, pos) } };
       break;
     case 6:
-      frame = { Presence: { peers_json: readVecStr(bytes, pos) } };
+      frame = { Presence: { peers: readVecBytes(bytes, pos) } };
       break;
     case 7:
       frame = { CreditGrant: { n: readVarintU64(bytes, pos) } };

@@ -22,9 +22,9 @@ crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
 
 [dependencies]
-playbook = { path = "../../rs" }
+playbook = { path = "../../../s/kernel/playbook/rs", package = "semio-s-kernel-playbook" }
 semio-framework-program = { path = "../../../framework/program/rs" }
-vcs = { path = "../../../vcs/rs" }
-store = { path = "../../../store/rs" }
+vcs = { path = "../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+store = { path = "../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

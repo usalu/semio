@@ -1,0 +1,20 @@
+[package]
+name = "semio-s-kernel-mathematical-graph-approximation"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+mathematical_graph = { path = "../../rs", package = "semio-s-kernel-mathematical-graph" }
+mathematical_graph_paths = { path = "../../paths/rs", package = "semio-s-kernel-mathematical-graph-paths" }
+mathematical_graph_matching = { path = "../../matching/rs", package = "semio-s-kernel-mathematical-graph-matching" }
+mathematical_graph_trees = { path = "../../trees/rs", package = "semio-s-kernel-mathematical-graph-trees" }
+mathematical_graph_cliques = { path = "../../cliques/rs", package = "semio-s-kernel-mathematical-graph-cliques" }
+mathematical_random = { path = "../../../random/rs", package = "semio-s-kernel-mathematical-random" }

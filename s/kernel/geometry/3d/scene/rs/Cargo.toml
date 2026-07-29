@@ -1,0 +1,14 @@
+[package]
+name = "semio-s-kernel-geometry-3d-scene"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+mathematical_algebra = { path = "../../../../mathematical/algebra/rs", package = "semio-s-kernel-mathematical-algebra" }

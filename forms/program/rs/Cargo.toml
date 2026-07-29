@@ -23,9 +23,9 @@ path = "lib.rs"
 
 [dependencies]
 forms = { path = "../../rs" }
-vcs = { path = "../../../vcs/rs" }
-store = { path = "../../../store/rs" }
-playbook = { path = "../../../playbook/rs" }
+vcs = { path = "../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+store = { path = "../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
+playbook = { path = "../../../s/kernel/playbook/rs", package = "semio-s-kernel-playbook" }
 semio-framework-program = { path = "../../../framework/program/rs" }
 semio-framework-core = { path = "../../../framework/core/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

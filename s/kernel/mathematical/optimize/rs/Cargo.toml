@@ -1,0 +1,16 @@
+[package]
+name = "semio-s-kernel-mathematical-optimize"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+mathematical_algebra = { path = "../../algebra/rs", package = "semio-s-kernel-mathematical-algebra" }
+mathematical_random = { path = "../../random/rs", package = "semio-s-kernel-mathematical-random" }

@@ -12,12 +12,12 @@ crate-type = ["rlib"]
 path = "lib.rs"
 
 [dependencies]
-neural_engine = { path = "../../../neural/engine/rs" }
+neural_engine = { path = "../../../s/kernel/neural/engine/rs", package = "semio-s-kernel-neural-engine" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
-vcs = { path = "../../../vcs/rs" }
-store = { path = "../../../store/rs" }
-protocol = { path = "../../../protocol/rs" }
+vcs = { path = "../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+store = { path = "../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
+protocol = { path = "../../../s/kernel/protocol/rs", package = "semio-s-kernel-protocol" }
 imperative_module_core = { path = "../../module/core/rs" }
 imperative_module_text = { path = "../../module/text/rs" }
 imperative_module_math = { path = "../../module/math/rs" }

@@ -1,0 +1,16 @@
+[package]
+name = "semio-s-kernel-neural-dag"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lib]
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+mathematical_graph_dsl = { path = "../../../mathematical/graph/dsl/rs", package = "semio-s-kernel-mathematical-graph-dsl" }
+mathematical_graph_manifest = { path = "../../../mathematical/graph/manifest/rs", package = "semio-s-kernel-mathematical-graph-manifest" }
+neural_engine = { path = "../../engine/rs", package = "semio-s-kernel-neural-engine" }
+serde_json = "1.0.140"
+thiserror = "2.0.12"

@@ -13,8 +13,8 @@ path = "lib.rs"
 [dependencies]
 norm_core = { path = "../../../core/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
-mathematical_algebra = { path = "../../../../mathematical/algebra/rs" }
+mathematical_algebra = { path = "../../../../s/kernel/mathematical/algebra/rs", package = "semio-s-kernel-mathematical-algebra" }
 norm_en_1990 = { path = "../../1990/rs" }
-vcs = { path = "../../../../vcs/rs" }
-store = { path = "../../../../store/rs" }
-dsl = { path = "../../../../dsl/rs" }
+vcs = { path = "../../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+store = { path = "../../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
+dsl = { path = "../../../../s/kernel/dsl/rs", package = "semio-s-kernel-dsl" }

@@ -39,7 +39,7 @@ ui_styling = { path = "../../styling/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 ts-rs = { version = "10", optional = true }
-kernel_3d_scene = { path = "../../../kernel/3d/scene/rs", optional = true }
+kernel_3d_scene = { path = "../../../s/kernel/geometry/3d/scene/rs", optional = true, package = "semio-s-kernel-geometry-3d-scene" }
 # 🖋️ Text shaping/font-fallback (parley) + rasterization (swash) for the `text` region's glyph
 # atlas — versions match what `layout_rs` already resolves in the workspace lockfile (parley
 # pulls fontique 0.5.0 transitively; accessed here via `parley::fontique`, not a direct dep).

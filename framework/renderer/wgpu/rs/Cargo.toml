@@ -17,15 +17,15 @@ path = "lib.rs"
 semio-framework-core = { path = "../../../core/rs" }
 framework_surface_node_graph = { path = "../../../surface/node-graph/rs" }
 framework_editor = { path = "../../../editor/rs" }
-infinite_cavas = { path = "../../../../infinite/cavas/rs" }
-infinite_world = { path = "../../../../infinite/world/rs" }
+infinite_cavas = { path = "../../../../s/kernel/infinite/canvas/rs", package = "semio-s-kernel-infinite-canvas" }
+infinite_world = { path = "../../../../s/kernel/infinite/world/rs", package = "semio-s-kernel-infinite-world" }
 # 🎬 Direct dependency (rather than reaching through `infinite_world`, which imports these privately)
 # so the Tutorial track's camera keyframes can convert to/from `OrbitController`/`Camera3d` — see
 # `//#region 🎬Tutorial` in lib.rs.
-kernel_3d_scene = { path = "../../../../kernel/3d/scene/rs" }
+kernel_3d_scene = { path = "../../../../s/kernel/geometry/3d/scene/rs", package = "semio-s-kernel-geometry-3d-scene" }
 framework_surface_tiled_map = { path = "../../../surface/tiled-map/rs" }
 puzzle_2d = { path = "../../../../puzzle/2d/rs" }
-flow_core = { path = "../../../../flow/core/rs" }
+flow_core = { path = "../../../../s/kernel/flow/core/rs", package = "semio-s-kernel-flow-core" }
 ui_wgpu = { path = "../../../../ui/wgpu/rs", features = ["engine"] }
 semio-framework-program = { path = "../../../program/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
@@ -49,10 +49,10 @@ required-features = ["native-bin"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-program-host = { path = "../../../program/host/rs" }
-store_sync = { path = "../../../../store/sync/rs" }
-vcs = { path = "../../../../vcs/rs" }
-store = { path = "../../../../store/rs" }
-protocol = { path = "../../../../protocol/rs" }
+store_sync = { path = "../../../../s/kernel/store/sync/rs", package = "semio-s-kernel-store-sync" }
+vcs = { path = "../../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+store = { path = "../../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
+protocol = { path = "../../../../s/kernel/protocol/rs", package = "semio-s-kernel-protocol" }
 tokio = { version = "1", features = ["sync"], default-features = false }
 ureq = "2.12.1"
 rfd = "0.15.4"

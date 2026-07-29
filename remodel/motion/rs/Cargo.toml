@@ -16,8 +16,8 @@ remodel_image = { path = "../../image/rs" }
 remodel_feature = { path = "../../feature/rs" }
 remodel_camera = { path = "../../camera/rs" }
 remodel_sfm = { path = "../../sfm/rs" }
-mathematical_algebra = { path = "../../../mathematical/algebra/rs" }
-mathematical_signal = { path = "../../../mathematical/signal/rs" }
-mathematical_lie = { path = "../../../mathematical/lie/rs" }
-mathematical_optimize = { path = "../../../mathematical/optimize/rs" }
-mathematical_spatial = { path = "../../../mathematical/spatial/rs" }
+mathematical_algebra = { path = "../../../s/kernel/mathematical/algebra/rs", package = "semio-s-kernel-mathematical-algebra" }
+mathematical_signal = { path = "../../../s/kernel/mathematical/signal/rs", package = "semio-s-kernel-mathematical-signal" }
+mathematical_lie = { path = "../../../s/kernel/mathematical/lie/rs", package = "semio-s-kernel-mathematical-lie" }
+mathematical_optimize = { path = "../../../s/kernel/mathematical/optimize/rs", package = "semio-s-kernel-mathematical-optimize" }
+mathematical_spatial = { path = "../../../s/kernel/mathematical/spatial/rs", package = "semio-s-kernel-mathematical-spatial" }

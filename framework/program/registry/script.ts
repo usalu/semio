@@ -39,7 +39,10 @@ function findProgramCargoFiles(root: string): string[] {
       } else if (name === "Cargo.toml" && !path.includes("/framework/program/rs/")) {
         const isProgramCrate = path.endsWith("/program/rs/Cargo.toml");
         const isModuleCrate = /\/module\/[^/]+\/rs\/Cargo\.toml$/.test(path);
-        if (isProgramCrate || isModuleCrate) {
+        // 🏛️ Post-restructure plugin bundle crate: `s/plugin/<p>/rs/Cargo.toml` absorbs the
+        // former `<tech>/program/rs`. Kept alongside the legacy patterns during the migration.
+        const isPluginBundleCrate = /\/s\/plugin\/[^/]+\/rs\/Cargo\.toml$/.test(path);
+        if (isProgramCrate || isModuleCrate || isPluginBundleCrate) {
           out.push(path);
         }
       }
@@ -196,7 +199,9 @@ function discoverExamplesForPlayground(repoRoot: string, cratePath: string, prog
   }
   if (variant.startsWith(programId) && variant.length > programId.length) {
     const suffix = variant.slice(programId.length);
-    const techRoot = trimmed.split("/")[0];
+    const segments = trimmed.split("/");
+    // 🏛️ Under `s/plugin/<p>/...` the tech root is the plugin folder (3 segments), not `s` itself.
+    const techRoot = segments[0] === "s" && segments[1] === "plugin" ? segments.slice(0, 3).join("/") : segments[0];
     const dir = join(repoRoot, techRoot, suffix, "example");
     if (existsSync(dir)) return idsIn(dir);
   }

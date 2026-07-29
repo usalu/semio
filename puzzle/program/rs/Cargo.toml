@@ -61,9 +61,9 @@ semio-framework-core = { path = "../../../framework/core/rs" }
 semio-framework-os = { path = "../../../framework/product/os/core/rs" }
 semio-framework-program = { path = "../../../framework/program/rs" }
 ui_wgpu = { path = "../../../ui/wgpu/rs" }
-vcs = { path = "../../../vcs/rs" }
-store = { path = "../../../store/rs" }
-protocol = { path = "../../../protocol/rs" }
+vcs = { path = "../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+store = { path = "../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
+protocol = { path = "../../../s/kernel/protocol/rs", package = "semio-s-kernel-protocol" }
 puzzle_2d = { path = "../../2d/rs" }
 puzzle_3d = { path = "../../3d/rs" }
 puzzle_5d = { path = "../../5d/rs" }
