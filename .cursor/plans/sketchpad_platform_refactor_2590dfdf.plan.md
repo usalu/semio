@@ -85,7 +85,7 @@ flowchart TB
 ## A. framework/platform/core ([framework/platform/core/index.ts](framework/platform/core/index.ts))
 
 - Rename `ProductRuntime` -> `Platform` (class at 666-721) and all sibling names: `ProductSubscriber` -> `PlatformSubscriber`, `ProductDefinition` -> `PlatformDefinition`, `WindowBodyViewContext.runtime` type, etc. Update `SurfaceRouter.flattenFromProductDefinition` -> `flattenFromPlatformDefinition`/`flattenFromPlatformApps`.
-- Add a declarative constructor: `new Platform(def: PlatformDefinition)` that builds `AppRuntime`/`ModeRuntime`/`WindowKindRuntime` from data (reusing existing `PluginManifest`/`SurfaceRouter` machinery). Keep imperative `addApp` for plugins.
+- Add a declarative constructor: `new Platform(def: PlatformDefinition)` that builds `AppRuntime`/`ModeRuntime`/`WindowKindRuntime` from data (reusing existing `ProgramManifest`/`SurfaceRouter` machinery). Keep imperative `addApp` for plugins.
 - Replace `board`/`scene3d` surface node kinds in the `UiNode` union (93-101) with `puzzle2d`/`puzzle3d`/`puzzle5d`/`cad` (keep `table`, `panel`). Each carries `componentKind`, `surfaceId`, `controllerId`, optional `paneId`, and an opaque `props?: JsonValue`/binding id.
 - Replace builders `buildScene3dWindowBody`/`buildBoardWindowBody` (104-116) with `buildPuzzle2dWindowBody`/`buildPuzzle3dWindowBody`/`buildPuzzle5dWindowBody`/`buildCadWindowBody`; keep `buildTableWindowBody`.
 - Update `isCanvasOnlyWindowBody`/`assertCanvasOnlyWindowBody` (118-133) and the error message to the new kind set.

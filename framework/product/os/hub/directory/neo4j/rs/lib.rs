@@ -1,6 +1,6 @@
 mod header {
     // 🧲Header
-    // HubDirectory over Neo4j (neo4rs). Users/Studios/Memberships are real nodes+relationships —
+    // HubDirectory over Neo4j (neo4rs). Users/Spaces/Memberships are real nodes+relationships —
     // where graph traversal earns its keep (role lookups, VFS tree walks). Document persistence
     // and blobs are no longer this crate's concern — `db::Database` and `db_storage_neo4j` own
     // that half now (see `os-hub`'s `bin.rs`).
@@ -24,7 +24,7 @@ fn backend<E: std::fmt::Display>(err: E) -> DirectoryError {
 
 const CONSTRAINTS: &[&str] = &[
     "CREATE CONSTRAINT IF NOT EXISTS FOR (u:User) REQUIRE u.id IS UNIQUE",
-    "CREATE CONSTRAINT IF NOT EXISTS FOR (s:Studio) REQUIRE s.id IS UNIQUE",
+    "CREATE CONSTRAINT IF NOT EXISTS FOR (s:Space) REQUIRE s.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (t:ShareToken) REQUIRE t.token IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (n:Node) REQUIRE n.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (a:AuthSession) REQUIRE a.id IS UNIQUE",
@@ -46,11 +46,11 @@ impl Neo4jDirectory {
         Ok(Self { graph })
     }
 
-    /// @emoji 🌱 Seeds a default studio and a `Documents/default` node.
+    /// @emoji 🌱 Seeds a default space and a `Documents/default` node.
     pub async fn seed(&self) -> DirectoryResult<()> {
-        let mut existing = self.graph.execute(query("MATCH (s:Studio {id: 'default'}) RETURN s.id AS id")).await.map_err(backend)?;
+        let mut existing = self.graph.execute(query("MATCH (s:Space {id: 'default'}) RETURN s.id AS id")).await.map_err(backend)?;
         if existing.next().await.map_err(backend)?.is_none() {
-            self.graph.run(query("CREATE (s:Studio {id: 'default', name: 'Studio', createdAt: $created_at})").param("created_at", now_ms())).await.map_err(backend)?;
+            self.graph.run(query("CREATE (s:Space {id: 'default', name: 'Space', createdAt: $created_at})").param("created_at", now_ms())).await.map_err(backend)?;
         }
         let mut node_count = self.graph.execute(query("MATCH (n:Node) RETURN count(n) AS c")).await.map_err(backend)?;
         let count: i64 = node_count.next().await.map_err(backend)?.and_then(|row| row.get("c").ok()).unwrap_or(0);
@@ -65,35 +65,35 @@ impl Neo4jDirectory {
 #[async_trait]
 impl HubDirectory for Neo4jDirectory {
     //#region Vfs
-    async fn list_nodes(&self, studio_id: &str, parent: Option<&str>) -> DirectoryResult<Vec<NodeRecord>> {
+    async fn list_nodes(&self, space_id: &str, parent: Option<&str>) -> DirectoryResult<Vec<NodeRecord>> {
         let cypher = match parent {
-            Some(_) => "MATCH (n:Node {studioId: $studio_id})-[:PARENT]->(p:Node {id: $parent_id}) RETURN n.id AS id, p.id AS parentId, n.name AS name, n.kind AS kind ORDER BY n.name",
-            None => "MATCH (n:Node {studioId: $studio_id}) WHERE NOT (n)-[:PARENT]->(:Node) RETURN n.id AS id, null AS parentId, n.name AS name, n.kind AS kind ORDER BY n.name",
+            Some(_) => "MATCH (n:Node {spaceId: $space_id})-[:PARENT]->(p:Node {id: $parent_id}) RETURN n.id AS id, p.id AS parentId, n.name AS name, n.kind AS kind ORDER BY n.name",
+            None => "MATCH (n:Node {spaceId: $space_id}) WHERE NOT (n)-[:PARENT]->(:Node) RETURN n.id AS id, null AS parentId, n.name AS name, n.kind AS kind ORDER BY n.name",
         };
-        let mut q = query(cypher).param("studio_id", studio_id);
+        let mut q = query(cypher).param("space_id", space_id);
         if let Some(parent) = parent {
             q = q.param("parent_id", parent);
         }
         let mut result = self.graph.execute(q).await.map_err(backend)?;
         let mut rows = Vec::new();
         while let Some(row) = result.next().await.map_err(backend)? {
-            rows.push(NodeRecord { id: row.get("id").map_err(backend)?, studio_id: studio_id.to_string(), parent_id: row.get::<String>("parentId").ok(), name: row.get("name").map_err(backend)?, kind: row.get("kind").map_err(backend)? });
+            rows.push(NodeRecord { id: row.get("id").map_err(backend)?, space_id: space_id.to_string(), parent_id: row.get::<String>("parentId").ok(), name: row.get("name").map_err(backend)?, kind: row.get("kind").map_err(backend)? });
         }
         Ok(rows)
     }
 
-    async fn create_node(&self, studio_id: &str, parent_id: Option<&str>, name: &str, kind: &str) -> DirectoryResult<NodeRecord> {
+    async fn create_node(&self, space_id: &str, parent_id: Option<&str>, name: &str, kind: &str) -> DirectoryResult<NodeRecord> {
         let id = Uuid::now_v7().to_string();
         match parent_id {
             Some(parent_id) => {
                 self.graph
                     .run(
                         query(
-                            "MATCH (s:Studio {id: $studio_id}), (p:Node {id: $parent_id})
-                             CREATE (n:Node {id: $id, studioId: $studio_id, name: $name, kind: $kind})-[:IN_STUDIO]->(s)
+                            "MATCH (s:Space {id: $space_id}), (p:Node {id: $parent_id})
+                             CREATE (n:Node {id: $id, spaceId: $space_id, name: $name, kind: $kind})-[:IN_STUDIO]->(s)
                              CREATE (n)-[:PARENT]->(p)",
                         )
-                        .param("studio_id", studio_id)
+                        .param("space_id", space_id)
                         .param("parent_id", parent_id)
                         .param("id", id.clone())
                         .param("name", name)
@@ -106,10 +106,10 @@ impl HubDirectory for Neo4jDirectory {
                 self.graph
                     .run(
                         query(
-                            "MATCH (s:Studio {id: $studio_id})
-                             CREATE (n:Node {id: $id, studioId: $studio_id, name: $name, kind: $kind})-[:IN_STUDIO]->(s)",
+                            "MATCH (s:Space {id: $space_id})
+                             CREATE (n:Node {id: $id, spaceId: $space_id, name: $name, kind: $kind})-[:IN_STUDIO]->(s)",
                         )
-                        .param("studio_id", studio_id)
+                        .param("space_id", space_id)
                         .param("id", id.clone())
                         .param("name", name)
                         .param("kind", kind),
@@ -118,7 +118,7 @@ impl HubDirectory for Neo4jDirectory {
                     .map_err(backend)?;
             }
         }
-        Ok(NodeRecord { id, studio_id: studio_id.to_string(), parent_id: parent_id.map(str::to_string), name: name.to_string(), kind: kind.to_string() })
+        Ok(NodeRecord { id, space_id: space_id.to_string(), parent_id: parent_id.map(str::to_string), name: name.to_string(), kind: kind.to_string() })
     }
     //#endregion
 
@@ -212,15 +212,15 @@ impl HubDirectory for Neo4jDirectory {
     }
     //#endregion
 
-    //#region Studios
-    async fn create_studio(&self, name: &str, owner_user_id: &str) -> DirectoryResult<StudioRecord> {
+    //#region Spaces
+    async fn create_space(&self, name: &str, owner_user_id: &str) -> DirectoryResult<SpaceRecord> {
         let id = Uuid::now_v7().to_string();
         let created_at = now_ms();
         self.graph
             .run(
                 query(
                     "MATCH (u:User {id: $owner_user_id})
-                     CREATE (s:Studio {id: $id, name: $name, ownerUserId: $owner_user_id, createdAt: $created_at})
+                     CREATE (s:Space {id: $id, name: $name, ownerUserId: $owner_user_id, createdAt: $created_at})
                      CREATE (u)-[:MEMBER_OF {role: 'owner', createdAt: $created_at}]->(s)",
                 )
                 .param("id", id.clone())
@@ -230,42 +230,42 @@ impl HubDirectory for Neo4jDirectory {
             )
             .await
             .map_err(backend)?;
-        Ok(StudioRecord { id, name: name.to_string(), owner_user_id: owner_user_id.to_string(), created_at })
+        Ok(SpaceRecord { id, name: name.to_string(), owner_user_id: owner_user_id.to_string(), created_at })
     }
 
-    async fn list_studios_for_user(&self, user_id: &str) -> DirectoryResult<Vec<(StudioRecord, StudioRole)>> {
-        let mut result = self.graph.execute(query("MATCH (:User {id: $user_id})-[m:MEMBER_OF]->(s:Studio) RETURN s AS s, m.role AS role ORDER BY s.createdAt").param("user_id", user_id)).await.map_err(backend)?;
+    async fn list_spaces_for_user(&self, user_id: &str) -> DirectoryResult<Vec<(SpaceRecord, SpaceRole)>> {
+        let mut result = self.graph.execute(query("MATCH (:User {id: $user_id})-[m:MEMBER_OF]->(s:Space) RETURN s AS s, m.role AS role ORDER BY s.createdAt").param("user_id", user_id)).await.map_err(backend)?;
         let mut studios = Vec::new();
         while let Some(row) = result.next().await.map_err(backend)? {
-            let studio = studio_from_node(&row)?;
+            let studio = space_from_node(&row)?;
             let role: String = row.get("role").map_err(backend)?;
-            if let Some(role) = StudioRole::parse(&role) {
+            if let Some(role) = SpaceRole::parse(&role) {
                 studios.push((studio, role));
             }
         }
         Ok(studios)
     }
 
-    async fn list_studios(&self, limit: i64, offset: i64) -> DirectoryResult<Vec<StudioRecord>> {
-        let mut result = self.graph.execute(query("MATCH (s:Studio) RETURN s AS s ORDER BY s.createdAt SKIP $offset LIMIT $limit").param("limit", limit).param("offset", offset)).await.map_err(backend)?;
+    async fn list_spaces(&self, limit: i64, offset: i64) -> DirectoryResult<Vec<SpaceRecord>> {
+        let mut result = self.graph.execute(query("MATCH (s:Space) RETURN s AS s ORDER BY s.createdAt SKIP $offset LIMIT $limit").param("limit", limit).param("offset", offset)).await.map_err(backend)?;
         let mut studios = Vec::new();
         while let Some(row) = result.next().await.map_err(backend)? {
-            studios.push(studio_from_node(&row)?);
+            studios.push(space_from_node(&row)?);
         }
         Ok(studios)
     }
 
-    async fn upsert_membership(&self, studio_id: &str, user_id: &str, role: StudioRole) -> DirectoryResult<()> {
+    async fn upsert_membership(&self, space_id: &str, user_id: &str, role: SpaceRole) -> DirectoryResult<()> {
         self.graph
             .run(
                 query(
-                    "MATCH (u:User {id: $user_id}), (s:Studio {id: $studio_id})
+                    "MATCH (u:User {id: $user_id}), (s:Space {id: $space_id})
                      MERGE (u)-[m:MEMBER_OF]->(s)
                      ON CREATE SET m.role = $role, m.createdAt = $created_at
                      ON MATCH SET m.role = $role",
                 )
                 .param("user_id", user_id)
-                .param("studio_id", studio_id)
+                .param("space_id", space_id)
                 .param("role", role.as_str())
                 .param("created_at", now_ms()),
             )
@@ -274,17 +274,17 @@ impl HubDirectory for Neo4jDirectory {
         Ok(())
     }
 
-    async fn remove_membership(&self, studio_id: &str, user_id: &str) -> DirectoryResult<()> {
-        self.graph.run(query("MATCH (:User {id: $user_id})-[m:MEMBER_OF]->(:Studio {id: $studio_id}) DELETE m").param("user_id", user_id).param("studio_id", studio_id)).await.map_err(backend)?;
+    async fn remove_membership(&self, space_id: &str, user_id: &str) -> DirectoryResult<()> {
+        self.graph.run(query("MATCH (:User {id: $user_id})-[m:MEMBER_OF]->(:Space {id: $space_id}) DELETE m").param("user_id", user_id).param("space_id", space_id)).await.map_err(backend)?;
         Ok(())
     }
 
-    async fn get_role(&self, studio_id: &str, user_id: &str) -> DirectoryResult<Option<StudioRole>> {
-        let mut result = self.graph.execute(query("MATCH (:User {id: $user_id})-[m:MEMBER_OF]->(:Studio {id: $studio_id}) RETURN m.role AS role").param("user_id", user_id).param("studio_id", studio_id)).await.map_err(backend)?;
+    async fn get_role(&self, space_id: &str, user_id: &str) -> DirectoryResult<Option<SpaceRole>> {
+        let mut result = self.graph.execute(query("MATCH (:User {id: $user_id})-[m:MEMBER_OF]->(:Space {id: $space_id}) RETURN m.role AS role").param("user_id", user_id).param("space_id", space_id)).await.map_err(backend)?;
         match result.next().await.map_err(backend)? {
             Some(row) => {
                 let role: String = row.get("role").map_err(backend)?;
-                Ok(StudioRole::parse(&role))
+                Ok(SpaceRole::parse(&role))
             }
             None => Ok(None),
         }
@@ -338,17 +338,17 @@ impl HubDirectory for Neo4jDirectory {
     //#endregion
 
     //#region SyncSessions
-    async fn record_sync_session_open(&self, document_id: &str, user_id: Option<&str>, studio_role: Option<StudioRole>, client_label: &str) -> DirectoryResult<SyncSessionRecord> {
+    async fn record_sync_session_open(&self, document_id: &str, user_id: Option<&str>, space_role: Option<SpaceRole>, client_label: &str) -> DirectoryResult<SyncSessionRecord> {
         let id = Uuid::now_v7().to_string();
         let connected_at = now_ms();
-        let role_str = studio_role.map(|r| r.as_str().to_string()).unwrap_or_default();
+        let role_str = space_role.map(|r| r.as_str().to_string()).unwrap_or_default();
         match user_id {
             Some(user_id) => {
                 self.graph
                     .run(
                         query(
                             "MATCH (u:User {id: $user_id})
-                             CREATE (s:SyncSession {id: $id, documentId: $document_id, clientLabel: $client_label, studioRole: $role, connectedAt: $connected_at})
+                             CREATE (s:SyncSession {id: $id, documentId: $document_id, clientLabel: $client_label, spaceRole: $role, connectedAt: $connected_at})
                              CREATE (s)-[:AS_USER]->(u)",
                         )
                         .param("document_id", document_id)
@@ -365,7 +365,7 @@ impl HubDirectory for Neo4jDirectory {
                 self.graph
                     .run(
                         query(
-                            "CREATE (s:SyncSession {id: $id, documentId: $document_id, clientLabel: $client_label, studioRole: $role, connectedAt: $connected_at})",
+                            "CREATE (s:SyncSession {id: $id, documentId: $document_id, clientLabel: $client_label, spaceRole: $role, connectedAt: $connected_at})",
                         )
                         .param("document_id", document_id)
                         .param("id", id.clone())
@@ -377,7 +377,7 @@ impl HubDirectory for Neo4jDirectory {
                     .map_err(backend)?;
             }
         }
-        Ok(SyncSessionRecord { id, document_id: document_id.to_string(), user_id: user_id.map(str::to_string), studio_role, client_label: client_label.to_string(), connected_at, disconnected_at: None })
+        Ok(SyncSessionRecord { id, document_id: document_id.to_string(), user_id: user_id.map(str::to_string), space_role, client_label: client_label.to_string(), connected_at, disconnected_at: None })
     }
 
     async fn record_sync_session_close(&self, sync_session_id: &str) -> DirectoryResult<()> {
@@ -392,7 +392,7 @@ impl HubDirectory for Neo4jDirectory {
                 query(
                     "MATCH (s:SyncSession {documentId: $document_id})
                      OPTIONAL MATCH (s)-[:AS_USER]->(u:User)
-                     RETURN s.id AS id, u.id AS userId, s.studioRole AS role, s.clientLabel AS clientLabel,
+                     RETURN s.id AS id, u.id AS userId, s.spaceRole AS role, s.clientLabel AS clientLabel,
                             s.connectedAt AS connectedAt, s.disconnectedAt AS disconnectedAt
                      ORDER BY s.connectedAt DESC",
                 )
@@ -407,7 +407,7 @@ impl HubDirectory for Neo4jDirectory {
                 id: row.get("id").map_err(backend)?,
                 document_id: document_id.to_string(),
                 user_id: row.get::<String>("userId").ok(),
-                studio_role: StudioRole::parse(&role),
+                space_role: SpaceRole::parse(&role),
                 client_label: row.get("clientLabel").map_err(backend)?,
                 connected_at: row.get("connectedAt").map_err(backend)?,
                 disconnected_at: row.get::<i64>("disconnectedAt").ok(),
@@ -431,9 +431,9 @@ fn user_from_node(row: &neo4rs::Row) -> DirectoryResult<UserRecord> {
     })
 }
 
-fn studio_from_node(row: &neo4rs::Row) -> DirectoryResult<StudioRecord> {
+fn space_from_node(row: &neo4rs::Row) -> DirectoryResult<SpaceRecord> {
     let node: neo4rs::Node = row.get("s").map_err(backend)?;
-    Ok(StudioRecord { id: node.get("id").map_err(backend)?, name: node.get("name").map_err(backend)?, owner_user_id: node.get("ownerUserId").map_err(backend)?, created_at: node.get("createdAt").map_err(backend)? })
+    Ok(SpaceRecord { id: node.get("id").map_err(backend)?, name: node.get("name").map_err(backend)?, owner_user_id: node.get("ownerUserId").map_err(backend)?, created_at: node.get("createdAt").map_err(backend)? })
 }
 
 //#region 🔖Tests

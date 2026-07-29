@@ -1,6 +1,6 @@
 ---
 name: Norm Plugin Apps
-overview: Add a retained headless NormHost session layer on top of the existing family crates, then ship one WASM DocumentApp per family (13 apps) in a single `norm/plugin` crate so compliance can run without UI while the plugin only mirrors host state.
+overview: Add a retained headless NormHost session layer on top of the existing family crates, then ship one WASM DocumentApp per family (13 apps) in a single `norm/plugin` crate so compliance can run without UI while the program only mirrors host state.
 todos:
   - id: ticket
     content: Open ticket under goal Norm and bind plan
@@ -11,11 +11,11 @@ todos:
   - id: family-sessions
     content: Add Document, Operation, evaluate, Host wiring in all 13 family crates
     status: completed
-  - id: norm-plugin
+  - id: norm-program
     content: Create norm/plugin with 13 DocumentApps, Cargo metadata, workspace + launch registration
     status: completed
   - id: verify
-    content: Run norm_core, family, and norm-plugin tests; close ticket with summary
+    content: Run norm_core, family, and norm-program tests; close ticket with summary
     status: completed
 isProject: false
 ---
@@ -32,13 +32,13 @@ isProject: false
 ```mermaid
 flowchart TB
   caller["Rust caller / tests"]
-  plugin["norm-plugin WASM"]
+  plugin["norm-program WASM"]
   core["norm_core\nNormHost + NormFamily"]
   families["Family crates\nDocument + Operation + evaluate"]
   checks["Existing check_* / compute_*"]
 
   caller --> core
-  plugin --> core
+  program --> core
   core --> families
   families --> checks
 ```
@@ -50,7 +50,7 @@ flowchart TB
 | ------------------ | -------------------------------------------- | ------------------------------------------------------------------------- |
 | Shared host kernel | `[norm/core/rs/lib.rs](norm/core/rs/lib.rs)` | `NormFamily` trait, generic `NormHost<F>`, shared session types           |
 | Family sessions    | each `norm/*/rs/lib.rs`                      | Typed `Document`, `Operation`, `evaluate(doc) -> CheckReport`, thin `Host` alias |
-| Plugin             | new `[norm/plugin/rs/](norm/plugin/rs/)`     | 13 DocumentApps; VCS undo over document operations; render from host report      |
+| Plugin             | new `[norm/program/rs/](norm/program/rs/)`     | 13 DocumentApps; VCS undo over document operations; render from host report      |
 
 
 Computation stays in family crates. The host only retains inputs, annex choice, and the last report, and re-evaluates when the document changes.
@@ -76,7 +76,7 @@ pub trait NormFamily {
   - `apply(operation)` → mutate document, recompute report
   - `replace_document` / `set_annex` as needed
   - `document()`, `report()`, `evaluate()` (force recompute)
-- Unit tests that construct a host, apply operations, and assert report updates **with no plugin/UI**.
+- Unit tests that construct a host, apply operations, and assert report updates **with no program/UI**.
 
 Depend on `vcs` in `norm_core` only if needed for `Operation` — otherwise keep operations in family crates and keep core free of VCS if that stays cleaner (prefer family `Operation: ::vcs::Operation<Document>` like architect/`ProgramOperation`).
 
@@ -98,9 +98,9 @@ Headless tests in each family (extend existing test region): host round-trip + a
 
 ## 3. Plugin crate: one app per family
 
-Create `[norm/plugin/rs/](norm/plugin/rs/)` following `[fem/plugin/rs](fem/plugin/rs)` / `[architect/plugin/rs](architect/plugin/rs)` consistency contract:
+Create `[norm/program/rs/](norm/program/rs/)` following `[fem/program/rs](fem/program/rs)` / `[architect/spine/rs](architect/spine/rs)` consistency contract:
 
-- `Cargo.toml`: `name = "norm-plugin"`, `package = "semio:norm"`, `cdylib`+`rlib`, deps on all 13 families + `norm_core` + `semio-framework-plugin` + `vcs`.
+- `Cargo.toml`: `name = "norm-program"`, `package = "semio:norm"`, `cdylib`+`rlib`, deps on all 13 families + `norm_core` + `semio-framework-program` + `vcs`.
 - 13 playground rows, ports **react 6091–6103 / wgpu 6191–6203** (free above architect `6090`/`6190`):
 
 
@@ -118,9 +118,9 @@ Create `[norm/plugin/rs/](norm/plugin/rs/)` following `[fem/plugin/rs](fem/plugi
   - Runtime: selection + optional UI-only camera; **report comes from host**, not recomputed only in React
   - On document operations: apply via host semantics (mutate + evaluate)
   - Windows: inputs (form/table), results (`CheckReport` as block list / table), standard Document/Catalogue/Inspection panels
-  - `semio_plugin!` registers all 13 create_* factories
+  - `semio_program!` registers all 13 create_* factories
 
-Register workspace member in root `[Cargo.toml](Cargo.toml)`. Add launch entries next to `🧪test📏norm` for plugin tests / playground variants (same grouping/naming as other plugins).
+Register workspace member in root `[Cargo.toml](Cargo.toml)`. Add launch entries next to `🧪test📏norm` for program tests / playground variants (same grouping/naming as other plugins).
 
 ## 4. Ticket and goal
 
@@ -132,7 +132,7 @@ Register workspace member in root `[Cargo.toml](Cargo.toml)`. Add launch entries
 
 - `cargo test -p norm_core` — host trait/session tests.
 - Per-family `cargo test -p norm_*` — host evaluate after operation.
-- `cargo test -p norm-plugin` — manifest lists 13 apps; undo/redo round-trip on one representative app; host-backed report present after operation.
+- `cargo test -p norm-program` — manifest lists 13 apps; undo/redo round-trip on one representative app; host-backed report present after operation.
 - Confirm with temporary `[DEBUG]` logs only if needed for runtime proof, then leave them removable.
 
 ## Out of scope
@@ -140,5 +140,5 @@ Register workspace member in root `[Cargo.toml](Cargo.toml)`. Add launch entries
 - Clause-complete physics upgrades (separate feature-complete ticket).
 - Research-only standards (EN 15804, ISO 14040, …).
 - One app per `part_*` module.
-- HTTP/service backend — “backend” here is the retained Rust host inside the process/WASM plugin boundary.
+- HTTP/service backend — “backend” here is the retained Rust host inside the process/WASM program boundary.
 

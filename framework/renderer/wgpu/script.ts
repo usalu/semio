@@ -23,14 +23,14 @@ import {
   loadFrameworkOsPlaygroundCatalog,
 } from "../../../repo/lib/js/index.ts";
 import { startAssetServer } from "../../../ui/styling/vite-elements-assets.ts";
-import type { PlaygroundAssetSpec } from "../../plugin/registry/generated/playgrounds.ts";
-import { writePlaygroundSession } from "../../plugin/registry/script.ts";
+import type { PlaygroundAssetSpec } from "../../program/registry/generated/playgrounds.ts";
+import { writePlaygroundSession } from "../../program/registry/script.ts";
 
 const repoRoot = getWorkspaceRoot();
 const wasmTarget = "wasm32-unknown-unknown";
 const crateName = "semio-framework-renderer-wgpu";
 const outDir = join(repoRoot, "framework/product/os/dev/renderer-modules/wgpu");
-const pluginOutRoot = join(repoRoot, "framework/product/os/dev/plugin-modules");
+const pluginOutRoot = join(repoRoot, "framework/product/os/dev/program-modules");
 
 //#region 🌐 DevServer
 function trunkEnv(): NodeJS.ProcessEnv {
@@ -135,10 +135,10 @@ class TrunkServeScript extends BundleScript {
     ensureTrunk();
     ensureWasmTarget();
     buildBootScript(this.root);
-    const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
+    const program = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
     ensureAssetServer(plugin);
     const catalog = loadFrameworkOsPlaygroundCatalog();
-    const defaultPort = String(frameworkOsPlaygroundDefaultPort(catalog, plugin, "wgpu"));
+    const defaultPort = String(frameworkOsPlaygroundDefaultPort(catalog, program, "wgpu"));
     const port = process.env.S_OS_PORT ?? defaultPort;
     const extra = segments.filter((segment, index, all) => segment !== "--port" && all[index - 1] !== "--port");
     const args = ["serve", "--config", "Trunk.toml", "--port", port, ...extra];
@@ -154,14 +154,14 @@ class NativeBuildScript extends BundleScript {
       throw new Error("native wgpu renderer build failed");
     }
     const osDevScript = join(repoRoot, "framework/product/os/dev/script.ts");
-    // Recurses into os/dev's own `plugin` build loop, whose per-plugin `cargo build` calls are individually budgeted.
-    const plugin = runCmdStatus("bun", [osDevScript, "plugin", filterPlugin], {
+    // Recurses into os/dev's own `program` build loop, whose per-program `cargo build` calls are individually budgeted.
+    const program = runCmdStatus("bun", [osDevScript, "plugin", filterPlugin], {
       cwd: join(repoRoot, "framework/product/os/dev"),
       env: { ...process.env, SEMIO_RENDERER: "wgpu", SEMIO_PLUGIN: filterPlugin },
       ...orchestratorBudgetOpts(),
     });
-    if (plugin !== 0) throw new Error(`wasm plugin build failed: ${filterPlugin}`);
-    console.log(`[DEBUG] built native wgpu renderer and wasm plugins for ${filterPlugin}`);
+    if (program !== 0) throw new Error(`wasm program build failed: ${filterPlugin}`);
+    console.log(`[DEBUG] built native wgpu renderer and wasm programs for ${filterPlugin}`);
   }
 }
 
@@ -180,7 +180,7 @@ class NativeRunScript extends BundleScript {
     const catalog = loadFrameworkOsPlaygroundCatalog();
     const appArgs = resolveNativeAppArgs(catalog, filterPlugin);
     // Interactive native app window — runs until the user closes it.
-    if (runCmdStatus("cargo", ["run", "-p", crateName, "--bin", "semio-wgpu-native", "--release", "--features", "native-bin", "--", "--plugin", filterPlugin, ...appArgs], { cwd: repoRoot, env: nativeEnv, ...daemonBudgetOpts() }) !== 0) {
+    if (runCmdStatus("cargo", ["run", "-p", crateName, "--bin", "semio-wgpu-native", "--release", "--features", "native-bin", "--", "--program", filterPlugin, ...appArgs], { cwd: repoRoot, env: nativeEnv, ...daemonBudgetOpts() }) !== 0) {
       throw new Error("native wgpu renderer run failed");
     }
   }

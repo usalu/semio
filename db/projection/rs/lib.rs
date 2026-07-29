@@ -8,7 +8,7 @@
 //! 🎯 Design choice: per the contract's "no db crate below `db_document` interprets operation
 //! semantics" rule, this crate never looks inside a `protocol::OperationEnvelope`'s
 //! `diff.schema`/`diff.payload` itself — every `ProjectionClass::apply` is supplied by a higher
-//! layer (`db_document`, or an app-level plugin) that owns the actual domain interpretation. This
+//! layer (`db_document`, or an app-level program) that owns the actual domain interpretation. This
 //! crate only owns the mechanism around that: dependency ordering, incremental application,
 //! checkpoint persistence/versioning, historical lookup, and preview augmentation.
 //!

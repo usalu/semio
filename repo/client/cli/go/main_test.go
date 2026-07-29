@@ -7993,14 +7993,14 @@ func TestEntityKinds(t *testing.T) {
 	}
 }
 
-func TestResourceKinds(t *testing.T) {
+func TestArtifactKinds(t *testing.T) {
 	expected := []string{"repo", "technology", "bundle", "folder", "file", "section", "definition"}
-	if len(ResourceKinds) != len(expected) {
-		t.Fatalf("ResourceKinds length: expected %d, got %d", len(expected), len(ResourceKinds))
+	if len(ArtifactKinds) != len(expected) {
+		t.Fatalf("ArtifactKinds length: expected %d, got %d", len(expected), len(ArtifactKinds))
 	}
 	for i, e := range expected {
-		if ResourceKinds[i] != e {
-			t.Errorf("ResourceKinds[%d]: expected %q, got %q", i, e, ResourceKinds[i])
+		if ArtifactKinds[i] != e {
+			t.Errorf("ArtifactKinds[%d]: expected %q, got %q", i, e, ArtifactKinds[i])
 		}
 	}
 }

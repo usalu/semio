@@ -33,7 +33,7 @@ var EntityKindCatalog = []EntityKindSpec{
 	{ID: "file-script", Emoji: "📜", IconID: "code", Label: "Script", Filterable: true},
 	{ID: "file-docs", Emoji: "📃", IconID: "file-text", Label: "Docs", Filterable: true},
 	{ID: "file-config", Emoji: "⚙️", IconID: "settings", Label: "Config", Filterable: true},
-	{ID: "file-resource", Emoji: "💾", IconID: "hard-drive", Label: "Resource", Filterable: true},
+	{ID: "file-artifact", Emoji: "💾", IconID: "hard-drive", Label: "Resource", Filterable: true},
 	{ID: "file-template", Emoji: "📋", IconID: "clipboard-list", Label: "Template", Filterable: true},
 	{ID: "file-license", Emoji: "⚖️", IconID: "landmark", Label: "License", Filterable: true},
 	{ID: "line", Emoji: "📌", IconID: "hash", Label: "Line", Filterable: true},

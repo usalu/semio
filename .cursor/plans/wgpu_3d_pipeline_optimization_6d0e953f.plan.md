@@ -93,6 +93,6 @@ Remove dead `UiPipelines` fields (`glyph_view`, `surface_format`, unused layouts
 ## Verification
 
 - `cargo test -p ui_wgpu` (new tests: dynamic offset slot math, AABB slab test, frustum culling, projected-AABB marquee early-out).
-- `cargo test -p semio-framework-core` and plugin crates unchanged-green.
+- `cargo test -p semio-framework-core` and program crates unchanged-green.
 - `cargo build -p semio-framework-renderer-wgpu --target wasm32-unknown-unknown --release` + `bun ./script.ts wasm` artifact regen.
 - Browser check with `SEMIO_RENDERER=wgpu` `?plugin=puzzle3d` (many instances, one draw call per mesh) and `?plugin=lowpoly`: `[DEBUG]` logs for buffer growth events, culled instance counts, and per-frame re-sync skips; verify two simultaneous world-3d surfaces (puzzle5d) get distinct cameras.

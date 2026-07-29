@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import { pluginHandleForBridge } from "@semio-tech/framework-core";
 
 describe("framework renderer wgpu", () => {
-  it("builds plugin bridge handles", () => {
+  it("builds program bridge handles", () => {
     const handle = pluginHandleForBridge({
-      pluginId: "draw",
+      programId: "draw",
       manifest: {
-        pluginId: "draw",
+        programId: "draw",
         label: "Draw",
         version: "0.1.0",
         apps: [],
@@ -20,6 +20,6 @@ describe("framework renderer wgpu", () => {
       refreshUi: async () => ({}),
       dispose: () => {},
     });
-    expect(JSON.parse(handle.manifest()).pluginId).toBe("draw");
+    expect(JSON.parse(handle.manifest()).programId).toBe("draw");
   });
 });

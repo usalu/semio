@@ -1,6 +1,6 @@
 //! 🗃️ Local-first, non-blocking, client-side, in-memory document store — hot-swappable
 //! backbones (`temp://`/`file://`/`folder://`/`remote://`) layered on `vcs`'s version-graph
-//! algebra. `DocumentStore`/`Backbone`/`BlobStore`/`Studio`/the serialization seam
+//! algebra. `DocumentStore`/`Backbone`/`BlobStore`/`Space`/the serialization seam
 //! (`DocumentDsl`/`DocumentPack`/`pack_rt`/`DocumentCodec`) all live here — apps depend on
 //! `store`, never on `vcs`/`pack`/`dsl_core` directly (moved from `vcs/rs/lib.rs` by ticket
 //! `26/07/28/EXTRACT-STORE-INTO-ITS-OWN-TECHNOLOGY`).
@@ -288,7 +288,7 @@ pub fn decode_document_pack_bytes(bytes: &[u8]) -> Result<(Vec<u8>, Vec<u8>), Vc
     Ok((bytes[pos..pack_end].to_vec(), bytes[pack_end..].to_vec()))
 }
 
-/// @emoji 🌱 Pack counterpart of the schema-less `serde_json::Value` escape hatch (puzzle-plugin/
+/// @emoji 🌱 Pack counterpart of the schema-less `serde_json::Value` escape hatch (puzzle-program/
 /// compose-kit apps stay on `serde_json::Value` end to end): delegates to `pack_rt`'s JSON bridge.
 impl DocumentPack for serde_json::Value {
     fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
@@ -322,7 +322,7 @@ pub use dsl::op_rt;
 /// @emoji 🗂️ Type-erased document codec — the bridge a schema-string-keyed caller (chiefly
 /// `framework/sync`'s `FolderEndpoint`) uses to print/parse pack+ops without naming the concrete
 /// `P`/`Operation` types at that layer. Built once per document kind via `DocumentCodec::of`
-/// (wrapped one line per app by `register_document_codec_for_app` in `framework/plugin/rs/lib.rs`,
+/// (wrapped one line per app by `register_document_codec_for_app` in `framework/program/rs/lib.rs`,
 /// wave 2) and looked up by `schema` string through `register_document_codec`/`document_codec`.
 #[derive(Clone)]
 pub struct DocumentCodec {
@@ -332,7 +332,7 @@ pub struct DocumentCodec {
     /// `pack::schema_hash(&spec)` over `P::record_spec()`, or `[0u8; 32]` when `P` has no
     /// `RecordSpec` (hand-written `DocumentPack` impls, see that trait method's doc). Hub actors
     /// send this in `ClientFrame::Hello`; the hub pins the first non-zero hash it sees per
-    /// `(studio, document)` scope and rejects a later mismatching one before `Welcome` — a zero
+    /// `(space, document)` scope and rejects a later mismatching one before `Welcome` — a zero
     /// hash always skips validation (schema-agnostic client). Durable pinning belongs in the db
     /// catalog once it grows a column for it; this in-memory pin is this wave's scope.
     pub pack_schema_hash: [u8; 32],
@@ -407,7 +407,7 @@ fn document_codec_registry() -> &'static std::sync::RwLock<HashMap<String, Docum
 }
 
 /// @emoji 📝 Registers (or overwrites) the codec for `codec.schema` — idempotent, safe to call
-/// repeatedly (every app's registration fn calls this once per document kind at plugin-init time).
+/// repeatedly (every app's registration fn calls this once per document kind at program-init time).
 pub fn register_document_codec(codec: DocumentCodec) {
     let mut registry = document_codec_registry().write().unwrap_or_else(|poisoned| poisoned.into_inner());
     registry.insert(codec.schema.clone(), codec);
@@ -560,19 +560,19 @@ where
 /// crate's replay/store paths always performed: runs the LAST applied operation's `reconcile` hook
 /// against `projection`, or passes `projection` through unchanged (matching the trait's own no-op
 /// default) if no operation has ever been applied yet. Every real `Operation` impl in this crate
-/// (`StudioHistoryOperation`/`DemoOperation`/`TimestampedOperation`) inherits the default no-op
+/// (`SpaceHistoryOperation`/`DemoOperation`/`TimestampedOperation`) inherits the default no-op
 /// `reconcile`, which ignores `self` entirely and only inspects `projection` — so which specific
 /// operation instance triggers the call is immaterial for every one of them; a technology that
 /// overrides `reconcile` to do real cross-document/graph validation (see
 /// `framework/product/os/core`'s `OsOperation`) is documented as inspecting the resulting
 /// `projection`, not `self`, for the same reason. Maps `protocol::ReconcileReport` to this crate's
-/// own `StudioConflict` at this edge — `protocol_command` deliberately doesn't know about studio
+/// own `SpaceConflict` at this edge — `protocol_command` deliberately doesn't know about space
 /// types (see its `Operation::reconcile` doc comment).
-fn reconcile_with_last<P, Op: Operation<P>>(last_operation: Option<&Op>, projection: P) -> (P, Vec<StudioConflict>) {
+fn reconcile_with_last<P, Op: Operation<P>>(last_operation: Option<&Op>, projection: P) -> (P, Vec<SpaceConflict>) {
     match last_operation {
         Some(operation) => {
             let (projection, reports) = operation.reconcile(projection);
-            (projection, reports.into_iter().map(StudioConflict::from).collect())
+            (projection, reports.into_iter().map(SpaceConflict::from).collect())
         }
         None => (projection, Vec::new()),
     }
@@ -586,7 +586,7 @@ fn reconcile_with_last<P, Op: Operation<P>>(last_operation: Option<&Op>, project
 pub fn materialize_document_projection_with_conflicts<P, Operation>(
     envelope: &DocumentEnvelope<P, Operation>,
     applied_edit_ids: &[String],
-) -> Result<(P, Vec<StudioConflict>), VcsError>
+) -> Result<(P, Vec<SpaceConflict>), VcsError>
 where
     P: Clone,
     Operation: crate::Operation<P>,
@@ -1847,7 +1847,7 @@ where
     edit_sequence: i32,
     generation: u64,
     /// @emoji 🧭 The checkpoint new commits parent onto; advances on commit/checkout/switch. Not
-    /// part of the wire envelope — callers that reconstruct the store per call (e.g. a WASM plugin)
+    /// part of the wire envelope — callers that reconstruct the store per call (e.g. a WASM program)
     /// must save/restore it themselves via {@link current_checkpoint_id}/{@link set_current_checkpoint_id}.
     current_checkpoint_id: Option<String>,
     /// @emoji 🖋️ Identity of the local actor driving this store. Set from each local `Apply`/
@@ -1858,7 +1858,7 @@ where
     /// @emoji 🤝 Conflicts reported by the last {@link Operation::reconcile} pass, refreshed after
     /// remote ingestion (see {@link ingest_envelope}). Empty for every document kind that keeps the
     /// default no-operation `reconcile`. Not part of the wire envelope — it is derived, not source of truth.
-    conflicts: Vec<StudioConflict>,
+    conflicts: Vec<SpaceConflict>,
     /// @emoji ⚡ The live, incrementally-maintained RAW fold of `initial_projection` over every
     /// `forwards` operation in `applied_edit_ids` order — i.e. exactly what a full
     /// {@link materialize_document_projection} replay computes BEFORE its single final
@@ -2063,7 +2063,7 @@ where
 
     /// @emoji 🤝 `current` reconciled, plus whatever conflicts {@link Operation::reconcile} reports.
     /// O(1) instead of a full replay — see {@link projection}.
-    pub fn projection_with_conflicts(&self) -> Result<(P, Vec<StudioConflict>), VcsError> {
+    pub fn projection_with_conflicts(&self) -> Result<(P, Vec<SpaceConflict>), VcsError> {
         Ok(reconcile_with_last(self.last_applied_operation(), self.current.clone()))
     }
 
@@ -2096,7 +2096,7 @@ where
     }
 
     /// @emoji 🤝 Conflicts from the last reconciliation pass (see {@link conflicts} field doc).
-    pub fn conflicts(&self) -> &[StudioConflict] {
+    pub fn conflicts(&self) -> &[SpaceConflict] {
         &self.conflicts
     }
 
@@ -2551,9 +2551,16 @@ where
             self.envelope.backbone = backbone_ref;
             // 🌱 A snapshot adopts these edits directly (not through `dag.insert`), so the dag never
             // learns they're satisfied — seed it here or a later envelope whose `deps` point back at
-            // one of these ids would sit `Pending` forever (see `OpDag::seed_applied`).
-            for edit_id in &applied {
-                self.dag.seed_applied(OperationId(edit_id.clone()));
+            // one of these ids would sit `Pending` forever (see `OpDag::seed_applied`). Seed each
+            // edit's own id AND its per-op WIRE ids (`protocol::operation_ids_for_edit` — the same
+            // ids `ingest_envelope` would key a remote copy of these ops under, see the double-
+            // delivery note below) so a `BackboneMessage::Operations` for one of these ops that
+            // arrives later is recognized as `AlreadyApplied` instead of re-materializing it.
+            for edit in &self.envelope.vcs.edits {
+                self.dag.seed_applied(OperationId(edit.id.clone()));
+                for operation_id in protocol::operation_ids_for_edit(edit) {
+                    self.dag.seed_applied(operation_id);
+                }
             }
             self.applied_edit_ids = applied;
             self.redo_edit_ids.clear();
@@ -2563,19 +2570,38 @@ where
             self.bump();
             return Ok(());
         }
-        let existing_edit_ids: HashSet<String> = self.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
+        // 🪪 An edit's top-level `id` is NOT a stable cross-store identity: `ingest_envelope` (the
+        // `BackboneMessage::Operations` path) reconstructs a remote op under its WIRE id
+        // (`envelope.operation_id`, from `protocol::operation_ids_for_edit`/`operation_meta`), which
+        // differs from the id the op's own edit carries on the store that authored it. Without also
+        // indexing by each known edit's derived op ids, a snapshot re-broadcasting an edit this store
+        // already ingested via Operations (under that different wire id) reads as "new" and gets
+        // merged a second time — confirmed double-delivery: harmless for idempotent patch-style ops,
+        // but a visible duplicate for insert-style ops (see raster's `addLayer` convergence test).
+        let mut known_ids: HashSet<String> = HashSet::new();
+        for edit in &self.envelope.vcs.edits {
+            known_ids.insert(edit.id.clone());
+            known_ids.extend(protocol::operation_ids_for_edit(edit).into_iter().map(|id| id.0));
+        }
         let mut newly_merged_ids: Vec<String> = Vec::new();
         for edit in remote.vcs.edits {
-            if existing_edit_ids.contains(&edit.id) {
+            let operation_ids = protocol::operation_ids_for_edit(&edit);
+            let already_known = known_ids.contains(&edit.id) || (!operation_ids.is_empty() && operation_ids.iter().all(|id| known_ids.contains(&id.0)));
+            if already_known {
                 continue;
             }
             self.edit_sequence = self.edit_sequence.max(edit.sequence_number);
             self.applied_edit_ids.push(edit.id.clone());
             newly_merged_ids.push(edit.id.clone());
+            known_ids.insert(edit.id.clone());
+            known_ids.extend(operation_ids.iter().map(|id| id.0.clone()));
             // ⚡ Each newly-merged edit is appended at the tail, so folding its forwards onto `current`
             // in iteration order is exactly a prefix-extension of the existing raw fold.
             for operation in &edit.forwards {
                 self.current = apply_operation(&self.current, operation);
+            }
+            for operation_id in operation_ids {
+                self.dag.seed_applied(operation_id);
             }
             self.envelope.vcs.edits.push(edit);
         }
@@ -2753,7 +2779,7 @@ pub fn edit_from_operation_envelope<Operation: protocol::OpBinary>(envelope: &pr
 //#region 🔖Backbone
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct StudioConflict {
+pub struct SpaceConflict {
     pub kind: String,
     pub uri: String,
     pub message: String,
@@ -2761,19 +2787,19 @@ pub struct StudioConflict {
 
 /// @emoji 🎞️ Maps `protocol_command::Operation::reconcile`'s new `Vec<ReconcileReport>` result onto
 /// this crate's own conflict type — see `reconcile_with_last`'s doc comment for why the mapping
-/// happens at this edge rather than `protocol_command` knowing about `StudioConflict` directly.
+/// happens at this edge rather than `protocol_command` knowing about `SpaceConflict` directly.
 /// `kind: report.id` verbatim (NOT prefixed with severity) — a technology's own `reconcile` override
-/// (e.g. `framework/product/os/core`'s `OsOperation`) round-trips its own `StudioConflict.kind`
+/// (e.g. `framework/product/os/core`'s `OsOperation`) round-trips its own `SpaceConflict.kind`
 /// through `ReconcileReport.id` on the way in (see that crate's `reconcile` wrapper), and callers
-/// pattern-match `StudioConflict.kind` against exact strings (e.g. `"workflow/edge-orphaned"`) —
+/// pattern-match `SpaceConflict.kind` against exact strings (e.g. `"workflow/edge-orphaned"`) —
 /// mangling it here would silently break every such exact-match call site. `severity` has no
-/// `StudioConflict` field to land in, so it is dropped (a real, structural information loss inherent
+/// `SpaceConflict` field to land in, so it is dropped (a real, structural information loss inherent
 /// to `ReconcileReport`'s frozen shape, not fixable at this edge). `ReconcileReport` also has no
-/// URI-shaped field (it targets a schema-opaque `id`, not a studio member resource), so `uri` is
-/// left empty for any report that didn't originate from a `StudioConflict` round-trip.
-impl From<ReconcileReport> for StudioConflict {
+/// URI-shaped field (it targets a schema-opaque `id`, not a space member resource), so `uri` is
+/// left empty for any report that didn't originate from a `SpaceConflict` round-trip.
+impl From<ReconcileReport> for SpaceConflict {
     fn from(report: ReconcileReport) -> Self {
-        StudioConflict {
+        SpaceConflict {
             kind: report.id,
             uri: String::new(),
             message: report.message,
@@ -2782,8 +2808,7 @@ impl From<ReconcileReport> for StudioConflict {
 }
 
 /// @emoji 📨 Wire message exchanged over an attached backbone channel.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub enum BackboneMessage {
     Snapshot { pack: Vec<u8>, spr: Vec<u8> },
     Operations { envelopes: Vec<protocol::OperationEnvelope> },
@@ -2794,9 +2819,9 @@ pub enum BackboneMessage {
 
 /// @emoji 🎯 `tag u8 (variant decl order) | body` — Snapshot: `pack bytes | spr bytes`;
 /// Operations: `count varint | protocol::encode_envelope each`; Ack: `count varint | str each`.
-/// The `Serialize`/`Deserialize` derive on `BackboneMessage` stays (kept for the wasm-sandbox
-/// `BackboneChannelPort` seam, itself real bytes wrapped in a JSON-array-of-numbers by design —
-/// see that trait's doc) — this is the real, primary binary encoding for every OTHER caller.
+/// This is the one real binary encoding for every caller, including the wasm-sandbox
+/// `BackboneChannelPort` seam (see that trait's doc) — the WIT `backbone-send`/`backbone-poll`
+/// host functions carry these exact bytes as `list<u8>`.
 fn write_backbone_bytes(out: &mut Vec<u8>, b: &[u8]) {
     pack::write_varint_u64(out, b.len() as u64);
     out.extend_from_slice(b);
@@ -3003,15 +3028,16 @@ impl BackbonePort for LocalStorageBackbonePort {
     }
 }
 
-/// @emoji 🕸️ Injectable duplex transport across the wasm sandbox boundary (plugin ↔ host process).
+/// @emoji 🕸️ Injectable duplex transport across the wasm sandbox boundary (program ↔ host process).
+/// `message`/the `poll` result are `encode_backbone_message`/`decode_backbone_message` bytes.
 pub trait BackboneChannelPort: Send + Sync {
-    fn send(&self, uri: &str, message_json: &str) -> Result<(), VcsError>;
-    fn poll(&self, uri: &str) -> Result<Vec<String>, VcsError>;
+    fn send(&self, uri: &str, message: &[u8]) -> Result<(), VcsError>;
+    fn poll(&self, uri: &str) -> Result<Vec<Vec<u8>>, VcsError>;
 }
 
 static HOST_BACKBONE_CHANNEL: Mutex<Option<Arc<dyn BackboneChannelPort>>> = Mutex::new(None);
 
-/// @emoji 🔌 Injects the plugin host's duplex backbone channel for wasm-sandboxed document stores.
+/// @emoji 🔌 Injects the program host's duplex backbone channel for wasm-sandboxed document stores.
 pub fn set_host_backbone_channel(channel: Arc<dyn BackboneChannelPort>) {
     if let Ok(mut guard) = HOST_BACKBONE_CHANNEL.lock() {
         *guard = Some(channel);
@@ -3042,8 +3068,7 @@ impl Backbone for PortBackbone {
     fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError> {
         let channel = host_backbone_channel()
             .ok_or_else(|| VcsError::Backbone("backbone channel requires host port".into()))?;
-        let json = serde_json::to_string(&message).map_err(|e| VcsError::Serialize(e.to_string()))?;
-        channel.send(&self.uri, &json)
+        channel.send(&self.uri, &encode_backbone_message(&message))
     }
 
     fn receive(&mut self) -> Result<Vec<BackboneMessage>, VcsError> {
@@ -3052,7 +3077,7 @@ impl Backbone for PortBackbone {
         channel
             .poll(&self.uri)?
             .into_iter()
-            .map(|json| serde_json::from_str(&json).map_err(|e| VcsError::Deserialize(e.to_string())))
+            .map(|bytes| decode_backbone_message(&bytes).map_err(|e| VcsError::Deserialize(e.to_string())))
             .collect()
     }
 }
@@ -3219,13 +3244,13 @@ pub trait BlobStore: Send + Sync {
 }
 //#endregion 🔖BlobStore
 
-//#region 🔖Studio
-//#region StudioMember
-/// @emoji 🧑‍🤝‍🧑 Object-safe façade over a `DocumentStore<P, Operation>` so a studio host can hold a
-/// heterogeneous registry of documents (`HashMap<String, Box<dyn StudioMember>>`) without knowing
+//#region 🔖Space
+//#region SpaceMember
+/// @emoji 🧑‍🤝‍🧑 Object-safe façade over a `DocumentStore<P, Operation>` so a space host can hold a
+/// heterogeneous registry of documents (`HashMap<String, Box<dyn SpaceMember>>`) without knowing
 /// each member's concrete `P`/`Operation`. Blanket-implemented below by delegating to `dispatch` — never
 /// reimplement the underlying VCS mechanics here.
-pub trait StudioMember {
+pub trait SpaceMember {
     fn document_id(&self) -> &str;
     /// @emoji 🩸 Whether this member has edits applied since its last checkpoint (mirrors the
     /// `CommitCheckpoint` dispatch's own "nothing to commit" check via `uncommitted_edit_ids`).
@@ -3241,14 +3266,14 @@ pub trait StudioMember {
     fn last_undone_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp>;
     fn undo(&mut self) -> Result<(), VcsError>;
     fn redo(&mut self) -> Result<(), VcsError>;
-    /// @emoji 🪄 Downcast escape hatch: a studio host UI (or a test) needs the concrete
-    /// `DocumentStore<P, Operation>` back out of a `Box<dyn StudioMember>` — e.g. to `Apply` a
+    /// @emoji 🪄 Downcast escape hatch: a space host UI (or a test) needs the concrete
+    /// `DocumentStore<P, Operation>` back out of a `Box<dyn SpaceMember>` — e.g. to `Apply` a
     /// technology-specific `Operation`, which can't appear in this object-safe trait. `Self: 'static` is
     /// implied by every real `P`/`Operation` pair, so this never fails for a genuine member.
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
 }
 
-impl<P, Operation> StudioMember for DocumentStore<P, Operation>
+impl<P, Operation> SpaceMember for DocumentStore<P, Operation>
 where
     P: Clone + Serialize + DeserializeOwned + DocumentPack + 'static,
     Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P> + protocol::OpBinary + OpText + 'static,
@@ -3347,13 +3372,13 @@ where
         self
     }
 }
-//#endregion StudioMember
+//#endregion SpaceMember
 
-//#region StudioHistoryDocument
-/// @emoji 📌 One member document's position at the moment a `StudioCheckpoint` was recorded.
+//#region SpaceHistoryDocument
+/// @emoji 📌 One member document's position at the moment a `SpaceCheckpoint` was recorded.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct StudioMemberPin {
+pub struct SpaceMemberPin {
     pub document_id: String,
     pub checkpoint_id: String,
     /// @emoji 🌿 Empty string when the member had no active alternative (its own trunk) at pin time.
@@ -3361,73 +3386,73 @@ pub struct StudioMemberPin {
     pub alternative_id: String,
 }
 
-/// @emoji 🗄️ A studio-wide checkpoint: one pin per registered member, so checking it out (or an
+/// @emoji 🗄️ A space-wide checkpoint: one pin per registered member, so checking it out (or an
 /// alternative built on top of it) fans out deterministically to every member's own VCS.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct StudioCheckpoint {
+pub struct SpaceCheckpoint {
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub parent_id: Option<String>,
     pub message: String,
     pub authors: Vec<Author>,
     pub timestamp: HybridLogicalTimestamp,
-    pub members: Vec<StudioMemberPin>,
+    pub members: Vec<SpaceMemberPin>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct StudioAlternative {
+pub struct SpaceAlternative {
     pub id: String,
     pub name: String,
     pub checkpoint_ids: Vec<String>,
 }
 
-/// @emoji 🗄️ Projection of the `"os.studio.history"` meta-document: itself an ordinary `DocumentVcs`
-/// document kind (dogfooded — no bespoke transport), holding the studio-level checkpoint/alternative
-/// graph that `StudioHost` composes on top of every registered member's own history.
+/// @emoji 🗄️ Projection of the `"os.space.history"` meta-document: itself an ordinary `DocumentVcs`
+/// document kind (dogfooded — no bespoke transport), holding the space-level checkpoint/alternative
+/// graph that `SpaceHost` composes on top of every registered member's own history.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct StudioHistoryProjection {
-    pub checkpoints: Vec<StudioCheckpoint>,
-    pub alternatives: Vec<StudioAlternative>,
+pub struct SpaceHistoryProjection {
+    pub checkpoints: Vec<SpaceCheckpoint>,
+    pub alternatives: Vec<SpaceAlternative>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub active_alternative_id: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "operation", rename_all = "camelCase")]
-pub enum StudioHistoryOperation {
-    CommitStudioCheckpoint { checkpoint: StudioCheckpoint },
-    CreateStudioAlternative { alternative: StudioAlternative },
-    SwitchStudioAlternative { alternative_id: String },
-    /// @emoji ↩️ Mechanical inverse of `CommitStudioCheckpoint`; never dispatched directly by
-    /// `StudioHost` (studio undo is derived and member-local, see `StudioHost::undo`), only
+pub enum SpaceHistoryOperation {
+    CommitSpaceCheckpoint { checkpoint: SpaceCheckpoint },
+    CreateSpaceAlternative { alternative: SpaceAlternative },
+    SwitchSpaceAlternative { alternative_id: String },
+    /// @emoji ↩️ Mechanical inverse of `CommitSpaceCheckpoint`; never dispatched directly by
+    /// `SpaceHost` (space undo is derived and member-local, see `SpaceHost::undo`), only
     /// produced by `backwards` for VCS round-trip correctness.
-    RemoveStudioCheckpoint { checkpoint_id: String },
-    /// @emoji ↩️ Mechanical inverse of `CreateStudioAlternative`; see `RemoveStudioCheckpoint`.
-    RemoveStudioAlternative { alternative_id: String },
-    /// @emoji ↩️ Mechanical inverse of `SwitchStudioAlternative`; see `RemoveStudioCheckpoint`.
-    SetActiveStudioAlternative { alternative_id: Option<String> },
+    RemoveSpaceCheckpoint { checkpoint_id: String },
+    /// @emoji ↩️ Mechanical inverse of `CreateSpaceAlternative`; see `RemoveSpaceCheckpoint`.
+    RemoveSpaceAlternative { alternative_id: String },
+    /// @emoji ↩️ Mechanical inverse of `SwitchSpaceAlternative`; see `RemoveSpaceCheckpoint`.
+    SetActiveSpaceAlternative { alternative_id: Option<String> },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct StudioHistoryDiff {
+pub struct SpaceHistoryDiff {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub add_checkpoint: Option<StudioCheckpoint>,
+    pub add_checkpoint: Option<SpaceCheckpoint>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub remove_checkpoint_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub add_alternative: Option<StudioAlternative>,
+    pub add_alternative: Option<SpaceAlternative>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub remove_alternative_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub set_active_alternative_id: Option<Option<String>>,
 }
 
-impl OperationDiff<StudioHistoryProjection> for StudioHistoryDiff {
-    fn apply(&self, projection: &StudioHistoryProjection) -> StudioHistoryProjection {
+impl OperationDiff<SpaceHistoryProjection> for SpaceHistoryDiff {
+    fn apply(&self, projection: &SpaceHistoryProjection) -> SpaceHistoryProjection {
         let mut next = projection.clone();
         if let Some(checkpoint) = &self.add_checkpoint {
             next.checkpoints.push(checkpoint.clone());
@@ -3466,70 +3491,70 @@ impl OperationDiff<StudioHistoryProjection> for StudioHistoryDiff {
     }
 }
 
-impl Operation<StudioHistoryProjection> for StudioHistoryOperation {
-    type Diff = StudioHistoryDiff;
+impl Operation<SpaceHistoryProjection> for SpaceHistoryOperation {
+    type Diff = SpaceHistoryDiff;
 
-    fn diff(&self, _projection: &StudioHistoryProjection) -> StudioHistoryDiff {
+    fn diff(&self, _projection: &SpaceHistoryProjection) -> SpaceHistoryDiff {
         match self {
-            StudioHistoryOperation::CommitStudioCheckpoint { checkpoint } => StudioHistoryDiff {
+            SpaceHistoryOperation::CommitSpaceCheckpoint { checkpoint } => SpaceHistoryDiff {
                 add_checkpoint: Some(checkpoint.clone()),
                 ..Default::default()
             },
-            StudioHistoryOperation::CreateStudioAlternative { alternative } => StudioHistoryDiff {
+            SpaceHistoryOperation::CreateSpaceAlternative { alternative } => SpaceHistoryDiff {
                 add_alternative: Some(alternative.clone()),
                 set_active_alternative_id: Some(Some(alternative.id.clone())),
                 ..Default::default()
             },
-            StudioHistoryOperation::SwitchStudioAlternative { alternative_id } => StudioHistoryDiff {
+            SpaceHistoryOperation::SwitchSpaceAlternative { alternative_id } => SpaceHistoryDiff {
                 set_active_alternative_id: Some(Some(alternative_id.clone())),
                 ..Default::default()
             },
-            StudioHistoryOperation::RemoveStudioCheckpoint { checkpoint_id } => StudioHistoryDiff {
+            SpaceHistoryOperation::RemoveSpaceCheckpoint { checkpoint_id } => SpaceHistoryDiff {
                 remove_checkpoint_id: Some(checkpoint_id.clone()),
                 ..Default::default()
             },
-            StudioHistoryOperation::RemoveStudioAlternative { alternative_id } => StudioHistoryDiff {
+            SpaceHistoryOperation::RemoveSpaceAlternative { alternative_id } => SpaceHistoryDiff {
                 remove_alternative_id: Some(alternative_id.clone()),
                 ..Default::default()
             },
-            StudioHistoryOperation::SetActiveStudioAlternative { alternative_id } => StudioHistoryDiff {
+            SpaceHistoryOperation::SetActiveSpaceAlternative { alternative_id } => SpaceHistoryDiff {
                 set_active_alternative_id: Some(alternative_id.clone()),
                 ..Default::default()
             },
         }
     }
 
-    fn backwards(&self, projection: &StudioHistoryProjection) -> Vec<Self> {
+    fn backwards(&self, projection: &SpaceHistoryProjection) -> Vec<Self> {
         match self {
-            StudioHistoryOperation::CommitStudioCheckpoint { checkpoint } => {
-                vec![StudioHistoryOperation::RemoveStudioCheckpoint {
+            SpaceHistoryOperation::CommitSpaceCheckpoint { checkpoint } => {
+                vec![SpaceHistoryOperation::RemoveSpaceCheckpoint {
                     checkpoint_id: checkpoint.id.clone(),
                 }]
             }
-            StudioHistoryOperation::CreateStudioAlternative { alternative } => vec![
-                StudioHistoryOperation::SetActiveStudioAlternative {
+            SpaceHistoryOperation::CreateSpaceAlternative { alternative } => vec![
+                SpaceHistoryOperation::SetActiveSpaceAlternative {
                     alternative_id: projection.active_alternative_id.clone(),
                 },
-                StudioHistoryOperation::RemoveStudioAlternative {
+                SpaceHistoryOperation::RemoveSpaceAlternative {
                     alternative_id: alternative.id.clone(),
                 },
             ],
-            StudioHistoryOperation::SwitchStudioAlternative { .. } => vec![StudioHistoryOperation::SetActiveStudioAlternative {
+            SpaceHistoryOperation::SwitchSpaceAlternative { .. } => vec![SpaceHistoryOperation::SetActiveSpaceAlternative {
                 alternative_id: projection.active_alternative_id.clone(),
             }],
-            StudioHistoryOperation::RemoveStudioCheckpoint { checkpoint_id } => projection
+            SpaceHistoryOperation::RemoveSpaceCheckpoint { checkpoint_id } => projection
                 .checkpoints
                 .iter()
                 .find(|checkpoint| checkpoint.id == *checkpoint_id)
-                .map(|checkpoint| vec![StudioHistoryOperation::CommitStudioCheckpoint { checkpoint: checkpoint.clone() }])
+                .map(|checkpoint| vec![SpaceHistoryOperation::CommitSpaceCheckpoint { checkpoint: checkpoint.clone() }])
                 .unwrap_or_default(),
-            StudioHistoryOperation::RemoveStudioAlternative { alternative_id } => projection
+            SpaceHistoryOperation::RemoveSpaceAlternative { alternative_id } => projection
                 .alternatives
                 .iter()
                 .find(|alternative| alternative.id == *alternative_id)
-                .map(|alternative| vec![StudioHistoryOperation::CreateStudioAlternative { alternative: alternative.clone() }])
+                .map(|alternative| vec![SpaceHistoryOperation::CreateSpaceAlternative { alternative: alternative.clone() }])
                 .unwrap_or_default(),
-            StudioHistoryOperation::SetActiveStudioAlternative { .. } => vec![StudioHistoryOperation::SetActiveStudioAlternative {
+            SpaceHistoryOperation::SetActiveSpaceAlternative { .. } => vec![SpaceHistoryOperation::SetActiveSpaceAlternative {
                 alternative_id: projection.active_alternative_id.clone(),
             }],
         }
@@ -3538,9 +3563,9 @@ impl Operation<StudioHistoryProjection> for StudioHistoryOperation {
 
 // 🎯 B2: `DocumentStore`'s shared impl block now requires `P: DocumentPack` + `Operation: OpText
 // + OpBinary` for every instantiation (the pack+spr binary snapshot pipeline, needed by
-// `StudioHost::attach_backbone`'s real backbone-attach path — this dogfooded meta-document DOES
+// `SpaceHost::attach_backbone`'s real backbone-attach path — this dogfooded meta-document DOES
 // cross a real wire once a backbone is attached, see `studio_vcs_host_meta_document_is_backbone_
-// attachable_and_detachable`). `StudioCheckpoint`/`StudioAlternative` embed foreign types
+// attachable_and_detachable`). `SpaceCheckpoint`/`SpaceAlternative` embed foreign types
 // (`vcs::Author`, `protocol_core::HybridLogicalTimestamp`) that cannot derive `dsl::DslRecord`
 // (orphan rule; `dsl`'s own dependency graph would cycle back through `protocol`), so a full
 // `#[derive(DslDocument)]`/`#[derive(DslOps)]` grammar is out of reach here without a larger
@@ -3555,34 +3580,34 @@ impl Operation<StudioHistoryProjection> for StudioHistoryOperation {
 // `ComposeWireOperation` needs the exact same fix and calls the same `pack_rt::` function.
 use pack_rt::renormalize_whole_number_floats;
 
-impl protocol::OpText for StudioHistoryOperation {
+impl protocol::OpText for SpaceHistoryOperation {
     fn print_op(&self) -> String {
-        serde_json::to_string(self).expect("StudioHistoryOperation serializes infallibly")
+        serde_json::to_string(self).expect("SpaceHistoryOperation serializes infallibly")
     }
     fn parse_op(line: &str) -> Result<Self, TextError> {
         serde_json::from_str(line).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
     }
 }
-impl protocol::OpBinary for StudioHistoryOperation {
+impl protocol::OpBinary for SpaceHistoryOperation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        let value = serde_json::to_value(self).map_err(|error| protocol::ProtocolError::Malformed { what: "studio history op", offset: 0, detail: error.to_string() })?;
+        let value = serde_json::to_value(self).map_err(|error| protocol::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error.to_string() })?;
         Ok(pack_rt::encode_json_value(&value))
     }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let value = pack_rt::decode_json_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "studio history op", offset: 0, detail: error.to_string() })?;
-        serde_json::from_value(renormalize_whole_number_floats(value)).map_err(|error| protocol::ProtocolError::Malformed { what: "studio history op", offset: 0, detail: error.to_string() })
+        let value = pack_rt::decode_json_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error.to_string() })?;
+        serde_json::from_value(renormalize_whole_number_floats(value)).map_err(|error| protocol::ProtocolError::Malformed { what: "space history op", offset: 0, detail: error.to_string() })
     }
 }
-impl DocumentDsl for StudioHistoryProjection {
-    const EXTENSION: &'static str = "studio-history";
+impl DocumentDsl for SpaceHistoryProjection {
+    const EXTENSION: &'static str = "space-history";
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
         serde_json::from_str(text).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
     }
     fn print_dsl(&self) -> String {
-        serde_json::to_string(self).expect("StudioHistoryProjection serializes infallibly")
+        serde_json::to_string(self).expect("SpaceHistoryProjection serializes infallibly")
     }
 }
-impl DocumentPack for StudioHistoryProjection {
+impl DocumentPack for SpaceHistoryProjection {
     fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
         let value = serde_json::to_value(self).map_err(|error| PackError::Schema(error.to_string()))?;
         Ok(pack_rt::encode_json_value(&value))
@@ -3592,56 +3617,56 @@ impl DocumentPack for StudioHistoryProjection {
         serde_json::from_value(renormalize_whole_number_floats(value)).map_err(|error| PackError::Schema(error.to_string()))
     }
 }
-//#endregion StudioHistoryDocument
+//#endregion SpaceHistoryDocument
 
-//#region StudioHost
-/// @emoji 🏛️ Composes many `StudioMember` documents under one studio-wide checkpoint/alternative
-/// timeline, itself stored in a dogfooded `"os.studio.history"` meta-document. App-agnostic: this
-/// crate has no notion of what a member document *is*, only that it satisfies `StudioMember`.
-pub struct StudioHost {
-    meta: DocumentStore<StudioHistoryProjection, StudioHistoryOperation>,
-    members: HashMap<String, Box<dyn StudioMember>>,
+//#region SpaceHost
+/// @emoji 🏛️ Composes many `SpaceMember` documents under one space-wide checkpoint/alternative
+/// timeline, itself stored in a dogfooded `"os.space.history"` meta-document. App-agnostic: this
+/// crate has no notion of what a member document *is*, only that it satisfies `SpaceMember`.
+pub struct SpaceHost {
+    meta: DocumentStore<SpaceHistoryProjection, SpaceHistoryOperation>,
+    members: HashMap<String, Box<dyn SpaceMember>>,
 }
 
-impl StudioHost {
-    pub fn new(meta_envelope: DocumentEnvelope<StudioHistoryProjection, StudioHistoryOperation>) -> Self {
+impl SpaceHost {
+    pub fn new(meta_envelope: DocumentEnvelope<SpaceHistoryProjection, SpaceHistoryOperation>) -> Self {
         Self {
             meta: DocumentStore::new(meta_envelope),
             members: HashMap::new(),
         }
     }
 
-    pub fn register_member(&mut self, member: Box<dyn StudioMember>) {
+    pub fn register_member(&mut self, member: Box<dyn SpaceMember>) {
         self.members.insert(member.document_id().to_string(), member);
     }
 
-    pub fn unregister_member(&mut self, document_id: &str) -> Option<Box<dyn StudioMember>> {
+    pub fn unregister_member(&mut self, document_id: &str) -> Option<Box<dyn SpaceMember>> {
         self.members.remove(document_id)
     }
 
-    pub fn member(&self, document_id: &str) -> Option<&dyn StudioMember> {
+    pub fn member(&self, document_id: &str) -> Option<&dyn SpaceMember> {
         self.members.get(document_id).map(|member| member.as_ref())
     }
 
-    pub fn member_mut<'a>(&'a mut self, document_id: &str) -> Option<&'a mut (dyn StudioMember + 'a)> {
+    pub fn member_mut<'a>(&'a mut self, document_id: &str) -> Option<&'a mut (dyn SpaceMember + 'a)> {
         match self.members.get_mut(document_id) {
             Some(member) => Some(member.as_mut()),
             None => None,
         }
     }
 
-    pub fn meta_projection(&self) -> Result<StudioHistoryProjection, VcsError> {
+    pub fn meta_projection(&self) -> Result<SpaceHistoryProjection, VcsError> {
         self.meta.projection()
     }
 
-    /// @emoji 🔗 Attaches a backbone to the studio-wide meta-document, same runtime-attach/detach
+    /// @emoji 🔗 Attaches a backbone to the space-wide meta-document, same runtime-attach/detach
     /// contract as any other `DocumentStore` — default is unattached, this is always an
     /// explicit call.
     pub fn attach_backbone(&mut self, backbone: Box<dyn Backbone>) -> Result<(), VcsError> {
         self.meta.attach_backbone(backbone)
     }
 
-    /// @emoji ✂️ Detaches the meta-document's backbone; the studio history stays in memory.
+    /// @emoji ✂️ Detaches the meta-document's backbone; the space history stays in memory.
     pub fn detach_backbone(&mut self) -> Option<Box<dyn Backbone>> {
         self.meta.detach_backbone()
     }
@@ -3656,10 +3681,10 @@ impl StudioHost {
     }
 
     /// @emoji 💾 Commits every dirty member (leaving clean members' existing checkpoints untouched),
-    /// pins each member's resulting `(checkpoint, alternative)`, and records one `StudioCheckpoint`
-    /// on the meta-document — applied *and* committed there too, so the studio history itself is
+    /// pins each member's resulting `(checkpoint, alternative)`, and records one `SpaceCheckpoint`
+    /// on the meta-document — applied *and* committed there too, so the space history itself is
     /// durable the moment this returns.
-    pub fn commit_studio_checkpoint(&mut self, message: String, authors: Vec<Author>) -> Result<String, VcsError> {
+    pub fn commit_space_checkpoint(&mut self, message: String, authors: Vec<Author>) -> Result<String, VcsError> {
         let mut document_ids: Vec<String> = self.members.keys().cloned().collect();
         document_ids.sort();
         let mut pins = Vec::with_capacity(document_ids.len());
@@ -3669,20 +3694,20 @@ impl StudioHost {
                 member.commit_checkpoint(message.clone(), authors.clone())?;
             }
             let checkpoint_id = member.current_checkpoint_id().ok_or(VcsError::NoCheckpoint)?;
-            pins.push(StudioMemberPin {
+            pins.push(SpaceMemberPin {
                 document_id: document_id.clone(),
                 checkpoint_id,
                 alternative_id: member.current_alternative_id().unwrap_or_default(),
             });
         }
-        let checkpoint_id = create_document_vcs_id("studio-checkpoint");
+        let checkpoint_id = create_document_vcs_id("space-checkpoint");
         let parent_id = self
             .meta
             .projection()?
             .checkpoints
             .last()
             .map(|checkpoint| checkpoint.id.clone());
-        let checkpoint = StudioCheckpoint {
+        let checkpoint = SpaceCheckpoint {
             id: checkpoint_id.clone(),
             parent_id,
             message: message.clone(),
@@ -3699,7 +3724,7 @@ impl StudioHost {
         // per-OP ids (distinct from the edit's own id — see `flush_outbound`), the two flushes are
         // no longer accidentally deduplicable, so avoiding the redundant one is the real fix.
         self.meta.dispatch_inner(DocumentCommand::Apply {
-            operations: vec![StudioHistoryOperation::CommitStudioCheckpoint { checkpoint }],
+            operations: vec![SpaceHistoryOperation::CommitSpaceCheckpoint { checkpoint }],
             description: Some(message),
         })?;
         self.meta.dispatch(DocumentCommand::CommitCheckpoint {
@@ -3709,26 +3734,26 @@ impl StudioHost {
         Ok(checkpoint_id)
     }
 
-    /// @emoji 🌿 Records a `StudioAlternative` pinned at the current studio checkpoint tip (or none,
+    /// @emoji 🌿 Records a `SpaceAlternative` pinned at the current space checkpoint tip (or none,
     /// if nothing has been committed yet), so it can later be switched back into.
-    pub fn create_studio_alternative(&mut self, name: String) -> Result<String, VcsError> {
+    pub fn create_space_alternative(&mut self, name: String) -> Result<String, VcsError> {
         let checkpoint_id = self.meta.projection()?.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
-        let alternative_id = create_document_vcs_id("studio-alternative");
-        let alternative = StudioAlternative {
+        let alternative_id = create_document_vcs_id("space-alternative");
+        let alternative = SpaceAlternative {
             id: alternative_id.clone(),
             name,
             checkpoint_ids: checkpoint_id.into_iter().collect(),
         };
         self.meta.dispatch(DocumentCommand::Apply {
-            operations: vec![StudioHistoryOperation::CreateStudioAlternative { alternative }],
+            operations: vec![SpaceHistoryOperation::CreateSpaceAlternative { alternative }],
             description: None,
         })?;
         Ok(alternative_id)
     }
 
-    /// @emoji 🔀 Fans out to every member pinned by `checkpoint_id`'s `StudioCheckpoint`, restoring
+    /// @emoji 🔀 Fans out to every member pinned by `checkpoint_id`'s `SpaceCheckpoint`, restoring
     /// each to its exact recorded `(checkpoint, alternative)`.
-    pub fn checkout_studio_checkpoint(&mut self, checkpoint_id: &str) -> Result<(), VcsError> {
+    pub fn checkout_space_checkpoint(&mut self, checkpoint_id: &str) -> Result<(), VcsError> {
         let projection = self.meta.projection()?;
         let checkpoint = projection
             .checkpoints
@@ -3744,7 +3769,7 @@ impl StudioHost {
     }
 
     /// @emoji 🔀 Switches the studio's active alternative and fans out to its tip checkpoint's pins.
-    pub fn switch_studio_alternative(&mut self, alternative_id: &str) -> Result<(), VcsError> {
+    pub fn switch_space_alternative(&mut self, alternative_id: &str) -> Result<(), VcsError> {
         let projection = self.meta.projection()?;
         let alternative = projection
             .alternatives
@@ -3753,17 +3778,17 @@ impl StudioHost {
             .ok_or_else(|| VcsError::UnknownAlternative(alternative_id.to_string()))?;
         let checkpoint_id = alternative.checkpoint_ids.last().cloned().ok_or(VcsError::NoCheckpoint)?;
         self.meta.dispatch(DocumentCommand::Apply {
-            operations: vec![StudioHistoryOperation::SwitchStudioAlternative {
+            operations: vec![SpaceHistoryOperation::SwitchSpaceAlternative {
                 alternative_id: alternative_id.to_string(),
             }],
             description: None,
         })?;
-        self.checkout_studio_checkpoint(&checkpoint_id)
+        self.checkout_space_checkpoint(&checkpoint_id)
     }
 
     /// @emoji ↩️ Derived, local-only undo: targets whichever registered member has the most recent
     /// `last_local_edit_timestamp` (by {@link HybridLogicalTimestamp::cmp_key}) and undoes just that
-    /// member. Never dispatched against the meta-document — studio-level undo has no `StudioHistoryOperation`
+    /// member. Never dispatched against the meta-document — space-level undo has no `SpaceHistoryOperation`
     /// of its own, it is purely a cross-member ordering policy.
     pub fn undo(&mut self) -> Result<(), VcsError> {
         let target = self
@@ -3795,8 +3820,8 @@ impl StudioHost {
         self.members.get_mut(&document_id).ok_or(VcsError::NothingToRedo)?.redo()
     }
 }
-//#endregion StudioHost
-//#endregion 🔖Studio
+//#endregion SpaceHost
+//#endregion 🔖Space
 
 //#region 🔖TestSupport
 /// @emoji 🧪 Round-trip assertions shared by every technology crate's `Operation` test suite.
@@ -5225,7 +5250,7 @@ mod tests {
         assert_eq!(store.projection().expect("projection").n, 4);
     }
 
-    //#region 🏛️StudioTests
+    //#region 🏛️SpaceTests
     /// @emoji ⏱️ Like `DemoOperation` but with an explicit, test-controlled `timestamp()` override, so
     /// undo-ordering-by-HLT tests don't depend on real wall-clock resolution.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
@@ -5258,9 +5283,9 @@ mod tests {
         }
     }
 
-    /// @emoji 🪄 Downcasts a registered `dyn StudioMember` back to its concrete demo store.
+    /// @emoji 🪄 Downcasts a registered `dyn SpaceMember` back to its concrete demo store.
     fn demo_member<'a, Operation: crate::Operation<DemoProjection> + 'static>(
-        host: &'a mut StudioHost,
+        host: &'a mut SpaceHost,
         document_id: &str,
     ) -> &'a mut DocumentStore<DemoProjection, Operation> {
         host.member_mut(document_id)
@@ -5271,7 +5296,7 @@ mod tests {
     }
 
     #[test]
-    fn studio_checkpoint_commits_dirty_members_and_pins_their_checkpoints() {
+    fn space_checkpoint_commits_dirty_members_and_pins_their_checkpoints() {
         let mut member_a = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>(
             "demo/v1",
             "member-a",
@@ -5305,17 +5330,17 @@ mod tests {
             .expect("commit b upfront, so it starts clean");
         let member_b_checkpoint = member_b.current_checkpoint_id().expect("b checkpoint").to_string();
 
-        let mut host = StudioHost::new(create_document_envelope(
-            "os.studio.history/v1",
+        let mut host = SpaceHost::new(create_document_envelope(
+            "os.space.history/v1",
             "studio",
-            StudioHistoryProjection::default(),
+            SpaceHistoryProjection::default(),
             None,
         ));
         host.register_member(Box::new(member_a));
         host.register_member(Box::new(member_b));
 
-        let studio_checkpoint_id = host
-            .commit_studio_checkpoint(
+        let space_checkpoint_id = host
+            .commit_space_checkpoint(
                 "studio init".into(),
                 vec![Author {
                     id: "a1".into(),
@@ -5323,28 +5348,28 @@ mod tests {
                     avatar: None,
                 }],
             )
-            .expect("commit studio checkpoint");
+            .expect("commit space checkpoint");
 
         let projection = host.meta_projection().expect("meta projection");
         assert_eq!(projection.checkpoints.len(), 1);
         let checkpoint = &projection.checkpoints[0];
-        assert_eq!(checkpoint.id, studio_checkpoint_id);
+        assert_eq!(checkpoint.id, space_checkpoint_id);
         assert_eq!(checkpoint.members.len(), 2, "pins one entry per registered member");
         let pin_b = checkpoint.members.iter().find(|pin| pin.document_id == "member-b").expect("pin b");
         assert_eq!(pin_b.checkpoint_id, member_b_checkpoint, "clean member reuses its existing checkpoint");
         assert!(
             !host.member("member-a").expect("member a").is_dirty(),
-            "dirty member-a is committed (and therefore clean) by the studio checkpoint"
+            "dirty member-a is committed (and therefore clean) by the space checkpoint"
         );
     }
 
     #[test]
-    fn studio_vcs_host_meta_document_is_backbone_attachable_and_detachable() {
+    fn space_vcs_host_meta_document_is_backbone_attachable_and_detachable() {
         let (backbone_a, backbone_b) = MemoryBackbone::pair("studio-a", "studio-b");
-        let meta_envelope: DocumentEnvelope<StudioHistoryProjection, StudioHistoryOperation> =
-            create_document_envelope("os.studio.history/v1", "studio", StudioHistoryProjection::default(), None);
-        let mut host_a = StudioHost::new(meta_envelope.clone());
-        let mut host_b = StudioHost::new(meta_envelope);
+        let meta_envelope: DocumentEnvelope<SpaceHistoryProjection, SpaceHistoryOperation> =
+            create_document_envelope("os.space.history/v1", "studio", SpaceHistoryProjection::default(), None);
+        let mut host_a = SpaceHost::new(meta_envelope.clone());
+        let mut host_b = SpaceHost::new(meta_envelope);
         assert!(host_a.backbone_ref().is_none(), "default is unattached, like any other DocumentStore");
 
         host_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
@@ -5365,41 +5390,41 @@ mod tests {
             .expect("apply on member, so it's dirty and can be committed");
         host_a.register_member(Box::new(member));
         host_a
-            .commit_studio_checkpoint("studio init".into(), Vec::new())
-            .expect("commit studio checkpoint on a");
+            .commit_space_checkpoint("studio init".into(), Vec::new())
+            .expect("commit space checkpoint on a");
 
         host_b.tick().expect("tick b");
         assert_eq!(
             host_b.meta_projection().expect("meta projection b").checkpoints.len(),
             1,
-            "the studio-wide checkpoint replicates through the meta-document's backbone"
+            "the space-wide checkpoint replicates through the meta-document's backbone"
         );
 
         host_a.detach_backbone();
         assert!(host_a.backbone_ref().is_none());
         host_a
-            .commit_studio_checkpoint("studio offline".into(), Vec::new())
+            .commit_space_checkpoint("studio offline".into(), Vec::new())
             .expect("meta history keeps working purely in memory once detached");
         host_b.tick().expect("tick b again");
         assert_eq!(
             host_b.meta_projection().expect("meta projection b unchanged").checkpoints.len(),
             1,
-            "detached studio edits never reach the peer"
+            "detached space edits never reach the peer"
         );
     }
 
     #[test]
-    fn studio_checkout_checkpoint_fans_out_and_restores_pinned_member_state() {
+    fn space_checkout_checkpoint_fans_out_and_restores_pinned_member_state() {
         let member_a = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>(
             "demo/v1",
             "member-a",
             DemoProjection { n: 0 },
             None,
         ));
-        let mut host = StudioHost::new(create_document_envelope(
-            "os.studio.history/v1",
+        let mut host = SpaceHost::new(create_document_envelope(
+            "os.space.history/v1",
             "studio",
-            StudioHistoryProjection::default(),
+            SpaceHistoryProjection::default(),
             None,
         ));
         host.register_member(Box::new(member_a));
@@ -5410,7 +5435,7 @@ mod tests {
                 description: None,
             })
             .expect("apply 1");
-        let studio_checkpoint_1 = host.commit_studio_checkpoint("first".into(), Vec::new()).expect("commit 1");
+        let space_checkpoint_1 = host.commit_space_checkpoint("first".into(), Vec::new()).expect("commit 1");
 
         demo_member::<DemoOperation>(&mut host, "member-a")
             .dispatch(DocumentCommand::Apply {
@@ -5418,33 +5443,33 @@ mod tests {
                 description: None,
             })
             .expect("apply 2");
-        host.commit_studio_checkpoint("second".into(), Vec::new()).expect("commit 2");
+        host.commit_space_checkpoint("second".into(), Vec::new()).expect("commit 2");
         assert_eq!(
             demo_member::<DemoOperation>(&mut host, "member-a").projection().expect("projection").n,
             2,
-            "member reflects the second studio checkpoint before checking out the first"
+            "member reflects the second space checkpoint before checking out the first"
         );
 
-        host.checkout_studio_checkpoint(&studio_checkpoint_1).expect("checkout studio checkpoint 1");
+        host.checkout_space_checkpoint(&space_checkpoint_1).expect("checkout space checkpoint 1");
         assert_eq!(
             demo_member::<DemoOperation>(&mut host, "member-a").projection().expect("projection").n,
             1,
-            "checking out the first studio checkpoint fans out and restores member-a's pinned state"
+            "checking out the first space checkpoint fans out and restores member-a's pinned state"
         );
     }
 
     #[test]
-    fn studio_switch_alternative_fans_out_and_restores_pinned_member_state() {
+    fn space_switch_alternative_fans_out_and_restores_pinned_member_state() {
         let member_a = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>(
             "demo/v1",
             "member-a",
             DemoProjection { n: 0 },
             None,
         ));
-        let mut host = StudioHost::new(create_document_envelope(
-            "os.studio.history/v1",
+        let mut host = SpaceHost::new(create_document_envelope(
+            "os.space.history/v1",
             "studio",
-            StudioHistoryProjection::default(),
+            SpaceHistoryProjection::default(),
             None,
         ));
         host.register_member(Box::new(member_a));
@@ -5455,9 +5480,9 @@ mod tests {
                 description: None,
             })
             .expect("apply 1");
-        host.commit_studio_checkpoint("root".into(), Vec::new()).expect("commit root");
+        host.commit_space_checkpoint("root".into(), Vec::new()).expect("commit root");
 
-        let alt_id = host.create_studio_alternative("branch-a".into()).expect("create alternative");
+        let alt_id = host.create_space_alternative("branch-a".into()).expect("create alternative");
 
         demo_member::<DemoOperation>(&mut host, "member-a")
             .dispatch(DocumentCommand::Apply {
@@ -5471,7 +5496,7 @@ mod tests {
             "uncommitted edit is live before switching"
         );
 
-        host.switch_studio_alternative(&alt_id).expect("switch alternative fans out to its pinned checkpoint");
+        host.switch_space_alternative(&alt_id).expect("switch alternative fans out to its pinned checkpoint");
         assert_eq!(
             demo_member::<DemoOperation>(&mut host, "member-a").projection().expect("projection").n,
             1,
@@ -5480,7 +5505,7 @@ mod tests {
     }
 
     #[test]
-    fn studio_undo_and_redo_target_the_member_with_the_most_recent_local_edit_by_hlt() {
+    fn space_undo_and_redo_target_the_member_with_the_most_recent_local_edit_by_hlt() {
         let mut member_early = DocumentStore::new(create_document_envelope::<DemoProjection, TimestampedOperation>(
             "demo-ts/v1",
             "member-early",
@@ -5507,16 +5532,16 @@ mod tests {
             })
             .expect("apply late");
 
-        let mut host = StudioHost::new(create_document_envelope(
-            "os.studio.history/v1",
+        let mut host = SpaceHost::new(create_document_envelope(
+            "os.space.history/v1",
             "studio",
-            StudioHistoryProjection::default(),
+            SpaceHistoryProjection::default(),
             None,
         ));
         host.register_member(Box::new(member_early));
         host.register_member(Box::new(member_late));
 
-        host.undo().expect("studio undo targets the member with the higher HLT");
+        host.undo().expect("space undo targets the member with the higher HLT");
         assert_eq!(
             demo_member::<TimestampedOperation>(&mut host, "member-early").projection().expect("early projection").n,
             1,
@@ -5560,48 +5585,48 @@ mod tests {
     }
 
     #[test]
-    fn studio_history_op_round_trips() {
-        let checkpoint = StudioCheckpoint {
+    fn space_history_op_round_trips() {
+        let checkpoint = SpaceCheckpoint {
             id: "sc-1".into(),
             parent_id: None,
             message: "root".into(),
             authors: Vec::new(),
             timestamp: HybridLogicalTimestamp::new(0, 1),
-            members: vec![StudioMemberPin {
+            members: vec![SpaceMemberPin {
                 document_id: "member-a".into(),
                 checkpoint_id: "cp-1".into(),
                 alternative_id: String::new(),
             }],
         };
         test_support::assert_operation_round_trip(
-            &StudioHistoryProjection::default(),
-            StudioHistoryOperation::CommitStudioCheckpoint {
+            &SpaceHistoryProjection::default(),
+            SpaceHistoryOperation::CommitSpaceCheckpoint {
                 checkpoint: checkpoint.clone(),
             },
         );
 
-        let with_checkpoint = StudioHistoryProjection {
+        let with_checkpoint = SpaceHistoryProjection {
             checkpoints: vec![checkpoint],
             alternatives: Vec::new(),
             active_alternative_id: None,
         };
-        let alternative = StudioAlternative {
+        let alternative = SpaceAlternative {
             id: "sa-1".into(),
             name: "branch".into(),
             checkpoint_ids: vec!["sc-1".into()],
         };
         test_support::assert_operation_round_trip(
             &with_checkpoint,
-            StudioHistoryOperation::CreateStudioAlternative { alternative },
+            SpaceHistoryOperation::CreateSpaceAlternative { alternative },
         );
 
-        let with_alternative_active = StudioHistoryProjection {
+        let with_alternative_active = SpaceHistoryProjection {
             active_alternative_id: Some("sa-1".into()),
             ..with_checkpoint
         };
         test_support::assert_operation_round_trip(
             &with_alternative_active,
-            StudioHistoryOperation::SwitchStudioAlternative {
+            SpaceHistoryOperation::SwitchSpaceAlternative {
                 alternative_id: "sa-other".into(),
             },
         );
@@ -6075,9 +6100,9 @@ mod tests {
 
     //#endregion 🔖RemoteSnapshotMerge
 
-    //#region 🔖StudioMemberCheckoutRouting
+    //#region 🔖SpaceMemberCheckoutRouting
     #[test]
-    fn studio_member_checkout_switches_at_the_alternative_tip_and_falls_back_to_checkout_when_stale() {
+    fn space_member_checkout_switches_at_the_alternative_tip_and_falls_back_to_checkout_when_stale() {
         let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
             create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut store = DocumentStore::new(envelope);
@@ -6090,7 +6115,7 @@ mod tests {
         let alt_id = store.envelope().vcs.alternatives[0].id.clone();
         let tip = store.envelope().vcs.alternatives[0].checkpoint_ids.last().expect("alt has a tip").clone();
 
-        StudioMember::checkout(&mut store, &tip, &alt_id).expect("checkout at the tip routes through SwitchAlternative");
+        SpaceMember::checkout(&mut store, &tip, &alt_id).expect("checkout at the tip routes through SwitchAlternative");
         assert_eq!(store.envelope().active_alternative_id, Some(alt_id.clone()), "switching to the tip keeps it active");
 
         store
@@ -6100,7 +6125,7 @@ mod tests {
             .dispatch(DocumentCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() })
             .expect("commit c2, advancing the alt's tip past `tip`");
 
-        StudioMember::checkout(&mut store, &tip, &alt_id).expect("checkout of the now-stale tip falls back to CheckoutCheckpoint");
+        SpaceMember::checkout(&mut store, &tip, &alt_id).expect("checkout of the now-stale tip falls back to CheckoutCheckpoint");
         assert_eq!(store.projection().expect("projection").n, 1, "restored the old checkpoint's state");
         assert_eq!(
             store.envelope().active_alternative_id, None,
@@ -6108,7 +6133,7 @@ mod tests {
         );
     }
 
-    //#endregion 🔖StudioMemberCheckoutRouting
+    //#endregion 🔖SpaceMemberCheckoutRouting
 
     //#region 🔖BackbonePorts
     #[test]

@@ -117,7 +117,7 @@ Reassign every overloaded window/app icon so each kind is unique and specific. P
 | Panel tabs `framework.panel.*`         | Real catalog icons for catalogue / inspection / parameters (today fall back to `circle-dot`)                                                        |
 
 
-Touch every `plugin/rs/lib.rs` `.window_kind*` / `.icon_id(` site (~30 plugins). Prefer **new handcrafted SVGs** over forcing mismatched Lucide reuse.
+Touch every `program/rs/lib.rs` `.window_kind*` / `.icon_id(` site (~30 plugins). Prefer **new handcrafted SVGs** over forcing mismatched Lucide reuse.
 
 ## Phase 3 — Utilities, tools, measures, aliases
 

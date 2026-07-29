@@ -12,7 +12,7 @@ pub const PROCEDURAL_3D_SCHEMA: &str = "procedural.3d";
 
 //#region 🔖Document
 /// 🧾 Persistent procedural-3d document — the flow fixture plus the generation vocabulary state.
-/// Ephemeral view state (selection, sun, LOD, preview caches) lives in the plugin app struct.
+/// Ephemeral view state (selection, sun, LOD, preview caches) lives in the program app struct.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Procedural3dDocument {
@@ -214,7 +214,7 @@ impl Operation<Procedural3dDocument> for Procedural3dOperation {
 
 /// 🔀 Diffs two fixtures into a minimal, invertible, mergeable operation set: removed/added/patched widgets
 /// and synapses (keyed by id), layout entries, and the fixture schema. The canvas camera is ephemeral
-/// view state (plugin runtime), never a document operation. Lets action handlers keep computing the target
+/// view state (program runtime), never a document operation. Lets action handlers keep computing the target
 /// fixture via `FlowHost` while emitting granular operations.
 pub fn procedural3d_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec<Procedural3dOperation> {
     let mut operations = Vec::new();
@@ -267,7 +267,7 @@ pub fn procedural3d_fixture_operations(before: &FlowFixture, after: &FlowFixture
 /// at the `parse_dsl`/`print_dsl`/`parse_op`/`print_op` boundary (same pattern as `fem_2d`'s `FemDof`
 /// and `imperative_core`'s `ValueDsl`/`StepNodeDsl`/`PathDsl`) — `Procedural3dDocument`/
 /// `Procedural3dOperation` themselves keep their ORIGINAL foreign field types unchanged, so
-/// `procedural-plugin` (which constructs/matches on them directly) keeps compiling unmodified.
+/// `procedural-program` (which constructs/matches on them directly) keeps compiling unmodified.
 ///
 /// `ValueDsl` mirrors `flow_core::neural::Value`/`Atom` field-for-field (duplicating
 /// `imperative_core::ValueDsl`'s approach for the identical `neural_engine` types, since crates can't

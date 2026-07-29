@@ -1,5 +1,5 @@
 //! 📸 Shooting scene document + typed VCS on `vcs` — the real icon-studio fixture (assets, shots,
-//! saved cameras, scene lighting) shared by `shooting-plugin`'s `DocumentApp` implementation.
+//! saved cameras, scene lighting) shared by `shooting-program`'s `DocumentApp` implementation.
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -413,7 +413,7 @@ fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: &mut 
 #[serde(tag = "operation", rename_all = "camelCase")]
 #[allow(
     clippy::large_enum_variant,
-    reason = "boxing SetFixture.fixture is a public field-type change; shooting/plugin/rs (its only external constructor, 3 call sites) has a live concurrent edit in progress right now (see CONFLICTS.md) and cannot be safely updated in the same pass — revisit once that edit lands"
+    reason = "boxing SetFixture.fixture is a public field-type change; shooting/program/rs (its only external constructor, 3 call sites) has a live concurrent edit in progress right now (see CONFLICTS.md) and cannot be safely updated in the same pass — revisit once that edit lands"
 )]
 pub enum ShootingOperation {
     Assets(CollectionOperation<String, ShootingAsset, ShootingAssetPatch>),

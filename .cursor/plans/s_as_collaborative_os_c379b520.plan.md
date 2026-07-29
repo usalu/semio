@@ -82,7 +82,7 @@ flowchart LR
 ## Phase 2 — Media graph combines all apps
 
 - Add missing `SAppHostRouter` cases in [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx): `note` (NoteCanvas embed with `patchAppSource`), make `layout` editable (change handler → `applyAppOperation`), eliminate JSON-dump fallbacks for every registered resource kind.
-- Complete stub programs: register `buildReasoningWiresProgramDefinition` in [s/core/program-extensions.ts](s/core/program-extensions.ts); add a mindmap program definition + VCS handler (or fold mindmap under `reasoning.wires` if it has no standalone document format — decide by inspecting reasoning/mindmap core).
+- Complete stub programs: register `buildReasoningWiresWorkflowDefinition` in [s/core/program-extensions.ts](s/core/program-extensions.ts); add a mindmap program definition + VCS handler (or fold mindmap under `reasoning.wires` if it has no standalone document format — decide by inspecting reasoning/mindmap core).
 - Audit every program in `TECHNOLOGY_APP_RESOURCE_BY_PROGRAM` ([s/core/internal.ts](s/core/internal.ts)) so each has: program definition merged, `AppVcsHandler` registered, componentKind routed, and correct in/out ports. Add output `projectOutput` hooks where apps should feed downstream (e.g. procedural → puzzle, flow dag → dag).
 - Extend the existing os-core/s-core test files with a registry-completeness test: for every registered app, assert handler + componentKind + ports resolve (no fallback).
 
@@ -90,7 +90,7 @@ flowchart LR
 
 - Upgrade `OsVcs`/`OsStore` in [framework/product/os/core/index.ts](framework/product/os/core/index.ts) to the document-VCS model from [vcs/core/internal.ts](vcs/core/internal.ts): checkpoints gain `parentId` + `authors`, add `checkoutCheckpoint` command, keep alternatives. Reuse `DocumentVcsStore` semantics rather than duplicating (os-core already depends on vcs-core).
 - Wire the OS History window to `buildHistoryColumns` + vcs/react `HistoryTable` (branch lanes, checkout, alternatives) instead of the current slider stub in `SPlayController`.
-- Per-app VCS (envelope in `sourceDocument.vcsJson`) stays; studio checkpoints snapshot both structural operations and app-operation change ids (already the case via `applyAppOperation`).
+- Per-app VCS (envelope in `sourceDocument.vcsJson`) stays; space checkpoints snapshot both structural operations and app-operation change ids (already the case via `applyAppOperation`).
 
 ## Phase 4 — Generic hub extracted as VFS storage layer
 

@@ -9,7 +9,7 @@ mod header {
     // operations) and content-addressed blobs are no longer this crate's concern — `db::Database`
     // (server-side document authority) and `db`'s own `PayloadStorage` own that now (see
     // `os-hub`'s `bin.rs`). This crate keeps exactly the identity/tenancy surface that has no `db`
-    // counterpart: users, studios, memberships, auth sessions, share tokens, VFS nodes, and
+    // counterpart: users, spaces, memberships, auth sessions, share tokens, VFS nodes, and
     // realtime sync sessions.
 }
 
@@ -37,12 +37,12 @@ pub mod error {
 pub mod model {
     use serde::{Deserialize, Serialize};
 
-    /// @emoji 🗂️ VFS tree entry, scoped to a studio.
+    /// @emoji 🗂️ VFS tree entry, scoped to a space.
     #[derive(Clone, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct NodeRecord {
         pub id: String,
-        pub studio_id: String,
+        pub space_id: String,
         pub parent_id: Option<String>,
         pub name: String,
         pub kind: String,
@@ -68,8 +68,8 @@ pub mod model {
         pub created_at: i64,
     }
 
-    /// @emoji 🏛️ A studio: the tenant/workspace unit that owns documents, nodes, and memberships.
-    pub struct StudioRecord {
+    /// @emoji 🏛️ A space: the tenant/workspace unit that owns documents, nodes, and memberships.
+    pub struct SpaceRecord {
         pub id: String,
         pub name: String,
         pub owner_user_id: String,
@@ -78,35 +78,35 @@ pub mod model {
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
     #[serde(rename_all = "lowercase")]
-    pub enum StudioRole {
+    pub enum SpaceRole {
         Owner,
         Member,
         Viewer,
     }
 
-    impl StudioRole {
+    impl SpaceRole {
         pub fn as_str(&self) -> &'static str {
             match self {
-                StudioRole::Owner => "owner",
-                StudioRole::Member => "member",
-                StudioRole::Viewer => "viewer",
+                SpaceRole::Owner => "owner",
+                SpaceRole::Member => "member",
+                SpaceRole::Viewer => "viewer",
             }
         }
 
         pub fn parse(value: &str) -> Option<Self> {
             match value {
-                "owner" => Some(StudioRole::Owner),
-                "member" => Some(StudioRole::Member),
-                "viewer" => Some(StudioRole::Viewer),
+                "owner" => Some(SpaceRole::Owner),
+                "member" => Some(SpaceRole::Member),
+                "viewer" => Some(SpaceRole::Viewer),
                 _ => None,
             }
         }
     }
 
-    pub struct StudioMembershipRecord {
-        pub studio_id: String,
+    pub struct SpaceMembershipRecord {
+        pub space_id: String,
         pub user_id: String,
-        pub role: StudioRole,
+        pub role: SpaceRole,
         pub created_at: i64,
     }
 
@@ -125,7 +125,7 @@ pub mod model {
         pub id: String,
         pub document_id: String,
         pub user_id: Option<String>,
-        pub studio_role: Option<StudioRole>,
+        pub space_role: Option<SpaceRole>,
         pub client_label: String,
         pub connected_at: i64,
         pub disconnected_at: Option<i64>,
@@ -144,8 +144,8 @@ use model::*;
 #[async_trait::async_trait]
 pub trait HubDirectory: Send + Sync + 'static {
     //#region Vfs
-    async fn list_nodes(&self, studio_id: &str, parent: Option<&str>) -> DirectoryResult<Vec<NodeRecord>>;
-    async fn create_node(&self, studio_id: &str, parent_id: Option<&str>, name: &str, kind: &str) -> DirectoryResult<NodeRecord>;
+    async fn list_nodes(&self, space_id: &str, parent: Option<&str>) -> DirectoryResult<Vec<NodeRecord>>;
+    async fn create_node(&self, space_id: &str, parent_id: Option<&str>, name: &str, kind: &str) -> DirectoryResult<NodeRecord>;
     //#endregion
 
     //#region ShareTokens
@@ -167,13 +167,13 @@ pub trait HubDirectory: Send + Sync + 'static {
     async fn list_users(&self, limit: i64, offset: i64) -> DirectoryResult<Vec<UserRecord>>;
     //#endregion
 
-    //#region Studios
-    async fn create_studio(&self, name: &str, owner_user_id: &str) -> DirectoryResult<StudioRecord>;
-    async fn list_studios_for_user(&self, user_id: &str) -> DirectoryResult<Vec<(StudioRecord, StudioRole)>>;
-    async fn list_studios(&self, limit: i64, offset: i64) -> DirectoryResult<Vec<StudioRecord>>;
-    async fn upsert_membership(&self, studio_id: &str, user_id: &str, role: StudioRole) -> DirectoryResult<()>;
-    async fn remove_membership(&self, studio_id: &str, user_id: &str) -> DirectoryResult<()>;
-    async fn get_role(&self, studio_id: &str, user_id: &str) -> DirectoryResult<Option<StudioRole>>;
+    //#region Spaces
+    async fn create_space(&self, name: &str, owner_user_id: &str) -> DirectoryResult<SpaceRecord>;
+    async fn list_spaces_for_user(&self, user_id: &str) -> DirectoryResult<Vec<(SpaceRecord, SpaceRole)>>;
+    async fn list_spaces(&self, limit: i64, offset: i64) -> DirectoryResult<Vec<SpaceRecord>>;
+    async fn upsert_membership(&self, space_id: &str, user_id: &str, role: SpaceRole) -> DirectoryResult<()>;
+    async fn remove_membership(&self, space_id: &str, user_id: &str) -> DirectoryResult<()>;
+    async fn get_role(&self, space_id: &str, user_id: &str) -> DirectoryResult<Option<SpaceRole>>;
     //#endregion
 
     //#region AuthSessions
@@ -187,7 +187,7 @@ pub trait HubDirectory: Send + Sync + 'static {
         &self,
         document_id: &str,
         user_id: Option<&str>,
-        studio_role: Option<StudioRole>,
+        space_role: Option<SpaceRole>,
         client_label: &str,
     ) -> DirectoryResult<SyncSessionRecord>;
     async fn record_sync_session_close(&self, sync_session_id: &str) -> DirectoryResult<()>;

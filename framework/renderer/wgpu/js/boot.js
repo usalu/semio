@@ -1,101 +1,101 @@
-// ../../plugin/registry/generated/playgrounds.ts
+// ../../program/registry/generated/playgrounds.ts
 var PLAYGROUND_BUILD_TARGETS = [
-  { variant: "aggregator", pluginId: "puzzle", cratePath: "puzzle/plugin/rs", app: "puzzle3d-play", brand: "entwerfen-mit-bestand", aliases: ["mit-bestand", "entwerfen-mit-bestand"], ports: { react: 6023, wgpu: 6123 }, examples: [], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", roots: ["asset/metabolism/representation", "asset/abbau-aufbau"], placeholder: "asset/mesh/placeholder.glb", filterFromExamples: true }, { kind: "static-dir", route: "/infinite-fixture", root: "infinite/fixture" }] },
-  { variant: "animate", pluginId: "animate", cratePath: "animate/plugin/rs", aliases: [], ports: { react: 6051, wgpu: 6151 }, examples: [], engines: [], assets: [] },
-  { variant: "architect", pluginId: "architect", cratePath: "architect/plugin/rs", aliases: [], ports: { react: 6090, wgpu: 6190 }, examples: [], engines: [], assets: [] },
-  { variant: "cad", pluginId: "cad", cratePath: "cad/plugin/rs", aliases: [], ports: { react: 6020, wgpu: 6120 }, examples: [], engines: [], assets: [{ kind: "static-dir", route: "/cad-fixture", root: "cad/fixture" }] },
-  { variant: "dag", pluginId: "dag", cratePath: "infinite/board/port/directed/dag/plugin/rs", aliases: [], ports: { react: 6017, wgpu: 6117 }, examples: [], engines: [], assets: [] },
-  { variant: "din16798", pluginId: "norm", cratePath: "norm/plugin/rs", app: "norm-din-en-16798-play", aliases: [], ports: { react: 6092, wgpu: 6192 }, examples: [], engines: [], assets: [] },
-  { variant: "din18599", pluginId: "norm", cratePath: "norm/plugin/rs", app: "norm-din-v-18599-play", aliases: [], ports: { react: 6093, wgpu: 6193 }, examples: [], engines: [], assets: [] },
-  { variant: "din4108", pluginId: "norm", cratePath: "norm/plugin/rs", app: "norm-din-4108-play", aliases: [], ports: { react: 6091, wgpu: 6191 }, examples: [], engines: [], assets: [] },
-  { variant: "draw", pluginId: "draw", cratePath: "draw/plugin/rs", aliases: [], ports: { react: 6064, wgpu: 6164 }, examples: [], engines: [], assets: [] },
-  { variant: "en1990", pluginId: "norm", cratePath: "norm/plugin/rs", app: "norm-en-1990-play", aliases: [], ports: { react: 6094, wgpu: 6194 }, examples: [], engines: [], assets: [] },
-  { variant: "en1991", pluginId: "norm", cratePath: "norm/plugin/rs", app: "norm-en-1991-play", aliases: [], ports: { react: 6095, wgpu: 6195 }, examples: [], engines: [], assets: [] },
-  { variant: "en1992", pluginId: "norm", cratePath: "norm/plugin/rs", app: "norm-en-1992-play", aliases: [], ports: { react: 6096, wgpu: 6196 }, examples: [], engines: [], assets: [] },
-  { variant: "en1993", pluginId: "norm", cratePath: "norm/plugin/rs", app: "norm-en-1993-play", aliases: [], ports: { react: 6097, wgpu: 6197 }, examples: [], engines: [], assets: [] },
-  { variant: "en1994", pluginId: "norm", cratePath: "norm/plugin/rs", app: "norm-en-1994-play", aliases: [], ports: { react: 6098, wgpu: 6198 }, examples: [], engines: [], assets: [] },
-  { variant: "en1995", pluginId: "norm", cratePath: "norm/plugin/rs", app: "norm-en-1995-play", aliases: [], ports: { react: 6099, wgpu: 6199 }, examples: [], engines: [], assets: [] },
-  { variant: "en1996", pluginId: "norm", cratePath: "norm/plugin/rs", app: "norm-en-1996-play", aliases: [], ports: { react: 6100, wgpu: 6200 }, examples: [], engines: [], assets: [] },
-  { variant: "en1997", pluginId: "norm", cratePath: "norm/plugin/rs", app: "norm-en-1997-play", aliases: [], ports: { react: 6101, wgpu: 6201 }, examples: [], engines: [], assets: [] },
-  { variant: "en1998", pluginId: "norm", cratePath: "norm/plugin/rs", app: "norm-en-1998-play", aliases: [], ports: { react: 6102, wgpu: 6202 }, examples: [], engines: [], assets: [] },
-  { variant: "en1999", pluginId: "norm", cratePath: "norm/plugin/rs", app: "norm-en-1999-play", aliases: [], ports: { react: 6103, wgpu: 6203 }, examples: [], engines: [], assets: [] },
-  { variant: "fem2d", pluginId: "fem", cratePath: "fem/plugin/rs", app: "fem2d-play", aliases: ["fem 2d"], ports: { react: 6086, wgpu: 6186 }, examples: [], engines: [], assets: [] },
-  { variant: "fem3d", pluginId: "fem", cratePath: "fem/plugin/rs", app: "fem3d-play", aliases: ["fem 3d"], ports: { react: 6087, wgpu: 6187 }, examples: [], engines: [], assets: [] },
-  { variant: "flow", pluginId: "flow", cratePath: "flow/plugin/rs", aliases: [], ports: { react: 6016, wgpu: 6116 }, examples: [], engines: ["flow/core/rs"], assets: [] },
-  { variant: "forms", pluginId: "forms", cratePath: "forms/plugin/rs", aliases: [], ports: { react: 6058, wgpu: 6158 }, examples: [], engines: [], assets: [] },
-  { variant: "gis2d", pluginId: "gis", cratePath: "gis/plugin/rs", app: "gis2d-play", aliases: ["gis 2d"], ports: { react: 6040, wgpu: 6140 }, examples: [], engines: ["framework/surface/tiled-map/rs"], assets: [{ kind: "tile-proxy", route: "/osm", upstream: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", cache: "osm-tiles" }, { kind: "tile-proxy", route: "/vt", upstream: "https://tiles.openfreemap.org/planet", cache: "openfreemap-vt" }] },
-  { variant: "gis3d", pluginId: "gis", cratePath: "gis/plugin/rs", app: "gis3d-play", aliases: ["gis 3d"], ports: { react: 6083, wgpu: 6183 }, examples: [], engines: ["framework/surface/terrain/rs"], assets: [{ kind: "tile-proxy", route: "/dem", upstream: "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png", cache: "terrarium-dem" }] },
-  { variant: "imperative", pluginId: "imperative", cratePath: "imperative/plugin/rs", aliases: [], ports: { react: 6076, wgpu: 6176 }, examples: [], engines: [], assets: [] },
-  { variant: "iso16757", pluginId: "norm", cratePath: "norm/plugin/rs", app: "norm-iso-16757-play", aliases: [], ports: { react: 6104, wgpu: 6204 }, examples: [], engines: [], assets: [] },
-  { variant: "layout", pluginId: "layout", cratePath: "layout/plugin/rs", aliases: [], ports: { react: 6079, wgpu: 6179 }, examples: [], engines: [], assets: [] },
-  { variant: "lowpoly", pluginId: "lowpoly", cratePath: "lowpoly/plugin/rs", aliases: [], ports: { react: 6078, wgpu: 6178 }, examples: [], engines: [], assets: [] },
-  { variant: "mathematical", pluginId: "mathematical", cratePath: "mathematical/plugin/rs", app: "mathematical-play", aliases: ["mathematical", "math"], ports: { react: 6084, wgpu: 6184 }, examples: [], engines: [], assets: [] },
-  { variant: "note", pluginId: "note", cratePath: "note/plugin/rs", aliases: [], ports: { react: 6080, wgpu: 6180 }, examples: [], engines: [], assets: [] },
-  { variant: "playbook", pluginId: "playbook", cratePath: "playbook/plugin/rs", aliases: [], ports: { react: 6085, wgpu: 6185 }, examples: [], engines: [], assets: [] },
-  { variant: "procedural2d", pluginId: "procedural", cratePath: "procedural/plugin/rs", app: "procedural2d-play", aliases: ["procedural 2d"], ports: { react: 6021, wgpu: 6121 }, examples: [], engines: [], assets: [] },
-  { variant: "procedural3d", pluginId: "procedural", cratePath: "procedural/plugin/rs", app: "procedural3d-play", aliases: ["procedural 3d"], ports: { react: 6018, wgpu: 6118 }, examples: [], engines: [], assets: [] },
-  { variant: "process3d", pluginId: "process", cratePath: "process/plugin/rs", app: "process3d-play", aliases: ["process 3d"], ports: { react: 6022, wgpu: 6122 }, examples: [], engines: [], assets: [] },
-  { variant: "puzzle2d", pluginId: "puzzle", cratePath: "puzzle/plugin/rs", app: "puzzle2d-play", aliases: ["2d"], ports: { react: 6012, wgpu: 6112 }, examples: [], engines: ["puzzle/2d/rs"], assets: [] },
-  { variant: "puzzle3d", pluginId: "puzzle", cratePath: "puzzle/plugin/rs", app: "puzzle3d-play", aliases: ["3d"], ports: { react: 6013, wgpu: 6113 }, examples: [], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", roots: ["asset/metabolism/representation", "asset/abbau-aufbau"], placeholder: "asset/mesh/placeholder.glb", filterFromExamples: true }, { kind: "static-dir", route: "/infinite-fixture", root: "infinite/fixture" }] },
-  { variant: "puzzle5d", pluginId: "puzzle", cratePath: "puzzle/plugin/rs", app: "puzzle5d-play", aliases: ["5d"], ports: { react: 6014, wgpu: 6114 }, examples: [], engines: [], assets: [] },
-  { variant: "raster", pluginId: "raster", cratePath: "raster/plugin/rs", aliases: [], ports: { react: 6060, wgpu: 6160 }, examples: [], engines: ["framework/surface/paint/rs"], assets: [] },
-  { variant: "reasoning-wires", pluginId: "reasoning-mindmap", cratePath: "reasoning/mindmap/plugin/rs", aliases: ["wires"], ports: { react: 6015, wgpu: 6115 }, examples: [], engines: [], assets: [] },
-  { variant: "remodel", pluginId: "remodel", cratePath: "remodel/plugin/rs", aliases: [], ports: { react: 6063, wgpu: 6163 }, examples: [], engines: [], assets: [] },
-  { variant: "s", pluginId: "s", cratePath: "s/plugin/rs", aliases: [], ports: { react: 6070, wgpu: 6066 }, examples: [], engines: [], assets: [] },
-  { variant: "sequence", pluginId: "sequence", cratePath: "sequence/plugin/rs", aliases: [], ports: { react: 6077, wgpu: 6177 }, examples: [], engines: [], assets: [] },
-  { variant: "shooting", pluginId: "shooting", cratePath: "shooting/plugin/rs", aliases: [], ports: { react: 6019, wgpu: 6119 }, examples: [], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", roots: ["asset/metabolism/representation", "asset/abbau-aufbau"], placeholder: "asset/mesh/placeholder.glb", filterFromExamples: true }] },
-  { variant: "sourcing", pluginId: "sourcing", cratePath: "sourcing/plugin/rs", app: "sourcing-curate", aliases: ["curate"], ports: { react: 6081, wgpu: 6181 }, examples: [], engines: [], assets: [] },
-  { variant: "trinity-jack", pluginId: "trinity", cratePath: "trinity/plugin/rs", app: "trinity-jack-play", aliases: ["trinity jack"], ports: { react: 6054, wgpu: 6154 }, examples: [], engines: [], assets: [] },
-  { variant: "trinity-rewrite", pluginId: "trinity", cratePath: "trinity/plugin/rs", app: "trinity-rewrite-play", aliases: ["trinity rewrite"], ports: { react: 6056, wgpu: 6156 }, examples: [], engines: [], assets: [] },
-  { variant: "vcs", pluginId: "vcs", cratePath: "vcs/plugin/rs", aliases: [], ports: { react: 6075, wgpu: 6175 }, examples: [], engines: [], assets: [] },
-  { variant: "vdi3805", pluginId: "norm", cratePath: "norm/plugin/rs", app: "norm-vdi-3805-play", aliases: [], ports: { react: 6105, wgpu: 6205 }, examples: [], engines: [], assets: [] },
-  { variant: "writer", pluginId: "writer", cratePath: "writer/plugin/rs", aliases: [], ports: { react: 6062, wgpu: 6162 }, examples: [], engines: [], assets: [] }
+  { variant: "aggregator", programId: "puzzle", cratePath: "puzzle/program/rs", app: "puzzle3d-play", brand: "entwerfen-mit-bestand", aliases: ["mit-bestand", "entwerfen-mit-bestand"], ports: { react: 6023, wgpu: 6123 }, examples: [], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", roots: ["asset/metabolism/representation", "asset/abbau-aufbau"], placeholder: "asset/mesh/placeholder.glb", filterFromExamples: true }, { kind: "static-dir", route: "/infinite-fixture", root: "infinite/fixture" }] },
+  { variant: "animate", programId: "animate", cratePath: "animate/program/rs", aliases: [], ports: { react: 6051, wgpu: 6151 }, examples: [], engines: [], assets: [] },
+  { variant: "architect", programId: "architect", cratePath: "architect/spine/rs", aliases: [], ports: { react: 6090, wgpu: 6190 }, examples: [], engines: [], assets: [] },
+  { variant: "cad", programId: "cad", cratePath: "cad/program/rs", aliases: [], ports: { react: 6020, wgpu: 6120 }, examples: [], engines: [], assets: [{ kind: "static-dir", route: "/cad-fixture", root: "cad/fixture" }] },
+  { variant: "dag", programId: "dag", cratePath: "infinite/board/port/directed/dag/program/rs", aliases: [], ports: { react: 6017, wgpu: 6117 }, examples: [], engines: [], assets: [] },
+  { variant: "din16798", programId: "norm", cratePath: "norm/program/rs", app: "norm-din-en-16798-play", aliases: [], ports: { react: 6092, wgpu: 6192 }, examples: [], engines: [], assets: [] },
+  { variant: "din18599", programId: "norm", cratePath: "norm/program/rs", app: "norm-din-v-18599-play", aliases: [], ports: { react: 6093, wgpu: 6193 }, examples: [], engines: [], assets: [] },
+  { variant: "din4108", programId: "norm", cratePath: "norm/program/rs", app: "norm-din-4108-play", aliases: [], ports: { react: 6091, wgpu: 6191 }, examples: [], engines: [], assets: [] },
+  { variant: "draw", programId: "draw", cratePath: "draw/program/rs", aliases: [], ports: { react: 6064, wgpu: 6164 }, examples: [], engines: [], assets: [] },
+  { variant: "en1990", programId: "norm", cratePath: "norm/program/rs", app: "norm-en-1990-play", aliases: [], ports: { react: 6094, wgpu: 6194 }, examples: [], engines: [], assets: [] },
+  { variant: "en1991", programId: "norm", cratePath: "norm/program/rs", app: "norm-en-1991-play", aliases: [], ports: { react: 6095, wgpu: 6195 }, examples: [], engines: [], assets: [] },
+  { variant: "en1992", programId: "norm", cratePath: "norm/program/rs", app: "norm-en-1992-play", aliases: [], ports: { react: 6096, wgpu: 6196 }, examples: [], engines: [], assets: [] },
+  { variant: "en1993", programId: "norm", cratePath: "norm/program/rs", app: "norm-en-1993-play", aliases: [], ports: { react: 6097, wgpu: 6197 }, examples: [], engines: [], assets: [] },
+  { variant: "en1994", programId: "norm", cratePath: "norm/program/rs", app: "norm-en-1994-play", aliases: [], ports: { react: 6098, wgpu: 6198 }, examples: [], engines: [], assets: [] },
+  { variant: "en1995", programId: "norm", cratePath: "norm/program/rs", app: "norm-en-1995-play", aliases: [], ports: { react: 6099, wgpu: 6199 }, examples: [], engines: [], assets: [] },
+  { variant: "en1996", programId: "norm", cratePath: "norm/program/rs", app: "norm-en-1996-play", aliases: [], ports: { react: 6100, wgpu: 6200 }, examples: [], engines: [], assets: [] },
+  { variant: "en1997", programId: "norm", cratePath: "norm/program/rs", app: "norm-en-1997-play", aliases: [], ports: { react: 6101, wgpu: 6201 }, examples: [], engines: [], assets: [] },
+  { variant: "en1998", programId: "norm", cratePath: "norm/program/rs", app: "norm-en-1998-play", aliases: [], ports: { react: 6102, wgpu: 6202 }, examples: [], engines: [], assets: [] },
+  { variant: "en1999", programId: "norm", cratePath: "norm/program/rs", app: "norm-en-1999-play", aliases: [], ports: { react: 6103, wgpu: 6203 }, examples: [], engines: [], assets: [] },
+  { variant: "fem2d", programId: "fem", cratePath: "fem/program/rs", app: "fem2d-play", aliases: ["fem 2d"], ports: { react: 6086, wgpu: 6186 }, examples: [], engines: [], assets: [] },
+  { variant: "fem3d", programId: "fem", cratePath: "fem/program/rs", app: "fem3d-play", aliases: ["fem 3d"], ports: { react: 6087, wgpu: 6187 }, examples: [], engines: [], assets: [] },
+  { variant: "flow", programId: "flow", cratePath: "flow/program/rs", aliases: [], ports: { react: 6016, wgpu: 6116 }, examples: [], engines: ["flow/core/rs"], assets: [] },
+  { variant: "forms", programId: "forms", cratePath: "forms/program/rs", aliases: [], ports: { react: 6058, wgpu: 6158 }, examples: [], engines: [], assets: [] },
+  { variant: "gis2d", programId: "gis", cratePath: "gis/program/rs", app: "gis2d-play", aliases: ["gis 2d"], ports: { react: 6040, wgpu: 6140 }, examples: [], engines: ["framework/surface/tiled-map/rs"], assets: [{ kind: "tile-proxy", route: "/osm", upstream: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", cache: "osm-tiles" }, { kind: "tile-proxy", route: "/vt", upstream: "https://tiles.openfreemap.org/planet", cache: "openfreemap-vt" }] },
+  { variant: "gis3d", programId: "gis", cratePath: "gis/program/rs", app: "gis3d-play", aliases: ["gis 3d"], ports: { react: 6083, wgpu: 6183 }, examples: [], engines: ["framework/surface/terrain/rs"], assets: [{ kind: "tile-proxy", route: "/dem", upstream: "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png", cache: "terrarium-dem" }] },
+  { variant: "imperative", programId: "imperative", cratePath: "imperative/program/rs", aliases: [], ports: { react: 6076, wgpu: 6176 }, examples: [], engines: [], assets: [] },
+  { variant: "iso16757", programId: "norm", cratePath: "norm/program/rs", app: "norm-iso-16757-play", aliases: [], ports: { react: 6104, wgpu: 6204 }, examples: [], engines: [], assets: [] },
+  { variant: "layout", programId: "layout", cratePath: "layout/program/rs", aliases: [], ports: { react: 6079, wgpu: 6179 }, examples: [], engines: [], assets: [] },
+  { variant: "lowpoly", programId: "lowpoly", cratePath: "lowpoly/program/rs", aliases: [], ports: { react: 6078, wgpu: 6178 }, examples: [], engines: [], assets: [] },
+  { variant: "mathematical", programId: "mathematical", cratePath: "mathematical/program/rs", app: "mathematical-play", aliases: ["mathematical", "math"], ports: { react: 6084, wgpu: 6184 }, examples: [], engines: [], assets: [] },
+  { variant: "note", programId: "note", cratePath: "note/program/rs", aliases: [], ports: { react: 6080, wgpu: 6180 }, examples: [], engines: [], assets: [] },
+  { variant: "playbook", programId: "playbook", cratePath: "playbook/program/rs", aliases: [], ports: { react: 6085, wgpu: 6185 }, examples: [], engines: [], assets: [] },
+  { variant: "procedural2d", programId: "procedural", cratePath: "procedural/program/rs", app: "procedural2d-play", aliases: ["procedural 2d"], ports: { react: 6021, wgpu: 6121 }, examples: [], engines: [], assets: [] },
+  { variant: "procedural3d", programId: "procedural", cratePath: "procedural/program/rs", app: "procedural3d-play", aliases: ["procedural 3d"], ports: { react: 6018, wgpu: 6118 }, examples: [], engines: [], assets: [] },
+  { variant: "process3d", programId: "process", cratePath: "process/program/rs", app: "process3d-play", aliases: ["process 3d"], ports: { react: 6022, wgpu: 6122 }, examples: [], engines: [], assets: [] },
+  { variant: "puzzle2d", programId: "puzzle", cratePath: "puzzle/program/rs", app: "puzzle2d-play", aliases: ["2d"], ports: { react: 6012, wgpu: 6112 }, examples: [], engines: ["puzzle/2d/rs"], assets: [] },
+  { variant: "puzzle3d", programId: "puzzle", cratePath: "puzzle/program/rs", app: "puzzle3d-play", aliases: ["3d"], ports: { react: 6013, wgpu: 6113 }, examples: [], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", roots: ["asset/metabolism/representation", "asset/abbau-aufbau"], placeholder: "asset/mesh/placeholder.glb", filterFromExamples: true }, { kind: "static-dir", route: "/infinite-fixture", root: "infinite/fixture" }] },
+  { variant: "puzzle5d", programId: "puzzle", cratePath: "puzzle/program/rs", app: "puzzle5d-play", aliases: ["5d"], ports: { react: 6014, wgpu: 6114 }, examples: [], engines: [], assets: [] },
+  { variant: "raster", programId: "raster", cratePath: "raster/program/rs", aliases: [], ports: { react: 6060, wgpu: 6160 }, examples: [], engines: ["framework/surface/paint/rs"], assets: [] },
+  { variant: "reasoning-wires", programId: "reasoning-mindmap", cratePath: "reasoning/mindmap/program/rs", aliases: ["wires"], ports: { react: 6015, wgpu: 6115 }, examples: [], engines: [], assets: [] },
+  { variant: "remodel", programId: "remodel", cratePath: "remodel/program/rs", aliases: [], ports: { react: 6063, wgpu: 6163 }, examples: [], engines: [], assets: [] },
+  { variant: "s", programId: "s", cratePath: "s/program/rs", aliases: [], ports: { react: 6070, wgpu: 6066 }, examples: [], engines: [], assets: [] },
+  { variant: "sequence", programId: "sequence", cratePath: "sequence/program/rs", aliases: [], ports: { react: 6077, wgpu: 6177 }, examples: [], engines: [], assets: [] },
+  { variant: "shooting", programId: "shooting", cratePath: "shooting/program/rs", aliases: [], ports: { react: 6019, wgpu: 6119 }, examples: [], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", roots: ["asset/metabolism/representation", "asset/abbau-aufbau"], placeholder: "asset/mesh/placeholder.glb", filterFromExamples: true }] },
+  { variant: "sourcing", programId: "sourcing", cratePath: "sourcing/program/rs", app: "sourcing-curate", aliases: ["curate"], ports: { react: 6081, wgpu: 6181 }, examples: [], engines: [], assets: [] },
+  { variant: "trinity-jack", programId: "trinity", cratePath: "trinity/program/rs", app: "trinity-jack-play", aliases: ["trinity jack"], ports: { react: 6054, wgpu: 6154 }, examples: [], engines: [], assets: [] },
+  { variant: "trinity-rewrite", programId: "trinity", cratePath: "trinity/program/rs", app: "trinity-rewrite-play", aliases: ["trinity rewrite"], ports: { react: 6056, wgpu: 6156 }, examples: [], engines: [], assets: [] },
+  { variant: "vcs", programId: "vcs", cratePath: "vcs/program/rs", aliases: [], ports: { react: 6075, wgpu: 6175 }, examples: [], engines: [], assets: [] },
+  { variant: "vdi3805", programId: "norm", cratePath: "norm/program/rs", app: "norm-vdi-3805-play", aliases: [], ports: { react: 6105, wgpu: 6205 }, examples: [], engines: [], assets: [] },
+  { variant: "writer", programId: "writer", cratePath: "writer/program/rs", aliases: [], ports: { react: 6062, wgpu: 6162 }, examples: [], engines: [], assets: [] }
 ];
 
-// ../../plugin/registry/generated/plugins.ts
+// ../../program/registry/generated/programs.ts
 var PLUGIN_HOST_CONFIGS = [
-  { pluginId: "s", landingAppId: "home", hostAppId: "studio" }
+  { programId: "s", landingAppId: "home", hostAppId: "studio" }
 ];
-var PLUGIN_BUILD_TARGETS = [
-  { pluginId: "animate", cratePath: "animate/plugin/rs", wasmOut: "animate_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "architect", cratePath: "architect/plugin/rs", wasmOut: "architect_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "cad", cratePath: "cad/plugin/rs", wasmOut: "cad_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "dag", cratePath: "infinite/board/port/directed/dag/plugin/rs", wasmOut: "dag_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "draw", cratePath: "draw/plugin/rs", wasmOut: "draw_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "fem", cratePath: "fem/plugin/rs", wasmOut: "fem_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "flow", cratePath: "flow/plugin/rs", wasmOut: "flow_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "forms", cratePath: "forms/plugin/rs", wasmOut: "forms_plugin.wasm", contributes: [], consumes: ["forms.questionKind"] },
-  { pluginId: "gis", cratePath: "gis/plugin/rs", wasmOut: "gis_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "imperative", cratePath: "imperative/plugin/rs", wasmOut: "imperative_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "layout", cratePath: "layout/plugin/rs", wasmOut: "layout_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "lowpoly", cratePath: "lowpoly/plugin/rs", wasmOut: "lowpoly_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "mathematical", cratePath: "mathematical/plugin/rs", wasmOut: "mathematical_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "norm", cratePath: "norm/plugin/rs", wasmOut: "norm_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "note", cratePath: "note/plugin/rs", wasmOut: "note_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "playbook", cratePath: "playbook/plugin/rs", wasmOut: "playbook_plugin.wasm", contributes: [], consumes: ["playbook.blockKind"] },
-  { pluginId: "playbook-module-procedural", cratePath: "playbook/module/procedural/rs", wasmOut: "playbook_module_procedural.wasm", contributes: ["playbook.blockKind"], consumes: [] },
-  { pluginId: "procedural", cratePath: "procedural/plugin/rs", wasmOut: "procedural_plugin.wasm", contributes: [], consumes: ["forms.questionKind"] },
-  { pluginId: "process", cratePath: "process/plugin/rs", wasmOut: "process_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "puzzle", cratePath: "puzzle/plugin/rs", wasmOut: "puzzle_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "raster", cratePath: "raster/plugin/rs", wasmOut: "raster_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "reasoning-mindmap", cratePath: "reasoning/mindmap/plugin/rs", wasmOut: "reasoning_mindmap_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "remodel", cratePath: "remodel/plugin/rs", wasmOut: "remodel_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "s", cratePath: "s/plugin/rs", wasmOut: "s_plugin.wasm", contributes: [], consumes: [], host: { landingAppId: "home", hostAppId: "studio" } },
-  { pluginId: "sequence", cratePath: "sequence/plugin/rs", wasmOut: "sequence_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "shooting", cratePath: "shooting/plugin/rs", wasmOut: "shooting_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "sourcing", cratePath: "sourcing/plugin/rs", wasmOut: "sourcing_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "sourcing-module-beams", cratePath: "sourcing/module/beams/rs", wasmOut: "sourcing_module_beams.wasm", contributes: [], consumes: [] },
-  { pluginId: "sourcing-module-slabs", cratePath: "sourcing/module/slabs/rs", wasmOut: "sourcing_module_slabs.wasm", contributes: [], consumes: [] },
-  { pluginId: "sourcing-module-windows", cratePath: "sourcing/module/windows/rs", wasmOut: "sourcing_module_windows.wasm", contributes: [], consumes: [] },
-  { pluginId: "trinity", cratePath: "trinity/plugin/rs", wasmOut: "trinity_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "vcs", cratePath: "vcs/plugin/rs", wasmOut: "vcs_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "writer", cratePath: "writer/plugin/rs", wasmOut: "writer_plugin.wasm", contributes: [], consumes: [] }
+var PROGRAM_BUILD_TARGETS = [
+  { programId: "animate", cratePath: "animate/program/rs", wasmOut: "animate_program.wasm", contributes: [], consumes: [] },
+  { programId: "architect", cratePath: "architect/spine/rs", wasmOut: "architect_spine.wasm", contributes: [], consumes: [] },
+  { programId: "cad", cratePath: "cad/program/rs", wasmOut: "cad_program.wasm", contributes: [], consumes: [] },
+  { programId: "dag", cratePath: "infinite/board/port/directed/dag/program/rs", wasmOut: "dag_program.wasm", contributes: [], consumes: [] },
+  { programId: "draw", cratePath: "draw/program/rs", wasmOut: "draw_program.wasm", contributes: [], consumes: [] },
+  { programId: "fem", cratePath: "fem/program/rs", wasmOut: "fem_program.wasm", contributes: [], consumes: [] },
+  { programId: "flow", cratePath: "flow/program/rs", wasmOut: "flow_program.wasm", contributes: [], consumes: [] },
+  { programId: "forms", cratePath: "forms/program/rs", wasmOut: "forms_program.wasm", contributes: [], consumes: ["forms.questionKind"] },
+  { programId: "gis", cratePath: "gis/program/rs", wasmOut: "gis_program.wasm", contributes: [], consumes: [] },
+  { programId: "imperative", cratePath: "imperative/program/rs", wasmOut: "imperative_program.wasm", contributes: [], consumes: [] },
+  { programId: "layout", cratePath: "layout/program/rs", wasmOut: "layout_program.wasm", contributes: [], consumes: [] },
+  { programId: "lowpoly", cratePath: "lowpoly/program/rs", wasmOut: "lowpoly_program.wasm", contributes: [], consumes: [] },
+  { programId: "mathematical", cratePath: "mathematical/program/rs", wasmOut: "mathematical_program.wasm", contributes: [], consumes: [] },
+  { programId: "norm", cratePath: "norm/program/rs", wasmOut: "norm_program.wasm", contributes: [], consumes: [] },
+  { programId: "note", cratePath: "note/program/rs", wasmOut: "note_program.wasm", contributes: [], consumes: [] },
+  { programId: "playbook", cratePath: "playbook/program/rs", wasmOut: "playbook_program.wasm", contributes: [], consumes: ["playbook.blockKind"] },
+  { programId: "playbook-module-procedural", cratePath: "playbook/module/procedural/rs", wasmOut: "playbook_module_procedural.wasm", contributes: ["playbook.blockKind"], consumes: [] },
+  { programId: "procedural", cratePath: "procedural/program/rs", wasmOut: "procedural_program.wasm", contributes: [], consumes: ["forms.questionKind"] },
+  { programId: "process", cratePath: "process/program/rs", wasmOut: "process_program.wasm", contributes: [], consumes: [] },
+  { programId: "puzzle", cratePath: "puzzle/program/rs", wasmOut: "puzzle_program.wasm", contributes: [], consumes: [] },
+  { programId: "raster", cratePath: "raster/program/rs", wasmOut: "raster_program.wasm", contributes: [], consumes: [] },
+  { programId: "reasoning-mindmap", cratePath: "reasoning/mindmap/program/rs", wasmOut: "reasoning_mindmap_program.wasm", contributes: [], consumes: [] },
+  { programId: "remodel", cratePath: "remodel/program/rs", wasmOut: "remodel_program.wasm", contributes: [], consumes: [] },
+  { programId: "s", cratePath: "s/program/rs", wasmOut: "s_program.wasm", contributes: [], consumes: [], host: { landingAppId: "home", hostAppId: "studio" } },
+  { programId: "sequence", cratePath: "sequence/program/rs", wasmOut: "sequence_program.wasm", contributes: [], consumes: [] },
+  { programId: "shooting", cratePath: "shooting/program/rs", wasmOut: "shooting_program.wasm", contributes: [], consumes: [] },
+  { programId: "sourcing", cratePath: "sourcing/program/rs", wasmOut: "sourcing_program.wasm", contributes: [], consumes: [] },
+  { programId: "sourcing-module-beams", cratePath: "sourcing/module/beams/rs", wasmOut: "sourcing_module_beams.wasm", contributes: [], consumes: [] },
+  { programId: "sourcing-module-slabs", cratePath: "sourcing/module/slabs/rs", wasmOut: "sourcing_module_slabs.wasm", contributes: [], consumes: [] },
+  { programId: "sourcing-module-windows", cratePath: "sourcing/module/windows/rs", wasmOut: "sourcing_module_windows.wasm", contributes: [], consumes: [] },
+  { programId: "trinity", cratePath: "trinity/program/rs", wasmOut: "trinity_program.wasm", contributes: [], consumes: [] },
+  { programId: "vcs", cratePath: "vcs/program/rs", wasmOut: "vcs_program.wasm", contributes: [], consumes: [] },
+  { programId: "writer", cratePath: "writer/program/rs", wasmOut: "writer_program.wasm", contributes: [], consumes: [] }
 ];
-var PLUGIN_TARGETS = PLUGIN_BUILD_TARGETS.map((target) => ({
-  pluginId: target.pluginId,
-  moduleUrl: `/plugin-modules/${target.pluginId}/${target.wasmOut.replace(/\.wasm$/, ".js")}`
+var PROGRAM_TARGETS = PROGRAM_BUILD_TARGETS.map((target) => ({
+  programId: target.programId,
+  moduleUrl: `/program-modules/${target.programId}/${target.wasmOut.replace(/\.wasm$/, ".js")}`
 }));
-var pluginModuleUrl = (pluginId, fileName) => `/plugin-modules/${pluginId}/${fileName.replace(/\.wasm$/, ".js")}`;
+var programModuleUrl = (programId, fileName) => `/program-modules/${programId}/${fileName.replace(/\.wasm$/, ".js")}`;
 
 // ../../core/js/index.ts
 class Store {
@@ -300,12 +300,12 @@ function createMemoryStoragePort() {
   };
 }
 var UI_CONTROL_NODE_TYPES = new Set(["input", "select", "toggle", "button", "keyValue", "slider", "numberStepper", "ring", "iconSelect"]);
-function expandPluginRegistry(plugins, primaryPluginId, studioMode = false) {
+function expandProgramRegistry(plugins, primaryPluginId, studioMode = false) {
   if (studioMode || !primaryPluginId)
     return plugins;
-  const primaryEntries = plugins.filter((entry) => entry.pluginId === primaryPluginId);
+  const primaryEntries = plugins.filter((entry) => entry.programId === primaryPluginId);
   const consumes = new Set(primaryEntries.flatMap((entry) => entry.consumes ?? []));
-  const contributorEntries = plugins.filter((entry) => entry.pluginId !== primaryPluginId && (entry.contributes ?? []).some((tag) => consumes.has(tag)));
+  const contributorEntries = plugins.filter((entry) => entry.programId !== primaryPluginId && (entry.contributes ?? []).some((tag) => consumes.has(tag)));
   return [...primaryEntries, ...contributorEntries];
 }
 var EMPTY_INVOCATION_RESPONSE = {
@@ -328,13 +328,13 @@ function pluginWorkerUrl(moduleUrl) {
 }
 
 class PluginWorkerClient {
-  pluginId;
+  programId;
   moduleUrl;
   worker = null;
   pending = new Map;
   onBackboneOutbound;
-  constructor(pluginId, moduleUrl) {
-    this.pluginId = pluginId;
+  constructor(programId, moduleUrl) {
+    this.programId = programId;
     this.moduleUrl = moduleUrl;
   }
   clearPending(error) {
@@ -360,15 +360,15 @@ class PluginWorkerClient {
       window.clearTimeout(entry.watchdog);
       this.pending.delete(requestId);
       if (message.type === "error") {
-        entry.reject(new Error(message.message ?? `plugin worker ${this.pluginId} error`));
+        entry.reject(new Error(message.message ?? `program worker ${this.programId} error`));
         return;
       }
       entry.resolve(message);
     };
     worker.onerror = (error) => {
-      console.error(`[DEBUG] plugin worker ${this.pluginId} crashed`, error);
+      console.error(`[DEBUG] program worker ${this.programId} crashed`, error);
       this.worker = null;
-      this.clearPending(new Error(`plugin worker ${this.pluginId} crashed`));
+      this.clearPending(new Error(`program worker ${this.programId} crashed`));
     };
   }
   async start() {
@@ -380,12 +380,12 @@ class PluginWorkerClient {
   request(type, payload) {
     return new Promise((resolve, reject) => {
       if (!this.worker) {
-        reject(new Error(`plugin worker ${this.pluginId} is not running`));
+        reject(new Error(`program worker ${this.programId} is not running`));
         return;
       }
       const requestId = crypto.randomUUID();
       const watchdog = window.setTimeout(() => {
-        console.warn(`[DEBUG] plugin worker ${this.pluginId} unresponsive for ${PLUGIN_WORKER_UNRESPONSIVE_MS}ms: ${type}`);
+        console.warn(`[DEBUG] program worker ${this.programId} unresponsive for ${PLUGIN_WORKER_UNRESPONSIVE_MS}ms: ${type}`);
       }, PLUGIN_WORKER_UNRESPONSIVE_MS);
       this.pending.set(requestId, { resolve, reject, watchdog });
       this.worker.postMessage({ type, requestId, ...payload });
@@ -413,7 +413,7 @@ class PluginWorkerClient {
     return String((await this.request("refreshUi", { instanceId, requestJson })).value ?? "{}");
   }
   dispose() {
-    this.clearPending(new Error(`plugin worker ${this.pluginId} disposed`));
+    this.clearPending(new Error(`program worker ${this.programId} disposed`));
     this.worker?.terminate();
     this.worker = null;
   }
@@ -431,8 +431,8 @@ var pluginModuleHandleCache = new Map;
 function findPlaygroundVariant(playgroundPluginId) {
   return PLAYGROUND_BUILD_TARGETS.find((entry) => entry.variant === playgroundPluginId || entry.aliases.includes(playgroundPluginId));
 }
-function resolvePluginRegistryId(playgroundPluginId) {
-  return findPlaygroundVariant(playgroundPluginId)?.pluginId ?? playgroundPluginId;
+function resolveProgramRegistryId(playgroundPluginId) {
+  return findPlaygroundVariant(playgroundPluginId)?.programId ?? playgroundPluginId;
 }
 function resolvePlaygroundDefaultAppId(playgroundPluginId) {
   return findPlaygroundVariant(playgroundPluginId)?.app;
@@ -442,23 +442,23 @@ function resolvePlaygroundBoot(variant, session) {
   if (session?.variant === variant) {
     return { variant, defaultAppId: session.defaultAppId ?? defaultAppId, plugins: session.plugins };
   }
-  const registryPluginId = resolvePluginRegistryId(variant);
-  const studioMode = resolvePluginHostConfig(variant) !== undefined;
-  const catalogPlugins = PLUGIN_BUILD_TARGETS.map((target) => ({
-    pluginId: target.pluginId,
-    moduleUrl: pluginModuleUrl(target.pluginId, target.wasmOut),
+  const registryPluginId = resolveProgramRegistryId(variant);
+  const studioMode = resolveProgramHostConfig(variant) !== undefined;
+  const catalogPlugins = PROGRAM_BUILD_TARGETS.map((target) => ({
+    programId: target.programId,
+    moduleUrl: programModuleUrl(target.programId, target.wasmOut),
     contributes: target.contributes,
     consumes: target.consumes
   }));
   return {
     variant,
     defaultAppId,
-    plugins: expandPluginRegistry(catalogPlugins, studioMode ? undefined : registryPluginId, studioMode)
+    plugins: expandProgramRegistry(catalogPlugins, studioMode ? undefined : registryPluginId, studioMode)
   };
 }
-function resolvePluginHostConfig(playgroundPluginId) {
-  const registryId = resolvePluginRegistryId(playgroundPluginId);
-  return PLUGIN_HOST_CONFIGS.find((entry) => entry.pluginId === registryId);
+function resolveProgramHostConfig(playgroundPluginId) {
+  const registryId = resolveProgramRegistryId(playgroundPluginId);
+  return PLUGIN_HOST_CONFIGS.find((entry) => entry.programId === registryId);
 }
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
@@ -654,23 +654,23 @@ if (import.meta.vitest) {
     });
   });
   describe("PlaygroundResolution", () => {
-    it("resolves host config from generated plugin metadata", () => {
-      expect(resolvePluginHostConfig("s")).toEqual({ pluginId: "s", landingAppId: "home", hostAppId: "studio" });
-      expect(resolvePluginHostConfig("puzzle3d")).toBeUndefined();
+    it("resolves host config from generated program metadata", () => {
+      expect(resolveProgramHostConfig("s")).toEqual({ programId: "s", landingAppId: "home", hostAppId: "studio" });
+      expect(resolveProgramHostConfig("puzzle3d")).toBeUndefined();
     });
-    it("resolves playground aliases to registry plugin ids", () => {
-      expect(resolvePluginRegistryId("aggregator")).toBe("puzzle");
-      expect(resolvePluginRegistryId("3d")).toBe("puzzle");
+    it("resolves playground aliases to registry program ids", () => {
+      expect(resolveProgramRegistryId("aggregator")).toBe("puzzle");
+      expect(resolveProgramRegistryId("3d")).toBe("puzzle");
     });
-    it("rebuilds plugin rows when the generated session variant is stale", () => {
+    it("rebuilds program rows when the generated session variant is stale", () => {
       const boot = resolvePlaygroundBoot("aggregator", {
         variant: "sourcing",
         defaultAppId: "sourcing-curate",
-        plugins: [{ pluginId: "sourcing", moduleUrl: "/plugin-modules/sourcing/sourcing_plugin.js" }]
+        plugins: [{ programId: "sourcing", moduleUrl: "/program-modules/sourcing/sourcing_program.js" }]
       });
       expect(boot.variant).toBe("aggregator");
       expect(boot.defaultAppId).toBe("puzzle3d-play");
-      expect(boot.plugins).toEqual([{ pluginId: "puzzle", moduleUrl: "/plugin-modules/puzzle/puzzle_plugin.js", contributes: [], consumes: [] }]);
+      expect(boot.plugins).toEqual([{ programId: "puzzle", moduleUrl: "/program-modules/puzzle/puzzle_program.js", contributes: [], consumes: [] }]);
     });
   });
 }
@@ -683,7 +683,7 @@ var PLAYGROUND_SESSION = {
   studioMode: false,
   host: undefined,
   plugins: [
-    { pluginId: "puzzle", moduleUrl: "/plugin-modules/puzzle/puzzle_plugin.js", contributes: [], consumes: [] }
+    { programId: "puzzle", moduleUrl: "/program-modules/puzzle/puzzle_program.js", contributes: [], consumes: [] }
   ]
 };
 
@@ -698,20 +698,20 @@ await new Promise((resolve) => {
 var PLUGIN_WORKER_BOOT_TIMEOUT_MS = 5000;
 var PLUGIN_WORKER_SLOW_CALL_WARN_MS = 2000;
 var PLUGIN_WORKER_BOOT_MESSAGE_TYPES = ["init", "manifest"];
-async function loadPluginModule(pluginId, moduleUrl) {
-  return loadPluginModuleViaWorker(pluginId, moduleUrl);
+async function loadPluginModule(programId, moduleUrl) {
+  return loadPluginModuleViaWorker(programId, moduleUrl);
 }
 function pluginWorkerUrl2(moduleUrl) {
   return moduleUrl.replace(/\/[^/]+\.js$/, "/plugin-worker.js");
 }
 
 class PluginWorkerClient2 {
-  pluginId;
+  programId;
   moduleUrl;
   worker = null;
   pending = new Map;
-  constructor(pluginId, moduleUrl) {
-    this.pluginId = pluginId;
+  constructor(programId, moduleUrl) {
+    this.programId = programId;
     this.moduleUrl = moduleUrl;
   }
   clearPending(error) {
@@ -739,33 +739,33 @@ class PluginWorkerClient2 {
       window.clearTimeout(entry.timer);
       this.pending.delete(requestId);
       if (message.type === "error") {
-        entry.reject(new Error(message.message ?? `plugin worker ${this.pluginId} error`));
+        entry.reject(new Error(message.message ?? `program worker ${this.programId} error`));
         return;
       }
       entry.resolve(message);
     };
     worker.onerror = (error) => {
-      console.error(`[DEBUG] plugin worker ${this.pluginId} crashed`, error);
+      console.error(`[DEBUG] program worker ${this.programId} crashed`, error);
       this.terminateWorker();
-      this.clearPending(new Error(`plugin worker ${this.pluginId} crashed`));
+      this.clearPending(new Error(`program worker ${this.programId} crashed`));
     };
   }
   async spawnWorker() {
     this.terminateWorker();
-    this.clearPending(new Error(`plugin worker ${this.pluginId} restarted`));
+    this.clearPending(new Error(`program worker ${this.programId} restarted`));
     const worker = new Worker(pluginWorkerUrl2(this.moduleUrl), { type: "module" });
     this.attachWorker(worker);
     this.worker = worker;
     await this.request("init", { moduleUrl: this.moduleUrl });
   }
   async restartWorker(reason) {
-    console.warn(`[DEBUG] restarting plugin worker ${this.pluginId}: ${reason}`);
+    console.warn(`[DEBUG] restarting program worker ${this.programId}: ${reason}`);
     await this.spawnWorker();
   }
   request(type, payload) {
     return new Promise((resolve, reject) => {
       if (!this.worker) {
-        reject(new Error(`plugin worker ${this.pluginId} is not running`));
+        reject(new Error(`program worker ${this.programId} is not running`));
         return;
       }
       const requestId = crypto.randomUUID();
@@ -775,12 +775,12 @@ class PluginWorkerClient2 {
         if (isBoot) {
           this.pending.delete(requestId);
           this.restartWorker(`timeout:${type}`).catch((error) => {
-            console.error(`[DEBUG] plugin worker ${this.pluginId} restart failed`, error);
+            console.error(`[DEBUG] program worker ${this.programId} restart failed`, error);
           });
-          reject(new Error(`plugin worker ${this.pluginId} timeout: ${type}`));
+          reject(new Error(`program worker ${this.programId} timeout: ${type}`));
           return;
         }
-        console.warn(`[DEBUG] plugin worker ${this.pluginId} slow ${type} call: still waiting after ${Date.now() - startedAt}ms`);
+        console.warn(`[DEBUG] program worker ${this.programId} slow ${type} call: still waiting after ${Date.now() - startedAt}ms`);
       }, isBoot ? PLUGIN_WORKER_BOOT_TIMEOUT_MS : PLUGIN_WORKER_SLOW_CALL_WARN_MS);
       this.pending.set(requestId, { resolve, reject, timer });
       this.worker.postMessage({ type, requestId, ...payload });
@@ -827,14 +827,14 @@ class PluginWorkerClient2 {
     return String(response.value ?? "{}");
   }
   dispose() {
-    this.clearPending(new Error(`plugin worker ${this.pluginId} disposed`));
+    this.clearPending(new Error(`program worker ${this.programId} disposed`));
     this.terminateWorker();
   }
 }
-function validatePluginManifest(pluginId, manifest) {
+function validateProgramManifest(programId, manifest) {
   const apps = manifest.apps;
   if (!Array.isArray(apps) || apps.length === 0) {
-    throw new Error(`[DEBUG] plugin ${pluginId} manifest has no apps`);
+    throw new Error(`[DEBUG] program ${programId} manifest has no apps`);
   }
   for (const app of apps) {
     const windowKinds = app.windowKinds;
@@ -842,18 +842,18 @@ function validatePluginManifest(pluginId, manifest) {
       continue;
     for (const kind of windowKinds) {
       if (!kind.surfaceKind) {
-        throw new Error(`[DEBUG] plugin ${pluginId} manifest window kind missing surfaceKind`);
+        throw new Error(`[DEBUG] program ${programId} manifest window kind missing surfaceKind`);
       }
     }
   }
 }
-async function loadPluginModuleViaWorker(pluginId, moduleUrl) {
-  const client = new PluginWorkerClient2(pluginId, moduleUrl);
+async function loadPluginModuleViaWorker(programId, moduleUrl) {
+  const client = new PluginWorkerClient2(programId, moduleUrl);
   await client.start();
   const manifest = JSON.parse(await client.manifest());
-  validatePluginManifest(pluginId, manifest);
+  validateProgramManifest(programId, manifest);
   return {
-    pluginId,
+    programId,
     manifest,
     createApp: (appId) => client.createApp(appId),
     destroyApp: (instanceId) => client.destroyApp(instanceId),
@@ -882,7 +882,7 @@ function pluginHandleForBridge(handle) {
 }
 var boot = resolvePlaygroundBoot(PLAYGROUND_SESSION.variant, PLAYGROUND_SESSION);
 var pluginTargets = boot.plugins.map((entry) => ({
-  pluginId: entry.pluginId,
+  programId: entry.programId,
   moduleUrl: entry.moduleUrl,
   contributes: entry.contributes,
   consumes: entry.consumes
@@ -916,11 +916,11 @@ try {
     }
   }
   if (availableTargets.length === 0) {
-    throw new Error(`[DEBUG] no wasm plugin modules found for filter ${pluginFilter}`);
+    throw new Error(`[DEBUG] no wasm program modules found for filter ${pluginFilter}`);
   }
   const handles = await Promise.all(availableTargets.map(async (entry) => ({
-    pluginId: entry.pluginId,
-    handle: pluginHandleForBridge(await loadPluginModule(entry.pluginId, entry.moduleUrl))
+    programId: entry.programId,
+    handle: pluginHandleForBridge(await loadPluginModule(entry.programId, entry.moduleUrl))
   })));
   const bindings = await new Promise((resolve, reject) => {
     const host = window;

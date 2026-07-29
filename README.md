@@ -153,7 +153,7 @@ The assistant helps you on every step in the design process with compose ✍
 
 ## 🦗 [compose.gh](https://docs.semio-tech.com/manual/grasshopper) [↑](#%EF%B8%8F-products-)
 
-A batteries-included [Grasshopper](https://www.grasshopper3d.com) plugin for compose ⚡
+A batteries-included [Grasshopper](https://www.grasshopper3d.com) program for compose ⚡
 
 ![compose Grasshopper Demo](compose/asset/image/grasshopper-demo.png)
 

@@ -1,6 +1,6 @@
 ---
 name: Restore Playgrounds App Split
-overview: Fix the build-breaking bugs blocking every playground, migrate `cad` into the shared `PlaygroundAppDefinition` registry, then refactor all 24 technologies so `core/playground.ts` only wires fixtures/dev-host while `core/index.ts` owns the actual app (Controller, selection, hover, tools, panels, windows, `build<X>ProgramDefinition`) so each app truly runs standalone as a playground or hosted inside `os`/`s`.
+overview: Fix the build-breaking bugs blocking every playground, migrate `cad` into the shared `PlaygroundAppDefinition` registry, then refactor all 24 technologies so `core/playground.ts` only wires fixtures/dev-host while `core/index.ts` owns the actual app (Controller, selection, hover, tools, panels, windows, `build<X>WorkflowDefinition`) so each app truly runs standalone as a playground or hosted inside `os`/`s`.
 todos: []
 isProject: false
 ---
@@ -29,10 +29,10 @@ Work happens inside the existing (reopened) ticket `.repo/🎫/26/07/02/FIX-KIT-
 
 ## Phase 1 — Migrate `cad` into the shared playground registry
 
-`cad` has no `core` package; its entire app (fixtures, `CadPlayShellController`, document/inspector builders, `buildCadProgramDefinition`, and the React root `CadPlayRoot`) lives in one 190k-character file [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx).
+`cad` has no `core` package; its entire app (fixtures, `CadPlayShellController`, document/inspector builders, `buildCadWorkflowDefinition`, and the React root `CadPlayRoot`) lives in one 190k-character file [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx).
 
 - Create `cad/js/renderer/core/{index.ts,playground.ts,package.json,project.json,vitest.config.ts}` following the `draw/core` package as the template (`@semio-tech/cad-js-core` is already taken by the spatial model package, so name this one distinctly, e.g. `@semio-tech/cad-js-renderer-core`, nested under the existing `cad/js/renderer` workspace umbrella like `framework/product/platform/{core,renderer/react}` does).
-- Split `play/index.tsx` per the Phase 2 rule below: Controller/tools/document/inspector/`buildCadProgramDefinition` → `core/index.ts`; fixture ids/options/`devHost`/`createPlayground`/`bootRenderer`/`cadPlayAppDefinition` → `core/playground.ts`; pure-JSX (`CadPlayRoot`, `registerCadPlaySurfaceHosts`) → `cad/js/renderer/react/index.tsx` (new, parallel to other technologies' `*/react` packages) or merge into existing `cad/js/renderer/index.tsx`.
+- Split `play/index.tsx` per the Phase 2 rule below: Controller/tools/document/inspector/`buildCadWorkflowDefinition` → `core/index.ts`; fixture ids/options/`devHost`/`createPlayground`/`bootRenderer`/`cadPlayAppDefinition` → `core/playground.ts`; pure-JSX (`CadPlayRoot`, `registerCadPlaySurfaceHosts`) → `cad/js/renderer/react/index.tsx` (new, parallel to other technologies' `*/react` packages) or merge into existing `cad/js/renderer/index.tsx`.
 - Register `cadPlayAppDefinition` in [framework/product/playground/core/app-registry.ts](framework/product/playground/core/app-registry.ts).
 - Add `cad` to `PACKAGE_ROOT_BY_ENTRY`/`ENTRY_TO_HOST` in [framework/product/playground/dev/script.ts](framework/product/playground/dev/script.ts).
 - Add `dev:cad`/`dev:cad:*` fixture scripts to root `package.json` (mirroring `dev:puzzle:3d:concrete-forest`) and a matching `resolvePlaygroundDevApp` case in [script.ts](script.ts).
@@ -47,7 +47,7 @@ Work happens inside the existing (reopened) ticket `.repo/🎫/26/07/02/FIX-KIT-
   - The `Controller` subclass (selection, hover payload handling, `toggleSelectableKind`/`toggleVisibleKind`-style commands).
   - Tools, panel tabs, and all window/panel declarative body builders (document trees, inspector trees, settings trees, kinds trees).
   - `build<X>AppRuntime` / `build<X>Runtime` / `register<X>DeclarativeBodies` / `register<X>SurfaceHosts`.
-  - `build<X>ProgramDefinition()` (os/`s` wiring) — already here in most technologies; keep and simplify since it can now reference the app pieces directly instead of importing the whole `<x>PlayAppDefinition`.
+  - `build<X>WorkflowDefinition()` (os/`s` wiring) — already here in most technologies; keep and simplify since it can now reference the app pieces directly instead of importing the whole `<x>PlayAppDefinition`.
   - Pure domain-model types/helpers stay wherever they already live (`internal.ts` if the technology has one — don't relocate those, they're already correctly separated).
   - Embedded `if (import.meta.vitest)` tests for everything above (move the corresponding tests out of `playground.ts`).
 - `core/playground.ts` ("the playground" — fixtures + dev-host wiring only):
@@ -59,7 +59,7 @@ Work happens inside the existing (reopened) ticket `.repo/🎫/26/07/02/FIX-KIT-
 
 **Rule of thumb**: if the code would need to change when swapping in a different fixture, it's a playground concern → stays in `playground.ts`. If it defines _how the app behaves_ regardless of which fixture is loaded, it's app logic → moves to `index.ts`.
 
-Do this per technology, verifying after each one: `bun nx run <pkg>:test` passes, `bun ./script.ts build --app <entry>` (from `framework/product/playground/dev`) still succeeds, and (where a `build<X>ProgramDefinition` test exists in `s/core` or `s/play`) the `s` extension loading test still passes.
+Do this per technology, verifying after each one: `bun nx run <pkg>:test` passes, `bun ./script.ts build --app <entry>` (from `framework/product/playground/dev`) still succeeds, and (where a `build<X>WorkflowDefinition` test exists in `s/core` or `s/play`) the `s` extension loading test still passes.
 
 Technologies (23 existing + cad from Phase 1), roughly smallest-first to build momentum before the largest files:
 `imperative`, `reasoning/mindmap/wires`, `vcs`, `layout`, `writer`, `trinity/jack/host-core`, `mathematical/graph/port/directed/dag`, `trinity/rewrite`, `lowpoly`, `framework/product/presentation`, `sequence`, `s`, `forms`, `shooting`, `raster`, `draw`, `flow`, `gis/2d`, `procedural/2d`, `puzzle/5d` (+ `puzzle/5d/react` which currently also carries force-graph merge logic — check if any of that belongs in `index.ts` too), `procedural/3d`, `puzzle/2d`, `puzzle/3d`, `cad`.

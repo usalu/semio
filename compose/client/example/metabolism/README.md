@@ -119,7 +119,7 @@ Or load the geometry directly from Speckle into Grasshopper ⬇️
 
 ![Speckle Representations Overview](https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/doc/grasshopper-speckle.png)
 
-> The Speckle Grasshopper plugin is not particulary the best 🥴 Most likely your receive components are not fetching and instead showing errors or show no errors and still not fetch ❌ If you replace them with fresh receive components and hit `Receive` then it should work ✅ And yes, you have to do that every time you open the file again 🥵
+> The Speckle Grasshopper program is not particulary the best 🥴 Most likely your receive components are not fetching and instead showing errors or show no errors and still not fetch ❌ If you replace them with fresh receive components and hit `Receive` then it should work ✅ And yes, you have to do that every time you open the file again 🥵
 
 ### 🤔 Curious, how it works?
 

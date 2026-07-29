@@ -6,7 +6,7 @@
   "projectType": "application",
   "devDependencies": {
     "@semio-tech/semio-asset": "*",
-    "vite-plugin-singlefile": "*"
+    "vite-program-singlefile": "*"
   },
   "author": {
     "name": "Ueli Saluz",

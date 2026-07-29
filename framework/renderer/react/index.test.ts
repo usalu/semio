@@ -133,11 +133,11 @@ import {
   isFlowGraphScene,
   loadPluginModule,
   mergeRecordPreservingIdentity,
-  parseStudioShellPath,
+  parseSpaceShellPath,
   preserveJsonIdentity,
   reconcileUtilityPath,
   studioPanelFocusingSpawned,
-  viewStateWithStudioPanel,
+  viewStateWithSpacePanel,
   findPressedUtilityLeafId,
   resolveUtilityNodes,
   resolveUtilities,
@@ -739,7 +739,7 @@ describe("ui identity preservation (puzzle 2d perf)", () => {
 // 🐢 Puzzle 2D performance round 3: the batched, hash-conditional `refresh-ui` protocol that replaces
 // ~12 sequential per-section WASM calls with one round trip. `buildUiRefreshRequest` restricts what's
 // asked for by scope and attaches known hashes; `applyUiRefreshResponseToCache` writes back only the
-// sections the plugin actually says changed.
+// sections the program actually says changed.
 describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
   const windowKinds = [
     { id: "overview", bodyKey: "puzzle2d.play.overview" },
@@ -760,7 +760,7 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
 
   it("buildActiveUtilityByWindowId makes a just-activated transform visible to refresh before the next React render", () => {
     // Regression: setActiveUtility must sync activeUtilityByWindowIdRef before refreshUi; otherwise the
-    // plugin never stamps transform and the gumball stays hidden.
+    // program never stamps transform and the gumball stays hidden.
     const map: Record<string, string | null> = { "puzzle3d-main-top": null };
     map["puzzle3d-main-top"] = "transform";
     const activeUtilityByWindowId = buildActiveUtilityByWindowId(map);
@@ -776,7 +776,7 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
     expect(request?.viewState.activeUtilityId).toBeUndefined();
   });
 
-  it("buildUiRefreshRequest for a full scope requests every window/panel/engagements/measures/labels section (utility bars are now registry-derived, not a plugin section)", () => {
+  it("buildUiRefreshRequest for a full scope requests every window/panel/engagements/measures/labels section (utility bars are now registry-derived, not a program section)", () => {
     const request = buildUiRefreshRequest({ kind: "full" }, windowKinds, panelTabLeaves, {}, new Map());
     expect(request?.windows?.map((w) => w.key)).toEqual(["overview", "detail"]);
     expect(request?.panels?.map((p) => p.key)).toEqual(["framework.panel.document"]);
@@ -860,33 +860,33 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
   });
 });
 
-describe("framework plugin runtime", () => {
-  it("preserves batched UI refreshes through the React plugin adapter", async () => {
-    const moduleUrl = `data:application/javascript,${encodeURIComponent("export function semio_plugin_manifest(){return JSON.stringify({pluginId:'mock-refresh',label:'Mock Refresh',version:'0',apps:[],programs:[],examples:[]})};export function semio_plugin_refresh_ui(instanceId,requestJson){return JSON.stringify({windows:[{key:'overview',hash:'fresh',value:{instanceId,request:JSON.parse(requestJson)}}]})}")}`;
+describe("framework program runtime", () => {
+  it("preserves batched UI refreshes through the React program adapter", async () => {
+    const moduleUrl = `data:application/javascript,${encodeURIComponent("export function semio_program_manifest(){return JSON.stringify({programId:'mock-refresh',label:'Mock Refresh',version:'0',apps:[],programs:[],examples:[]})};export function semio_program_refresh_ui(instanceId,requestJson){return JSON.stringify({windows:[{key:'overview',hash:'fresh',value:{instanceId,request:JSON.parse(requestJson)}}]})}")}`;
     const handle = await loadPluginModule("mock-refresh", moduleUrl);
     await expect(handle.refreshUi(7, { viewState: {} })).resolves.toEqual({
       windows: [{ key: "overview", hash: "fresh", value: { instanceId: 7, request: { viewState: {} } } }],
     });
   });
 
-  it("loads plugin modules through framework-core", async () => {
+  it("loads program modules through framework-core", async () => {
     const { loadPluginModule } = await import("@semio-tech/framework-core");
-    const handle = await loadPluginModule("mock", "data:application/javascript,export function semio_plugin_manifest(){return JSON.stringify({pluginId:'mock',label:'Mock',version:'0',apps:[],programs:[],examples:[]})}");
-    expect(handle.manifest.pluginId).toBe("mock");
+    const handle = await loadPluginModule("mock", "data:application/javascript,export function semio_program_manifest(){return JSON.stringify({programId:'mock',label:'Mock',version:'0',apps:[],programs:[],examples:[]})}");
+    expect(handle.manifest.programId).toBe("mock");
   });
 
-  it("parses a typed InvocationResponse, including requestedEffects, from a plugin handle-action response", async () => {
+  it("parses a typed InvocationResponse, including requestedEffects, from a program handle-action response", async () => {
     const { parseInvocationResponse } = await import("@semio-tech/framework-core");
     const response = parseInvocationResponse(
       JSON.stringify({
         output: null,
         operations: [{ diff: { payload: { schemaId: "draw.operation", document: { id: "forest" } } } }],
         inverseGroup: { invocationId: "setActiveExample:1:0", operations: [], inverseOperations: [] },
-        requestedEffects: [{ navigate: { uri: "/studios/forest" } }],
+        requestedEffects: [{ navigate: { uri: "/spaces/forest" } }],
       }),
     );
     expect(response.operations).toHaveLength(1);
-    expect(response.requestedEffects).toEqual([{ navigate: { uri: "/studios/forest" } }]);
+    expect(response.requestedEffects).toEqual([{ navigate: { uri: "/spaces/forest" } }]);
   });
 
   it("falls back to an empty InvocationResponse for malformed handle-action JSON", async () => {
@@ -895,13 +895,13 @@ describe("framework plugin runtime", () => {
     expect(parseInvocationResponse(JSON.stringify({ output: null }))).toEqual({ output: null, operations: [], inverseGroup: { invocationId: "", operations: [], inverseOperations: [] } });
   });
 
-  it("serializes concurrent plugin wasm handle calls", async () => {
+  it("serializes concurrent program wasm handle calls", async () => {
     const { withSerializedPluginWasmHandle } = await import("@semio-tech/framework-core");
     let inFlight = 0;
     let maxInFlight = 0;
     const handle = withSerializedPluginWasmHandle({
-      pluginId: "mock",
-      manifest: { pluginId: "mock", label: "Mock", version: "0", apps: [], programs: [], examples: [] },
+      programId: "mock",
+      manifest: { programId: "mock", label: "Mock", version: "0", apps: [], programs: [], examples: [] },
       createApp: async () => 1,
       destroyApp: async () => {},
       handleAction: async () => {
@@ -919,13 +919,13 @@ describe("framework plugin runtime", () => {
     expect(maxInFlight).toBe(1);
   });
 
-  it("detects jco payload-shaped plugin instance busy errors", async () => {
+  it("detects jco payload-shaped program instance busy errors", async () => {
     const { isPluginInstanceBusyError, pluginErrorText } = await import("@semio-tech/framework-core");
     const jcoBusy = Object.assign(new Error("[object Object] (see error.payload)"), {
-      payload: { tag: "message", val: "plugin instance busy" },
+      payload: { tag: "message", val: "program instance busy" },
     });
     expect(isPluginInstanceBusyError(jcoBusy)).toBe(true);
-    expect(pluginErrorText(jcoBusy)).toContain("plugin instance busy");
+    expect(pluginErrorText(jcoBusy)).toContain("program instance busy");
     expect(isPluginInstanceBusyError(new Error("boom"))).toBe(false);
   });
 });
@@ -1005,8 +1005,8 @@ describe("framework external slots", () => {
   it("resolves external slots through contributor plugins", async () => {
     const { resolveExternalSlots } = await import("@semio-tech/framework-core");
     const handle = {
-      pluginId: "forms-module-procedural",
-      manifest: { pluginId: "forms-module-procedural", label: "Module", version: "0", apps: [], programs: [], examples: [] },
+      programId: "forms-module-procedural",
+      manifest: { programId: "forms-module-procedural", label: "Module", version: "0", apps: [], programs: [], examples: [] },
       createApp: async () => 7,
       destroyApp: async () => {},
       handleAction: async () => [],
@@ -1021,7 +1021,7 @@ describe("framework external slots", () => {
     const resolved = await resolveExternalSlots(
       {
         type: "externalSlot",
-        pluginId: "forms-module-procedural",
+        programId: "forms-module-procedural",
         appId: "forms-module-procedural",
         bodyKey: "preview",
         paramsJson: "{}",
@@ -1040,7 +1040,7 @@ describe("framework external slots", () => {
       interpretUiNode(
         {
           type: "externalSlot",
-          pluginId: "missing-module",
+          programId: "missing-module",
           appId: "missing-module",
           bodyKey: "preview",
           paramsJson: "{}",
@@ -3027,7 +3027,7 @@ describe("spawned window chrome", () => {
     keybindings: [],
   };
 
-  it("builds spawned engagement and measures chrome from plugin contributions", () => {
+  it("builds spawned engagement and measures chrome from program contributions", () => {
     const kind = app.windowKinds[0]!;
     const engagements = {
       [kind.id]: {
@@ -3543,26 +3543,26 @@ describe("s workflow flow routing", () => {
   });
 
   it("parses studio and studio+instance shell paths, and rejects non-studio routes", () => {
-    expect(parseStudioShellPath("/studios/my-studio")).toEqual({ studioId: "my-studio", instanceId: undefined });
-    expect(parseStudioShellPath("/studios/my-studio/instances/inst-1")).toEqual({ studioId: "my-studio", instanceId: "inst-1" });
-    expect(parseStudioShellPath("/")).toBeNull();
-    expect(parseStudioShellPath("/studios/my-studio/instances/inst-1/extra")).toBeNull();
+    expect(parseSpaceShellPath("/spaces/my-studio")).toEqual({ spaceId: "my-studio", instanceId: undefined });
+    expect(parseSpaceShellPath("/spaces/my-studio/instances/inst-1")).toEqual({ spaceId: "my-studio", instanceId: "inst-1" });
+    expect(parseSpaceShellPath("/")).toBeNull();
+    expect(parseSpaceShellPath("/spaces/my-studio/instances/inst-1/extra")).toBeNull();
   });
 
   it("folds spawned focus into viewState so a subsequent host-effect session write keeps activeSpawnedId", () => {
     const panel = {
       activePanelTab: "s-play-catalogue",
-      programs: [{ pluginId: "draw", programId: "draw", appId: "draw", label: "Draw", document: ["draw"], yields: "2d.drawing" }],
+      programs: [{ programId: "draw", programId: "draw", appId: "draw", label: "Draw", document: ["draw"], yields: "2d.drawing" }],
       spawnedApps: [] as const,
     };
-    const spawned = { id: "app-draw-1", pluginId: "draw", instanceId: 1, appId: "draw", label: "Semio Emblem", document: ["draw"] };
+    const spawned = { id: "app-draw-1", programId: "draw", instanceId: 1, appId: "draw", label: "Semio Emblem", document: ["draw"] };
     const focused = studioPanelFocusingSpawned(panel, spawned);
     expect(focused.activeSpawnedId).toBe("app-draw-1");
     expect(focused.spawnedApps).toEqual([spawned]);
     // 🐚 Simulate applyHostEffects: fold into nextViewState, then a final SET_SESSION commits that
     // viewState (the bug was committing the pre-spawn viewState and wiping activeSpawnedId).
     const baseViewState = { panelJson: JSON.stringify(panel) };
-    const nextViewState = viewStateWithStudioPanel(baseViewState, focused);
+    const nextViewState = viewStateWithSpacePanel(baseViewState, focused);
     expect(JSON.parse(nextViewState.panelJson!).activeSpawnedId).toBe("app-draw-1");
     const refocused = studioPanelFocusingSpawned(focused, { ...spawned, label: "Renamed" });
     expect(refocused.spawnedApps).toHaveLength(1);
@@ -3987,7 +3987,7 @@ describe("resolveCommands / commandCategories (footer command panel registry)", 
     ] as AppModeDefinition[],
   };
 
-  it("aggregates os + plugin + app-scope + active-mode's mode-scope commands, excluding other modes' mode-scope commands", () => {
+  it("aggregates os + program + app-scope + active-mode's mode-scope commands, excluding other modes' mode-scope commands", () => {
     const resolved = resolveCommands(osCommands, pluginManifest, app, "edit");
     expect(resolved.map((entry) => entry.definition.id)).toEqual(["os.setThemeId", "plugin.export", "app.resetGrid", "mode.focus"]);
     expect(resolved.find((entry) => entry.definition.id === "os.setThemeId")?.source).toEqual({ kind: "os" });
@@ -4000,7 +4000,7 @@ describe("resolveCommands / commandCategories (footer command panel registry)", 
     expect(resolved.map((entry) => entry.definition.id)).toEqual(["os.setThemeId", "plugin.export", "app.resetGrid", "mode.paintOnly"]);
   });
 
-  it("resolves only os commands with no session (null plugin manifest / app)", () => {
+  it("resolves only os commands with no session (null program manifest / app)", () => {
     const resolved = resolveCommands(osCommands, null, null, "");
     expect(resolved.map((entry) => entry.definition.id)).toEqual(["os.setThemeId"]);
   });

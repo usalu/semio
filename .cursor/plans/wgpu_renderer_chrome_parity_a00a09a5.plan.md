@@ -30,7 +30,7 @@ todos:
    content: Replace context menu no-operations with real scene-contributed items (node-graph first)
    status: completed
  - id: verify-e2e
-   content: Extend verify-wgpu-playgrounds-e2e.ts with palette/find/rail assertions; cargo test; rebuild wasm; run full 25-plugin suites both renderers; screenshot s and draw
+   content: Extend verify-wgpu-playgrounds-e2e.ts with palette/find/rail assertions; cargo test; rebuild wasm; run full 25-program suites both renderers; screenshot s and draw
    status: completed
 isProject: false
 ---
@@ -40,17 +40,17 @@ isProject: false
 All 25 playground apps can boot in two renderer modes via `SEMIO_RENDERER=react|wgpu` (`framework/product/os/dev/js/index.ts`). The React renderer (`framework/renderer/react/os-shell.tsx`, already updated in the working tree by the in-progress "restore old S navbar parity" work) is the up-to-date behavioral reference. The WGPU renderer (`framework/renderer/wgpu/rs/shell.rs`) has structural navbar/footer/panel chrome but several pieces are stubs or entirely absent:
 
 - Global command palette (Mod+P) and find-in-window (Mod+F): `[render_palette](framework/renderer/wgpu/rs/shell.rs)` draws a title + empty input box, no item list, no filtering, no keyboard nav, no dispatch.
-- Per-window **Command** rail (engagement) and **Window Options** rail (measures): not implemented at all in `shell.rs`, even though `WindowKindDefinition.measures` / `.engagement` ([framework/core/rs/ui.rs:913-923](framework/core/rs/ui.rs)) are already populated by the `s` and `draw` plugins ([s/plugin/rs/lib.rs](s/plugin/rs/lib.rs), [draw/plugin/rs/lib.rs](draw/plugin/rs/lib.rs)) and already deserialized into `ActiveSession.app` on the WGPU side via `PluginBridgeEntry` — this is a pure rendering/interaction gap, not a data gap.
+- Per-window **Command** rail (engagement) and **Window Options** rail (measures): not implemented at all in `shell.rs`, even though `WindowKindDefinition.measures` / `.engagement` ([framework/core/rs/ui.rs:913-923](framework/core/rs/ui.rs)) are already populated by the `s` and `draw` plugins ([s/program/rs/lib.rs](s/program/rs/lib.rs), [draw/program/rs/lib.rs](draw/program/rs/lib.rs)) and already deserialized into `ActiveSession.app` on the WGPU side via `ProgramBridgeEntry` — this is a pure rendering/interaction gap, not a data gap.
 - Navbar: currently shows back/forward/up + breadcrumb + inline theme dropdown + visible Search/Find toggle buttons (the _old_, now-superseded React navbar shape). React has since been restored to: logo/title → example dropdown → fill → 4-icon panel toggle group (display/workbench/details/settings) → mode button group, with theme moved into a Settings panel tab and history/breadcrumb/search/find kept only as keybindings.
-- Framework side-panel tabs (Display/Workbench/Details/Settings, Document auto-injection) exist in React (`framework/renderer/react/os-chrome-panels.tsx`) but have no WGPU equivalent — panels only show raw plugin tabs.
+- Framework side-panel tabs (Display/Workbench/Details/Settings, Document auto-injection) exist in React (`framework/renderer/react/os-chrome-panels.tsx`) but have no WGPU equivalent — panels only show raw program tabs.
 - Keyboard: `on_key` in [framework/renderer/wgpu/rs/lib.rs:333-346](framework/renderer/wgpu/rs/lib.rs) only appends characters into a focused input; there is no Mod+P/Mod+F/history/Escape/Arrow routing.
 
-Confirmed via `AppDefinition`/`WindowKindDefinition`/`PluginManifest` in [framework/core/rs/ui.rs](framework/core/rs/ui.rs): the WGPU shell already receives everything it needs (`session.app.window_kinds[].measures`/`.engagement`, `manifest.examples`, `app.modes`, `app.panel_tabs`) — this plan is entirely about consuming that data in `shell.rs`/`lib.rs`, reusing existing `ui/wgpu/rs/widgets.rs` primitives (`Select`, `Slider`, `Toggle`, `Tree`, `NumberStepper`, `Ring`, `Input`, `Button`).
+Confirmed via `AppDefinition`/`WindowKindDefinition`/`ProgramManifest` in [framework/core/rs/ui.rs](framework/core/rs/ui.rs): the WGPU shell already receives everything it needs (`session.app.window_kinds[].measures`/`.engagement`, `manifest.examples`, `app.modes`, `app.panel_tabs`) — this plan is entirely about consuming that data in `shell.rs`/`lib.rs`, reusing existing `ui/wgpu/rs/widgets.rs` primitives (`Select`, `Slider`, `Toggle`, `Tree`, `NumberStepper`, `Ring`, `Input`, `Button`).
 
 ```mermaid
 flowchart LR
     core["framework/core/rs/ui.rs\nAppDefinition / WindowKindDefinition\n(measures, engagement, examples)"]
-    bridge["plugin_bridge.rs\nPluginBridgeEntry.manifest"]
+    bridge["program_bridge.rs\nProgramBridgeEntry.manifest"]
     shellState["shell.rs ShellState\n(new: panel kinds, rail fold state,\nsearch/find items)"]
     chrome["shell.rs render_chrome\nnavbar / panels / rails / overlays"]
     widgets["ui/wgpu/rs/widgets.rs\nSelect, Slider, Toggle, Tree, Input"]
@@ -65,7 +65,7 @@ flowchart LR
 Add fields alongside the existing `left_panel_open`/`open_selects` etc.:
 
 - `active_left_panel_kind: PanelKind` (`Workbench | Display`), `active_right_panel_kind: PanelKind` (`Details | Settings`)
-- `active_example_id: Option<String>`, derived/reset from `manifest.examples` on session change (mirror the generic derivation in `os-shell.tsx` — driven by `session.pluginId`, not hardcoded to `s`)
+- `active_example_id: Option<String>`, derived/reset from `manifest.examples` on session change (mirror the generic derivation in `os-shell.tsx` — driven by `session.programId`, not hardcoded to `s`)
 - `engagement_expanded: HashMap<String, bool>`, `measures_folded: HashMap<String, bool>`, `measures_expanded: HashMap<String, bool>`, `measures_width: HashMap<String, f32>` — keyed by window id, matching `WindowEngagementChrome`/`WindowMeasuresChrome` fold/expand/resize semantics from [ui/js/react/index.tsx:13124-13230](ui/js/react/index.tsx)
 - `search_items` / `find_items` (built lazily from `session.app` — panel tabs, window kinds, keybindings — plus a `find_items` registry populated by scene hosts, mirroring `UIFindProvider`)
 - Remove now-superseded fields tied to breadcrumb/back-forward-up if no longer used once the navbar is rewritten.
@@ -130,5 +130,5 @@ Replace the generic Copy/Paste no-operations with scene-contributed items (start
 
 - Extend the existing suite (per repo convention, no new test files): [.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts](.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts) — add assertions that Mod+P opens a palette with visible, clickable items; Mod+F opens find with items for `draw`/`flow`; the example dropdown, 4-icon panel toggle group, and mode buttons render/function; and — specifically on `s` and `draw` — the Command rail and Window Options rail chips are present and expand to show real controls.
 - `cargo test -p ui_wgpu` for widget/layout units touched; rebuild the WGPU wasm bundle (`framework/renderer/wgpu/script.ts wasm`).
-- Run the full 25-plugin suite for both `verify-react-playgrounds-e2e.ts` and `verify-wgpu-playgrounds-e2e.ts` to confirm no regressions, plus a manual screenshot comparison of `s` and `draw` in both renderers.
+- Run the full 25-program suite for both `verify-react-playgrounds-e2e.ts` and `verify-wgpu-playgrounds-e2e.ts` to confirm no regressions, plus a manual screenshot comparison of `s` and `draw` in both renderers.
 - All work stays in existing files using region/subregion comments per repo convention — no new script files.

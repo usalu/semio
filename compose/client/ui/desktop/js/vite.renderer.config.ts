@@ -22,8 +22,8 @@ import remarkFrontmatter from "remark-frontmatter";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import wasm from "vite-plugin-wasm";
-import topLevelAwait from "vite-plugin-top-level-await";
+import wasm from "vite-program-wasm";
+import topLevelAwait from "vite-program-top-level-await";
 import { createWorkspaceViteResolveConfig, semioFaviconVitePlugin } from "../../../../ui/styling/vite-elements-assets.ts";
 // #endregion 🔌Adapters
 

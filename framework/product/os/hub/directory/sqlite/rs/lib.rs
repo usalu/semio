@@ -25,7 +25,7 @@ use uuid::Uuid;
 const SCHEMA: &str = "\
 CREATE TABLE IF NOT EXISTS node (
     id TEXT PRIMARY KEY,
-    studio_id TEXT NOT NULL,
+    space_id TEXT NOT NULL,
     parent_id TEXT REFERENCES node(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     kind TEXT NOT NULL
@@ -44,18 +44,18 @@ CREATE TABLE IF NOT EXISTS hub_user (
     sso_provider TEXT,
     created_at INTEGER NOT NULL
 );
-CREATE TABLE IF NOT EXISTS hub_studio (
+CREATE TABLE IF NOT EXISTS hub_space (
     id TEXT PRIMARY KEY,
     name TEXT NOT NULL,
     owner_user_id TEXT NOT NULL REFERENCES hub_user(id),
     created_at INTEGER NOT NULL
 );
-CREATE TABLE IF NOT EXISTS hub_studio_membership (
-    studio_id TEXT NOT NULL REFERENCES hub_studio(id) ON DELETE CASCADE,
+CREATE TABLE IF NOT EXISTS hub_space_membership (
+    space_id TEXT NOT NULL REFERENCES hub_space(id) ON DELETE CASCADE,
     user_id TEXT NOT NULL REFERENCES hub_user(id) ON DELETE CASCADE,
     role TEXT NOT NULL,
     created_at INTEGER NOT NULL,
-    PRIMARY KEY (studio_id, user_id)
+    PRIMARY KEY (space_id, user_id)
 );
 CREATE TABLE IF NOT EXISTS hub_auth_session (
     id TEXT PRIMARY KEY,
@@ -68,13 +68,13 @@ CREATE TABLE IF NOT EXISTS hub_sync_session (
     id TEXT PRIMARY KEY,
     document_id TEXT NOT NULL,
     user_id TEXT REFERENCES hub_user(id) ON DELETE SET NULL,
-    studio_role TEXT,
+    space_role TEXT,
     client_label TEXT NOT NULL,
     connected_at INTEGER NOT NULL,
     disconnected_at INTEGER
 );
-CREATE INDEX IF NOT EXISTS idx_membership_user ON hub_studio_membership (user_id);
-CREATE INDEX IF NOT EXISTS idx_node_studio_parent ON node (studio_id, parent_id);
+CREATE INDEX IF NOT EXISTS idx_membership_user ON hub_space_membership (user_id);
+CREATE INDEX IF NOT EXISTS idx_node_space_parent ON node (space_id, parent_id);
 CREATE INDEX IF NOT EXISTS idx_sync_session_document ON hub_sync_session (document_id, disconnected_at);
 ";
 //#endregion 🔖Schema
@@ -107,8 +107,8 @@ impl SqliteDirectory {
         self.conn.lock().map_err(|_| DirectoryError::Backend("sqlite connection lock poisoned".into()))
     }
 
-    /// @emoji 🌱 Seeds a placeholder `seed` system user, a default studio it owns, and a
-    /// `Documents/default` node. The system user satisfies `hub_studio.owner_user_id`'s foreign
+    /// @emoji 🌱 Seeds a placeholder `seed` system user, a default space it owns, and a
+    /// `Documents/default` node. The system user satisfies `hub_space.owner_user_id`'s foreign
     /// key until a real bootstrap admin claims ownership through `/admin` (HP-6). Document
     /// existence itself is `db::Database`'s concern (see `os-hub`'s `bin.rs`), not seeded here.
     pub async fn seed(&self) -> DirectoryResult<()> {
@@ -124,12 +124,12 @@ impl SqliteDirectory {
         }
         let studio_exists: i64 = self
             .lock()?
-            .query_row("SELECT COUNT(*) FROM hub_studio WHERE id = 'default'", [], |row| row.get(0))
+            .query_row("SELECT COUNT(*) FROM hub_space WHERE id = 'default'", [], |row| row.get(0))
             .map_err(backend)?;
         if studio_exists == 0 {
             self.lock()?
                 .execute(
-                    "INSERT INTO hub_studio (id, name, owner_user_id, created_at) VALUES ('default', 'Studio', 'seed', ?1)",
+                    "INSERT INTO hub_space (id, name, owner_user_id, created_at) VALUES ('default', 'Space', 'seed', ?1)",
                     rusqlite::params![now_ms()],
                 )
                 .map_err(backend)?;
@@ -146,25 +146,25 @@ impl SqliteDirectory {
 #[async_trait]
 impl HubDirectory for SqliteDirectory {
     //#region Vfs
-    async fn list_nodes(&self, studio_id: &str, parent: Option<&str>) -> DirectoryResult<Vec<NodeRecord>> {
+    async fn list_nodes(&self, space_id: &str, parent: Option<&str>) -> DirectoryResult<Vec<NodeRecord>> {
         let conn = self.lock()?;
         let row_mapper = |row: &rusqlite::Row| -> rusqlite::Result<NodeRecord> {
-            Ok(NodeRecord { id: row.get(0)?, studio_id: studio_id.to_string(), parent_id: row.get(1)?, name: row.get(2)?, kind: row.get(3)? })
+            Ok(NodeRecord { id: row.get(0)?, space_id: space_id.to_string(), parent_id: row.get(1)?, name: row.get(2)?, kind: row.get(3)? })
         };
         let rows = match parent {
             Some(parent) => {
                 let mut stmt = conn
-                    .prepare("SELECT id, parent_id, name, kind FROM node WHERE studio_id = ?1 AND parent_id = ?2 ORDER BY name")
+                    .prepare("SELECT id, parent_id, name, kind FROM node WHERE space_id = ?1 AND parent_id = ?2 ORDER BY name")
                     .map_err(backend)?;
-                let mapped = stmt.query_map(rusqlite::params![studio_id, parent], row_mapper).map_err(backend)?;
+                let mapped = stmt.query_map(rusqlite::params![space_id, parent], row_mapper).map_err(backend)?;
                 let collected: Vec<_> = mapped.filter_map(|row| row.ok()).collect();
                 collected
             }
             None => {
                 let mut stmt = conn
-                    .prepare("SELECT id, parent_id, name, kind FROM node WHERE studio_id = ?1 AND parent_id IS NULL ORDER BY name")
+                    .prepare("SELECT id, parent_id, name, kind FROM node WHERE space_id = ?1 AND parent_id IS NULL ORDER BY name")
                     .map_err(backend)?;
-                let mapped = stmt.query_map([studio_id], row_mapper).map_err(backend)?;
+                let mapped = stmt.query_map([space_id], row_mapper).map_err(backend)?;
                 let collected: Vec<_> = mapped.filter_map(|row| row.ok()).collect();
                 collected
             }
@@ -172,15 +172,15 @@ impl HubDirectory for SqliteDirectory {
         Ok(rows)
     }
 
-    async fn create_node(&self, studio_id: &str, parent_id: Option<&str>, name: &str, kind: &str) -> DirectoryResult<NodeRecord> {
+    async fn create_node(&self, space_id: &str, parent_id: Option<&str>, name: &str, kind: &str) -> DirectoryResult<NodeRecord> {
         let id = Uuid::now_v7().to_string();
         self.lock()?
             .execute(
-                "INSERT INTO node (id, studio_id, parent_id, name, kind) VALUES (?1, ?2, ?3, ?4, ?5)",
-                rusqlite::params![id, studio_id, parent_id, name, kind],
+                "INSERT INTO node (id, space_id, parent_id, name, kind) VALUES (?1, ?2, ?3, ?4, ?5)",
+                rusqlite::params![id, space_id, parent_id, name, kind],
             )
             .map_err(backend)?;
-        Ok(NodeRecord { id, studio_id: studio_id.to_string(), parent_id: parent_id.map(str::to_string), name: name.to_string(), kind: kind.to_string() })
+        Ok(NodeRecord { id, space_id: space_id.to_string(), parent_id: parent_id.map(str::to_string), name: name.to_string(), kind: kind.to_string() })
     }
     //#endregion
 
@@ -280,26 +280,26 @@ impl HubDirectory for SqliteDirectory {
     }
     //#endregion
 
-    //#region Studios
-    async fn create_studio(&self, name: &str, owner_user_id: &str) -> DirectoryResult<StudioRecord> {
+    //#region Spaces
+    async fn create_space(&self, name: &str, owner_user_id: &str) -> DirectoryResult<SpaceRecord> {
         let id = Uuid::now_v7().to_string();
         let created_at = now_ms();
         self.lock()?
             .execute(
-                "INSERT INTO hub_studio (id, name, owner_user_id, created_at) VALUES (?1, ?2, ?3, ?4)",
+                "INSERT INTO hub_space (id, name, owner_user_id, created_at) VALUES (?1, ?2, ?3, ?4)",
                 rusqlite::params![id, name, owner_user_id, created_at],
             )
             .map_err(backend)?;
-        self.upsert_membership(&id, owner_user_id, StudioRole::Owner).await?;
-        Ok(StudioRecord { id, name: name.to_string(), owner_user_id: owner_user_id.to_string(), created_at })
+        self.upsert_membership(&id, owner_user_id, SpaceRole::Owner).await?;
+        Ok(SpaceRecord { id, name: name.to_string(), owner_user_id: owner_user_id.to_string(), created_at })
     }
 
-    async fn list_studios_for_user(&self, user_id: &str) -> DirectoryResult<Vec<(StudioRecord, StudioRole)>> {
+    async fn list_spaces_for_user(&self, user_id: &str) -> DirectoryResult<Vec<(SpaceRecord, SpaceRole)>> {
         let conn = self.lock()?;
         let mut stmt = conn
             .prepare(
-                "SELECT s.id, s.name, s.owner_user_id, s.created_at, m.role FROM hub_studio s
-                 JOIN hub_studio_membership m ON m.studio_id = s.id WHERE m.user_id = ?1 ORDER BY s.created_at",
+                "SELECT s.id, s.name, s.owner_user_id, s.created_at, m.role FROM hub_space s
+                 JOIN hub_space_membership m ON m.space_id = s.id WHERE m.user_id = ?1 ORDER BY s.created_at",
             )
             .map_err(backend)?;
         let rows = stmt
@@ -316,19 +316,19 @@ impl HubDirectory for SqliteDirectory {
         Ok(rows
             .filter_map(|row| row.ok())
             .filter_map(|(id, name, owner_user_id, created_at, role)| {
-                StudioRole::parse(&role).map(|role| (StudioRecord { id, name, owner_user_id, created_at }, role))
+                SpaceRole::parse(&role).map(|role| (SpaceRecord { id, name, owner_user_id, created_at }, role))
             })
             .collect())
     }
 
-    async fn list_studios(&self, limit: i64, offset: i64) -> DirectoryResult<Vec<StudioRecord>> {
+    async fn list_spaces(&self, limit: i64, offset: i64) -> DirectoryResult<Vec<SpaceRecord>> {
         let conn = self.lock()?;
         let mut stmt = conn
-            .prepare("SELECT id, name, owner_user_id, created_at FROM hub_studio ORDER BY created_at LIMIT ?1 OFFSET ?2")
+            .prepare("SELECT id, name, owner_user_id, created_at FROM hub_space ORDER BY created_at LIMIT ?1 OFFSET ?2")
             .map_err(backend)?;
         let rows = stmt
             .query_map(rusqlite::params![limit, offset], |row| {
-                Ok(StudioRecord {
+                Ok(SpaceRecord {
                     id: row.get(0)?,
                     name: row.get(1)?,
                     owner_user_id: row.get(2)?,
@@ -339,38 +339,38 @@ impl HubDirectory for SqliteDirectory {
         Ok(rows.filter_map(|row| row.ok()).collect())
     }
 
-    async fn upsert_membership(&self, studio_id: &str, user_id: &str, role: StudioRole) -> DirectoryResult<()> {
+    async fn upsert_membership(&self, space_id: &str, user_id: &str, role: SpaceRole) -> DirectoryResult<()> {
         self.lock()?
             .execute(
-                "INSERT INTO hub_studio_membership (studio_id, user_id, role, created_at) VALUES (?1, ?2, ?3, ?4)
-                 ON CONFLICT(studio_id, user_id) DO UPDATE SET role = ?3",
-                rusqlite::params![studio_id, user_id, role.as_str(), now_ms()],
+                "INSERT INTO hub_space_membership (space_id, user_id, role, created_at) VALUES (?1, ?2, ?3, ?4)
+                 ON CONFLICT(space_id, user_id) DO UPDATE SET role = ?3",
+                rusqlite::params![space_id, user_id, role.as_str(), now_ms()],
             )
             .map_err(backend)?;
         Ok(())
     }
 
-    async fn remove_membership(&self, studio_id: &str, user_id: &str) -> DirectoryResult<()> {
+    async fn remove_membership(&self, space_id: &str, user_id: &str) -> DirectoryResult<()> {
         self.lock()?
             .execute(
-                "DELETE FROM hub_studio_membership WHERE studio_id = ?1 AND user_id = ?2",
-                rusqlite::params![studio_id, user_id],
+                "DELETE FROM hub_space_membership WHERE space_id = ?1 AND user_id = ?2",
+                rusqlite::params![space_id, user_id],
             )
             .map_err(backend)?;
         Ok(())
     }
 
-    async fn get_role(&self, studio_id: &str, user_id: &str) -> DirectoryResult<Option<StudioRole>> {
+    async fn get_role(&self, space_id: &str, user_id: &str) -> DirectoryResult<Option<SpaceRole>> {
         let role: Option<String> = self
             .lock()?
             .query_row(
-                "SELECT role FROM hub_studio_membership WHERE studio_id = ?1 AND user_id = ?2",
-                rusqlite::params![studio_id, user_id],
+                "SELECT role FROM hub_space_membership WHERE space_id = ?1 AND user_id = ?2",
+                rusqlite::params![space_id, user_id],
                 |row| row.get(0),
             )
             .optional()
             .map_err(backend)?;
-        Ok(role.and_then(|r| StudioRole::parse(&r)))
+        Ok(role.and_then(|r| SpaceRole::parse(&r)))
     }
     //#endregion
 
@@ -418,15 +418,15 @@ impl HubDirectory for SqliteDirectory {
         &self,
         document_id: &str,
         user_id: Option<&str>,
-        studio_role: Option<StudioRole>,
+        space_role: Option<SpaceRole>,
         client_label: &str,
     ) -> DirectoryResult<SyncSessionRecord> {
         let id = Uuid::now_v7().to_string();
         let connected_at = now_ms();
-        let role_str = studio_role.map(|r| r.as_str());
+        let role_str = space_role.map(|r| r.as_str());
         self.lock()?
             .execute(
-                "INSERT INTO hub_sync_session (id, document_id, user_id, studio_role, client_label, connected_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                "INSERT INTO hub_sync_session (id, document_id, user_id, space_role, client_label, connected_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
                 rusqlite::params![id, document_id, user_id, role_str, client_label, connected_at],
             )
             .map_err(backend)?;
@@ -434,7 +434,7 @@ impl HubDirectory for SqliteDirectory {
             id,
             document_id: document_id.to_string(),
             user_id: user_id.map(str::to_string),
-            studio_role,
+            space_role,
             client_label: client_label.to_string(),
             connected_at,
             disconnected_at: None,
@@ -455,18 +455,18 @@ impl HubDirectory for SqliteDirectory {
         let conn = self.lock()?;
         let mut stmt = conn
             .prepare(
-                "SELECT id, user_id, studio_role, client_label, connected_at, disconnected_at FROM hub_sync_session
+                "SELECT id, user_id, space_role, client_label, connected_at, disconnected_at FROM hub_sync_session
                  WHERE document_id = ?1 ORDER BY connected_at DESC",
             )
             .map_err(backend)?;
         let rows = stmt
             .query_map([document_id], |row| {
-                let studio_role: Option<String> = row.get(2)?;
+                let space_role: Option<String> = row.get(2)?;
                 Ok(SyncSessionRecord {
                     id: row.get(0)?,
                     document_id: document_id.to_string(),
                     user_id: row.get(1)?,
-                    studio_role: studio_role.and_then(|r| StudioRole::parse(&r)),
+                    space_role: space_role.and_then(|r| SpaceRole::parse(&r)),
                     client_label: row.get(3)?,
                     connected_at: row.get(4)?,
                     disconnected_at: row.get(5)?,
@@ -497,15 +497,15 @@ mod tests {
 
     // 🔬 Users, studios, and role-based membership round-trip.
     #[tokio::test]
-    async fn user_studio_membership_round_trip() {
+    async fn user_space_membership_round_trip() {
         let directory = SqliteDirectory::connect(":memory:").await.expect("connect");
         let user = directory.create_user("a@example.com", "Ada", None, None, None).await.expect("create user");
-        let studio = directory.create_studio("Studio A", &user.id).await.expect("create studio");
-        assert_eq!(directory.get_role(&studio.id, &user.id).await.unwrap(), Some(StudioRole::Owner));
+        let studio = directory.create_space("Space A", &user.id).await.expect("create space");
+        assert_eq!(directory.get_role(&studio.id, &user.id).await.unwrap(), Some(SpaceRole::Owner));
         let member = directory.create_user("b@example.com", "Bob", None, None, None).await.expect("create user 2");
-        directory.upsert_membership(&studio.id, &member.id, StudioRole::Viewer).await.expect("add member");
-        assert_eq!(directory.get_role(&studio.id, &member.id).await.unwrap(), Some(StudioRole::Viewer));
-        let studios = directory.list_studios_for_user(&member.id).await.unwrap();
+        directory.upsert_membership(&studio.id, &member.id, SpaceRole::Viewer).await.expect("add member");
+        assert_eq!(directory.get_role(&studio.id, &member.id).await.unwrap(), Some(SpaceRole::Viewer));
+        let studios = directory.list_spaces_for_user(&member.id).await.unwrap();
         assert_eq!(studios.len(), 1);
         directory.remove_membership(&studio.id, &member.id).await.expect("remove");
         assert_eq!(directory.get_role(&studio.id, &member.id).await.unwrap(), None);

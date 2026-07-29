@@ -1,6 +1,6 @@
 ---
 name: Lint scripts JS facade
-overview: Replace the in-Go statute/breach mechanism with co-located `*.lint.script.ts` files driven by a new `@semio-tech/repo-lib` JS facade that spawns `client.exe` per call. An nx inferred plugin discovers every lint script and creates a cacheable per-entity target that writes `.repo/cache/breach/<entity-id>.json`.
+overview: Replace the in-Go statute/breach mechanism with co-located `*.lint.script.ts` files driven by a new `@semio-tech/repo-lib` JS facade that spawns `client.exe` per call. An nx inferred program discovers every lint script and creates a cacheable per-entity target that writes `.repo/cache/breach/<entity-id>.json`.
 todos:
  - id: scaffold_bundle
    content: Scaffold repo/lib/js bundle (package.json, project.json, tsconfig, README)
@@ -14,8 +14,8 @@ todos:
  - id: runner_bin
    content: Implement script.ts defineLint helper and bin/lint.ts runner that writes .repo/cache/breach/<id>.json
    status: completed
- - id: nx_plugin
-   content: Implement and register nx inferred plugin that discovers *.lint.script.ts and creates cacheable per-entity targets
+ - id: nx_program
+   content: Implement and register nx inferred program that discovers *.lint.script.ts and creates cacheable per-entity targets
    status: completed
  - id: remove_legacy
    content: Remove legacy policy/statute/CheckPolicies/Fix machinery from repo/client/cli/main.go and update main_test.go
@@ -63,9 +63,9 @@ In the runner:
 - File `<path>/lint.script.ts` lints the folder `<path>` → resolves to nearest enclosing `BundleLinter` if `<path>` is a bundle root, `TechnologyLinter` if technology root, otherwise `FolderLinter`. Resolution uses the same logic as `client folder <path> --json` (kind field tells us).
 - A script may also live next to a `*.section.<ext>` or `*.definition.<ext>` declarative anchor — out of scope for v1.
 
-## 3. nx inferred plugin
+## 3. nx inferred program
 
-`repo/lib/js/src/nx-plugin.ts` exporting `createNodes`:
+`repo/lib/js/src/nx-program.ts` exporting `createNodes`:
 
 - Glob: `**/*.lint.script.ts` and `**/lint.script.ts`, excluding `node_modules`, `.repo`, `dist`.
 - For each match, create a project (or inject targets onto the enclosing bundle project) with target `lint:<entity-id-flat>`:
@@ -83,7 +83,7 @@ In the runner:
 }
 ```
 
-Register the plugin in [nx.json](nx.json) `plugins` as `"@semio-tech/repo-lib/nx-plugin"`. nx caching handles the "automatic" part — if neither the script nor the target entity files changed, the cached breach JSON is restored.
+Register the program in [nx.json](nx.json) `plugins` as `"@semio-tech/repo-lib/nx-program"`. nx caching handles the "automatic" part — if neither the script nor the target entity files changed, the cached breach JSON is restored.
 
 ## 4. Remove legacy Go breach machinery
 

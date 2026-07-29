@@ -2412,7 +2412,7 @@
       }
     },
     {
-      "name": "🛠️dev🦀os-plugins",
+      "name": "🛠️dev🦀os-programs",
       "type": "node-terminal",
       "request": "launch",
       "command": "bun nx run @semio-tech/framework-os-dev:plugin",
@@ -2848,7 +2848,7 @@
       "name": "🧪test🏗️fem",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo test -p fem_core -p fem_2d -p fem_3d -p fem-plugin",
+      "command": "cargo test -p fem_core -p fem_2d -p fem_3d -p fem-program",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2859,7 +2859,7 @@
       "name": "🧪test📏norm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo test -p norm_core -p norm_din_4108 -p norm_din_en_16798 -p norm_din_v_18599 -p norm_en_1990 -p norm_en_1991 -p norm_en_1992 -p norm_en_1993 -p norm_en_1994 -p norm_en_1995 -p norm_en_1996 -p norm_en_1997 -p norm_en_1998 -p norm_en_1999 -p norm_iso_16757 -p norm_vdi_3805 -p norm-plugin",
+      "command": "cargo test -p norm_core -p norm_din_4108 -p norm_din_en_16798 -p norm_din_v_18599 -p norm_en_1990 -p norm_en_1991 -p norm_en_1992 -p norm_en_1993 -p norm_en_1994 -p norm_en_1995 -p norm_en_1996 -p norm_en_1997 -p norm_en_1998 -p norm_en_1999 -p norm_iso_16757 -p norm_vdi_3805 -p norm-program",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -2867,10 +2867,10 @@
       }
     },
     {
-      "name": "🧪test🏛️architect-program",
+      "name": "🧪test🏛️architect-spine",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/architect-program:test",
+      "command": "bun nx run @semio-tech/architect-spine:test",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -3874,7 +3874,7 @@
       "name": "📦build🧩plugin📜registry",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/plugin-registry:generate",
+      "command": "bun nx run @semio-tech/program-registry:generate",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",

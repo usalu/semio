@@ -1,6 +1,6 @@
 ---
 name: Puzzle 3D Selection Overhaul
-overview: Overhaul Puzzle 3D so selection is a window option (not a toolbar tool), picking/deselection works correctly, and the transform gumball only appears for active move/rotate/scale tools — matching CAD’s model and fixing the root bugs in plugin + world host.
+overview: Overhaul Puzzle 3D so selection is a window option (not a toolbar tool), picking/deselection works correctly, and the transform gumball only appears for active move/rotate/scale tools — matching CAD’s model and fixing the root bugs in program + world host.
 todos:
   - id: ticket
     content: Open ticket under Running Sketchpad; park notes in ticket folder
@@ -29,7 +29,7 @@ isProject: false
 
 - Associate with **Running Sketchpad** (`🎯r2602🎯runningsketchpad`).
 - Open a **new** ticket (existing `CANONICAL-PLAYGROUND-EXAMPLE-CLEANUP` is unrelated).
-- Scope: **Puzzle 3D**, with the **same selection/tool fixes applied to Puzzle 5D** in the same plugin file (identical defects; same technology).
+- Scope: **Puzzle 3D**, with the **same selection/tool fixes applied to Puzzle 5D** in the same program file (identical defects; same technology).
 
 ## Root causes (validated)
 
@@ -47,10 +47,10 @@ flowchart TD
 
 
 
-1. **Background deselect broken** in `[puzzle/plugin/rs/lib.rs](puzzle/plugin/rs/lib.rs)` `worldPick`: clears, then `unwrap_or(0)` re-selects the first object. CAD early-returns after clear (`[cad/plugin/rs/lib.rs](cad/plugin/rs/lib.rs)` ~4722).
-2. **Engagement blocks empty clicks**: `session_active: Some(active_utility != "select")` ([~4690](puzzle/plugin/rs/lib.rs)) makes transform/brush/fill mark the session active; `[handleEmptyClick](framework/renderer/react/components/world-3d-host.tsx)` skips `worldPick` when `engagementSessionActive`. Removing the select tool without fixing this would make background deselect worse (default would be `move`).
+1. **Background deselect broken** in `[puzzle/program/rs/lib.rs](puzzle/program/rs/lib.rs)` `worldPick`: clears, then `unwrap_or(0)` re-selects the first object. CAD early-returns after clear (`[cad/program/rs/lib.rs](cad/program/rs/lib.rs)` ~4722).
+2. **Engagement blocks empty clicks**: `session_active: Some(active_utility != "select")` ([~4690](puzzle/program/rs/lib.rs)) makes transform/brush/fill mark the session active; `[handleEmptyClick](framework/renderer/react/components/world-3d-host.tsx)` skips `worldPick` when `engagementSessionActive`. Removing the select tool without fixing this would make background deselect worse (default would be `move`).
 3. **Vortex click rarely selects**: host always starts connect-drag unless brush / `selectionMode === "vertex"`; Puzzle always emits `selectionMode: "mesh"`.
-4. **Gumball always on** when any object is selected ([~3485](puzzle/plugin/rs/lib.rs)); user wants it only for active transform tools.
+4. **Gumball always on** when any object is selected ([~3485](puzzle/program/rs/lib.rs)); user wants it only for active transform tools.
 
 ## Target model (CAD-consistent)
 
@@ -69,11 +69,11 @@ flowchart TD
 
 ### 1. Remove Select utility; keep Select as window options
 
-In `pub mod d3` of `[puzzle/plugin/rs/lib.rs](puzzle/plugin/rs/lib.rs)`:
+In `pub mod d3` of `[puzzle/program/rs/lib.rs](puzzle/program/rs/lib.rs)`:
 
 - Delete `.utility(... "select" ...)` and remove `"select"` from `.window_kind_utilities`.
 - Set `PUZZLE3D_DEFAULT_UTILITY` to `"move"`.
-- Keep / slightly expand `[puzzle3d_select_measures_group](puzzle/plugin/rs/lib.rs)` (already rectangle/lasso + objects/vortices/attractions) as the sole Select chrome; optionally add merge-mode toggles here (wired to `selection_mode_default`) so draw’s framework `SelectionUtilityOptions` (ids `selectLasso` / `selectMarquee`) is never relied on.
+- Keep / slightly expand `[puzzle3d_select_measures_group](puzzle/program/rs/lib.rs)` (already rectangle/lasso + objects/vortices/attractions) as the sole Select chrome; optionally add merge-mode toggles here (wired to `selection_mode_default`) so draw’s framework `SelectionUtilityOptions` (ids `selectLasso` / `selectMarquee`) is never relied on.
 - Strip engagement command `"select"`; map abort / fallbacks to `"move"` instead of `"select"`.
 - Set engagement `session_active` only for `brush`  `fill`  `worldRelocate` (not for transform tools).
 
@@ -103,7 +103,7 @@ In `[framework/renderer/react/components/world-3d-host.tsx](framework/renderer/r
 
 - Change vortex interaction to **click-vs-drag**:
   - brush: keep immediate `worldVortexSelect`
-  - otherwise: pointer-down arms a pending vortex; if movement stays under a small threshold and pointer-up on same vortex → `worldVortexSelect` (deselects objects via plugin); if drag exceeds threshold → connect-drag (attraction)
+  - otherwise: pointer-down arms a pending vortex; if movement stays under a small threshold and pointer-up on same vortex → `worldVortexSelect` (deselects objects via program); if drag exceeds threshold → connect-drag (attraction)
 - Refactor `resolveVortexPointerDownIntent` (or replace with a clearer helper) and extend existing tests in `[framework/renderer/react/index.test.ts](framework/renderer/react/index.test.ts)` — no new test files.
 - Update `worldInstancePickBlocked` tests that still assume a `"select"` utility (still false for move/undefined).
 
@@ -116,7 +116,7 @@ In `[framework/renderer/react/components/world-3d-host.tsx](framework/renderer/r
 
 ### 5. Tests / verification
 
-Extend existing Rust tests in `[puzzle/plugin/rs/lib.rs](puzzle/plugin/rs/lib.rs)` `d3` (and `d5` mirrors):
+Extend existing Rust tests in `[puzzle/program/rs/lib.rs](puzzle/program/rs/lib.rs)` `d3` (and `d5` mirrors):
 
 - `worldPick` null clears and does not reselect index 0
 - picking a new object clears vortex selection (replace)
@@ -130,7 +130,7 @@ Runtime: confirm with `[DEBUG]` logs only if needed during manual checks; remove
 
 ## Primary files
 
-- `[puzzle/plugin/rs/lib.rs](puzzle/plugin/rs/lib.rs)` — `d3` (+ `d5` parity): utilities, defaults, `worldPick` / `worldVortexSelect`, gumball, engagement, select measures, tests
+- `[puzzle/program/rs/lib.rs](puzzle/program/rs/lib.rs)` — `d3` (+ `d5` parity): utilities, defaults, `worldPick` / `worldVortexSelect`, gumball, engagement, select measures, tests
 - `[framework/renderer/react/components/world-3d-host.tsx](framework/renderer/react/components/world-3d-host.tsx)` — vortex click-vs-drag, empty-click / engagement interaction
 - `[framework/renderer/react/index.test.ts](framework/renderer/react/index.test.ts)` — intent / pick-block tests
 

@@ -11,7 +11,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 //#endregion 🔌Adapters
 
-import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../framework/plugin/registry/generated/playgrounds.ts";
+import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../framework/program/registry/generated/playgrounds.ts";
 
 export type PlaygroundHostKind = string;
 
@@ -1741,10 +1741,10 @@ export function playgroundEmbedUrl(kind: PlaygroundSiteKind, isDev: boolean): st
 
 //#region 🖥️FrameworkOsPlaygroundDev
 /**
- * 📚 Loads the generated framework OS playground catalog (variant/plugin/aliases/ports rows).
- * Reads `framework/plugin/registry/generated/playgrounds.json` directly (rather than a static
+ * 📚 Loads the generated framework OS playground catalog (variant/program/aliases/ports rows).
+ * Reads `framework/program/registry/generated/playgrounds.json` directly (rather than a static
  * TS import of the gitignored generated module) so this shared kernel never fails to load on a
- * fresh clone before `bun nx run @semio-tech/plugin-registry:generate` has ever run — callers get
+ * fresh clone before `bun nx run @semio-tech/program-registry:generate` has ever run — callers get
  * an empty catalog in that case instead of a hard module-resolution error.
  */
 export function loadFrameworkOsPlaygroundCatalog(): readonly PlaygroundVariant[] {
@@ -1768,7 +1768,7 @@ export function frameworkOsPlaygroundDefaultPort(catalog: readonly PlaygroundVar
   return renderer === "wgpu" ? row.ports.wgpu : row.ports.react;
 }
 
-/** @emoji 🎯 Resolves `bun ./script.ts dev …` segments to a framework OS plugin filter via the catalog. */
+/** @emoji 🎯 Resolves `bun ./script.ts dev …` segments to a framework OS program filter via the catalog. */
 export function resolveFrameworkOsPlaygroundPlugin(catalog: readonly PlaygroundVariant[], segments: readonly string[]): { readonly plugin: string; readonly rest: readonly string[] } | null {
   if (segments.length === 0) return null;
   for (let len = segments.length; len >= 1; len--) {
@@ -1781,13 +1781,13 @@ export function resolveFrameworkOsPlaygroundPlugin(catalog: readonly PlaygroundV
   return null;
 }
 
-/** @emoji 🧊 Env for `@semio-tech/framework-os-dev:dev` with wgpu renderer and plugin filter. */
+/** @emoji 🧊 Env for `@semio-tech/framework-os-dev:dev` with wgpu renderer and program filter. */
 export function frameworkOsPlaygroundDevEnv(catalog: readonly PlaygroundVariant[], plugin: string, extra: NodeJS.ProcessEnv = {}, env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
   const renderer = env.SEMIO_RENDERER ?? "wgpu";
-  const defaultPort = frameworkOsPlaygroundDefaultPort(catalog, plugin, renderer);
+  const defaultPort = frameworkOsPlaygroundDefaultPort(catalog, program, renderer);
   const portVal = env.S_OS_PORT || String(defaultPort);
   return devToolingEnv({
-    SEMIO_PLUGIN: plugin,
+    SEMIO_PLUGIN: program,
     SEMIO_RENDERER: renderer,
     S_OS_PORT: portVal,
     ...extra,
@@ -1847,7 +1847,7 @@ export function devServerUrl(host: string, port: number): string {
 /** @emoji 🧊 Legacy trunk entry paths still seen on long-running dev servers. */
 export const WGPU_DEV_LEGACY_ENTRY_PATH = "/renderer-modules/wgpu/";
 
-/** @emoji 🧊 Play URL for a wgpu trunk entry path and plugin filter. */
+/** @emoji 🧊 Play URL for a wgpu trunk entry path and program filter. */
 export function wgpuDevPlayUrl(host: string, port: number, plugin: string, entryPath = "/"): string {
   const probeHost = host === "0.0.0.0" ? "127.0.0.1" : host;
   const base = entryPath.endsWith("/") ? entryPath : `${entryPath}/`;

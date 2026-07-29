@@ -15,7 +15,7 @@ todos:
     content: Add selectAll, focusSelection, keybindings, context menu; mark internal actions in_palette:false
     status: completed
   - id: tests
-    content: Extend flow plugin and DAG host tests for measures, actions, grid, proximity default
+    content: Extend flow program and DAG host tests for measures, actions, grid, proximity default
     status: completed
 isProject: false
 ---
@@ -24,7 +24,7 @@ isProject: false
 
 ## Problem
 
-Flow’s play app ([flow/plugin/rs/lib.rs](flow/plugin/rs/lib.rs)) is missing the chrome other board apps already expose:
+Flow’s play app ([flow/program/rs/lib.rs](flow/program/rs/lib.rs)) is missing the chrome other board apps already expose:
 
 
 | Surface                | Flow today                                                                                             | Reference                                                          |
@@ -57,7 +57,7 @@ Mirror Puzzle2d/Note patterns entirely inside existing files (regions), with gri
 
 ### 1. Window options rail
 
-Implement `DocumentApp::window_measures` on `FlowPlayApp`, keyed by window **instance** id (same helper pattern as [puzzle/plugin/rs/lib.rs](puzzle/plugin/rs/lib.rs) `window_instance_ids`).
+Implement `DocumentApp::window_measures` on `FlowPlayApp`, keyed by window **instance** id (same helper pattern as [puzzle/program/rs/lib.rs](puzzle/program/rs/lib.rs) `window_instance_ids`).
 
 For `flow-main` only, emit untagged general measures:
 

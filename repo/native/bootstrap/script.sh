@@ -220,7 +220,7 @@ install_neo4j_desktop_apoc() {
       sleep 2
     done
   else
-    log "APOC installed into the compose DBMS. Restart it in Neo4j Desktop to load the plugin."
+    log "APOC installed into the compose DBMS. Restart it in Neo4j Desktop to load the program."
   fi
 }
 

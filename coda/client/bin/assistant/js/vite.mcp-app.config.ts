@@ -9,7 +9,7 @@ import mdx from "@mdx-js/rollup";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import { defineConfig, type Plugin } from "vite";
-import { viteSingleFile } from "vite-plugin-singlefile";
+import { viteSingleFile } from "vite-program-singlefile";
 // #endregion 🔌Adapters
 
 function zodJitlessPlugin(): Plugin {

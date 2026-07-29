@@ -1,6 +1,6 @@
 ---
 name: True Full-LOC S Parity
-overview: Port the old S studio to the pure-Rust plugin framework at full fidelity and full scale (~100k LOC, matching the deleted code), so the new S looks, behaves, and measures like the old one, verified end-to-end in the browser.
+overview: Port the old S studio to the pure-Rust program framework at full fidelity and full scale (~100k LOC, matching the deleted code), so the new S looks, behaves, and measures like the old one, verified end-to-end in the browser.
 todos:
  - id: baseline-audit
    content: Extract old-S reference sources and behavior checklist into ticket folder; set up old-to-new LOC accounting
@@ -11,8 +11,8 @@ todos:
  - id: os-core-full
    content: Complete framework/product/os/core/rs to full os-core JS coverage (backbones, media export, catalog, alternatives)
    status: completed
- - id: s-plugin-exact
-   content: "Line-for-line S plugin port: SPlayController commands, applySOsUri, export download, exact S_PLAY_LAYOUT, all old vitest behaviors as Rust tests"
+ - id: s-program-exact
+   content: "Line-for-line S program port: SPlayController commands, applySOsUri, export download, exact S_PLAY_LAYOUT, all old vitest behaviors as Rust tests"
    status: completed
  - id: demo-tech-full
    content: Full ports of draw, writer, raster, note plugins (~15k LOC) including all old react surface behavior as Rust scenes
@@ -49,9 +49,9 @@ The deleted code at `f8376e848` totals ~110k lines; the current Rust/renderer po
 
 ## Approach
 
-Port each old file 1:1 into its new home, preserving every behavior, command, layout constant, inspector field, and scene detail. New homes: tech logic/scenes go into `<tech>/plugin/rs/lib.rs` (+ existing `<tech>/rs` domain crates), shell/React goes into [framework/renderer/react/os-shell.tsx](framework/renderer/react/os-shell.tsx) and [framework/renderer/react/components/](framework/renderer/react/components/), OS/platform runtime goes into [framework/core/rs](framework/core/rs) and [framework/product/os/core/rs](framework/product/os/core/rs). Extend existing files with regions; no new files outside the package structure and ticket folder `26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION`.
+Port each old file 1:1 into its new home, preserving every behavior, command, layout constant, inspector field, and scene detail. New homes: tech logic/scenes go into `<tech>/program/rs/lib.rs` (+ existing `<tech>/rs` domain crates), shell/React goes into [framework/renderer/react/os-shell.tsx](framework/renderer/react/os-shell.tsx) and [framework/renderer/react/components/](framework/renderer/react/components/), OS/platform runtime goes into [framework/core/rs](framework/core/rs) and [framework/product/os/core/rs](framework/product/os/core/rs). Extend existing files with regions; no new files outside the package structure and ticket folder `26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION`.
 
-Each phase ends with: `cargo test` for the crates touched, plugin rebuild, and a browser check on port 6066 with `[DEBUG]` console logs confirming runtime behavior. No phase is "done" without the runtime confirmation.
+Each phase ends with: `cargo test` for the crates touched, program rebuild, and a browser check on port 6066 with `[DEBUG]` console logs confirming runtime behavior. No phase is "done" without the runtime confirmation.
 
 ## Phase 1 — Parity baseline and audit harness
 
@@ -66,9 +66,9 @@ Port `platform/renderer/react/index.tsx` (5,880) + `playground/renderer/react/in
 
 Finish [framework/product/os/core/rs](framework/product/os/core/rs) to full `os/core/js/index.ts` (3,095) coverage: every backbone, media export handler with coverage assertion, program/resource descriptor, parameter compatibility rule, studio catalog operation, OsStore alternative/checkpoint materialization path.
 
-## Phase 4 — S plugin exact port (~2.1k LOC Rust)
+## Phase 4 — S program exact port (~2.1k LOC Rust)
 
-Line-for-line port of [s/core/js/index.ts](s/core/js/index.ts) (1,579) + old `s/react/index.tsx` (521) into [s/plugin/rs/lib.rs](s/plugin/rs/lib.rs): SPlayController command-for-command, applySOsUri routing, media export download, compose-sketchpad program alignment, engagement, exact `S_PLAY_LAYOUT`, all 20 vitest behaviors as Rust tests.
+Line-for-line port of [s/core/js/index.ts](s/core/js/index.ts) (1,579) + old `s/react/index.tsx` (521) into [s/program/rs/lib.rs](s/program/rs/lib.rs): SPlayController command-for-command, applySOsUri routing, media export download, compose-sketchpad program alignment, engagement, exact `S_PLAY_LAYOUT`, all 20 vitest behaviors as Rust tests.
 
 ## Phase 5 — Demo-studio tech plugins full port (~15k LOC Rust)
 

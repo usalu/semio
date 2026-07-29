@@ -24,7 +24,7 @@ todos:
    content: Real Search/Find centered modals with item lists + keyboard nav; hotkeys mod+p/f/b/shift+b and history mod+[/]/up
    status: completed
  - id: verify-parity
-   content: Cargo tests incl. dock unit tests, wasm rebuild, 25-plugin E2E, side-by-side screenshot comparison vs React shell
+   content: Cargo tests incl. dock unit tests, wasm rebuild, 25-program E2E, side-by-side screenshot comparison vs React shell
    status: completed
 isProject: false
 ---
@@ -45,7 +45,7 @@ flowchart TD
     Canvas --> StudioBars["studio bars: back-to-home / focused-app"]
     Canvas --> ModeDock["Mode dock (bg-canvas p-single): layout tree of rows/columns/stacks"]
     MainRow --> RightPanel["SidePanel right (details/settings kinds)"]
-    Root --> FooterSlot["Footer (h-large): app action group + studio undo/redo/checkpoint"]
+    Root --> FooterSlot["Footer (h-large): app action group + space undo/redo/checkpoint"]
     Root --> Palettes["UISearch (mod+p) / UIFind (mod+f) centered modals"]
 ```
 
@@ -79,9 +79,9 @@ Rewrite `render_navbar` ([shell.rs](framework/renderer/wgpu/rs/shell.rs) lines 9
 Extend panel state in `ShellState`: `active_left_kind: PanelKind` (`Workbench | Display`), `active_right_kind` (`Details | Settings`).
 
 - **Tab routing** stays (`panel_side_for_group`), but the visible tab set now depends on the active kind:
-  - Left `workbench`: plugin left tabs + injected Document tab when missing (parity with [os-shell.tsx](framework/renderer/react/os-shell.tsx) lines 1158-1181).
+  - Left `workbench`: program left tabs + injected Document tab when missing (parity with [os-shell.tsx](framework/renderer/react/os-shell.tsx) lines 1158-1181).
   - Left `display`: shell-built tabs `framework.display.windows` + `framework.display.layout` — build their `UiNode` trees in Rust (window list with focus/close actions; layout summary), mirroring [os-chrome-panels.tsx](framework/renderer/react/os-chrome-panels.tsx) lines 163-189.
-  - Right `details`: plugin right tabs (current behavior).
+  - Right `details`: program right tabs (current behavior).
   - Right `settings`: shell-built `framework.settings.general` tab containing the **Theme select (system/light/dark)** — this is where the navbar theme dropdown moves — plus Expertise select stub (stored, not yet consumed).
 - Tab bar buttons get a 12px icon slot + label (icons via `IconAtlas` by `tab.icon_id`).
 - Panel visibility/kind commands `ui.panelToggle.{display|workbench|details|settings}` wired from the navbar group.
@@ -89,7 +89,7 @@ Extend panel state in `ShellState`: `active_left_kind: PanelKind` (`Workbench | 
 
 ## 4. Footer + studio canvas bars
 
-- Footer ([shell.rs](framework/renderer/wgpu/rs/shell.rs) lines 1174-1233): render the app item as a bordered action-group cell (icon from `session.app.icon_id` via `IconAtlas`, fallback `app-window` glyph) + label; keep studio undo/redo/checkpoint right-aligned with icons. No other items (React parity).
+- Footer ([shell.rs](framework/renderer/wgpu/rs/shell.rs) lines 1174-1233): render the app item as a bordered action-group cell (icon from `session.app.icon_id` via `IconAtlas`, fallback `app-window` glyph) + label; keep space undo/redo/checkpoint right-aligned with icons. No other items (React parity).
 - Studio canvas bars above the mode dock (from [os-shell.tsx](framework/renderer/react/os-shell.tsx) lines 1516-1538): "← Home" full-width bar when `studio_mode && app.id == "studio" && spawned_ui.is_none()` (dispatch `goHome`); "← Back to Media Graph · {label}" bar when a spawned app is focused (close focused instance). Error state renders as plain text in the canvas (already close).
 
 ## 5. Search / Find palettes + hotkeys
@@ -104,7 +104,7 @@ Replace the stub `render_palette` ([shell.rs](framework/renderer/wgpu/rs/shell.r
 
 1. `cargo test -p ui_wgpu -p semio-framework-renderer-wgpu` (extend existing test files with dock-layout unit tests: even-layout fallback, default_layout parsing, close-window collapse).
 2. Rebuild wasm `bun ./framework/renderer/wgpu/script.ts wasm`.
-3. Full 25-plugin E2E suite (`.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts`) — plugins with multiple window kinds (flow, cad, s) now exercise the dock.
+3. Full 25-program E2E suite (`.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts`) — programs with multiple window kinds (flow, cad, s) now exercise the dock.
 4. Side-by-side screenshot comparison against the React shell (`?renderer=react` vs wgpu) for: navbar composition, window tab caps + U-frames, panel kind toggles, footer, search palette.
 
 ## Todos

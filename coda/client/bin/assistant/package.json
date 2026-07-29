@@ -21,7 +21,7 @@
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "vite": "^6.0.0",
-    "vite-plugin-singlefile": "^2.0.0"
+    "vite-program-singlefile": "^2.0.0"
   },
   "author": {
     "name": "Ueli Saluz",

@@ -9,7 +9,7 @@
 // #endregion 🧲Header
 
 // #region 🗄️Configuration
-// Tailwind CSS configuration with typography plugin and custom prose styles.
+// Tailwind CSS configuration with typography program and custom prose styles.
 // Configuration MUST define content paths, dark mode, and typography theme extensions.
 
 import typography from "@tailwindcss/typography";

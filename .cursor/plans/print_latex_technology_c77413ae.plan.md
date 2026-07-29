@@ -39,7 +39,7 @@ isProject: false
 
 ## Goal
 
-New top-level `print/` technology for printable LaTeX documents that follow semio ideology (sharp corners, borders, basic geometric shapes, brand colors/fonts). Pure document technology — no framework OS plugin. Toolchain: Tectonic (zero-touch, cross-platform, XeTeX-based so expl3/l3keys/xparse/lthooks/fontspec all work).
+New top-level `print/` technology for printable LaTeX documents that follow semio ideology (sharp corners, borders, basic geometric shapes, brand colors/fonts). Pure document technology — no framework OS program. Toolchain: Tectonic (zero-touch, cross-platform, XeTeX-based so expl3/l3keys/xparse/lthooks/fontspec all work).
 
 ## Directory layout
 
@@ -98,7 +98,7 @@ print/
 - [package.json](package.json): add `"print"` to `workspaces`; add scripts `"dev:print": "bun nx run @semio-tech/print:watch"` and `"build:print": "bun nx run @semio-tech/print:build"`.
 - [.vscode/launch.json](.vscode/launch.json): `🛠️dev🖨️print` in group `3_dev` (watch) and `📦build🖨️print` in group `4_build` (order between `📦build📽️presentationplay` 100 and `📦audit🛝playground` 105, following alphabetical-ish ordering).
 - [.gitignore](.gitignore): `print/dist/` and `print/asset/font/`.
-- No Cargo workspace, plugin registry, or playground port entries (templates-only shape, as decided).
+- No Cargo workspace, program registry, or playground port entries (templates-only shape, as decided).
 - Ticket via repo MCP `ticket_open` (goal `r2603`), all logs/temp files inside the ticket folder.
 
 ## Verification

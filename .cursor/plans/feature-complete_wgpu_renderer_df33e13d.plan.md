@@ -39,7 +39,7 @@ todos:
    content: Canvas-2d pointer commands, text-editor editing, VFS selection/routing
    status: completed
  - id: verify-e2e
-   content: Extend E2E with interaction smoke + zero-warning assertion, run 25-plugin suite
+   content: Extend E2E with interaction smoke + zero-warning assertion, run 25-program suite
    status: completed
 isProject: false
 ---
@@ -88,16 +88,16 @@ The blockers for everything else:
 - **table**: header row, scrollable body, row hover + click -> `selectRow`, column separators, alternating row tint.
 - **node-graph**: pan (drag pane) and zoom (wheel) into a viewport transform, node bodies with port dots, node drag -> `moveMediaNode`, node click -> `selectInstance`/`selectNode`, edge rendering with bezier-ish polylines, port-to-port connect drag -> `connectMediaPorts`.
 - **flow-canvas**: parse `fixture_json` fully (nodes, wires, widgets), camera pan/zoom, selection -> `setMediaNodeSelection`, double-click -> `openInstance`, context menu items when `editable`.
-- **canvas-2d**: pan/zoom dispatching `canvasPointerDown/Move/Up` and `canvasWheel` with surface args (plugin owns camera, matching React).
+- **canvas-2d**: pan/zoom dispatching `canvasPointerDown/Move/Up` and `canvasWheel` with surface args (program owns camera, matching React).
 - **text-editor**: line rendering with scroll, visible cursor, click-to-position, text editing dispatching `setDocument`.
 - **virtualFileSystem**: schema-driven columns, row selection -> `selectRows`, double-click URI routing (`os://instance/` -> `openInstance`, etc.), hover row.
 - **world-3d**: already complete; keep as is.
 
 ## Phase 5 — Verify end to end
 
-- Extend [.repo tickets E2E script](.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts): per plugin assert boot, zero console errors/warnings (including WebGPU validation), canvas paint, and screenshot capture for manual chrome inspection.
-- Add interaction smoke: click a panel tab, toggle a panel, open a select dropdown via Playwright coordinates on `s` and one scene-heavy plugin (`flow`, `cad`).
-- `cargo test -p ui_wgpu` for layout/text/scissor units; rebuild wasm; run full 25-plugin suite.
+- Extend [.repo tickets E2E script](.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts): per program assert boot, zero console errors/warnings (including WebGPU validation), canvas paint, and screenshot capture for manual chrome inspection.
+- Add interaction smoke: click a panel tab, toggle a panel, open a select dropdown via Playwright coordinates on `s` and one scene-heavy program (`flow`, `cad`).
+- `cargo test -p ui_wgpu` for layout/text/scissor units; rebuild wasm; run full 25-program suite.
 
 ## Notes
 

@@ -268,7 +268,7 @@ pub struct IoPortSpec {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub connected: Option<bool>,
     #[serde(rename = "resourceKind", skip_serializing_if = "Option::is_none")]
-    pub resource_kind: Option<String>,
+    pub artifact_kind: Option<String>,
     #[serde(default = "default_port_cardinality")]
     pub cardinality: String,
     #[serde(default)]
@@ -297,7 +297,7 @@ impl Default for IoPortSpec {
             default: None,
             value: None,
             connected: None,
-            resource_kind: None,
+            artifact_kind: None,
             cardinality: default_port_cardinality(),
             shape: PortShape::default(),
             visible: true,
@@ -6896,7 +6896,7 @@ fn dag_document_schema() -> String {
 }
 
 /// 🧾 The persistent DAG projection — nodes and edges only. Camera/viewport and selection are
-/// ephemeral view state kept in the plugin runtime, never recorded in the document's undo history.
+/// ephemeral view state kept in the program runtime, never recorded in the document's undo history.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DagDocument {
@@ -7057,7 +7057,7 @@ fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: &mut 
 #[serde(tag = "operation", rename_all = "camelCase")]
 #[allow(
     clippy::large_enum_variant,
-    reason = "boxing `Nodes`'s CollectionOperation would require rewrapping every construction/match site across this crate and infinite/board/port/directed/dag/plugin/rs (10+ call sites, out of this crate's scope); DagOperation values are short-lived per-dispatch operations, not stored in bulk"
+    reason = "boxing `Nodes`'s CollectionOperation would require rewrapping every construction/match site across this crate and infinite/board/port/directed/dag/program/rs (10+ call sites, out of this crate's scope); DagOperation values are short-lived per-dispatch operations, not stored in bulk"
 )]
 pub enum DagOperation {
     Nodes(CollectionOperation<String, DagNodeSpec, DagNodePatch>),
@@ -7157,7 +7157,7 @@ pub type DagStore = DocumentStore<DagDocument, DagOperation>;
 // `Preview` variant carries a nested tagged enum (`DagPreviewContent`). The dsl:: derive engine
 // represents "exactly one nested tagged value" via `#[dsl(statements)] Box<T>` (`RequiredStatements`),
 // which needs a `Box` wrapper the REAL `DagNodeKind`/`DagNodeSpec` fields deliberately don't carry
-// (dozens of call sites here and in `dag-plugin`/`framework/surface/node-graph`/`flow/core` destructure
+// (dozens of call sites here and in `dag-program`/`framework/surface/node-graph`/`flow/core` destructure
 // `node.kind`/`DagNodeKind::Preview { content, .. }` directly — boxing those fields would ripple far
 // outside this crate's ownership). So, exactly like `imperative/core/rs`'s `ImperativeOperationDsl`
 // mirror, `DagNodeKindDsl`/`DagNodeSpecDsl`/`DagNodePatchDsl`/`DagDocumentDsl`/`DagOperationDsl` are

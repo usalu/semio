@@ -1,12 +1,12 @@
 ---
 name: Architect Technology
-overview: "Create the `architect` technology: headless `architect_program` covering all 65 architectural-programming feature areas end-to-end, plus a full s/OS `DocumentApp` at `architect/plugin` with triangular undirected adjacency-matrix editing as the signature surface."
+overview: "Create the `architect` technology: headless `architect_spine` covering all 65 architectural-programming feature areas end-to-end, plus a full s/OS `DocumentApp` at `architect/program` with triangular undirected adjacency-matrix editing as the signature surface."
 todos:
   - id: goal-ticket
     content: Open goal architect; ticket_open with plan_id; feature checklist in ticket folder
     status: completed
   - id: scaffold
-    content: Scaffold architect/program + architect/plugin, Cargo/nx/launch/registry/AGENTS.md
+    content: Scaffold architect/program + architect/program, Cargo/nx/launch/registry/AGENTS.md
     status: completed
   - id: kernel-document
     content: Implement kernel types + Program root with all 65-area registers and serde
@@ -21,7 +21,7 @@ todos:
     content: "DocumentApp: adjacency triangle list, graph, registers, reports, panels, full actions"
     status: completed
   - id: verify-close
-    content: Run architect_program tests + plugin registry/build; ticket_close
+    content: Run architect_spine tests + program registry/build; ticket_close
     status: completed
 isProject: false
 ---
@@ -30,8 +30,8 @@ isProject: false
 
 ## Decisions (locked)
 
-- **Paths:** [`architect/program`](architect/program) (headless) + [`architect/plugin`](architect/plugin) (standard plugin path; not `architect/constrain`).
-- **Depth:** Option 2A — full domain for all 65 feature areas + complete plugin (CRUD, analysis, exchange, reports, adjacency UI). No stubs, no empty registers.
+- **Paths:** [`architect/program`](architect/program) (headless) + [`architect/program`](architect/program) (standard program path; not `architect/constrain`).
+- **Depth:** Option 2A — full domain for all 65 feature areas + complete program (CRUD, analysis, exchange, reports, adjacency UI). No stubs, no empty registers.
 - **Goal:** Approving this plan authorizes opening goal `architect` (title “Architect”, due `2026-12-31`). Ticket binds to `🎯architect`.
 - **No mixing:** Do not depend on `coda`, `compose`, `puzzle`, or `mit-bestand`. Adjacency concepts may be reimplemented cleanly; prior art in [`coda/client/lib/programming`](coda/client/lib/programming/go/main.go) is reference only.
 - **Undirected adjacency:** Store only canonical pairs `(a, b)` with `a < b`; UI edits the lower triangle; graph view is undirected. Depend on [`mathematical_graph`](mathematical/graph/rs) for topology helpers (`normalize_undirected`, `Adjacency`).
@@ -40,15 +40,15 @@ isProject: false
 
 ```mermaid
 flowchart TB
-  plugin["architect_plugin\nDocumentApp WASM"]
-  program["architect_program\nProgram + Operations + Analysis"]
+  plugin["architect_spine\nDocumentApp WASM"]
+  program["architect_spine\nProgram + Operations + Analysis"]
   vcs["vcs"]
   graph["mathematical_graph"]
-  sdk["semio-framework-plugin"]
+  sdk["semio-framework-program"]
 
-  plugin --> program
-  plugin --> sdk
-  plugin --> vcs
+  program --> program
+  program --> sdk
+  program --> vcs
   program --> vcs
   program --> graph
 ```
@@ -65,23 +65,23 @@ All other feature areas hang off this spine as typed registers, cross-links, and
 architect/
   AGENTS.md                          # created once with technology (agents must not edit later)
   program/
-    rs/Cargo.toml                    # architect_program
+    rs/Cargo.toml                    # architect_spine
     rs/lib.rs                        # module router
     rs/src/*.rs                      # domain modules (regions)
-    script.ts + project.json         # @semio-tech/architect-program → test
-  plugin/
-    rs/Cargo.toml                    # architect-plugin, semio:architect, playground ports
-    rs/lib.rs                        # DocumentApp + semio_plugin!
+    script.ts + project.json         # @semio-tech/architect-spine → test
+  program/
+    rs/Cargo.toml                    # architect-spine, semio:architect, playground ports
+    rs/lib.rs                        # DocumentApp + semio_program!
 ```
 
-**Cargo names:** `architect_program`, `architect-plugin`  
-**Nx:** `@semio-tech/architect-program`  
+**Cargo names:** `architect_spine`, `architect-spine`  
+**Nx:** `@semio-tech/architect-spine`  
 **Schema:** `architect.program`  
 **Playground:** variant `architect`, ports react `6090` / wgpu `6190` (unused).
 
-## Headless domain — `architect_program`
+## Headless domain — `architect_spine`
 
-### Shared kernel ([`architect/program/rs/src/kernel.rs`](architect/program/rs/src/kernel.rs))
+### Shared kernel ([`architect/spine/rs/src/kernel.rs`](architect/spine/rs/src/kernel.rs))
 
 - `EntityId(String)` with serial helpers (`stakeholder-1`, `element-1`, …)
 - `Priority` (mandatory / essential / preferred / optional / deferred / prohibited)
@@ -204,9 +204,9 @@ API: `normalize_pair`, `set_adjacency`, `adjacency_matrix` (dense lower-triangle
 - Analysis and report smoke on a fixture program
 - Exchange import/export preserve ids and undirected edges
 
-## Plugin — `architect/plugin`
+## Plugin — `architect/program`
 
-Follow [`forms/plugin`](forms/plugin/rs) + [`flow/plugin`](flow/plugin/rs) patterns: `DocumentApp<Program, ProgramOperation>` + `semio_plugin!`.
+Follow [`forms/plugin`](forms/program/rs) + [`flow/plugin`](flow/program/rs) patterns: `DocumentApp<Program, ProgramOperation>` + `semio_program!`.
 
 ### Manifest
 
@@ -216,7 +216,7 @@ Follow [`forms/plugin`](forms/plugin/rs) + [`flow/plugin`](flow/plugin/rs) patte
   - **`adjacency`** (primary) — triangular adjacency matrix as **list** with triangle chrome on the side
   - **`graph`** — undirected `NodeGraphScene` over program elements + adjacency edges
   - **`register`** — `BlockList` / table editor for the selected register kind
-  - **`report`** — report body from `architect_program::report`
+  - **`report`** — report body from `architect_spine::report`
 - Modes: Edit / Review / Report
 - Full operation + view_action surface for CRUD, search, filter, import/export, analysis run, validation run, status filters
 
@@ -247,12 +247,12 @@ Selection, active register, search query, saved filters, last report JSON, adjac
 
 ## Workspace / nx / launch wiring
 
-1. Add `architect/program/rs` and `architect/plugin/rs` to [`Cargo.toml`](Cargo.toml) members.
-2. [`architect/program/script.ts`](architect/program/script.ts) + [`project.json`](architect/program/project.json) — `runCargoTestBudgeted(["architect_program"], …)`.
+1. Add `architect/spine/rs` and `architect/spine/rs` to [`Cargo.toml`](Cargo.toml) members.
+2. [`architect/program/script.ts`](architect/program/script.ts) + [`project.json`](architect/program/project.json) — `runCargoTestBudgeted(["architect_spine"], …)`.
 3. Plugin `Cargo.toml`: `[package.metadata.component] package = "semio:architect"`, playground `6090`/`6190`.
-4. Regenerate plugin registry: `bun nx run @semio-tech/plugin-registry:generate`.
+4. Regenerate program registry: `bun nx run @semio-tech/program-registry:generate`.
 5. Register launch configs in [`.vscode/launch.json`](.vscode/launch.json) (existing order/grouping):
-   - `🧪test🏛️architect-program`
+   - `🧪test🏛️architect-spine`
    - `🛠️dev🏛️architect⚛️react`
    - `🛠️dev🏛️architect🧊wgpu🌐wasm`
    - `🛠️dev🏛️architect🧊wgpu🖥️native`
@@ -262,8 +262,8 @@ Selection, active register, search query, saved filters, last report JSON, adjac
 
 1. Open goal `architect` (authorized by plan approval).
 2. `ticket_open` with goal `architect`, plan_id from this plan, emoji `🏛️`, title “Architect Program And Plugin”.
-3. Implement program crate → plugin → registry → launch → tests.
-4. Confirm: `cargo test -p architect_program`, plugin builds via OS dev / component target, adjacency UI path exercised with `[DEBUG]` logs if needed.
+3. Implement program crate → program → registry → launch → tests.
+4. Confirm: `cargo test -p architect_spine`, program builds via OS dev / component target, adjacency UI path exercised with `[DEBUG]` logs if needed.
 5. `ticket_close` with summary + all touched files.
 
 ## Out of scope

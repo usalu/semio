@@ -293,7 +293,7 @@ function connectHub(state: DocumentState, binding: Extract<PersistenceBinding, {
   if (state.closed) return;
   setRemote(state, { kind: "connecting" });
   const wsBase = binding.baseUrl.replace(/^http/, "ws");
-  const socket = new WebSocket(`${wsBase}/studios/${encodeURIComponent(binding.studioId)}/documents/${encodeURIComponent(state.config.documentId)}/ws`);
+  const socket = new WebSocket(`${wsBase}/spaces/${encodeURIComponent(binding.spaceId)}/documents/${encodeURIComponent(state.config.documentId)}/ws`);
   // 🎞️ Binary frames (`protocol_wire`), not JSON text — see this file's header + `WireBridge` region.
   socket.binaryType = "arraybuffer";
   state.socket = socket;
@@ -539,7 +539,7 @@ async function writeCachedBlob(record: CachedBlobRecord): Promise<void> {
 
 /** 📥 Reads a blob by hash — cache-first (bumping `lastAccessedAt` for LRU), falling back to the dev
  * server's `GET ${BLOB_ENDPOINT_PATH}/:hash` on a miss and populating the cache. Nothing outside this
- * worker calls this yet (no plugin/UI surface consumes blobs today), so it stays internal rather than
+ * worker calls this yet (no program/UI surface consumes blobs today), so it stays internal rather than
  * growing {@link BackboneWorkerRequest}/{@link BackboneWorkerResponse} with variants nothing sends. */
 async function getCachedBlob(hash: string): Promise<{ bytes: Uint8Array; mediaType: string } | null> {
   const cached = await readCachedBlob(hash);
@@ -571,7 +571,7 @@ async function putCachedBlob(bytes: Uint8Array, mediaType: string): Promise<stri
 }
 
 // 🧷 Referenced defensively so `getCachedBlob`/`putCachedBlob` aren't flagged unused before a
-// plugin/UI surface calls into them — both are the intended entry points once one does.
+// program/UI surface calls into them — both are the intended entry points once one does.
 void getCachedBlob;
 void putCachedBlob;
 //#endregion 🔖BlobCache

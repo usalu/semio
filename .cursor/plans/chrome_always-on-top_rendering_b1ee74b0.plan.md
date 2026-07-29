@@ -38,7 +38,7 @@ Today:
 - Floating left/right panels already correctly prefer the overlay list when available (`render_chrome`, `:10091-10104`): `if let Some(panel_draw) = overlay_slot.as_deref_mut() { render_left_panel(panel_draw, ...) } else { render_left_panel(draw, ...) }`. This is why the Document/Catalogue and Inspection panels render cleanly in the screenshot even though the main window's node-graph doesn't.
 - The dock window cap/border chrome (`DockState::paint_chrome` → `render_stack`, `framework/renderer/wgpu/rs/lib.rs:1226-1420`) already uses `ctx.draw.push_glass(..., GlassTier::Toolbar, ...)` + `begin_glass_content` for the tab/Focus/Close bar, so it composites via `draw`'s own glass-foreground phase (after `draw`'s own raster pass finishes) — safer than navbar/footer, but still tied to `draw` rather than the outer overlay.
 
-Net effect: navbar and footer have no structural protection at all, so any plugin whose main window content includes a full-pane raster/vello quad (procedural3d's Flow node-graph) can blank out the navbar/footer pixels above/below it, while plugins using only `push_scene_pass` (world-3d, e.g. lowpoly) never hit the vulnerable raster pass and look fine.
+Net effect: navbar and footer have no structural protection at all, so any program whose main window content includes a full-pane raster/vello quad (procedural3d's Flow node-graph) can blank out the navbar/footer pixels above/below it, while plugins using only `push_scene_pass` (world-3d, e.g. lowpoly) never hit the vulnerable raster pass and look fine.
 
 ## Fix strategy — one enforced "chrome sink", reusing the pattern that already works
 
@@ -62,7 +62,7 @@ This does not change navbar/footer's visual style (they stay plain opaque solids
 
 ## Verification plan (execution phase, not part of this plan-mode research)
 
-1. Reproduce live: boot the dev host, open `procedural3d`, screenshot before the fix; open `lowpoly` and one other node-graph-based plugin as a baseline/control.
+1. Reproduce live: boot the dev host, open `procedural3d`, screenshot before the fix; open `lowpoly` and one other node-graph-based program as a baseline/control.
 2. Apply the `chrome_sink` refactor.
 3. Re-screenshot `procedural3d`: confirm navbar (logo/title/examples/fullscreen), footer, and the Flow window's border/cap all render correctly over the node-graph raster content.
 4. Spot check a handful of other plugins with different component kinds (world-3d, canvas-2d, text-editor, gis-map — all of which also call `push_raster_quad`, see `framework/renderer/wgpu/rs/lib.rs:3310-3314, 3570-3574, 5307-5308, 5610-5611`) to make sure nothing regresses.

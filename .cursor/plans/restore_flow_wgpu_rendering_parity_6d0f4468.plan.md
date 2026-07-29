@@ -3,7 +3,7 @@ name: Restore Flow Wgpu Rendering Parity
 overview: Diagnose and fix the wgpu Flow node-graph renderer so it regains premigration parity (edges, port handles/channels, labels, selection rectangle, LOD-adjusted content) instead of showing bare rectangles, then verify live against the `premigration` git tag baseline.
 todos:
  - id: repro
-   content: Rebuild wgpu wasm, boot flow plugin, screenshot default/zoomed/selected/area-select states
+   content: Rebuild wgpu wasm, boot flow program, screenshot default/zoomed/selected/area-select states
    status: in_progress
  - id: reference
    content: Establish a premigration-equivalent visual reference (worktree checkout or working DAG playground) for comparison
@@ -15,7 +15,7 @@ todos:
    content: Check whether today's window-chrome rail / session bootstrap changes in framework/renderer/wgpu/rs/lib.rs degrade the node-graph content rect or skip rendering
    status: pending
  - id: fix-root-cause
-   content: Apply targeted fix(es) in engine_canvas region / flow plugin / shared types once root cause(s) confirmed
+   content: Apply targeted fix(es) in engine_canvas region / flow program / shared types once root cause(s) confirmed
    status: pending
  - id: tests
    content: Extend existing Rust test modules with regression coverage for the fixed behavior
@@ -41,7 +41,7 @@ A prior ticket (`.repo/🎫/26/07/05/FLOW-WGPU-RICH-PARITY`) already diagnosed t
 
 ```mermaid
 flowchart TD
-    plugin["flow plugin (Rust/WASM)\nbuild_node_graph_scene"] --> scene["UiComponentSceneNode.node_graph\n(NodeGraphScene JSON)"]
+    plugin["flow program (Rust/WASM)\nbuild_node_graph_scene"] --> scene["UiComponentSceneNode.node_graph\n(NodeGraphScene JSON)"]
     scene --> sync["sync_flow_host()\nengine_canvas region"]
     sync --> host["FlowHost (flow_core)"]
     host --> paint["dag::paint_scene()\nvector operations: fills/strokes/text"]
@@ -55,7 +55,7 @@ flowchart TD
 
 Local cargo builds are currently lock-contended by many concurrent WIP sessions, so this diagnosis has to be finished with a live rebuild + browser screenshot pass rather than static reading alone. Concretely:
 
-1. Rebuild wgpu WASM and boot the `flow` plugin (`SEMIO_RENDERER=wgpu SEMIO_PLUGIN=flow`), screenshot at default zoom, zoomed-in (higher LOD), with a node selected, and mid area-select drag.
+1. Rebuild wgpu WASM and boot the `flow` program (`SEMIO_RENDERER=wgpu SEMIO_PLUGIN=flow`), screenshot at default zoom, zoomed-in (higher LOD), with a node selected, and mid area-select drag.
 2. Compare against the `premigration` tag's behavior. Since `flow/react/index.tsx` no longer exists, use a `git worktree`/`git show` checkout of `premigration` (read-only reference, not touching the working tree) or fall back to a still-working DAG-based playground (e.g. puzzle board) under the current wgpu renderer as a cross-check for whether the bug is Flow-specific or shared-engine-wide.
 3. Pinpoint exactly which stage breaks by instrumenting/inspecting in order: `NodeGraphScene` JSON population (is `fixture_json` non-empty and does it actually contain widgets/synapses?) → `sync_flow_host` field sync (`fixture_json`, `selection_json`, `lod_json`, `viewport_json`, catalogue/operators) → `theme_is_dark`/`sync_canvas_theme_dark` correctness → `dag.paint_scene` output (path/fill/stroke count via `cavas::Scene::path_count()`) → Vello texture render → `push_raster_quad`/`register_engine_texture` compositing → `paint_node_graph_labels` overlay pass → pointer hit-testing for selection rectangle (`node_graph_pointer_down/move/up`, marquee drawing inside `paint_scene`).
 
@@ -63,7 +63,7 @@ Local cargo builds are currently lock-contended by many concurrent WIP sessions,
 
 - [framework/renderer/wgpu/rs/lib.rs](framework/renderer/wgpu/rs/lib.rs) `//#region NodeGraph` (`sync_flow_host`, `paint_node_graph`, `paint_node_graph_labels`, `theme_is_dark`, `is_flow_graph`): re-verify theme sync actually reaches the palette fields `dag.paint_scene` reads, and that today's window-chrome rail changes (`render_window_content` reordering, `content` rect no longer mutated by measures/engagement rail reserve width) didn't shrink the node-graph surface to zero or pass a stale/empty rect into `render_node_graph`.
 - Session/window bootstrap changes in the same file (`ActiveSession.view_state.active_mode_id` now defaulting instead of `None`, `window_ui`/`panel_ui` clear-and-rebuild reordering) — confirm the Flow app's "edit" mode window (`FLOW_PLAY_WINDOW_MAIN`) still renders its `node_graph` body and isn't skipped by a mode-filtering regression.
-- [flow/plugin/rs/lib.rs](flow/plugin/rs/lib.rs) `render_main_graph`: confirm `fixture_json`/`selection_json`/`lod_json` are still being serialized into the `NodeGraphScene` sent to the renderer (no field renamed/dropped in a recent shared-type change in `framework/plugin/rs` or `framework/core/rs`).
+- [flow/program/rs/lib.rs](flow/program/rs/lib.rs) `render_main_graph`: confirm `fixture_json`/`selection_json`/`lod_json` are still being serialized into the `NodeGraphScene` sent to the renderer (no field renamed/dropped in a recent shared-type change in `framework/program/rs` or `framework/core/rs`).
 - Marquee/selection-rectangle drawing: confirm it's actually part of `dag.paint_scene`'s output (not a separate draw call that got dropped during the migration) — premigration's `mathematical/graph/port/directed/dag/react/index.tsx` marquee code is the reference if it needs porting.
 
 ## Fix + verify

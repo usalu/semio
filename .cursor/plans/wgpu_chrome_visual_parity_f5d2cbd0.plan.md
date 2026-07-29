@@ -24,7 +24,7 @@ todos:
    content: Implement pointer-based drag for draggable tree items with drop-position indicator and payload-drop dispatch to matching targets
    status: completed
  - id: verify-parity
-   content: Rebuild wasm, run cargo tests, run E2E for a tree-bearing plugin, and screenshot-diff against the React shell to confirm font/icon/label/tree parity
+   content: Rebuild wasm, run cargo tests, run E2E for a tree-bearing program, and screenshot-diff against the React shell to confirm font/icon/label/tree parity
    status: completed
 isProject: false
 ---
@@ -114,5 +114,5 @@ Wgpu's current `TreeItem`/`TreeSection`/`render_tree` ([ui/wgpu/rs/widgets.rs:36
 ## 5. Verification
 
 - `cargo test` (including any new dock/tree unit tests), rebuild wasm bindings for `ui_wgpu` + `semio-framework-renderer-wgpu`.
-- Run the wgpu E2E harness for at least one plugin with a real document/catalogue tree panel, confirm: Anta font renders, semio logo + navbar/footer icons are visible, panel toggle and fullscreen controls show text labels, dock focus/close show text labels, and the tree panel shows correct indentation/icons/chevrons/expand-collapse/selection.
-- Side-by-side screenshot diff against the equivalent React shell view for the same plugin to confirm visual parity, same approach as the prior layout-parity verification pass.
+- Run the wgpu E2E harness for at least one program with a real document/catalogue tree panel, confirm: Anta font renders, semio logo + navbar/footer icons are visible, panel toggle and fullscreen controls show text labels, dock focus/close show text labels, and the tree panel shows correct indentation/icons/chevrons/expand-collapse/selection.
+- Side-by-side screenshot diff against the equivalent React shell view for the same program to confirm visual parity, same approach as the prior layout-parity verification pass.

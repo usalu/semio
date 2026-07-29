@@ -18,7 +18,7 @@ use semio_framework_core::{ActorId, OperationId, PresencePeer};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::sync::{broadcast, mpsc};
-use store::{reconcile_alternative, BackboneMessage, ChannelBackbone, ChannelBackboneRemote, DocumentPackFiles, DocumentStore, DocumentTextFiles, StudioConflict};
+use store::{reconcile_alternative, BackboneMessage, ChannelBackbone, ChannelBackboneRemote, DocumentPackFiles, DocumentStore, DocumentTextFiles, SpaceConflict};
 
 //#region 🔖Errors
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
@@ -40,10 +40,10 @@ pub enum PersistenceBinding {
     /// a `*.json` path uses the single-blob `file://` export format.
     Folder { path: std::path::PathBuf },
     /// @emoji ☁️ A hub node reachable over WebSocket
-    /// (`remote://host:port` → `ws://host:port/studios/{studio_id}/documents/{id}/ws`).
+    /// (`remote://host:port` → `ws://host:port/spaces/{space_id}/documents/{id}/ws`).
     Hub {
         base_url: String,
-        studio_id: String,
+        space_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         token: Option<String>,
     },
@@ -132,7 +132,7 @@ pub enum DocumentEvent {
     /// (the speculative local head is rolled back via {@link rollback_envelope} before this fires).
     CommandOutcome { batch_id: u64, outcome: CommandAckOutcome },
     /// @emoji ⚠️ A structural conflict (external divergence with local pending operations / hub CAS reject).
-    Conflict(StudioConflict),
+    Conflict(SpaceConflict),
 }
 
 /// @emoji ⚖️ The client-side twin of `protocol_wire::ApplyOutcome`, minus the `Transformed`
@@ -252,12 +252,12 @@ fn history_edit_from_envelope(envelope: &OperationEnvelope) -> protocol::History
 }
 
 /// @emoji 🔗 Derives a hub WebSocket URL: `remote://host:port` (or `http(s)://`, `ws(s)://`) →
-/// `ws(s)://host:port/studios/{studio_id}/documents/{document_id}/ws`.
-fn hub_ws_url(base_url: &str, studio_id: &str, document_id: &str) -> String {
+/// `ws(s)://host:port/spaces/{space_id}/documents/{document_id}/ws`.
+fn hub_ws_url(base_url: &str, space_id: &str, document_id: &str) -> String {
     let secure = base_url.starts_with("https://") || base_url.starts_with("wss://");
     let authority = base_url.split_once("://").map(|(_, rest)| rest).unwrap_or(base_url).split('/').next().unwrap_or(base_url);
     let scheme = if secure { "wss" } else { "ws" };
-    format!("{scheme}://{authority}/studios/{studio_id}/documents/{document_id}/ws")
+    format!("{scheme}://{authority}/spaces/{space_id}/documents/{document_id}/ws")
 }
 //#endregion 🔖Endpoints
 
@@ -624,7 +624,7 @@ mod native_actor {
         folder_watch_path: Option<PathBuf>,
         watch_external: bool,
         hub_base_url: Option<String>,
-        hub_studio_id: Option<String>,
+        hub_space_id: Option<String>,
         hub_token: Option<String>,
         hub: Option<HubConn>,
         /// @emoji 🏔️ Last frontier the hub reported (`Welcome.server_frontier` / `Commands.frontier` /
@@ -659,7 +659,7 @@ mod native_actor {
             let mut folder = None;
             let mut folder_watch_path = None;
             let mut hub_base_url = None;
-            let mut hub_studio_id = None;
+            let mut hub_space_id = None;
             let mut hub_token = None;
             for binding in &config.bindings {
                 match binding {
@@ -669,10 +669,10 @@ mod native_actor {
                             folder_watch_path = Some(folder_watch_path_for(path));
                         }
                     }
-                    PersistenceBinding::Hub { base_url, studio_id, token } => {
+                    PersistenceBinding::Hub { base_url, space_id, token } => {
                         if hub_base_url.is_none() {
                             hub_base_url = Some(base_url.clone());
-                            hub_studio_id = Some(studio_id.clone());
+                            hub_space_id = Some(space_id.clone());
                             hub_token = token.clone();
                         }
                     }
@@ -690,7 +690,7 @@ mod native_actor {
                 folder_watch_path,
                 watch_external: config.watch_external,
                 hub_base_url,
-                hub_studio_id,
+                hub_space_id,
                 hub_token,
                 hub: None,
                 server_frontier: None,
@@ -910,7 +910,7 @@ mod native_actor {
                 self.deliver_remote_operations(appended);
             } else if !lost.is_empty() {
                 if !self.pending_batches.is_empty() {
-                    self.emit(DocumentEvent::Conflict(StudioConflict { kind: "externalDivergence".into(), uri: format!("folder://{}", self.document_id), message: "external history diverged while local operations are pending".into() }));
+                    self.emit(DocumentEvent::Conflict(SpaceConflict { kind: "externalDivergence".into(), uri: format!("folder://{}", self.document_id), message: "external history diverged while local operations are pending".into() }));
                 } else {
                     self.known_op_ids = file_ids;
                     self.current_pack = Some(pack.clone());
@@ -925,9 +925,9 @@ mod native_actor {
         //#region 🔖Hub
         async fn try_connect_hub(&mut self) {
             let Some(base_url) = self.hub_base_url.clone() else { return };
-            let studio_id = self.hub_studio_id.clone().unwrap_or_default();
+            let space_id = self.hub_space_id.clone().unwrap_or_default();
             let token = self.hub_token.clone();
-            let url = hub_ws_url(&base_url, &studio_id, &self.document_id);
+            let url = hub_ws_url(&base_url, &space_id, &self.document_id);
             self.set_remote_state(RemoteState::Connecting);
             match tokio_tungstenite::connect_async(url).await {
                 Ok((stream, _response)) => {
@@ -1029,7 +1029,7 @@ mod native_actor {
                     // accepted and ignored.
                 }
                 ServerFrame::Error { code, message } => {
-                    self.emit(DocumentEvent::Conflict(StudioConflict { kind: code, uri: self.hub_base_url.clone().unwrap_or_default(), message }));
+                    self.emit(DocumentEvent::Conflict(SpaceConflict { kind: code, uri: self.hub_base_url.clone().unwrap_or_default(), message }));
                 }
             }
         }
@@ -1237,7 +1237,7 @@ mod wasm_actor {
         remote: ChannelBackboneRemote,
         events: broadcast::Sender<DocumentEvent>,
         hub_base_url: Option<String>,
-        hub_studio_id: Option<String>,
+        hub_space_id: Option<String>,
         hub_token: Option<String>,
         ws: Option<WebSocket>,
         server_frontier: Option<protocol::RuntimeFrontierSummary>,
@@ -1254,8 +1254,8 @@ mod wasm_actor {
     impl WasmActor {
         fn connect(&mut self) {
             let Some(base_url) = self.hub_base_url.clone() else { return };
-            let studio_id = self.hub_studio_id.clone().unwrap_or_default();
-            let url = hub_ws_url(&base_url, &studio_id, &self.document_id);
+            let space_id = self.hub_space_id.clone().unwrap_or_default();
+            let url = hub_ws_url(&base_url, &space_id, &self.document_id);
             let Ok(ws) = WebSocket::new(&url) else { return };
             ws.set_binary_type(BinaryType::Arraybuffer);
 
@@ -1383,7 +1383,7 @@ mod wasm_actor {
                 }
                 ServerFrame::CreditGrant { .. } => {}
                 ServerFrame::Error { code, message } => {
-                    let _ = self.events.send(DocumentEvent::Conflict(StudioConflict { kind: code, uri: self.hub_base_url.clone().unwrap_or_default(), message }));
+                    let _ = self.events.send(DocumentEvent::Conflict(SpaceConflict { kind: code, uri: self.hub_base_url.clone().unwrap_or_default(), message }));
                 }
             }
         }
@@ -1425,13 +1425,13 @@ mod wasm_actor {
     pub(super) fn spawn_actor(config: DocumentActorConfig, remote: ChannelBackboneRemote, mut cmd_rx: mpsc::UnboundedReceiver<DocumentActorMsg>, events: broadcast::Sender<DocumentEvent>) {
         let (incoming_tx, mut incoming_rx) = mpsc::unbounded_channel::<Vec<u8>>();
         let mut hub_base_url = None;
-        let mut hub_studio_id = None;
+        let mut hub_space_id = None;
         let mut hub_token = None;
         for binding in &config.bindings {
-            if let PersistenceBinding::Hub { base_url, studio_id, token } = binding {
+            if let PersistenceBinding::Hub { base_url, space_id, token } = binding {
                 if hub_base_url.is_none() {
                     hub_base_url = Some(base_url.clone());
-                    hub_studio_id = Some(studio_id.clone());
+                    hub_space_id = Some(space_id.clone());
                     hub_token = token.clone();
                 }
             }
@@ -1444,7 +1444,7 @@ mod wasm_actor {
             remote,
             events,
             hub_base_url,
-            hub_studio_id,
+            hub_space_id,
             hub_token,
             ws: None,
             server_frontier: None,
@@ -1903,7 +1903,7 @@ mod tests {
     /// @emoji 🎯 Idempotently registers the `demo/v1` codec (process-global `OnceLock` registry,
     /// shared across every test in this binary) — needed by any test exercising `FolderEndpoint`
     /// end-to-end (both `Sqlite` and `Pack` now go through `document_codec` per the pack+spr flip),
-    /// mirroring a real app's plugin-init-time `register_document_codec_for_app` call.
+    /// mirroring a real app's program-init-time `register_document_codec_for_app` call.
     fn ensure_demo_codec_registered() {
         static ONCE: std::sync::Once = std::sync::Once::new();
         ONCE.call_once(|| {
@@ -1960,9 +1960,9 @@ mod tests {
     //#region 🧪Helpers
     #[test]
     fn hub_ws_url_derives_ws_endpoint_from_remote_uri() {
-        assert_eq!(hub_ws_url("remote://host:6070", "studio-1", "doc-1"), "ws://host:6070/studios/studio-1/documents/doc-1/ws");
-        assert_eq!(hub_ws_url("https://hub.example.com", "studio-1", "doc-2"), "wss://hub.example.com/studios/studio-1/documents/doc-2/ws");
-        assert_eq!(hub_ws_url("ws://127.0.0.1:5000/prefix", "studio-1", "d"), "ws://127.0.0.1:5000/studios/studio-1/documents/d/ws");
+        assert_eq!(hub_ws_url("remote://host:6070", "studio-1", "doc-1"), "ws://host:6070/spaces/studio-1/documents/doc-1/ws");
+        assert_eq!(hub_ws_url("https://hub.example.com", "studio-1", "doc-2"), "wss://hub.example.com/spaces/studio-1/documents/doc-2/ws");
+        assert_eq!(hub_ws_url("ws://127.0.0.1:5000/prefix", "studio-1", "d"), "ws://127.0.0.1:5000/spaces/studio-1/documents/d/ws");
     }
     //#endregion 🧪Helpers
 
@@ -2382,7 +2382,7 @@ mod tests {
             let channels_a = host_a.open(DocumentActorConfig {
                 document_id: "shared".into(),
                 schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), studio_id: "studio-1".into(), token: None }],
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None }],
                 watch_external: false,
                 actor: "A".into(),
             });
@@ -2393,7 +2393,7 @@ mod tests {
             let channels_b = host_b.open(DocumentActorConfig {
                 document_id: "shared".into(),
                 schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), studio_id: "studio-1".into(), token: None }],
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None }],
                 watch_external: false,
                 actor: "B".into(),
             });
@@ -2430,7 +2430,7 @@ mod tests {
             let channels_a = host_a.open(DocumentActorConfig {
                 document_id: "catchup".into(),
                 schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), studio_id: "studio-1".into(), token: None }],
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None }],
                 watch_external: false,
                 actor: "A".into(),
             });
@@ -2448,7 +2448,7 @@ mod tests {
             // B connects fresh (since_version 0) and its Welcome backlog replays both operations.
             let host_b = DocumentHost::new();
             let channels_b =
-                host_b.open(DocumentActorConfig { document_id: "catchup".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, studio_id: "studio-1".into(), token: None }], watch_external: false, actor: "B".into() });
+                host_b.open(DocumentActorConfig { document_id: "catchup".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None }], watch_external: false, actor: "B".into() });
             let mut events_b = host_b.subscribe("catchup");
             let mut store_b = DocumentStore::new(demo_envelope("catchup"));
             store_b.attach_backbone(Box::new(channels_b.channel_backbone)).expect("attach b");
@@ -2476,7 +2476,7 @@ mod tests {
             let channels_b = host_b.open(DocumentActorConfig {
                 document_id: "drain".into(),
                 schema: "demo/v1".into(),
-                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), studio_id: "studio-1".into(), token: None }],
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None }],
                 watch_external: false,
                 actor: "B".into(),
             });
@@ -2486,7 +2486,7 @@ mod tests {
 
             let host_a = DocumentHost::new();
             let channels_a =
-                host_a.open(DocumentActorConfig { document_id: "drain".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, studio_id: "studio-1".into(), token: None }], watch_external: false, actor: "A".into() });
+                host_a.open(DocumentActorConfig { document_id: "drain".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None }], watch_external: false, actor: "A".into() });
             let mut store_a = DocumentStore::new(demo_envelope("drain"));
             store_a.attach_backbone(Box::new(channels_a.channel_backbone)).expect("attach a");
             tokio::time::sleep(Duration::from_millis(300)).await;
@@ -2512,7 +2512,7 @@ mod tests {
             let base_url = format!("ws://{addr}");
             let host = DocumentHost::new();
             let channels =
-                host.open(DocumentActorConfig { document_id: "outcome".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, studio_id: "studio-1".into(), token: None }], watch_external: false, actor: "A".into() });
+                host.open(DocumentActorConfig { document_id: "outcome".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None }], watch_external: false, actor: "A".into() });
             let mut events = host.subscribe("outcome");
             let mut store = DocumentStore::new(demo_envelope("outcome"));
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
@@ -2538,10 +2538,10 @@ mod tests {
 
             let host_a = DocumentHost::new();
             let channels_a =
-                host_a.open(DocumentActorConfig { document_id: "preview".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), studio_id: "studio-1".into(), token: None }], watch_external: false, actor: "A".into() });
+                host_a.open(DocumentActorConfig { document_id: "preview".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), token: None }], watch_external: false, actor: "A".into() });
 
             let host_b = DocumentHost::new();
-            host_b.open(DocumentActorConfig { document_id: "preview".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, studio_id: "studio-1".into(), token: None }], watch_external: false, actor: "B".into() });
+            host_b.open(DocumentActorConfig { document_id: "preview".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), token: None }], watch_external: false, actor: "B".into() });
             let mut events_b = host_b.subscribe("preview");
             tokio::time::sleep(Duration::from_millis(300)).await;
 

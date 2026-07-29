@@ -30,7 +30,7 @@ isProject: false
 Split the current monolithic [framework/renderer/wgpu/rs](framework/renderer/wgpu/rs/lib.rs) into two layers:
 
 - `**ui/wasm/rs**` (new crate `ui_wasm`) — a general, pure, business-logic-free wgpu UI toolkit, the Rust/wasm sibling of `ui/react`. It knows nothing about `semio-framework-core`, `UiNode`, plugins, or the OS shell.
-- `**framework/renderer/wgpu/rs**` (existing crate `semio-framework-renderer-wgpu`) — a thin renderer that depends on `ui_wasm` and only contains framework concerns: `UiNode` interpretation, componentScene hosts, OS shell chrome, plugin bridge, boot.
+- `**framework/renderer/wgpu/rs**` (existing crate `semio-framework-renderer-wgpu`) — a thin renderer that depends on `ui_wasm` and only contains framework concerns: `UiNode` interpretation, componentScene hosts, OS shell chrome, program bridge, boot.
 
 Path note: the request said "ui/rs/wasm"; repo convention for the ui technology is `ui/<bundle>/rs` (e.g. [ui/styling/rs](ui/styling/rs/Cargo.toml) with crate `ui_styling`), so the bundle lands at `ui/wasm/rs` with crate name `ui_wasm`.
 
@@ -51,7 +51,7 @@ flowchart LR
     Interp["interpreter: UiNode to ui_wasm widgets"]
     Scenes["scenes: componentScene hosts"]
     OsShell["shell: navbar, panels, sessions, studio"]
-    Bridge["plugin_bridge + wasm-bindgen boot"]
+    Bridge["program_bridge + wasm-bindgen boot"]
   end
   CoreRs["semio-framework-core UiNode types"]
 
@@ -92,7 +92,7 @@ Depends on `ui_wasm` (path dep) + `semio-framework-core`; drops direct `wgpu`, `
 - `interpreter.rs` (replaces `widgets.rs`) — maps each `semio_framework_core::UiNode` variant to the corresponding `ui_wasm` widget spec, instantiating `E = CommandDescriptor`. Measurement delegates to `ui_wasm`.
 - `scenes.rs` — componentScene hosts (raster, table, canvas-2d, node-graph, flow-canvas, virtualFileSystem, text-editor, world-3d) rewritten against the `ui_wasm` draw/widget API.
 - `shell.rs` — unchanged responsibilities (sessions, navbar, panels, studio mode) but renders through `ui_wasm` widgets/theme instead of local draw calls.
-- `plugin_bridge.rs`, `lib.rs` — boot flow unchanged (`semioRendererBoot`), now constructing `ui_wasm::GpuContext`, `FontAtlas`, `InputState<CommandDescriptor>`.
+- `program_bridge.rs`, `lib.rs` — boot flow unchanged (`semioRendererBoot`), now constructing `ui_wasm::GpuContext`, `FontAtlas`, `InputState<CommandDescriptor>`.
 - Delete the now-moved module files (`draw.rs`, `gpu.rs`, `text.rs`, `theme.rs`, `layout_engine.rs`, `shaders.rs`, `input.rs`).
 
 JS side ([framework/renderer/wgpu/js/index.ts](framework/renderer/wgpu/js/index.ts), [script.ts](framework/renderer/wgpu/script.ts), dev-host wiring, launch entries) is untouched — the wasm artifact name and boot export stay the same.

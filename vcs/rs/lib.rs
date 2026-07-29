@@ -232,7 +232,7 @@ where
 /// `Operation::diff` can produce a diff in one call instead of hand-writing `removed`/`modified`/
 /// `added`. `Add` → `added`, `Remove` → `removed`, `Patch` → `modified`. `CollectionDiff` has no
 /// positional-move channel, so `Move` is encoded as `removed` + `added` (delete then re-add by
-/// identity); a plugin that keeps items keyed by id reconstructs order from item identity.
+/// identity); a program that keeps items keyed by id reconstructs order from item identity.
 pub fn collection_diff_from_operation<TId, TItem, TPatch>(
     items: &[TItem],
     operation: &CollectionOperation<TId, TItem, TPatch>,

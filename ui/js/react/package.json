@@ -85,7 +85,7 @@
     "@vitest/coverage-v8": "^4.0.17",
     "postcss": "^8.5.6",
     "postcss-load-config": "^6.0.1",
-    "prettier-plugin-tailwindcss": "^0.7.2",
+    "prettier-program-tailwindcss": "^0.7.2",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-slug": "^6.0.0",
     "remark-frontmatter": "^5.0.0",

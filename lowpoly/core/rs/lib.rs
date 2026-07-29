@@ -1,5 +1,5 @@
 //! 🔷 Lowpoly core: mesh + paint document projection and its VCS `Operation`, plus a mutable compute
-//! session (`LowpolyDocument`) wrapping `kernel_3d_mesh` used by the plugin to run mesh edits and paint
+//! session (`LowpolyDocument`) wrapping `kernel_3d_mesh` used by the program to run mesh edits and paint
 //! strokes and read them back out as typed [`LowpolyOperation`]s.
 
 use kernel_3d_mesh::{EdgeId, FaceId, HalfedgeMesh, MeshKernelError, Vec3, VertexId};
@@ -484,7 +484,7 @@ pub enum LowpolyCoreError {
 
 //#region 🔖ComputeSession
 /// @emoji 🛠️ Mutable compute session built from a projection clone plus ephemeral editing context
-/// (active object + selection). The plugin runs a mesh/paint edit against it, then reads the mutated
+/// (active object + selection). The program runs a mesh/paint edit against it, then reads the mutated
 /// `mesh_json`/pixels back out to construct the typed [`LowpolyOperation`] it emits. Never the source of truth.
 pub struct LowpolyDocument {
     projection: LowpolyProjection,
@@ -1613,7 +1613,7 @@ mod tests {
 //#region 🔖ExportConcreteForestMeshTests
 #[cfg(test)]
 mod export_concrete_forest_mesh_tests {
-    use cad_plugin::geometry_import::{objects_from_fixture_model, parse_geometry};
+    use cad_program::geometry_import::{objects_from_fixture_model, parse_geometry};
     use kernel_3d_brepkit::BrepkitKernel;
     use kernel_3d_engine::GeometryHandle;
     use kernel_3d_mesh::{FaceId, HalfedgeMesh, Vec3 as MeshVec3, VertexId};

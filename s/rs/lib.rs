@@ -6,7 +6,7 @@ use protocol::{Operation, OperationDiff};
 use vcs::{DocumentVcs, VcsError};
 use store::{create_document_envelope, materialize_document_projection, DocumentBackboneRef, DocumentCommand, DocumentEnvelope, DocumentStore};
 
-pub const S_STUDIO_SCHEMA: &str = "s.studio";
+pub const S_STUDIO_SCHEMA: &str = "s.space";
 pub const S_WORKFLOW_SCHEMA: &str = "s.workflow";
 
 //#region 🔖Schemas
@@ -35,7 +35,7 @@ pub struct SAppInstance {
 #[serde(rename_all = "camelCase")]
 pub struct SWorkflowPort {
     pub id: String,
-    pub resource_kind: String,
+    pub artifact_kind: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -313,7 +313,7 @@ pub fn materialize_studio_projection(document: &SStudioDocument, applied_edit_id
 //#endregion 🔖OpText
 
 
-//#region 🔖StudioStore
+//#region 🔖SpaceStore
 pub struct StudioStore {
     inner: DocumentStore<SStudioProjection, StudioOperation>,
     name: String,
@@ -362,7 +362,7 @@ impl StudioStore {
         self.inner.attach_backbone_uri(uri)
     }
 
-    /// @emoji 🚧 Native attach is a documented no-operation: `s` only runs as a WASM plugin in the browser
+    /// @emoji 🚧 Native attach is a documented no-operation: `s` only runs as a WASM program in the browser
     /// today (no native caller exists), and wiring its native path onto `framework/sync`'s
     /// `DocumentHost` is `s`'s own `DocumentApp` migration (WS-F's last wave), not this compile fix.
     #[cfg(not(target_arch = "wasm32"))]
@@ -374,7 +374,7 @@ impl StudioStore {
         self.inner.detach_backbone();
     }
 }
-//#endregion 🔖StudioStore
+//#endregion 🔖SpaceStore
 
 //#region 🔖WasmBridge
 #[cfg(target_arch = "wasm32")]
@@ -431,7 +431,7 @@ mod tests {
 
     #[test]
     fn spawns_app_instance_through_cqrs_dispatch() {
-        let mut store = StudioStore::new(create_empty_studio_document("studio", "Studio"));
+        let mut store = StudioStore::new(create_empty_studio_document("studio", "Space"));
         let instance = SAppInstance { id: "app-1".into(), program_id: "draw".into(), app_id: "draw".into(), label: "Draw".into(), yields: "graph.dag".into(), document: SDocumentRef { document_id: "doc-1".into(), schema: "draw.document".into() } };
         store.dispatch_apply(vec![StudioOperation::SpawnAppInstance { instance: instance.clone(), position: WorkflowPosition { x: 0.0, y: 0.0 } }]).expect("spawn");
         let projection = store.projection().expect("projection");
@@ -441,7 +441,7 @@ mod tests {
 
     #[test]
     fn undo_after_spawn() {
-        let mut store = StudioStore::new(create_empty_studio_document("studio", "Studio"));
+        let mut store = StudioStore::new(create_empty_studio_document("studio", "Space"));
         let instance = SAppInstance { id: "app-1".into(), program_id: "draw".into(), app_id: "draw".into(), label: "Draw".into(), yields: "graph.dag".into(), document: SDocumentRef { document_id: "doc-1".into(), schema: "draw.document".into() } };
         store.dispatch_apply(vec![StudioOperation::SpawnAppInstance { instance, position: WorkflowPosition { x: 0.0, y: 0.0 } }]).expect("spawn");
         store.dispatch_text("undo").expect("undo");
@@ -470,8 +470,8 @@ mod tests {
                     label: "Draw\nNode".into(),
                     x: 40.0,
                     y: 80.0,
-                    inputs: vec![SWorkflowPort { id: "app-1:in".into(), resource_kind: "2d.drawing".into() }],
-                    outputs: vec![SWorkflowPort { id: "app-1:out".into(), resource_kind: "2d.drawing".into() }],
+                    inputs: vec![SWorkflowPort { id: "app-1:in".into(), artifact_kind: "2d.drawing".into() }],
+                    outputs: vec![SWorkflowPort { id: "app-1:out".into(), artifact_kind: "2d.drawing".into() }],
                 }],
                 edges: vec![SWorkflowEdge {
                     id: "edge-1".into(),
@@ -485,7 +485,7 @@ mod tests {
     }
 
     #[test]
-    fn studio_dsl_round_trips_empty_and_sample_projections() {
+    fn space_dsl_round_trips_empty_and_sample_projections() {
         store::test_support::assert_dsl_round_trip(&default_studio_projection());
         store::test_support::assert_dsl_round_trip(&sample_studio_projection());
         store::test_support::assert_dsl_pack_equivalence(&default_studio_projection());
@@ -493,7 +493,7 @@ mod tests {
     }
 
     #[test]
-    fn studio_op_text_round_trips_every_variant() {
+    fn space_op_text_round_trips_every_variant() {
         store::test_support::assert_op_line_round_trip(&StudioOperation::SetActiveProgram { program_id: Some("draw".into()) });
         store::test_support::assert_op_line_round_trip(&StudioOperation::SetActiveProgram { program_id: None });
         store::test_support::assert_op_line_round_trip(&StudioOperation::SetActiveAlternative { alternative_id: Some("alt-1".into()) });
@@ -515,7 +515,7 @@ mod tests {
     }
 
     #[test]
-    fn studio_document_text_round_trips_through_the_store() {
+    fn space_document_text_round_trips_through_the_store() {
         let envelope = create_document_envelope::<SStudioProjection, StudioOperation>(S_STUDIO_SCHEMA, "studio", sample_studio_projection(), None);
         let store: DocumentStore<SStudioProjection, StudioOperation> = DocumentStore::new(envelope);
         store::test_support::assert_document_text_round_trip(&store);

@@ -9,7 +9,7 @@ isProject: false
 
 ## Why another round
 
-Previous rounds fixed S studio and shell-wide regressions. The existing `.cursor/plans/restore_app_parity_post-migration_e255a2e1.plan.md` claimed 12 "Tier 1" apps were severely broken, but a fresh verification pass shows **puzzle3d, lowpoly, and raster are already fully ported** (real GLB meshes/brush-fill, real halfedge paint/mesh-edit, real pixel decode/composite) — evidently fixed by concurrent work outside this thread. That plan is stale. This plan replaces it with a fully re-verified gap list across every remaining plugin, using the pre-migration commit `32693795d4d761d347338fa010fed19ab714ef2d` (last commit before old TS `core/js`/`react` files were deleted) as ground truth.
+Previous rounds fixed S studio and shell-wide regressions. The existing `.cursor/plans/restore_app_parity_post-migration_e255a2e1.plan.md` claimed 12 "Tier 1" apps were severely broken, but a fresh verification pass shows **puzzle3d, lowpoly, and raster are already fully ported** (real GLB meshes/brush-fill, real halfedge paint/mesh-edit, real pixel decode/composite) — evidently fixed by concurrent work outside this thread. That plan is stale. This plan replaces it with a fully re-verified gap list across every remaining program, using the pre-migration commit `32693795d4d761d347338fa010fed19ab714ef2d` (last commit before old TS `core/js`/`react` files were deleted) as ground truth.
 
 ## Cross-cutting bug found: node-graph canvas commands don't match across 5 plugins
 
@@ -25,15 +25,15 @@ export const nodeGraphCommands = {
 } as const;
 ```
 
-Only `s/plugin/rs/lib.rs` and `flow/plugin/rs/lib.rs` implement handlers for these exact names. The other 5 plugins that mount `node-graph-host` instead implement legacy/custom names (`setSelection`, `selectNode`, `graphPointerDown`) that the host never sends, so **clicking/hovering/dragging nodes on the canvas is silently a no-operation** in:
+Only `s/program/rs/lib.rs` and `flow/program/rs/lib.rs` implement handlers for these exact names. The other 5 plugins that mount `node-graph-host` instead implement legacy/custom names (`setSelection`, `selectNode`, `graphPointerDown`) that the host never sends, so **clicking/hovering/dragging nodes on the canvas is silently a no-operation** in:
 
-- `trinity/jack/plugin/rs/lib.rs:700` (`"setSelection"`), `:864` (`"graphPointerDown"`)
-- `trinity/rewrite/plugin/rs/lib.rs:712` (`"setSelection"`), `:769` (`"graphPointerDown"`)
-- `mathematical/graph/port/directed/dag/plugin/rs/lib.rs:650` (`"setSelection" | "selectNode"`), `:671` (`"graphPointerDown"`)
-- `sequence/plugin/rs/lib.rs:512`, `:516`
-- `procedural/3d/plugin/rs/lib.rs:691`, `:848`
+- `trinity/jack/program/rs/lib.rs:700` (`"setSelection"`), `:864` (`"graphPointerDown"`)
+- `trinity/rewrite/program/rs/lib.rs:712` (`"setSelection"`), `:769` (`"graphPointerDown"`)
+- `mathematical/graph/port/directed/dag/program/rs/lib.rs:650` (`"setSelection" | "selectNode"`), `:671` (`"graphPointerDown"`)
+- `sequence/program/rs/lib.rs:512`, `:516`
+- `procedural/3d/program/rs/lib.rs:691`, `:848`
 
-**Fix:** add `"nodeGraphSelect"`, `"nodeGraphHover"`, `"nodeGraphEdit"`, `"nodeGraphViewport"` as the primary handled names in all 5 plugins' `handle_command` match arms (keeping/removing legacy names per plugin as appropriate), matching the pattern already correct in `s`/`flow`. Two plugin-specific follow-ons surfaced by the audit: `dag` also needs `"deleteSelection"` handling (Delete/Backspace on the canvas currently dispatches this, but only `removeNode` exists, which nothing calls), and `dag`'s `render_main_graph` needs `selection_json` wired into the scene (unlike trinity-rewrite, which at least plumbs it) so tree-selected nodes highlight on the canvas.
+**Fix:** add `"nodeGraphSelect"`, `"nodeGraphHover"`, `"nodeGraphEdit"`, `"nodeGraphViewport"` as the primary handled names in all 5 plugins' `handle_command` match arms (keeping/removing legacy names per program as appropriate), matching the pattern already correct in `s`/`flow`. Two plugin-specific follow-ons surfaced by the audit: `dag` also needs `"deleteSelection"` handling (Delete/Backspace on the canvas currently dispatches this, but only `removeNode` exists, which nothing calls), and `dag`'s `render_main_graph` needs `selection_json` wired into the scene (unlike trinity-rewrite, which at least plumbs it) so tree-selected nodes highlight on the canvas.
 
 ## Confirmed gaps by app (post fresh audit)
 
@@ -44,15 +44,15 @@ Only `s/plugin/rs/lib.rs` and `flow/plugin/rs/lib.rs` implement handlers for the
 - **trinity (jack)**: bespoke WebGPU `TrinityCanvas` (LOD/force-layout) downgraded to generic node-graph _and_ clicks/drags dead (command mismatch above).
 - **trinity-rewrite**: LHS/RHS are read-only graphs missing semantic node-kind vocabulary (`match`/`where`/`set`/`parameter`/`create`/`delete`/`merge`); cross-panel hover/select bridge is dead code; command mismatch above.
 - **procedural2d**: the actual node-graph editor window was replaced by a duplicate canvas — no `addWidget`/`moveMediaNode`/`removeWidget`, so the flow graph cannot be edited from the UI at all.
-- **cad**: no transform gumball UI (`grep -i gumball` = 0 matches; only headless `translateSelection`/`rotateSelection`/`scaleSelection`), no quad multi-pane view (single `CAD_PLAY_WINDOW_COMPOSITE` vs old 4-pane shape/building/energy/structure-classic), no undo/redo (dead `vcs::{Operation, OperationDiff}` import, `cad/plugin/rs/lib.rs:20`), typology mesh geometry hardcoded per-typology (`cad/plugin/rs/lib.rs:73-80`) instead of derived from the object's authored dimensions.
+- **cad**: no transform gumball UI (`grep -i gumball` = 0 matches; only headless `translateSelection`/`rotateSelection`/`scaleSelection`), no quad multi-pane view (single `CAD_PLAY_WINDOW_COMPOSITE` vs old 4-pane shape/building/energy/structure-classic), no undo/redo (dead `vcs::{Operation, OperationDiff}` import, `cad/program/rs/lib.rs:20`), typology mesh geometry hardcoded per-typology (`cad/program/rs/lib.rs:73-80`) instead of derived from the object's authored dimensions.
 - **draw**: canvas renders bounding-box-only stubs, no real path/fill/boolean geometry, no interactive drawing tools.
 - **dag/sequence/procedural3d canvas click/select**: covered by the cross-cutting fix above.
 
 **Tier 2 — degraded but functional:**
 
-- **puzzle5d** (vs. fully-ported puzzle3d reference): missing `deleteSelection`, `setFixtureJson`, `worldVortexHover/Select`, `worldRelocate`, `setBrushPlacementOverlapBudget`, `setObjectKindWeight`/`setVortexKindWeight`; grips/fasteners never rendered or selectable in either 2D or 3D view (`puzzle/5d/plugin/rs/lib.rs:279-301`, `:350-378`).
-- **puzzle2d**: 3-pane LOD architecture (overview/detail/selection) collapsed to one pane; engagement REPL input/candidate-cycling control/fill-slider all stripped (`puzzle2d_engagement`, `puzzle/2d/plugin/rs/lib.rs:440-489` leaves `input`/`control`/`controls` all `None`); suggestion-offset and kind-weight sliders have working handlers but no UI ever calls them.
-- **gis2d**: most of `MapHost`'s capability (render mode, vector style, LOD, feature hit-testing/selection, route editing) never invoked from the plugin.
+- **puzzle5d** (vs. fully-ported puzzle3d reference): missing `deleteSelection`, `setFixtureJson`, `worldVortexHover/Select`, `worldRelocate`, `setBrushPlacementOverlapBudget`, `setObjectKindWeight`/`setVortexKindWeight`; grips/fasteners never rendered or selectable in either 2D or 3D view (`puzzle/5d/program/rs/lib.rs:279-301`, `:350-378`).
+- **puzzle2d**: 3-pane LOD architecture (overview/detail/selection) collapsed to one pane; engagement REPL input/candidate-cycling control/fill-slider all stripped (`puzzle2d_engagement`, `puzzle/2d/program/rs/lib.rs:440-489` leaves `input`/`control`/`controls` all `None`); suggestion-offset and kind-weight sliders have working handlers but no UI ever calls them.
+- **gis2d**: most of `MapHost`'s capability (render mode, vector style, LOD, feature hit-testing/selection, route editing) never invoked from the program.
 - **flow**: ~18 of ~28 old commands ported; missing LOD/proximity/catalogue/extension/generation commands (`setLodMode`, `setProximityDistance`, `setCatalogueSections`, `toggleExtension`, `runExtensionCommand`, etc.).
 - **writer**: `formatDocument` is a no-operation; completions/lint run against an empty graph (schema-blind).
 - **shooting**: icon window shows a hardcoded placeholder PNG; export produces a generic title-card SVG, not a real render of the model/icon.

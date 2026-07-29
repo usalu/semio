@@ -522,7 +522,7 @@ function Install-Neo4jDesktopApoc {
             Start-Sleep -Seconds 2
         }
     } else {
-        Write-Step "APOC installed into the compose DBMS. Restart it in Neo4j Desktop to load the plugin."
+        Write-Step "APOC installed into the compose DBMS. Restart it in Neo4j Desktop to load the program."
     }
 
     return $true

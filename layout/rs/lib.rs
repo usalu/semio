@@ -1260,7 +1260,7 @@ mod export {
 
 mod operations {
     // #region operations
-    //! 🧾 Typed VCS operation vocabulary for the layout document — the operations the layout plugin emits
+    //! 🧾 Typed VCS operation vocabulary for the layout document — the operations the layout program emits
     //! (page/story/link collections, per-page frame add/remove/patch, and camera). Each operation computes a
     //! true pre-state inverse so undo/redo round-trips exactly. See {@link store::Operation}.
 

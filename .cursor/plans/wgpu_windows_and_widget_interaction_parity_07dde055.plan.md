@@ -12,7 +12,7 @@ todos:
    content: Verify and fix any remaining gaps in tree expand/collapse, hover fill/commands, label click/selection_change, and drag-and-drop now that hits reach their targets
    status: completed
  - id: tree-visual-diff
-   content: Screenshot-diff tree indentation guide lines/chevrons against React for a document-heavy plugin and fix any real mismatch found
+   content: Screenshot-diff tree indentation guide lines/chevrons against React for a document-heavy program and fix any real mismatch found
    status: completed
  - id: table-vfs-interaction-verify
    content: Verify Table selectRow and VFS selectRows/openInstance/drag-drop now work end-to-end for representative plugins
@@ -89,8 +89,8 @@ Structs, mapping, and rendering are already largely correct (`ui/wgpu/rs/widgets
 - Verify hover fill and `tree_hover_commands`/`tree_unhover_commands` dispatch (existing logic at [shell.rs:1399-1417](framework/renderer/wgpu/rs/shell.rs)).
 - Verify label click dispatches `item.event` and `selection_change` (existing logic at [shell.rs:1374-1380](framework/renderer/wgpu/rs/shell.rs)).
 - Verify drag-and-drop initiation for `draggable` items (existing logic at [shell.rs:855-908, 1519-1580](framework/renderer/wgpu/rs/shell.rs)).
-- Screenshot-diff indentation guide lines and chevron icons against React's `IndentationLines`/`TreeDocumentGutter` ([ui/js/react/index.tsx:9648-9707](ui/js/react/index.tsx)) for a document-heavy plugin (e.g. `s`, `lowpoly`) — fix any remaining depth/spacing mismatch found only now that the tree is actually interactive.
-- Verify Table (`selectRow`) and VFS (`selectRows`/`openInstance`/drag-drop) click/hover now work end-to-end for a plugin using each (e.g. `vcs`/`forms` for Table, `s` for VFS).
+- Screenshot-diff indentation guide lines and chevron icons against React's `IndentationLines`/`TreeDocumentGutter` ([ui/js/react/index.tsx:9648-9707](ui/js/react/index.tsx)) for a document-heavy program (e.g. `s`, `lowpoly`) — fix any remaining depth/spacing mismatch found only now that the tree is actually interactive.
+- Verify Table (`selectRow`) and VFS (`selectRows`/`openInstance`/drag-drop) click/hover now work end-to-end for a program using each (e.g. `vcs`/`forms` for Table, `s` for VFS).
 
 ## 3. Dock/window chrome parity
 
@@ -116,12 +116,12 @@ React's dock shell (`Mode`, [ui/js/react/index.tsx:19543-21324](ui/js/react/inde
 
 - Close only mutates the local `DockState` stack ([dock.rs:107-129](framework/renderer/wgpu/rs/dock.rs), dispatched at [shell.rs:1212-1216](framework/renderer/wgpu/rs/shell.rs)) with no command dispatch, unlike React's `onWindowClose` which updates the persisted layout tree ([framework/renderer/react/os-shell.tsx:1611-1624](framework/renderer/react/os-shell.tsx)).
 - Stack `activeId` is dropped on load — wgpu always defaults to the first child window ([dock.rs:240-248](framework/renderer/wgpu/rs/dock.rs)) instead of round-tripping from the wire layout.
-- No equivalent of React's `onLayoutChange` — `DockState` mutations (splits, closes, and the new drag-to-dock moves from 3.1) are ephemeral in wgpu today. Add a layout-change hook that persists the current `DockNode` tree back through the same channel the plugin/session uses (mirror whatever `shellLayout` persistence React uses in `os-shell.tsx`).
+- No equivalent of React's `onLayoutChange` — `DockState` mutations (splits, closes, and the new drag-to-dock moves from 3.1) are ephemeral in wgpu today. Add a layout-change hook that persists the current `DockNode` tree back through the same channel the program/session uses (mirror whatever `shellLayout` persistence React uses in `os-shell.tsx`).
 - Apply `named_layouts` when selected instead of only listing them as text ([shell.rs:532-558](framework/renderer/wgpu/rs/shell.rs)).
 
 ## 4. Verification
 
 - `cargo test` for `ui_wgpu` and `semio-framework-renderer-wgpu` (add regression tests for `hit_at` ordering with a scroll region + overlapping content hit, and for the new dock drag/resize mutations).
 - Rebuild WASM bindings for `ui_wgpu` and `semio-framework-renderer-wgpu`.
-- Run the existing wgpu E2E harness ([.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts](.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts)) for plugins covering each surface: a tree-heavy plugin (`s` or `lowpoly`), a Table plugin (`vcs`/`forms`), a VFS plugin (`s`), and any plugin with a multi-window/multi-panel layout for the dock work.
+- Run the existing wgpu E2E harness ([.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts](.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts)) for plugins covering each surface: a tree-heavy program (`s` or `lowpoly`), a Table program (`vcs`/`forms`), a VFS program (`s`), and any program with a multi-window/multi-panel layout for the dock work.
 - Screenshot-diff wgpu vs React for the same plugins to confirm tree collapse/hover/selection, table/VFS row interaction, and dock drag/resize/close chrome now match.

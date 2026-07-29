@@ -6,8 +6,8 @@ mod header {
     // studios, memberships, auth sessions, share tokens, VFS nodes, sync sessions). Every
     // OpDag/DocumentActor/DocMsg/JSON-snapshot-CAS internal the pre-CW6 hub owned directly is gone
     // — that is now `db`'s job end to end (see `db/engine/rs/lib.rs`, `db/document/rs/lib.rs`).
-    // "Studio" is a namespacing convention this crate applies on top of `db`'s flat document
-    // catalog (`{studio_id}:{document_id}`), not hub-internal state.
+    // "Space" is a namespacing convention this crate applies on top of `db`'s flat document
+    // catalog (`{space_id}:{document_id}`), not hub-internal state.
     //
     // The WebSocket endpoint speaks `protocol_wire`'s binary lane-tagged `ClientFrame`/
     // `ServerFrame` frames directly (see `protocol/wire/rs/lib.rs`) — the server-side counterpart
@@ -28,7 +28,7 @@ use axum::{Json, Router};
 use dashmap::DashMap;
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt};
-use os_hub_directory::model::{NodeRecord, StudioRole};
+use os_hub_directory::model::{NodeRecord, SpaceRole};
 use os_hub_directory::HubDirectory;
 use os_hub_directory_sqlite::SqliteDirectory;
 use protocol::{AckStage, ActorId, ApplyOutcome, ClientFrame, DocumentId as ProtocolDocumentId, Lane, OperationEnvelope, RuntimeFrontierSummary, ServerFrame, decode_client_frame, encode_server_frame};
@@ -62,15 +62,15 @@ fn now_ms() -> i64 {
 }
 
 //#region 🔖State
-/// @emoji 🎫 `(studio_id, document_id)` -> the single string key both `db::Database`'s flat
-/// document catalog and this crate's own fanout/presence registries key on — studio scoping is a
+/// @emoji 🎫 `(space_id, document_id)` -> the single string key both `db::Database`'s flat
+/// document catalog and this crate's own fanout/presence registries key on — space scoping is a
 /// convention this crate applies on top of `db`'s namespace, not something `db` itself knows about.
-fn scope_key(studio_id: &str, document_id: &str) -> String {
-    format!("{studio_id}:{document_id}")
+fn scope_key(space_id: &str, document_id: &str) -> String {
+    format!("{space_id}:{document_id}")
 }
 
-fn db_document_id(studio_id: &str, document_id: &str) -> ProtocolDocumentId {
-    ProtocolDocumentId(scope_key(studio_id, document_id))
+fn db_document_id(space_id: &str, document_id: &str) -> ProtocolDocumentId {
+    ProtocolDocumentId(scope_key(space_id, document_id))
 }
 
 fn db_core_document_id(id: &ProtocolDocumentId) -> db::core::DocumentId {
@@ -165,22 +165,22 @@ fn parse_content_hash(hex: &str) -> Option<db::ContentHash> {
 //#endregion 🔖State
 
 //#region 🔖Auth
-/// @emoji 🔎 What a bearer token resolved to: an authenticated studio member, an anonymous
+/// @emoji 🔎 What a bearer token resolved to: an authenticated space member, an anonymous
 /// share-token viewer, or nothing.
 enum AuthOutcome {
-    Session { user_id: String, role: StudioRole },
+    Session { user_id: String, role: SpaceRole },
     ShareToken,
     Denied,
 }
 
-/// @emoji 🔐 Tries the bearer as an `AuthSessionRecord` (session id -> user -> studio role) first;
+/// @emoji 🔐 Tries the bearer as an `AuthSessionRecord` (session id -> user -> space role) first;
 /// falls back to the existing anonymous share-token scheme when session resolution fails. Tokenless
 /// documents stay open (dev default) until any share token is issued for them.
-async fn resolve_auth(state: &HubState, studio_id: &str, document_id: &str, token: Option<&str>) -> AuthOutcome {
+async fn resolve_auth(state: &HubState, space_id: &str, document_id: &str, token: Option<&str>) -> AuthOutcome {
     if let Some(session_id) = token {
         if let Ok(Some(session)) = state.directory.get_auth_session(session_id).await {
             if session.expires_at > now_ms() {
-                if let Ok(Some(role)) = state.directory.get_role(studio_id, &session.user_id).await {
+                if let Ok(Some(role)) = state.directory.get_role(space_id, &session.user_id).await {
                     return AuthOutcome::Session { user_id: session.user_id, role };
                 }
             }
@@ -192,18 +192,18 @@ async fn resolve_auth(state: &HubState, studio_id: &str, document_id: &str, toke
     }
 }
 
-async fn authorized(state: &HubState, studio_id: &str, document_id: &str, token: Option<&str>) -> bool {
-    !matches!(resolve_auth(state, studio_id, document_id, token).await, AuthOutcome::Denied)
+async fn authorized(state: &HubState, space_id: &str, document_id: &str, token: Option<&str>) -> bool {
+    !matches!(resolve_auth(state, space_id, document_id, token).await, AuthOutcome::Denied)
 }
 
-/// @emoji 📦 Studio-scoped blobs have no owning document, so this borrows `resolve_auth`'s
-/// session -> role branch as-is (studio role lookup never touches `document_id`) by passing the
+/// @emoji 📦 Space-scoped blobs have no owning document, so this borrows `resolve_auth`'s
+/// session -> role branch as-is (space role lookup never touches `document_id`) by passing the
 /// blob hash in the document-id slot; the share-token branch then degrades to `Denied` unless a
 /// document happens to share the blob's hash as its id, which content hashes never do in
-/// practice. A session with any studio role is required — a document's share token intentionally
-/// does not widen into read access over the whole studio's content-addressed blob store.
-async fn authorized_for_blob(state: &HubState, studio_id: &str, hash: &str, token: Option<&str>) -> bool {
-    !matches!(resolve_auth(state, studio_id, hash, token).await, AuthOutcome::Denied)
+/// practice. A session with any space role is required — a document's share token intentionally
+/// does not widen into read access over the whole space's content-addressed blob store.
+async fn authorized_for_blob(state: &HubState, space_id: &str, hash: &str, token: Option<&str>) -> bool {
+    !matches!(resolve_auth(state, space_id, hash, token).await, AuthOutcome::Denied)
 }
 //#endregion 🔖Auth
 
@@ -252,28 +252,28 @@ struct BlobRecord {
     size: i64,
 }
 
-async fn list_nodes(Path(studio_id): Path<String>, Query(query): Query<NodesQuery>, State(state): State<HubState>) -> Result<Json<Vec<NodeRecord>>, StatusCode> {
-    state.directory.list_nodes(&studio_id, query.parent.as_deref()).await.map(Json).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+async fn list_nodes(Path(space_id): Path<String>, Query(query): Query<NodesQuery>, State(state): State<HubState>) -> Result<Json<Vec<NodeRecord>>, StatusCode> {
+    state.directory.list_nodes(&space_id, query.parent.as_deref()).await.map(Json).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
 
-async fn create_node(Path(studio_id): Path<String>, State(state): State<HubState>, Json(body): Json<CreateNodeRequest>) -> Result<Json<NodeRecord>, StatusCode> {
-    state.directory.create_node(&studio_id, body.parent_id.as_deref(), &body.name, &body.kind).await.map(Json).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+async fn create_node(Path(space_id): Path<String>, State(state): State<HubState>, Json(body): Json<CreateNodeRequest>) -> Result<Json<NodeRecord>, StatusCode> {
+    state.directory.create_node(&space_id, body.parent_id.as_deref(), &body.name, &body.kind).await.map(Json).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
 
 /// @emoji 🧭 A document's current frontier — the REST surface's only document-shaped route now
 /// that whole-envelope JSON snapshot/operation-log routes are gone (superseded by the WS wire-v2
 /// protocol; see `header`). Lazily mints the document in `db`'s catalog on first access, same as
 /// the WS handshake does.
-async fn get_document_status(Path((studio_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<DocumentStatusResponse>, StatusCode> {
-    if !authorized(&state, &studio_id, &document_id, bearer(&headers).as_deref()).await {
+async fn get_document_status(Path((space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<DocumentStatusResponse>, StatusCode> {
+    if !authorized(&state, &space_id, &document_id, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
-    let handle = state.ensure_document(&db_document_id(&studio_id, &document_id)).map_err(db_error_status)?;
+    let handle = state.ensure_document(&db_document_id(&space_id, &document_id)).map_err(db_error_status)?;
     let frontier = handle.frontier().map_err(db_error_status)?;
     Ok(Json(DocumentStatusResponse { document_id, head_seq: frontier.head_seq, commit_seq: frontier.commit_seq, epoch: frontier.epoch }))
 }
 
-async fn create_share(Path((_studio_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<ShareResponse>, StatusCode> {
+async fn create_share(Path((_space_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<ShareResponse>, StatusCode> {
     match state.admin_token.as_deref() {
         Some(expected) => {
             if bearer(&headers).as_deref() != Some(expected) {
@@ -300,8 +300,8 @@ async fn create_auth_session(State(state): State<HubState>, Json(body): Json<Cre
 }
 
 //#region Blobs
-async fn put_blob(Path((studio_id, hash)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Result<Json<BlobRecord>, StatusCode> {
-    if !authorized_for_blob(&state, &studio_id, &hash, bearer(&headers).as_deref()).await {
+async fn put_blob(Path((space_id, hash)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Result<Json<BlobRecord>, StatusCode> {
+    if !authorized_for_blob(&state, &space_id, &hash, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
     let media_type = headers.get(axum::http::header::CONTENT_TYPE).and_then(|value| value.to_str().ok()).unwrap_or("application/octet-stream").to_string();
@@ -316,8 +316,8 @@ async fn put_blob(Path((studio_id, hash)): Path<(String, String)>, headers: Head
     Ok(Json(BlobRecord { hash: computed_hex, media_type, size: body.len() as i64 }))
 }
 
-async fn get_blob(Path((studio_id, hash)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<impl IntoResponse, StatusCode> {
-    if !authorized_for_blob(&state, &studio_id, &hash, bearer(&headers).as_deref()).await {
+async fn get_blob(Path((space_id, hash)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<impl IntoResponse, StatusCode> {
+    if !authorized_for_blob(&state, &space_id, &hash, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
     let content_hash = parse_content_hash(&hash).ok_or(StatusCode::BAD_REQUEST)?;
@@ -328,8 +328,8 @@ async fn get_blob(Path((studio_id, hash)): Path<(String, String)>, headers: Head
     }
 }
 
-async fn head_blob(Path((studio_id, hash)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> StatusCode {
-    if !authorized_for_blob(&state, &studio_id, &hash, bearer(&headers).as_deref()).await {
+async fn head_blob(Path((space_id, hash)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> StatusCode {
+    if !authorized_for_blob(&state, &space_id, &hash, bearer(&headers).as_deref()).await {
         return StatusCode::UNAUTHORIZED;
     }
     let Some(content_hash) = parse_content_hash(&hash) else { return StatusCode::BAD_REQUEST };
@@ -343,8 +343,8 @@ async fn head_blob(Path((studio_id, hash)): Path<(String, String)>, headers: Hea
 //#endregion 🔖Rest
 
 //#region 🔖WebSocket
-async fn document_ws(ws: WebSocketUpgrade, Path((studio_id, document_id)): Path<(String, String)>, State(state): State<HubState>) -> impl IntoResponse {
-    ws.on_upgrade(move |socket| handle_ws(socket, studio_id, document_id, state))
+async fn document_ws(ws: WebSocketUpgrade, Path((space_id, document_id)): Path<(String, String)>, State(state): State<HubState>) -> impl IntoResponse {
+    ws.on_upgrade(move |socket| handle_ws(socket, space_id, document_id, state))
 }
 
 fn encode(frame: &ServerFrame) -> Message {
@@ -448,7 +448,7 @@ async fn handle_client_frame(
     }
 }
 
-async fn handle_ws(socket: WebSocket, studio_id: String, document_id: String, state: HubState) {
+async fn handle_ws(socket: WebSocket, space_id: String, document_id: String, state: HubState) {
     let (mut sender, mut receiver) = socket.split();
 
     let hello = match receiver.next().await {
@@ -460,7 +460,7 @@ async fn handle_ws(socket: WebSocket, studio_id: String, document_id: String, st
         return;
     };
 
-    let key = scope_key(&studio_id, &document_id);
+    let key = scope_key(&space_id, &document_id);
     if pack_schema_hash != [0u8; 32] {
         let pinned = *state.schema_hashes.entry(key.clone()).or_insert(pack_schema_hash);
         if pinned != pack_schema_hash {
@@ -469,7 +469,7 @@ async fn handle_ws(socket: WebSocket, studio_id: String, document_id: String, st
         }
     }
 
-    let auth = resolve_auth(&state, &studio_id, &document_id, token.as_deref()).await;
+    let auth = resolve_auth(&state, &space_id, &document_id, token.as_deref()).await;
     let (user_id, role) = match &auth {
         AuthOutcome::Session { user_id, role } => (Some(user_id.clone()), Some(*role)),
         AuthOutcome::ShareToken => (None, None),
@@ -479,7 +479,7 @@ async fn handle_ws(socket: WebSocket, studio_id: String, document_id: String, st
         }
     };
 
-    let db_id = db_document_id(&studio_id, &document_id);
+    let db_id = db_document_id(&space_id, &document_id);
     let handle = match state.ensure_document(&db_id) {
         Ok(handle) => handle,
         Err(error) => {
@@ -561,11 +561,11 @@ async fn handle_ws(socket: WebSocket, studio_id: String, document_id: String, st
 fn router(state: HubState) -> Router {
     Router::new()
         .route("/auth/sessions", post(create_auth_session))
-        .route("/studios/{studio_id}/nodes", get(list_nodes).post(create_node))
-        .route("/studios/{studio_id}/blobs/{hash}", get(get_blob).head(head_blob).put(put_blob))
-        .route("/studios/{studio_id}/documents/{id}", get(get_document_status))
-        .route("/studios/{studio_id}/documents/{id}/share", post(create_share))
-        .route("/studios/{studio_id}/documents/{id}/ws", get(document_ws))
+        .route("/spaces/{space_id}/nodes", get(list_nodes).post(create_node))
+        .route("/spaces/{space_id}/blobs/{hash}", get(get_blob).head(head_blob).put(put_blob))
+        .route("/spaces/{space_id}/documents/{id}", get(get_document_status))
+        .route("/spaces/{space_id}/documents/{id}/share", post(create_share))
+        .route("/spaces/{space_id}/documents/{id}/ws", get(document_ws))
         .with_state(state)
 }
 
@@ -668,7 +668,7 @@ mod tests {
     use tokio_tungstenite::connect_async;
     use tokio_tungstenite::tungstenite::Message as WsMessage;
 
-    /// @emoji 🏛️ The seeded studio id every test routes against (see `SqliteDirectory::seed`).
+    /// @emoji 🏛️ The seeded space id every test routes against (see `SqliteDirectory::seed`).
     const STUDIO: &str = "default";
 
     /// @emoji 📁 A fresh, never-reused temp directory per call — `uuid::Uuid::now_v7` rather than
@@ -748,7 +748,7 @@ mod tests {
     #[tokio::test]
     async fn ws_duplex_fan_out() {
         let addr = spawn_server(test_state().await).await;
-        let url = format!("ws://{addr}/studios/{STUDIO}/documents/default/ws");
+        let url = format!("ws://{addr}/spaces/{STUDIO}/documents/default/ws");
 
         let (mut a, _) = connect_async(&url).await.unwrap();
         a.send(client_binary(&hello("A"), Lane::Command)).await.unwrap();
@@ -782,7 +782,7 @@ mod tests {
     #[tokio::test]
     async fn reconnect_replays_missing_commands_via_bootstrap_tail() {
         let addr = spawn_server(test_state().await).await;
-        let url = format!("ws://{addr}/studios/{STUDIO}/documents/default/ws");
+        let url = format!("ws://{addr}/spaces/{STUDIO}/documents/default/ws");
         let document = WireDocumentId(format!("{STUDIO}:default"));
 
         let (mut a, _) = connect_async(&url).await.unwrap();
@@ -802,26 +802,26 @@ mod tests {
         }
     }
 
-    // 🔬 Studio-scoped documents: the same document id in two different studios lands in two
-    // independent `db` documents (the `{studio_id}:{document_id}` scope key) — a peer on
-    // studio-b's `shared-doc` never observes studio-a's commands.
+    // 🔬 Space-scoped documents: the same document id in two different studios lands in two
+    // independent `db` documents (the `{space_id}:{document_id}` scope key) — a peer on
+    // space-b's `shared-doc` never observes space-a's commands.
     #[tokio::test]
-    async fn studio_scoped_documents_are_isolated() {
+    async fn space_scoped_documents_are_isolated() {
         let state = test_state().await;
         let addr = spawn_server(state).await;
 
-        let url_a = format!("ws://{addr}/studios/studio-a/documents/shared-doc/ws");
+        let url_a = format!("ws://{addr}/spaces/space-a/documents/shared-doc/ws");
         let (mut a, _) = connect_async(&url_a).await.unwrap();
         a.send(client_binary(&hello("A"), Lane::Command)).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Welcome { .. }));
-        let document = WireDocumentId("studio-a:shared-doc".to_string());
+        let document = WireDocumentId("space-a:shared-doc".to_string());
         a.send(client_binary(&ClientFrame::Commands { batch_id: 1, envelopes: vec![sample_envelope("only-in-a", &document)] }, Lane::Command)).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, ServerFrame::Ack { .. }));
 
-        let url_b = format!("ws://{addr}/studios/studio-b/documents/shared-doc/ws");
+        let url_b = format!("ws://{addr}/spaces/space-b/documents/shared-doc/ws");
         let (mut b, _) = connect_async(&url_b).await.unwrap();
         b.send(client_binary(&hello("B"), Lane::Command)).await.unwrap();
-        assert!(matches!(next_server_frame(&mut b).await, ServerFrame::Welcome { bootstrap: Bootstrap::None, .. }), "studio-b's document must not see studio-a's committed op");
+        assert!(matches!(next_server_frame(&mut b).await, ServerFrame::Welcome { bootstrap: Bootstrap::None, .. }), "space-b's document must not see space-a's committed op");
     }
 
     // 🔬 Auth-lite: issuing a share token closes an otherwise-open document to a tokenless Hello.
@@ -835,7 +835,7 @@ mod tests {
         headers.insert(axum::http::header::AUTHORIZATION, "Bearer admin-secret".parse().unwrap());
         let share = create_share(Path((STUDIO.to_string(), "guarded".to_string())), headers, State(admin_state)).await.expect("share");
 
-        let url = format!("ws://{addr}/studios/{STUDIO}/documents/guarded/ws");
+        let url = format!("ws://{addr}/spaces/{STUDIO}/documents/guarded/ws");
         let (mut denied, _) = connect_async(&url).await.unwrap();
         denied.send(client_binary(&hello("intruder"), Lane::Command)).await.unwrap();
         assert!(matches!(next_server_frame(&mut denied).await, ServerFrame::Error { code, .. } if code == "unauthorized"));
@@ -894,20 +894,20 @@ mod tests {
         assert_eq!(children.0[0].id, child.0.id);
     }
 
-    // 🔬 Auth sessions: POST /auth/sessions mints a session that resolves the caller's studio role
+    // 🔬 Auth sessions: POST /auth/sessions mints a session that resolves the caller's space role
     // and grants access even to a document a share token has otherwise closed.
     #[tokio::test]
     async fn auth_session_grants_role_and_bypasses_share_gate() {
         let state = test_state().await;
-        // `hub_studio_membership.studio_id` is FK-bound to `hub_studio(id)` — a real studio, not a
+        // `hub_space_membership.space_id` is FK-bound to `hub_space(id)` — a real studio, not a
         // bare string, matching how `create_auth_session`'s minted user must also be a real row.
-        let studio = state.directory.create_studio("Studio X", "seed").await.expect("create studio").id;
+        let studio = state.directory.create_space("Space X", "seed").await.expect("create space").id;
         let document = "closed-doc";
         state.directory.create_share_token(document).await.expect("close with share token");
         assert!(!state.directory.authorized_by_token(document, None).await.unwrap());
 
         let minted = create_auth_session(State(state.clone()), Json(CreateAuthSessionRequest { email: "dev@example.com".into() })).await.expect("mint session");
-        state.directory.upsert_membership(&studio, &minted.0.user_id, StudioRole::Member).await.expect("grant membership");
+        state.directory.upsert_membership(&studio, &minted.0.user_id, SpaceRole::Member).await.expect("grant membership");
 
         assert!(!authorized(&state, &studio, document, None).await, "tokenless request still denied");
         assert!(authorized(&state, &studio, document, Some(&minted.0.token)).await, "session token authorized despite no share token");
@@ -915,7 +915,7 @@ mod tests {
         match resolve_auth(&state, &studio, document, Some(&minted.0.token)).await {
             AuthOutcome::Session { user_id, role } => {
                 assert_eq!(user_id, minted.0.user_id);
-                assert_eq!(role, StudioRole::Member);
+                assert_eq!(role, SpaceRole::Member);
             }
             _ => panic!("expected a resolved session"),
         }

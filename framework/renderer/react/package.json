@@ -2,7 +2,7 @@
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "@semio-tech/framework-renderer-react",
   "version": "0.1.0",
-  "description": "framework · trusted React renderer for declarative Rust plugin UI trees",
+  "description": "framework · trusted React renderer for declarative Rust program UI trees",
   "type": "module",
   "private": true,
   "bundleKind": "library",

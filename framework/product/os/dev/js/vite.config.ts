@@ -4,8 +4,8 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import { playgroundAssetVitePlugins, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, staticDirVitePlugin, uiAssetsVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
-import { PLAYGROUND_BUILD_TARGETS } from "../../../../plugin/registry/generated/playgrounds.ts";
-import { isStudioPluginFilter } from "../../../../plugin/registry/script.ts";
+import { PLAYGROUND_BUILD_TARGETS } from "../../../../program/registry/generated/playgrounds.ts";
+import { isStudioPluginFilter } from "../../../../program/registry/script.ts";
 import { resolveShellBrandById } from "../brand/index.ts";
 import { semioBackboneVitePlugin, semioBlobVitePlugin } from "../script.ts";
 
@@ -23,7 +23,7 @@ const uiAssetsRoot = path.join(repoRoot, "ui/asset");
 //#region 🔖RegistryDrivenAssetsAndEngines
 /** @emoji 🔌 Framework engine crates every react-renderer dev session needs regardless of the active
  * plugin (the node-graph/editor host engines back shared studio chrome, not any one app) — kept as a
- * literal baseline rather than per-plugin metadata, mirroring the equally-unconditional pre-registry
+ * literal baseline rather than per-program metadata, mirroring the equally-unconditional pre-registry
  * build in `os/dev/script.ts`'s `buildEngineWasm`. */
 const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = ["@semio-tech/framework-surface-node-graph-rs", "@semio-tech/framework-editor-rs"];
 

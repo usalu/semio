@@ -132,7 +132,7 @@ mod document_vcs {
     // `store::DocumentDsl for WriterProjection` and `protocol::OpText for WriterOperation` are now generated
     // by `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslOps)]` on the type definitions above — the
     // engine's `dsl_schema` grammar replaces this crate's own hand-rolled kv printer (the old
-    // `writer_dsl` lexer/parser/printer module was deleted after regenerating `writer-plugin`'s two
+    // `writer_dsl` lexer/parser/printer module was deleted after regenerating `writer-program`'s two
     // fixture files to the new canonical format).
     // #endregion 🔖Dsl
 

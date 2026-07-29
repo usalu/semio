@@ -1,7 +1,7 @@
 # #region 🔖Header
 # 2026 Ueli Saluz
 # AGPL-3.0
-# HubDirectory implementation over Neo4j (neo4rs) — users/studios/memberships as real nodes and
+# HubDirectory implementation over Neo4j (neo4rs) — users/spaces/memberships as real nodes and
 # relationships; VFS nodes form a real tree too (see lib.rs header for why).
 # #endregion 🔖Header
 

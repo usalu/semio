@@ -973,10 +973,10 @@ impl OsMediaFormat {
 }
 //#endregion MediaFormat
 
-//#region ResourceKind
+//#region ArtifactKind
 /// 🧬 Which geometry backend a resource kind's media exporters/importers target — the manifest-level
-/// counterpart threaded onto `AppDefinition.resource_kinds` (see `ResourceKindSpec`). Canonical home for
-/// what used to be duplicated verbatim in `framework/plugin/rs` and `framework/product/os/core/rs`; both
+/// counterpart threaded onto `AppDefinition.artifact_kinds` (see `ArtifactKindSpec`). Canonical home for
+/// what used to be duplicated verbatim in `framework/program/rs` and `framework/product/os/core/rs`; both
 /// now re-export this definition instead of declaring their own.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
@@ -987,17 +987,17 @@ pub enum OsMediaCapability {
 }
 
 /// 🗂️ An app-declared OS resource kind (e.g. a 3D mesh format, a raster format) — the manifest-level
-/// counterpart to `AppBuilder::resource_kind(...)` (`framework/plugin/rs`), letting `framework/product/os/core`
-/// build its resource catalog from `AppDefinition.resource_kinds` at plugin registration time instead of
+/// counterpart to `AppBuilder::artifact_kind(...)` (`framework/program/rs`), letting `framework/product/os/core`
+/// build its artifact catalog from `AppDefinition.artifact_kinds` at program registration time instead of
 /// hardcoding a per-app match on kind-id strings. Absorbs the manifest-level media-kind fields
 /// (`media_type`/`schema`/`export_formats`/`import_formats`, matching `MediaKindDescriptor` below field-for-field)
 /// so one spec carries both the OS-catalog presentation shape and the `MediaType` a wire actually negotiates
-/// — see `crate::media_types_compatible`. `OsResourceDescriptor` (`framework/product/os/core`) threads
+/// — see `crate::media_types_compatible`. `OsArtifactDescriptor` (`framework/product/os/core`) threads
 /// `media_type` through so registry lookups return it alongside the rest of the descriptor.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
-pub struct ResourceKindSpec {
+pub struct ArtifactKindSpec {
     pub id: String,
     pub name: String,
     pub source_format: String,
@@ -1009,10 +1009,10 @@ pub struct ResourceKindSpec {
     pub export_formats: Vec<OsMediaFormat>,
     pub import_formats: Vec<OsMediaFormat>,
 }
-//#endregion ResourceKind
+//#endregion ArtifactKind
 
 //#region MediaType
-/// 🧬 Typed-media lattice: every port/wire in the workflow carries a `MediaType` (`class` × `form`) instead of the legacy string `resource_kind`. This is separate from `OsMediaFormat` above — `MediaType` is what a wire negotiates, `OsMediaFormat` is only how bytes are encoded once they actually cross a process boundary (see `MediaWireFormat`). Dependent tickets retire `OsMediaCapability` (see the `ResourceKind` region above) onto `MediaForm::{Brep,Mesh}`, which already covers what `OsMediaCapability::{Brep,MeshOnly}` expresses.
+/// 🧬 Typed-media lattice: every port/wire in the workflow carries a `MediaType` (`class` × `form`) instead of the legacy string `artifact_kind`. This is separate from `OsMediaFormat` above — `MediaType` is what a wire negotiates, `OsMediaFormat` is only how bytes are encoded once they actually cross a process boundary (see `MediaWireFormat`). Dependent tickets retire `OsMediaCapability` (see the `ArtifactKind` region above) onto `MediaForm::{Brep,Mesh}`, which already covers what `OsMediaCapability::{Brep,MeshOnly}` expresses.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -1068,7 +1068,7 @@ pub enum MediaWireFormat {
     Document { schema: String },
 }
 
-/// 📇 An app-declared media kind — the manifest-level counterpart to `MediaType`, naming a concrete component/schema an app can produce or consume plus which `OsMediaFormat`s it can export/import. `ResourceKindSpec` (see the `ResourceKind` region above) now carries these same four fields directly, so this shape has no live producer — kept for now as the standalone media-kind vocabulary dependent tickets (edge contracts, WIT/SDK) may still key off of.
+/// 📇 An app-declared media kind — the manifest-level counterpart to `MediaType`, naming a concrete component/schema an app can produce or consume plus which `OsMediaFormat`s it can export/import. `ArtifactKindSpec` (see the `ArtifactKind` region above) now carries these same four fields directly, so this shape has no live producer — kept for now as the standalone media-kind vocabulary dependent tickets (edge contracts, WIT/SDK) may still key off of.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -1158,7 +1158,7 @@ pub enum MediaPayload {
     Binary { format: OsMediaFormat, blob_hash: String },
 }
 
-/// 🔑 A cheap identity for one port's current output, independent of serializing the full payload — the unit the `StudioRunner` compares to decide whether a downstream node actually needs to see a new value.
+/// 🔑 A cheap identity for one port's current output, independent of serializing the full payload — the unit the `SpaceRunner` compares to decide whether a downstream node actually needs to see a new value.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 pub struct MediaFingerprint(pub String);
@@ -3115,7 +3115,7 @@ mod tests {
             dialogs: Vec::new(),
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
-            resource_kinds: Vec::new(),
+            artifact_kinds: Vec::new(),
         });
         assert_eq!(platform.active_app_id, "draw-play");
     }
@@ -3165,7 +3165,7 @@ mod tests {
             dialogs: Vec::new(),
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
-            resource_kinds: Vec::new(),
+            artifact_kinds: Vec::new(),
         }
     }
 
@@ -3214,13 +3214,13 @@ mod tests {
 
 pub mod ui {
 // #region ui
-//! 🧩 App manifest (`AppDefinition`/`ModeDefinition`/`WindowKindDefinition`/`PluginManifest`/`ViewState`)
+//! 🧩 App manifest (`AppDefinition`/`ModeDefinition`/`WindowKindDefinition`/`ProgramManifest`/`ViewState`)
 //! and kernel types shared by plugins and renderers; the declarative `UiNode` component model itself
 //! lives in `ui_wgpu`'s `component` region.
 
 use serde::{Deserialize, Serialize};
 use ui_wgpu::{ActionDescriptor, NamedLayout, SurfaceKind, WindowLayout, WindowOptions};
-use crate::mesh::{MediaPortSpec, ResourceKindSpec};
+use crate::mesh::{MediaPortSpec, ArtifactKindSpec};
 use crate::IconName;
 
 //#region 🔖Manifest
@@ -3484,7 +3484,7 @@ pub fn set_active_tool_action_definition() -> ActionDefinition {
 pub const START_INTRODUCTION_ACTION_ID: &str = "startIntroduction";
 
 /// @emoji 🎓 The framework-injected `startIntroduction` View action: fully shell-intercepted (never
-/// forwarded to the plugin), it resets playback to the first step of `AppDefinition.introduction`.
+/// forwarded to the program), it resets playback to the first step of `AppDefinition.introduction`.
 /// Unlike ordinary app actions this stays out of the action palette because the shell exposes the
 /// dedicated `Introduce App` command.
 pub fn start_introduction_action_definition() -> ActionDefinition {
@@ -3604,14 +3604,14 @@ impl From<String> for UtilityRef {
 
 //#region 🔖Commands
 /// @emoji 🗂️ Where a command is offered. There are no window-level commands — window-scoped verbs
-/// stay `ActionDefinition`/`UtilityDefinition`; a command is scoped to the os shell, a plugin, an app, or
+/// stay `ActionDefinition`/`UtilityDefinition`; a command is scoped to the os shell, a program, an app, or
 /// one of an app's modes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum CommandScope {
     Os,
-    Plugin,
+    Program,
     App,
     Mode,
 }
@@ -4380,7 +4380,7 @@ pub struct TutorialTracks {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub video: Vec<TutorialVideoCue>,
     /// 🏷️ Annotational only — drives affordance pulses and scrub-bar tick marks; playback never
-    /// re-dispatches these into a plugin (see `TutorialEventKind`).
+    /// re-dispatches these into a program (see `TutorialEventKind`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub events: Vec<TutorialEvent>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -4571,7 +4571,7 @@ pub struct TutorialUiSnapshot {
     /// 📑 Active tab id per panel group; groups absent from the map are collapsed/closed.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub active_panel_tab_by_group: std::collections::HashMap<String, String>,
-    /// 🗂️ Opaque plugin vocabulary, verbatim `ViewState.panel_json`/`selection_json`.
+    /// 🗂️ Opaque program vocabulary, verbatim `ViewState.panel_json`/`selection_json`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub panel_json: Option<String>,
@@ -4650,7 +4650,7 @@ pub enum TutorialUiChange {
 /// @emoji 🖋️ One document-track entry — mirrors `store::DocumentCommand` with `Operation =
 /// serde_json::Value` (opaque per-app operation JSON, already the wire shape of every `KernelOperation`
 /// diff). This is the SOLE source of document mutation during playback: recorded `TutorialEvent`s are
-/// annotational only, never re-dispatched, because re-dispatching a plugin action is non-deterministic
+/// annotational only, never re-dispatched, because re-dispatching a program action is non-deterministic
 /// (fresh ids/timestamps) and would double-apply against this track.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
@@ -4800,10 +4800,10 @@ pub fn record_tutorial_action_definition() -> ActionDefinition {
 pub const TUTORIAL_CONVERGE_MS: u64 = 600;
 
 //#region 🔖TutorialEngine
-/// @emoji ✅ Structural validation shared by the plugin builder and both recorders before save: every
+/// @emoji ✅ Structural validation shared by the program builder and both recorders before save: every
 /// track sorted ascending by `at`, every entry within `[0, durationMs]`, chapter/narration-cue ids
 /// unique, `base.cameras` all at `at == 0`. Does NOT check that referenced action/command/element ids
-/// exist — the plugin builder's validation (which has the full `AppDefinition` in scope) does that.
+/// exist — the program builder's validation (which has the full `AppDefinition` in scope) does that.
 pub fn validate_tutorial(def: &TutorialDefinition) -> Result<(), String> {
     fn sorted_by_at<T>(label: &str, items: &[T], at: impl Fn(&T) -> u64, duration_ms: u64) -> Result<(), String> {
         let mut last: Option<u64> = None;
@@ -5416,10 +5416,10 @@ pub struct AppDefinition {
     /// 🔌 This app's workflow output ports — see `crate::MediaPortSpec`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub media_outputs: Vec<MediaPortSpec>,
-    /// 🗂️ OS resource kinds this app produces/consumes — see `crate::ResourceKindSpec`. Drives
-    /// `framework/product/os/core`'s resource catalog registry instead of a hardcoded per-app match.
+    /// 🗂️ OS resource kinds this app produces/consumes — see `crate::ArtifactKindSpec`. Drives
+    /// `framework/product/os/core`'s artifact catalog registry instead of a hardcoded per-app match.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub resource_kinds: Vec<ResourceKindSpec>,
+    pub artifact_kinds: Vec<ArtifactKindSpec>,
 }
 
 /// 🧭 Resolves the dock layout a mode should present.
@@ -5484,7 +5484,7 @@ fn action_is_panel_eligible(action: &ActionDefinition) -> bool {
 /// refs resolve in declared order; additionally, any panel-eligible app action referenced by *no*
 /// window kind is an "orphan" that appears on every window (the scoping fallback that prevents blank
 /// panels mid-migration — Architecture Decision 8). A window that scopes nothing therefore shows every
-/// orphan; once a plugin scopes an action to some window, it stops being an orphan and appears only
+/// orphan; once a program scopes an action to some window, it stops being an orphan and appears only
 /// where scoped. Unresolvable refs are skipped (the builder validates them at construction time).
 pub fn resolve_window_actions<'a>(
     app: &'a AppDefinition,
@@ -5539,8 +5539,8 @@ pub fn resolve_mode_tools<'a>(app: &'a AppDefinition, mode_id: &str) -> Vec<&'a 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
-pub struct ProgramDefinition {
-    pub program_id: String,
+pub struct WorkflowDefinition {
+    pub workflow_step_id: String,
     pub app_id: String,
     pub label: String,
     pub document: Vec<String>,
@@ -5621,18 +5621,18 @@ pub enum Contribution {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
-pub struct PluginManifest {
-    pub plugin_id: String,
+pub struct ProgramManifest {
+    pub program_id: String,
     pub label: String,
     pub version: String,
     pub apps: Vec<AppDefinition>,
-    pub programs: Vec<ProgramDefinition>,
+    pub workflows: Vec<WorkflowDefinition>,
     pub examples: Vec<ExampleDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub capabilities: Vec<kernel::CapabilityRequirement>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub contributions: Vec<Contribution>,
-    /// 🎛️ Plugin-scope commands this plugin exposes — apply whenever any of its apps is focused.
+    /// 🎛️ Plugin-scope commands this program exposes — apply whenever any of its apps is focused.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub commands: Vec<CommandDefinition>,
 }
@@ -5648,7 +5648,7 @@ pub struct ViewState {
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub active_window_kind_id: Option<String>,
     /// 🧰 Per-call overlay: the host-owned active utility for the window targeted by this `render`/`handle_action`
-    /// call (`window_id`). On batched `refresh-ui`, the plugin stamps this from
+    /// call (`window_id`). On batched `refresh-ui`, the program stamps this from
     /// `active_utility_by_window_id` per window entry — never from the focused window alone.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
@@ -5681,7 +5681,7 @@ pub struct ViewState {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub terminology: Option<String>,
-    /// 🪟 The window instance a `render`/`handle_action` call targets — plugins key all per-window
+    /// 🪟 The window instance a `render`/`handle_action` call targets — programs key all per-window
     /// option state (grid, LOD, selection mode, …) off this, never off `active_window_kind_id`, so that
     /// two window instances of the same kind (e.g. split top/perspective panes) never share options.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -5784,11 +5784,11 @@ pub struct CapabilityToken(pub u128);
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct PluginInstanceId(pub String);
+pub struct ProgramInstanceId(pub String);
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct ResourceId(pub String);
+pub struct ArtifactId(pub String);
 
 // 🎞️ CW3 kernel cut-over: OperationId/ActorId/DocumentId/DocumentVersion/SchemaId moved to
 // `protocol_core` (frozen contract `.repo/🎫/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md`),
@@ -5855,7 +5855,7 @@ pub enum Rights {
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
-pub enum ResourceKind {
+pub enum ArtifactKind {
     Document,
     Projection,
     Window,
@@ -5870,7 +5870,7 @@ pub enum ResourceKind {
 pub enum Scope {
     Instance,
     App,
-    Plugin,
+    Program,
     Global,
 }
 
@@ -5878,7 +5878,7 @@ pub enum Scope {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct CapabilityRequirement {
-    pub resource: ResourceKind,
+    pub artifact: ArtifactKind,
     pub rights: Rights,
     pub scope: Scope,
 }
@@ -5886,8 +5886,8 @@ pub struct CapabilityRequirement {
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Capability {
-    pub subject: PluginInstanceId,
-    pub resource: ResourceId,
+    pub subject: ProgramInstanceId,
+    pub artifact: ArtifactId,
     pub rights: Rights,
     pub scope: Scope,
 }
@@ -5959,12 +5959,12 @@ pub enum HostEffect {
     RequestSync,
     /// @emoji 🧭 Navigates the shell to a URI (studio/instance/document route).
     Navigate { uri: String },
-    /// @emoji 📂 Replaces the active app instance's document with a VCS envelope JSON — the host-owned
-    /// counterpart of `loadAppDocument`, used when the plugin resolves a catalog/example studio and
-    /// needs the shell to swap the live store without going through a persistence binding.
-    LoadDocument { document_json: String },
-    /// @emoji 🌐 Opens an external URL in a new browser tab — the host-bridge substitute for a plugin
-    /// reaching into `web-sys`/`window()` directly, which the plugin capability lint forbids.
+    /// @emoji 📂 Replaces the active app instance's document with pack+spr bytes — the host-owned
+    /// counterpart of `loadAppDocumentPack`, used when the program resolves a catalog/example studio
+    /// and needs the shell to swap the live store without going through a persistence binding.
+    LoadDocument { pack: Vec<u8>, spr: Vec<u8> },
+    /// @emoji 🌐 Opens an external URL in a new browser tab — the host-bridge substitute for a program
+    /// reaching into `web-sys`/`window()` directly, which the program capability lint forbids.
     OpenExternalUrl { url: String },
     /// @emoji 🗂️ Replaces the active studio/window panel state with a serialized panel JSON.
     SetPanel { panel_json: String },
@@ -6016,7 +6016,7 @@ pub enum HostEffect {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         args: Option<Value>,
     },
-    /// @emoji ✨ Spawns a plugin instance (idempotent on `os_instance_id`) without focusing it.
+    /// @emoji ✨ Spawns a program instance (idempotent on `os_instance_id`) without focusing it.
     SpawnPluginInstance {
         program_id: String,
         app_id: String,
@@ -6027,7 +6027,7 @@ pub enum HostEffect {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         document_json: Option<String>,
     },
-    /// @emoji 🪟 Spawns (if needed) and focuses/navigates to a plugin instance.
+    /// @emoji 🪟 Spawns (if needed) and focuses/navigates to a program instance.
     OpenPluginInstance {
         program_id: String,
         app_id: String,
@@ -6035,10 +6035,10 @@ pub enum HostEffect {
         os_instance_id: Option<String>,
     },
     /// @emoji 🧰 Programmatically switches the host-owned active utility of a window instance — the effect
-    /// form of `setActiveUtility`, letting a plugin change utilities without a user click.
+    /// form of `setActiveUtility`, letting a program change utilities without a user click.
     SetActiveUtility { window_id: String, utility_id: String },
     /// @emoji 🛠️ Programmatically switches the host-owned active tool of the active mode — the effect
-    /// form of `setActiveTool`, letting a plugin change tools without a user click. Empty `tool_id`
+    /// form of `setActiveTool`, letting a program change tools without a user click. Empty `tool_id`
     /// deactivates the current tool.
     SetActiveTool { tool_id: String },
     /// @emoji 🗨️ Opens a declared `AppDefinition.dialogs` entry; `args` (an object keyed by arg id)
@@ -6048,11 +6048,11 @@ pub enum HostEffect {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         args: Option<Value>,
     },
-    /// @emoji 🔁 Re-dispatches `action` onto the same plugin instance after `delay_ms` — lets a
+    /// @emoji 🔁 Re-dispatches `action` onto the same program instance after `delay_ms` — lets a
     /// plugin's `handle_action` advance staged/progressive work (e.g. a multi-pass reconstruction)
     /// over several ticks without blocking the host. The host feeds the follow-up response's own
     /// `requestedEffects` back through the same effect-application pass, so a `DispatchAction` can
-    /// itself emit another one, chaining as many ticks as the plugin needs.
+    /// itself emit another one, chaining as many ticks as the program needs.
     DispatchAction {
         action: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -6126,7 +6126,7 @@ pub struct UndoGroup {
 
 /// @emoji 🐢 What part of the shell's rendered UI an action actually invalidates — lets `refresh-ui`
 /// skip re-rendering/re-fetching sections nothing touched. Absent from JSON (older/unmodified plugins)
-/// deserializes to `Full`, so any plugin that never sets this keeps today's whole-shell-refresh
+/// deserializes to `Full`, so any program that never sets this keeps today's whole-shell-refresh
 /// behavior exactly. `None` means "nothing to re-render at all" (e.g. a pure telemetry/heartbeat action).
 // 🐢 `rename_all = "camelCase"` alone only renames the *variant* names (Full/None/Partial ->
 // full/none/partial via `tag = "kind"`) — it does NOT cascade into a struct variant's own fields, which
@@ -6503,7 +6503,7 @@ mod app_document_tests {
         use crate::kernel::UiDirtyScope;
         assert_eq!(UiDirtyScope::default(), UiDirtyScope::Full);
         assert_eq!(serde_json::to_string(&UiDirtyScope::Full).unwrap(), "{\"kind\":\"full\"}");
-        // Absent from JSON (an older plugin that never sets it) must also deserialize to Full.
+        // Absent from JSON (an older program that never sets it) must also deserialize to Full.
         #[derive(serde::Deserialize)]
         struct Wrapper {
             #[serde(default)]
@@ -6645,7 +6645,7 @@ mod app_document_tests {
             dialogs: Vec::new(),
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
-            resource_kinds: Vec::new(),
+            artifact_kinds: Vec::new(),
         }
     }
 
@@ -7488,7 +7488,7 @@ mod app_document_tests {
         // variants' camelCase wire tags so a future variant addition can't silently reorder them.
         for (scope, tag) in [
             (CommandScope::Os, "\"os\""),
-            (CommandScope::Plugin, "\"plugin\""),
+            (CommandScope::Program, "\"plugin\""),
             (CommandScope::App, "\"app\""),
             (CommandScope::Mode, "\"mode\""),
         ] {
@@ -7746,20 +7746,20 @@ mod app_document_tests {
         crate::ui::TutorialGestureCue::export().unwrap();
         crate::ui::DialogDefinition::export().unwrap();
         crate::ui::AppDefinition::export().unwrap();
-        crate::ui::ProgramDefinition::export().unwrap();
+        crate::ui::WorkflowDefinition::export().unwrap();
         crate::ui::ExampleDefinition::export().unwrap();
         crate::ui::Contribution::export().unwrap();
-        crate::ui::PluginManifest::export().unwrap();
+        crate::ui::ProgramManifest::export().unwrap();
         crate::ui::ViewWindowInstance::export().unwrap();
         crate::ui::ViewState::export().unwrap();
         crate::ui::AppLabelsOverlay::export().unwrap();
         crate::ui::kernel::CapabilityRequirement::export().unwrap();
         crate::ui::kernel::Rights::export().unwrap();
-        crate::ui::kernel::ResourceKind::export().unwrap();
+        crate::ui::kernel::ArtifactKind::export().unwrap();
         crate::ui::kernel::Scope::export().unwrap();
         crate::mesh::OsMediaFormat::export().unwrap();
         crate::mesh::OsMediaCapability::export().unwrap();
-        crate::mesh::ResourceKindSpec::export().unwrap();
+        crate::mesh::ArtifactKindSpec::export().unwrap();
         crate::mesh::MediaClass::export().unwrap();
         crate::mesh::MediaForm::export().unwrap();
         crate::mesh::MediaType::export().unwrap();
@@ -7785,7 +7785,7 @@ pub use mesh::{
     DwgColor, DwgDrawing, DwgEntity, DwgGeometry, DwgLayer, DwgPathSegment,
     MeshExporter, MeshImporter, ObjExporter, ObjImporter, GlbExporter, GlbImporter, StlExporter, StlImporter,
     OsMediaFormat,
-    OsMediaCapability, ResourceKindSpec,
+    OsMediaCapability, ArtifactKindSpec,
     MediaClass, MediaForm, MediaType, MediaWireFormat, MediaKindDescriptor, MediaPortDirection, MediaPortSpec,
     MediaCompat, media_types_compatible,
     Media, MediaPayload, MediaFingerprint, MediaError, MediaConverter,
@@ -7797,8 +7797,8 @@ pub use ui::kernel::{
     CapabilityToken, ActionContext, ActionDef, ActionId, ActionInvocation, CommandContext, CommandId, CommandInvocation,
     ActionRequest, InvocationId, InvocationResult, Diagnostic, HostEffect, HybridLogicalTimestamp, IconRenderExportItem, InverseOperation,
     KernelOperation, MergeStrategyKind, DocumentDiff, DocumentHandle, DocumentId, DocumentKind,
-    DocumentVersion, OperationId, PhysicalSize, PluginInstanceId, PresencePeer,
+    DocumentVersion, OperationId, PhysicalSize, ProgramInstanceId, PresencePeer,
     PresencePoint, PresenceViewport, decode_presence_peer, encode_presence_peer,
-    ResourceId, ResourceKind, Appearance, Rights, SchemaId, SchemaVersion, Scope, UndoGroup, UndoPolicy,
+    ArtifactId, ArtifactKind, Appearance, Rights, SchemaId, SchemaVersion, Scope, UndoGroup, UndoPolicy,
     WindowEvent, WindowHandle, WindowInput, WindowKindDef, WindowKindId, WindowOutput,
 };

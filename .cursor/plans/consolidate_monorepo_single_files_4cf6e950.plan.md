@@ -49,7 +49,7 @@ Only **2** real `src/` folders exist in the whole repo (`repo/lib/js/src/`, `ui/
 
 - `repo/lib/js/src/{index.ts,index.test.ts}` → `repo/lib/js/{index.ts,index.test.ts}`.
   - Update [`repo/lib/js/package.json`](repo/lib/js/package.json) (`exports["."]`: `./index.ts` → `./index.ts`; `"test"` script: `bun test ./index.test.ts` → `./index.test.ts`).
-  - Update [`repo/lib/js/project.json`](repo/lib/js/project.json) `sourceRoot`, and `tsconfig.json`/`nx-plugin.mjs` if they reference `src/`.
+  - Update [`repo/lib/js/project.json`](repo/lib/js/project.json) `sourceRoot`, and `tsconfig.json`/`nx-program.mjs` if they reference `src/`.
   - Rewrite every import of `repo/lib/js/index.ts` (relative variants like `../../repo/lib/js/index.ts`) across the ~150 files that reference it, using a one-off rewrite script under the ticket folder (same approach as the existing `rewrite-lib-js-imports.ts`).
 - `ui/styling/rs/src/generated.rs` → `ui/styling/rs/generated.rs`.
   - Update `lib.rs`'s `#[path = "src/generated.rs"]` → `#[path = "generated.rs"]`.

@@ -1,6 +1,6 @@
 ---
 name: Architect Feature Complete
-overview: Close every remaining gap so architect_program and architect/plugin match all 65 feature areas at bullet-level typed fields, real analysis/report/search/exchange/trace behavior, and full register CRUD UI — using an isolated Cargo target dir so builds never wait on workspace locks.
+overview: Close every remaining gap so architect_spine and architect/program match all 65 feature areas at bullet-level typed fields, real analysis/report/search/exchange/trace behavior, and full register CRUD UI — using an isolated Cargo target dir so builds never wait on workspace locks.
 todos:
   - id: reopen-ticket
     content: Reopen ARCHITECT-PROGRAM-AND-PLUGIN ticket; write gap checklist in ticket folder
@@ -11,8 +11,8 @@ todos:
   - id: phase2-behavior
     content: Deepen validate/analyze/report/search/trace/exchange/template/status/adjacency + new outputs.rs
     status: completed
-  - id: phase3-plugin
-    content: Full plugin CRUD for all registers, inspectors, search/import/templates/trace/all analysis+report kinds
+  - id: phase3-program
+    content: Full program CRUD for all registers, inspectors, search/import/templates/trace/all analysis+report kinds
     status: completed
   - id: phase4-verify
     content: Isolated-target tests for program+plugin; ticket_close
@@ -38,14 +38,14 @@ flowchart LR
   plugin["Plugin: only elements + adjacency editable"]
   fields --> complete["Feature complete"]
   behavior --> complete
-  plugin --> complete
+  program --> complete
 ```
 
 
 
 ## Phase 1 — Typed domain fields (all 65 sections)
 
-Edit primarily `[architect/program/rs/src/registers.rs](architect/program/rs/src/registers.rs)`, `[kernel.rs](architect/program/rs/src/kernel.rs)`, `[program.rs](architect/program/rs/src/program.rs)`.
+Edit primarily `[architect/spine/rs/src/registers.rs](architect/spine/rs/src/registers.rs)`, `[kernel.rs](architect/spine/rs/src/kernel.rs)`, `[program.rs](architect/spine/rs/src/program.rs)`.
 
 **P0 spine (§1–§9, §56):**
 
@@ -68,21 +68,21 @@ Update patches (`*Patch`), `Identified`/`Patchable` macros, `empty_program`/`sam
 
 | Module                                                            | Make complete                                                                                                                                                                |
 | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `[validate.rs](architect/program/rs/src/validate.rs)`             | Cross-ref all entity ids; relationship targets; duplicate ids; adjacency separation/distance/level; requirement orphan checks                                                |
-| `[analyze.rs](architect/program/rs/src/analyze.rs)`               | Real logic per `AnalysisKind`; add missing kinds (RequirementComparison, Clustering, Filtering, Sorting, Scoring, Weighting, RelationshipAnalysis); persist `AnalysisRecord` |
-| `[report.rs](architect/program/rs/src/report.rs)`                 | All 20 §52 summaries; true matrices (requirement×element, adjacency cells); persist `ReportRecord`                                                                           |
-| `[search.rs](architect/program/rs/src/search.rs)`                 | Search **all** registers; apply categories/date/source/approval/dependency filters; search history                                                                           |
-| `[trace.rs](architect/program/rs/src/trace.rs)`                   | Kind-specific chains for all §54 links; reverse impact; sorted audit trail                                                                                                   |
-| `[exchange.rs](architect/program/rs/src/exchange.rs)`             | CSV/TSV for all registers; quoted CSV; duplicate detection; merge strategies; adjacency/relationship preservation                                                            |
-| `[template.rs](architect/program/rs/src/template.rs)`             | All entity kinds + adjacency bundles + sector packages                                                                                                                       |
-| `[status_summary.rs](architect/program/rs/src/status_summary.rs)` | Aggregate **all** registers + `status_records`                                                                                                                               |
-| `[adjacency.rs](architect/program/rs/src/adjacency.rs)`           | Separation/distance/level conflict detection                                                                                                                                 |
-| New `[outputs.rs](architect/program/rs/src/outputs.rs)`           | §65 abstract outputs: hierarchies, taxonomies, matrices, networks, journeys, schedules — typed builders                                                                      |
+| `[validate.rs](architect/spine/rs/src/validate.rs)`             | Cross-ref all entity ids; relationship targets; duplicate ids; adjacency separation/distance/level; requirement orphan checks                                                |
+| `[analyze.rs](architect/spine/rs/src/analyze.rs)`               | Real logic per `AnalysisKind`; add missing kinds (RequirementComparison, Clustering, Filtering, Sorting, Scoring, Weighting, RelationshipAnalysis); persist `AnalysisRecord` |
+| `[report.rs](architect/spine/rs/src/report.rs)`                 | All 20 §52 summaries; true matrices (requirement×element, adjacency cells); persist `ReportRecord`                                                                           |
+| `[search.rs](architect/spine/rs/src/search.rs)`                 | Search **all** registers; apply categories/date/source/approval/dependency filters; search history                                                                           |
+| `[trace.rs](architect/spine/rs/src/trace.rs)`                   | Kind-specific chains for all §54 links; reverse impact; sorted audit trail                                                                                                   |
+| `[exchange.rs](architect/spine/rs/src/exchange.rs)`             | CSV/TSV for all registers; quoted CSV; duplicate detection; merge strategies; adjacency/relationship preservation                                                            |
+| `[template.rs](architect/spine/rs/src/template.rs)`             | All entity kinds + adjacency bundles + sector packages                                                                                                                       |
+| `[status_summary.rs](architect/spine/rs/src/status_summary.rs)` | Aggregate **all** registers + `status_records`                                                                                                                               |
+| `[adjacency.rs](architect/spine/rs/src/adjacency.rs)`           | Separation/distance/level conflict detection                                                                                                                                 |
+| New `[outputs.rs](architect/spine/rs/src/outputs.rs)`           | §65 abstract outputs: hierarchies, taxonomies, matrices, networks, journeys, schedules — typed builders                                                                      |
 
 
-## Phase 3 — Full plugin CRUD
+## Phase 3 — Full program CRUD
 
-Rewrite/extend `[architect/plugin/rs/lib.rs](architect/plugin/rs/lib.rs)`:
+Rewrite/extend `[architect/spine/rs/lib.rs](architect/spine/rs/lib.rs)`:
 
 - `REGISTER_IDS` = every `Program` vec register + meta/project/governance
 - Generic register CRUD actions: `addRegisterItem`, `removeRegisterItem`, `patchRegisterItem`, `selectRegister`
@@ -96,7 +96,7 @@ Rewrite/extend `[architect/plugin/rs/lib.rs](architect/plugin/rs/lib.rs)`:
 
 - Co-located tests per module: every analysis/report kind has a non-empty finding; search hits every register class; CSV round-trips all registers; validate catches broken refs; §65 outputs build from `sample_program`
 - Plugin tests: CRUD for representative registers; adjacency field edit; import/export; search UI path
-- Always: `CARGO_TARGET_DIR=/tmp/semio-architect-target cargo test -p architect_program --lib` and `cargo test -p architect-plugin --lib` (never wait on default target lock)
+- Always: `CARGO_TARGET_DIR=/tmp/semio-architect-target cargo test -p architect_spine --lib` and `cargo test -p architect-spine --lib` (never wait on default target lock)
 - Update ticket `feature-checklist.md` only after verified; `ticket_close`
 
 ## Execution order
@@ -104,7 +104,7 @@ Rewrite/extend `[architect/plugin/rs/lib.rs](architect/plugin/rs/lib.rs)`:
 1. Reopen ticket
 2. Phase 1 field/enum/collection gaps (registers + operations + sample)
 3. Phase 2 behavioral modules + outputs
-4. Phase 3 plugin full CRUD
+4. Phase 3 program full CRUD
 5. Phase 4 tests with isolated target dir → ticket_close
 
 ## Out of scope

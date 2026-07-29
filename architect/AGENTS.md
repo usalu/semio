@@ -5,9 +5,9 @@ emoji: 🏛️
 
 # Architect
 
-Headless architectural programming technology: [architect/program](program/rs/lib.rs) domain model and analysis (`architect_program`), [architect/plugin](plugin/rs/lib.rs) s/OS DocumentApp for program editing with undirected adjacency-matrix UI.
+Headless architectural programming technology: [architect/program](program/rs/lib.rs) domain model and analysis (`architect_spine`), [architect/program](program/rs/lib.rs) s/OS DocumentApp for program editing with undirected adjacency-matrix UI.
 
-## Program (`architect_program`)
+## Program (`architect_spine`)
 
 - **Spine:** Objectives → stakeholders → users → activities → functions → elements → requirements → relationships/adjacencies → constraints → criteria → decisions → validation
 - **Registers:** 65 feature-area typed registers with VCS `CollectionOp` patches
@@ -18,12 +18,12 @@ Headless architectural programming technology: [architect/program](program/rs/li
 
 - Docstrings start with a unique emoji; no comments inside definitions
 - Regions in `lib.rs` and `src/` modules
-- `bun ./script.ts test` via nx `@semio-tech/architect-program`
+- `bun ./script.ts test` via nx `@semio-tech/architect-spine`
 - Do not depend on coda, compose, puzzle, or geometry crates
 
 ## Stack
 
-- Rust crate `architect_program`
+- Rust crate `architect_spine`
 - `mathematical_graph` for undirected topology helpers
 - `vcs` for document operations and undo
-- Plugin: `semio-framework-plugin`, WASM `semio:architect`
+- Plugin: `semio-framework-program`, WASM `semio:architect`

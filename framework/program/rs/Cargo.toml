@@ -1,0 +1,28 @@
+[package]
+name = "semio-framework-program"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Declarative app program SDK for semio framework WASM components"
+
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+semio-framework-core = { path = "../../core/rs" }
+ui_wgpu = { path = "../../../ui/wgpu/rs" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+thiserror = "2.0.12"
+vcs = { path = "../../../vcs/rs" }
+store = { path = "../../../store/rs" }
+# 🎞️ CW3 kernel cut-over: `DocumentApp::Operation`'s trait bound now references `protocol::Operation`/
+# `protocol::OpText` directly.
+protocol = { path = "../../../protocol/rs" }
+wit-bindgen = { version = "0.36.0", features = ["macros"] }
+
+[dev-dependencies]
+dsl = { path = "../../../dsl/rs" }

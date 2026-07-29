@@ -15,7 +15,7 @@ todos:
     content: Rename example label to Family House; update node/element/solid count assertions
     status: completed
   - id: verify
-    content: Run fem_2d/fem_3d/fem-plugin tests and close ticket with summary
+    content: Run fem_2d/fem_3d/fem-program tests and close ticket with summary
     status: completed
 isProject: false
 ---
@@ -29,7 +29,7 @@ Both FEM defaults are didactic L-frame + slab demos, not buildings:
 - `[fem/2d/example/default.fem2d.json](fem/2d/example/default.fem2d.json)` — 8 nodes, 3 beams, 1 region
 - `[fem/3d/example/default.fem3d.json](fem/3d/example/default.fem3d.json)` — 7 nodes, 2 frames, 1 solid
 
-They are compile-time embedded in `[fem/plugin/rs/lib.rs](fem/plugin/rs/lib.rs)` via `include_str!` and loaded by `setActiveExample` → `SetDocument`. No plugin code changes are required beyond the example display label and fixture-coupled test assertions.
+They are compile-time embedded in `[fem/program/rs/lib.rs](fem/program/rs/lib.rs)` via `include_str!` and loaded by `setActiveExample` → `SetDocument`. No program code changes are required beyond the example display label and fixture-coupled test assertions.
 
 Goal association (from `.repo/🎯`): `🎯r2602🎯updateddocs🎯updatedexamples`. Open a new ticket at implementation start (no open ticket covers this).
 
@@ -72,7 +72,7 @@ Elevation/section in the short span (x horizontal, y vertical), matching how the
 
 - 3×3 column grid on the 8×10 footprint (corners, mid-walls, center)
 - Frame members: columns through both stories, perimeter + internal floor beams at z=2.8 and z=5.6, ridge beam along the long axis, rafters at each transverse grid line
-- Solids: floor slabs `sol1` (first floor) and `sol2` (attic floor) — **keep `sol1` / `e1` ids** so existing plugin render assertions (`solid-sol1`, `el-e1`) stay valid
+- Solids: floor slabs `sol1` (first floor) and `sol2` (attic floor) — **keep `sol1` / `e1` ids** so existing program render assertions (`solid-sol1`, `el-e1`) stay valid
 - Supports: all ground nodes fixed in Tx/Ty/Tz (and rotations for frames)
 - Area loads on both solids; snow as member UDLs on rafters
 
@@ -80,7 +80,7 @@ Elevation/section in the short span (x horizontal, y vertical), matching how the
 
 1. Replace `[fem/2d/example/default.fem2d.json](fem/2d/example/default.fem2d.json)` with the 2D house section document.
 2. Replace `[fem/3d/example/default.fem3d.json](fem/3d/example/default.fem3d.json)` with the 3D house document.
-3. Update example label in `[fem/plugin/rs/lib.rs](fem/plugin/rs/lib.rs)`: `.example("default", "Family House", ...)` for both apps (id stays `"default"` so boot/`setActiveExample` is unchanged).
+3. Update example label in `[fem/program/rs/lib.rs](fem/program/rs/lib.rs)`: `.example("default", "Family House", ...)` for both apps (id stays `"default"` so boot/`setActiveExample` is unchanged).
 4. Update fixture-coupled assertions only:
   - `[fem/2d/rs/lib.rs](fem/2d/rs/lib.rs)` `example_fixture_parses_and_solves` — new node/element/region counts; keep solve/von Mises/buckling behavioral checks
   - `[fem/3d/rs/lib.rs](fem/3d/rs/lib.rs)` `example_fixture_parses` — new counts; keep mesh preview / von Mises / buckling checks; expect 2 solid previews if both floors are solids
@@ -88,9 +88,9 @@ Elevation/section in the short span (x horizontal, y vertical), matching how the
 
 ## Verification
 
-- Run `cargo test -p fem_2d -p fem_3d -p fem-plugin` (or the existing `🧪test🏗️fem` launch target)
+- Run `cargo test -p fem_2d -p fem_3d -p fem-program` (or the existing `🧪test🏗️fem` launch target)
 - Confirm both fixtures parse, solve `dead`/`live`/`uls`, produce non-empty nodal von Mises from floor continuum, and yield buckling factor > 1
-- Confirm plugin scene tests still find mesh edges / contours / `solid-sol1` / reaction labels
+- Confirm program scene tests still find mesh edges / contours / `solid-sol1` / reaction labels
 
 ## Out of scope
 

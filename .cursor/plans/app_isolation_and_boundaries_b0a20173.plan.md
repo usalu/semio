@@ -91,7 +91,7 @@ Dependency direction inverts: apps depend on framework; framework never names a 
 - Replace the three registries with a manifest mechanism:
   - Each app's core package.json declares itself, e.g. `"semio": { "playgroundApp": { "kind": "flow", "aliases": ["flow"], "packageRoot": "flow", "port": 6016 } }` (ports move here from `PLAYGROUND_PORTS` in `repo/lib/js/index.ts`).
   - [framework/product/playground/dev/script.ts](framework/product/playground/dev/script.ts) and `resolvePlaygroundDevApp` in root [script.ts](script.ts) derive their app maps by scanning workspace package manifests (generic code in `repo/lib/js/index.ts`).
-  - `app-registry.ts` keeps its `loadPlaygroundApp(kind)` API but is backed by a virtual module (`virtual:semio-playground-apps`) emitted by a generic Vite plugin in the dev harness that reads the manifests and generates `kind → () => import("<core package name>")`. No shared file lists concrete apps.
+  - `app-registry.ts` keeps its `loadPlaygroundApp(kind)` API but is backed by a virtual module (`virtual:semio-playground-apps`) emitted by a generic Vite program in the dev harness that reads the manifests and generates `kind → () => import("<core package name>")`. No shared file lists concrete apps.
 
 ## Phase 4 — Enforcement
 

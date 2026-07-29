@@ -9,7 +9,7 @@
 // #endregion 🧲Header
 
 // #region 🗄️Configuration
-// PostCSS plugin configuration for the desktop application.
+// PostCSS program configuration for the desktop application.
 // Configuration MUST use postcss-import and postcss-nesting plugins.
 
 import { Config } from "postcss-load-config";

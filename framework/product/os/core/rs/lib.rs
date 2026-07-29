@@ -1,13 +1,13 @@
-//! 🖥️ Plugin-based OS kernel: hot-swappable WASM components, workflow, document VCS.
+//! 🖥️ Plugin-based OS kernel: hot-swappable WASM programs, workflow, document VCS.
 
 pub mod host {
     // #region host
     //! 🔌 Plugin host, studio document VCS store, backbone, and catalog.
 
     use crate::instance::{create_default_os_parameter, create_os_document_id, create_os_id, patch_os_parameter, OsAppInstance, OsDocumentRef, OsInstanceState, OsParameter, OsParameterFieldBinding, OsParameterType};
-    use crate::workflow::{empty_workflow, workflow_node_for_instance, sync_workflow_parameter_ports, WorkflowPosition, OsWorkflow, OsWorkflowEdge, OsWorkflowNode, OS_WORKFLOW_SCHEMA, OS_STUDIO_SCHEMA};
-    use crate::registry::{os_app_primary_output_kind, os_app_registration, PluginRegistry};
-    use semio_framework_core::{AppDefinition, Contribution, PluginManifest, ViewState};
+    use crate::workflow::{empty_workflow, workflow_node_for_instance, sync_workflow_parameter_ports, WorkflowPosition, OsWorkflow, OsWorkflowEdge, OsWorkflowNode, OS_WORKFLOW_SCHEMA, OS_SPACE_SCHEMA};
+    use crate::registry::{os_app_primary_output_kind, os_app_registration, ProgramRegistry};
+    use semio_framework_core::{AppDefinition, Contribution, ProgramManifest, ViewState};
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
     use std::collections::{HashMap, HashSet};
@@ -15,34 +15,34 @@ pub mod host {
     use ui_wgpu::{ui_recovery_panel, UiNode};
     use protocol::{Operation, OperationDiff};
     use vcs::{DocumentVcs, VcsError};
-use store::{create_document_envelope, document_backbone_ref, materialize_document_projection, DocumentBackboneRef, DocumentCommand, DocumentEnvelope, DocumentStore, StudioConflict};
+use store::{create_document_envelope, document_backbone_ref, materialize_document_projection, DocumentBackboneRef, DocumentCommand, DocumentEnvelope, DocumentStore, SpaceConflict};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct PluginHotSwapEvent {
-        pub plugin_id: String,
+    pub struct ProgramHotSwapEvent {
+        pub program_id: String,
         pub version: String,
         pub added_apps: Vec<String>,
         pub removed_apps: Vec<String>,
     }
 
     #[derive(Clone, Debug, PartialEq)]
-    pub struct LoadedPlugin {
-        pub plugin_id: String,
-        pub manifest: PluginManifest,
+    pub struct LoadedProgram {
+        pub program_id: String,
+        pub manifest: ProgramManifest,
         pub artifact_uri: String,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct PluginContributionEntry {
-        pub plugin_id: String,
+    pub struct ProgramContributionEntry {
+        pub program_id: String,
         pub contribution: Contribution,
     }
 
-    //#region 🔖PluginSupervisorState
+    //#region 🔖ProgramSupervisorState
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-    pub enum PluginSupervisorState {
+    pub enum ProgramSupervisorState {
         Loaded,
         Running,
         Crashed,
@@ -51,91 +51,91 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         Quarantined,
         Unloaded,
     }
-    //#endregion 🔖PluginSupervisorState
+    //#endregion 🔖ProgramSupervisorState
 
-    pub struct PluginHost {
-        registry: PluginRegistry,
+    pub struct ProgramHost {
+        registry: ProgramRegistry,
         instances: HashMap<u32, OsInstanceState>,
         next_instance_id: u32,
-        plugins: HashMap<String, LoadedPlugin>,
-        supervisor: HashMap<String, PluginSupervisorState>,
+        programs: HashMap<String, LoadedProgram>,
+        supervisor: HashMap<String, ProgramSupervisorState>,
     }
 
-    impl Default for PluginHost {
+    impl Default for ProgramHost {
         fn default() -> Self {
             Self::new()
         }
     }
 
-    impl PluginHost {
+    impl ProgramHost {
         pub fn new() -> Self {
-            Self { registry: PluginRegistry::new(), instances: HashMap::new(), next_instance_id: 1, plugins: HashMap::new(), supervisor: HashMap::new() }
+            Self { registry: ProgramRegistry::new(), instances: HashMap::new(), next_instance_id: 1, programs: HashMap::new(), supervisor: HashMap::new() }
         }
 
-        pub fn supervisor_state(&self, plugin_id: &str) -> Option<PluginSupervisorState> {
-            self.supervisor.get(plugin_id).copied()
+        pub fn supervisor_state(&self, program_id: &str) -> Option<ProgramSupervisorState> {
+            self.supervisor.get(program_id).copied()
         }
 
-        pub fn registry(&self) -> &PluginRegistry {
+        pub fn registry(&self) -> &ProgramRegistry {
             &self.registry
         }
 
-        pub fn registry_mut(&mut self) -> &mut PluginRegistry {
+        pub fn registry_mut(&mut self) -> &mut ProgramRegistry {
             &mut self.registry
         }
 
-        pub fn load_plugin(&mut self, plugin: LoadedPlugin) -> PluginHotSwapEvent {
-            let plugin_id = plugin.plugin_id.clone();
-            let version = plugin.manifest.version.clone();
-            let previous_apps: Vec<String> = self.plugins.get(&plugin_id).map(|existing| existing.manifest.apps.iter().map(|app| app.id.clone()).collect()).unwrap_or_default();
-            let next_apps: Vec<String> = plugin.manifest.apps.iter().map(|app| app.id.clone()).collect();
-            for app in &plugin.manifest.apps {
+        pub fn load_program(&mut self, program: LoadedProgram) -> ProgramHotSwapEvent {
+            let program_id = program.program_id.clone();
+            let version = program.manifest.version.clone();
+            let previous_apps: Vec<String> = self.programs.get(&program_id).map(|existing| existing.manifest.apps.iter().map(|app| app.id.clone()).collect()).unwrap_or_default();
+            let next_apps: Vec<String> = program.manifest.apps.iter().map(|app| app.id.clone()).collect();
+            for app in &program.manifest.apps {
                 self.registry.register_app(app.clone());
             }
-            for program in &plugin.manifest.programs {
-                self.registry.register_program(program.clone());
+            for workflow in &program.manifest.workflows {
+                self.registry.register_workflow(workflow.clone());
             }
-            crate::registry::register_resource_descriptors(&plugin.manifest);
-            self.plugins.insert(plugin_id.clone(), plugin);
-            self.supervisor.insert(plugin_id.clone(), PluginSupervisorState::Running);
-            PluginHotSwapEvent { plugin_id, version, added_apps: next_apps.iter().filter(|app| !previous_apps.contains(app)).cloned().collect(), removed_apps: previous_apps.iter().filter(|app| !next_apps.contains(app)).cloned().collect() }
+            crate::registry::register_artifact_descriptors(&program.manifest);
+            self.programs.insert(program_id.clone(), program);
+            self.supervisor.insert(program_id.clone(), ProgramSupervisorState::Running);
+            ProgramHotSwapEvent { program_id, version, added_apps: next_apps.iter().filter(|app| !previous_apps.contains(app)).cloned().collect(), removed_apps: previous_apps.iter().filter(|app| !next_apps.contains(app)).cloned().collect() }
         }
 
-        pub fn hot_swap_plugin(&mut self, plugin: LoadedPlugin) -> PluginHotSwapEvent {
-            let plugin_id = plugin.plugin_id.clone();
-            let rollback = HotSwapRollback { previous_plugin: self.plugins.get(&plugin_id).cloned(), instance_generations: self.instances.iter().map(|(id, state)| (*id, state.generation)).collect() };
+        pub fn hot_swap_program(&mut self, program: LoadedProgram) -> ProgramHotSwapEvent {
+            let program_id = program.program_id.clone();
+            let rollback = HotSwapRollback { previous_program: self.programs.get(&program_id).cloned(), instance_generations: self.instances.iter().map(|(id, state)| (*id, state.generation)).collect() };
 
-            if let Err(error) = validate_plugin_manifest(&plugin) {
-                self.supervisor.insert(plugin_id.clone(), PluginSupervisorState::Loaded);
-                return rollback.emit_failure(plugin_id, error);
-            }
-
-            let previous_apps: Vec<String> = rollback.previous_plugin.as_ref().map(|existing| existing.manifest.apps.iter().map(|app| app.id.clone()).collect()).unwrap_or_default();
-            let next_apps: Vec<String> = plugin.manifest.apps.iter().map(|app| app.id.clone()).collect();
-
-            if let Err(error) = self.validate_swap_apps(&plugin) {
-                return self.hot_swap_failed(plugin_id, error, rollback);
-            }
-            if let Err(error) = self.validate_swap_instances(&plugin_id, &plugin) {
-                return self.hot_swap_failed(plugin_id, error, rollback);
-            }
-            if let Err(error) = self.validate_swap_app_retention(&plugin, rollback.previous_plugin.as_ref()) {
-                return self.hot_swap_failed(plugin_id, error, rollback);
-            }
-            if let Err(error) = self.validate_swap_window_kinds(&plugin) {
-                return self.hot_swap_failed(plugin_id, error, rollback);
+            if let Err(error) = validate_program_manifest(&program) {
+                self.supervisor.insert(program_id.clone(), ProgramSupervisorState::Loaded);
+                return rollback.emit_failure(program_id, error);
             }
 
-            let controller_rebindings = self.plan_controller_rebindings(&plugin_id, &plugin);
-            let version = plugin.manifest.version.clone();
-            for app in &plugin.manifest.apps {
+            let previous_apps: Vec<String> = rollback.previous_program.as_ref().map(|existing| existing.manifest.apps.iter().map(|app| app.id.clone()).collect()).unwrap_or_default();
+            let next_apps: Vec<String> = program.manifest.apps.iter().map(|app| app.id.clone()).collect();
+
+            if let Err(error) = self.validate_swap_apps(&program) {
+                return self.hot_swap_failed(program_id, error, rollback);
+            }
+            if let Err(error) = self.validate_swap_instances(&program_id, &program) {
+                return self.hot_swap_failed(program_id, error, rollback);
+            }
+            if let Err(error) = self.validate_swap_app_retention(&program, rollback.previous_program.as_ref()) {
+                return self.hot_swap_failed(program_id, error, rollback);
+            }
+            if let Err(error) = self.validate_swap_window_kinds(&program) {
+                return self.hot_swap_failed(program_id, error, rollback);
+            }
+
+            let controller_rebindings = self.plan_controller_rebindings(&program_id, &program);
+            let version = program.manifest.version.clone();
+            for app in &program.manifest.apps {
                 self.registry.register_app(app.clone());
             }
-            for program in &plugin.manifest.programs {
-                self.registry.register_program(program.clone());
+            for workflow in &program.manifest.workflows {
+                self.registry.register_workflow(workflow.clone());
             }
-            crate::registry::register_resource_descriptors(&plugin.manifest);
-            self.plugins.insert(plugin_id.clone(), plugin);
+            crate::registry::register_artifact_descriptors(&program.manifest);
+            self.programs.insert(program_id.clone(), program);
             for (instance_id, controller_id) in controller_rebindings {
                 if let Some(instance) = self.instances.get_mut(&instance_id) {
                     instance.controller_id = controller_id;
@@ -144,19 +144,19 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             for instance in self.instances.values_mut() {
                 instance.generation += 1;
             }
-            self.supervisor.insert(plugin_id.clone(), PluginSupervisorState::Running);
-            PluginHotSwapEvent { plugin_id, version, added_apps: next_apps.iter().filter(|app| !previous_apps.contains(app)).cloned().collect(), removed_apps: previous_apps.iter().filter(|app| !next_apps.contains(app)).cloned().collect() }
+            self.supervisor.insert(program_id.clone(), ProgramSupervisorState::Running);
+            ProgramHotSwapEvent { program_id, version, added_apps: next_apps.iter().filter(|app| !previous_apps.contains(app)).cloned().collect(), removed_apps: previous_apps.iter().filter(|app| !next_apps.contains(app)).cloned().collect() }
         }
 
         pub fn apps(&self) -> Vec<AppDefinition> {
             self.registry.apps()
         }
 
-        pub fn contributions(&self) -> Vec<PluginContributionEntry> {
+        pub fn contributions(&self) -> Vec<ProgramContributionEntry> {
             let mut entries = Vec::new();
-            for plugin in self.plugins.values() {
-                for contribution in &plugin.manifest.contributions {
-                    entries.push(PluginContributionEntry { plugin_id: plugin.plugin_id.clone(), contribution: contribution.clone() });
+            for loaded in self.programs.values() {
+                for contribution in &loaded.manifest.contributions {
+                    entries.push(ProgramContributionEntry { program_id: loaded.program_id.clone(), contribution: contribution.clone() });
                 }
             }
             entries
@@ -187,9 +187,9 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         /// @emoji 🩺 Delegates to `ui_wgpu::ui_recovery_panel`'s `🔖StatusBuilders` builder — this host
         /// has no locale on hand at this call site (no `ViewState` threaded into `recovery_ui`), so
         /// `is_de` is pinned to `false` (English) until a locale source is plumbed through.
-        pub fn recovery_ui(&self, plugin_id: &str) -> UiNode {
-            let quarantined = self.supervisor.get(plugin_id).copied() == Some(PluginSupervisorState::Quarantined);
-            ui_recovery_panel(plugin_id, quarantined, false)
+        pub fn recovery_ui(&self, program_id: &str) -> UiNode {
+            let quarantined = self.supervisor.get(program_id).copied() == Some(ProgramSupervisorState::Quarantined);
+            ui_recovery_panel(program_id, quarantined, false)
         }
         //#endregion 🔖ActionKernel
 
@@ -205,14 +205,14 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             ui
         }
 
-        fn hot_swap_failed(&mut self, plugin_id: String, error: String, rollback: HotSwapRollback) -> PluginHotSwapEvent {
+        fn hot_swap_failed(&mut self, program_id: String, error: String, rollback: HotSwapRollback) -> ProgramHotSwapEvent {
             rollback.restore(self);
-            self.supervisor.insert(plugin_id.clone(), PluginSupervisorState::Loaded);
-            rollback.emit_failure(plugin_id, error)
+            self.supervisor.insert(program_id.clone(), ProgramSupervisorState::Loaded);
+            rollback.emit_failure(program_id, error)
         }
 
-        fn validate_swap_apps(&self, plugin: &LoadedPlugin) -> Result<(), String> {
-            for app in &plugin.manifest.apps {
+        fn validate_swap_apps(&self, program: &LoadedProgram) -> Result<(), String> {
+            for app in &program.manifest.apps {
                 if app.id.trim().is_empty() {
                     return Err("app id must not be empty".into());
                 }
@@ -223,9 +223,9 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             Ok(())
         }
 
-        fn validate_swap_instances(&self, plugin_id: &str, plugin: &LoadedPlugin) -> Result<(), String> {
-            let next_app_ids: HashSet<String> = plugin.manifest.apps.iter().map(|app| app.id.clone()).collect();
-            let previous_app_ids: HashSet<String> = self.plugins.get(plugin_id).map(|existing| existing.manifest.apps.iter().map(|app| app.id.clone()).collect()).unwrap_or_default();
+        fn validate_swap_instances(&self, program_id: &str, program: &LoadedProgram) -> Result<(), String> {
+            let next_app_ids: HashSet<String> = program.manifest.apps.iter().map(|app| app.id.clone()).collect();
+            let previous_app_ids: HashSet<String> = self.programs.get(program_id).map(|existing| existing.manifest.apps.iter().map(|app| app.id.clone()).collect()).unwrap_or_default();
             for instance in self.instances.values() {
                 if !previous_app_ids.contains(&instance.app_id) {
                     continue;
@@ -239,17 +239,17 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
 
         /// @emoji 🔢 Same-version hot-swaps must not silently drop apps — a version bump is required to
         /// shrink the app set, so a client relying on document/instance continuity can detect the change.
-        fn validate_swap_app_retention(&self, plugin: &LoadedPlugin, previous: Option<&LoadedPlugin>) -> Result<(), String> {
+        fn validate_swap_app_retention(&self, program: &LoadedProgram, previous: Option<&LoadedProgram>) -> Result<(), String> {
             if let Some(previous) = previous {
-                if previous.manifest.version == plugin.manifest.version && previous.manifest.apps.len() > plugin.manifest.apps.len() {
+                if previous.manifest.version == program.manifest.version && previous.manifest.apps.len() > program.manifest.apps.len() {
                     return Err("cannot hot-swap to fewer apps within the same version".into());
                 }
             }
             Ok(())
         }
 
-        fn validate_swap_window_kinds(&self, plugin: &LoadedPlugin) -> Result<(), String> {
-            for app in &plugin.manifest.apps {
+        fn validate_swap_window_kinds(&self, program: &LoadedProgram) -> Result<(), String> {
+            for app in &program.manifest.apps {
                 if app.window_kinds.is_empty() {
                     return Err(format!("app {} must declare at least one window kind", app.id));
                 }
@@ -262,33 +262,33 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             Ok(())
         }
 
-        fn plan_controller_rebindings(&self, plugin_id: &str, plugin: &LoadedPlugin) -> Vec<(u32, String)> {
-            let apps_by_id: HashMap<&str, &AppDefinition> = plugin.manifest.apps.iter().map(|app| (app.id.as_str(), app)).collect();
-            let previous_app_ids: HashSet<String> = self.plugins.get(plugin_id).map(|existing| existing.manifest.apps.iter().map(|app| app.id.clone()).collect()).unwrap_or_default();
+        fn plan_controller_rebindings(&self, program_id: &str, program: &LoadedProgram) -> Vec<(u32, String)> {
+            let apps_by_id: HashMap<&str, &AppDefinition> = program.manifest.apps.iter().map(|app| (app.id.as_str(), app)).collect();
+            let previous_app_ids: HashSet<String> = self.programs.get(program_id).map(|existing| existing.manifest.apps.iter().map(|app| app.id.clone()).collect()).unwrap_or_default();
             self.instances.values().filter(|instance| previous_app_ids.contains(&instance.app_id)).filter_map(|instance| apps_by_id.get(instance.app_id.as_str()).map(|app| (instance.id, app.controller_id.clone()))).collect()
         }
     }
 
     struct HotSwapRollback {
-        previous_plugin: Option<LoadedPlugin>,
+        previous_program: Option<LoadedProgram>,
         instance_generations: HashMap<u32, u64>,
     }
 
     impl HotSwapRollback {
-        fn emit_failure(self, plugin_id: String, _error: String) -> PluginHotSwapEvent {
-            let version = self.previous_plugin.as_ref().map(|plugin| plugin.manifest.version.clone()).unwrap_or_default();
-            PluginHotSwapEvent { plugin_id, version, added_apps: vec![], removed_apps: vec![] }
+        fn emit_failure(self, program_id: String, _error: String) -> ProgramHotSwapEvent {
+            let version = self.previous_program.as_ref().map(|previous| previous.manifest.version.clone()).unwrap_or_default();
+            ProgramHotSwapEvent { program_id, version, added_apps: vec![], removed_apps: vec![] }
         }
 
-        fn restore(&self, host: &mut PluginHost) {
-            if let Some(previous) = &self.previous_plugin {
+        fn restore(&self, host: &mut ProgramHost) {
+            if let Some(previous) = &self.previous_program {
                 for app in &previous.manifest.apps {
                     host.registry.register_app(app.clone());
                 }
-                for program in &previous.manifest.programs {
-                    host.registry.register_program(program.clone());
+                for workflow in &previous.manifest.workflows {
+                    host.registry.register_workflow(workflow.clone());
                 }
-                host.plugins.insert(previous.plugin_id.clone(), previous.clone());
+                host.programs.insert(previous.program_id.clone(), previous.clone());
             }
             for (instance_id, generation) in &self.instance_generations {
                 if let Some(instance) = host.instances.get_mut(instance_id) {
@@ -298,18 +298,18 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         }
     }
 
-    fn validate_plugin_manifest(plugin: &LoadedPlugin) -> Result<(), String> {
-        if plugin.plugin_id.trim().is_empty() {
-            return Err("plugin_id must not be empty".into());
+    fn validate_program_manifest(program: &LoadedProgram) -> Result<(), String> {
+        if program.program_id.trim().is_empty() {
+            return Err("program_id must not be empty".into());
         }
-        if plugin.manifest.plugin_id.trim().is_empty() {
-            return Err("manifest.plugin_id must not be empty".into());
+        if program.manifest.program_id.trim().is_empty() {
+            return Err("manifest.program_id must not be empty".into());
         }
-        if plugin.manifest.version.trim().is_empty() {
+        if program.manifest.version.trim().is_empty() {
             return Err("manifest.version must not be empty".into());
         }
-        if plugin.plugin_id != plugin.manifest.plugin_id {
-            return Err("plugin_id must match manifest.plugin_id".into());
+        if program.program_id != program.manifest.program_id {
+            return Err("program_id must match manifest.program_id".into());
         }
         Ok(())
     }
@@ -419,7 +419,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
     }
 
     pub fn create_empty_os_document(id: &str, name: &str) -> OsDocument {
-        OsDocument { schema: OS_STUDIO_SCHEMA.into(), id: id.into(), name: name.into(), vcs: create_document_envelope(OS_STUDIO_SCHEMA, id, default_os_projection(), None).vcs, applied_edit_ids: Vec::new(), backbone: None }
+        OsDocument { schema: OS_SPACE_SCHEMA.into(), id: id.into(), name: name.into(), vcs: create_document_envelope(OS_SPACE_SCHEMA, id, default_os_projection(), None).vcs, applied_edit_ids: Vec::new(), backbone: None }
     }
 
     pub fn apply_os_operation(projection: &OsProjection, operation: &OsOperation) -> OsProjection {
@@ -661,11 +661,11 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         ///
         /// 🎞️ CW3 kernel cut-over ripple fix: `Operation::reconcile` moved to `protocol_command` with
         /// a changed signature (was an associated fn, `fn reconcile(projection: P) -> (P,
-        /// Vec<StudioConflict>)`; now an instance method returning `protocol`-owned
+        /// Vec<SpaceConflict>)`; now an instance method returning `protocol`-owned
         /// `Vec<ReconcileReport>`, per that trait's own doc comment: "`vcs` maps `ReconcileReport ->
-        /// StudioConflict` at its own edge instead of this crate knowing about studio types"). The
+        /// SpaceConflict` at its own edge instead of this crate knowing about space types"). The
         /// workflow rules themselves (`reconcile_os_workflow`) are untouched — only this thin
-        /// trait-facing wrapper adapts to the new signature, converting each `StudioConflict` to a
+        /// trait-facing wrapper adapts to the new signature, converting each `SpaceConflict` to a
         /// `ReconcileReport` at the boundary.
         fn reconcile(&self, projection: OsProjection) -> (OsProjection, Vec<protocol::ReconcileReport>) {
             let (projection, conflicts) = reconcile_os_workflow(projection);
@@ -685,7 +685,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
     /// lexicographically smallest id (deterministic across peers replaying the same operation log), (4) break
     /// any cycle the previous rules left behind. Each rule operates on the edge set the previous one
     /// produced.
-    fn reconcile_os_workflow(mut projection: OsProjection) -> (OsProjection, Vec<StudioConflict>) {
+    fn reconcile_os_workflow(mut projection: OsProjection) -> (OsProjection, Vec<SpaceConflict>) {
         let mut conflicts = Vec::new();
         let mut edges = std::mem::take(&mut projection.workflow.edges);
         let node_by_id: HashMap<&str, &OsWorkflowNode> = projection.workflow.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
@@ -697,7 +697,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             if source_ok && target_ok {
                 true
             } else {
-                conflicts.push(StudioConflict {
+                conflicts.push(SpaceConflict {
                     kind: "workflow/edge-orphaned".into(),
                     uri: edge.id.clone(),
                     message: format!("edge {} references a node or port that no longer exists ({}:{} -> {}:{})", edge.id, edge.source_node_id, edge.source_port_id, edge.target_node_id, edge.target_port_id),
@@ -708,16 +708,16 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         //#endregion OrphanEdgeDrop
 
         //#region TypeMismatchDrop
-        // 🩹 Baseline comparison: straight `resource_kind` string equality, since `OsWorkflowEdge` has
+        // 🩹 Baseline comparison: straight `artifact_kind` string equality, since `OsWorkflowEdge` has
         // no `contract` field yet. Once edge contracts land, prefer the contract's `kind_id` against the
         // live port types (contract wins if present), falling back to this comparison otherwise.
         edges.retain(|edge| {
-            let source_kind = node_by_id.get(edge.source_node_id.as_str()).and_then(|node| node.outputs.iter().find(|port| port.id == edge.source_port_id)).map(|port| port.resource_kind.as_str());
-            let target_kind = node_by_id.get(edge.target_node_id.as_str()).and_then(|node| node.inputs.iter().find(|port| port.id == edge.target_port_id)).map(|port| port.resource_kind.as_str());
+            let source_kind = node_by_id.get(edge.source_node_id.as_str()).and_then(|node| node.outputs.iter().find(|port| port.id == edge.source_port_id)).map(|port| port.artifact_kind.as_str());
+            let target_kind = node_by_id.get(edge.target_node_id.as_str()).and_then(|node| node.inputs.iter().find(|port| port.id == edge.target_port_id)).map(|port| port.artifact_kind.as_str());
             match (source_kind, target_kind) {
                 (Some(source), Some(target)) if source == target => true,
                 _ => {
-                    conflicts.push(StudioConflict {
+                    conflicts.push(SpaceConflict {
                         kind: "workflow/edge-type-mismatch".into(),
                         uri: edge.id.clone(),
                         message: format!("edge {} connects ports whose types no longer match", edge.id),
@@ -755,12 +755,12 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
     /// `HybridLogicalTimestamp`s from the edit log. `apply_os_operation`'s `ConnectWorkflowPorts` handler
     /// appends new edges to the end of the vec, so a higher index approximates a later edit; true
     /// HLT-based tie-breaking would need `reconcile` to also see edit history, not just the projection.
-    fn drop_workflow_cycle_edges(mut edges: Vec<OsWorkflowEdge>, conflicts: &mut Vec<StudioConflict>) -> Vec<OsWorkflowEdge> {
+    fn drop_workflow_cycle_edges(mut edges: Vec<OsWorkflowEdge>, conflicts: &mut Vec<SpaceConflict>) -> Vec<OsWorkflowEdge> {
         while let Some(cycle_node_ids) = find_workflow_cycle_participants(&edges) {
             let newest_cycle_edge_index = edges.iter().enumerate().filter(|(_, edge)| cycle_node_ids.contains(&edge.source_node_id) && cycle_node_ids.contains(&edge.target_node_id)).map(|(index, _)| index).max();
             let Some(newest_cycle_edge_index) = newest_cycle_edge_index else { break };
             let dropped = edges.remove(newest_cycle_edge_index);
-            conflicts.push(StudioConflict {
+            conflicts.push(SpaceConflict {
                 kind: "workflow/edge-cycle".into(),
                 uri: dropped.id.clone(),
                 message: format!("edge {} was dropped to break a cycle in the workflow", dropped.id),
@@ -963,23 +963,10 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         serde_json::to_string_pretty(document).map_err(|error| VcsError::Serialize(error.to_string()))
     }
 
-    /// @emoji 📦 Serializes an `OsDocument` as the bare `DocumentEnvelope` JSON `loadAppDocument` expects.
-    pub fn os_document_to_envelope_json(document: &OsDocument) -> Result<String, VcsError> {
-        let envelope = OsEnvelope {
-            schema: document.schema.clone(),
-            id: document.id.clone(),
-            vcs: document.vcs.clone(),
-            backbone: document.backbone.clone(),
-            active_alternative_id: document.vcs.initial_projection.active_alternative_id.clone(),
-            cursor: None,
-        };
-        serde_json::to_string(&envelope).map_err(|error| VcsError::Serialize(error.to_string()))
-    }
-
     pub fn os_document_from_json(json: &str) -> Result<OsDocument, VcsError> {
         let document: OsDocument = serde_json::from_str(json).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-        if document.schema != OS_STUDIO_SCHEMA {
-            return Err(VcsError::Deserialize(format!("expected schema {OS_STUDIO_SCHEMA}")));
+        if document.schema != OS_SPACE_SCHEMA {
+            return Err(VcsError::Deserialize(format!("expected schema {OS_SPACE_SCHEMA}")));
         }
         Ok(document)
     }
@@ -1013,7 +1000,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
 
         /// @emoji 🤝 Fresh replay plus whatever `OsOperation::reconcile`'s workflow pass reports. See
         /// `store::DocumentStore::projection_with_conflicts`.
-        pub fn projection_with_conflicts(&self) -> Result<(OsProjection, Vec<StudioConflict>), VcsError> {
+        pub fn projection_with_conflicts(&self) -> Result<(OsProjection, Vec<SpaceConflict>), VcsError> {
             self.inner.projection_with_conflicts()
         }
 
@@ -1034,7 +1021,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             self.inner.dispatch(DocumentCommand::Apply { operations, description: None })
         }
 
-        pub fn set_studio_name(&mut self, name: &str) {
+        pub fn set_space_name(&mut self, name: &str) {
             self.name = name.into();
             let _ = self.inner.generation();
         }
@@ -1121,7 +1108,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         }
     }
 
-    fn sync_os_studio_document(document: &OsDocument, backbone_uri: &str, port: &Arc<dyn OsBackbonePort>) -> Result<(), VcsError> {
+    fn sync_os_space_document(document: &OsDocument, backbone_uri: &str, port: &Arc<dyn OsBackbonePort>) -> Result<(), VcsError> {
         let mut synced = document.clone();
         synced.backbone = Some(document_backbone_ref(backbone_uri));
         port.write(backbone_uri, &os_document_to_json(&synced)?)
@@ -1133,15 +1120,15 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
     // duplex `PresencePeer`/`HubServerFrame::Presence` frames (`framework/core/rs`'s 🔖HubProtocol
     // region) via `framework/sync`'s `DocumentHost::subscribe` yielding `DocumentEvent::Presence`; the
     // `host_runtime` module below is where a native host translates that event into
-    // `ViewState.presence_peers_json` — the plugin read-side contract is unchanged.
+    // `ViewState.presence_peers_json` — the program read-side contract is unchanged.
 
-    //#region 🔖StudioCatalog
+    //#region 🔖SpaceCatalog
     pub const OS_HOME_VFS_ROOT_ID: &str = "os-home-root";
-    pub const OS_STUDIO_BACKBONE_URI_PREFIX: &str = "studio://";
+    pub const OS_SPACE_BACKBONE_URI_PREFIX: &str = "space://";
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct OsStudioCatalogEntry {
+    pub struct OsSpaceCatalogEntry {
         pub id: String,
         pub name: String,
         pub backbone_uri: String,
@@ -1156,33 +1143,33 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         Arc::as_ptr(port) as *const () as usize
     }
 
-    fn track_os_studio_backbone_uri(port: &Arc<dyn OsBackbonePort>, uri: &str) {
+    fn track_os_space_backbone_uri(port: &Arc<dyn OsBackbonePort>, uri: &str) {
         STUDIO_CATALOG_URIS.lock().unwrap_or_else(std::sync::PoisonError::into_inner).entry(port_key(port)).or_default().insert(uri.into());
     }
 
-    fn untrack_os_studio_backbone_uri(port: &Arc<dyn OsBackbonePort>, uri: &str) {
+    fn untrack_os_space_backbone_uri(port: &Arc<dyn OsBackbonePort>, uri: &str) {
         if let Some(uris) = STUDIO_CATALOG_URIS.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get_mut(&port_key(port)) {
             uris.remove(uri);
         }
     }
 
-    fn os_studio_backbone_uri(studio_id: &str) -> String {
-        format!("{OS_STUDIO_BACKBONE_URI_PREFIX}{studio_id}")
+    fn os_space_backbone_uri(space_id: &str) -> String {
+        format!("{OS_SPACE_BACKBONE_URI_PREFIX}{space_id}")
     }
 
-    fn os_studio_id_from_backbone_uri(uri: &str) -> Option<String> {
-        uri.strip_prefix(OS_STUDIO_BACKBONE_URI_PREFIX).filter(|id| !id.is_empty()).map(str::to_string)
+    fn os_space_id_from_backbone_uri(uri: &str) -> Option<String> {
+        uri.strip_prefix(OS_SPACE_BACKBONE_URI_PREFIX).filter(|id| !id.is_empty()).map(str::to_string)
     }
 
-    fn os_studio_catalog_entry_from_document(backbone_uri: &str, document: &OsDocument) -> Result<OsStudioCatalogEntry, VcsError> {
-        let studio_id = os_studio_id_from_backbone_uri(backbone_uri).unwrap_or_else(|| document.id.clone());
+    fn os_space_catalog_entry_from_document(backbone_uri: &str, document: &OsDocument) -> Result<OsSpaceCatalogEntry, VcsError> {
+        let space_id = os_space_id_from_backbone_uri(backbone_uri).unwrap_or_else(|| document.id.clone());
         let projection = materialize_os_projection(document, &[])?;
         let updated_at = document.vcs.changes.last().map(|change| change.saved_at.clone()).unwrap_or_else(|| "0".into());
-        Ok(OsStudioCatalogEntry { id: studio_id, name: document.name.clone(), backbone_uri: backbone_uri.into(), app_count: projection.app_instances.len(), node_count: projection.workflow.nodes.len(), updated_at })
+        Ok(OsSpaceCatalogEntry { id: space_id, name: document.name.clone(), backbone_uri: backbone_uri.into(), app_count: projection.app_instances.len(), node_count: projection.workflow.nodes.len(), updated_at })
     }
 
     /// @emoji 📚 Lists persisted studio documents from the dev backbone namespace.
-    pub fn list_os_studio_catalog_entries(port: Arc<dyn OsBackbonePort>) -> Result<Vec<OsStudioCatalogEntry>, VcsError> {
+    pub fn list_os_space_catalog_entries(port: Arc<dyn OsBackbonePort>) -> Result<Vec<OsSpaceCatalogEntry>, VcsError> {
         let mut entries = Vec::new();
         let uris: Vec<String> = STUDIO_CATALOG_URIS.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&port_key(&port)).cloned().unwrap_or_default().into_iter().collect();
         for uri in uris {
@@ -1191,54 +1178,54 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 continue;
             }
             let document = os_document_from_json(&json)?;
-            entries.push(os_studio_catalog_entry_from_document(&uri, &document)?);
+            entries.push(os_space_catalog_entry_from_document(&uri, &document)?);
         }
         entries.sort_by(|left, right| right.updated_at.cmp(&left.updated_at).then_with(|| left.name.cmp(&right.name)));
         Ok(entries)
     }
 
     /// @emoji 🫧 Mints an empty session-local studio document — no backbone URI and no catalog port write.
-    pub fn create_ephemeral_os_studio(name: &str) -> OsDocument {
-        let id = create_os_id("studio");
+    pub fn create_ephemeral_os_space(name: &str) -> OsDocument {
+        let id = create_os_id("space");
         create_empty_os_document(&id, name.trim())
     }
 
     /// @emoji 🆕 Creates an empty studio document on the dev backbone.
-    pub fn create_os_studio(name: &str, port: Arc<dyn OsBackbonePort>) -> Result<OsStudioCatalogEntry, VcsError> {
-        let id = create_os_id("studio");
+    pub fn create_os_space(name: &str, port: Arc<dyn OsBackbonePort>) -> Result<OsSpaceCatalogEntry, VcsError> {
+        let id = create_os_id("space");
         let document = create_empty_os_document(&id, name.trim());
-        let backbone_uri = os_studio_backbone_uri(&id);
-        sync_os_studio_document(&document, &backbone_uri, &port)?;
-        track_os_studio_backbone_uri(&port, &backbone_uri);
-        os_studio_catalog_entry_from_document(&backbone_uri, &document)
+        let backbone_uri = os_space_backbone_uri(&id);
+        sync_os_space_document(&document, &backbone_uri, &port)?;
+        track_os_space_backbone_uri(&port, &backbone_uri);
+        os_space_catalog_entry_from_document(&backbone_uri, &document)
     }
 
     /// @emoji 🗑️ Deletes a studio document from the dev backbone.
-    pub fn delete_os_studio(studio_id: &str, port: Arc<dyn OsBackbonePort>) -> Result<(), VcsError> {
-        let uri = os_studio_backbone_uri(studio_id);
-        untrack_os_studio_backbone_uri(&port, &uri);
+    pub fn delete_os_space(space_id: &str, port: Arc<dyn OsBackbonePort>) -> Result<(), VcsError> {
+        let uri = os_space_backbone_uri(space_id);
+        untrack_os_space_backbone_uri(&port, &uri);
         port.write(&uri, "")
     }
 
     /// @emoji 📥 Imports a studio document JSON onto the dev backbone.
-    pub fn import_os_studio_from_json(json: &str, port: Arc<dyn OsBackbonePort>) -> Result<OsStudioCatalogEntry, VcsError> {
+    pub fn import_os_space_from_json(json: &str, port: Arc<dyn OsBackbonePort>) -> Result<OsSpaceCatalogEntry, VcsError> {
         let mut document = os_document_from_json(json)?;
-        let studio_id = if document.id.is_empty() { create_os_id("studio") } else { document.id.clone() };
-        let backbone_uri = os_studio_backbone_uri(&studio_id);
-        document.id = studio_id;
-        sync_os_studio_document(&document, &backbone_uri, &port)?;
-        track_os_studio_backbone_uri(&port, &backbone_uri);
-        os_studio_catalog_entry_from_document(&backbone_uri, &document)
+        let space_id = if document.id.is_empty() { create_os_id("space") } else { document.id.clone() };
+        let backbone_uri = os_space_backbone_uri(&space_id);
+        document.id = space_id;
+        sync_os_space_document(&document, &backbone_uri, &port)?;
+        track_os_space_backbone_uri(&port, &backbone_uri);
+        os_space_catalog_entry_from_document(&backbone_uri, &document)
     }
 
-    /// @emoji 📦 Pack counterpart of `import_os_studio_from_json`: decodes `pack`+`spr` directly via
+    /// @emoji 📦 Pack counterpart of `import_os_space_from_json`: decodes `pack`+`spr` directly via
     /// the typed `store::parse_document_pack::<OsProjection, OsOperation>` (this crate is fully
     /// typed — no `store::DocumentCodec` indirection needed) into the same envelope JSON shape,
     /// then follows the identical admission flow.
-    pub fn import_os_studio_from_pack(pack: &[u8], spr: &[u8], port: Arc<dyn OsBackbonePort>) -> Result<OsStudioCatalogEntry, VcsError> {
+    pub fn import_os_space_from_pack(pack: &[u8], spr: &[u8], port: Arc<dyn OsBackbonePort>) -> Result<OsSpaceCatalogEntry, VcsError> {
         let parsed: store::ParsedDocumentText<OsProjection, OsOperation> = store::parse_document_pack(pack, spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         let json = serde_json::to_string(&parsed.envelope).map_err(|error| VcsError::Serialize(error.to_string()))?;
-        import_os_studio_from_json(&json, port)
+        import_os_space_from_json(&json, port)
     }
 
     /// @emoji 📤 Exports an already-loaded studio document as pack bytes + ops text. This crate never
@@ -1248,56 +1235,56 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
     /// `export_os_app_instance_media`'s data-returning shape so `s/plugin`'s `handle_action` can wrap
     /// the result into a `HostEffect::DownloadMediaExport` exactly the way `exportMedia` already wraps
     /// `export_os_app_instance_media`'s `OsMediaExportResult`.
-    pub fn export_os_studio_pack(document: &OsDocument) -> Result<store::DocumentPackFiles, VcsError> {
+    pub fn export_os_space_pack(document: &OsDocument) -> Result<store::DocumentPackFiles, VcsError> {
         store::print_document_pack(&os_envelope_of(document))
     }
 
-    /// @emoji 📤 DSL-text counterpart of `export_os_studio_pack` — exercises the text export path
+    /// @emoji 📤 DSL-text counterpart of `export_os_space_pack` — exercises the text export path
     /// (`exportDocumentDsl`) via the same typed `store::print_document_text`.
-    pub fn export_os_studio_dsl(document: &OsDocument) -> Result<store::DocumentTextFiles, VcsError> {
+    pub fn export_os_space_dsl(document: &OsDocument) -> Result<store::DocumentTextFiles, VcsError> {
         store::print_document_text(&os_envelope_of(document))
     }
 
     /// @emoji 📂 Loads a studio document from the dev backbone.
-    pub fn load_os_studio_document(studio_id: &str, port: Arc<dyn OsBackbonePort>) -> Result<OsDocument, VcsError> {
-        let backbone_uri = os_studio_backbone_uri(studio_id);
+    pub fn load_os_space_document(space_id: &str, port: Arc<dyn OsBackbonePort>) -> Result<OsDocument, VcsError> {
+        let backbone_uri = os_space_backbone_uri(space_id);
         let json = port.read(&backbone_uri)?;
         if json.is_empty() {
-            return Err(VcsError::Backbone(format!("unknown os studio: {studio_id}")));
+            return Err(VcsError::Backbone(format!("unknown os space: {space_id}")));
         }
         os_document_from_json(&json)
     }
 
     /// @emoji 🌱 Seeds the demo studio when the catalog is empty.
-    pub fn seed_os_studio_catalog_if_empty(seed_document: OsDocument, port: Arc<dyn OsBackbonePort>) -> Result<Option<OsStudioCatalogEntry>, VcsError> {
-        if !list_os_studio_catalog_entries(port.clone())?.is_empty() {
+    pub fn seed_os_space_catalog_if_empty(seed_document: OsDocument, port: Arc<dyn OsBackbonePort>) -> Result<Option<OsSpaceCatalogEntry>, VcsError> {
+        if !list_os_space_catalog_entries(port.clone())?.is_empty() {
             return Ok(None);
         }
-        let studio_id = if seed_document.id.is_empty() { "default".into() } else { seed_document.id.clone() };
-        let backbone_uri = os_studio_backbone_uri(&studio_id);
+        let space_id = if seed_document.id.is_empty() { "default".into() } else { seed_document.id.clone() };
+        let backbone_uri = os_space_backbone_uri(&space_id);
         let mut seeded = seed_document;
-        seeded.id = studio_id;
-        sync_os_studio_document(&seeded, &backbone_uri, &port)?;
-        track_os_studio_backbone_uri(&port, &backbone_uri);
-        Ok(Some(os_studio_catalog_entry_from_document(&backbone_uri, &seeded)?))
+        seeded.id = space_id;
+        sync_os_space_document(&seeded, &backbone_uri, &port)?;
+        track_os_space_backbone_uri(&port, &backbone_uri);
+        Ok(Some(os_space_catalog_entry_from_document(&backbone_uri, &seeded)?))
     }
-    //#endregion 🔖StudioCatalog
+    //#endregion 🔖SpaceCatalog
 
     #[cfg(test)]
     mod tests {
         use super::*;
         use crate::workflow::{empty_workflow, placeholder_media_contract, validate_workflow, MediaContract, OsMediaPort};
         use crate::registry::{merge_os_program_definition, os_baseline_resource, os_in_port, OsAppResourceSpec, OsPlatformAppInput, OsPlatformInput};
-        use semio_framework_core::{MediaClass, MediaForm, MediaType, MediaWireFormat, ModeDefinition, OsMediaFormat, PluginManifest, WindowKindDefinition};
+        use semio_framework_core::{MediaClass, MediaForm, MediaType, MediaWireFormat, ModeDefinition, OsMediaFormat, ProgramManifest, WindowKindDefinition};
         use std::sync::Arc;
         use ui_wgpu::SurfaceKind;
         use store::{MemoryBackbone, MemoryBackbonePort};
 
         #[test]
-        fn loads_plugin_apps_into_registry() {
-            let mut host = PluginHost::new();
-            let manifest = PluginManifest {
-                plugin_id: "draw".into(),
+        fn loads_program_apps_into_registry() {
+            let mut host = ProgramHost::new();
+            let manifest = ProgramManifest {
+                program_id: "draw".into(),
                 label: "Draw".into(),
                 version: "0.1.0".into(),
                 apps: vec![AppDefinition {
@@ -1337,22 +1324,22 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                     dialogs: Vec::new(),
                     media_inputs: Vec::new(),
                     media_outputs: Vec::new(),
-                    resource_kinds: Vec::new(),
+                    artifact_kinds: Vec::new(),
                     tutorials: Vec::new(),
                 }],
-                programs: vec![],
+                workflows: vec![],
                 capabilities: vec![],
                 contributions: vec![],
                 examples: vec![],
                 commands: vec![],
             };
-            host.load_plugin(LoadedPlugin { plugin_id: "draw".into(), manifest, artifact_uri: "plugin://draw".into() });
+            host.load_program(LoadedProgram { program_id: "draw".into(), manifest, artifact_uri: "program://draw".into() });
             assert_eq!(host.apps().len(), 1);
         }
 
         #[test]
         fn hot_swap_bumps_instance_generation_and_tracks_app_changes() {
-            let mut host = PluginHost::new();
+            let mut host = ProgramHost::new();
             let draw_app = AppDefinition {
                 id: "draw-play".into(),
                 label: "Draw".into(),
@@ -1390,7 +1377,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 dialogs: Vec::new(),
                 media_inputs: Vec::new(),
                 media_outputs: Vec::new(),
-                resource_kinds: Vec::new(),
+                artifact_kinds: Vec::new(),
                 tutorials: Vec::new(),
             };
             let note_app = AppDefinition {
@@ -1430,32 +1417,32 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 dialogs: Vec::new(),
                 media_inputs: Vec::new(),
                 media_outputs: Vec::new(),
-                resource_kinds: Vec::new(),
+                artifact_kinds: Vec::new(),
                 tutorials: Vec::new(),
             };
-            host.load_plugin(LoadedPlugin {
-                plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.1.0".into(), apps: vec![draw_app.clone()], programs: vec![], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![] },
-                artifact_uri: "plugin://draw".into(),
+            host.load_program(LoadedProgram {
+                program_id: "draw".into(),
+                manifest: ProgramManifest { program_id: "draw".into(), label: "Draw".into(), version: "0.1.0".into(), apps: vec![draw_app.clone()], workflows: vec![], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![] },
+                artifact_uri: "program://draw".into(),
             });
             let instance_id = host.create_instance("draw-play", "{}".into()).expect("instance");
             let generation_before = host.instance(instance_id).expect("instance").generation;
-            let event = host.hot_swap_plugin(LoadedPlugin {
-                plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.2.0".into(), apps: vec![draw_app, note_app], programs: vec![], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![] },
-                artifact_uri: "plugin://draw".into(),
+            let event = host.hot_swap_program(LoadedProgram {
+                program_id: "draw".into(),
+                manifest: ProgramManifest { program_id: "draw".into(), label: "Draw".into(), version: "0.2.0".into(), apps: vec![draw_app, note_app], workflows: vec![], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![] },
+                artifact_uri: "program://draw".into(),
             });
             assert_eq!(event.added_apps, vec!["note-play".to_string()]);
             assert!(event.removed_apps.is_empty());
-            assert_eq!(event.plugin_id, "draw");
+            assert_eq!(event.program_id, "draw");
             assert_eq!(event.version, "0.2.0");
             assert!(host.instance(instance_id).expect("instance").generation > generation_before, "hot swap must bump instance generation");
             assert_eq!(host.apps().len(), 2);
         }
 
         #[test]
-        fn hot_swap_rollback_on_invalid_manifest_keeps_old_plugin() {
-            let mut host = PluginHost::new();
+        fn hot_swap_rollback_on_invalid_manifest_keeps_old_program() {
+            let mut host = ProgramHost::new();
             let draw_app = AppDefinition {
                 id: "draw-play".into(),
                 label: "Draw".into(),
@@ -1493,32 +1480,32 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 dialogs: Vec::new(),
                 media_inputs: Vec::new(),
                 media_outputs: Vec::new(),
-                resource_kinds: Vec::new(),
+                artifact_kinds: Vec::new(),
                 tutorials: Vec::new(),
             };
-            host.load_plugin(LoadedPlugin {
-                plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "0.1.0".into(), apps: vec![draw_app], programs: vec![], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![] },
-                artifact_uri: "plugin://draw".into(),
+            host.load_program(LoadedProgram {
+                program_id: "draw".into(),
+                manifest: ProgramManifest { program_id: "draw".into(), label: "Draw".into(), version: "0.1.0".into(), apps: vec![draw_app], workflows: vec![], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![] },
+                artifact_uri: "program://draw".into(),
             });
             let instance_id = host.create_instance("draw-play", "{}".into()).expect("instance");
             let generation_before = host.instance(instance_id).expect("instance").generation;
-            let event = host.hot_swap_plugin(LoadedPlugin {
-                plugin_id: "draw".into(),
-                manifest: PluginManifest { plugin_id: "draw".into(), label: "Draw".into(), version: "".into(), apps: vec![], programs: vec![], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![] },
-                artifact_uri: "plugin://draw".into(),
+            let event = host.hot_swap_program(LoadedProgram {
+                program_id: "draw".into(),
+                manifest: ProgramManifest { program_id: "draw".into(), label: "Draw".into(), version: "".into(), apps: vec![], workflows: vec![], capabilities: vec![], contributions: vec![], examples: vec![], commands: vec![] },
+                artifact_uri: "program://draw".into(),
             });
-            assert_eq!(event.plugin_id, "draw");
+            assert_eq!(event.program_id, "draw");
             assert_eq!(event.version, "0.1.0");
             assert!(event.added_apps.is_empty());
             assert_eq!(host.apps().len(), 1);
             assert_eq!(host.instance(instance_id).expect("instance").generation, generation_before);
-            assert_eq!(host.plugins.get("draw").expect("plugin").manifest.version, "0.1.0");
+            assert_eq!(host.programs.get("draw").expect("plugin").manifest.version, "0.1.0");
         }
 
         #[test]
-        fn contributions_track_plugin_load_and_hot_swap() {
-            let mut host = PluginHost::new();
+        fn contributions_track_program_load_and_hot_swap() {
+            let mut host = ProgramHost::new();
             let contribution = Contribution::PlaybookBlockKind {
                 app_id: "playbook-module-procedural".into(),
                 block_kind: "buildingComponent".into(),
@@ -1528,45 +1515,45 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 params_body_key: "params".into(),
                 preview_body_key: "preview".into(),
             };
-            host.load_plugin(LoadedPlugin {
-                plugin_id: "playbook-module-procedural".into(),
-                manifest: PluginManifest {
-                    plugin_id: "playbook-module-procedural".into(),
+            host.load_program(LoadedProgram {
+                program_id: "playbook-module-procedural".into(),
+                manifest: ProgramManifest {
+                    program_id: "playbook-module-procedural".into(),
                     label: "Playbook Module Procedural".into(),
                     version: "0.1.0".into(),
                     apps: vec![],
-                    programs: vec![],
+                    workflows: vec![],
                     capabilities: vec![],
                     contributions: vec![contribution.clone()],
                     examples: vec![],
                     commands: vec![],
                 },
-                artifact_uri: "plugin://playbook-module-procedural".into(),
+                artifact_uri: "program://playbook-module-procedural".into(),
             });
             assert_eq!(host.contributions().len(), 1);
-            assert_eq!(host.contributions()[0].plugin_id, "playbook-module-procedural");
-            host.hot_swap_plugin(LoadedPlugin {
-                plugin_id: "playbook-module-procedural".into(),
-                manifest: PluginManifest {
-                    plugin_id: "playbook-module-procedural".into(),
+            assert_eq!(host.contributions()[0].program_id, "playbook-module-procedural");
+            host.hot_swap_program(LoadedProgram {
+                program_id: "playbook-module-procedural".into(),
+                manifest: ProgramManifest {
+                    program_id: "playbook-module-procedural".into(),
                     label: "Playbook Module Procedural".into(),
                     version: "0.2.0".into(),
                     apps: vec![],
-                    programs: vec![],
+                    workflows: vec![],
                     capabilities: vec![],
                     contributions: vec![],
                     examples: vec![],
                     commands: vec![],
                 },
-                artifact_uri: "plugin://playbook-module-procedural".into(),
+                artifact_uri: "program://playbook-module-procedural".into(),
             });
             assert!(host.contributions().is_empty());
         }
 
         #[test]
-        fn recovery_ui_renders_actions_for_quarantined_plugin() {
-            let mut host = PluginHost::new();
-            host.supervisor.insert("draw".into(), PluginSupervisorState::Quarantined);
+        fn recovery_ui_renders_actions_for_quarantined_program() {
+            let mut host = ProgramHost::new();
+            host.supervisor.insert("draw".into(), ProgramSupervisorState::Quarantined);
             let ui = host.recovery_ui("draw");
             match ui {
                 UiNode::Stack(stack) => assert_eq!(stack.children.len(), 5, "title + message + restart/disable/showDiagnostics buttons"),
@@ -1636,7 +1623,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         #[test]
         fn spawns_and_removes_app_instances() {
             seed_draw_program();
-            let mut store = OsStore::new(create_empty_os_document("studio", "Studio"));
+            let mut store = OsStore::new(create_empty_os_document("space", "Space"));
             store.spawn_app_instance("draw", "draw", None, WorkflowPosition { x: 40.0, y: 40.0 }).expect("spawn");
             assert_eq!(store.projection().expect("projection").app_instances.len(), 1);
             store.dispatch_text("undo").expect("undo");
@@ -1645,7 +1632,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
 
         #[test]
         fn adds_and_patches_studio_parameters() {
-            let mut store = OsStore::new(create_empty_os_document("studio", "Studio"));
+            let mut store = OsStore::new(create_empty_os_document("space", "Space"));
             let parameter_id = store.add_parameter(&OsParameterType::Numeric, "Zoom").expect("add");
             store.patch_parameter(&parameter_id, &serde_json::json!({ "value": 12.0, "max": 10.0 })).expect("patch");
             match &store.projection().expect("projection").parameters[0] {
@@ -1655,10 +1642,10 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         }
 
         #[test]
-        fn create_ephemeral_os_studio_has_no_backbone() {
-            let document = create_ephemeral_os_studio("Ephemeral Studio");
+        fn create_ephemeral_os_space_has_no_backbone() {
+            let document = create_ephemeral_os_space("Ephemeral Space");
             assert!(document.id.starts_with("studio-"));
-            assert_eq!(document.name, "Ephemeral Studio");
+            assert_eq!(document.name, "Ephemeral Space");
             assert!(document.backbone.is_none());
             assert!(document.vcs.initial_projection.app_instances.is_empty());
         }
@@ -1666,11 +1653,11 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         #[test]
         fn creates_and_lists_studio_catalog_entries() {
             let port = Arc::new(MemoryBackbonePort::new());
-            let entry = create_os_studio("Catalog Studio", port.clone()).expect("create");
-            let listed = list_os_studio_catalog_entries(port.clone()).expect("list");
+            let entry = create_os_space("Catalog Space", port.clone()).expect("create");
+            let listed = list_os_space_catalog_entries(port.clone()).expect("list");
             assert!(listed.iter().any(|row| row.id == entry.id));
-            delete_os_studio(&entry.id, port.clone()).expect("delete");
-            assert!(!list_os_studio_catalog_entries(port).expect("list").iter().any(|row| row.id == entry.id));
+            delete_os_space(&entry.id, port.clone()).expect("delete");
+            assert!(!list_os_space_catalog_entries(port).expect("list").iter().any(|row| row.id == entry.id));
         }
 
         #[test]
@@ -1682,7 +1669,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         fn concurrent_delete_and_wire_reconciles_without_a_dangling_edge() {
             seed_draw_program();
             seed_sink_program();
-            let mut store_a = OsStore::new(create_empty_os_document("studio", "Studio"));
+            let mut store_a = OsStore::new(create_empty_os_document("space", "Space"));
             let node_a_instance = store_a.spawn_app_instance("draw", "draw", None, WorkflowPosition { x: 0.0, y: 0.0 }).expect("spawn a");
             let node_b_instance = store_a.spawn_app_instance("sink", "sink", None, WorkflowPosition { x: 200.0, y: 0.0 }).expect("spawn b");
             let mut store_b = OsStore::new(store_a.document());
@@ -1739,7 +1726,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 width: 220.0,
                 height: 92.0,
                 inputs: Vec::new(),
-                outputs: vec![OsMediaPort { id: "app-1:puzzle.out:out".into(), resource_kind: "puzzle.2d.fixture".into(), direction: "out".into() }],
+                outputs: vec![OsMediaPort { id: "app-1:puzzle.out:out".into(), artifact_kind: "puzzle.2d.fixture".into(), direction: "out".into() }],
             };
             let node_b = OsWorkflowNode {
                 id: "node-2".into(),
@@ -1748,7 +1735,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 y: 0.0,
                 width: 220.0,
                 height: 92.0,
-                inputs: vec![OsMediaPort { id: "app-2:draw.in:in".into(), resource_kind: "puzzle.2d.fixture".into(), direction: "in".into() }],
+                inputs: vec![OsMediaPort { id: "app-2:draw.in:in".into(), artifact_kind: "puzzle.2d.fixture".into(), direction: "in".into() }],
                 outputs: Vec::new(),
             };
             let edge = OsWorkflowEdge {
@@ -1907,7 +1894,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
 
         #[test]
         fn document_text_round_trips_store_with_applied_operation() {
-            let envelope = create_document_envelope(OS_STUDIO_SCHEMA, "studio-text-test", default_os_projection(), None);
+            let envelope = create_document_envelope(OS_SPACE_SCHEMA, "space-text-test", default_os_projection(), None);
             let mut store = DocumentStore::new(envelope);
             store
                 .dispatch(DocumentCommand::Apply { operations: vec![OsOperation::SetActiveProgram { program_id: Some("puzzle".into()) }], description: None })
@@ -1927,7 +1914,7 @@ pub mod backbone {
 
     use crate::host::OsBackbonePort;
     #[cfg(not(target_arch = "wasm32"))]
-    use crate::workflow::OS_STUDIO_SCHEMA;
+    use crate::workflow::OS_SPACE_SCHEMA;
     #[cfg(not(target_arch = "wasm32"))]
     use crate::{OsEnvelope, OsOperation, OsProjection};
     #[cfg(not(target_arch = "wasm32"))]
@@ -1941,9 +1928,9 @@ pub mod backbone {
     /// folder holds exactly one os document at its root (app documents get their own document ids once
     /// {@link OsDocumentRef} routes them through `framework/sync`'s multi-document `DocumentHost`).
     #[cfg(not(target_arch = "wasm32"))]
-    const STUDIO_FOLDER_DOCUMENT_ID: &str = "studio";
+    const SPACE_FOLDER_DOCUMENT_ID: &str = "studio";
 
-    enum StudioPortKind {
+    enum SpacePortKind {
         /// @emoji 🗃️ A single document's pack blob addressed by an arbitrary `file://` path —
         /// `<folder>/<document_id>.<extension>.pack` (authoritative) + `.ops` + a DSL mirror, via
         /// `FolderTextStorage::write_pack`/`read_pack` and the typed `store::parse_document_pack`/
@@ -1955,12 +1942,12 @@ pub mod backbone {
         Folder(String, FolderSqliteStorage),
     }
 
-    pub struct StudioBackbonePort {
-        kind: Option<StudioPortKind>,
+    pub struct SpaceBackbonePort {
+        kind: Option<SpacePortKind>,
         memory: MemoryBackbonePort,
     }
 
-    impl StudioBackbonePort {
+    impl SpaceBackbonePort {
         #[cfg(not(target_arch = "wasm32"))]
         pub fn file(file_path: &str) -> Result<Self, VcsError> {
             let uri = format!("file://{file_path}");
@@ -1968,22 +1955,22 @@ pub mod backbone {
             let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or("txt").to_string();
             let document_id = path.file_stem().and_then(|stem| stem.to_str()).unwrap_or("document").to_string();
             let folder = path.parent().map(|parent| parent.to_path_buf()).unwrap_or_else(|| std::path::PathBuf::from("."));
-            Ok(Self { kind: Some(StudioPortKind::File { uri, storage: FolderTextStorage::new(folder), document_id, extension }), memory: MemoryBackbonePort::new() })
+            Ok(Self { kind: Some(SpacePortKind::File { uri, storage: FolderTextStorage::new(folder), document_id, extension }), memory: MemoryBackbonePort::new() })
         }
 
         #[cfg(not(target_arch = "wasm32"))]
         pub fn folder(folder_path: &str) -> Result<Self, VcsError> {
             let uri = format!("folder://{folder_path}");
-            Ok(Self { kind: Some(StudioPortKind::Folder(uri, FolderSqliteStorage::new(std::path::PathBuf::from(folder_path)))), memory: MemoryBackbonePort::new() })
+            Ok(Self { kind: Some(SpacePortKind::Folder(uri, FolderSqliteStorage::new(std::path::PathBuf::from(folder_path)))), memory: MemoryBackbonePort::new() })
         }
     }
 
-    impl OsBackbonePort for StudioBackbonePort {
+    impl OsBackbonePort for SpaceBackbonePort {
         fn read(&self, uri: &str) -> Result<String, VcsError> {
             if let Some(kind) = &self.kind {
                 match kind {
                     #[cfg(not(target_arch = "wasm32"))]
-                    StudioPortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
+                    SpacePortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
                         if let Some(pack_files) = storage.read_pack(document_id, extension)? {
                             let parsed: store::ParsedDocumentText<OsProjection, OsOperation> = store::parse_document_pack(&pack_files.pack, &pack_files.spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
                             return serde_json::to_string(&parsed.envelope).map_err(|error| VcsError::Serialize(error.to_string()));
@@ -1997,8 +1984,8 @@ pub mod backbone {
                         };
                     }
                     #[cfg(not(target_arch = "wasm32"))]
-                    StudioPortKind::Folder(folder_uri, storage) if uri == folder_uri => {
-                        let (pack, spr) = storage.read(STUDIO_FOLDER_DOCUMENT_ID)?.ok_or_else(|| VcsError::Backbone(format!("missing backbone file {uri}")))?;
+                    SpacePortKind::Folder(folder_uri, storage) if uri == folder_uri => {
+                        let (pack, spr) = storage.read(SPACE_FOLDER_DOCUMENT_ID)?.ok_or_else(|| VcsError::Backbone(format!("missing backbone file {uri}")))?;
                         let parsed: store::ParsedDocumentText<OsProjection, OsOperation> = store::parse_document_pack(&pack, &spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
                         return serde_json::to_string(&parsed.envelope).map_err(|error| VcsError::Serialize(error.to_string()));
                     }
@@ -2012,17 +1999,17 @@ pub mod backbone {
             if let Some(kind) = &self.kind {
                 match kind {
                     #[cfg(not(target_arch = "wasm32"))]
-                    StudioPortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
+                    SpacePortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
                         let envelope: OsEnvelope = serde_json::from_str(payload).map_err(|error| VcsError::Deserialize(error.to_string()))?;
                         let pack_files = store::print_document_pack(&envelope)?;
                         let dsl_mirror = envelope.vcs.initial_projection.print_dsl();
                         return storage.write_pack(document_id, extension, &pack_files, &dsl_mirror);
                     }
                     #[cfg(not(target_arch = "wasm32"))]
-                    StudioPortKind::Folder(folder_uri, storage) if uri == folder_uri => {
+                    SpacePortKind::Folder(folder_uri, storage) if uri == folder_uri => {
                         let envelope: OsEnvelope = serde_json::from_str(payload).map_err(|error| VcsError::Deserialize(error.to_string()))?;
                         let pack_files = store::print_document_pack(&envelope)?;
-                        return storage.write(STUDIO_FOLDER_DOCUMENT_ID, OS_STUDIO_SCHEMA, &pack_files.pack, &pack_files.spr);
+                        return storage.write(SPACE_FOLDER_DOCUMENT_ID, OS_SPACE_SCHEMA, &pack_files.pack, &pack_files.spr);
                     }
                     _ => {}
                 }
@@ -2032,13 +2019,13 @@ pub mod backbone {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn open_folder_studio_backbone(folder_path: &str) -> Result<Arc<dyn OsBackbonePort>, VcsError> {
-        Ok(Arc::new(StudioBackbonePort::folder(folder_path)?))
+    pub fn open_folder_space_backbone(folder_path: &str) -> Result<Arc<dyn OsBackbonePort>, VcsError> {
+        Ok(Arc::new(SpaceBackbonePort::folder(folder_path)?))
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn open_file_studio_backbone(file_path: &str) -> Result<Arc<dyn OsBackbonePort>, VcsError> {
-        Ok(Arc::new(StudioBackbonePort::file(file_path)?))
+    pub fn open_file_space_backbone(file_path: &str) -> Result<Arc<dyn OsBackbonePort>, VcsError> {
+        Ok(Arc::new(SpaceBackbonePort::file(file_path)?))
     }
     // #endregion backbone
 }
@@ -2050,7 +2037,7 @@ pub mod host_runtime {
     //! (currently the wgpu shell). Native-only: it depends on `framework/sync`'s `DocumentHost`, whose
     //! actor is a native-thread (or wasm `spawn_local`) concern — WASI-P2 plugins never see it, and the
     //! browser React shell talks to its own TS twin (`framework/product/os/core/js/backbone-worker.ts`)
-    //! through a different FFI boundary (the WIT plugin sandbox), not through this Rust module. Keeping
+    //! through a different FFI boundary (the WIT program sandbox), not through this Rust module. Keeping
     //! this doc-comment as the single canonical description of the sequence — referenced from both
     //! `os-shell.tsx`'s `openDocument` and `framework/renderer/wgpu/rs/lib.rs` — is how the two stay in
     //! lockstep without a literal shared code path across the Rust/TS boundary.
@@ -2061,10 +2048,10 @@ pub mod host_runtime {
     //!    {@link crate::instance::OsDocumentRef}.
     //! 2. `DocumentHost::open(config)` → `DocumentChannels{cmd_tx, channel_backbone}`.
     //! 3. Attach `channel_backbone` to the document's own store: `store.attach_backbone(Box::new(...))`.
-    //!    For a native WASM plugin instance this ALSO means calling `framework/plugin/host`'s
-    //!    `WasmPluginRuntime::register_host_backbone(uri, Box::new(channel_backbone))` so the sandboxed
+    //!    For a native WASM program instance this ALSO means calling `framework/program/host`'s
+    //!    `WasmProgramRuntime::register_host_backbone(uri, Box::new(channel_backbone))` so the sandboxed
     //!    plugin's `backbone-send`/`backbone-poll` host imports reach the same channel — this crate does
-    //!    not link `framework/plugin/host` directly (no existing dependency edge), so the wgpu shell,
+    //!    not link `framework/program/host` directly (no existing dependency edge), so the wgpu shell,
     //!    which links both, is the one that actually performs that registration call using the
     //!    {@link OpenedDocument} this module hands back.
     //! 4. `DocumentHost::subscribe(&document_id)` → `broadcast::Receiver<DocumentEvent>`; on each event:
@@ -2080,7 +2067,7 @@ pub mod host_runtime {
     //!    steps 1-5 for that app's own document.
     //! 7. On close: send `DocumentActorMsg::Detach` (flushes pending operations) via `host.send(id, Detach)`, then
     //!    `DocumentHost::close(&id)`, then `store.detach_backbone()` /
-    //!    `WasmPluginRuntime::deregister_host_backbone(uri)`.
+    //!    `WasmProgramRuntime::deregister_host_backbone(uri)`.
 
     use crate::instance::OsDocumentRef;
     use store_sync::{DocumentActorConfig, DocumentActorMsg, DocumentChannels, DocumentEvent, DocumentHost, PersistenceBinding};
@@ -2092,8 +2079,8 @@ pub mod host_runtime {
     }
 
     /// @emoji ☁️ The hub persistence binding for a document.
-    pub fn hub_binding(base_url: impl Into<String>, studio_id: impl Into<String>, token: Option<String>) -> PersistenceBinding {
-        PersistenceBinding::Hub { base_url: base_url.into(), studio_id: studio_id.into(), token }
+    pub fn hub_binding(base_url: impl Into<String>, space_id: impl Into<String>, token: Option<String>) -> PersistenceBinding {
+        PersistenceBinding::Hub { base_url: base_url.into(), space_id: space_id.into(), token }
     }
 
     /// @emoji 🔗 Builds the `DocumentActorConfig` to open an app instance's own document, from its
@@ -2282,7 +2269,7 @@ pub mod instance {
         format!("{prefix}-{n}")
     }
 
-    /// @emoji 🎛️ Reads the runtime value from a studio parameter definition.
+    /// @emoji 🎛️ Reads the runtime value from a space parameter definition.
     pub fn os_parameter_value(parameter: &OsParameter) -> Value {
         match parameter {
             OsParameter::Numeric { value, .. } => Value::from(*value),
@@ -2297,7 +2284,7 @@ pub mod instance {
         left == right
     }
 
-    /// @emoji 🎛️ Creates a default studio parameter of the given type.
+    /// @emoji 🎛️ Creates a default space parameter of the given type.
     pub fn create_default_os_parameter(parameter_type: &OsParameterType, name: &str, id: Option<&str>) -> OsParameter {
         let parameter_id = id.map(str::to_string).unwrap_or_else(|| create_os_id("param"));
         match parameter_type {
@@ -2329,7 +2316,7 @@ pub mod instance {
         next
     }
 
-    /// @emoji 🎛️ Applies a partial patch to a studio parameter, enforcing type constraints.
+    /// @emoji 🎛️ Applies a partial patch to a space parameter, enforcing type constraints.
     pub fn patch_os_parameter(parameter: &OsParameter, patch: &Value) -> OsParameter {
         let name = patch.get("name").and_then(|v| v.as_str()).map(str::to_string).unwrap_or_else(|| parameter_name(parameter));
         let patch_type = patch.get("type").and_then(|v| v.as_str());
@@ -2431,7 +2418,7 @@ pub mod instance {
         }
     }
 
-    /// @emoji 🎛️ Applies bound studio parameter values onto an app projection via JSON pointers.
+    /// @emoji 🎛️ Applies bound space parameter values onto an app projection via JSON pointers.
     pub fn apply_parameter_values_to_projection(projection: Value, bindings: &[OsParameterFieldBinding], parameters: &[OsParameter], instance_id: &str) -> Value {
         let instance_bindings: Vec<_> = bindings.iter().filter(|binding| binding.instance_id == instance_id).collect();
         if instance_bindings.is_empty() {
@@ -2469,17 +2456,17 @@ pub mod instance {
         values
     }
 
-    /// @emoji 🎛️ Builds the workflow input port id for a bound studio parameter.
+    /// @emoji 🎛️ Builds the workflow input port id for a bound space parameter.
     pub fn parameter_port_id(instance_id: &str, parameter_id: &str) -> String {
         media_port_id_for_spec(instance_id, &format!("{OS_PARAMETER_PORT_PREFIX}{parameter_id}"), "in")
     }
 
-    /// @emoji 🎛️ Returns whether a media port id denotes a studio parameter input channel.
+    /// @emoji 🎛️ Returns whether a media port id denotes a space parameter input channel.
     pub fn is_parameter_port_id(port_id: &str) -> bool {
         media_port_spec_id(port_id).map(|spec_id| spec_id.starts_with(OS_PARAMETER_PORT_PREFIX)).unwrap_or(false)
     }
 
-    /// @emoji 🎛️ Extracts the studio parameter id from a parameter input port id.
+    /// @emoji 🎛️ Extracts the space parameter id from a parameter input port id.
     pub fn parameter_id_from_port_id(port_id: &str) -> Option<String> {
         let spec_id = media_port_spec_id(port_id)?;
         spec_id.strip_prefix(OS_PARAMETER_PORT_PREFIX).map(str::to_string)
@@ -2534,7 +2521,7 @@ pub mod instance {
 
     /// @emoji 🔀 Host-side hook for the common case: when a bound parameter's value changes, computes the
     /// patched document JSON for every app instance with a field bound to it, keyed by document id — the
-    /// host dispatches each as a snapshot replace into that app's own document store (e.g. via the plugin
+    /// host dispatches each as a snapshot replace into that app's own document store (e.g. via the program
     /// WIT boundary's `load-app-document`, or `framework/sync`'s document actor once the app is wired onto
     /// `DocumentHost`). This covers the "common/simple case" per the JSON-pointer overlay convention
     /// {@link apply_parameter_values_to_projection} already established — a true typed operation into the bound
@@ -2760,17 +2747,17 @@ pub mod media_export_raster {
     pub type Svg2dDocumentRenderer = fn(&Value) -> Result<(String, u32, u32), String>;
 
     /// @emoji 💾 Registers SVG, PNG, and DWG export handlers for one 2D resource kind.
-    pub fn register_2d_export_handlers(resource_kind: &'static str, file_stem: &'static str, document_to_svg: Svg2dDocumentRenderer) {
-        register_os_media_export_handler(resource_kind, OsMediaFormat::Svg, move |doc| {
+    pub fn register_2d_export_handlers(artifact_kind: &'static str, file_stem: &'static str, document_to_svg: Svg2dDocumentRenderer) {
+        register_os_media_export_handler(artifact_kind, OsMediaFormat::Svg, move |doc| {
             let (svg, _width, _height) = document_to_svg(doc)?;
             Ok(OsMediaExportResult { data: svg, mime_type: OsMediaFormat::Svg.mime_type().into(), file_name: format!("{file_stem}.svg"), encoding: None })
         });
-        register_os_media_export_handler(resource_kind, OsMediaFormat::Png, move |doc| {
+        register_os_media_export_handler(artifact_kind, OsMediaFormat::Png, move |doc| {
             let (svg, width, height) = document_to_svg(doc)?;
             let data = rasterize_svg_to_png_base64(&svg, width, height)?;
             Ok(OsMediaExportResult { data, mime_type: OsMediaFormat::Png.mime_type().into(), file_name: format!("{file_stem}.png"), encoding: Some("base64".into()) })
         });
-        register_os_media_export_handler(resource_kind, OsMediaFormat::Dwg, move |doc| {
+        register_os_media_export_handler(artifact_kind, OsMediaFormat::Dwg, move |doc| {
             let (svg, _width, _height) = document_to_svg(doc)?;
             let bytes = svg_to_dwg_bytes(&svg)?;
             Ok(OsMediaExportResult { data: base64::engine::general_purpose::STANDARD.encode(bytes), mime_type: OsMediaFormat::Dwg.mime_type().into(), file_name: format!("{file_stem}.dwg"), encoding: Some("base64".into()) })
@@ -2778,20 +2765,20 @@ pub mod media_export_raster {
     }
 
     /// @emoji 📥 Registers a DWG import handler for one 2D resource kind, rasterizing DWG geometry into flat SVG first.
-    pub fn register_dwg_import_handler(resource_kind: &'static str, from_dwg: fn(&DwgDrawing) -> Result<Value, String>) {
-        register_os_media_import_handler(resource_kind, OsMediaFormat::Dwg, move |bytes| {
+    pub fn register_dwg_import_handler(artifact_kind: &'static str, from_dwg: fn(&DwgDrawing) -> Result<Value, String>) {
+        register_os_media_import_handler(artifact_kind, OsMediaFormat::Dwg, move |bytes| {
             let drawing = semio_framework_core::dwg_from_bytes(bytes)?;
             from_dwg(&drawing)
         });
     }
 
     /// @emoji 🧵 Registers one `MeshExporter` format (Obj/Glb/Stl/…) for a mesh resource kind; call once per format — `mesh_from_document` bridges the OS workflow's per-document export pipeline down to the format-agnostic `MeshData` the exporter instance actually encodes. DWG stays on `register_mesh_dwg_import_handler`'s sibling below; it is not part of the `MeshExporter` mechanism.
-    pub fn register_mesh_exporter(resource_kind: &'static str, file_stem: &'static str, mesh_from_document: fn(&Value) -> Result<semio_framework_plugin::MeshData, String>, exporter: Box<dyn semio_framework_plugin::MeshExporter>) {
+    pub fn register_mesh_exporter(artifact_kind: &'static str, file_stem: &'static str, mesh_from_document: fn(&Value) -> Result<semio_framework_program::MeshData, String>, exporter: Box<dyn semio_framework_program::MeshExporter>) {
         let format = exporter.format();
         let ext = format.as_str();
         let mime_type = format.mime_type().to_string();
         let binary = format.is_binary();
-        register_os_media_export_handler(resource_kind, format, move |doc| {
+        register_os_media_export_handler(artifact_kind, format, move |doc| {
             let mesh = mesh_from_document(doc)?;
             let bytes = exporter.export(&mesh)?;
             let data = if binary { base64::engine::general_purpose::STANDARD.encode(&bytes) } else { String::from_utf8(bytes).map_err(|error| error.to_string())? };
@@ -2800,17 +2787,17 @@ pub mod media_export_raster {
     }
 
     /// @emoji 🧵 Registers one `MeshImporter` format (Obj/Glb/Stl/…) for a mesh resource kind; `document_from_mesh` bridges the decoded `MeshData` back into the app's own document shape.
-    pub fn register_mesh_importer(resource_kind: &'static str, document_from_mesh: fn(&semio_framework_plugin::MeshData) -> Result<Value, String>, importer: Box<dyn semio_framework_plugin::MeshImporter>) {
+    pub fn register_mesh_importer(artifact_kind: &'static str, document_from_mesh: fn(&semio_framework_program::MeshData) -> Result<Value, String>, importer: Box<dyn semio_framework_program::MeshImporter>) {
         let format = importer.format();
-        register_os_media_import_handler(resource_kind, format, move |bytes| {
+        register_os_media_import_handler(artifact_kind, format, move |bytes| {
             let mesh = importer.import(bytes)?;
             document_from_mesh(&mesh)
         });
     }
 
     /// @emoji 📥 Registers a DWG import handler for one mesh resource kind.
-    pub fn register_mesh_dwg_import_handler(resource_kind: &'static str, document_from_mesh: fn(&semio_framework_plugin::MeshData) -> Result<Value, String>) {
-        register_os_media_import_handler(resource_kind, OsMediaFormat::Dwg, move |bytes| {
+    pub fn register_mesh_dwg_import_handler(artifact_kind: &'static str, document_from_mesh: fn(&semio_framework_program::MeshData) -> Result<Value, String>) {
+        register_os_media_import_handler(artifact_kind, OsMediaFormat::Dwg, move |bytes| {
             let drawing = semio_framework_core::dwg_from_bytes(bytes)?;
             let mesh = semio_framework_core::dwg_drawing_to_mesh(&drawing);
             document_from_mesh(&mesh)
@@ -2818,8 +2805,8 @@ pub mod media_export_raster {
     }
 
     /// @emoji 💾 Registers a DWG export handler for one mesh resource kind; DWG is not part of the `MeshExporter` mechanism (it flattens a mesh into a DWG drawing, not a mesh codec), so it stays a dedicated registrar alongside `register_mesh_exporter`.
-    pub fn register_mesh_dwg_export_handler(resource_kind: &'static str, file_stem: &'static str, mesh_from_document: fn(&Value) -> Result<semio_framework_plugin::MeshData, String>) {
-        register_os_media_export_handler(resource_kind, OsMediaFormat::Dwg, move |doc| {
+    pub fn register_mesh_dwg_export_handler(artifact_kind: &'static str, file_stem: &'static str, mesh_from_document: fn(&Value) -> Result<semio_framework_program::MeshData, String>) {
+        register_os_media_export_handler(artifact_kind, OsMediaFormat::Dwg, move |doc| {
             let mesh = mesh_from_document(doc)?;
             let drawing = semio_framework_core::mesh_to_dwg_drawing(&mesh);
             let bytes = semio_framework_core::dwg_to_bytes(&drawing)?;
@@ -2842,38 +2829,38 @@ pub mod media_export_raster {
         HANDLERS.get_or_init(|| Mutex::new(HashMap::new()))
     }
 
-    fn solid_registry_key(resource_kind: &str, format: &OsMediaFormat) -> String {
-        format!("{}:{}", resource_kind, format.as_str())
+    fn solid_registry_key(artifact_kind: &str, format: &OsMediaFormat) -> String {
+        format!("{}:{}", artifact_kind, format.as_str())
     }
 
     /// @emoji 🧊 Registers a B-Rep solid exporter (STEP/STL/OBJ/GLB, operating on `GeometryHandle` via `kernel_3d_brepkit::BrepkitKernel` rather than a tessellated `MeshData`) for a resource kind; call once per format.
-    pub fn register_solid_exporter(resource_kind: &str, exporter: Box<dyn kernel_3d_brepkit::SolidExporter>) {
-        let key = solid_registry_key(resource_kind, &exporter.format());
+    pub fn register_solid_exporter(artifact_kind: &str, exporter: Box<dyn kernel_3d_brepkit::SolidExporter>) {
+        let key = solid_registry_key(artifact_kind, &exporter.format());
         solid_exporters().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(key, exporter);
     }
 
     /// @emoji 🧊 Registers a B-Rep solid importer for a resource kind; see `register_solid_exporter`.
-    pub fn register_solid_importer(resource_kind: &str, importer: Box<dyn kernel_3d_brepkit::SolidImporter>) {
-        let key = solid_registry_key(resource_kind, &importer.format());
+    pub fn register_solid_importer(artifact_kind: &str, importer: Box<dyn kernel_3d_brepkit::SolidImporter>) {
+        let key = solid_registry_key(artifact_kind, &importer.format());
         solid_importers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(key, importer);
     }
 
     /// @emoji 🧊 Looks up a previously registered solid exporter for a resource kind + format.
-    pub fn solid_exporter_for(resource_kind: &str, format: &OsMediaFormat) -> bool {
-        solid_exporters().lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(&solid_registry_key(resource_kind, format))
+    pub fn solid_exporter_for(artifact_kind: &str, format: &OsMediaFormat) -> bool {
+        solid_exporters().lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(&solid_registry_key(artifact_kind, format))
     }
 
-    /// @emoji 🧊 Exports `shapes` from `kernel` through the solid exporter registered for `resource_kind` + `format`.
-    pub fn export_registered_solid(resource_kind: &str, format: &OsMediaFormat, kernel: &kernel_3d_brepkit::BrepkitKernel, shapes: &[kernel_3d_engine::GeometryHandle], deflection: f64) -> Result<Vec<u8>, String> {
-        let key = solid_registry_key(resource_kind, format);
+    /// @emoji 🧊 Exports `shapes` from `kernel` through the solid exporter registered for `artifact_kind` + `format`.
+    pub fn export_registered_solid(artifact_kind: &str, format: &OsMediaFormat, kernel: &kernel_3d_brepkit::BrepkitKernel, shapes: &[kernel_3d_engine::GeometryHandle], deflection: f64) -> Result<Vec<u8>, String> {
+        let key = solid_registry_key(artifact_kind, format);
         let handlers = solid_exporters().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let exporter = handlers.get(&key).ok_or_else(|| format!("no solid export handler for {key}"))?;
         exporter.export(kernel, shapes, deflection).map_err(|error| error.to_string())
     }
 
-    /// @emoji 🧊 Imports bytes into `kernel` through the solid importer registered for `resource_kind` + `format`.
-    pub fn import_registered_solid(resource_kind: &str, format: &OsMediaFormat, kernel: &mut kernel_3d_brepkit::BrepkitKernel, data: &[u8], tolerance: f64) -> Result<Vec<kernel_3d_engine::GeometryHandle>, String> {
-        let key = solid_registry_key(resource_kind, format);
+    /// @emoji 🧊 Imports bytes into `kernel` through the solid importer registered for `artifact_kind` + `format`.
+    pub fn import_registered_solid(artifact_kind: &str, format: &OsMediaFormat, kernel: &mut kernel_3d_brepkit::BrepkitKernel, data: &[u8], tolerance: f64) -> Result<Vec<kernel_3d_engine::GeometryHandle>, String> {
+        let key = solid_registry_key(artifact_kind, format);
         let handlers = solid_importers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let importer = handlers.get(&key).ok_or_else(|| format!("no solid import handler for {key}"))?;
         importer.import(kernel, data, tolerance).map_err(|error| error.to_string())
@@ -2972,14 +2959,14 @@ pub mod workflow {
 
     use crate::host::OsOperation;
     use crate::instance::{create_os_id, is_parameter_port_id, media_port_spec_id, parameter_id_from_port_id, parameter_port_id, OsAppInstance, OsParameter, OsParameterFieldBinding};
-    use crate::registry::{os_app_primary_output_kind, os_app_registration, os_resource_descriptor, OsAppRegistration, OsResourceDescriptor};
+    use crate::registry::{os_app_primary_output_kind, os_app_registration, os_artifact_descriptor, OsAppRegistration, OsArtifactDescriptor};
     use semio_framework_core::{media_types_compatible, MediaClass, MediaCompat, MediaForm, MediaType, MediaWireFormat};
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use std::collections::{HashMap, HashSet};
     use std::sync::{Mutex, OnceLock};
 
-    pub const OS_STUDIO_SCHEMA: &str = "s.studio";
+    pub const OS_SPACE_SCHEMA: &str = "s.space";
     pub const OS_WORKFLOW_SCHEMA: &str = "s.workflow";
     pub const OS_WORKFLOW_VFS_ROOT_ID: &str = "os-workflow-root";
     pub const OS_MEDIA_FLOW_MODULE_ID: &str = "os-media";
@@ -2989,7 +2976,7 @@ pub mod workflow {
     #[serde(rename_all = "camelCase")]
     pub struct OsMediaPort {
         pub id: String,
-        pub resource_kind: String,
+        pub artifact_kind: String,
         pub direction: String,
     }
 
@@ -3009,7 +2996,7 @@ pub mod workflow {
     //#region 🔖MediaContract
     /// 🤝 A connect-time negotiated wire contract between two `OsMediaPort`s — produced by
     /// `negotiate_media_contract` and stored on `OsWorkflowEdge` so later passes (`validate_workflow`,
-    /// merge reconciliation) can re-check it without re-resolving the resource registry. `kind_id`/`media_type`
+    /// merge reconciliation) can re-check it without re-resolving the artifact registry. `kind_id`/`media_type`
     /// describe the *accepted* (target) side — see `semio_framework_core::media_types_compatible`.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -3021,31 +3008,31 @@ pub mod workflow {
     }
 
     /// @emoji 🤝 Negotiates the wire contract for connecting `source_port` (a producer/output) to
-    /// `target_port` (a consumer/input): resolves each port's `OsResourceDescriptor` from the resource
+    /// `target_port` (a consumer/input): resolves each port's `OsArtifactDescriptor` from the resource
     /// registry, checks `media_types_compatible`, and picks a shared wire format. `Err` means the connect
     /// must be rejected outright (see the `s::plugin` connect handlers).
     pub fn negotiate_media_contract(source_port: &OsMediaPort, target_port: &OsMediaPort) -> Result<MediaContract, String> {
-        let source_descriptor = os_resource_descriptor(&source_port.resource_kind);
-        let target_descriptor = os_resource_descriptor(&target_port.resource_kind);
+        let source_descriptor = os_artifact_descriptor(&source_port.artifact_kind);
+        let target_descriptor = os_artifact_descriptor(&target_port.artifact_kind);
         let conversion = match media_types_compatible(&source_descriptor.media_type, &target_descriptor.media_type) {
             MediaCompat::Direct => None,
             MediaCompat::Convert { from, to } => Some((from, to)),
             MediaCompat::Reject => {
                 return Err(format!(
                     "cannot connect `{}` ({:?}/{:?}) to `{}` ({:?}/{:?}): incompatible media types",
-                    source_port.resource_kind, source_descriptor.media_type.class, source_descriptor.media_type.form, target_port.resource_kind, target_descriptor.media_type.class, target_descriptor.media_type.form
+                    source_port.artifact_kind, source_descriptor.media_type.class, source_descriptor.media_type.form, target_port.artifact_kind, target_descriptor.media_type.class, target_descriptor.media_type.form
                 ));
             }
         };
         let wire = negotiate_wire_format(&source_descriptor, &target_descriptor)
-            .ok_or_else(|| format!("cannot connect `{}` to `{}`: no shared wire format", source_port.resource_kind, target_port.resource_kind))?;
+            .ok_or_else(|| format!("cannot connect `{}` to `{}`: no shared wire format", source_port.artifact_kind, target_port.artifact_kind))?;
         Ok(MediaContract { kind_id: target_descriptor.kind.clone(), media_type: target_descriptor.media_type, wire, conversion })
     }
 
     /// 🔀 Prefers a shared `Document{schema}` wire (structured payloads round-trip losslessly) over a shared
     /// `Binary{format}` wire (the first common `OsMediaFormat` between the two descriptors' export/import
     /// lists) — see `MediaWireFormat`.
-    fn negotiate_wire_format(source: &OsResourceDescriptor, target: &OsResourceDescriptor) -> Option<MediaWireFormat> {
+    fn negotiate_wire_format(source: &OsArtifactDescriptor, target: &OsArtifactDescriptor) -> Option<MediaWireFormat> {
         if !source.schema.is_empty() && source.schema == target.schema {
             return Some(MediaWireFormat::Document { schema: source.schema.clone() });
         }
@@ -3053,7 +3040,7 @@ pub mod workflow {
     }
 
     /// 🧪 Placeholder contract for test/fixture edges built without a real port-negotiation context — mirrors
-    /// `registry::os_resource_descriptor`'s unregistered-kind fallback (`Data`/`Value`, schema pinned to
+    /// `registry::os_artifact_descriptor`'s unregistered-kind fallback (`Data`/`Value`, schema pinned to
     /// `kind_id` itself).
     pub fn placeholder_media_contract(kind_id: &str) -> MediaContract {
         MediaContract { kind_id: kind_id.into(), media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, wire: MediaWireFormat::Document { schema: kind_id.into() }, conversion: None }
@@ -3330,7 +3317,7 @@ pub mod workflow {
     fn sync_workflow_node_parameter_ports(node: &OsWorkflowNode, bindings: &[OsParameterFieldBinding]) -> OsWorkflowNode {
         let instance_bindings: Vec<_> = bindings.iter().filter(|binding| binding.instance_id == node.instance_id).collect();
         let base_inputs: Vec<_> = node.inputs.iter().filter(|port| !is_parameter_port_id(&port.id)).cloned().collect();
-        let parameter_inputs: Vec<_> = instance_bindings.iter().map(|binding| OsMediaPort { id: parameter_port_id(&node.instance_id, &binding.parameter_id), resource_kind: "parameter.value".into(), direction: "in".into() }).collect();
+        let parameter_inputs: Vec<_> = instance_bindings.iter().map(|binding| OsMediaPort { id: parameter_port_id(&node.instance_id, &binding.parameter_id), artifact_kind: "parameter.value".into(), direction: "in".into() }).collect();
         let inputs: Vec<_> = base_inputs.into_iter().chain(parameter_inputs).collect();
         let port_count = inputs.len().max(node.outputs.len()).max(1);
         OsWorkflowNode { inputs, height: 56.0 + port_count as f64 * 18.0, ..node.clone() }
@@ -3355,7 +3342,7 @@ pub mod workflow {
 
         //#region ContractConsistency
         // 🛡️ Defense in depth for merged/imported studio documents: re-negotiate each edge's endpoints
-        // against the *current* resource registry and flag any edge whose stored `contract` no longer
+        // against the *current* artifact registry and flag any edge whose stored `contract` no longer
         // matches — a concurrent re-typing or a stale import can leave a wire's contract behind.
         let node_by_id: HashMap<&str, &OsWorkflowNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
         for edge in &graph.edges {
@@ -3553,13 +3540,13 @@ pub mod workflow {
                     "height": node.height,
                     "inputs": node.inputs.iter().map(|port| json!({
                         "id": port.id,
-                        "resourceKind": port.resource_kind,
+                        "resourceKind": port.artifact_kind,
                         "direction": port.direction,
                         "label": port.id,
                     })).collect::<Vec<_>>(),
                     "outputs": node.outputs.iter().map(|port| json!({
                         "id": port.id,
-                        "resourceKind": port.resource_kind,
+                        "resourceKind": port.artifact_kind,
                         "direction": port.direction,
                         "label": port.id,
                     })).collect::<Vec<_>>(),
@@ -3628,10 +3615,10 @@ pub mod workflow {
         pub outputs: Vec<OsWorkflowChannelSpec>,
     }
 
-    fn os_workflow_channel_spec(port_id: &str, resource_kind: &str, label: &str) -> OsWorkflowChannelSpec {
+    fn os_workflow_channel_spec(port_id: &str, artifact_kind: &str, label: &str) -> OsWorkflowChannelSpec {
         let code = port_id.chars().next().map(|ch| ch.to_uppercase().collect::<String>()).unwrap_or_else(|| "P".into());
         let abbreviation = if label.chars().count() <= 3 { label.into() } else { label.chars().take(3).collect() };
-        OsWorkflowChannelSpec { name: port_id.into(), code, abbreviation, full_name: label.into(), operators: vec![resource_kind.into()] }
+        OsWorkflowChannelSpec { name: port_id.into(), code, abbreviation, full_name: label.into(), operators: vec![artifact_kind.into()] }
     }
 
     fn parameter_label(parameter: &OsParameter) -> &str {
@@ -3670,7 +3657,7 @@ pub mod workflow {
                         .map(|port| {
                             let parameter_id = parameter_id_from_port_id(&port.id);
                             let label = parameter_id.as_ref().and_then(|id| parameter_by_id.get(id)).map(|parameter| parameter_label(parameter).to_string()).or_else(|| media_port_spec_id(&port.id)).unwrap_or_else(|| port.id.clone());
-                            os_workflow_channel_spec(&port.id, &port.resource_kind, &label)
+                            os_workflow_channel_spec(&port.id, &port.artifact_kind, &label)
                         })
                         .collect(),
                     outputs: node
@@ -3678,7 +3665,7 @@ pub mod workflow {
                         .iter()
                         .map(|port| {
                             let label = media_port_spec_id(&port.id).unwrap_or_else(|| port.id.clone());
-                            os_workflow_channel_spec(&port.id, &port.resource_kind, &label)
+                            os_workflow_channel_spec(&port.id, &port.artifact_kind, &label)
                         })
                         .collect(),
                 }
@@ -3760,13 +3747,13 @@ pub mod workflow {
     }
     //#endregion 🔖WorkflowPlanner
 
-    //#region 🔖ProgramRegistry
+    //#region 🔖WorkflowInstanceRegistry
     #[derive(Clone, Debug, Default)]
-    pub struct ProgramRegistry {
+    pub struct WorkflowInstanceRegistry {
         instances: HashMap<String, OsAppInstance>,
     }
 
-    impl ProgramRegistry {
+    impl WorkflowInstanceRegistry {
         pub fn materialize_instance(&mut self, instance: OsAppInstance) {
             self.instances.insert(instance.id.clone(), instance);
         }
@@ -3775,7 +3762,7 @@ pub mod workflow {
             self.instances.get(instance_id)
         }
     }
-    //#endregion 🔖ProgramRegistry
+    //#endregion 🔖WorkflowInstanceRegistry
 
     //#region 🔖MediaExport
     /// 🗂️ Defined in `semio_framework_core` (below this crate in the dependency graph) so `MeshExporter`/`MeshImporter` there can name it too; re-exported here verbatim.
@@ -3783,9 +3770,9 @@ pub mod workflow {
 
     //#region 🔖MediaCapability
     pub use crate::registry::os_resource_media_capability;
-    /// 🗂️ Defined in `semio_framework_core` alongside `OsMediaFormat`/`ResourceKindSpec`; re-exported here
+    /// 🗂️ Defined in `semio_framework_core` alongside `OsMediaFormat`/`ArtifactKindSpec`; re-exported here
     /// verbatim. `os_resource_media_capability` is a registry lookup (see `crate::registry`) driven by each
-    /// app's declared `ResourceKindSpec.media_capability` instead of a hardcoded per-app match.
+    /// app's declared `ArtifactKindSpec.media_capability` instead of a hardcoded per-app match.
     pub use semio_framework_core::OsMediaCapability;
     //#endregion 🔖MediaCapability
 
@@ -3804,13 +3791,13 @@ pub mod workflow {
         HANDLERS.get_or_init(|| Mutex::new(HashMap::new()))
     }
 
-    fn os_media_export_key(resource_kind: &str, format: &OsMediaFormat) -> String {
-        format!("{}:{}", resource_kind, format.as_str())
+    fn os_media_export_key(artifact_kind: &str, format: &OsMediaFormat) -> String {
+        format!("{}:{}", artifact_kind, format.as_str())
     }
 
     /// @emoji 💾 Registers an export handler for a media resource kind and format.
-    pub fn register_os_media_export_handler(resource_kind: &str, format: OsMediaFormat, handler: impl Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync + 'static) {
-        export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(os_media_export_key(resource_kind, &format), Box::new(handler));
+    pub fn register_os_media_export_handler(artifact_kind: &str, format: OsMediaFormat, handler: impl Fn(&Value) -> Result<OsMediaExportResult, String> + Send + Sync + 'static) {
+        export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(os_media_export_key(artifact_kind, &format), Box::new(handler));
     }
 
     /// 📐 Required export formats per dimension; 3D/5D mesh-only apps stop at OBJ/GLB/STL/DWG, B-Rep apps (`os_resource_media_capability`) additionally require STEP.
@@ -3829,7 +3816,7 @@ pub mod workflow {
     pub fn assert_os_media_export_coverage() -> Result<(), String> {
         let handlers = export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let mut missing = Vec::new();
-        for descriptor in crate::registry::list_os_resource_descriptors() {
+        for descriptor in crate::registry::list_os_artifact_descriptors() {
             let capability = os_resource_media_capability(&descriptor.kind);
             for format in required_os_media_export_formats(&descriptor.dimension, capability) {
                 if !handlers.contains_key(&os_media_export_key(&descriptor.kind, &format)) {
@@ -3862,8 +3849,8 @@ pub mod workflow {
     }
 
     /// @emoji 📥 Registers an import handler for a media resource kind and format; the handler turns raw bytes into a complete source document.
-    pub fn register_os_media_import_handler(resource_kind: &str, format: OsMediaFormat, handler: impl Fn(&[u8]) -> Result<Value, String> + Send + Sync + 'static) {
-        import_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(os_media_export_key(resource_kind, &format), Box::new(handler));
+    pub fn register_os_media_import_handler(artifact_kind: &str, format: OsMediaFormat, handler: impl Fn(&[u8]) -> Result<Value, String> + Send + Sync + 'static) {
+        import_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(os_media_export_key(artifact_kind, &format), Box::new(handler));
     }
 
     /// @emoji 📥 Formats every resource kind of the given dimension must accept for import; 2D stays DWG-only, 3D/5D mirrors `required_os_media_export_formats`.
@@ -3882,7 +3869,7 @@ pub mod workflow {
     pub fn assert_os_media_import_coverage() -> Result<(), String> {
         let handlers = import_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let mut missing = Vec::new();
-        for descriptor in crate::registry::list_os_resource_descriptors() {
+        for descriptor in crate::registry::list_os_artifact_descriptors() {
             let capability = os_resource_media_capability(&descriptor.kind);
             for format in required_os_media_import_formats(&descriptor.dimension, capability) {
                 if !handlers.contains_key(&os_media_export_key(&descriptor.kind, &format)) {
@@ -4095,7 +4082,7 @@ pub mod workflow {
                         has_children: false,
                         icon: Some("plug".into()),
                         navigate_uri: None,
-                        descriptor_values: HashMap::from([("binding".into(), spec.resource_kind.clone())]),
+                        descriptor_values: HashMap::from([("binding".into(), spec.artifact_kind.clone())]),
                     });
                 }
             }
@@ -4132,7 +4119,7 @@ pub mod workflow {
                     )]),
                 });
             }
-            let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
+            let descriptor = crate::registry::os_artifact_descriptor(&instance.yields);
             for format in required_os_media_import_formats(&descriptor.dimension, os_resource_media_capability(&descriptor.kind)) {
                 let ext = format.as_str();
                 rows.push(OsWorkflowVfsNodeRecord {
@@ -4150,7 +4137,7 @@ pub mod workflow {
             return rows;
         }
         if parent_id == os_workflow_vfs_outputs_folder_id(&instance_id) {
-            let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
+            let descriptor = crate::registry::os_artifact_descriptor(&instance.yields);
             let formats = required_os_media_export_formats(&descriptor.dimension, os_resource_media_capability(&descriptor.kind));
             let mut rows = Vec::new();
             if let Some(registration) = registration.as_ref() {
@@ -4166,7 +4153,7 @@ pub mod workflow {
                             has_children: false,
                             icon: Some(ext.into()),
                             navigate_uri: Some(format!("os://export/{}/{}/{}", instance.id, spec.id, format.as_str())),
-                            descriptor_values: HashMap::from([("binding".into(), spec.resource_kind.clone()), ("format".into(), format.as_str().into())]),
+                            descriptor_values: HashMap::from([("binding".into(), spec.artifact_kind.clone()), ("format".into(), format.as_str().into())]),
                         });
                     }
                 }
@@ -4195,7 +4182,7 @@ pub mod workflow {
 
         #[test]
         fn export_coverage_accepts_registered_handlers() {
-            for descriptor in crate::registry::list_os_resource_descriptors() {
+            for descriptor in crate::registry::list_os_artifact_descriptors() {
                 for format in required_os_media_export_formats(&descriptor.dimension, os_resource_media_capability(&descriptor.kind)) {
                     register_os_media_export_handler(&descriptor.kind, format, |_| Ok(OsMediaExportResult { data: "export".into(), mime_type: "application/octet-stream".into(), file_name: "export.bin".into(), encoding: None }));
                 }
@@ -4205,7 +4192,7 @@ pub mod workflow {
 
         #[test]
         fn import_coverage_accepts_registered_handlers() {
-            for descriptor in crate::registry::list_os_resource_descriptors() {
+            for descriptor in crate::registry::list_os_artifact_descriptors() {
                 for format in required_os_media_import_formats(&descriptor.dimension, os_resource_media_capability(&descriptor.kind)) {
                     register_os_media_import_handler(&descriptor.kind, format, |_| Ok(serde_json::json!({})));
                 }
@@ -4224,7 +4211,7 @@ pub mod workflow {
         #[test]
         fn mesh_dwg_registrar_round_trips_a_box() {
             use base64::Engine;
-            crate::media_export_raster::register_mesh_dwg_export_handler("3d.__dwg_test", "box", |_| Ok(semio_framework_plugin::mesh_from_kind("box")));
+            crate::media_export_raster::register_mesh_dwg_export_handler("3d.__dwg_test", "box", |_| Ok(semio_framework_program::mesh_from_kind("box")));
             let result = export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&os_media_export_key("3d.__dwg_test", &OsMediaFormat::Dwg)).expect("dwg handler registered")(&serde_json::json!({})).expect("export dwg");
             let bytes = base64::engine::general_purpose::STANDARD.decode(result.data).expect("decode base64");
             let drawing = semio_framework_core::dwg_from_bytes(&bytes).expect("dwg from bytes");
@@ -4234,7 +4221,7 @@ pub mod workflow {
         #[test]
         fn mesh_exporter_registrar_round_trips_a_box_through_glb() {
             use base64::Engine;
-            crate::media_export_raster::register_mesh_exporter("3d.__mesh_exporter_test", "box", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::GlbExporter));
+            crate::media_export_raster::register_mesh_exporter("3d.__mesh_exporter_test", "box", |_| Ok(semio_framework_program::mesh_from_kind("box")), Box::new(semio_framework_program::GlbExporter));
             let result =
                 export_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(&os_media_export_key("3d.__mesh_exporter_test", &OsMediaFormat::Glb)).expect("glb handler registered")(&serde_json::json!({})).expect("export glb");
             let bytes = base64::engine::general_purpose::STANDARD.decode(result.data).expect("decode base64");
@@ -4244,8 +4231,8 @@ pub mod workflow {
 
         #[test]
         fn mesh_importer_registrar_round_trips_a_box_through_obj() {
-            crate::media_export_raster::register_mesh_importer("3d.__mesh_importer_test", |mesh| Ok(serde_json::json!({ "vertexCount": mesh.vertex_count() })), Box::new(semio_framework_plugin::ObjImporter));
-            let obj_bytes = semio_framework_core::mesh_to_obj(&semio_framework_plugin::mesh_from_kind("box"), "box").into_bytes();
+            crate::media_export_raster::register_mesh_importer("3d.__mesh_importer_test", |mesh| Ok(serde_json::json!({ "vertexCount": mesh.vertex_count() })), Box::new(semio_framework_program::ObjImporter));
+            let obj_bytes = semio_framework_core::mesh_to_obj(&semio_framework_program::mesh_from_kind("box"), "box").into_bytes();
             let handlers = import_handlers().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             let handler = handlers.get(&os_media_export_key("3d.__mesh_importer_test", &OsMediaFormat::Obj)).expect("obj handler registered");
             let document = handler(&obj_bytes).expect("import obj");
@@ -4302,7 +4289,7 @@ pub mod workflow {
 
         #[test]
         fn vfs_inputs_folder_lists_a_dwg_import_row_for_2d_kinds() {
-            crate::registry::register_resource_descriptor(&semio_framework_core::ResourceKindSpec {
+            crate::registry::register_artifact_descriptor(&semio_framework_core::ArtifactKindSpec {
                 id: "2d.drawing".into(),
                 name: "2D Drawing".into(),
                 source_format: "draw.document".into(),
@@ -4348,8 +4335,8 @@ pub mod workflow {
                 y,
                 width: 160.0,
                 height: 72.0,
-                inputs: vec![OsMediaPort { id: format!("{instance_id}:in"), resource_kind: "2d.drawing".into(), direction: "in".into() }],
-                outputs: vec![OsMediaPort { id: format!("{instance_id}:out"), resource_kind: "2d.drawing".into(), direction: "out".into() }],
+                inputs: vec![OsMediaPort { id: format!("{instance_id}:in"), artifact_kind: "2d.drawing".into(), direction: "in".into() }],
+                outputs: vec![OsMediaPort { id: format!("{instance_id}:out"), artifact_kind: "2d.drawing".into(), direction: "out".into() }],
             }
         }
 
@@ -4501,22 +4488,22 @@ pub mod workflow {
 
 pub mod registry {
     // #region registry
-    //! 🗂️ Plugin manifest registry and OS program/resource catalog.
+    //! 🗂️ Plugin manifest registry and OS program/artifact catalog.
 
     use crate::instance::{media_port_id_for_spec, OsParameterFieldSpec};
-    use semio_framework_core::{AppDefinition, MediaClass, MediaForm, MediaType, ModeDefinition, OsMediaCapability, OsMediaFormat, PluginManifest, ProgramDefinition, ResourceKindSpec, WindowKindDefinition};
+    use semio_framework_core::{AppDefinition, MediaClass, MediaForm, MediaType, ModeDefinition, OsMediaCapability, OsMediaFormat, ProgramManifest, WorkflowDefinition, ArtifactKindSpec, WindowKindDefinition};
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
     use std::sync::{LazyLock, Mutex};
     use ui_wgpu::SurfaceKind;
 
-    pub type OsResourceKindId = String;
+    pub type OsArtifactKindId = String;
 
     //#region 🔖ResourceDescriptors
     #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct OsResourceDescriptor {
-        pub kind: OsResourceKindId,
+    pub struct OsArtifactDescriptor {
+        pub kind: OsArtifactKindId,
         pub name: String,
         pub source_format: String,
         pub component_kind: String,
@@ -4524,7 +4511,7 @@ pub mod registry {
         /// 🧬 The `MediaType` this resource kind negotiates on the workflow — see
         /// `semio_framework_core::media_types_compatible`.
         pub media_type: MediaType,
-        /// 🔌 Structured-payload schema id, mirrored from `ResourceKindSpec::schema` — see
+        /// 🔌 Structured-payload schema id, mirrored from `ArtifactKindSpec::schema` — see
         /// `crate::workflow::negotiate_media_contract`, which prefers a matching schema over a shared
         /// binary `OsMediaFormat`.
         pub schema: String,
@@ -4533,16 +4520,16 @@ pub mod registry {
     }
 
     /// 🗂️ One registered resource kind's full catalog entry — the descriptor plus the media capability
-    /// its exporters/importers target (kept alongside rather than in `OsResourceDescriptor` itself since
+    /// its exporters/importers target (kept alongside rather than in `OsArtifactDescriptor` itself since
     /// the descriptor is also the wire-facing presentation shape).
-    struct ResourceKindEntry {
-        descriptor: OsResourceDescriptor,
+    struct ArtifactKindEntry {
+        descriptor: OsArtifactDescriptor,
         media_capability: OsMediaCapability,
     }
 
-    fn resource_kind_entry_from_spec(spec: &ResourceKindSpec) -> ResourceKindEntry {
-        ResourceKindEntry {
-            descriptor: OsResourceDescriptor {
+    fn artifact_kind_entry_from_spec(spec: &ArtifactKindSpec) -> ArtifactKindEntry {
+        ArtifactKindEntry {
+            descriptor: OsArtifactDescriptor {
                 kind: spec.id.clone(),
                 name: spec.name.clone(),
                 source_format: spec.source_format.clone(),
@@ -4559,13 +4546,13 @@ pub mod registry {
 
     /// 🌱 `parameter.value` is not one app's document format — every app's parameter fields share it as
     /// their port resource kind (see `crate::instance::OsParameterFieldSpec`) — so it is seeded as a
-    /// framework-level builtin instead of declared via any single app's `AppBuilder::resource_kind(...)`.
-    fn seed_builtin_resource_kinds() -> HashMap<OsResourceKindId, ResourceKindEntry> {
+    /// framework-level builtin instead of declared via any single app's `AppBuilder::artifact_kind(...)`.
+    fn seed_builtin_artifact_kinds() -> HashMap<OsArtifactKindId, ArtifactKindEntry> {
         let mut registry = HashMap::new();
         registry.insert(
             "parameter.value".to_string(),
-            ResourceKindEntry {
-                descriptor: OsResourceDescriptor {
+            ArtifactKindEntry {
+                descriptor: OsArtifactDescriptor {
                     kind: "parameter.value".into(),
                     name: "Parameter".into(),
                     source_format: "parameter.value".into(),
@@ -4582,31 +4569,31 @@ pub mod registry {
         registry
     }
 
-    /// 🗂️ Manifest-driven OS resource catalog, populated at plugin registration time instead of hardcoding
+    /// 🗂️ Manifest-driven OS artifact catalog, populated at program registration time instead of hardcoding
     /// the app roster — mirrors the `crate::workflow::export_handlers()` runtime-registry pattern.
-    static RESOURCE_KIND_REGISTRY: LazyLock<Mutex<HashMap<OsResourceKindId, ResourceKindEntry>>> = LazyLock::new(|| Mutex::new(seed_builtin_resource_kinds()));
+    static RESOURCE_KIND_REGISTRY: LazyLock<Mutex<HashMap<OsArtifactKindId, ArtifactKindEntry>>> = LazyLock::new(|| Mutex::new(seed_builtin_artifact_kinds()));
 
-    /// @emoji 📚 Registers every `ResourceKindSpec` declared by `manifest`'s apps into the OS resource
-    /// catalog — call at plugin registration time (`PluginHost::load_plugin`/`hot_swap_plugin`).
-    pub fn register_resource_descriptors(manifest: &PluginManifest) {
+    /// @emoji 📚 Registers every `ArtifactKindSpec` declared by `manifest`'s apps into the OS resource
+    /// catalog — call at program registration time (`ProgramHost::load_program`/`hot_swap_program`).
+    pub fn register_artifact_descriptors(manifest: &ProgramManifest) {
         let mut registry = RESOURCE_KIND_REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         for app in &manifest.apps {
-            for spec in &app.resource_kinds {
-                registry.insert(spec.id.clone(), resource_kind_entry_from_spec(spec));
+            for spec in &app.artifact_kinds {
+                registry.insert(spec.id.clone(), artifact_kind_entry_from_spec(spec));
             }
         }
     }
 
     /// @emoji 🧪 Registers one resource kind directly, for tests/fixtures that don't build a full
-    /// `PluginManifest`.
-    pub fn register_resource_descriptor(spec: &ResourceKindSpec) {
-        RESOURCE_KIND_REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(spec.id.clone(), resource_kind_entry_from_spec(spec));
+    /// `ProgramManifest`.
+    pub fn register_artifact_descriptor(spec: &ArtifactKindSpec) {
+        RESOURCE_KIND_REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(spec.id.clone(), artifact_kind_entry_from_spec(spec));
     }
 
     /// @emoji 📚 Lists all registered OS resource descriptors, sorted by kind id for a stable snapshot.
-    pub fn list_os_resource_descriptors() -> Vec<OsResourceDescriptor> {
+    pub fn list_os_artifact_descriptors() -> Vec<OsArtifactDescriptor> {
         let registry = RESOURCE_KIND_REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        let mut descriptors: Vec<OsResourceDescriptor> = registry.values().map(|entry| entry.descriptor.clone()).collect();
+        let mut descriptors: Vec<OsArtifactDescriptor> = registry.values().map(|entry| entry.descriptor.clone()).collect();
         descriptors.sort_by(|left, right| left.kind.cmp(&right.kind));
         descriptors
     }
@@ -4614,8 +4601,8 @@ pub mod registry {
     /// @emoji 📚 Resolves presentation metadata for one resource kind. An unregistered kind falls back to a
     /// bare placeholder built from the kind id itself — dimension is declared by the app, never inferred
     /// from an id-prefix convention.
-    pub fn os_resource_descriptor(kind: &str) -> OsResourceDescriptor {
-        RESOURCE_KIND_REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(kind).map(|entry| entry.descriptor.clone()).unwrap_or_else(|| OsResourceDescriptor {
+    pub fn os_artifact_descriptor(kind: &str) -> OsArtifactDescriptor {
+        RESOURCE_KIND_REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(kind).map(|entry| entry.descriptor.clone()).unwrap_or_else(|| OsArtifactDescriptor {
             kind: kind.into(),
             name: kind.into(),
             source_format: kind.into(),
@@ -4646,7 +4633,7 @@ pub mod registry {
     pub struct OsPortSpec {
         pub id: String,
         pub label: String,
-        pub resource_kind: OsResourceKindId,
+        pub artifact_kind: OsArtifactKindId,
         #[serde(skip_serializing_if = "Option::is_none")]
         pub required: Option<bool>,
     }
@@ -4671,7 +4658,7 @@ pub mod registry {
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct OsProgramDefinition {
+    pub struct OsWorkflowDefinition {
         pub id: String,
         pub name: String,
         pub api_version: String,
@@ -4718,22 +4705,22 @@ pub mod registry {
         pub parameter_fields: Vec<OsParameterFieldSpec>,
     }
 
-    pub fn os_out_port(resource_kind: &str, id: &str, label: &str) -> OsPortSpec {
-        OsPortSpec { id: id.into(), label: label.into(), resource_kind: resource_kind.into(), required: None }
+    pub fn os_out_port(artifact_kind: &str, id: &str, label: &str) -> OsPortSpec {
+        OsPortSpec { id: id.into(), label: label.into(), artifact_kind: artifact_kind.into(), required: None }
     }
 
-    pub fn os_in_port(resource_kind: &str, id: &str, label: &str, required: bool) -> OsPortSpec {
-        OsPortSpec { id: id.into(), label: label.into(), resource_kind: resource_kind.into(), required: Some(required) }
+    pub fn os_in_port(artifact_kind: &str, id: &str, label: &str, required: bool) -> OsPortSpec {
+        OsPortSpec { id: id.into(), label: label.into(), artifact_kind: artifact_kind.into(), required: Some(required) }
     }
 
-    pub fn os_app_primary_output_kind(registration: &OsAppRegistration) -> OsResourceKindId {
-        registration.outputs.first().map(|port| port.resource_kind.clone()).unwrap_or_else(|| "graph.dag".into())
+    pub fn os_app_primary_output_kind(registration: &OsAppRegistration) -> OsArtifactKindId {
+        registration.outputs.first().map(|port| port.artifact_kind.clone()).unwrap_or_else(|| "graph.dag".into())
     }
 
-    pub fn os_baseline_resource(resource_kind: &str, source_format: &str, component_kind: &str) -> OsAppResourceSpec {
+    pub fn os_baseline_resource(artifact_kind: &str, source_format: &str, component_kind: &str) -> OsAppResourceSpec {
         OsAppResourceSpec {
             inputs: Vec::new(),
-            outputs: vec![os_out_port(resource_kind, "out", "Out")],
+            outputs: vec![os_out_port(artifact_kind, "out", "Out")],
             source_format: source_format.into(),
             component_kind: component_kind.into(),
             modes: vec![ModeDefinition { id: "edit".into(), label: "Edit".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }],
@@ -4742,11 +4729,11 @@ pub mod registry {
         }
     }
 
-    static BUILTIN_PROGRAMS: LazyLock<Mutex<Vec<OsProgramDefinition>>> = LazyLock::new(|| Mutex::new(Vec::new()));
-    static EXTENSION_PROGRAMS: LazyLock<Mutex<HashMap<String, OsProgramDefinition>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+    static BUILTIN_PROGRAMS: LazyLock<Mutex<Vec<OsWorkflowDefinition>>> = LazyLock::new(|| Mutex::new(Vec::new()));
+    static EXTENSION_PROGRAMS: LazyLock<Mutex<HashMap<String, OsWorkflowDefinition>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
     /// @emoji 📚 Registers a built-in os program prepended to list_os_programs.
-    pub fn register_os_builtin_program(program: OsProgramDefinition) {
+    pub fn register_os_builtin_program(program: OsWorkflowDefinition) {
         let mut registry = BUILTIN_PROGRAMS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if registry.iter().any(|entry| entry.id == program.id) {
             return;
@@ -4755,18 +4742,18 @@ pub mod registry {
     }
 
     /// @emoji 📚 Registers a fully materialized os program definition.
-    pub fn register_os_program_definition(program: OsProgramDefinition) {
+    pub fn register_os_program_definition(program: OsWorkflowDefinition) {
         EXTENSION_PROGRAMS.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(program.id.clone(), program);
     }
 
     /// @emoji 🧩 Merges a platform definition into the os program registry with port metadata.
-    pub fn merge_os_program_definition(program_id: &str, definition: &OsPlatformInput, resource_by_app_id: &HashMap<String, OsAppResourceSpec>) -> Result<(), String> {
-        let fallback_resource = resource_by_app_id.values().next().ok_or_else(|| format!("merge_os_program_definition requires resourceByAppId for {program_id}"))?.clone();
+    pub fn merge_os_program_definition(program_id: &str, definition: &OsPlatformInput, artifact_by_app_id: &HashMap<String, OsAppResourceSpec>) -> Result<(), String> {
+        let fallback_artifact = artifact_by_app_id.values().next().ok_or_else(|| format!("merge_os_program_definition requires resourceByAppId for {program_id}"))?.clone();
         let apps = definition
             .apps
             .iter()
             .map(|app| {
-                let resource = resource_by_app_id.get(&app.id).cloned().unwrap_or_else(|| fallback_resource.clone());
+                let resource = artifact_by_app_id.get(&app.id).cloned().unwrap_or_else(|| fallback_artifact.clone());
                 OsAppRegistration {
                     id: app.id.clone(),
                     label: app.label.clone(),
@@ -4782,11 +4769,11 @@ pub mod registry {
                 }
             })
             .collect();
-        register_os_program_definition(OsProgramDefinition { id: program_id.into(), name: definition.name.clone(), api_version: definition.api_version.clone(), apps });
+        register_os_program_definition(OsWorkflowDefinition { id: program_id.into(), name: definition.name.clone(), api_version: definition.api_version.clone(), apps });
         Ok(())
     }
 
-    /// @emoji 🌱 Seeds the extension registry from a resource map for tests and offline tooling.
+    /// @emoji 🌱 Seeds the extension registry from a artifact map for tests and offline tooling.
     pub fn seed_os_program_registry_from_resource_map(resource_by_program: &HashMap<String, HashMap<String, OsAppResourceSpec>>) {
         let mut registry = EXTENSION_PROGRAMS.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         for (program_id, resources) in resource_by_program {
@@ -4828,13 +4815,13 @@ pub mod registry {
         }
     }
 
-    pub fn list_os_programs() -> Vec<OsProgramDefinition> {
+    pub fn list_os_programs() -> Vec<OsWorkflowDefinition> {
         let builtins = BUILTIN_PROGRAMS.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
         let extensions = EXTENSION_PROGRAMS.lock().unwrap_or_else(std::sync::PoisonError::into_inner).values().cloned().collect::<Vec<_>>();
         builtins.into_iter().chain(extensions).collect()
     }
 
-    pub fn os_program_by_id(program_id: &str) -> Option<OsProgramDefinition> {
+    pub fn os_program_by_id(program_id: &str) -> Option<OsWorkflowDefinition> {
         list_os_programs().into_iter().find(|program| program.id == program_id)
     }
 
@@ -4891,60 +4878,60 @@ pub mod registry {
             dialogs: Vec::new(),
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
-            resource_kinds: Vec::new(),
+            artifact_kinds: Vec::new(),
             tutorials: Vec::new(),
         })
     }
 
     pub fn workflow_node_ports_for_registration(instance_id: &str, registration: &OsAppRegistration) -> (Vec<crate::workflow::OsMediaPort>, Vec<crate::workflow::OsMediaPort>) {
-        let inputs = registration.inputs.iter().map(|spec| crate::workflow::OsMediaPort { id: media_port_id_for_spec(instance_id, &spec.id, "in"), resource_kind: spec.resource_kind.clone(), direction: "in".into() }).collect();
-        let outputs = registration.outputs.iter().map(|spec| crate::workflow::OsMediaPort { id: media_port_id_for_spec(instance_id, &spec.id, "out"), resource_kind: spec.resource_kind.clone(), direction: "out".into() }).collect();
+        let inputs = registration.inputs.iter().map(|spec| crate::workflow::OsMediaPort { id: media_port_id_for_spec(instance_id, &spec.id, "in"), artifact_kind: spec.artifact_kind.clone(), direction: "in".into() }).collect();
+        let outputs = registration.outputs.iter().map(|spec| crate::workflow::OsMediaPort { id: media_port_id_for_spec(instance_id, &spec.id, "out"), artifact_kind: spec.artifact_kind.clone(), direction: "out".into() }).collect();
         (inputs, outputs)
     }
     //#endregion 🔖ProgramRegistry
 
-    //#region 🔖PluginRegistry
-    pub struct PluginRegistry {
+    //#region 🔖ProgramRegistry
+    pub struct ProgramRegistry {
         apps: HashMap<String, AppDefinition>,
-        programs: HashMap<String, ProgramDefinition>,
+        workflows: HashMap<String, WorkflowDefinition>,
     }
 
-    impl Default for PluginRegistry {
+    impl Default for ProgramRegistry {
         fn default() -> Self {
             Self::new()
         }
     }
 
-    impl PluginRegistry {
+    impl ProgramRegistry {
         pub fn new() -> Self {
-            Self { apps: HashMap::new(), programs: HashMap::new() }
+            Self { apps: HashMap::new(), workflows: HashMap::new() }
         }
 
         pub fn register_app(&mut self, app: AppDefinition) {
             self.apps.insert(app.id.clone(), app);
         }
 
-        pub fn register_program(&mut self, program: ProgramDefinition) {
-            self.programs.insert(program.program_id.clone(), program);
+        pub fn register_workflow(&mut self, workflow: WorkflowDefinition) {
+            self.workflows.insert(workflow.workflow_step_id.clone(), workflow);
         }
 
         pub fn find_app(&self, app_id: &str) -> Option<&AppDefinition> {
             self.apps.get(app_id)
         }
 
-        pub fn find_program(&self, program_id: &str) -> Option<&ProgramDefinition> {
-            self.programs.get(program_id)
+        pub fn find_workflow(&self, workflow_step_id: &str) -> Option<&WorkflowDefinition> {
+            self.workflows.get(workflow_step_id)
         }
 
         pub fn apps(&self) -> Vec<AppDefinition> {
             self.apps.values().cloned().collect()
         }
 
-        pub fn programs(&self) -> Vec<ProgramDefinition> {
-            self.programs.values().cloned().collect()
+        pub fn workflows(&self) -> Vec<WorkflowDefinition> {
+            self.workflows.values().cloned().collect()
         }
     }
-    //#endregion 🔖PluginRegistry
+    //#endregion 🔖ProgramRegistry
 
     //#region 🧪Tests
     #[cfg(test)]
@@ -4967,11 +4954,11 @@ pub mod registry {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub use backbone::{open_file_studio_backbone, open_folder_studio_backbone};
+pub use backbone::{open_file_space_backbone, open_folder_space_backbone};
 pub use host::{
-    apply_os_operation, create_empty_os_document, create_ephemeral_os_studio, create_os_studio, default_os_projection, delete_os_studio, import_os_studio_from_json, list_os_studio_catalog_entries, load_os_studio_document, materialize_os_projection, os_document_from_json,
-    os_document_to_envelope_json, os_document_to_json, seed_os_studio_catalog_if_empty, LoadedPlugin, OsBackbonePort, OsDiff, OsDocument, OsEnvelope, OsOperation, OsProjection, OsStore, OsStudioCatalogEntry, OsVcs, PluginHost, PluginHotSwapEvent, PluginSupervisorState,
-    OS_HOME_VFS_ROOT_ID, OS_STUDIO_BACKBONE_URI_PREFIX,
+    apply_os_operation, create_empty_os_document, create_ephemeral_os_space, create_os_space, default_os_projection, delete_os_space, export_os_space_pack, import_os_space_from_json, list_os_space_catalog_entries, load_os_space_document, materialize_os_projection, os_document_from_json,
+    os_document_to_json, seed_os_space_catalog_if_empty, LoadedProgram, OsBackbonePort, OsDiff, OsDocument, OsEnvelope, OsOperation, OsProjection, OsStore, OsSpaceCatalogEntry, OsVcs, ProgramHost, ProgramHotSwapEvent, ProgramSupervisorState,
+    OS_HOME_VFS_ROOT_ID, OS_SPACE_BACKBONE_URI_PREFIX,
 };
 pub use instance::{
     apply_parameter_values_to_projection, create_default_os_parameter, create_os_document_id, create_os_id, is_parameter_port_id, materialize_os_app_instance_document_json, media_port_id_for_spec, media_port_spec_id, os_fixture_json,
@@ -4989,12 +4976,12 @@ pub use workflow::{
     os_workflow_vfs_import_id, os_workflow_vfs_instance_folder_id, os_workflow_vfs_instance_id, os_workflow_vfs_schema, os_workflow_vfs_source_id, os_media_neuron_kind_for_node, os_resource_media_capability,
     placeholder_media_contract, register_os_media_export_handler, register_os_media_import_handler, required_os_media_export_formats, required_os_media_import_formats, sync_workflow_parameter_ports, validate_workflow, MediaContract,
     WorkflowPosition, WorkflowValidation, OsMediaCapability, OsMediaExportResult, OsWorkflowOperatorInfo, OsMediaFormat, OsWorkflow, OsWorkflowCamera, OsWorkflowEdge, OsWorkflowNode, OsWorkflowVfsNodeRecord, OsWorkflowVfsSchema,
-    OsWorkflowNodeGraphPayload, OsMediaPort, ProgramRegistry, OS_MEDIA_FLOW_MODULE_ID, OS_WORKFLOW_SCHEMA, OS_WORKFLOW_VFS_ROOT_ID, OS_STUDIO_SCHEMA,
+    OsWorkflowNodeGraphPayload, OsMediaPort, WorkflowInstanceRegistry, OS_MEDIA_FLOW_MODULE_ID, OS_WORKFLOW_SCHEMA, OS_WORKFLOW_VFS_ROOT_ID, OS_SPACE_SCHEMA,
 };
 pub use registry::{
-    list_os_programs, list_os_resource_descriptors, merge_os_program_definition, os_app_primary_output_kind, os_app_registration, os_baseline_resource, os_in_port, os_out_port, os_program_by_id, os_resource_descriptor, register_os_builtin_program,
-    register_os_program_definition, register_resource_descriptor, register_resource_descriptors, resolve_os_app_definition, resources_compatible, seed_os_program_registry_from_resource_map, OsAppRegistration, OsAppResourceSpec, OsPlatformAppInput,
-    OsPlatformInput, OsPortSpec, OsProgramDefinition, OsResourceDescriptor, OsResourceKindId, PluginRegistry,
+    list_os_programs, list_os_artifact_descriptors, merge_os_program_definition, os_app_primary_output_kind, os_app_registration, os_baseline_resource, os_in_port, os_out_port, os_program_by_id, os_artifact_descriptor, register_os_builtin_program,
+    register_os_program_definition, register_artifact_descriptor, register_artifact_descriptors, resolve_os_app_definition, resources_compatible, seed_os_program_registry_from_resource_map, OsAppRegistration, OsAppResourceSpec, OsPlatformAppInput,
+    OsPlatformInput, OsPortSpec, OsWorkflowDefinition, OsArtifactDescriptor, OsArtifactKindId, ProgramRegistry,
 };
 pub use semio_framework_core::*;
 pub use ui_wgpu::*;

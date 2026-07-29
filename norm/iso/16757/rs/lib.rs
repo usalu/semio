@@ -2439,7 +2439,7 @@ mod tests {
     }
 
     #[test]
-    // 🪲 Blocked on the same confirmed upstream `pack` crate bug as `architect/program/rs/lib.rs`'s
+    // 🪲 Blocked on the same confirmed upstream `pack` crate bug as `architect/spine/rs/lib.rs`'s
     // `sample_program_dsl_pack_equivalence` (see its comment there): `pack::value`'s self-describing
     // `TableSoA` decoder (`decode_table_soa`, `pack/value/rs/lib.rs`) has no `RecordSpec` for a
     // `#[dsl(table)]` row's nested non-primitive `Record` columns, so it can't backfill an `Option<T>`

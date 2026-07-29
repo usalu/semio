@@ -21,7 +21,7 @@ struct GraphPortRecord {
     #[serde(rename = "fullName", default)]
     full_name: Option<String>,
     #[serde(rename = "resourceKind", default)]
-    resource_kind: Option<String>,
+    artifact_kind: Option<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize)]
@@ -107,8 +107,8 @@ fn port_to_io(port: &GraphPortRecord) -> IoPortSpec {
     if let Some(full) = &port.full_name {
         spec.full_name = full.clone();
     }
-    if let Some(kind) = &port.resource_kind {
-        spec.resource_kind = Some(kind.clone());
+    if let Some(kind) = &port.artifact_kind {
+        spec.artifact_kind = Some(kind.clone());
     }
     spec
 }
@@ -716,14 +716,14 @@ mod tests {
 
     #[test]
     fn port_to_io_copies_optional_metadata() {
-        let port = GraphPortRecord { id: "p1".into(), label: Some("Speed".into()), code: Some("SPD".into()), abbreviation: Some("Sp".into()), full_name: Some("Speed Value".into()), resource_kind: Some("number".into()) };
+        let port = GraphPortRecord { id: "p1".into(), label: Some("Speed".into()), code: Some("SPD".into()), abbreviation: Some("Sp".into()), full_name: Some("Speed Value".into()), artifact_kind: Some("number".into()) };
         let spec = port_to_io(&port);
         assert_eq!(spec.id, "p1");
         assert_eq!(spec.label, "Speed");
         assert_eq!(spec.code, "SPD");
         assert_eq!(spec.abbreviation, "Sp");
         assert_eq!(spec.full_name, "Speed Value");
-        assert_eq!(spec.resource_kind.as_deref(), Some("number"));
+        assert_eq!(spec.artifact_kind.as_deref(), Some("number"));
     }
 
     #[test]
@@ -731,7 +731,7 @@ mod tests {
         let port = GraphPortRecord { id: "p2".into(), ..Default::default() };
         let spec = port_to_io(&port);
         assert_eq!(spec.id, "p2");
-        assert!(spec.resource_kind.is_none());
+        assert!(spec.artifact_kind.is_none());
     }
     //#endregion 🔖PortHelpers
 

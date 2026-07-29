@@ -1,17 +1,17 @@
 // #region 🧲Header
 // 💻 .storybook/framework/os/index.tsx
-// Specs: Boot `FrameworkOsShell` inside Storybook's own React tree, filtered to one plugin from the generated registry.
-// Summary: Mirrors `bootFrameworkOs` (`framework/renderer/react/index.tsx`) minus its `createRoot` call — Storybook already owns the tree, so this renders the shell directly and lets decorator/story unmount handle cleanup. Serves prebuilt plugin WASM from `/plugin-modules` (aliased + static-dir'd by the `framework/os` scope in `.storybook/scopes.ts`) and never triggers a cargo build: a missing artifact renders an instruction panel instead of failing silently.
+// Specs: Boot `FrameworkOsShell` inside Storybook's own React tree, filtered to one program from the generated registry.
+// Summary: Mirrors `bootFrameworkOs` (`framework/renderer/react/index.tsx`) minus its `createRoot` call — Storybook already owns the tree, so this renders the shell directly and lets decorator/story unmount handle cleanup. Serves prebuilt program WASM from `/program-modules` (aliased + static-dir'd by the `framework/os` scope in `.storybook/scopes.ts`) and never triggers a cargo build: a missing artifact renders an instruction panel instead of failing silently.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
 import { useEffect, useMemo, useState } from "react";
 import { FrameworkOsShell, resolveShellLocks, type FrameworkOsLocks } from "../../../framework/renderer/react/index.tsx";
-import { PLUGIN_BUILD_TARGETS, pluginModuleUrl, type PluginBuildTarget } from "../../../framework/plugin/registry/generated/plugins.ts";
+import { PROGRAM_BUILD_TARGETS, programModuleUrl, type ProgramBuildTarget } from "../../../framework/program/registry/generated/programs.ts";
 import { bootstrapElementsSurfaceChromeDocument, readStoredUiChromeAppearance } from "@semio-tech/ui-react";
 
-export { PLUGIN_BUILD_TARGETS };
-export type { PluginBuildTarget };
+export { PROGRAM_BUILD_TARGETS };
+export type { ProgramBuildTarget };
 
 // #region 🔖ArtifactProbe
 /** @emoji 🔍 HEAD-probes a plugin's module URL; `undefined` while probing, then true/false. Never blocks on a cargo build — a missing artifact just renders an instruction panel. */
@@ -33,23 +33,23 @@ function usePluginArtifactAvailable(moduleUrl: string): boolean | undefined {
 
 // #region 🔖OsBootHost
 export type OsBootHostProps = {
-  /** Registry `pluginId`, e.g. `"s"`, `"puzzle"`, `"gis"`. Also used as the shell's `pluginFilter`. */
+  /** Registry `programId`, e.g. `"s"`, `"puzzle"`, `"gis"`. Also used as the shell's `pluginFilter`. */
   readonly plugin: string;
   readonly appId?: string;
   readonly locks?: FrameworkOsLocks;
 };
 
-/** @emoji 🖥️ One entry from `PLUGIN_BUILD_TARGETS` resolved to its dev-build module URL, mirroring `framework/product/os/dev/js/index.ts`. */
-function resolveTargetPlugin(pluginId: string): PluginBuildTarget | undefined {
-  return PLUGIN_BUILD_TARGETS.find((t) => t.pluginId === pluginId);
+/** @emoji 🖥️ One entry from `PROGRAM_BUILD_TARGETS` resolved to its dev-build module URL, mirroring `framework/product/os/dev/js/index.ts`. */
+function resolveTargetPlugin(programId: string): ProgramBuildTarget | undefined {
+  return PROGRAM_BUILD_TARGETS.find((t) => t.programId === programId);
 }
 
-/** @emoji 🖥️ Boots the real `FrameworkOsShell` filtered to one plugin — the app-boot story mechanism
- * "filters for starting apps" refers to. Keyed by `plugin` so switching the Storybook `plugin` control
- * fully remounts the shell (plugin runtimes are module-singletons and must not be reused across boots). */
-export function OsBootHost({ plugin, appId, locks }: OsBootHostProps) {
+/** @emoji 🖥️ Boots the real `FrameworkOsShell` filtered to one program — the app-boot story mechanism
+ * "filters for starting apps" refers to. Keyed by `program` so switching the Storybook `program` control
+ * fully remounts the shell (program runtimes are module-singletons and must not be reused across boots). */
+export function OsBootHost({ program, appId, locks }: OsBootHostProps) {
   const target = resolveTargetPlugin(plugin);
-  const moduleUrl = target ? pluginModuleUrl(target.pluginId, target.wasmOut) : undefined;
+  const moduleUrl = target ? programModuleUrl(target.programId, target.wasmOut) : undefined;
   const available = usePluginArtifactAvailable(moduleUrl ?? "");
   const resolvedLocks = useMemo(() => resolveShellLocks(locks), [locks]);
 
@@ -60,27 +60,27 @@ export function OsBootHost({ plugin, appId, locks }: OsBootHostProps) {
   if (!target) {
     return (
       <div className="p-4 text-sm text-red-600">
-        unknown plugin {JSON.stringify(plugin)} — not in `framework/plugin/registry/generated/plugins.ts`
+        unknown program {JSON.stringify(plugin)} — not in `framework/program/registry/generated/programs.ts`
       </div>
     );
   }
   if (available === undefined) {
-    return <div className="p-4 text-sm opacity-60">probing {target.pluginId} plugin artifact…</div>;
+    return <div className="p-4 text-sm opacity-60">probing {target.programId} program artifact…</div>;
   }
   if (available === false) {
     return (
       <div className="p-4 text-sm">
-        <p className="font-medium text-amber-600">plugin artifact missing: {target.pluginId}</p>
+        <p className="font-medium text-amber-600">plugin artifact missing: {target.programId}</p>
         <p className="mt-1 opacity-80">
-          {moduleUrl} returned a non-OK response. Build it once with <code>bun nx run {target.pluginId}:build-wasm</code> (or the matching wasm target for{" "}
+          {moduleUrl} returned a non-OK response. Build it once with <code>bun nx run {target.programId}:build-wasm</code> (or the matching wasm target for{" "}
           <code>{target.cratePath}</code>) — this story never triggers a cargo build itself.
         </p>
       </div>
     );
   }
   return (
-    <div key={`${target.pluginId}:${appId ?? ""}`} className="h-full w-full">
-      <FrameworkOsShell pluginFilter={target.pluginId} plugins={[{ pluginId: target.pluginId, moduleUrl: moduleUrl! }]} appId={appId} locks={resolvedLocks} />
+    <div key={`${target.programId}:${appId ?? ""}`} className="h-full w-full">
+      <FrameworkOsShell pluginFilter={target.programId} plugins={[{ programId: target.programId, moduleUrl: moduleUrl! }]} appId={appId} locks={resolvedLocks} />
     </div>
   );
 }
@@ -88,7 +88,7 @@ export function OsBootHost({ plugin, appId, locks }: OsBootHostProps) {
 
 // #region 🔖WgpuBootHost
 export type WgpuBootHostProps = {
-  /** Registry `pluginId` passed through to the wgpu renderer as its `pluginFilter`. */
+  /** Registry `programId` passed through to the wgpu renderer as its `pluginFilter`. */
   readonly plugin: string;
 };
 
@@ -115,10 +115,10 @@ function navigatorGpuUnavailableReason(): string | undefined {
   return undefined;
 }
 
-/** @emoji 🧊 Boots the real `@semio-tech/framework-renderer-wgpu` raw-wgpu host for one registry plugin,
+/** @emoji 🧊 Boots the real `@semio-tech/framework-renderer-wgpu` raw-wgpu host for one registry program,
  * with a graceful fallback when WebGPU itself is unavailable (headless CI Chromium without `--enable-unsafe-webgpu`,
- * Safari/Firefox, …) and when the plugin has no prebuilt artifact — mirrors {@link OsBootHost}'s artifact probe. */
-export function WgpuBootHost({ plugin }: WgpuBootHostProps) {
+ * Safari/Firefox, …) and when the program has no prebuilt artifact — mirrors {@link OsBootHost}'s artifact probe. */
+export function WgpuBootHost({ program }: WgpuBootHostProps) {
   const target = resolveTargetPlugin(plugin);
   const gpuUnavailableReason = navigatorGpuUnavailableReason();
   const [state, setState] = useState<WgpuBootState>({ kind: "booting" });
@@ -129,14 +129,14 @@ export function WgpuBootHost({ plugin }: WgpuBootHostProps) {
       return;
     }
     if (!target) {
-      setState({ kind: "error", message: `unknown plugin ${JSON.stringify(plugin)} — not in \`framework/plugin/registry/generated/plugins.ts\`` });
+      setState({ kind: "error", message: `unknown program ${JSON.stringify(plugin)} — not in \`framework/program/registry/generated/programs.ts\`` });
       return;
     }
     let cancelled = false;
     let dispose: (() => void) | undefined;
     setState({ kind: "booting" });
     (async () => {
-      const moduleUrl = pluginModuleUrl(target.pluginId, target.wasmOut);
+      const moduleUrl = programModuleUrl(target.programId, target.wasmOut);
       const artifactRes = await fetch(moduleUrl, { method: "HEAD" }).catch(() => undefined);
       if (cancelled) return;
       if (!artifactRes?.ok) {
@@ -145,7 +145,7 @@ export function WgpuBootHost({ plugin }: WgpuBootHostProps) {
       }
       const [{ bootFrameworkOsWgpu }, rendererModuleUrl] = await Promise.all([import("@semio-tech/framework-renderer-wgpu"), resolveWgpuRendererModuleUrl()]);
       if (cancelled) return;
-      dispose = await bootFrameworkOsWgpu({ plugin: target.pluginId, plugins: [{ pluginId: target.pluginId, moduleUrl }], rendererModuleUrl });
+      dispose = await bootFrameworkOsWgpu({ plugin: target.programId, plugins: [{ programId: target.programId, moduleUrl }], rendererModuleUrl });
       if (cancelled) {
         dispose();
         return;
@@ -158,7 +158,7 @@ export function WgpuBootHost({ plugin }: WgpuBootHostProps) {
       cancelled = true;
       dispose?.();
     };
-  }, [plugin, target?.pluginId, gpuUnavailableReason]);
+  }, [plugin, target?.programId, gpuUnavailableReason]);
 
   if (state.kind === "unavailable") {
     return <div className="p-4 text-sm opacity-80">WebGPU unavailable: {state.reason}</div>;

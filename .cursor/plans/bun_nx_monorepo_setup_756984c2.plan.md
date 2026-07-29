@@ -83,7 +83,7 @@ Coverage matrix:
 - Missing — Go modules without `package.json`: `repo/mcp`, `repo/cursor`, `repo/copilot`, `repo/codex`, `repo/claude`, `repo/kiro`, `repo/go`, `coda/blnbo/go`, `coda/programming/go` (add `project.json` invoking `go build`/`go test`).
 - Missing — .NET projects without `package.json`: `compose/net/Compose.Tests`, `compose/net/Compose.Benchmark`, `compose/gh/Compose.Grasshopper.Tests`, `compose/3dm/Compose.Rhino.Tests` (add `project.json` invoking `dotnet build/test`).
 
-All targets implement via `nx:run-commands` (no third-party Nx plugin churn). Keep `@nxlv/python` for `compose/py` + `compose/engine` since it already provides `update`/`lock` executors.
+All targets implement via `nx:run-commands` (no third-party Nx program churn). Keep `@nxlv/python` for `compose/py` + `compose/engine` since it already provides `update`/`lock` executors.
 
 ## 4. Root `workspace` project (orchestration)
 

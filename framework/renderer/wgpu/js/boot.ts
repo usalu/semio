@@ -1,8 +1,8 @@
 // #region 🧲Header
-/** @emoji 🧊 Trunk boot glue — loads wasm plugins and starts the wgpu renderer. */
+/** @emoji 🧊 Trunk boot glue — loads wasm programs and starts the wgpu renderer. */
 // #endregion 🧲Header
 
-import { parseInvocationResponse, type PluginRegistryEntry } from "@semio-tech/framework-core";
+import { parseInvocationResponse, type ProgramRegistryEntry } from "@semio-tech/framework-core";
 import { resolvePlaygroundBoot } from "@semio-tech/framework-core";
 import { PLAYGROUND_SESSION } from "../../../product/os/dev/generated/session.ts";
 
@@ -16,7 +16,7 @@ await new Promise<void>((resolve) => {
 
 //#region PluginTypes
 type PluginModuleHandle = {
-  pluginId: string;
+  programId: string;
   manifest: unknown;
   createApp: (appId: string) => Promise<number>;
   destroyApp: (instanceId: number) => Promise<void>;
@@ -38,8 +38,8 @@ const PLUGIN_WORKER_SLOW_CALL_WARN_MS = 2000;
 const PLUGIN_WORKER_BOOT_MESSAGE_TYPES: readonly PluginWorkerMessageType[] = ["init", "manifest"];
 //#endregion PluginTypes
 
-async function loadPluginModule(pluginId: string, moduleUrl: string): Promise<PluginModuleHandle> {
-  return loadPluginModuleViaWorker(pluginId, moduleUrl);
+async function loadPluginModule(programId: string, moduleUrl: string): Promise<PluginModuleHandle> {
+  return loadPluginModuleViaWorker(programId, moduleUrl);
 }
 
 function pluginWorkerUrl(moduleUrl: string): string {
@@ -51,7 +51,7 @@ class PluginWorkerClient {
   private readonly pending = new Map<string, { resolve: (value: unknown) => void; reject: (error: Error) => void; timer: number }>();
 
   constructor(
-    private readonly pluginId: string,
+    private readonly programId: string,
     private readonly moduleUrl: string,
   ) {}
 
@@ -86,21 +86,21 @@ class PluginWorkerClient {
       window.clearTimeout(entry.timer);
       this.pending.delete(requestId);
       if (message.type === "error") {
-        entry.reject(new Error(message.message ?? `plugin worker ${this.pluginId} error`));
+        entry.reject(new Error(message.message ?? `program worker ${this.programId} error`));
         return;
       }
       entry.resolve(message);
     };
     worker.onerror = (error) => {
-      console.error(`[DEBUG] plugin worker ${this.pluginId} crashed`, error);
+      console.error(`[DEBUG] program worker ${this.programId} crashed`, error);
       this.terminateWorker();
-      this.clearPending(new Error(`plugin worker ${this.pluginId} crashed`));
+      this.clearPending(new Error(`program worker ${this.programId} crashed`));
     };
   }
 
   private async spawnWorker(): Promise<void> {
     this.terminateWorker();
-    this.clearPending(new Error(`plugin worker ${this.pluginId} restarted`));
+    this.clearPending(new Error(`program worker ${this.programId} restarted`));
     const worker = new Worker(pluginWorkerUrl(this.moduleUrl), { type: "module" });
     this.attachWorker(worker);
     this.worker = worker;
@@ -108,14 +108,14 @@ class PluginWorkerClient {
   }
 
   private async restartWorker(reason: string): Promise<void> {
-    console.warn(`[DEBUG] restarting plugin worker ${this.pluginId}: ${reason}`);
+    console.warn(`[DEBUG] restarting program worker ${this.programId}: ${reason}`);
     await this.spawnWorker();
   }
 
   private request(type: PluginWorkerMessageType, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
     return new Promise((resolve, reject) => {
       if (!this.worker) {
-        reject(new Error(`plugin worker ${this.pluginId} is not running`));
+        reject(new Error(`program worker ${this.programId} is not running`));
         return;
       }
       const requestId = crypto.randomUUID();
@@ -125,16 +125,16 @@ class PluginWorkerClient {
         if (isBoot) {
           this.pending.delete(requestId);
           void this.restartWorker(`timeout:${type}`).catch((error) => {
-            console.error(`[DEBUG] plugin worker ${this.pluginId} restart failed`, error);
+            console.error(`[DEBUG] program worker ${this.programId} restart failed`, error);
           });
-          reject(new Error(`plugin worker ${this.pluginId} timeout: ${type}`));
+          reject(new Error(`program worker ${this.programId} timeout: ${type}`));
           return;
         }
         // 🐢 A long-running call (e.g. a fill-plan `setFillCount`/`render` doing catch-up work) is expected
         // and must never restart the worker — a restart destroys the running app instance (document, fill
         // plan, meshes), turning one slow call into total, minutes-long unresponsiveness while everything
         // replans from zero. Only a genuine crash (`worker.onerror`) restarts a non-boot call.
-        console.warn(`[DEBUG] plugin worker ${this.pluginId} slow ${type} call: still waiting after ${Date.now() - startedAt}ms`);
+        console.warn(`[DEBUG] program worker ${this.programId} slow ${type} call: still waiting after ${Date.now() - startedAt}ms`);
       }, isBoot ? PLUGIN_WORKER_BOOT_TIMEOUT_MS : PLUGIN_WORKER_SLOW_CALL_WARN_MS);
       this.pending.set(requestId, { resolve, reject, timer });
       this.worker.postMessage({ type, requestId, ...payload });
@@ -192,34 +192,34 @@ class PluginWorkerClient {
   }
 
   dispose(): void {
-    this.clearPending(new Error(`plugin worker ${this.pluginId} disposed`));
+    this.clearPending(new Error(`program worker ${this.programId} disposed`));
     this.terminateWorker();
   }
 }
 
-function validatePluginManifest(pluginId: string, manifest: unknown): void {
+function validateProgramManifest(programId: string, manifest: unknown): void {
   const apps = (manifest as { apps?: unknown }).apps;
   if (!Array.isArray(apps) || apps.length === 0) {
-    throw new Error(`[DEBUG] plugin ${pluginId} manifest has no apps`);
+    throw new Error(`[DEBUG] program ${programId} manifest has no apps`);
   }
   for (const app of apps as { windowKinds?: unknown }[]) {
     const windowKinds = app.windowKinds;
     if (!Array.isArray(windowKinds) || windowKinds.length === 0) continue;
     for (const kind of windowKinds as { surfaceKind?: unknown }[]) {
       if (!kind.surfaceKind) {
-        throw new Error(`[DEBUG] plugin ${pluginId} manifest window kind missing surfaceKind`);
+        throw new Error(`[DEBUG] program ${programId} manifest window kind missing surfaceKind`);
       }
     }
   }
 }
 
-async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): Promise<PluginModuleHandle> {
-  const client = new PluginWorkerClient(pluginId, moduleUrl);
+async function loadPluginModuleViaWorker(programId: string, moduleUrl: string): Promise<PluginModuleHandle> {
+  const client = new PluginWorkerClient(programId, moduleUrl);
   await client.start();
   const manifest = JSON.parse(await client.manifest());
-  validatePluginManifest(pluginId, manifest);
+  validateProgramManifest(programId, manifest);
   return {
-    pluginId,
+    programId,
     manifest,
     createApp: (appId: string) => client.createApp(appId),
     destroyApp: (instanceId: number) => client.destroyApp(instanceId),
@@ -251,8 +251,8 @@ function pluginHandleForBridge(handle: PluginModuleHandle) {
 }
 
 const boot = resolvePlaygroundBoot(PLAYGROUND_SESSION.variant, PLAYGROUND_SESSION);
-const pluginTargets: PluginRegistryEntry[] = boot.plugins.map((entry) => ({
-  pluginId: entry.pluginId,
+const pluginTargets: ProgramRegistryEntry[] = boot.plugins.map((entry) => ({
+  programId: entry.programId,
   moduleUrl: entry.moduleUrl,
   contributes: entry.contributes,
   consumes: entry.consumes,
@@ -279,20 +279,20 @@ function renderBootErrorBanner(message: string): void {
 }
 
 try {
-  const availableTargets: PluginRegistryEntry[] = [];
+  const availableTargets: ProgramRegistryEntry[] = [];
   for (const entry of pluginTargets) {
     if (await pluginModuleAvailable(entry.moduleUrl)) {
       availableTargets.push(entry);
     }
   }
   if (availableTargets.length === 0) {
-    throw new Error(`[DEBUG] no wasm plugin modules found for filter ${pluginFilter}`);
+    throw new Error(`[DEBUG] no wasm program modules found for filter ${pluginFilter}`);
   }
 
   const handles = await Promise.all(
     availableTargets.map(async (entry) => ({
-      pluginId: entry.pluginId,
-      handle: pluginHandleForBridge(await loadPluginModule(entry.pluginId, entry.moduleUrl)),
+      programId: entry.programId,
+      handle: pluginHandleForBridge(await loadPluginModule(entry.programId, entry.moduleUrl)),
     })),
   );
 

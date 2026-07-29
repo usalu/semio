@@ -16,7 +16,7 @@ import {
   ObservableCell,
   Panel,
   Platform,
-  PluginHost,
+  ProgramHost,
   Store,
   PlatformTopologyStore,
   PlatformTopologyPayload,
@@ -45,7 +45,7 @@ import {
   type PanelModel,
   type PlatformSpec,
   type PlatformDefinition,
-  type PluginManifest,
+  type ProgramManifest,
   type PluginModule,
   type Puzzle2dModel,
   type Puzzle5dModel,
@@ -15264,7 +15264,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 }
 
 let sketchpadPlatformSingleton: Platform | null = null;
-let sketchpadPluginHostSingleton: PluginHost | null = null;
+let sketchpadProgramHostSingleton: ProgramHost | null = null;
 let sketchpadPlatformReady: Promise<Platform> | null = null;
 let sketchpadBodiesRegistered = false;
 
@@ -15296,7 +15296,7 @@ function sketchpadHomePanelTabs(): readonly SideTabSpec[] {
   ];
 }
 
-/** @emoji 🗣️ Atomic labels for the sketchpad plugin manifest (apps/window kinds/modes/panel tabs), resolved at call time via {@link composeCurrentUiLocale}. */
+/** @emoji 🗣️ Atomic labels for the sketchpad program manifest (apps/window kinds/modes/panel tabs), resolved at call time via {@link composeCurrentUiLocale}. */
 const SKETCHPAD_MANIFEST_LABELS: UiTerminologyLabelSet<"display" | "composeSketchpad" | "kit" | "explore" | "fileSystem" | "wires" | "design" | "edit" | "scene" | "diagram" | "type" | "docs" | "feedback" | "windows" | "sketchpad"> = {
   en: {
     display: "Display",
@@ -15344,7 +15344,7 @@ function sketchpadKitPanelTabs(): readonly SideTabSpec[] {
   ];
 }
 
-function buildSketchpadExtensionManifest(): PluginManifest {
+function buildSketchpadExtensionManifest(): ProgramManifest {
   const l = SKETCHPAD_MANIFEST_LABELS[composeCurrentUiLocale()];
   return {
     id: SKETCHPAD_EXTENSION_ID,
@@ -15586,7 +15586,7 @@ const SKETCHPAD_PLATFORM_SPEC: PlatformSpec = {
 };
 
 /** @emoji 🖥️ Sketchpad as a s {@link PlatformDefinition} program (apps mirror {@link buildSketchpadExtensionManifest}). */
-export function buildSketchpadProgramDefinition(): PlatformDefinition {
+export function buildSketchpadPlatformDefinition(): PlatformDefinition {
   const l = SKETCHPAD_MANIFEST_LABELS[composeCurrentUiLocale()];
   return {
     id: SKETCHPAD_PLATFORM_SPEC.id,
@@ -15610,7 +15610,7 @@ export async function buildSketchpadPlatform(): Promise<Platform> {
   const platform = new Platform(SKETCHPAD_PLATFORM_SPEC);
   const controller = new SketchpadShellController(platform.actionBus, () => platform.notify());
   sketchpadShellControllerSingleton = controller;
-  const host = new PluginHost(platform);
+  const host = new ProgramHost(platform);
   host.register(buildSketchpadExtensionManifest(), {
     id: SKETCHPAD_EXTENSION_ID,
     activate() {},
@@ -15624,7 +15624,7 @@ export async function buildSketchpadPlatform(): Promise<Platform> {
     platform.notify();
   }
   sketchpadPlatformSingleton = platform;
-  sketchpadPluginHostSingleton = host;
+  sketchpadProgramHostSingleton = host;
   if (typeof window !== "undefined") {
     sketchpadInstallHomeDropzone();
   }
@@ -17523,7 +17523,7 @@ export const sketchpadPlayAppDefinition = createPlaygroundApp({
 //#endregion 🔖Play
 
 //#region 🔖OsProgram
-import { createTypedAppVcsHandler, mergeOsProgramDefinition, osBaselineResource, registerAppVcsHandler } from "@semio-tech/framework-os-core";
+import { createTypedAppVcsHandler, mergeOsWorkflowDefinition, osBaselineArtifact, registerAppVcsHandler } from "@semio-tech/framework-os-core";
 import type { OsProgramContribution } from "@semio-tech/framework-platform-core";
 
 /** @emoji 🏘️ S app VCS handler for compose design documents. */
@@ -17561,12 +17561,12 @@ export const sketchpadProgramContribution: OsProgramContribution = {
   programId: "compose.sketchpad",
   register() {
     const l = SKETCHPAD_MANIFEST_LABELS[composeCurrentUiLocale()];
-    mergeOsProgramDefinition("compose.sketchpad", buildSketchpadProgramDefinition(), {
-      kit: osBaselineResource("kit.compose", "compose.kit", "virtualFileSystem", [{ id: "explore", label: l.explore }]),
-      design: osBaselineResource("5d.puzzle", "compose.design", "puzzle5d", [{ id: "edit", label: l.edit }]),
-      type: osBaselineResource("3d.puzzle", "compose.type", "puzzle3d", [{ id: "edit", label: l.edit }]),
-      docs: osBaselineResource("text.document", "writer.document", "panel", [{ id: "explore", label: l.explore }]),
-      feedback: osBaselineResource("form.dictionary", "forms.dictionary", "panel", [{ id: "explore", label: l.explore }]),
+    mergeOsWorkflowDefinition("compose.sketchpad", buildSketchpadPlatformDefinition(), {
+      kit: osBaselineArtifact("kit.compose", "compose.kit", "virtualFileSystem", [{ id: "explore", label: l.explore }]),
+      design: osBaselineArtifact("5d.puzzle", "compose.design", "puzzle5d", [{ id: "edit", label: l.edit }]),
+      type: osBaselineArtifact("3d.puzzle", "compose.type", "puzzle3d", [{ id: "edit", label: l.edit }]),
+      docs: osBaselineArtifact("text.document", "writer.document", "panel", [{ id: "explore", label: l.explore }]),
+      feedback: osBaselineArtifact("form.dictionary", "forms.dictionary", "panel", [{ id: "explore", label: l.explore }]),
     });
     registerAppVcsHandler(createComposeDesignAppVcsHandler());
     registerAppVcsHandler(createComposeTypeAppVcsHandler());

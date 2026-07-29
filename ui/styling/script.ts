@@ -906,7 +906,7 @@ const COLOR_SCAN_LEGACY_ALLOWLIST = [
   "infinite/world/r3f/index.tsx",
   "infinite/world/rs/lib.rs",
   "puzzle/2d/rs/lib.rs",
-  "puzzle/plugin/rs/lib.rs",
+  "puzzle/program/rs/lib.rs",
 ];
 
 const COLOR_SCAN_SKIP = [
@@ -915,7 +915,7 @@ const COLOR_SCAN_SKIP = [
   "/.vite/",
   "/.stage/",
   "/renderer-modules/",
-  "/plugin-modules/",
+  "/program-modules/",
   "generated/",
   "generated.rs",
   "generated.py",

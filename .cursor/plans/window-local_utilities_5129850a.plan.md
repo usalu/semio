@@ -36,9 +36,9 @@ const viewState: ViewState = injectActiveUtility({
 const request = buildUiRefreshRequest(scope, windowInstances, panelTabLeaves, viewState, cache);
 ```
 
-`[plugin_refresh_ui](framework/plugin/rs/lib.rs)` stamps `window_id` per pane but **clones the same `active_utility_id`**:
+`[plugin_refresh_ui](framework/program/rs/lib.rs)` stamps `window_id` per pane but **clones the same `active_utility_id`**:
 
-```4052:4057:framework/plugin/rs/lib.rs
+```4052:4057:framework/program/rs/lib.rs
 let window_view_state = ViewState { window_id: Some(entry.key.clone()), ..request.view_state.clone() };
 ```
 
@@ -52,7 +52,7 @@ flowchart LR
   refresh["refreshUi injectActiveUtility focused only"]
   plugin["plugin_refresh_ui clones one active_utility_id"]
   panes["Top + Perspective both get same utility"]
-  shell --> refresh --> plugin --> panes
+  shell --> refresh --> program --> panes
 ```
 
 
@@ -83,7 +83,7 @@ Update `[buildUiRefreshRequest](framework/renderer/react/index.tsx)` tests if th
 
 ### 3. Plugin refresh: stamp utility per window
 
-In `[framework/plugin/rs/lib.rs](framework/plugin/rs/lib.rs)` `plugin_refresh_ui` window loop:
+In `[framework/program/rs/lib.rs](framework/program/rs/lib.rs)` `plugin_refresh_ui` window loop:
 
 ```rust
 let active_utility_id = request.view_state
@@ -100,7 +100,7 @@ let window_view_state = ViewState {
 
 ### 4. Puzzle (and same pattern elsewhere): resolve utility per instance
 
-In `[puzzle/plugin/rs/lib.rs](puzzle/plugin/rs/lib.rs)`:
+In `[puzzle/program/rs/lib.rs](puzzle/program/rs/lib.rs)`:
 
 - Extend `puzzle3d_scene_active_utility` (and 2d/5d equivalents) to accept a window id and prefer `active_utility_by_window_id[window_id]`, then singular overlay, then fill-tool override, then default.
 - In `window_engagements` / `window_measures`, resolve utility **inside** the per-`wid` loop (not once before the loop).

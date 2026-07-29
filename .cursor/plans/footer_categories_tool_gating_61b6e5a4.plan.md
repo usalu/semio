@@ -6,7 +6,7 @@ todos:
    content: Add ToolCategory enum + category field/getter/with_category builder to framework/core ToolNode
    status: completed
  - id: wgpu-remove-dead
-   content: Remove useless app button and duplicate studio undo/redo/checkpoint footer chrome + handlers
+   content: Remove useless app button and duplicate space undo/redo/checkpoint footer chrome + handlers
    status: completed
  - id: wgpu-sections
    content: Rewrite render_footer to bucket active_tools into fixed Selection/Tools/Commands/History sections with dividers
@@ -24,7 +24,7 @@ todos:
    content: Tag sequence edit_tools categories and split layout collection into Reorganize command + Orientation tool group
    status: completed
  - id: s-categories
-   content: Tag s home_create_tools and studio history collection with correct categories
+   content: Tag s home_create_tools and space history collection with correct categories
    status: completed
  - id: verify-build
    content: cargo check touched crates and manually verify footer behavior across lowpoly/cad/sequence/s
@@ -36,16 +36,16 @@ isProject: false
 
 ## Scope
 
-Touches the shared tool schema in [framework/core/rs/lib.rs](framework/core/rs/lib.rs) (needed by any renderer, purely additive/non-breaking so the React renderer keeps compiling unchanged), the wgpu shell in [framework/renderer/wgpu/rs/lib.rs](framework/renderer/wgpu/rs/lib.rs), and the four plugins that currently feed the wgpu footer with real toolbars: `lowpoly`, `cad`, `sequence`, `s`. No other plugin (flow, gis, puzzle, mindmap, forms, ...) is touched — their tools fall back to a generic default categorization and keep working as-is. The React renderer (`framework/renderer/react/os-shell.tsx`) is not touched.
+Touches the shared tool schema in [framework/core/rs/lib.rs](framework/core/rs/lib.rs) (needed by any renderer, purely additive/non-breaking so the React renderer keeps compiling unchanged), the wgpu shell in [framework/renderer/wgpu/rs/lib.rs](framework/renderer/wgpu/rs/lib.rs), and the four plugins that currently feed the wgpu footer with real toolbars: `lowpoly`, `cad`, `sequence`, `s`. No other program (flow, gis, puzzle, mindmap, forms, ...) is touched — their tools fall back to a generic default categorization and keep working as-is. The React renderer (`framework/renderer/react/os-shell.tsx`) is not touched.
 
 ## 1. Shared schema — `framework/core/rs/lib.rs` (`pub mod tools`)
 
 - Add `ToolCategory { Selection, Tools, Commands, History }` (serde camelCase, `Copy`).
 - Add an optional `category: Option<ToolCategory>` field to `ToolNode::Button`, `Toggle`, `Collection` (not `Separator`).
 - Add `ToolNode::category(&self) -> ToolCategory`: returns the explicit value if set, else defaults `Toggle | Collection -> Tools`, `Button -> Commands`. `Selection` and `History` are always explicit opt-in.
-- Add `ToolNode::with_category(self, category: ToolCategory) -> Self` builder, mirroring the existing `with_order`/`with_disabled` pattern (currently duplicated locally in `cad/plugin/rs/lib.rs` as `ToolNodeExt` — leave that trait as-is, just add the new capability in core).
+- Add `ToolNode::with_category(self, category: ToolCategory) -> Self` builder, mirroring the existing `with_order`/`with_disabled` pattern (currently duplicated locally in `cad/program/rs/lib.rs` as `ToolNodeExt` — leave that trait as-is, just add the new capability in core).
 
-This is additive-only (`Option`, defaulted), so every currently-untouched plugin keeps compiling and rendering exactly as today, just bucketed by the new default rule.
+This is additive-only (`Option`, defaulted), so every currently-untouched program keeps compiling and rendering exactly as today, just bucketed by the new default rule.
 
 ## 2. wgpu shell — `framework/renderer/wgpu/rs/lib.rs`
 
@@ -73,7 +73,7 @@ This is additive-only (`Option`, defaulted), so every currently-untouched plugin
 
 ## 3. Plugin re-categorization
 
-### `lowpoly/plugin/rs/lib.rs` (`edit_tools`, `paint_tools`)
+### `lowpoly/program/rs/lib.rs` (`edit_tools`, `paint_tools`)
 
 - `lowpoly-tools-selection` (Mesh/Face/Edge/Vertex) -> `Selection`
 - `lowpoly-tools-transform` (Move/Rotate/Scale) -> `Tools`
@@ -83,23 +83,23 @@ This is additive-only (`Option`, defaulted), so every currently-untouched plugin
 - `lowpoly-paint-uv` (Unwrap/Mark Seam/Clear Seam) -> `Commands`
 - `lowpoly-paint-history` -> `History`
 
-### `cad/plugin/rs/lib.rs` (`build_cad_play_toolbar`)
+### `cad/program/rs/lib.rs` (`build_cad_play_toolbar`)
 
 - `view` (pane focus toggles) -> `Tools` (+ allow-list entry above)
 - `save` -> `Commands`
 - `transfer` -> `Commands`
 
-### `sequence/plugin/rs/lib.rs` (`edit_tools`)
+### `sequence/program/rs/lib.rs` (`edit_tools`)
 
 - `sequence-tools-execution` (Run/Stop) -> `Commands`
 - Split `sequence-tools-layout` into a standalone `Reorganize` button (`Commands`) and a new `sequence-tools-orientation` collection holding the left-right/top-bottom toggles (`Tools`), since today it incorrectly mixes a one-shot command with a mutually-exclusive tool pair under one label.
 
-### `s/plugin/rs/lib.rs`
+### `s/program/rs/lib.rs`
 
 - `home_create_tools()`: `s-home.create` collection and `s-home.import` button -> `Commands`
 - studio `mode_tools("main", [tool_collection("s-play.history", ...)])` -> `History`
 
 ## Verification
 
-- `cargo check -p semio-framework-renderer-wgpu -p semio-framework-core -p lowpoly-plugin -p cad-plugin -p sequence-plugin -p s-plugin` (or the nx-wrapped equivalents per `script.ts`) to confirm the schema change and all four plugin edits compile.
-- Manually exercise the wgpu playground for lowpoly (edit + paint modes), cad, sequence, and s/studio to confirm: no app button, four ordered sections, only one active tool highlighted at a time, Commands gray out while a Tool is active except cad's pane-focus toggle, and studio undo/redo/checkpoint still work via the single `s-play.history` path.
+- `cargo check -p semio-framework-renderer-wgpu -p semio-framework-core -p lowpoly-program -p cad-program -p sequence-program -p s-program` (or the nx-wrapped equivalents per `script.ts`) to confirm the schema change and all four program edits compile.
+- Manually exercise the wgpu playground for lowpoly (edit + paint modes), cad, sequence, and s/studio to confirm: no app button, four ordered sections, only one active tool highlighted at a time, Commands gray out while a Tool is active except cad's pane-focus toggle, and space undo/redo/checkpoint still work via the single `s-play.history` path.

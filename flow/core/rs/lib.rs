@@ -1772,7 +1772,7 @@ impl FlowHost {
     }
 
     /// 🧠 Builds a host sharing an existing [`NeuralCache`] — lets a long-lived caller (e.g. a
-    /// stateless request/response plugin boundary that reconstructs `FlowHost` on every call)
+    /// stateless request/response program boundary that reconstructs `FlowHost` on every call)
     /// keep per-node memoization alive across those reconstructions instead of discarding it.
     pub fn from_fixture_with_cache(mut fixture: FlowFixture, neural_cache: std::sync::Arc<NeuralCache>) -> Self {
         dedupe_fixture_widgets(&mut fixture);
@@ -2435,7 +2435,7 @@ impl FlowHost {
 
     /// ⏳🧵 Evaluates at most `budget` cache-missed (dirty) nodes and returns the not-yet-computed
     /// widget ids in topo order — `remaining[0]` is the node currently blocking, `remaining[1..]`
-    /// are downstream widgets waiting behind it. An off-main-thread caller (a plugin worker) resumes
+    /// are downstream widgets waiting behind it. An off-main-thread caller (a program worker) resumes
     /// with another `evaluate_step` call until `remaining` is empty; a single `evaluate_step(usize::MAX)`
     /// call (via [`FlowHost::evaluate`]/`evaluate_internal`) still evaluates everything synchronously
     /// in one shot for callers that don't need to spread the work across ticks (tests, explicit
@@ -3354,7 +3354,7 @@ impl FlowHost {
 }
 
 // #region 🔖EvalDriver
-/// 🧵 Off-main-thread evaluation state a flow-backed plugin runtime embeds across its per-action
+/// 🧵 Off-main-thread evaluation state a flow-backed program runtime embeds across its per-action
 /// `FlowHost` reconstructions (the [`NeuralCache`] persists via [`FlowHost::from_fixture_with_cache`]'s
 /// shared `Arc`, but everything else on `FlowHost` is rebuilt every call — this is the part that
 /// needs to survive between ticks). Drives a chain of single-node ticks via `HostEffect::DispatchAction`
@@ -4260,7 +4260,7 @@ pub struct FlowLayoutEntry {
 
 /// 🌊 Typed, invertible flow-document operation. `Widgets`/`Synapses` are id-keyed collection operations for
 /// granular convergence; `SetLayout` moves nodes; `SetFixture` replaces the whole fixture (import/reset).
-/// The camera is ephemeral view state (plugin runtime), never a document operation.
+/// The camera is ephemeral view state (program runtime), never a document operation.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum FlowOperation {
@@ -4344,7 +4344,7 @@ impl Operation<FlowFixture> for FlowOperation {
 /// 🌉 Host-mutation → granular-operations bridge: diffs a `FlowFixture` before/after a `FlowHost` mutation into
 /// the minimal set of `FlowOperation`s, so the rich stateful engine keeps owning mutation logic (port wiring,
 /// cycle checks, cluster collapse) while the document store still records convergent, invertible operations.
-/// The camera is intentionally excluded (it is plugin runtime state).
+/// The camera is intentionally excluded (it is program runtime state).
 pub fn flow_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec<FlowOperation> {
     let mut operations = Vec::new();
     let after_widget_ids: std::collections::BTreeSet<&str> = after.widgets.iter().map(widget_id_for).collect();

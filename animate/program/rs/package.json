@@ -1,0 +1,9 @@
+{
+  "name": "@semio-tech/animate-program-rs",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./pkg/animate_program.js",
+    "./pkg/animate_program.js": "./pkg/animate_program.js"
+  }
+}

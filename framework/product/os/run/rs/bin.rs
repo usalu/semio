@@ -3,7 +3,8 @@
 //! studio-bundle plumbing only — all the actual dirty/clean and execution logic lives in the library.
 
 use semio_framework_os::{materialize_os_projection, os_document_from_json};
-use semio_framework_os_run::{plan, StudioBundle, StudioRunner, WasmtimeNodeHost};
+use semio_framework_os_run::{plan, SpaceBundle, SpaceRunner, WasmtimeNodeHost};
+use store::{decode_document_pack_bytes, encode_document_pack_bytes};
 use std::collections::{BTreeMap, HashMap};
 use std::path::PathBuf;
 
@@ -52,14 +53,15 @@ fn main() {
 }
 
 fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
-    let bundle = StudioBundle::open(&args.bundle);
-    let document_json = bundle.read_studio_document()?;
+    let bundle = SpaceBundle::open(&args.bundle);
+    let document_json = bundle.read_space_document()?;
     let document = os_document_from_json(&document_json).map_err(|error| error.to_string())?;
     let projection = materialize_os_projection(&document, &document.applied_edit_ids).map_err(|error| error.to_string())?;
 
-    let mut documents: BTreeMap<String, String> = BTreeMap::new();
+    let mut documents: BTreeMap<String, Vec<u8>> = BTreeMap::new();
     for instance in &projection.app_instances {
-        documents.insert(instance.id.clone(), bundle.read_document(&instance.document.document_id).unwrap_or_default());
+        let (pack, spr) = bundle.read_document(&instance.document.document_id).unwrap_or_default();
+        documents.insert(instance.id.clone(), encode_document_pack_bytes(&pack, &spr));
     }
 
     let mut graph = projection.workflow.clone();
@@ -77,21 +79,22 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
 
-    // 🩹 Resolved from the dev shell's compiled `plugin-modules/<app>/*.wasm` in a follow-up ticket —
-    // empty today, so any node that actually needs a real plugin instantiated fails loudly with a
+    // 🩹 Resolved from the dev shell's compiled `program-modules/<app>/*.wasm` in a follow-up ticket —
+    // empty today, so any node that actually needs a real program instantiated fails loudly with a
     // named-app error instead of silently producing nothing.
     let plugin_paths: HashMap<String, PathBuf> = HashMap::new();
     let host = WasmtimeNodeHost::new(plugin_paths);
-    let mut runner = StudioRunner::new(host);
+    let mut runner = SpaceRunner::new(host);
     let mut cache = bundle.media_cache();
 
     let (documents_out, report) = runner.run(&graph, &projection.app_instances, &documents, &mut state, &mut cache)?;
     println!("recomputed: {:?}", report.recomputed);
     println!("clean:      {:?}", report.clean);
 
-    for (instance_id, doc_json) in &documents_out {
-        if documents.get(instance_id) != Some(doc_json) {
-            bundle.write_document(instance_id, doc_json)?;
+    for (instance_id, document_bytes) in &documents_out {
+        if documents.get(instance_id) != Some(document_bytes) {
+            let (pack, spr) = decode_document_pack_bytes(document_bytes).map_err(|error| error.to_string())?;
+            bundle.write_document(instance_id, &pack, &spr)?;
         }
     }
     bundle.save_run_state(&state)?;

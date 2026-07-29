@@ -18,7 +18,7 @@ todos:
    content: Start tile-proxy server + pass SEMIO_GIS_MAP_TILE_BASE_URL env into NativeRunScript for gis2d
    status: completed
  - id: plugin-absolute-template
-   content: "gis/2d/plugin/rs/lib.rs render_canvas: override tile_url_template/vector_tile_url_template from SEMIO_GIS_MAP_TILE_BASE_URL when set, plus test"
+   content: "gis/2d/program/rs/lib.rs render_canvas: override tile_url_template/vector_tile_url_template from SEMIO_GIS_MAP_TILE_BASE_URL when set, plus test"
    status: completed
  - id: verify-close
    content: Reopen Map Wgpu Renderer Parity ticket, rebuild/verify tiles render in wgpu dev + run cargo tests, close ticket with summary
@@ -71,10 +71,10 @@ backend = "http://127.0.0.1:6141/vt/"
 so browser requests to `/osm/...`/`/vt/...` on the Trunk dev server are transparently forwarded to the tile-proxy server. Harmless no-operation for other plugins (route just never gets hit).
 
 4. **`framework/renderer/wgpu/script.ts`**:
-   - `TrunkServeScript.run()`: when the resolved plugin is `"gis2d"`, call `startGisMapTileProxyServer(repoRoot, 6141)` before `spawnSync("trunk", ["serve", ...])`.
-   - `NativeRunScript.run()`: when plugin is `"gis2d"`, also start the tile-proxy server and pass `SEMIO_GIS_MAP_TILE_BASE_URL=http://127.0.0.1:6141` into the env for the `cargo run ... semio-wgpu-native` child process (native has no browser "same origin" to resolve relative paths against).
+   - `TrunkServeScript.run()`: when the resolved program is `"gis2d"`, call `startGisMapTileProxyServer(repoRoot, 6141)` before `spawnSync("trunk", ["serve", ...])`.
+   - `NativeRunScript.run()`: when program is `"gis2d"`, also start the tile-proxy server and pass `SEMIO_GIS_MAP_TILE_BASE_URL=http://127.0.0.1:6141` into the env for the `cargo run ... semio-wgpu-native` child process (native has no browser "same origin" to resolve relative paths against).
 
-5. **`gis/2d/plugin/rs/lib.rs`** (`render_canvas`) — after building the base `GisMapScene`, if `SEMIO_GIS_MAP_TILE_BASE_URL` is set in the process environment, override `scene.tile_url_template`/`scene.vector_tile_url_template` with absolute URLs built from that base (`format!("{base}/osm/{{z}}/{{x}}/{{y}}.png")`, etc.); otherwise keep the relative defaults. `std::env::var` returns `Err` on `wasm32-unknown-unknown` (no env support), so the browser/Trunk build is unaffected and keeps using relative URLs proxied per step 3. This is the one Rust code change; extend the existing test file for `gis/2d/plugin` to cover the override.
+5. **`gis/2d/program/rs/lib.rs`** (`render_canvas`) — after building the base `GisMapScene`, if `SEMIO_GIS_MAP_TILE_BASE_URL` is set in the process environment, override `scene.tile_url_template`/`scene.vector_tile_url_template` with absolute URLs built from that base (`format!("{base}/osm/{{z}}/{{x}}/{{y}}.png")`, etc.); otherwise keep the relative defaults. `std::env::var` returns `Err` on `wasm32-unknown-unknown` (no env support), so the browser/Trunk build is unaffected and keeps using relative URLs proxied per step 3. This is the one Rust code change; extend the existing test file for `gis/2d/plugin` to cover the override.
 
 ## Verification
 

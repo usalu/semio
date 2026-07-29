@@ -18,7 +18,7 @@ todos:
    content: Move TECHNOLOGY_APP_RESOURCE_BY_PROGRAM rows and per-format VCS handlers into owning app cores as program contributions; derive program registration from manifests
    status: completed
  - id: manifest-virtual
-   content: Extend semio.app manifest + scanner + virtual module plugin to expose program exports
+   content: Extend semio.app manifest + scanner + virtual module program to expose program exports
    status: completed
  - id: enforcement
    content: Tighten dependency-cruiser (framework/s must not import app packages) and repo guard tests
@@ -111,7 +111,7 @@ Each app core's definition points at it: `loadRenderer: async () => (await impor
 
 ## Phase 5 — Manifest + enforcement + verification
 
-- Extend the `semio.playgroundApp` manifest (rename to `semio.app`) with `programExport` where relevant; update scanner in [repo/lib/js/index.ts](repo/lib/js/index.ts) and the virtual-module plugin in [ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts).
+- Extend the `semio.playgroundApp` manifest (rename to `semio.app`) with `programExport` where relevant; update scanner in [repo/lib/js/index.ts](repo/lib/js/index.ts) and the virtual-module program in [ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts).
 - Tighten [.dependency-cruiser.cjs](.dependency-cruiser.cjs): forbid `framework/**` → app packages and `s/**` → app packages (except the flow-react media-graph exemption); extend guards in [repo/lib/js/index.test.ts](repo/lib/js/index.test.ts) to fail on any `registerUiXxxSurfaceHost`-style per-technology API reappearing in framework.
 - Verify: boot flow/layout/2d/note playground dev servers, boot OS dev (S studio, spawn + open an instance of at least two technologies), run affected package tests, run lint.
 

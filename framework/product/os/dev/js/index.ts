@@ -1,11 +1,11 @@
 // #region 🧲Header
-/** @emoji 🖥️ OS dev runner — boots the Rust plugin framework with a selectable renderer. */
+/** @emoji 🖥️ OS dev runner — boots the Rust program framework with a selectable renderer. */
 // #endregion 🧲Header
 
 import "../globals.css";
 
-export type { PluginBuildTarget } from "../../../../plugin/registry/generated/plugins.ts";
-export { PLUGIN_BUILD_TARGETS, PLUGIN_TARGETS, pluginModuleUrl } from "../../../../plugin/registry/generated/plugins.ts";
+export type { ProgramBuildTarget } from "../../../../program/registry/generated/programs.ts";
+export { PROGRAM_BUILD_TARGETS, PROGRAM_TARGETS, programModuleUrl } from "../../../../program/registry/generated/programs.ts";
 export { PLAYGROUND_SESSION } from "../generated/session.ts";
 
 import { resolvePlaygroundBoot } from "@semio-tech/framework-core";
@@ -20,7 +20,7 @@ const appId = import.meta.env.VITE_SEMIO_APP_ID ?? boot.defaultAppId;
 /** @emoji 🏷️ Baked-in shell brand for this artifact (registry `brand` column or `SEMIO_BRAND`); no `?query=` override. */
 const brand = resolveShellBrandById(import.meta.env.VITE_SEMIO_BRAND || undefined);
 
-/** @emoji 🔒 Boot-time-only shell preference locks; unlike `plugin`, these have no `?query=` override. */
+/** @emoji 🔒 Boot-time-only shell preference locks; unlike `program`, these have no `?query=` override. */
 const locks = {
   exampleId: import.meta.env.VITE_SEMIO_LOCKED_EXAMPLE || undefined,
   locale: import.meta.env.VITE_SEMIO_LOCKED_LOCALE || undefined,

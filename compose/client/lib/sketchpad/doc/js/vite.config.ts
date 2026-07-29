@@ -24,8 +24,8 @@ import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
 import { semioFaviconVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
-import topLevelAwait from "vite-plugin-top-level-await";
-import wasm from "vite-plugin-wasm";
+import topLevelAwait from "vite-program-top-level-await";
+import wasm from "vite-program-wasm";
 // #endregion 🔌Adapters
 
 const __filename = fileURLToPath(import.meta.url);

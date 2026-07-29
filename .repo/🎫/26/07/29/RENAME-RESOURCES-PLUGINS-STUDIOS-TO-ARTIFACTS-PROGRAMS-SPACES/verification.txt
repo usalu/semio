@@ -1,0 +1,17 @@
+Rename verification — 2026-07-29 (continued session)
+
+## Compile
+- `cargo check --workspace` — run after final fixes (see agent output)
+
+## Renames applied (this session)
+- Fixed ProgramHost variable shadowing / register_workflow in framework/product/os/core
+- PluginWorld → ProgramWorld in program host
+- PluginBridge* → ProgramBridge*, studio_mode → space_mode in wgpu shell
+- Hub directory: StudioRecord/StudioRole → SpaceRecord/SpaceRole, create_studio → create_space, Neo4j :Studio → :Space
+- plugin_exports! → program_exports!, AppBuilder .program() → .workflow() across program crates
+- os-run: read_space_document, pack/spr MediaNodeHost alignment
+- SStudioProjection default uses programs field
+
+## Reports
+- rename-pass4-report.json
+- rename-pass5-report.json

@@ -3296,9 +3296,9 @@ such that
 
 ## 15. Language semantics
 
-### 15.1 Language plugin structure
+### 15.1 Language program structure
 
-A language plugin is a tuple
+A language program is a tuple
 
 `L = (name, extensions, supportsSections, supportsDefinitions, supportsComments, supportsHeaders, usesIndentScoping, commentPrefix, blockCommentStart, blockCommentEnd, parseSections, parseDefinitions, formatSectionStart, formatSectionEnd, formatSectionBoth, formatHeader, policySectionStartMatch, policySectionEndMatch, extraOrphanDefinitions, scanComments, skipDirectives, extractImports, formatImports, extractPackage)`.
 

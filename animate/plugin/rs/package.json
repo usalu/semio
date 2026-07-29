@@ -1,9 +1,0 @@
-{
-  "name": "@semio-tech/animate-plugin-rs",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": "./pkg/animate_plugin.js",
-    "./pkg/animate_plugin.js": "./pkg/animate_plugin.js"
-  }
-}

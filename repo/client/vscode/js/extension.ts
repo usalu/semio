@@ -1277,7 +1277,7 @@ export const ENTITY_EMOJIS: ReadonlyMap<string, string> = new Map([
   ["📜", "file-script"],
   ["📃", "file-docs"],
   ["⚙️", "file-config"],
-  ["💾", "file-resource"],
+  ["💾", "file-artifact"],
   ["📋", "file-template"],
   ["⚖️", "file-license"],
 

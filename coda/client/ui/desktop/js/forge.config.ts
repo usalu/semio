@@ -29,7 +29,7 @@ const assistantBundleRoot = path.resolve(__dirname, "..", "assistant");
 
 // #region 🗄️Configuration
 /**
- * Electron Forge configuration with Vite plugin and security fuses.
+ * Electron Forge configuration with Vite program and security fuses.
  * Config MUST include VitePlugin with main, preload, and renderer entries.
  **/
 const config: ForgeConfig = {

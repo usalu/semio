@@ -1,6 +1,6 @@
 ---
 name: Forms Premigration Parity Both Renderers
-overview: Restore the `forms` plugin (plus its `flow`/`procedural 2d`/`procedural 3d` "Generate mode" siblings, which pre-migration shared forms-core) to full pre-migration feature parity, rendered identically by both the React and wgpu renderers via the shared `UiNode` protocol.
+overview: Restore the `forms` program (plus its `flow`/`procedural 2d`/`procedural 3d` "Generate mode" siblings, which pre-migration shared forms-core) to full pre-migration feature parity, rendered identically by both the React and wgpu renderers via the shared `UiNode` protocol.
 todos:
  - id: domain-model
    content: Expand FormQuestion/FormExpr/validation in forms/rs/lib.rs to full pre-migration field set + condition evaluation + runtime helpers
@@ -18,7 +18,7 @@ todos:
    content: "Replace forms Try table with a real multi-step wizard: per-kind controls, step nav, validation, conditional visibility"
    status: completed
  - id: building-component-preview
-   content: Port procedural/3d's evaluate-tessellate pipeline into forms-plugin and add a dedicated live mesh Preview window for buildingComponent questions
+   content: Port procedural/3d's evaluate-tessellate pipeline into forms-program and add a dedicated live mesh Preview window for buildingComponent questions
    status: completed
  - id: forms-fixtures
    content: Restore default/Contact and onboarding example fixtures with full field coverage and a conditional step
@@ -37,10 +37,10 @@ isProject: false
 
 ## Audit summary
 
-Compared pre-migration TypeScript (`git show 5ecbe3dbf^:forms/react/index.tsx`, `git show e1369ca57^:forms/core/js/{index,internal}.ts`, and ticket `.repo/🎫/26/06/30/FORMS-TECHNOLOGY-AND-GENERATE-MODE/`) against the current Rust/WASM [forms/rs/lib.rs](forms/rs/lib.rs) + [forms/plugin/rs/lib.rs](forms/plugin/rs/lib.rs). Findings:
+Compared pre-migration TypeScript (`git show 5ecbe3dbf^:forms/react/index.tsx`, `git show e1369ca57^:forms/core/js/{index,internal}.ts`, and ticket `.repo/🎫/26/06/30/FORMS-TECHNOLOGY-AND-GENERATE-MODE/`) against the current Rust/WASM [forms/rs/lib.rs](forms/rs/lib.rs) + [forms/program/rs/lib.rs](forms/program/rs/lib.rs). Findings:
 
 - The domain model regressed hard: `FormQuestion` today only has `{id, label, kind, default, text, options}` — it silently drops `required`, `description`, `placeholder`, `min/max/step/unit`, vector `fields`, `schema`, `src`, `accept`, `fixtureSlug`/`params`, and `condition` on every parse. The already-handcrafted [forms/example/building-component.forms.json](forms/example/building-component.forms.json) fixture authors all of these fields today, but they're silently discarded.
-- "Try" mode (`render_try_table` at [forms/plugin/rs/lib.rs:406](forms/plugin/rs/lib.rs)) is a label-only `TableScene` — there is no interactive form at all (no inputs, no step wizard, no validation, no conditional visibility).
+- "Try" mode (`render_try_table` at [forms/program/rs/lib.rs:406](forms/program/rs/lib.rs)) is a label-only `TableScene` — there is no interactive form at all (no inputs, no step wizard, no validation, no conditional visibility).
 - "Edit" mode is a flat table; the old per-question structural editor (placeholder/min/max/step/unit/options-editor/vector-fields-editor/note-text/image-src/file-accept editing) has no equivalent.
 - `buildingComponent` questions carry `fixtureSlug`/`params` but there's no evaluation/tessellation/preview pipeline in Rust for forms (procedural/3d has one, forms doesn't reuse it).
 - `FlowGenerateSurface` (named "generations" list + bound form + preview) was never part of forms itself pre-migration — it was a second `"generate"` app mode on `flow`, `procedural/2d`, and `procedural/3d` (reusing forms-core types). None of the three currently have a `generate` mode.
@@ -49,7 +49,7 @@ Compared pre-migration TypeScript (`git show 5ecbe3dbf^:forms/react/index.tsx`, 
 
 ## Scope decisions (confirmed with dev)
 
-- Restore the `buildingComponent` **live 3D mesh preview**, reusing procedural/3d's proven Rust evaluate→tessellate→`World3dScene` pipeline ([procedural/3d/plugin/rs/lib.rs:388-437](procedural/3d/plugin/rs/lib.rs)), not the old JS/WASM-kernel-bridge approach.
+- Restore the `buildingComponent` **live 3D mesh preview**, reusing procedural/3d's proven Rust evaluate→tessellate→`World3dScene` pipeline ([procedural/3d/program/rs/lib.rs:388-437](procedural/3d/program/rs/lib.rs)), not the old JS/WASM-kernel-bridge approach.
 - Include restoring `Generate` mode on `flow`, `procedural/2d`, and `procedural/3d` in this same effort (touches those plugins, but forms-core is the shared type foundation, so this is one coherent piece of work, not "mixing technologies").
 - `date`/`color`/`file` question kinds get functional-but-approximated wgpu controls (plain editable text field for date/color value, filename-text for file — no native OS pickers in wgpu); this is a documented, explicit limitation, not a silent gap.
 
@@ -72,21 +72,21 @@ Fix [framework/renderer/wgpu/rs/interpreter.rs:127-130](framework/renderer/wgpu/
 - `framework/renderer/react/ui-interpreter.tsx:92-119`: extend the `Input` control's `inputKind` handling to map `longText`→`Textarea`, `date`→`<Input type="date">`, `color`→`<Input type="color">`, `file`→`<Input type="file">` (dispatch filename via `onChange`).
 - `ui/wgpu/rs/widgets.rs` / wgpu shell input handling: keep single-line text editing for all non-`number` kinds (already generic); only the numeric-parse branch needs to stay gated on `input_kind == "number"`. Document the date/color/file simplification inline as a known wgpu limitation (comment, not silent).
 - No new `UiNode`/`UiControlNode` variants needed for `multi` (build via a `Stack` of `Toggle` controls, one per option, mirroring the old `FormMultiSelectControl`) or `vector` with arbitrary field counts (a `Stack` of `Field`+`NumberStepper` per configured field, not the fixed-3 `Vec3` control).
-- `image` question rendering: decode `question.src` via the `image` crate (already a dependency of `raster-plugin`, add to `forms-plugin`) into RGBA pixels and emit a nested `build_raster_scene` (reuses the already-parity-proven Raster host in both renderers); fall back to a muted "No image" text node when `src` is empty/undecodable (e.g. SVG, which `image` doesn't decode — swap the onboarding fixture's avatar to a bundled raster asset when restoring that fixture).
+- `image` question rendering: decode `question.src` via the `image` crate (already a dependency of `raster-program`, add to `forms-program`) into RGBA pixels and emit a nested `build_raster_scene` (reuses the already-parity-proven Raster host in both renderers); fall back to a muted "No image" text node when `src` is empty/undecodable (e.g. SVG, which `image` doesn't decode — swap the onboarding fixture's avatar to a bundled raster asset when restoring that fixture).
 
-## Phase 4 — `forms/plugin/rs/lib.rs`: Edit mode restoration
+## Phase 4 — `forms/program/rs/lib.rs`: Edit mode restoration
 
-Keep the Edit window's overview table, but restore full per-question structural editing in the Inspection panel (`build_inspector_tree`, extending the existing pattern already used for `label`/`kind`/`required`) so it exposes, per selected question kind: `description`, `placeholder` (text/longText), `min`/`max`/`step`/`default` (number/slider) + `unit` (slider), boolean default, options editor with individual add/remove rows for `single`/`multi` (mirror the "S" plugin's restored per-option-row pattern, [s/plugin/rs/lib.rs:663-689](s/plugin/rs/lib.rs)) + a default-option select/multi-toggle, `date`/`color` default, vector `schema`/`step` + per-field add/remove editor, `note` text, `image` `src`, `file` `accept`, and `buildingComponent`'s `fixtureSlug` (readonly) + `params` (one numeric field per known param key). Extend `patchQuestions` (and add sibling commands only if a single patch shape can't cover options/vector-field add-remove) to cover every field.
+Keep the Edit window's overview table, but restore full per-question structural editing in the Inspection panel (`build_inspector_tree`, extending the existing pattern already used for `label`/`kind`/`required`) so it exposes, per selected question kind: `description`, `placeholder` (text/longText), `min`/`max`/`step`/`default` (number/slider) + `unit` (slider), boolean default, options editor with individual add/remove rows for `single`/`multi` (mirror the "S" plugin's restored per-option-row pattern, [s/program/rs/lib.rs:663-689](s/program/rs/lib.rs)) + a default-option select/multi-toggle, `date`/`color` default, vector `schema`/`step` + per-field add/remove editor, `note` text, `image` `src`, `file` `accept`, and `buildingComponent`'s `fixtureSlug` (readonly) + `params` (one numeric field per known param key). Extend `patchQuestions` (and add sibling commands only if a single patch shape can't cover options/vector-field add-remove) to cover every field.
 
-## Phase 5 — `forms/plugin/rs/lib.rs`: Try mode wizard
+## Phase 5 — `forms/program/rs/lib.rs`: Try mode wizard
 
 Replace `render_try_table`/`try_table_rows` with a real multi-step wizard `UiNode` tree: title + "Step N / M" text, `visible_questions`-filtered `Field`s mapping each kind to its control (text→`Input`, longText→`Input(longText)`, number→`Input(number)`, slider→`Slider`, boolean→`Toggle`, single→`Select`, multi→`Stack` of `Toggle`s, date/color→`Input(date|color)`, vector→`Stack` of `Field`+`NumberStepper`, note→`Text`, image→nested raster scene, file→`Input(file)`, buildingComponent→params as `Field`+`NumberStepper` rows), plus Back/Next/Submit `Button`s gated by `can_advance`. Add `current_step_index` to `FormsPlayEnvelope` and commands `previousStep`/`nextStep`/`submit` (mirroring `FormRuntime.previousStep/nextStep/submit`), plus a generic `setTryValue` command replacing the current stubbed `tryEngagementInput`.
 
 ## Phase 6 — `buildingComponent` live mesh preview
 
-- Add `flow_core`, `flow_module_brep`, `kernel_3d_brepkit`, `kernel_3d_engine` to [forms/plugin/rs/Cargo.toml](forms/plugin/rs/Cargo.toml) (mirrors [procedural/3d/plugin/rs/Cargo.toml](procedural/3d/plugin/rs/Cargo.toml)).
-- Bundle `hexagonal-mushroom-column.procedural.json` via `include_str!` and a small `fixture_json_for_slug(slug) -> Option<&str>` lookup (local to forms-plugin; the one bundled slug today, extensible).
-- Port `evaluated_preview_payload` ([procedural/3d/plugin/rs/lib.rs:388-437](procedural/3d/plugin/rs/lib.rs)): parse fixture → `FlowHost::from_fixture` → apply the question's `params` via `FlowHost::set_neuron_params` ([flow/core/rs/lib.rs:2244-2256](flow/core/rs/lib.rs)) → `evaluate()` → tessellate preview geometry handles → mesh/instance JSON.
+- Add `flow_core`, `flow_module_brep`, `kernel_3d_brepkit`, `kernel_3d_engine` to [forms/program/rs/Cargo.toml](forms/program/rs/Cargo.toml) (mirrors [procedural/3d/program/rs/Cargo.toml](procedural/3d/program/rs/Cargo.toml)).
+- Bundle `hexagonal-mushroom-column.procedural.json` via `include_str!` and a small `fixture_json_for_slug(slug) -> Option<&str>` lookup (local to forms-program; the one bundled slug today, extensible).
+- Port `evaluated_preview_payload` ([procedural/3d/program/rs/lib.rs:388-437](procedural/3d/program/rs/lib.rs)): parse fixture → `FlowHost::from_fixture` → apply the question's `params` via `FlowHost::set_neuron_params` ([flow/core/rs/lib.rs:2244-2256](flow/core/rs/lib.rs)) → `evaluate()` → tessellate preview geometry handles → mesh/instance JSON.
 - Add a third window (`FORMS_PLAY_WINDOW_PREVIEW`/"Preview") whose body renders `build_world_3d_scene` for the current form's first visible `buildingComponent` question (empty-state message when none), added to the default layout as a 3-way row split. A dedicated window (not inline-nested) is deliberate: matches procedural/3d's own dedicated preview window and gives the mesh real interactive/orbit space in both renderers.
 
 ## Phase 7 — Fixtures
@@ -96,13 +96,13 @@ Restore `forms/fixture`-equivalent `.example(...)` entries in `create_forms_app(
 ## Phase 8 — `Generate` mode (`flow`, `procedural/2d`, `procedural/3d`)
 
 - `flow/core/rs/lib.rs`: add `flow_fixture_to_form_spec(fixture: &Widget-graph) -> forms::FormSpec` (map `InputSlider`→`slider`, `InputStepper`→`vector`, `InputNote`→`note`, `InputImage`→`image`, `Variable`→`text`/`single`, porting the humanized-label heuristic from `/tmp/forms_internal_premigration.ts:691-753`) and `apply_generation_values_to_fixture(fixture_json, values) -> String` (non-destructive widget-value patch). Add `forms` as a path dependency of `flow_core`.
-- Add a small shared "generate mode" helper (new module in `semio-framework-plugin`, reused by all three plugins per the "use existing generic infra, don't triplicate" precedent from the S-parity restoration): generations `Vec<{id, name, values}>` CRUD (`addGeneration`/`removeGeneration`/`renameGeneration`/`selectGeneration`/`updateGenerationValues`) + tree-list rendering + form-body rendering from a `FormSpec`.
-- Wire `.mode("generate", "Generate")` + 3 new `window_kind`s (Generations list / Form / Preview text or mesh) + a `named_layout` (mirroring [lowpoly/plugin/rs/lib.rs:2069-2092](lowpoly/plugin/rs/lib.rs)) into `flow/plugin/rs/lib.rs`, `procedural/2d/plugin/rs/lib.rs`, `procedural/3d/plugin/rs/lib.rs`. Preview pane: flow uses the existing eval-JSON-as-text path ([flow/plugin/rs/lib.rs:682-686](flow/plugin/rs/lib.rs)); procedural/2d/3d reuse their existing `evaluated_preview_payload`-style pipelines for a real canvas-2d/world-3d preview per generation.
+- Add a small shared "generate mode" helper (new module in `semio-framework-program`, reused by all three plugins per the "use existing generic infra, don't triplicate" precedent from the S-parity restoration): generations `Vec<{id, name, values}>` CRUD (`addGeneration`/`removeGeneration`/`renameGeneration`/`selectGeneration`/`updateGenerationValues`) + tree-list rendering + form-body rendering from a `FormSpec`.
+- Wire `.mode("generate", "Generate")` + 3 new `window_kind`s (Generations list / Form / Preview text or mesh) + a `named_layout` (mirroring [lowpoly/program/rs/lib.rs:2069-2092](lowpoly/program/rs/lib.rs)) into `flow/program/rs/lib.rs`, `procedural/2d/program/rs/lib.rs`, `procedural/3d/program/rs/lib.rs`. Preview pane: flow uses the existing eval-JSON-as-text path ([flow/program/rs/lib.rs:682-686](flow/program/rs/lib.rs)); procedural/2d/3d reuse their existing `evaluated_preview_payload`-style pipelines for a real canvas-2d/world-3d preview per generation.
 - Persist `generations`/`selected_generation_id` on each plugin's document envelope.
 
 ## Phase 9 — Verification
 
-- `cargo check`/`cargo test` (native) for `forms-plugin`, `flow-plugin`, `procedural2d-plugin`, `procedural3d-plugin`, `semio-framework-plugin`, `semio-framework-core`, `semio-framework-renderer-wgpu`.
+- `cargo check`/`cargo test` (native) for `forms-program`, `flow-program`, `procedural2d-program`, `procedural3d-program`, `semio-framework-program`, `semio-framework-core`, `semio-framework-renderer-wgpu`.
 - `cargo build --target wasm32-unknown-unknown` for the same crates; rebuild wasm bindings.
 - `bun nx run @semio-tech/framework-renderer-react:test` after the interpreter changes.
 - Re-run/extend the WGPU playground E2E harness ([.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts](.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts)) for `forms`, `flow`, `procedural2d`, `procedural3d`, screenshot-diffing wgpu vs React for Edit/Try/Preview/Generate.

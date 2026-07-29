@@ -15,7 +15,7 @@ todos:
     content: Render vortex arrows in infinite/world (direction + displayDirection, shaft/head instances, pick unchanged)
     status: completed
   - id: tests-close
-    content: Extend puzzle-plugin tests; close ticket
+    content: Extend puzzle-program tests; close ticket
     status: completed
 isProject: false
 ---
@@ -29,7 +29,7 @@ Vortices are connection points with world `position` and `direction`. Today both
 - React: `[WorldVortexMarkers](framework/renderer/react/index.tsx)` (`sphereGeometry` at `vortex.position`; `direction` ignored)
 - WGPU: `[infinite/world/rs/lib.rs](infinite/world/rs/lib.rs)` instances `vortex-marker` (ico-sphere) with uniform scale
 
-Plugin already emits direction in `[world_vortices_json](puzzle/plugin/rs/lib.rs)`. Window options follow the existing `vortex_show` pattern (per-window via `Puzzle3dWindowOptions`).
+Plugin already emits direction in `[world_vortices_json](puzzle/program/rs/lib.rs)`. Window options follow the existing `vortex_show` pattern (per-window via `Puzzle3dWindowOptions`).
 
 Goal: `🎯r2602` (Running Sketchpad). New ticket (no open ticket covers arrow display).
 
@@ -63,9 +63,9 @@ Pointer hit target stays an invisible sphere of full `radius` at the point so se
 
 ## Changes
 
-### 1. Window option in puzzle plugin
+### 1. Window option in puzzle program
 
-In `[puzzle/plugin/rs/lib.rs](puzzle/plugin/rs/lib.rs)`, mirror `vortex_show`:
+In `[puzzle/program/rs/lib.rs](puzzle/program/rs/lib.rs)`, mirror `vortex_show`:
 
 - Constants: `PUZZLE3D_VORTEX_DIRECTION_OUTWARDS = "outwards"`, `PUZZLE3D_VORTEX_DIRECTION_INWARDS = "inwards"`
 - Runtime + `Puzzle3dWindowOptions` field: `vortex_direction: String` (default outwards)
@@ -108,7 +108,7 @@ In `[infinite/world/rs/lib.rs](infinite/world/rs/lib.rs)`:
 
 ### 4. Tests
 
-Extend existing plugin tests in the same file (no new test files):
+Extend existing program tests in the same file (no new test files):
 
 - Default measure is outwards; `setVortexDirection` switches to inwards
 - Emitted `vorticesJson` entries include `displayDirection` matching the option
@@ -117,6 +117,6 @@ Extend existing plugin tests in the same file (no new test files):
 ## Ticket workflow (on execute)
 
 1. `ticket_open` under goal `🎯r2602`
-2. Implement + run `cargo test -p puzzle-plugin` for the new/updated cases
+2. Implement + run `cargo test -p puzzle-program` for the new/updated cases
 3. `ticket_close` with summary and touched paths
 

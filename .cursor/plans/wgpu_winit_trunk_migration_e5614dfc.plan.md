@@ -1,6 +1,6 @@
 ---
 name: wgpu winit trunk migration
-overview: Migrate the shared raw-wgpu renderer stack (used by the OS and all playgrounds via the single SEMIO_RENDERER=wgpu switch) from browser-only wasm-bindgen/web-sys to a winit-driven windowing/input layer that runs both natively and on the web via trunk, plus a native, hot-swappable plugin host.
+overview: Migrate the shared raw-wgpu renderer stack (used by the OS and all playgrounds via the single SEMIO_RENDERER=wgpu switch) from browser-only wasm-bindgen/web-sys to a winit-driven windowing/input layer that runs both natively and on the web via trunk, plus a native, hot-swappable program host.
 todos:
  - id: ticket
    content: Open/reopen MCP ticket under the framework/playground goal lineage
@@ -14,8 +14,8 @@ todos:
  - id: renderer-native-bin
    content: "framework/renderer/wgpu: add native [[bin]] target with winit EventLoop + native window"
    status: completed
- - id: native-plugin-host
-   content: Add native cdylib export path per plugin crate + libloading-based NativePluginHost with hot-swap file watcher
+ - id: native-program-host
+   content: Add native cdylib export path per program crate + libloading-based NativeProgramHost with hot-swap file watcher
    status: completed
  - id: trunk-build
    content: Replace framework/renderer/wgpu/script.ts wasm-bindgen pipeline with trunk build/serve; add index.html + Trunk.toml
@@ -30,7 +30,7 @@ todos:
    content: Add native (non-wasm32) equivalents for infinite/world's web_sys fetch usage
    status: completed
  - id: verify
-   content: Verify web (trunk) and native builds boot s studio and a single-plugin app, confirm native plugin hot-swap works, run existing test suites
+   content: Verify web (trunk) and native builds boot s studio and a single-program app, confirm native program hot-swap works, run existing test suites
    status: completed
 isProject: false
 ---
@@ -72,7 +72,7 @@ pub async fn from_canvas(canvas: web_sys::HtmlCanvasElement, dpr: f32) -> Result
 - All input is hand-wired DOM listeners in `attach_dom_listeners` (`ui/wgpu/rs/lib.rs`, input region ~4147-4337) — `mousemove`/`mousedown`/`wheel`/`keydown`/`contextmenu` via `web_sys::Element::add_event_listener_with_callback`. The good news: they already funnel into a renderer-agnostic `PointerCallbacks { on_move, on_button, on_wheel, on_key, on_context_menu }` closure struct and `InputState<E>` — only the DOM wiring itself is browser-specific.
 - The `<canvas>` element and the icon atlas are created/rasterized in JS, not Rust: [framework/renderer/wgpu/js/index.ts](framework/renderer/wgpu/js/index.ts) `bootFrameworkOsWgpu` creates the `<canvas>`, and `buildIconAtlas`/`rasterizeSvg` use `document.createElement("canvas")` + `CanvasRenderingContext2d` — not portable to a native, DOM-less binary.
 - Build is a hand-rolled `cargo build --target wasm32-unknown-unknown` + `wasm-bindgen --target web` pair in [framework/renderer/wgpu/script.ts](framework/renderer/wgpu/script.ts), no `trunk` involved.
-- Plugins are wasm-bindgen modules loaded via browser `import()` (`loadPluginModule` in [framework/core/js/index.ts](framework/core/js/index.ts:666)), string-in/string-out (`semio_plugin_manifest/create_app/destroy_app/handle_command/render/tools/window_engagements/window_measures`) — a shape that maps cleanly onto a native C-ABI dylib. There's already a hot-rebuild watcher for the wasm build (`PluginWatchScript` in [framework/product/os/dev/script.ts](framework/product/os/dev/script.ts:81)) that the native path should mirror.
+- Plugins are wasm-bindgen modules loaded via browser `import()` (`loadPluginModule` in [framework/core/js/index.ts](framework/core/js/index.ts:666)), string-in/string-out (`semio_program_manifest/create_app/destroy_app/handle_command/render/tools/window_engagements/window_measures`) — a shape that maps cleanly onto a native C-ABI dylib. There's already a hot-rebuild watcher for the wasm build (`PluginWatchScript` in [framework/product/os/dev/script.ts](framework/product/os/dev/script.ts:81)) that the native path should mirror.
 
 ## Target architecture
 
@@ -118,13 +118,13 @@ flowchart TB
 - `rs/lib.rs`'s shell/scenes/widgets interpreter is already renderer-agnostic (operates on `UiNode`/JSON) — untouched.
 - New `rs/host.rs` region: a `SemioApp` implementing `ApplicationHandler`, wrapping the existing boot logic that `semio_renderer_boot` performs today, following the winit 0.30 pattern (create window in `resumed()`, `pollster::block_on` GPU setup natively, `wasm_bindgen_futures::spawn_local` + `EventLoopProxy` user-event round trip on web).
 - **Web**: winit creates/attaches the `<canvas>` itself (`WindowAttributesExtWebSys::with_canvas`/`with_append` into the `#root` div) via `EventLoopExtWebSys::spawn_app`, replacing the manual `document.createElement("canvas")` in `js/index.ts`. Plugin `.wasm` module loading stays JS-driven (`loadPluginModule`), invoked from the trunk-generated glue.
-- **Native**: new `rs/bin.rs` + `[[bin]]` target in [framework/renderer/wgpu/rs/Cargo.toml](framework/renderer/wgpu/rs/Cargo.toml). `main()` builds a native `winit::event_loop::EventLoop`, runs the same `SemioApp`, and resolves plugins through the new native plugin host instead of `loadPluginModule`.
+- **Native**: new `rs/bin.rs` + `[[bin]]` target in [framework/renderer/wgpu/rs/Cargo.toml](framework/renderer/wgpu/rs/Cargo.toml). `main()` builds a native `winit::event_loop::EventLoop`, runs the same `SemioApp`, and resolves plugins through the new native program host instead of `loadPluginModule`.
 - **Icon atlas**: move `buildIconAtlas`/`rasterizeSvg`/`iconTintMask` from `js/index.ts` into Rust (CPU SVG rasterization, e.g. `resvg`/`tiny-skia`) so both native and web builds can produce the atlas without a DOM canvas; `@semio-tech/ui-asset`'s icon SVGs get mirrored into a generated Rust const, same pattern as [ui/styling/rs/generated.rs](ui/styling/rs/generated.rs) already does for design tokens.
 
-## 3. Native plugin hosting (new) — hot-swappable, for performance
+## 3. Native program hosting (new) — hot-swappable, for performance
 
-- Each plugin crate (`draw/plugin/rs`, `s/plugin/rs`, ... all 25 in [framework/product/os/dev/js/index.ts](framework/product/os/dev/js/index.ts:14) `PLUGIN_BUILD_TARGETS`) gains a native `cdylib` build path exporting the same function names as today's wasm-bindgen exports, but as `#[no_mangle] pub extern "C" fn` over `*const c_char`/`*mut c_char` JSON strings — no ABI redesign, since the existing interface is already JSON-string-based (`framework/core/js/index.ts:638` `PluginWasmHandle`).
-- New `NativePluginHost` (shared crate, e.g. `framework/plugin/rs` region or a new sibling crate) using `libloading::Library` to `dlopen`/resolve symbols, exposing the exact same shape as `PluginWasmHandle`.
+- Each program crate (`draw/program/rs`, `s/program/rs`, ... all 25 in [framework/product/os/dev/js/index.ts](framework/product/os/dev/js/index.ts:14) `PROGRAM_BUILD_TARGETS`) gains a native `cdylib` build path exporting the same function names as today's wasm-bindgen exports, but as `#[no_mangle] pub extern "C" fn` over `*const c_char`/`*mut c_char` JSON strings — no ABI redesign, since the existing interface is already JSON-string-based (`framework/core/js/index.ts:638` `PluginWasmHandle`).
+- New `NativeProgramHost` (shared crate, e.g. `framework/program/rs` region or a new sibling crate) using `libloading::Library` to `dlopen`/resolve symbols, exposing the exact same shape as `PluginWasmHandle`.
 - Hot-swap: a file watcher mirroring `PluginWatchScript` ([framework/product/os/dev/script.ts:81](framework/product/os/dev/script.ts)) rebuilds the native dylib on change; the host drops the old `Library` and opens the new one. Plugin state already round-trips through JSON via `handle_command`/`render`, so instances survive a reload without a redesign.
 - [framework/product/os/dev/script.ts](framework/product/os/dev/script.ts) `PluginBuildScript`/`PluginWatchScript` gain a native branch alongside the existing `wasm32-unknown-unknown` branch.
 
@@ -133,12 +133,12 @@ flowchart TB
 - New `framework/renderer/wgpu/index.html` + `Trunk.toml`, dist output kept at the same place the dev host already serves from (`framework/product/os/dev/renderer-modules/wgpu` or equivalent).
 - Rewrite `WasmBuildScript` in [framework/renderer/wgpu/script.ts](framework/renderer/wgpu/script.ts) to shell out to `trunk build --release` instead of the manual `cargo build` + `wasm-bindgen` pair — `trunk` is invoked as a subprocess from `script.ts`, keeping the `project.json` → `script.ts` contract intact. Add a `trunk serve`-backed dev command.
 - [framework/product/os/dev/script.ts](framework/product/os/dev/script.ts) `DevScript`/`BuildScript`: when `SEMIO_RENDERER=wgpu`, run `trunk serve`/`trunk build` directly on `S_OS_PORT` instead of routing through Vite's dynamic `import()` — the React path (`SEMIO_RENDERER=react`) stays exactly as-is on Vite.
-- [framework/product/os/dev/js/index.ts](framework/product/os/dev/js/index.ts) drops its wgpu branch (lines 57-61); plugin-registry/`pluginFilter` resolution moves into the trunk `index.html`/Rust boot code, reading `plugin`/`SEMIO_PLUGIN` from the query string the same way the React path already does via `pluginFromUrl`.
+- [framework/product/os/dev/js/index.ts](framework/product/os/dev/js/index.ts) drops its wgpu branch (lines 57-61); program-registry/`pluginFilter` resolution moves into the trunk `index.html`/Rust boot code, reading `program`/`SEMIO_PLUGIN` from the query string the same way the React path already does via `pluginFromUrl`.
 
 ## 5. Native launch entries
 
-- Add `bun ./script.ts native <plugin>` to [framework/renderer/wgpu/script.ts](framework/renderer/wgpu/script.ts) (`cargo run -p semio-framework-renderer-wgpu --bin <native-bin> --release -- --plugin <id>`).
-- Add new `.vscode/launch.json` entries following the existing `🛠️dev<emoji><name>🧊wgpu` naming/grouping, e.g. `🛠️dev🖥️s🧊wgpu🖥️native`, starting with `s` plus one or two representative playgrounds (`draw`, `puzzle/3d`) rather than mechanically duplicating all ~26 — native plugin dylibs need to exist per app first.
+- Add `bun ./script.ts native <plugin>` to [framework/renderer/wgpu/script.ts](framework/renderer/wgpu/script.ts) (`cargo run -p semio-framework-renderer-wgpu --bin <native-bin> --release -- --program <id>`).
+- Add new `.vscode/launch.json` entries following the existing `🛠️dev<emoji><name>🧊wgpu` naming/grouping, e.g. `🛠️dev🖥️s🧊wgpu🖥️native`, starting with `s` plus one or two representative playgrounds (`draw`, `puzzle/3d`) rather than mechanically duplicating all ~26 — native program dylibs need to exist per app first.
 
 ## 6. `infinite/world` follow-through
 
@@ -147,4 +147,4 @@ flowchart TB
 ## Process
 
 - One MCP ticket (read `repo://goals` first; likely continues the `🎯framework🎯playground` / raw-wgpu-renderer lineage). All temp logs/scripts inside the ticket folder. Edits added to existing files via regions — no new test files, no example files.
-- Verification: `trunk build`/`trunk serve` for the web target still boots `s` studio and a couple of single-plugin apps; `cargo run` the native binary opens a real OS window and renders the same shell; hot-swap a plugin dylib while the native app is running and confirm the UI updates without a restart; existing `bun test` / `cargo test` suites stay green.
+- Verification: `trunk build`/`trunk serve` for the web target still boots `s` studio and a couple of single-program apps; `cargo run` the native binary opens a real OS window and renders the same shell; hot-swap a program dylib while the native app is running and confirm the UI updates without a restart; existing `bun test` / `cargo test` suites stay green.

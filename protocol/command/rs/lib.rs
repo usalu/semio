@@ -23,9 +23,9 @@ pub trait OperationDiff<P>: Clone + Default + serde::Serialize + serde::de::Dese
 /// `Option<protocol_core::DocumentVersion>` (was a bare `u64` defaulting to `0`, which conflated
 /// "no base" with "based on version 0" — `None` fixes that); `conflict_rule`/`state_class` are new
 /// defaulted methods so every existing `impl` recompiles unchanged; `reconcile` becomes an instance
-/// method (`&self`) returning this crate's own `ReconcileReport` instead of `store::StudioConflict`,
-/// so `vcs` maps `ReconcileReport -> StudioConflict` at its own edge instead of this crate knowing
-/// about studio types.
+/// method (`&self`) returning this crate's own `ReconcileReport` instead of `store::SpaceConflict`,
+/// so `vcs` maps `ReconcileReport -> SpaceConflict` at its own edge instead of this crate knowing
+/// about space types.
 pub trait Operation<P>: Clone + serde::Serialize + serde::de::DeserializeOwned {
     type Diff: OperationDiff<P>;
 

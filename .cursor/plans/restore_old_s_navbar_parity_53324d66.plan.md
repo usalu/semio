@@ -1,9 +1,9 @@
 ---
 name: Restore old S navbar parity
-overview: Restore the old S/playground navbar structure in the shared `os-shell.tsx` renderer (used by all 25 plugin playgrounds) and make the example dropdown work generically for any plugin that declares examples, not just S.
+overview: Restore the old S/playground navbar structure in the shared `os-shell.tsx` renderer (used by all 25 program playgrounds) and make the example dropdown work generically for any program that declares examples, not just S.
 todos:
  - id: generic-example-dropdown
-   content: "Make the navbar example dropdown generic: derive from the active session's own plugin manifest examples, dispatch to session.app.controllerId, fix activeExampleId default/reset"
+   content: "Make the navbar example dropdown generic: derive from the active session's own program manifest examples, dispatch to session.app.controllerId, fix activeExampleId default/reset"
    status: completed
  - id: restore-panel-toggle-and-modes
    content: Add activeLeftPanelKind/activeRightPanelKind state, split leftPanelTabs/rightPanelTabs accordingly, rebuild panelToggles as the old 4-icon (display/workbench/details/settings) group, and add a mode ButtonGroup navbar item (set App chrome={false})
@@ -22,11 +22,11 @@ isProject: false
 
 ## Root cause
 
-`os-shell.tsx` (`framework/renderer/react/os-shell.tsx`) is the **one shared renderer** used for every plugin playground (`draw`, `puzzle2d`, `raster`, `s`, etc. -- see `framework/product/os/dev/js/plugin-registry.ts`), replacing the old `PlaygroundView` (`framework/product/playground/renderer/react/index.tsx` at commit `f8376e848`, 2207 lines). During the Rust/WIT plugin migration, the navbar was substantially redesigned and the example dropdown was hardwired to the S plugin only, so:
+`os-shell.tsx` (`framework/renderer/react/os-shell.tsx`) is the **one shared renderer** used for every program playground (`draw`, `puzzle2d`, `raster`, `s`, etc. -- see `framework/product/os/dev/js/program-registry.ts`), replacing the old `PlaygroundView` (`framework/product/playground/renderer/react/index.tsx` at commit `f8376e848`, 2207 lines). During the Rust/WIT program migration, the navbar was substantially redesigned and the example dropdown was hardwired to the S program only, so:
 
 - 23 of 25 plugins declare `.example(...)` in their manifest builder (confirmed in `draw`, `puzzle2d`, `puzzle3d`, `puzzle5d`, `raster`, `writer`, `note`, `layout`, `cad`, etc.) but only S gets a working dropdown, because `os-shell.tsx` line ~1233-1237 does:
   ```ts
-  const sPluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === "s")?.manifest, [loadedPlugins]);
+  const sProgramManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.programId === "s")?.manifest, [loadedPlugins]);
   ```
   and the navbar item is gated on `session?.app.id === S_PLAY_APP_ID` (line 1273).
 - The navbar composition itself diverged structurally from old S:
@@ -47,17 +47,17 @@ The underlying settings/display panel-tab infrastructure already exists and is r
 
 ## Decisions (confirmed with user)
 
-1. **Example dropdown fix is generic** -- driven by the active session's own plugin manifest, not hardcoded to S.
+1. **Example dropdown fix is generic** -- driven by the active session's own program manifest, not hardcoded to S.
 2. **Navbar restored to old structure** -- move theme/compact/expertise back to the Settings panel tab only, restore the 4-icon display/workbench/details/settings panel toggle group and the mode `ButtonGroup`; drop the newly-added history-nav buttons, breadcrumb, and search/find toggles from the navbar (their underlying keybindings/dialogs stay functional, just not exposed as navbar buttons -- flagged below in case full removal is preferred instead).
 
 ## Changes
 
 ### 1. Generic example dropdown -- `framework/renderer/react/os-shell.tsx`
 
-- Replace the S-only `sPluginManifest`/`exampleOptions` derivation with one based on the **active session's own plugin**: `loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest.examples`.
+- Replace the S-only `sProgramManifest`/`exampleOptions` derivation with one based on the **active session's own plugin**: `loadedPlugins.find((entry) => entry.handle.programId === session?.programId)?.manifest.examples`.
 - Change the navbar gate from `studioMode && session?.app.id === S_PLAY_APP_ID && exampleOptions.length > 0` to just `exampleOptions.length > 0`.
 - Dispatch `{ controllerId: session.app.controllerId, command: "setActiveExample", args: { exampleId } }` (generic controller id, already used elsewhere in this file e.g. line 1357) instead of hardcoded `S_PLAY_CONTROLLER_ID`.
-- Fix `activeExampleId` default: currently `useState("demo")`, but example ids vary per plugin (`"empty"`, `"default"`, `"nakagin"`, etc. -- confirmed via `grep .example(` across plugins). Initialize/reset to `exampleOptions[0]?.id` when the active app/plugin changes.
+- Fix `activeExampleId` default: currently `useState("demo")`, but example ids vary per program (`"empty"`, `"default"`, `"nakagin"`, etc. -- confirmed via `grep .example(` across plugins). Initialize/reset to `exampleOptions[0]?.id` when the active app/plugin changes.
 
 ### 2. Restore 4-icon panel toggle group + mode switcher -- `framework/renderer/react/os-shell.tsx`
 

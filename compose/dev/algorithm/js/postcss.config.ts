@@ -6,8 +6,8 @@
 // #endregion 🧲Header
 
 // #region 🗄️Configuration
-// PostCSS plugin configuration for the algorithms bundle.
-// Configuration MUST use the @tailwindcss/postcss plugin.
+// PostCSS program configuration for the algorithms bundle.
+// Configuration MUST use the @tailwindcss/postcss program.
 
 import { Config } from "postcss-load-config";
 

@@ -9,7 +9,7 @@ isProject: false
 
 These are pre-existing bugs, not caused by the gumball work, but block "works end to end":
 
-- `**engine_canvas_target` missing `STORAGE_BINDING**`: [framework/renderer/wgpu/rs/engine_canvas.rs](framework/renderer/wgpu/rs/engine_canvas.rs) `create_target_texture()` (~~line 174-191) and the post-render replacement texture in `render_vello_scene()` (~~216-228) create the texture with `RENDER_ATTACHMENT | TEXTURE_BINDING` only. Vello's `render_to_texture` requires `STORAGE_BINDING` (per `vello::Renderer::render_to_texture` docs). Add `wgpu::TextureUsages::STORAGE_BINDING` to both texture descriptors. This is hit by any plugin embedding a node-graph or text-editor via Vello (e.g. `dag`), not by world3d.
+- `**engine_canvas_target` missing `STORAGE_BINDING**`: [framework/renderer/wgpu/rs/engine_canvas.rs](framework/renderer/wgpu/rs/engine_canvas.rs) `create_target_texture()` (~~line 174-191) and the post-render replacement texture in `render_vello_scene()` (~~216-228) create the texture with `RENDER_ATTACHMENT | TEXTURE_BINDING` only. Vello's `render_to_texture` requires `STORAGE_BINDING` (per `vello::Renderer::render_to_texture` docs). Add `wgpu::TextureUsages::STORAGE_BINDING` to both texture descriptors. This is hit by any program embedding a node-graph or text-editor via Vello (e.g. `dag`), not by world3d.
 - `**ui_pipeline` depth mismatch on `ui_raster_pass**`: [ui/wgpu/rs/draw.rs](ui/wgpu/rs/draw.rs) `ui_pipeline` is created (~~1039-1083) with `depth_stencil: overlay_depth_state` (Depth24Plus), but the `ui_raster_pass` render pass (~~1887-1912) is opened with `depth_stencil_attachment: None`. Fix by giving `ui_raster_pass` a depth-stencil attachment referencing the existing `depth_view` with `LoadOperation::Load` (matching the always-true/no-write `overlay_depth_state`), so its attachment state matches `ui_pipeline`. Triggered whenever `push_raster_quad` is used (dag/text-editor embeds, `"raster"` scenes) - unrelated to gumball.
 
 ## 2. Extract `kernel/3d/scene` - generic 3D math + draw descriptors
@@ -47,8 +47,8 @@ Create a new Rust crate under `infinite/world/`, mirroring `infinite/cavas/rs` (
 
 - `cargo test -p kernel_3d_scene`, `cargo test -p infinite_world`, `cargo test -p ui_wgpu`, `cargo test -p semio-framework-renderer-wgpu` (or workspace-wide) - confirm all moved tests (including the `concrete_forest_*` frustum regression tests) still pass from their new locations.
 - Rebuild WASM (`bun ./framework/renderer/wgpu/script.ts wasm`).
-- Re-run `bun ./.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts --plugins puzzle3d,puzzle5d,lowpoly,procedural3d,cad,shooting` and confirm all six pass (including re-investigating the earlier `procedural3d` screenshot timeout).
-- Manually load a plugin that triggers the Vello/raster path (e.g. `dag`) in the dev browser and confirm the two WebGPU validation errors no longer appear in the console.
+- Re-run `bun ./.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts --programs puzzle3d,puzzle5d,lowpoly,procedural3d,cad,shooting` and confirm all six pass (including re-investigating the earlier `procedural3d` screenshot timeout).
+- Manually load a program that triggers the Vello/raster path (e.g. `dag`) in the dev browser and confirm the two WebGPU validation errors no longer appear in the console.
 
 ## Architecture after this change
 
@@ -57,7 +57,7 @@ graph TD
     kernelScene[kernel_3d_scene: Vec3/Mat4/Camera3d/OrbitController/frustum/ray-picking/Mesh3d/SceneDraw3d/ScenePass3d]
     uiWgpu[ui_wgpu: wgpu pipelines/bind groups/GpuContext/DrawList - GPU execution only]
     infiniteWorld[infinite_world: World3dState/scene JSON sync/picking/gumball interaction/GLB+texture loading]
-    frameworkRenderer[semio-framework-renderer-wgpu: plugin command dispatch, shell, dock]
+    frameworkRenderer[semio-framework-renderer-wgpu: program command dispatch, shell, dock]
 
     kernelScene --> uiWgpu
     kernelScene --> infiniteWorld
@@ -66,4 +66,4 @@ graph TD
     uiWgpu --> frameworkRenderer
 ```
 
-[{"id":"fix-webgpu-errors","content":"Fix engine_canvas_target STORAGE_BINDING usage and ui_raster_pass depth-attachment mismatch"},{"id":"create-kernel-3d-scene","content":"Create kernel/3d/scene crate (AGENTS.md, script.ts, project.json, Cargo.toml) and move scene3d.rs math/draw-descriptor content plus gumball math helpers into it"},{"id":"rewire-ui-wgpu","content":"Delete ui/wgpu/rs/scene3d.rs, depend on kernel_3d_scene, update lib.rs re-exports and draw.rs/gpu.rs imports"},{"id":"create-infinite-world","content":"Create infinite/world/rs crate and move World3dState/sync/picking/gumball-interaction/render orchestration out of framework world3d.rs"},{"id":"rewire-framework-renderer","content":"Delete framework/renderer/wgpu/rs/world3d.rs, add infinite_world dependency, update lib.rs/shell.rs/scenes.rs/interpreter.rs call sites"},{"id":"update-workspace-cargo","content":"Register kernel/3d/scene/rs and infinite/world/rs as workspace members in root Cargo.toml"},{"id":"verify-e2e","content":"Run cargo tests for all touched crates, rebuild wasm, rerun 6-plugin e2e suite, manually confirm WebGPU console errors are gone"}]
+[{"id":"fix-webgpu-errors","content":"Fix engine_canvas_target STORAGE_BINDING usage and ui_raster_pass depth-attachment mismatch"},{"id":"create-kernel-3d-scene","content":"Create kernel/3d/scene crate (AGENTS.md, script.ts, project.json, Cargo.toml) and move scene3d.rs math/draw-descriptor content plus gumball math helpers into it"},{"id":"rewire-ui-wgpu","content":"Delete ui/wgpu/rs/scene3d.rs, depend on kernel_3d_scene, update lib.rs re-exports and draw.rs/gpu.rs imports"},{"id":"create-infinite-world","content":"Create infinite/world/rs crate and move World3dState/sync/picking/gumball-interaction/render orchestration out of framework world3d.rs"},{"id":"rewire-framework-renderer","content":"Delete framework/renderer/wgpu/rs/world3d.rs, add infinite_world dependency, update lib.rs/shell.rs/scenes.rs/interpreter.rs call sites"},{"id":"update-workspace-cargo","content":"Register kernel/3d/scene/rs and infinite/world/rs as workspace members in root Cargo.toml"},{"id":"verify-e2e","content":"Run cargo tests for all touched crates, rebuild wasm, rerun 6-program e2e suite, manually confirm WebGPU console errors are gone"}]

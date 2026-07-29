@@ -78,12 +78,12 @@ test-results
 /playwright/.auth/
 #--------------------------------------VITE--------------------------------------
 .vite
-/framework/product/os/dev/plugin-modules/
-/framework/product/os/dev/plugin-modules-native/
-/framework/product/os/dev/public/plugin-modules/
+/framework/product/os/dev/program-modules/
+/framework/product/os/dev/program-modules-native/
+/framework/product/os/dev/public/program-modules/
 /framework/product/os/dev/renderer-modules/
 /framework/product/os/dev/public/plugins/
-/public/plugin-modules/
+/public/program-modules/
 #--------------------------------------NEXTJS--------------------------------------
 .next
 #--------------------------------------TURBO--------------------------------------

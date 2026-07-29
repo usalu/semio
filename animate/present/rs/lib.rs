@@ -29,7 +29,7 @@ pub mod present {
 
         pub type Result<T> = std::result::Result<T, PresentCompileError>;
 
-        /// 📦 Rendered scene clip paths for present sites and plugin export.
+        /// 📦 Rendered scene clip paths for present sites and program export.
         #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
         #[serde(rename_all = "camelCase")]
         pub struct SceneAssetBundle {
@@ -70,9 +70,9 @@ pub mod present {
                 "tileCount": deck.tiles.len(),
                 "player": {
                     "kind": "wgpu",
-                    "wasm": "/animate/plugin/wasm/animate_plugin_bg.wasm",
-                    "js": "/animate/plugin/wasm/animate_plugin.js",
-                    "boot": "/animate/plugin/wasm/boot.js"
+                    "wasm": "/animate/program/wasm/animate_program_bg.wasm",
+                    "js": "/animate/program/wasm/animate_program.js",
+                    "boot": "/animate/program/wasm/boot.js"
                 },
                 "assets": {
                     "deck": "deck.json",
@@ -100,7 +100,7 @@ pub mod present {
             <canvas id="animate-present-canvas" width="1280" height="720"></canvas>
             <script id="animate-present-deck" type="application/json">{escaped}</script>
           </main>
-          <script type="module" src="/animate/plugin/wasm/animate_plugin.js"></script>
+          <script type="module" src="/animate/program/wasm/animate_program.js"></script>
           <script type="module" src="player.js"></script>
         </body>
         </html>
@@ -183,7 +183,7 @@ pub mod present {
         }
 
         async function bootAnimatePresentPlayer() {
-          const wasmUrl = "/animate/plugin/wasm/animate_plugin_bg.wasm";
+          const wasmUrl = "/animate/program/wasm/animate_program_bg.wasm";
           const init = globalThis.AnimatePluginInit || globalThis.default;
           const sceneClips = collectSceneClips(deck);
           if (typeof init !== "function") {
@@ -214,12 +214,12 @@ pub mod present {
                 compile_present_site(&deck, &output).expect("compile site");
                 let index = std::fs::read_to_string(output.join("index.html")).expect("index.html");
                 assert!(index.contains("animate.present.deck"));
-                assert!(index.contains("animate_plugin.js"));
+                assert!(index.contains("animate_program.js"));
                 let player = std::fs::read_to_string(output.join("player.js")).expect("player.js");
                 assert!(player.contains("sceneClips"));
                 let manifest: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(output.join("manifest.json")).expect("manifest")).expect("json");
                 assert_eq!(manifest.get("schema").and_then(|v| v.as_str()), Some("animate.present.site"));
-                assert_eq!(manifest.pointer("/player/wasm").and_then(|v| v.as_str()), Some("/animate/plugin/wasm/animate_plugin_bg.wasm"));
+                assert_eq!(manifest.pointer("/player/wasm").and_then(|v| v.as_str()), Some("/animate/program/wasm/animate_program_bg.wasm"));
                 let deck_file: PresentDeck = serde_json::from_str(&std::fs::read_to_string(output.join("deck.json")).expect("deck.json")).expect("deck");
                 assert_eq!(deck_file.tiles.len(), 4);
                 let _ = std::fs::remove_dir_all(&output);

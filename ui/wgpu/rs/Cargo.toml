@@ -17,7 +17,7 @@ default = []
 # (see framework/core's former `typegen` feature); never enabled by default.
 typegen = ["dep:ts-rs"]
 # 🖥️ Full retained-mode engine: arena/tree/layout/text/input/gpu rendering. Off by
-# default so wasm32-wasip2 plugin components depend on the component types only.
+# default so wasm32-wasip2 program components depend on the component types only.
 engine = [
     "dep:parley",
     "dep:swash",

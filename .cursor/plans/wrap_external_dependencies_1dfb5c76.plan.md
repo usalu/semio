@@ -3,7 +3,7 @@ name: Wrap External Dependencies
 overview: "Establish a repo-wide ports-and-adapters discipline so no package imports a third-party library directly: every external dependency is reached only through a first-party interface (port) plus a thin adapter, enforced by a new repo policy and linter statutes across all languages."
 todos:
  - id: policy
-   content: Add `dependency-boundary` policy + per-language statutes to .repo/📊/policies.json and implement import-boundary detection in repo/lib/js linter and Go CLI analyze (using language plugin extractImports)
+   content: Add `dependency-boundary` policy + per-language statutes to .repo/📊/policies.json and implement import-boundary detection in repo/lib/js linter and Go CLI analyze (using language program extractImports)
    status: completed
  - id: rust-compose
    content: Wrap third-party deps in the Rust `compose` crate (nalgebra, rusqlite, ureq, zip, async-graphql, wasm web-sys/js-sys) behind traits + adapter regions

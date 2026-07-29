@@ -26,7 +26,7 @@ pub use protocol_command::{
 pub use protocol_causal::{
     FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult, InverseOperation, OpDag, OpDagError, DocumentDiff, OperationEnvelope, OperationTransform,
     TransformOutcome, decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec, frontier_delta as runtime_frontier_delta,
-    operation_envelope_from_edit,
+    operation_envelope_from_edit, operation_ids_for_edit,
 };
 pub use protocol_crdt::merge_concurrent_diffs;
 pub use protocol_wire::{AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, ServerFrame, decode_client_frame, decode_server_frame, encode_client_frame, encode_server_frame};

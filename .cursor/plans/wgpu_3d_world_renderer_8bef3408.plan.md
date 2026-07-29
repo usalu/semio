@@ -39,7 +39,7 @@ isProject: false
 - [framework/renderer/wgpu/rs/scenes.rs](framework/renderer/wgpu/rs/scenes.rs) `render_world_3d` draws a fake 2D cube; `WORLD3D_SHADER` in [ui/wgpu/rs/shaders.rs](ui/wgpu/rs/shaders.rs) is compiled but never used; all pipelines have `depth_stencil: None`; input has no wheel/drag/modifiers; `scene_hit_target` is dead code.
 - Protocol `World3dScene { camera_json, instances_json }` in [framework/core/rs/ui.rs](framework/core/rs/ui.rs) only carries box instances — no meshes, no selection. Emitted by lowpoly, procedural3d, puzzle3d, puzzle5d, cad, shooting plugins.
 - React `World3dHost` ([framework/renderer/react/components/world-3d-host.tsx](framework/renderer/react/components/world-3d-host.tsx)) renders unit boxes only; rich picking/lasso lives in domain packages (cad renderer, puzzle3d core) — design/type apps (compose sketchpad) need GLB mesh URLs.
-- Export: Rust-side `OsMediaExportFormat { Svg, Png, Obj, Glb }` + handler registry exist in [framework/product/os/core/rs/media_graph.rs](framework/product/os/core/rs/media_graph.rs); the s plugin emits a `downloadMediaExport` operation which the React shell downloads, but the wgpu shell's `apply_operations` ignores it. No 3d export handlers are registered in the Rust plugin path.
+- Export: Rust-side `OsMediaExportFormat { Svg, Png, Obj, Glb }` + handler registry exist in [framework/product/os/core/rs/media_graph.rs](framework/product/os/core/rs/media_graph.rs); the s program emits a `downloadMediaExport` operation which the React shell downloads, but the wgpu shell's `apply_operations` ignores it. No 3d export handlers are registered in the Rust program path.
 
 ## Architecture
 
@@ -83,7 +83,7 @@ In [framework/core/rs/ui.rs](framework/core/rs/ui.rs), mirrored in [framework/re
 - `instances_json`: `[{ id, meshId, position, rotationQuat, scale, color, selected, hovered, label }]`.
 - `selection_json`: `{ method: "rectangle"|"lasso", mode, ids, hoveredId }`.
 
-Standard renderer-to-plugin commands (handled by every world-3d plugin): `worldSelect { ids, merge }`, `worldHover { id }`, `setSelectionMethod { method }`. No back-compat shims — all emitters and both renderers move at once.
+Standard renderer-to-program commands (handled by every world-3d program): `worldSelect { ids, merge }`, `worldHover { id }`, `setSelectionMethod { method }`. No back-compat shims — all emitters and both renderers move at once.
 
 ## 3. `ui_wgpu` toolkit 3D layer — `ui/wgpu/rs`
 
@@ -105,13 +105,13 @@ New `scene3d.rs` module plus targeted extensions to existing files:
   - mousemove: raycast, renderer-local hover tint, dispatch `worldHover` only on change.
   - left click: pick nearest instance, dispatch `worldSelect` (shift/ctrl merge modes).
   - left drag: marquee per `selection_json.method` — rectangle or lasso; on release project instances and test coverage, dispatch `worldSelect` with the id set.
-  - right drag orbit, middle or shift+right drag pan, wheel zoom — all renderer-local (no plugin round trip).
+  - right drag orbit, middle or shift+right drag pan, wheel zoom — all renderer-local (no program round trip).
 - **Export** ([shell.rs](framework/renderer/wgpu/rs/shell.rs)): handle the `downloadMediaExport` operation in `apply_operations` — trigger a browser download via `web_sys` Blob + anchor click (parity with `os-shell.tsx`).
 
 ## 5. Plugin updates (all world-3d emitters, all at once)
 
-- **lowpoly** ([lowpoly/plugin/rs/lib.rs](lowpoly/plugin/rs/lib.rs)): store real `MeshData` per object (primitives from the core mesh module), emit mesh library + instances with selection/hover state, handle `worldSelect`/`worldHover`/`setSelectionMethod`, register `obj`/`glb` export handlers via `register_os_media_export_handler` using the core encoders; fix the default fixture.
-- **procedural3d** ([procedural/3d/plugin/rs/lib.rs](procedural/3d/plugin/rs/lib.rs)): preview emits real meshes (primitive geometry per node kind), selection wiring, obj/glb export of the preview meshes.
+- **lowpoly** ([lowpoly/program/rs/lib.rs](lowpoly/program/rs/lib.rs)): store real `MeshData` per object (primitives from the core mesh module), emit mesh library + instances with selection/hover state, handle `worldSelect`/`worldHover`/`setSelectionMethod`, register `obj`/`glb` export handlers via `register_os_media_export_handler` using the core encoders; fix the default fixture.
+- **procedural3d** ([procedural/3d/program/rs/lib.rs](procedural/3d/program/rs/lib.rs)): preview emits real meshes (primitive geometry per node kind), selection wiring, obj/glb export of the preview meshes.
 - **puzzle3d, puzzle5d, cad, shooting**: emit the extended payload — GLB `url` mesh entries where fixtures carry `meshUrl`, primitives otherwise — and handle the standard selection commands. Design/type apps (compose sketchpad, React-only) are covered by the GLB-url + selection capabilities without touching compose.
 
 ## 6. React renderer parity — `framework/renderer/react`
@@ -120,7 +120,7 @@ Update [world-3d-host.tsx](framework/renderer/react/components/world-3d-host.tsx
 
 ## 7. Verification
 
-- `cargo test` for framework core (mesh primitives, obj/glb round-trip), `ui_wgpu` (camera math, picking, lasso polygon tests), and each updated plugin.
+- `cargo test` for framework core (mesh primitives, obj/glb round-trip), `ui_wgpu` (camera math, picking, lasso polygon tests), and each updated program.
 - `cargo build -p semio-framework-renderer-wgpu --target wasm32-unknown-unknown --release` + wasm-bindgen artifact regeneration.
 - Boot dev server with `SEMIO_RENDERER=wgpu` for `?plugin=lowpoly` and `?plugin=procedural3d`; confirm runtime behaviour in the browser with `[DEBUG]` console logs (mesh upload counts, pick hits, lasso selection ids, export download).
 - React renderer vitest suite plus a react-path browser check for the same plugins.

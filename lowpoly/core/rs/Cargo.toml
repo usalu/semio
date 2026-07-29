@@ -26,9 +26,9 @@ base64 = "0.22.1"
 thiserror = "2.0.12"
 
 [dev-dependencies]
-cad-plugin = { path = "../../../cad/plugin/rs" }
+cad-program = { path = "../../../cad/program/rs" }
 cad_document = { path = "../../../cad/rs" }
 kernel_3d_brepkit = { path = "../../../kernel/3d/brep/rs" }
 kernel_3d_engine = { path = "../../../kernel/3d/brep/engine/rs" }
 semio-framework-core = { path = "../../../framework/core/rs" }
-semio-framework-plugin = { path = "../../../framework/plugin/rs" }
+semio-framework-program = { path = "../../../framework/program/rs" }

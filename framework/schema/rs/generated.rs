@@ -29,7 +29,7 @@ pub const ENTITY_KINDS: &[EntityKindSpec] = &[
 	EntityKindSpec { id: "file-script", emoji: "📜", icon_id: "code", label: "Script", filterable: true },
 	EntityKindSpec { id: "file-docs", emoji: "📃", icon_id: "file-text", label: "Docs", filterable: true },
 	EntityKindSpec { id: "file-config", emoji: "⚙️", icon_id: "settings", label: "Config", filterable: true },
-	EntityKindSpec { id: "file-resource", emoji: "💾", icon_id: "hard-drive", label: "Resource", filterable: true },
+	EntityKindSpec { id: "file-artifact", emoji: "💾", icon_id: "hard-drive", label: "Artifact", filterable: true },
 	EntityKindSpec { id: "file-template", emoji: "📋", icon_id: "clipboard-list", label: "Template", filterable: true },
 	EntityKindSpec { id: "file-license", emoji: "⚖️", icon_id: "landmark", label: "License", filterable: true },
 	EntityKindSpec { id: "line", emoji: "📌", icon_id: "hash", label: "Line", filterable: true },

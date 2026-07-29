@@ -15,7 +15,7 @@ todos:
     content: "Harden framework/sync + os-hub for file/folder/hub: reconnect, CAS, multi-client, wire or delete unused storage backends"
     status: completed
   - id: browser-rust-actor
-    content: Replace backbone-worker.ts with Rust wasm DocumentHost; finish plugin host relay (WS-E)
+    content: Replace backbone-worker.ts with Rust wasm DocumentHost; finish program host relay (WS-E)
     status: completed
   - id: verify-close
     content: Run vcs/sync/hub tests; runtime backbone attach round-trips with [DEBUG]; close ticket
@@ -31,13 +31,13 @@ isProject: false
 - **IO boundary stays:** `vcs` remains a non-blocking queue + storage format helpers; hub/file/folder IO stays in [`framework/sync/rs/lib.rs`](framework/sync/rs/lib.rs) and [`framework/product/os/hub/`](framework/product/os/hub/). Do not pull HTTP/fs into `vcs`.
 - **Browser sync becomes Rust:** replace [`backbone-worker.ts`](framework/product/os/core/js/backbone-worker.ts) by shipping `framework/sync`'s existing wasm `DocumentHost` path as the browser actor (no TS twin). Thin JS only hosts the worker entrypoint.
 - **Ticket:** reopen [`26/07/12/OS-VCS-HUB-CQRS-EVENT-SOURCING-REFACTOR`](.repo/🎫/26/07/12/OS-VCS-HUB-CQRS-EVENT-SOURCING-REFACTOR/ticket.json) (goal `🎯r2602🎯runningsketchpad` / issue #1956) — same task, not a new ticket.
-- **Out of scope for this pass:** WS-F mass plugin `setDocument` migration (~20 plugins). Hub/backbone must work for already-migrated typed-operation apps (shooting, vcs-play, architect, etc.).
+- **Out of scope for this pass:** WS-F mass program `setDocument` migration (~20 plugins). Hub/backbone must work for already-migrated typed-operation apps (shooting, vcs-play, architect, etc.).
 
 ## Architecture (target)
 
 ```mermaid
 flowchart TB
-  plugin["WASM plugin DocumentVcsStore"]
+  plugin["WASM program DocumentVcsStore"]
   port["PortBackbone / ChannelBackbone"]
   actor["framework/sync DocumentHost\nRust native thread OR Rust wasm worker"]
   folder["folder:// FolderSqliteStorage"]
@@ -45,11 +45,11 @@ flowchart TB
   hub["remote:// OS Hub WS+REST"]
   mem["MemoryBackbone tests"]
 
-  plugin --> port --> actor
+  program --> port --> actor
   actor --> folder
   actor --> file
   actor --> hub
-  plugin -.-> mem
+  program -.-> mem
 ```
 
 ## Workstreams
@@ -57,8 +57,8 @@ flowchart TB
 ### 1. Retire TypeScript VCS
 
 - Remove `vcs/core` package (project.json, package.json, js/, script.ts) and nx/workspace wiring.
-- Migrate sole consumer [`animate/present/core/js/internal.ts`](animate/present/core/js/internal.ts) off `@semio-tech/vcs-core`: move presentation deck VCS usage into Rust (`animate/present` rs or existing animate plugin path) so TS only sees serialized envelopes if needed.
-- Update [`vcs/AGENTS.md`](vcs/AGENTS.md) bundles to `vcs/rs` + `vcs/plugin` only (no `vcs/core`, drop stale `vcs/react`/`vcs/play` claims or point at plugin).
+- Migrate sole consumer [`animate/present/core/js/internal.ts`](animate/present/core/js/internal.ts) off `@semio-tech/vcs-core`: move presentation deck VCS usage into Rust (`animate/present` rs or existing animate program path) so TS only sees serialized envelopes if needed.
+- Update [`vcs/AGENTS.md`](vcs/AGENTS.md) bundles to `vcs/rs` + `vcs/plugin` only (no `vcs/core`, drop stale `vcs/react`/`vcs/play` claims or point at program).
 
 ### 2. Finish VCS engine gaps in Rust
 
@@ -80,7 +80,7 @@ In [`vcs/rs/lib.rs`](vcs/rs/lib.rs):
 **Browser (replace TS twin):**
 
 - Compile/use `semio-framework-sync` wasm actor as the worker body; delete or shrink `backbone-worker.ts` to a loader that posts messages to the wasm actor.
-- Finish WS-E relay: plugin WIT `backbone-send`/`backbone-poll` → plugin host → sync actor (React shell + wgpu wasm).
+- Finish WS-E relay: program WIT `backbone-send`/`backbone-poll` → program host → sync actor (React shell + wgpu wasm).
 - Confirm Sync attach cards (temp/file/folder/remote) open documents through this path only.
 
 ### 4. Verification
@@ -94,4 +94,4 @@ In [`vcs/rs/lib.rs`](vcs/rs/lib.rs):
 
 - Migrating all remaining plugins off `setDocument` (WS-F waves 2–4).
 - Unifying Compose hub (`compose/server/hub`) with OS hub.
-- Building a separate `vcs/react` HistoryTable package (history UI stays in plugin/framework surfaces).
+- Building a separate `vcs/react` HistoryTable package (history UI stays in program/framework surfaces).

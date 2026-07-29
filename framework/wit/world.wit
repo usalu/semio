@@ -1,7 +1,7 @@
 package semio:framework;
 
 interface types {
-  record plugin-manifest-json {
+  record program-manifest-json {
     json: string,
   }
 
@@ -66,7 +66,7 @@ interface types {
     ops: string,
   }
 
-  /// 🎞️ Payload crossing the plugin ABI on one declared workflow port (`consume-media`/
+  /// 🎞️ Payload crossing the program ABI on one declared workflow port (`consume-media`/
   /// `produce-media`). `descriptor-json` is a JSON object `{ edgeId?, portId?, kindId?, mediaType?,
   /// wire, blobHash? }` — `mediaType` mirrors `framework/core/rs/lib.rs`'s `MediaType` (`{class,
   /// form}`), `wire` mirrors its `MediaWireFormat` (`{kind:"document",schema}` or
@@ -78,14 +78,14 @@ interface types {
     data: list<u8>,
   }
 
-  variant plugin-error {
+  variant program-error {
     message(string),
   }
 }
 
-interface plugin {
+interface program {
   use types.{
-    plugin-manifest-json,
+    program-manifest-json,
     action-invocation-json,
     command-invocation-json,
     invocation-context-json,
@@ -99,27 +99,27 @@ interface plugin {
     document-text-files,
     document-pack-files,
     media-artifact,
-    plugin-error,
+    program-error,
   };
 
-  manifest: func() -> plugin-manifest-json;
-  instantiate-app: func(app-id: string, instance-id: string) -> result<u32, plugin-error>;
+  manifest: func() -> program-manifest-json;
+  instantiate-app: func(app-id: string, instance-id: string) -> result<u32, program-error>;
   handle-action: func(
     instance-id: u32,
     action: action-invocation-json,
     context: invocation-context-json,
-  ) -> result<invocation-response-json, plugin-error>;
-  /// 🎛️ Dispatches a scoped command (os/plugin/app/mode — never window-level; see `ActionDescriptor`
+  ) -> result<invocation-response-json, program-error>;
+  /// 🎛️ Dispatches a scoped command (os/program/app/mode — never window-level; see `ActionDescriptor`
   /// for window-level verbs) through the same operation-emitting pipeline as `handle-action`.
   handle-command: func(
     instance-id: u32,
     command: command-invocation-json,
     context: invocation-context-json,
-  ) -> result<invocation-response-json, plugin-error>;
+  ) -> result<invocation-response-json, program-error>;
   update-window: func(
     instance-id: u32,
     input: window-input-json,
-  ) -> result<window-output-json, plugin-error>;
+  ) -> result<window-output-json, program-error>;
   /// 🐢 Batched, hash-conditional refresh: one call replaces the old per-section `list-tools` /
   /// `window-engagements` / `window-measures` / `app-labels` (+ per-window `update-window`) round
   /// trips. The request lists every window/panel/utilities/engagements/measures/labels section the host
@@ -129,37 +129,37 @@ interface plugin {
   refresh-ui: func(
     instance-id: u32,
     request: ui-refresh-request-json,
-  ) -> result<ui-refresh-response-json, plugin-error>;
+  ) -> result<ui-refresh-response-json, program-error>;
   /// 📦 `data` (both directions) is pack-container bytes going forward (see `document-pack-files`) —
   /// the WIT signature itself is unchanged (`list<u8>` both ways) so no other func needed updating.
-  migrate-document: func(input: migrate-document-input) -> result<migrate-document-output, plugin-error>;
+  migrate-document: func(input: migrate-document-input) -> result<migrate-document-output, program-error>;
   /// 📦 `operations` is `protocol::encode_envelopes` bytes (a binary `OperationEnvelope` array).
-  apply-operations: func(instance-id: u32, operations: list<u8>) -> result<_, plugin-error>;
+  apply-operations: func(instance-id: u32, operations: list<u8>) -> result<_, program-error>;
   /// 📜 Text-DSL counterpart of `apply-operations`: one already-authored operation per non-blank line
   /// (op-text grammar, `vcs::OpText::parse_op`/`print_op`) instead of a binary `OperationEnvelope` array.
-  apply-operations-text: func(instance-id: u32, operations-text: string) -> result<_, plugin-error>;
+  apply-operations-text: func(instance-id: u32, operations-text: string) -> result<_, program-error>;
   /// 📜 Text-DSL counterpart of `read-app-document-pack`.
-  read-app-document-text: func(instance-id: u32) -> result<document-text-files, plugin-error>;
+  read-app-document-text: func(instance-id: u32) -> result<document-text-files, program-error>;
   /// 📜 Text-DSL counterpart of `load-app-document-pack`.
-  load-app-document-text: func(instance-id: u32, document-text: document-text-files) -> result<_, plugin-error>;
+  load-app-document-text: func(instance-id: u32, document-text: document-text-files) -> result<_, program-error>;
   /// 📦 Pack counterpart of `read-app-document-text`.
-  read-app-document-pack: func(instance-id: u32) -> result<document-pack-files, plugin-error>;
+  read-app-document-pack: func(instance-id: u32) -> result<document-pack-files, program-error>;
   /// 📦 Pack counterpart of `load-app-document-text`.
-  load-app-document-pack: func(instance-id: u32, document-pack: document-pack-files) -> result<_, plugin-error>;
-  attach-backbone: func(instance-id: u32, uri: string) -> result<_, plugin-error>;
-  detach-backbone: func(instance-id: u32) -> result<_, plugin-error>;
-  /// 🔌 Delivers a typed media artifact to a plugin instance's declared input port — the WIT-level
-  /// counterpart of the plugin SDK's `PluginApp::consume_media`. Every `PluginApp` gets a default
+  load-app-document-pack: func(instance-id: u32, document-pack: document-pack-files) -> result<_, program-error>;
+  attach-backbone: func(instance-id: u32, uri: string) -> result<_, program-error>;
+  detach-backbone: func(instance-id: u32) -> result<_, program-error>;
+  /// 🔌 Delivers a typed media artifact to a program instance's declared input port — the WIT-level
+  /// counterpart of the program SDK's `ProgramApp::consume_media`. Every `ProgramApp` gets a default
   /// (whole-document passthrough for a matching `document` wire); apps whose input isn't simply their
   /// own document override the SDK method directly.
-  consume-media: func(instance-id: u32, port-id: string, artifact: media-artifact) -> result<_, plugin-error>;
-  /// 🎬 Requests a typed media artifact from a plugin instance's declared output port — the WIT-level
-  /// counterpart of `PluginApp::produce_media`. Optional override point: most apps' "media output" is
+  consume-media: func(instance-id: u32, port-id: string, artifact: media-artifact) -> result<_, program-error>;
+  /// 🎬 Requests a typed media artifact from a program instance's declared output port — the WIT-level
+  /// counterpart of `ProgramApp::produce_media`. Optional override point: most apps' "media output" is
   /// just their document (the host can instead call `read-app-document-pack` and transcode server-side), so
   /// this only matters for apps whose output isn't simply their raw document (computed/derived
   /// outputs). `request-json` is reserved for future parameterized requests and currently ignored by
   /// the SDK default.
-  produce-media: func(instance-id: u32, port-id: string, request-json: string) -> result<media-artifact, plugin-error>;
+  produce-media: func(instance-id: u32, port-id: string, request-json: string) -> result<media-artifact, program-error>;
   /// 🩹 Clears the plugin's single-flight instance guard after a wasm trap skipped `Drop`. Hosts
   /// must only call this between serialized top-level calls — never while another call is in flight.
   clear-instance-guard: func();
@@ -176,12 +176,13 @@ interface host {
   network-fetch: func(origin: string, path: string) -> result<list<u8>, string>;
   write-blob: func(data: list<u8>, media-type: string) -> result<string, string>;
   read-blob: func(hash: string) -> result<list<u8>, string>;
-  backbone-send: func(uri: string, message-json: string) -> result<_, string>;
-  backbone-poll: func(uri: string) -> result<list<string>, string>;
+  /// 📦 `message` is a `store::encode_backbone_message` blob (a binary `BackboneMessage`).
+  backbone-send: func(uri: string, message: list<u8>) -> result<_, string>;
+  backbone-poll: func(uri: string) -> result<list<list<u8>>, string>;
   backbone-status: func(uri: string) -> result<string, string>;
 }
 
-world plugin-world {
+world program-world {
   import host;
-  export plugin;
+  export program;
 }

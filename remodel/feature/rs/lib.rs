@@ -215,7 +215,7 @@ pub fn detect_orb_keypoints(pyramid: &Pyramid, target_count: usize) -> Vec<Keypo
     keypoints
 }
 
-/// 🌄 Standalone Harris-only keypoint detector — the third `detector: harris` option promised by the plugin UI, independent of FAST: scores every pixel with [`harris_response`], keeps the positive-response ones, applies the same grid-bucketed top-k spatial spread as [`detect_orb_keypoints`], and assigns orientation via the intensity centroid, so the resulting [`Keypoint`]s (all at `octave: 0`, single-level) feed straight into [`describe_orb`]/[`match_brute`] unchanged.
+/// 🌄 Standalone Harris-only keypoint detector — the third `detector: harris` option promised by the program UI, independent of FAST: scores every pixel with [`harris_response`], keeps the positive-response ones, applies the same grid-bucketed top-k spatial spread as [`detect_orb_keypoints`], and assigns orientation via the intensity centroid, so the resulting [`Keypoint`]s (all at `octave: 0`, single-level) feed straight into [`describe_orb`]/[`match_brute`] unchanged.
 /// <https://en.wikipedia.org/wiki/Harris_Corner_Detector>
 pub fn detect_harris_keypoints(image: &ImageGray, target_count: usize) -> Vec<Keypoint> {
     if target_count == 0 || image.width == 0 || image.height == 0 {

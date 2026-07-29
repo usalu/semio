@@ -3375,7 +3375,7 @@ export const uiChromeTranslationBundles = {
             panels: { label: { normal: "Panels", beginner: "Panels" } },
             windows: { label: { normal: "Fenster", beginner: "Fenster" } },
             catalogue: { label: { normal: "Katalog", beginner: "Katalog" } },
-            studio: { label: { normal: "Studio", beginner: "Studio" } },
+            studio: { label: { normal: "Space", beginner: "Space" } },
             navigation: { label: { normal: "Navigation", beginner: "Navigation" } },
           },
         },
@@ -3990,7 +3990,7 @@ export const uiChromeTranslationBundles = {
             panels: { label: { normal: "Panels", beginner: "Panels" } },
             windows: { label: { normal: "Windows", beginner: "Windows" } },
             catalogue: { label: { normal: "Catalogue", beginner: "Catalogue" } },
-            studio: { label: { normal: "Studio", beginner: "Studio" } },
+            studio: { label: { normal: "Space", beginner: "Space" } },
             navigation: { label: { normal: "Navigation", beginner: "Navigation" } },
           },
         },
@@ -4579,7 +4579,7 @@ export function registerUiTranslationBundles<S extends Record<string, unknown>>(
 }
 
 //#region 🗣️TsNativeTerminology
-/** @emoji 🗣️ A `(locale) -> label-record` pair for one terminology id, mirroring the Rust `*_LABELS_{ID}_{LOCALE}` const pattern for TS-native products (e.g. compose, coda) that never cross the WASM plugin boundary and so have no `AppDefinition.terminologies`/`AppLabelsOverlay`. */
+/** @emoji 🗣️ A `(locale) -> label-record` pair for one terminology id, mirroring the Rust `*_LABELS_{ID}_{LOCALE}` const pattern for TS-native products (e.g. compose, coda) that never cross the WASM program boundary and so have no `AppDefinition.terminologies`/`AppLabelsOverlay`. */
 export type UiTerminologyLabelSet<Keys extends string> = Readonly<Record<UiLocale, Readonly<Record<Keys, string>>>>;
 
 /** @emoji 🗣️ Builds a `(terminologyId, locale) -> labels` resolver from a set of terminology-keyed label tables, falling back to `native` for unknown/undeclared ids — the TS analog of the Rust `puzzle2d_labels`-style resolver. */
@@ -16200,7 +16200,7 @@ interface TreeRootProps {
   onOpenStateChange?: (id: string, open: boolean) => void;
   /** @emoji ↕️ When true, every section header renders a drag handle and sibling sections can be reordered. Defaults to true when there are two or more sections. */
   sortableSections?: boolean;
-  /** @emoji ↕️ Fires after a section-handle reorder with the new section-id order (host may persist; Tree also keeps an internal merge so plugin re-renders do not snap order back). */
+  /** @emoji ↕️ Fires after a section-handle reorder with the new section-id order (host may persist; Tree also keeps an internal merge so program re-renders do not snap order back). */
   onSectionsReorder?: (orderedIds: readonly string[]) => void;
 }
 

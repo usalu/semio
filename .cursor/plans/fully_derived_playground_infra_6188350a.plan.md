@@ -12,7 +12,7 @@ todos:
    content: Give compose.sketchpad a full semio.app manifest + instanceHost; delete s/react play-host branches, bootstrapSPlayExtensions hardcoded import, TECHNOLOGY_APP_RESOURCE_BY_PROGRAM entry, dead compose-sketchpad-stub.ts
    status: completed
  - id: vite-assets
-   content: Replace playEntryKind plugin dispatch with manifest assets union; delete PlaygroundRendererPuzzleKind union; move PUZZLE_3D_LOCKED_FIXTURE_JSON_REL into puzzle manifests; rename PUZZLE_PLAY_ENTRY to PLAYGROUND_APP_KIND
+   content: Replace playEntryKind program dispatch with manifest assets union; delete PlaygroundRendererPuzzleKind union; move PUZZLE_3D_LOCKED_FIXTURE_JSON_REL into puzzle manifests; rename PUZZLE_PLAY_ENTRY to PLAYGROUND_APP_KIND
    status: completed
  - id: program-id-routing
    content: Emit programIdToPlaygroundKind fully from manifests (programId + programIds aliases); add reasoning.mindmap manifest and presentation.deck alias; delete PROGRAM_ID_RESIDUAL and virtual-module inline residuals
@@ -58,7 +58,7 @@ flowchart LR
 Extend `PlaygroundAppManifest` (lines 1175-1187) with optional fields so apps can declare what the central tables currently hardcode:
 
 - `site?: { readonly embedKind: string; readonly host: string }` — replaces `PLAYGROUND_SITE_HOSTS` (1153-1159), `PlaygroundEmbedSiteKind` (1107), and `resolvePlaygroundEmbedSiteDevPorts`'s hardcoded kind→hostKind map (1113-1118). Add to compose-sketchpad, cad, puzzle 2d/3d/5d manifests (`embedKind: "compose" | "cad" | "2d" | "3d" | "5d"`, hosts `play.*.semio-tech.com`).
-- `assets?: readonly ("puzzle3d-meshes" | "gis-tiles" | "sketchpad-mdx")[]` — names of framework-provided Vite plugin factories the app needs (Part 4).
+- `assets?: readonly ("puzzle3d-meshes" | "gis-tiles" | "sketchpad-mdx")[]` — names of framework-provided Vite program factories the app needs (Part 4).
 - `programIds?: readonly string[]` — extra program-id aliases routing to this app (replaces `PROGRAM_ID_RESIDUAL`, Part 5).
 - `lockedExampleFixtures?: Readonly<Record<string, readonly string[]>>` — replaces `PUZZLE_3D_LOCKED_FIXTURE_JSON_REL` in [ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts) (422-431); declared on puzzle 3d/5d manifests.
 - `optimizeDepsExclude?: readonly string[]` — replaces `FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE` (1177-1186); declared on flow manifest.
@@ -88,7 +88,7 @@ readonly sidePanelBodies?: Readonly<Record<string, SidePanelBodyFactory>>;
 
 ## Part 4 — Vite config derived from manifest `assets` ([ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts))
 
-- Replace the `playEntryKind === "3d" | "5d" | "shooting"` / `=== "map"` / `=== "s"` dispatch in `createPlaygroundPlayViteConfig` (1417-1441) with: scan manifests, collect the union of `assets` declared by apps in the build, apply the matching framework plugin factories (`puzzle3d-meshes` → `puzzle3dMeshesVitePlugin`, `gis-tiles` → `gisMapTilesVitePlugins`, `sketchpad-mdx` → sketchpad MDX plugin). Fixes the stale `"map"` vs `"gis-2d"` kind mismatch (line 1437) at the root.
+- Replace the `playEntryKind === "3d" | "5d" | "shooting"` / `=== "map"` / `=== "s"` dispatch in `createPlaygroundPlayViteConfig` (1417-1441) with: scan manifests, collect the union of `assets` declared by apps in the build, apply the matching framework program factories (`puzzle3d-meshes` → `puzzle3dMeshesVitePlugin`, `gis-tiles` → `gisMapTilesVitePlugins`, `sketchpad-mdx` → sketchpad MDX program). Fixes the stale `"map"` vs `"gis-2d"` kind mismatch (line 1437) at the root.
 - Delete the closed `PlaygroundRendererPuzzleKind` union (line 694); `playEntryKind` becomes `string` validated against scanned manifest kinds.
 - `puzzle3dLockedExampleMeshBasenames` (457-479) reads `lockedExampleFixtures` from puzzle manifests instead of `PUZZLE_3D_LOCKED_FIXTURE_JSON_REL`; also fixes the currently failing ui-styling test.
 - Rename the misnamed `PUZZLE_PLAY_ENTRY` env/define to `PLAYGROUND_APP_KIND` everywhere (it is the generic app selector, not puzzle-specific).

@@ -31,7 +31,7 @@ isProject: false
 
 ## Approach
 
-Make `icon_id` **required**, force every plugin to pick an icon at declaration time, then thread it into every UI surface that shows a window name.
+Make `icon_id` **required**, force every program to pick an icon at declaration time, then thread it into every UI surface that shows a window name.
 
 ```mermaid
 flowchart LR
@@ -47,14 +47,14 @@ flowchart LR
 ## 1. Schema + builder (required icon)
 
 - In `[framework/core/rs/lib.rs](framework/core/rs/lib.rs)`: change `WindowKindDefinition.icon_id` from `Option<String>` to `String` (always serialized). Regenerate TS types.
-- In `[framework/plugin/rs/lib.rs](framework/plugin/rs/lib.rs)`:
+- In `[framework/program/rs/lib.rs](framework/program/rs/lib.rs)`:
   - Add `icon_id` as a required 5th argument to `window_kind` and 6th to `window_kind_with_engagement`.
   - Assert non-empty `icon_id` when building the app.
   - Fix all in-crate `WindowKindDefinition { icon_id: None }` fixtures (core tests, os core, wgpu harness).
 
 ## 2. Populate every window kind
 
-Update every `.window_kind(` / `.window_kind_with_engagement(` call site in app `plugin/rs/lib.rs` files (puzzle, cad, flow, procedural, trinity, shooting, note, gis, draw, sourcing, remodel, architect, s, writer, process, vcs, lowpoly, fem, sequence, animate, mindmap, protocol, …) plus framework test harnesses.
+Update every `.window_kind(` / `.window_kind_with_engagement(` call site in app `program/rs/lib.rs` files (puzzle, cad, flow, procedural, trinity, shooting, note, gis, draw, sourcing, remodel, architect, s, writer, process, vcs, lowpoly, fem, sequence, animate, mindmap, protocol, …) plus framework test harnesses.
 
 Choose existing Lucide ids from `[ui/asset/icon/](ui/asset/icon/)` that match the kind (e.g. Scene → `box`/`move-3d`, Graph → `network`, Table → `table-2`, Canvas → `pen-tool`, Map → `globe`, Icon preview → `image`). No new SVG assets unless nothing fits.
 

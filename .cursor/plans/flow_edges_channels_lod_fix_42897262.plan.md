@@ -13,7 +13,7 @@ This is broader than a wgpu-only gap: two of the three causes affect **both** re
 
 `FlowHost::kind_infos` (`flow/core/rs/lib.rs:1734`) drives `neuron_io_layout` (`flow/core/rs/lib.rs:729-765`), which computes each neuron's input/output ports. For a neuron widget with empty explicit `input_ports`/`output_ports` (e.g. the default fixture's `math.add`, `flow/core/rs/lib.rs:303`: `input_ports: vec![], output_ports: vec![]`) and **no** `kind_infos` entry, `neuron_io_layout` returns `(vec![], vec![], false, false)` — **zero ports**. `DagHost::rebuild_engine_with_layout` (`mathematical/graph/port/directed/dag/rs/lib.rs:2775-2831`) can only wire an edge into `self.engine.edges` when both endpoint port handles exist; with zero ports, edges silently fail to wire, and `paint_scene`'s port-handle painting (`dag/rs/lib.rs:3645-3650`) and edge painting (`dag/rs/lib.rs:4607-4624`) both have nothing to draw.
 
-`kind_infos` is only ever populated via `set_neuron_kind_infos_json` (`flow/core/rs/lib.rs:1828-1831`), which is called **only from Rust tests** (confirmed via repo-wide grep — zero call sites in any `.tsx`/`.ts` file, despite an old ticket claiming otherwise). The flow plugin's scene builder explicitly sets `operators_json: None` (`flow/plugin/rs/lib.rs:720`), so neither renderer ever receives operator metadata to forward. Note this is separate from `catalogue_json`/`set_host_catalogue_json` (`flow/core/rs/lib.rs:1824-1826`), which only feeds the drag-and-drop sidebar and has nothing to do with port layout.
+`kind_infos` is only ever populated via `set_neuron_kind_infos_json` (`flow/core/rs/lib.rs:1828-1831`), which is called **only from Rust tests** (confirmed via repo-wide grep — zero call sites in any `.tsx`/`.ts` file, despite an old ticket claiming otherwise). The flow plugin's scene builder explicitly sets `operators_json: None` (`flow/program/rs/lib.rs:720`), so neither renderer ever receives operator metadata to forward. Note this is separate from `catalogue_json`/`set_host_catalogue_json` (`flow/core/rs/lib.rs:1824-1826`), which only feeds the drag-and-drop sidebar and has nothing to do with port layout.
 
 The registry already exposes exactly the right shape: `flow_registry().operator_catalogue()` (`flow/core/rs/lib.rs:1316-1331`, `neural/engine/rs/lib.rs:997-1001`) returns `Vec<OperatorInfo>` — the exact type `set_neuron_kind_infos_json` deserializes.
 
@@ -27,14 +27,14 @@ The registry already exposes exactly the right shape: `flow_registry().operator_
 
 ### 4. Forced-LOD-label field name mismatch (three different names, minor, same code paths)
 
-The plugin emits `"forced"` (`flow/plugin/rs/lib.rs:729`), wgpu's `sync_flow_host` reads `"lod"` (`engine_canvas.rs:114`), and React reads `"forcedLabel"` (`flow-graph-canvas-host.tsx:43,45`). Manually forcing an LOD tier from the "LOD Mode" dropdown currently has no effect in either renderer.
+The program emits `"forced"` (`flow/program/rs/lib.rs:729`), wgpu's `sync_flow_host` reads `"lod"` (`engine_canvas.rs:114`), and React reads `"forcedLabel"` (`flow-graph-canvas-host.tsx:43,45`). Manually forcing an LOD tier from the "LOD Mode" dropdown currently has no effect in either renderer.
 
 ## Fix plan
 
 ### A. Wire operator metadata end-to-end (fixes ports/channels/edges in both renderers)
 
 - `flow/core/rs/lib.rs`: add a small public helper, e.g. `pub fn flow_neuron_kind_infos_json() -> String { serde_json::to_string(&flow_registry().operator_catalogue()).unwrap_or_else(|_| "[]".into()) }`, next to `flow_operator_catalogue_json`.
-- `flow/plugin/rs/lib.rs:720`: change `operators_json: None` to `operators_json: Some(flow_core::flow_neuron_kind_infos_json())`.
+- `flow/program/rs/lib.rs:720`: change `operators_json: None` to `operators_json: Some(flow_core::flow_neuron_kind_infos_json())`.
 - `framework/renderer/wgpu/rs/engine_canvas.rs`'s `sync_flow_host`: add a diff-gated `operators_json` field to `NodeGraphSyncCache` and call `host.set_neuron_kind_infos_json(json)` when it changes (mirroring the existing `fixture_json`/`catalogue_json` pattern added previously).
 - `framework/renderer/react/components/flow-graph-canvas-host.tsx`'s `syncFlowSessionFromScene`: add `if (scene.operatorsJson) session.setNeuronKindInfosJson(scene.operatorsJson);`.
 
@@ -53,11 +53,11 @@ The plugin emits `"forced"` (`flow/plugin/rs/lib.rs:729`), wgpu's `sync_flow_hos
 
 ### D. Fix forced-LOD-label field name mismatch
 
-- Standardize on `forcedLabel` everywhere: change `flow/plugin/rs/lib.rs:729` to emit `"forcedLabel"` instead of `"forced"`, and update wgpu's `sync_flow_host` (`engine_canvas.rs:114`) to read `"forcedLabel"` instead of `"lod"`. React already reads `"forcedLabel"` — no change needed there.
+- Standardize on `forcedLabel` everywhere: change `flow/program/rs/lib.rs:729` to emit `"forcedLabel"` instead of `"forced"`, and update wgpu's `sync_flow_host` (`engine_canvas.rs:114`) to read `"forcedLabel"` instead of `"lod"`. React already reads `"forcedLabel"` — no change needed there.
 
 ### E. Verification
 
-- `cargo test -p flow-plugin`, `cargo test -p flow_core`, `cargo test -p mathematical-graph-port-directed-dag` (or workspace equivalents) and `cargo build --target wasm32-unknown-unknown` for `flow-plugin` and `semio-framework-renderer-wgpu`.
+- `cargo test -p flow-program`, `cargo test -p flow_core`, `cargo test -p mathematical-graph-port-directed-dag` (or workspace equivalents) and `cargo build --target wasm32-unknown-unknown` for `flow-program` and `semio-framework-renderer-wgpu`.
 - Manually check both the React and wgpu Flow playgrounds with a neuron-to-neuron chain (e.g. two connected `math.add`/`math.multiply` nodes): confirm port/channel labels are visible, connecting edge lines render, node/port text density changes across zoom levels (LOD), and that picking a specific tier from "LOD Mode" actually pins that tier's appearance in both renderers.
 
 ## Explicitly out of scope

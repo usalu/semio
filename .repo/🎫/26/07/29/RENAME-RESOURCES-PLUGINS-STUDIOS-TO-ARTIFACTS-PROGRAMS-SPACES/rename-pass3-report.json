@@ -1,0 +1,12 @@
+{
+  "touched": 7,
+  "files": [
+    "ui/wgpu/rs/lib.rs",
+    "framework/renderer/wgpu/rs/lib.rs",
+    "framework/core/rs/lib.rs",
+    "framework/product/os/core/rs/lib.rs",
+    "framework/program/host/rs/lib.rs",
+    "s/program/rs/lib.rs",
+    "repo/cli/rs/lib.rs"
+  ]
+}

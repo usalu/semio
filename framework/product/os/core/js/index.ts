@@ -4,28 +4,28 @@
  * envelopes, `backbone-worker.ts` request/response wire types, `PersistenceBinding`/`OperationEnvelope`,
  * {@link buildFrameworkSyncUtilities}) consumed by `framework/renderer/react/index.tsx` and
  * `framework/product/os/dev/script.ts`. The OS kernel's *stateful* logic (operation application, program
- * registry) is Rust/wasm-only, hosted by the s-plugin wasm — this file is not a JS port of that. The
+ * registry) is Rust/wasm-only, hosted by the s-program wasm — this file is not a JS port of that. The
  * one exception is {@link planWorkflow}: a pure, side-effect-free scheduling function has no state
  * to keep in sync with a live wasm host, so it's hand-mirrored here against the Rust `plan_workflow`
  * (`framework/product/os/core/rs/lib.rs`) with shared fixtures (`framework/product/os/core/fixtures/`)
- * asserting parity. This file still exposes a small legacy `osBaselineResource`/
- * `mergeOsProgramDefinition`/`registerAppVcsHandler` app-registration shim kept alive only because
+ * asserting parity. This file still exposes a small legacy `osBaselineArtifact`/
+ * `mergeOsWorkflowDefinition`/`registerAppVcsHandler` app-registration shim kept alive only because
  * `compose/client/lib/sketchpad/js/index.ts` still calls it; do not extend that shim further.
  */
 // #endregion Header
 
 import type { UtilityLeaf } from "@semio-tech/framework-core";
 
-export type OsProgramResourceMap = Readonly<Record<string, { readonly kind: string; readonly id: string; readonly label: string }>>;
+export type OsProgramArtifactMap = Readonly<Record<string, { readonly kind: string; readonly id: string; readonly label: string }>>;
 
 const programDefinitions = new Map<string, unknown>();
 const vcsHandlers = new Set<() => void>();
 
-export function osBaselineResource(kind: string, id: string, label: string) {
+export function osBaselineArtifact(kind: string, id: string, label: string) {
   return { kind, id, label };
 }
 
-export function mergeOsProgramDefinition(programId: string, definition: unknown, resources?: OsProgramResourceMap): void {
+export function mergeOsWorkflowDefinition(programId: string, definition: unknown, resources?: OsProgramArtifactMap): void {
   programDefinitions.set(programId, { definition, resources });
 }
 
@@ -57,18 +57,18 @@ export function documentBackboneRef(uri: string): DocumentBackboneRef {
   return { kind: backboneKindFromUri(uri), uri };
 }
 
-export function parseRemoteBackboneUri(uri: string): { readonly hostPort: string; readonly studioId: string; readonly documentId: string } | null {
+export function parseRemoteBackboneUri(uri: string): { readonly hostPort: string; readonly spaceId: string; readonly documentId: string } | null {
   if (!uri.startsWith("remote://")) return null;
   const rest = uri.slice("remote://".length);
   const firstSlash = rest.indexOf("/");
   if (firstSlash <= 0) return null;
   const secondSlash = rest.indexOf("/", firstSlash + 1);
   if (secondSlash <= 0) return null;
-  return { hostPort: rest.slice(0, firstSlash), studioId: rest.slice(firstSlash + 1, secondSlash), documentId: rest.slice(secondSlash + 1) };
+  return { hostPort: rest.slice(0, firstSlash), spaceId: rest.slice(firstSlash + 1, secondSlash), documentId: rest.slice(secondSlash + 1) };
 }
 
-export function buildRemoteBackboneUri(hostPort: string, studioId: string, documentId: string): string {
-  return `remote://${hostPort}/${studioId}/${documentId}`;
+export function buildRemoteBackboneUri(hostPort: string, spaceId: string, documentId: string): string {
+  return `remote://${hostPort}/${spaceId}/${documentId}`;
 }
 
 export function buildFileBackboneUri(path: string): string {
@@ -81,8 +81,8 @@ export function buildFolderBackboneUri(path: string): string {
   return `folder://${normalized}`;
 }
 
-function remoteEnvelopeUrl(remote: { readonly hostPort: string; readonly studioId: string; readonly documentId: string }): string {
-  return `http://${remote.hostPort}/studios/${encodeURIComponent(remote.studioId)}/documents/${encodeURIComponent(remote.documentId)}/envelope`;
+function remoteEnvelopeUrl(remote: { readonly hostPort: string; readonly spaceId: string; readonly documentId: string }): string {
+  return `http://${remote.hostPort}/spaces/${encodeURIComponent(remote.spaceId)}/documents/${encodeURIComponent(remote.documentId)}/envelope`;
 }
 
 export async function readBackboneEnvelope(uri: string): Promise<string | null> {
@@ -838,7 +838,7 @@ export function decodeServerFrame(bytes: Uint8Array): { readonly lane: WireLane;
 }
 
 /** 🗃️ A durable place a document synchronizes with — mirrors Rust `PersistenceBinding`. */
-export type PersistenceBinding = { readonly kind: "folder"; readonly path: string } | { readonly kind: "hub"; readonly baseUrl: string; readonly studioId: string; readonly token?: string };
+export type PersistenceBinding = { readonly kind: "folder"; readonly path: string } | { readonly kind: "hub"; readonly baseUrl: string; readonly spaceId: string; readonly token?: string };
 
 /** 🧾 Everything the worker needs to open one document's actor — mirrors `DocumentActorConfig`. */
 export type DocumentActorConfig = {
@@ -873,7 +873,7 @@ export type DocumentSyncStatus = {
   readonly remote: RemoteState;
 };
 
-/** ⚠️ A structural sync conflict — loosely typed pending a full mirror of `vcs::StudioConflict`; the
+/** ⚠️ A structural sync conflict — loosely typed pending a full mirror of `vcs::SpaceConflict`; the
  * shell only needs enough to render a conflict card / offer "fork alternative" vs "take theirs". */
 export type SyncConflict = { readonly message?: string } & Record<string, unknown>;
 
@@ -1022,7 +1022,7 @@ if (import.meta.vitest) {
       expect(buildFileBackboneUri("tmp/a.json")).toBe("file:///tmp/a.json");
       expect(buildFolderBackboneUri("tmp")).toBe("folder:///tmp");
       expect(buildRemoteBackboneUri("localhost:1234", "studio-1", "doc-1")).toBe("remote://localhost:1234/studio-1/doc-1");
-      expect(parseRemoteBackboneUri("remote://localhost:1234/studio-1/doc-1")).toEqual({ hostPort: "localhost:1234", studioId: "studio-1", documentId: "doc-1" });
+      expect(parseRemoteBackboneUri("remote://localhost:1234/studio-1/doc-1")).toEqual({ hostPort: "localhost:1234", spaceId: "studio-1", documentId: "doc-1" });
       expect(parseRemoteBackboneUri("remote://localhost:1234/doc-1")).toBeNull();
       expect(parseRemoteBackboneUri("file:///tmp/a.json")).toBeNull();
     });

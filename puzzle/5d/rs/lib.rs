@@ -107,7 +107,7 @@ pub fn puzzle5d_grip_kinds_compatible(source_kind: &str, target_kind: &str) -> b
 // label/camera2d/camera3d/meta/kindCatalogs/kindCompatibility/parts/fasteners) with granular
 // per-collection operations and a whole-document fallback, so disjoint edits converge instead of
 // clobbering. Mirrors `puzzle_3d::Puzzle3dOperation`'s shape; ground truth for field shapes is
-// `puzzle/5d/example/*.5d.json` plus `puzzle-plugin`'s own (until now duplicated) `Puzzle5dDocument`/
+// `puzzle/5d/example/*.5d.json` plus `puzzle-program`'s own (until now duplicated) `Puzzle5dDocument`/
 // `Puzzle5dPart`/… local mirror.
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -612,7 +612,7 @@ impl Operation<Puzzle5dProjection> for Puzzle5dOperation {
 // #endregion 🔖Operations
 
 // #region 🔖ValueBridge
-// 🌉 `puzzle-plugin`'s scene-mutation helpers predate this typed projection and stay on a bare
+// 🌉 `puzzle-program`'s scene-mutation helpers predate this typed projection and stay on a bare
 // `serde_json::Value` scratch fixture (out of scope for this ticket). Bridging `Puzzle5dOperation`/
 // `Puzzle5dDiff` onto that `Value` boundary too keeps `puzzle5d_document_delta_operations` and the
 // plugin's `DocumentApp::Projection = Value` compiling unchanged — mirrors `puzzle_2d`/`puzzle_3d`'s bridge.
@@ -790,7 +790,7 @@ where
 }
 
 /// 🧮 Computes the granular typed operation sequence turning `before` into `after` (both the bare
-/// document JSON `puzzle-plugin` mutates). Falls back to a single `SetDocument` whenever the granular
+/// document JSON `puzzle-program` mutates). Falls back to a single `SetDocument` whenever the granular
 /// replay would not reproduce `after` exactly, or whenever `schema`/`domain`/`label`/`kindCatalogs`/
 /// `kindCompatibility` changed (no granular editor for those today — see `Puzzle5dOperation`'s doc).
 pub fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -> Vec<Puzzle5dOperation> {
@@ -868,7 +868,7 @@ pub fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 }
 
 // #region 🔖PlayProjection
-/// 🌱 `puzzle-plugin`'s `Puzzle5dPlayApp` predates the typed `Puzzle5dProjection` above and stays on
+/// 🌱 `puzzle-program`'s `Puzzle5dPlayApp` predates the typed `Puzzle5dProjection` above and stays on
 /// this ad-hoc `serde_json::Value` fixture shape for its scene-mutation helpers (out of scope to
 /// retrofit onto the typed struct). This newtype exists only to satisfy `DocumentApp::Projection:
 /// store::DocumentDsl + store::DocumentPack` post the repo-wide `store::DocumentDsl for serde_json::Value`

@@ -1,0 +1,7 @@
+{
+  "file_renames": [
+    "plugins.stories.tsx -> programs.stories.tsx",
+    "os-plugins.spec.ts -> os-programs.spec.ts"
+  ],
+  "touched": 1063
+}

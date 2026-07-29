@@ -88,10 +88,10 @@ Follow `PlaygroundDraw` / `DrawPlayController`:
 
 ## S integration
 
-- `note/core/index.ts`: `buildNoteProgramDefinition()` like `buildDrawProgramDefinition` ([draw/core/index.ts](draw/core/index.ts)).
-- [s/manifest/resources.manifest.json](s/manifest/resources.manifest.json): add `{ "id": "2d.note", "sourceFormat": "note.document", "componentKind": "note", "dimension": "2d" }`.
+- `note/core/index.ts`: `buildNoteWorkflowDefinition()` like `buildDrawWorkflowDefinition` ([draw/core/index.ts](draw/core/index.ts)).
+- [s/manifest/artifacts.manifest.json](s/manifest/artifacts.manifest.json): add `{ "id": "2d.note", "sourceFormat": "note.document", "componentKind": "note", "dimension": "2d" }`.
 - [s/core/internal.ts](s/core/internal.ts): `TECHNOLOGY_APP_RESOURCE_BY_PROGRAM.note` entry (~line 184).
-- [s/core/program-extensions.ts](s/core/program-extensions.ts): lazy `mergeSProgramDefinition("note", ...)` + `registerAppVcsHandler(createNoteAppVcsHandler())`.
+- [s/core/program-extensions.ts](s/core/program-extensions.ts): lazy `mergeSWorkflowDefinition("note", ...)` + `registerAppVcsHandler(createNoteAppVcsHandler())`.
 - [s/core/playground.ts](s/core/playground.ts): register note in the S play test extensions/fixture loading; add `@semio-tech/note-core` devDep to `s/core/package.json`.
 
 ## Tooling and commands

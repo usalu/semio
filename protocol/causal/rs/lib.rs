@@ -279,20 +279,37 @@ pub trait OperationTransform<P>: protocol_command::Operation<P> {
 // (`{edit.id}#{i}` for the id, `edit.actor` or `"unknown"` for the actor,
 // `HybridLogicalTimestamp::new(0, 0)` for the timestamp) so this function is total (modulo encode
 // failure) even for a bare-bones `Edit` with no explicit meta.
+/// @emoji 🪪 The wire `OperationId` each of `edit.forwards` would get if fanned out through
+/// `operation_envelope_from_edit` — same fallback chain (`operation_meta[i]` field, else the `Op`
+/// trait method, else `{edit.id}#{i}`), extracted so callers that only need identity (e.g.
+/// snapshot-vs-operations-message dedup) don't have to pay for `encode_op`/`backwards` work, and so
+/// there is exactly one place this chain is spelled out.
+pub fn operation_ids_for_edit<P, Op: protocol_command::Operation<P>>(edit: &protocol_command::Edit<Op>) -> Vec<protocol_core::OperationId> {
+    edit.forwards
+        .iter()
+        .enumerate()
+        .map(|(index, op)| {
+            edit.operation_meta
+                .get(index)
+                .and_then(|m| m.operation_id.clone())
+                .or_else(|| op.operation_id())
+                .unwrap_or_else(|| protocol_core::OperationId(format!("{}#{index}", edit.id)))
+        })
+        .collect()
+}
+
 pub fn operation_envelope_from_edit<P, Op: protocol_command::Operation<P> + protocol_command::OpBinary>(
     edit: &protocol_command::Edit<Op>,
     document_id: &protocol_core::DocumentId,
     schema: &protocol_core::SchemaId,
 ) -> Result<Vec<OperationEnvelope>, protocol_core::ProtocolError> {
+    let operation_ids = operation_ids_for_edit(edit);
     edit.forwards
         .iter()
         .enumerate()
         .map(|(index, op)| {
             let meta = edit.operation_meta.get(index);
-            let operation_id = meta
-                .and_then(|m| m.operation_id.clone())
-                .or_else(|| op.operation_id())
-                .unwrap_or_else(|| protocol_core::OperationId(format!("{}#{index}", edit.id)));
+            let operation_id = operation_ids[index].clone();
             let dependencies = meta.map_or_else(|| op.dependencies(), |m| m.dependencies.clone());
             let actor = meta
                 .and_then(|m| m.author_id.clone())
@@ -422,7 +439,7 @@ pub fn decode_envelopes(bytes: &[u8]) -> Result<Vec<OperationEnvelope>, protocol
 
 /// @emoji 🎯 `count varint | (len varint | bytes) each` — a binary vec-of-op-payloads framing,
 /// replacing the `serde_json::json!({"backwards": [...]})` convention for `InverseOperation`
-/// payloads that carry more than one composed op (e.g. framework/plugin's `result_from_last_edit`).
+/// payloads that carry more than one composed op (e.g. framework/program's `result_from_last_edit`).
 pub fn encode_ops_vec(ops: &[Vec<u8>]) -> Vec<u8> {
     let mut out = Vec::new();
     protocol_core::write_varint_u64(&mut out, ops.len() as u64);

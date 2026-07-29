@@ -1,9 +1,9 @@
 ---
 name: cad engine with plugins
-overview: Introduce a pure, hexagonal CAD engine at `elements/client/lib/geometry/cad/index.tsx` that owns a runtime plugin registry contributing commands; abstract `IGraphicsEngine`/`ICADEngine`/`IHostContext` interfaces decouple plugins from Three.js, R3F and Topologic, while injected adapters bind the engine to the existing Topologic wasm bindings and to a single exported R3F `<CadCanvas/>` + hooks for the UI.
+overview: Introduce a pure, hexagonal CAD engine at `elements/client/lib/geometry/cad/index.tsx` that owns a runtime program registry contributing commands; abstract `IGraphicsEngine`/`ICADEngine`/`IHostContext` interfaces decouple plugins from Three.js, R3F and Topologic, while injected adapters bind the engine to the existing Topologic wasm bindings and to a single exported R3F `<CadCanvas/>` + hooks for the UI.
 todos:
  - id: ticket-open
-   content: Open repo ticket `cad-engine-plugins` and associate with the most appropriate goal from `repo://goals`
+   content: Open repo ticket `cad-engine-programs` and associate with the most appropriate goal from `repo://goals`
    status: completed
  - id: core
    content: Write `🔖Core` + `🔖Commands` + `🔖Registry` + `🔖Plugins` regions (pure, zero three/wasm/r3f imports)
@@ -32,7 +32,7 @@ isProject: false
 - **Adapters live in the same file but in isolated regions** — the pure core in regions `🔖Core` / `🔖Registry` / `🔖Commands` does NOT import `three`, `@react-three/fiber`, or `../wasm/`\*. Adapters in separate regions DO. Enforced by import discipline and an inline vitest assertion.
 - **Use existing infrastructure**: Topologic adapter calls the existing wasm bindings from `[elements/client/lib/geometry/wasm/index.ts](elements/client/lib/geometry/wasm/index.ts)` (via `ensureTopologicWasmLoaded`) — no new wasm work. Honors `[elements/client/lib/geometry/react/AGENTS.md](elements/client/lib/geometry/react/AGENTS.md)`: topologic for all geometry, three.js only for rendering.
 - **Tests extend the existing inline `import.meta.vitest` block** in the new file (no new test file), per repo rule.
-- **Ticket**: open a new ticket via repo mcp `ticket_open` (slug `cad-engine-plugins`) before any non-readonly work; close on finish.
+- **Ticket**: open a new ticket via repo mcp `ticket_open` (slug `cad-engine-programs`) before any non-readonly work; close on finish.
 
 ## File layout inside `elements/client/lib/geometry/cad/index.tsx`
 
@@ -46,7 +46,7 @@ flowchart LR
   TopoAdapter["Topologic adapter<br/>(wasm bindings)"] -.implements.-> ICad
   CadCanvas["<CadCanvas/> + hooks"] --> R3FAdapter
   CadCanvas --> TopoAdapter
-  CadCanvas --> Registry["PluginRegistry"]
+  CadCanvas --> Registry["ProgramRegistry"]
   Registry --> Plugin
 ```
 
@@ -82,5 +82,5 @@ All already in `[elements/client/lib/geometry/package.json](elements/client/lib/
 
 ## Validation
 
-- `nx test @elements/geometry` (vitest inline block) runs new tests and confirms (a) pure-core import set is empty of `three|wasm|@react-three`, (b) plugin lifecycle works against mocks, (c) Topologic adapter returns a renderable entity for `createCylinder` after `ensureTopologicWasmLoaded()`.
+- `nx test @elements/geometry` (vitest inline block) runs new tests and confirms (a) pure-core import set is empty of `three|wasm|@react-three`, (b) program lifecycle works against mocks, (c) Topologic adapter returns a renderable entity for `createCylinder` after `ensureTopologicWasmLoaded()`.
 - Close ticket with `ticket_close` including the updated file path.

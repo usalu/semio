@@ -73,7 +73,7 @@ const STORY_DEFAULT_RUNTIME: StoryPuzzle2dRuntime = {
   lodMode: "automatic",
 };
 
-/** @emoji 📬 Story-local mirror of `apply_board_events_from_json` in `puzzle/plugin/rs/d2/mod.rs` (see `./Board.stories.tsx`'s copy) — only the event kinds the real fixtures need to demonstrate (camera pan/zoom, select, drag, delete). */
+/** @emoji 📬 Story-local mirror of `apply_board_events_from_json` in `puzzle/program/rs/d2/mod.rs` (see `./Board.stories.tsx`'s copy) — only the event kinds the real fixtures need to demonstrate (camera pan/zoom, select, drag, delete). */
 function applyStoryBoardEvents(state: StoryPuzzle2dState, eventsJson: string): StoryPuzzle2dState {
   let events: readonly { readonly name: string; readonly payload?: Record<string, unknown> }[] = [];
   try {

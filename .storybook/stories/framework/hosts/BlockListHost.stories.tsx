@@ -5,7 +5,7 @@
 // `moveStep`/`addBlock`/`removeBlock`/`moveBlock` for real.
 // Summary: `reduceStoryBlockListAction` mirrors `BlockListHost`'s dispatched actions (`framework/renderer/react/index.tsx`).
 // Clicking a palette entry's `addBlock` (no `stepId` — `PalettePanel`'s click handler only ever sends `{ kind }`)
-// targets the *last* step, matching the only sane host-app default when the plugin protocol itself doesn't say which step.
+// targets the *last* step, matching the only sane host-app default when the program protocol itself doesn't say which step.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 

@@ -21,7 +21,7 @@
   { "id": "file-script", "emoji": "📜", "iconId": "code", "label": "Script", "filterable": true },
   { "id": "file-docs", "emoji": "📃", "iconId": "file-text", "label": "Docs", "filterable": true },
   { "id": "file-config", "emoji": "⚙️", "iconId": "settings", "label": "Config", "filterable": true },
-  { "id": "file-resource", "emoji": "💾", "iconId": "hard-drive", "label": "Resource", "filterable": true },
+  { "id": "file-artifact", "emoji": "💾", "iconId": "hard-drive", "label": "Resource", "filterable": true },
   { "id": "file-template", "emoji": "📋", "iconId": "clipboard-list", "label": "Template", "filterable": true },
   { "id": "file-license", "emoji": "⚖️", "iconId": "landmark", "label": "License", "filterable": true },
 

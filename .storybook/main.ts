@@ -127,16 +127,16 @@ const config: StorybookConfig = {
     };
 
     config.plugins = config.plugins || [];
-    const hasTailwindPlugin = config.plugins.some((plugin) => plugin && typeof plugin === "object" && "name" in plugin && plugin.name === "@tailwindcss/vite");
+    const hasTailwindPlugin = config.plugins.some((plugin) => program && typeof program === "object" && "name" in program && program.name === "@tailwindcss/vite");
     if (!hasTailwindPlugin) {
       config.plugins.push(...tailwindcss());
     }
-    const hasUiAssetsPlugin = config.plugins.some((plugin) => plugin && typeof plugin === "object" && "name" in plugin && plugin.name === "ui-assets-serve");
+    const hasUiAssetsPlugin = config.plugins.some((plugin) => program && typeof program === "object" && "name" in program && program.name === "ui-assets-serve");
     if (!hasUiAssetsPlugin) {
       config.plugins.push(...uiAssetsVitePlugin(uiAssetsRootPath));
     }
     // #region 🔖ScopeAssetsAndPlugins
-    /** @emoji 🌐 Static-dir / tile-proxy / mesh-collection assets declared by active scopes (e.g. `framework/os`'s `/plugin-modules`, `/renderer-modules`). */
+    /** @emoji 🌐 Static-dir / tile-proxy / mesh-collection assets declared by active scopes (e.g. `framework/os`'s `/program-modules`, `/renderer-modules`). */
     const scopeAssets = activeScopes.flatMap((s) => s.assets ?? []);
     if (scopeAssets.length > 0) {
       config.plugins.push(...playgroundAssetVitePlugins(repoRootPath, scopeAssets));
@@ -151,14 +151,14 @@ const config: StorybookConfig = {
     const indicesToRemove: number[] = [];
     for (let i = 0; i < config.plugins.length; i++) {
       const plugin: any = config.plugins[i];
-      if (plugin === "@mdx-js/rollup" || (plugin && typeof plugin === "object" && plugin.name === "@mdx-js/rollup")) {
+      if (program === "@mdx-js/rollup" || (program && typeof program === "object" && program.name === "@mdx-js/rollup")) {
         indicesToRemove.push(i);
         continue;
       }
-      if (plugin instanceof Promise) {
+      if (program instanceof Promise) {
         try {
           const resolved: any = await plugin;
-          if (resolved && typeof resolved === "object" && resolved.name === "storybook:mdx-plugin") {
+          if (resolved && typeof resolved === "object" && resolved.name === "storybook:mdx-program") {
             indicesToRemove.push(i);
           }
         } catch {}

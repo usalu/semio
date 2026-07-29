@@ -4,7 +4,7 @@
 
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details. You should have received a copy of the GNU Affero General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Rhino 8 plugin hosting a WebView2 panel for importing compose kits and representations.
+// Rhino 8 program hosting a WebView2 panel for importing compose kits and representations.
 
 #endregion 📱Header
 
@@ -56,8 +56,8 @@ public interface IWebViewHost
 #endregion 🔌Ports
 
 #region ⭐AssemblyAttributes
-// Assembly-level attributes required by Rhino to identify this plugin.
-// The Id is the plugin ID. PlugInDescription attributes show in Rhino Options > Plug-ins.
+// Assembly-level attributes required by Rhino to identify this program.
+// The Id is the program ID. PlugInDescription attributes show in Rhino Options > Plug-ins.
 #if RHINO_PLUGIN
 [assembly: Guid("A1B2C3D4-E5F6-7890-ABCD-EF1234567890")]
 [assembly: PlugInDescription(DescriptionType.Address, "")]
@@ -454,11 +454,11 @@ public class ImportBinding : IBridgeBinding
 
 #if RHINO_PLUGIN
 #region 🪩ComposeRhinoPlugin
-// Main Rhino plugin class bootstrapping the bridge bindings.
+// Main Rhino program class bootstrapping the bridge bindings.
 // Panel registration is done in the ShowComposeCommand constructor (like Speckle).
 
 /// <summary>
-/// 📍Entry point for the compose Rhino plugin.
+/// 📍Entry point for the compose Rhino program.
 /// Registers bridge bindings on load. Panel is registered by the command.
 /// </summary>
 public class ComposeRhinoPlugin : PlugIn
@@ -478,7 +478,7 @@ public class ComposeRhinoPlugin : PlugIn
         Bridge.Register(new DocumentBinding());
         Bridge.Register(new ImportBinding());
 
-        RhinoApp.WriteLine("compose.3dm plugin loaded.");
+        RhinoApp.WriteLine("compose.3dm program loaded.");
         return LoadReturnCode.Success;
     }
 }
@@ -568,10 +568,10 @@ public class ComposeWebViewControl : System.Windows.Controls.UserControl
             var request = JsonConvert.DeserializeObject<BridgeRequest>(json);
             if (request == null) return;
 
-            var plugin = ComposeRhinoPlugin.Instance;
-            if (plugin == null) return;
+            var program = ComposeRhinoPlugin.Instance;
+            if (program == null) return;
 
-            var response = await plugin.Bridge.HandleAsync(request);
+            var response = await program.Bridge.HandleAsync(request);
             var responseJson = JsonConvert.SerializeObject(response);
 
             _webView?.CoreWebView2?.PostWebMessageAsJson(responseJson);
@@ -617,10 +617,10 @@ public class ComposePanelHost : RhinoWindows.Controls.WpfElementHost
 
     private static ComposeWebViewControl GetOrCreateWebViewControl()
     {
-        var plugin = ComposeRhinoPlugin.Instance;
-        if (plugin?.WebViewControl == null && plugin != null)
+        var program = ComposeRhinoPlugin.Instance;
+        if (plugin?.WebViewControl == null && program != null)
         {
-            plugin.WebViewControl = new ComposeWebViewControl();
+            program.WebViewControl = new ComposeWebViewControl();
         }
         return plugin?.WebViewControl!;
     }

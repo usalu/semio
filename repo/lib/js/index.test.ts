@@ -521,7 +521,7 @@ describe("playground static sites", () => {
     expect(allPlaygroundReservedPorts().size).toBeGreaterThanOrEqual(Object.keys(PLAYGROUND_PORTS).length);
   });
 
-  test("resolveFrameworkOsPlaygroundPlugin maps CLI segments to OS plugin ids", () => {
+  test("resolveFrameworkOsPlaygroundPlugin maps CLI segments to OS program ids", () => {
     const catalog = loadFrameworkOsPlaygroundCatalog();
     expect(resolveFrameworkOsPlaygroundPlugin(catalog, ["dag"])).toEqual({ plugin: "dag", rest: [] });
     expect(resolveFrameworkOsPlaygroundPlugin(catalog, ["gis", "2d"])).toEqual({ plugin: "gis2d", rest: [] });

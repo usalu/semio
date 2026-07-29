@@ -197,8 +197,8 @@
     "@vitest/coverage-v8": "^4.0.17",
     "chevrotain": "^11.0.3",
     "eslint": "^10.0.1",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-storybook": "10.4.0",
+    "eslint-program-react-hooks": "^7.1.1",
+    "eslint-program-storybook": "10.4.0",
     "globals": "^16.4.0",
     "lint-staged": "^16.2.7",
     "nx": "21.6.11",
@@ -213,7 +213,7 @@
     "storybook": "^10.4.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.50.1",
-    "vite-plugin-singlefile": "^2.3.2",
+    "vite-program-singlefile": "^2.3.2",
     "vitest": "^4.0.17"
   },
   "keywords": [

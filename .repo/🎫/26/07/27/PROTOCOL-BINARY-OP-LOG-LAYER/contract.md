@@ -949,6 +949,12 @@ pub trait OperationTransform<P>: protocol_command::Operation<P> {
 //#region 🔖Bridge
 // Moved from vcs/rs (was operation_envelope_from_edit); generic over Op: Operation<P> + OpText.
 pub fn operation_envelope_from_edit<P, Op: protocol_command::Operation<P>>(edit: &protocol_command::Edit<Op>, document_id: &protocol_core::DocumentId) -> Vec<OperationEnvelope>;
+// Addendum (double-delivery fix, PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS): extracted the id half
+// of operation_envelope_from_edit's per-op fallback chain (operation_meta[i] field, else the Op
+// trait method, else `{edit.id}#{i}`) so `store::merge_remote_snapshot` can recognize a
+// snapshot-carried edit as one it already ingested via a prior `BackboneMessage::Operations`
+// message under that edit's wire id, without paying for encode_op/backwards.
+pub fn operation_ids_for_edit<P, Op: protocol_command::Operation<P>>(edit: &protocol_command::Edit<Op>) -> Vec<protocol_core::OperationId>;
 //#endregion
 ```
 
@@ -1059,7 +1065,7 @@ pub fn decode_server_frame(bytes: &[u8]) -> Result<(Lane, ServerFrame), protocol
 ```rust
 pub use protocol_core::{OperationId, ActorId, DocumentId, DocumentVersion, SchemaId, SchemaVersion, PayloadHash, HybridLogicalTimestamp, UndoPolicy, MergeStrategyKind, ConflictRule, StateClass};
 pub use protocol_command::{Operation, OperationDiff, OpText, OperationMeta, Edit, Identified, Patchable, CollectionOperation, CollectionDiff, ItemPatch, OperationDescriptor, register_operation_descriptor, operation_descriptor, OperationUpcaster, OperationEvent, CommandOutcome, ReconcileReport, ReconcileSeverity};
-pub use protocol_causal::{OperationEnvelope, DocumentDiff, InverseOperation, OpDag, InsertResult, OpDagError, FrontierSummary as RuntimeFrontierSummary, FrontierComparison as RuntimeFrontierComparison, frontier_delta as runtime_frontier_delta, TransformOutcome, OperationTransform, operation_envelope_from_edit};
+pub use protocol_causal::{OperationEnvelope, DocumentDiff, InverseOperation, OpDag, InsertResult, OpDagError, FrontierSummary as RuntimeFrontierSummary, FrontierComparison as RuntimeFrontierComparison, frontier_delta as runtime_frontier_delta, TransformOutcome, OperationTransform, operation_envelope_from_edit, operation_ids_for_edit};
 pub use protocol_crdt::merge_concurrent_diffs;
 pub use protocol_wire::{Lane, ClientFrame, ServerFrame, Bootstrap, ApplyOutcome, AckStage, encode_client_frame, decode_client_frame, encode_server_frame, decode_server_frame};
 ```

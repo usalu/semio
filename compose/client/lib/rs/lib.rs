@@ -7830,7 +7830,7 @@ pub mod vcs {
         /// `store::DocumentDsl for serde_json::Value` escape hatch this used to delegate to was removed
         /// (final DSL-syntax convergence gate); `parse_dsl`/`print_dsl` now round-trip through plain
         /// JSON directly, scoped locally to this one deliberately-untyped bridge instead of a repo-wide
-        /// one (same local-bridge shape `puzzle-plugin`'s `Puzzle2dPlayApp`/`Puzzle3dPlayApp`/
+        /// one (same local-bridge shape `puzzle-program`'s `Puzzle2dPlayApp`/`Puzzle3dPlayApp`/
         /// `Puzzle5dPlayApp` now use for keeping `Projection = serde_json::Value`).
         impl store::DocumentDsl for KitSnapshot {
             const EXTENSION: &'static str = "kit";
@@ -7849,7 +7849,7 @@ pub mod vcs {
         /// @emoji 📦 Same schema-less bridge rationale as `KitSnapshot`'s `DocumentDsl` above:
         /// `encode_pack_with`/`decode_pack_with` round-trip straight through the still-standing
         /// `store::DocumentPack for serde_json::Value` impl (JSON-bridge pack encoding), same
-        /// local-bridge shape as `puzzle-plugin`'s `Puzzle2dPlayProjection`/`Puzzle3dPlayProjection`/
+        /// local-bridge shape as `puzzle-program`'s `Puzzle2dPlayProjection`/`Puzzle3dPlayProjection`/
         /// `Puzzle5dPlayProjection`.
         impl store::DocumentPack for KitSnapshot {
             fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
@@ -8003,7 +8003,7 @@ pub mod vcs {
         //#region 🔖CodecRegistration
         /// 🗂️ Registers `KitSnapshot`'s pack<->dsl codec under its real `KIT_SNAPSHOT_SCHEMA` string
         /// so `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can
-        /// print/parse kit documents. `compose` has no `framework/plugin`-style native setup hook (it
+        /// print/parse kit documents. `compose` has no `framework/program`-style native setup hook (it
         /// is not a `DocumentApp`/plugin-bundle crate), so this registers directly via
         /// `store::register_document_codec`/`store::DocumentCodec::of` instead of
         /// `register_document_codec_for_app`, gated by a `std::sync::Once` and called from

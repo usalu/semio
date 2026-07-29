@@ -1,6 +1,6 @@
 ---
 name: GIS 2D Map Parity Restore
-overview: Restore GIS 2D map tile rendering and window options to premigration parity by building the missing React WASM host for the `gis2d-map` component kind and implementing `window_measures()` in the Rust plugin.
+overview: Restore GIS 2D map tile rendering and window options to premigration parity by building the missing React WASM host for the `gis2d-map` component kind and implementing `window_measures()` in the Rust program.
 todos:
  - id: os-shell-types
    content: Add GisMapScene type + gisMap field to UiComponentSceneNode, MapWasmSession type + createMapSession() loader in os-shell.tsx
@@ -18,7 +18,7 @@ todos:
    content: Factor lod_select_entries/layer_weight_entries helpers and implement Gis2dPlayApp::window_measures() in app_2d.rs, extend tests
    status: completed
  - id: validate
-   content: cargo test -p gis-plugin, rebuild gis plugin wasm + gis-2d-rs pkg, browser smoke test tiles/interactions/window options
+   content: cargo test -p gis-program, rebuild gis program wasm + gis-2d-rs pkg, browser smoke test tiles/interactions/window options
    status: completed
 isProject: false
 ---
@@ -27,10 +27,10 @@ isProject: false
 
 ## Root cause
 
-The Rust plugin side (`gis/plugin/rs/app_2d.rs`) is already nearly complete: `render_canvas` emits a fully-populated `GisMapScene` (fixture JSON, camera, render mode, vector style, LOD mode, tile URL templates, layer visibility/weights, selection, hover) via `build_gis_map_scene`, and `handle_command_patch_operations` already implements every interaction command (`setCamera`, `setRenderMode`, `setFeatureSelection`, `toggleLayerVisibility`, `fitWorld`, `focusFeature`, `openSource`, etc.). Two things are missing:
+The Rust program side (`gis/program/rs/app_2d.rs`) is already nearly complete: `render_canvas` emits a fully-populated `GisMapScene` (fixture JSON, camera, render mode, vector style, LOD mode, tile URL templates, layer visibility/weights, selection, hover) via `build_gis_map_scene`, and `handle_command_patch_operations` already implements every interaction command (`setCamera`, `setRenderMode`, `setFeatureSelection`, `toggleLayerVisibility`, `fitWorld`, `focusFeature`, `openSource`, etc.). Two things are missing:
 
 1. **No tiles show** — the React renderer has no component for `componentKind === "gis2d-map"` (`SurfaceKind::GisMap.as_str()` in `framework/core/rs/lib.rs:2169`). `ui-interpreter.tsx`'s `renderComponentSceneHost` switch (`framework/renderer/react/ui-interpreter.tsx:42-67`) falls through to "Unknown component", so the WASM `MapSession` (from `gis/2d/rs/pkg/gis_2d.js`, already built — see `gis/2d/rs/pkg/gis_2d.d.ts`) never gets attached to a canvas, tiles never get uploaded, and nothing renders.
-2. **No window options** — `Gis2dPlayApp` never overrides `PluginApp::window_measures()` (default in `framework/plugin/rs/lib.rs:422-428` returns empty), so the window options rail is empty even though the Inspector tab already exposes equivalent controls via `map_view_field_group` (`gis/plugin/rs/app_2d.rs:442-526`).
+2. **No window options** — `Gis2dPlayApp` never overrides `ProgramApp::window_measures()` (default in `framework/program/rs/lib.rs:422-428` returns empty), so the window options rail is empty even though the Inspector tab already exposes equivalent controls via `map_view_field_group` (`gis/program/rs/app_2d.rs:442-526`).
 
 ```mermaid
 flowchart LR
@@ -52,7 +52,7 @@ Reference implementation: the premigration `gis/2d/react/index.tsx` (`MapRendere
 - Add `readonly gisMap?: GisMapScene;` to `UiComponentSceneNode` (`os-shell.tsx:2212-2226`).
 - Add a `MapWasmSession` type (mirroring the raw `MapSession` d.ts surface in `gis/2d/rs/pkg/gis_2d.d.ts`: `attachCanvas`, `setSize`, `renderFrame`, `setCamera`, `cameraJson`, `cameraLimitsJson`, `fitWorldCamera`, `reclampCamera`, `pointerDownScreen/Move/UpScreen`, `wheelScreen`, `syncMapJson`, `uploadTile`/`uploadVectorTile`, `visibleTilesJson`/`visibleVectorTilesJson`, `setRenderMode`/`setVectorStyle`/`setLodMode`, `setLayerVisibilityJson`/`setLayerStrokeScaleJson`, `setSelectionJson`/`setHoverJson`, `featuresInRectJson`/`featuresInPolygonJson`/`hitTestFeatureJson`/`featureScreenJson`/`positionScreenJson`, `lodScaleJson`/`currentLodJson`/`layerWeightSliderIdsJson`, `setMapThemeJson`, `gpuReady`, `free`) and a `createMapSession()` loader following the exact `createGraphSession`/`createFlowSession` pattern (`os-shell.tsx:2643-2734`), importing `@semio-tech/gis-2d-rs/pkg/gis_2d.js`.
 
-2. `**gis/plugin/rs/../../2d/rs` dependency\*_: add `"@semio-tech/gis-2d-rs": "workspace:_"`to`framework/renderer/react/package.json`dependencies (pkg already exports`.`→`./pkg/gis_2d.js`, per `gis/2d/rs/package.json`).
+2. `**gis/program/rs/../../2d/rs` dependency\*_: add `"@semio-tech/gis-2d-rs": "workspace:_"`to`framework/renderer/react/package.json`dependencies (pkg already exports`.`→`./pkg/gis_2d.js`, per `gis/2d/rs/package.json`).
 3. **New file `framework/renderer/react/components/gis-map-host.tsx`** — port and adapt from the premigration file:
 
 - Constants/helpers ported verbatim: `GIS_MAP_LAYER_IDS`, layer-weight bounds, `parseVisibleTilesJson`, `parseCameraJson`, `parseMapFeatureHit`, `parseMapHoveredFeature`, `screenRectFromPoints`, `serializeMapCanvasThemeJson` (theme sync from CSS custom properties), `MAP_MARQUEE_THRESHOLD_PX`.
@@ -71,9 +71,9 @@ Reference implementation: the premigration `gis/2d/react/index.tsx` (`MapRendere
 
 ## Part B — Rust `window_measures()` (fixes missing window options)
 
-In `gis/plugin/rs/app_2d.rs`:
+In `gis/program/rs/app_2d.rs`:
 
-1. Import `layout::MeasureSelectItem` and `WindowMeasure` from `semio_framework_plugin` (already used by `puzzle/plugin/rs/d2/mod.rs`).
+1. Import `layout::MeasureSelectItem` and `WindowMeasure` from `semio_framework_program` (already used by `puzzle/program/rs/d2/mod.rs`).
 2. Factor two small SSOT helpers out of existing duplicated logic so the Inspector tab and the new window-options rail share one source (per the "single source of truth" rule):
 
 - `lod_select_entries() -> Vec<(String, String)>` — extracted from the LOD-items-building block in `map_view_field_group` (`app_2d.rs:443-457`), used by both the Inspector's `UiSelectItem` list and the new `MeasureSelectItem` list.
@@ -89,12 +89,12 @@ In `gis/plugin/rs/app_2d.rs`:
 - `Group` "Layer Weights" containing one `Slider` per `layer_weight_entries(play)` (min 0.25, max 3.0, step 0.05) → `on_change: gis2d_cmd("setLayerStrokeScale", Some(json!({"layerId": layer_id})))`.
 - These reuse commands already implemented in `handle_command_patch_operations` (all read `value`/`pressed` merged in by `renderWindowMeasure` in `os-shell.tsx:545-602`), so **no Rust command-handling changes are needed**.
 
-4. Implement `fn window_measures(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>>` on `impl PluginApp for Gis2dPlayApp`, returning `{ GIS2D_PLAY_WINDOW_MAIN: gis2d_window_measures(&parse_envelope(document_json)) }`.
+4. Implement `fn window_measures(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>>` on `impl ProgramApp for Gis2dPlayApp`, returning `{ GIS2D_PLAY_WINDOW_MAIN: gis2d_window_measures(&parse_envelope(document_json)) }`.
 5. Extend the existing `#[cfg(test)] mod tests` block (do not add a new test file) with a test asserting `window_measures()` includes the render-mode select and a layers toggle group.
 
 ## Validation
 
-- `cargo test -p gis-plugin` (Rust logic + new window-measures test).
-- Rebuild the `gis` plugin WASM component via the existing dev pipeline (`framework/renderer/wgpu/js/boot.js` entry `{ pluginId: "gis", cratePath: "gis/plugin/rs", wasmOut: "gis_plugin.wasm" }`) and the `@semio-tech/gis-2d-rs` pkg if stale (`bun nx run @semio-tech/gis-2d-rs:wasm`).
+- `cargo test -p gis-program` (Rust logic + new window-measures test).
+- Rebuild the `gis` program WASM component via the existing dev pipeline (`framework/renderer/wgpu/js/boot.js` entry `{ programId: "gis", cratePath: "gis/program/rs", wasmOut: "gis_program.wasm" }`) and the `@semio-tech/gis-2d-rs` pkg if stale (`bun nx run @semio-tech/gis-2d-rs:wasm`).
 - Browser smoke check on the GIS 2D window: confirm raster/vector tiles render, pan/zoom/marquee-select/hover/context-menu work, and the window options rail shows Render Mode / Vector Style / LOD Mode / Selection Method / Layers / Layer Weights — with `[DEBUG]`-prefixed console logs while verifying, removed before finishing.
 - Per workspace rules: do this work inside a ticket (check `repo://goals` first, reopen `FIX-LOWPOLY-DEV-BOOT`-style existing ticket only if it truly covers this, otherwise open a new one), and close it with a summary of files touched.

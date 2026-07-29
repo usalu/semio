@@ -9,14 +9,14 @@
 // #endregion 🧲Header
 
 // #region 🗄️Configuration
-// PostCSS plugin configuration for the docs application.
-// Configuration MUST use the @tailwindcss/postcss plugin.
+// PostCSS program configuration for the docs application.
+// Configuration MUST use the @tailwindcss/postcss program.
 
 import { Config } from "postcss-load-config";
 
 /**
- * PostCSS configuration with the Tailwind CSS PostCSS plugin.
- * Config MUST include the @tailwindcss/postcss plugin.
+ * PostCSS configuration with the Tailwind CSS PostCSS program.
+ * Config MUST include the @tailwindcss/postcss program.
  **/
 const config: Config = {
   plugins: {

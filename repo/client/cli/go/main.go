@@ -5223,8 +5223,8 @@ var EntityKinds = []string{
 	"policy", "breach", "contributor", "checkpoint", "interaction", "session",
 }
 
-// 🎁ResourceKinds holds the data fields for a ResourceKinds record.
-var ResourceKinds = []string{
+// 🎁ArtifactKinds holds the data fields for a ArtifactKinds record.
+var ArtifactKinds = []string{
 	"repo", "technology", "bundle", "folder", "file", "section", "definition",
 }
 
@@ -12915,9 +12915,9 @@ type TicketBundleMetrics struct {
 type TicketBundles map[string]TicketBundleMetrics
 
 // #region 🎽Languages
-// Language plugin registry with parsers for sections, definitions, comments, imports, and headers.
+// Language program registry with parsers for sections, definitions, comments, imports, and headers.
 
-// 🔌LanguagePlugin defines the interface contract for language plugin operations.
+// 🔌LanguagePlugin defines the interface contract for language program operations.
 type LanguagePlugin interface {
 	Name() string
 	Extensions() []string
@@ -13747,7 +13747,7 @@ func (l *BaseLanguage) ExtractPackage(content string) (string, string) {
 }
 
 // #region 🎶TypeScript
-// TypeScript language plugin with section, definition, comment, and import support.
+// TypeScript language program with section, definition, comment, and import support.
 
 // 🗣️TypeScriptLanguage holds the data fields for a type script language record.
 type TypeScriptLanguage struct {
@@ -14043,7 +14043,7 @@ func (l *TypeScriptLanguage) FormatImports(imports []string) string {
 }
 
 // #region 🎚️Go
-// Go language plugin with section, definition, import, and package support.
+// Go language program with section, definition, import, and package support.
 
 // 🗣️GoLanguage holds the data fields for a go language record.
 type GoLanguage struct {
@@ -14251,7 +14251,7 @@ func (l *PythonLanguage) FormatImports(imports []string) string {
 // #endregion 🎚️Go
 
 // #region 📜C#
-// C# language plugin with section, definition, and import support.
+// C# language program with section, definition, and import support.
 
 // 🗣️CSharpLanguage holds the data fields for a c sharp language record.
 type CSharpLanguage struct {
@@ -14321,7 +14321,7 @@ func (l *CSharpLanguage) FormatImports(imports []string) string {
 // #endregion 📜C#
 
 // #region 📭JSON
-// JSON language plugin with section parsing via embedded comment keys.
+// JSON language program with section parsing via embedded comment keys.
 
 // 🗣️JSONLanguage holds the data fields for a j s o n language record.
 type JSONLanguage struct {
@@ -14363,7 +14363,7 @@ func (l *JSONLanguage) ParseSections(content string) []Section {
 // #endregion 📭JSON
 
 // #region 🛒Markdown
-// Markdown language plugin with heading-based section parsing.
+// Markdown language program with heading-based section parsing.
 
 // 🗣️MarkdownLanguage holds the data fields for a markdown language record.
 type MarkdownLanguage struct {
@@ -14405,7 +14405,7 @@ func (l *MarkdownLanguage) ParseSections(content string) []Section {
 // #endregion 🛒Markdown
 
 // #region ⏳Rust
-// Rust language plugin with section, definition, and import support.
+// Rust language program with section, definition, and import support.
 
 // 🗣️RustLanguage holds the data fields for a rust language record.
 type RustLanguage struct {
@@ -14563,7 +14563,7 @@ func (l *RustLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange 
 // #endregion ⏳Rust
 
 // #region 🪅Ruby
-// Ruby language plugin with section, definition, and import support.
+// Ruby language program with section, definition, and import support.
 
 // 🗣️RubyLanguage holds the data fields for a ruby language record.
 type RubyLanguage struct {
@@ -14669,7 +14669,7 @@ func (l *RubyLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange 
 // #endregion 🪅Ruby
 
 // #region 📊Shell
-// Shell language plugin with section and comment support.
+// Shell language program with section and comment support.
 
 // 🗣️ShellLanguage holds the data fields for a shell language record.
 type ShellLanguage struct {
@@ -14701,7 +14701,7 @@ func NewShellLanguage() *ShellLanguage {
 // #endregion 📊Shell
 
 // #region 📢TOML
-// TOML language plugin with section heading and comment support.
+// TOML language program with section heading and comment support.
 
 // 🗣️TomlLanguage holds the data fields for a toml language record.
 type TomlLanguage struct {
@@ -14743,7 +14743,7 @@ func (l *TomlLanguage) SupportsHeaders() bool { return false }
 // #endregion 📢TOML
 
 // #region 🤸YAML
-// YAML language plugin with section heading and comment support.
+// YAML language program with section heading and comment support.
 
 // 🗣️YamlLanguage holds the data fields for a yaml language record.
 type YamlLanguage struct {
@@ -14785,7 +14785,7 @@ func (l *YamlLanguage) SupportsHeaders() bool { return false }
 // #endregion 🤸YAML
 
 // #region 🕌SQL
-// SQL language plugin with section and comment support.
+// SQL language program with section and comment support.
 
 // 🗣️SqlLanguage holds the data fields for a sql language record.
 type SqlLanguage struct {
@@ -14817,7 +14817,7 @@ func NewSqlLanguage() *SqlLanguage {
 // #endregion 🕌SQL
 
 // #region 🎙️GraphQL
-// GraphQL language plugin with section and comment support.
+// GraphQL language program with section and comment support.
 
 // 🕸️GraphqlLanguage holds the data fields for a graphql language record.
 type GraphqlLanguage struct {

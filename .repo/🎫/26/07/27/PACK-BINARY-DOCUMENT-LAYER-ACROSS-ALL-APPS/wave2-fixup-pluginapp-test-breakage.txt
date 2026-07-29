@@ -1,0 +1,80 @@
+Follow-up fixup: framework/program's PluginApp trait had document_json()/load_document(&str) deleted
+(replaced by document_pack()/load_document_pack(&store::DocumentPackFiles)) and ingest_operations(&str)
+changed to ingest_operations(&self, operations: &[u8]) (binary, via protocol::encode_envelopes/decode_envelopes).
+This left 6 app crates' test code with compile errors. Fixed all 6, verified cargo check + cargo test per crate.
+
+Files changed:
+- trinity/program/rs/lib.rs
+    commit_checkpoint_records_change_and_stays_undoable: replaced
+    `app.document_json()` + serde_json::from_str::<Value> envelope parsing with
+    `app.document_pack()` + `store::parse_document_pack::<RewriteRuleState, RewriteRuleOperation>`,
+    asserting on `parsed.envelope.vcs.checkpoints` directly (typed) instead of JSON path indexing.
+  cargo check -p trinity-program --all-targets: clean (pre-existing warnings only)
+  cargo test -p trinity-program: 36 passed; 0 failed
+
+- puzzle/program/rs/lib.rs
+    ingest_operations_is_idempotent: replaced `serde_json::to_string(&envelopes)` +
+    `.ingest_operations(&operations_json)` (String) with `protocol::encode_envelopes(&envelopes)` +
+    `.ingest_operations(&operations)` (&[u8]).
+  puzzle/program/rs/Cargo.toml: added `protocol = { path = "../../../protocol/rs" }` dependency
+    (crate previously used protocol::OperationEnvelope only transitively via store::BackboneMessage,
+    never named the `protocol::` path directly, so had no direct dependency).
+  cargo check -p puzzle-program --all-targets: clean (pre-existing warnings only)
+  cargo test -p puzzle-program: 113 passed; 0 failed
+
+- reasoning/mindmap/program/rs/lib.rs
+    metabolism_app() helper and two_instances_converge_disjoint_graph_edits_via_backbone: replaced
+    `serde_json::to_string(&store::create_document_envelope(...))` + `.load_document(&json_string)`
+    with `store::create_document_envelope(...)` -> `store::print_document_pack(&envelope)` ->
+    `.load_document_pack(&files)`.
+  cargo check -p reasoning-mindmap-program --all-targets: clean (pre-existing warnings only)
+  cargo test -p reasoning-mindmap-program: 15 passed; 0 failed
+
+- cad/program/rs/lib.rs
+    two_instances_converge_disjoint_edits_via_backbone: same create_document_envelope ->
+    print_document_pack -> load_document_pack(&files) rewrite for base_envelope/instance_a/instance_b.
+    ingest_operations_is_idempotent_for_cad: same protocol::encode_envelopes(&envelopes) ->
+    .ingest_operations(&operations) (&[u8]) rewrite as puzzle above (Cargo.toml already had
+    `protocol` dependency).
+  cargo check -p cad-program --all-targets: clean (pre-existing warnings only)
+  cargo test -p cad-program: 80 passed; 1 failed
+    FAILED (pre-existing, unrelated, NOT fixed): tests::cad_labels_translate_catalogue_typologies_in_german
+      panics at ui/wgpu/rs/../../../ui/asset/icon/generated/icon_name.rs:1507:31 "invalid catalog icon name"
+      — icon catalog issue, unrelated to this JSON/binary migration.
+
+- vcs/program/rs/lib.rs
+    seeded_envelope() helper: replaced `app.document_json()` + serde_json::from_str into the already
+    -typed `DocumentEnvelope<VcsDemoProjection, VcsDemoOperation>` return type with `app.document_pack()`
+    + `store::parse_document_pack::<VcsDemoProjection, VcsDemoOperation>(...).envelope`.
+  cargo check -p vcs-program --all-targets: clean (pre-existing warnings only)
+  cargo test -p vcs-program: 15 passed; 0 failed
+
+- raster/program/rs/lib.rs
+    semio_app() helper and two_instances_converge_disjoint_layer_edits_via_backbone: same
+    create_document_envelope -> print_document_pack -> load_document_pack(&files) rewrite as
+    mindmap/cad above.
+  cargo check -p raster-program --all-targets: clean (pre-existing warnings only)
+  cargo test -p raster-program: 25 passed; 4 failed
+    FAILED (pre-existing, unrelated, NOT fixed):
+      - __semio_program_sanity_declared_apps_appear_in_bundle_manifest
+      - tests::set_active_utility_switch_emits_no_ops_and_reads_from_view_state
+      - tests::utility_registry_declares_utilities_scoped_to_the_composite_window
+        all 3 panic at ui/wgpu/rs/../../../ui/asset/icon/generated/icon_name.rs:1507:31
+        "invalid catalog icon name" — same icon catalog issue as cad above.
+      - tests::two_instances_converge_disjoint_layer_edits_via_backbone
+        assertion left(3) == right(2) "B converges on A's added layer" — investigated with temporary
+        [DEBUG] eprintln! instrumentation (added then removed, confirmed no debug output left in the
+        file). Root cause: B's addLayer-derived operation from A is applied TWICE — once during B's
+        own patchLayer dispatch (DocumentStore::dispatch always pumps inbound first) and again during
+        B's commitCheckpoint dispatch's pump. This is a double-delivery/dedup gap in
+        store/rs/lib.rs's DocumentStore::pump/ingest_remote/MemoryBackbone plumbing (op-log binary
+        migration, actively evolving under this same ticket) — NOT caused by this fixup's test-code
+        change, which only affects how the INITIAL seed document is loaded (pack vs JSON), before any
+        backbone activity starts. cad's structurally-identical convergence test (patchObject, a
+        mutate-style op) does not surface this because reapplying a patch is visually idempotent;
+        raster's addLayer (an insert-style op) visibly duplicates when double-delivered. Left
+        unfixed per task scope (concurrent session territory); flagged here for whoever owns
+        store/rs's backbone dedup next.
+
+No new files created. No git commands run. protocol dependency added to puzzle/program/rs/Cargo.toml only
+(cad/vcs/raster already had it).

@@ -9,7 +9,7 @@ todos:
    content: Refactor vcs/rs to BackboneKind + Temporary/File/Folder/Remote backbones with temp/file/folder/remote URI schemes and store auto-sync
    status: completed
  - id: os-core-collapse
-   content: Collapse os core and s plugin duplicate backbones onto vcs backbones, fix fixtures and defaults
+   content: Collapse os core and s program duplicate backbones onto vcs backbones, fix fixtures and defaults
    status: completed
  - id: hub-envelope
    content: Add hub envelope GET/PUT + ws broadcast, fix stale hub test
@@ -78,7 +78,7 @@ Replace the current `DevJsonFileBackbone` / `SqliteFolderBackbone` / `RemoteHttp
 ## 2. Collapse duplicate backbones in os core and s
 
 - [framework/product/os/core/rs/lib.rs](framework/product/os/core/rs/lib.rs): delete `DevJsonBackbone`, `LocalJsonBackbone`, `RemoteOsBackbone`, `OsBackboneRef`, `NativeFileBackbonePort`, `SqliteFolderBackbonePort`; use vcs `Backbone`/`BackbonePort` and `DocumentBackboneRef` directly. Studio catalog keeps working over ports with `temp://` (memory) and browser localStorage.
-- [s/plugin/rs/lib.rs](s/plugin/rs/lib.rs): rewire `bind_studio_file`, `create_folder_studio`, catalog ports, and demo fixtures onto the new kinds/URIs; fix all touched fixtures at once.
+- [s/program/rs/lib.rs](s/program/rs/lib.rs): rewire `bind_studio_file`, `create_folder_studio`, catalog ports, and demo fixtures onto the new kinds/URIs; fix all touched fixtures at once.
 
 ## 3. Hub envelope sync — [framework/product/os/hub/rs/bin.rs](framework/product/os/hub/rs/bin.rs)
 
@@ -104,10 +104,10 @@ The four tool nodes (`framework.sync.temporary/file/folder/remote`, toggles; pre
 ## 7. Defaults and state-management audit
 
 - Every document without a backbone gets `temp://<document-id>` attached on creation — playgrounds therefore default to Temporary (replace the current `dev://studio.json` default in `create_empty_os_document`).
-- Audit all plugin play apps to confirm each defines its document + typed operations through `DocumentVcsStore` (the compile-time manifest) and returns the full envelope to the shell (needed for sync); fix stragglers found during implementation.
+- Audit all program play apps to confirm each defines its document + typed operations through `DocumentVcsStore` (the compile-time manifest) and returns the full envelope to the shell (needed for sync); fix stragglers found during implementation.
 
 ## 8. Verification
 
-- `cargo test -p vcs`, os core, s plugin, hub, wgpu renderer tests; react renderer vitest for Sync tools/card; extend existing test files only.
+- `cargo test -p vcs`, os core, s program, hub, wgpu renderer tests; react renderer vitest for Sync tools/card; extend existing test files only.
 - Runtime confirmation with `[DEBUG]` logs: boot a playground (temporary default), attach File/Folder/Remote via the cards, verify persistence and hub round-trip; remove debug logs after.
 - Open a repo MCP ticket first (`repo://goals`, `ticket_open`), keep temp artifacts in the ticket folder, close with summary.

@@ -5,7 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./index.ts",
-    "./nx-plugin": "./nx-plugin.mjs"
+    "./nx-program": "./nx-program.mjs"
   },
   "scripts": {
     "lint": "bun ./script.ts lint",

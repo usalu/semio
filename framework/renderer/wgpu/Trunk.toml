@@ -4,7 +4,7 @@ dist = "../../product/os/dev/renderer-modules/wgpu"
 public_url = "/"
 
 [watch]
-watch = ["rs", "js", "index.html", "../../product/os/dev/plugin-modules"]
+watch = ["rs", "js", "index.html", "../../product/os/dev/program-modules"]
 
 [serve]
 addresses = ["127.0.0.1"]
