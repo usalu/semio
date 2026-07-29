@@ -1,8 +1,7 @@
 #!/usr/bin/env bun
 /** @emoji ⚙️ Builds/tests the `repo_cli` crate and execs the `semio` binary (nx bridge for `repo/cli/rs`). */
-import { spawnSync } from "node:child_process";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runCmd, resolveTestLevel } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runCmd, runCmdStatus, resolveTestLevel } from "../../../repo/lib/js/index.ts";
 
 class BuildScript extends BundleScript {
   run(): void {
@@ -27,8 +26,8 @@ class RunScript extends BundleScript {
     runCmd("cargo", ["build", "-p", "repo_cli", "--release"], { cwd: this.repoRoot });
     const binName = process.platform === "win32" ? "semio.exe" : "semio";
     const bin = join(this.repoRoot, "target", "release", binName);
-    const result = spawnSync(bin, segments, { stdio: "inherit", cwd: this.repoRoot });
-    process.exit(result.status ?? 1);
+    const status = runCmdStatus(bin, segments, { cwd: this.repoRoot });
+    process.exit(status);
   }
 }
 

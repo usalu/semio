@@ -520,8 +520,9 @@ impl DocumentEngine {
             match record {
                 db_wal::WalRecord::TxBegin { .. } => batch_ids.clear(),
                 db_wal::WalRecord::Command(bytes) => {
-                    let envelope: protocol::OperationEnvelope =
-                        serde_json::from_slice(&bytes).map_err(|err| DbError::Corrupt(format!("wal command record is not a valid operation envelope: {err}")))?;
+                    let mut pos = 0usize;
+                    let envelope = protocol::decode_envelope(&bytes, &mut pos)
+                        .map_err(|err| DbError::Corrupt(format!("wal command record is not a valid operation envelope: {err}")))?;
                     seen += 1;
                     batch_ids.insert(envelope.operation_id.0.clone());
                     if seen <= applied_head_seq {
@@ -659,7 +660,13 @@ impl DocumentEngine {
                 now_ms,
             )?;
 
-            let envelope_bytes = serde_json::to_vec(envelope).map_err(json_err)?;
+            // 🎯 W5: `WalRecord::Command`'s bytes are `protocol::encode_envelope`'s binary record now
+            // (M-C's "storage AND communication both binary") — `db_sync::replay_sync_state` reads
+            // these same WAL records via `decode_command_envelope` (the same binary codec) to serve
+            // hub bootstrap/catch-up, so this crate's own write-and-read-back convention below must
+            // agree with it byte-for-byte.
+            let mut envelope_bytes = Vec::new();
+            protocol::encode_envelope(envelope, &mut envelope_bytes);
             db_core::check_len(envelope_bytes.len() as u64, self.config.limits.max_command_bytes, "db_document::envelope_bytes")?;
 
             // base-resolve/deps + validate + conflict + execute

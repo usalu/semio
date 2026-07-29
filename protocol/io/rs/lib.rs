@@ -393,7 +393,7 @@ mod native {
                 finished_at: Some("2026-07-27T00:00:01Z".to_string()),
                 coalesce_key: None,
                 description: Some("a sample edit".to_string()),
-                ops: vec![protocol_history::OpPayload { text: "set x 1".to_string(), binary: None }],
+                ops: vec![protocol_history::OpPayload { text: Some("set x 1".to_string()), binary: None }],
                 backwards: Vec::new(),
                 meta: None,
             }

@@ -10,10 +10,13 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { defineConfig, devices } from "@playwright/test";
+
+import { playwrightTestTimeoutMs } from "../repo/lib/js/index.ts";
 // #endregion 🔌Adapters
 
 const storybookDir = resolve(fileURLToPath(import.meta.url), "..");
 const storybookPort = process.env.STORYBOOK_PORT ?? "6010";
+const playwrightTimeoutMs = playwrightTestTimeoutMs();
 function withTrailingSlash(url: string): string {
   return url.endsWith("/") ? url : `${url}/`;
 }
@@ -26,8 +29,8 @@ export default defineConfig({
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  timeout: 300000,
-  expect: { timeout: 120_000 },
+  timeout: playwrightTimeoutMs,
+  expect: { timeout: Math.min(playwrightTimeoutMs, 120_000) },
   workers: 1,
   reporter: [["list"]],
   use: {

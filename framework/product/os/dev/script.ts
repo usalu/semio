@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** @emoji 🧭 `@semio-tech/framework-os-dev` task router — Rust plugin OS dev host. */
-import { spawnSync } from "node:child_process";
+import { createWriteStream } from "node:fs";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, watch, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -8,7 +8,7 @@ import {
   BundleScript,
   ScriptRouter,
   buildBudgetMs,
-  budgetTimeoutHint,
+  daemonBudgetOpts,
   describeDevPortOccupant,
   devServerUrl,
   getWorkspaceRoot,
@@ -20,7 +20,10 @@ import {
   runBundleScriptMain,
   runCmd,
   runCmdStatus,
+  runProbe,
   runVitest,
+  spawnDaemon,
+  type SpawnDaemonHandle,
   runViteBunxDev,
   frameworkOsPlaygroundDefaultPort,
   frameworkOsLockedPrefsEnv,
@@ -790,8 +793,8 @@ export async function createPluginApi() {
 }
 
 function ensureWasmTarget(): void {
-  const probe = spawnSync("rustup", ["target", "list", "--installed"], { encoding: "utf8" });
-  if (!probe.stdout?.includes(PLUGIN_WASM_TARGET)) {
+  const probe = runProbe("rustup", ["target", "list", "--installed"]);
+  if (!probe.stdout.includes(PLUGIN_WASM_TARGET)) {
     runCmd("rustup", ["target", "add", PLUGIN_WASM_TARGET]);
   }
 }
@@ -1134,7 +1137,7 @@ class DevScript extends BundleScript {
           SEMIO_RENDERER: renderer,
           S_OS_PORT: String(port),
         },
-        budgetMs: null, // dev server — runs until stopped
+        ...daemonBudgetOpts(),
       });
       if (serveStatus !== 0 && !probeWgpuDevPort(host, port)) {
         throw new Error("wgpu trunk serve failed");
@@ -1206,22 +1209,11 @@ function walkRustSources(dir: string, out: string[]): void {
 
 class PluginCapabilityLintScript extends BundleScript {
   async run(): Promise<void> {
-    // Captures stdout (`encoding`), so it can't use inherit-stdio runCmd/runCmdStatus — budgeted inline instead.
-    const metadataBudgetMs = buildBudgetMs();
-    const metadataResult = spawnSync("cargo", ["metadata", "--format-version", "1"], {
-      cwd: repoRoot,
-      encoding: "utf8",
-      maxBuffer: 64 * 1024 * 1024,
-      timeout: metadataBudgetMs,
-      killSignal: "SIGKILL",
-    });
-    if (metadataResult.error && (metadataResult.error as NodeJS.ErrnoException).code === "ETIMEDOUT") {
-      throw new Error(`[budget] cargo metadata exceeded ${metadataBudgetMs}ms — killed. ${budgetTimeoutHint("cargo")}`);
-    }
+    const metadataResult = runProbe("cargo", ["metadata", "--format-version", "1", "--no-deps"], { cwd: repoRoot, budgetMs: buildBudgetMs() });
     if (metadataResult.status !== 0) {
       throw new Error(metadataResult.stderr || "cargo metadata failed");
     }
-    const metadata = JSON.parse(metadataResult.stdout ?? "{}") as {
+    const metadata = JSON.parse(metadataResult.stdout || "{}") as {
       packages: Array<{
         name: string;
         manifest_path: string;
@@ -2032,7 +2024,7 @@ function parityDevUrl(renderer: ParityRenderer, variant: string, port: number): 
   return renderer === "wgpu" ? wgpuDevPlayUrl("127.0.0.1", port, variant) : devServerUrl("127.0.0.1", port);
 }
 
-type ParityServerHandle = { readonly proc: ReturnType<typeof Bun.spawn>; readonly port: number };
+type ParityServerHandle = { readonly daemon: SpawnDaemonHandle; readonly port: number };
 
 /** ⏱️A cold `bun ./script.ts dev` boot can mean compiling the ENTIRE plugin crate catalog (33 crates)
  * plus, for wgpu, a from-scratch trunk/cargo build — many minutes with an empty `target/`, not the
@@ -2042,20 +2034,21 @@ const PARITY_DEV_SERVER_BOOT_BUDGET_MS = Number(process.env.PARITY_BOOT_BUDGET_M
 async function startParityDevServer(renderer: ParityRenderer, variant: string, port: number): Promise<ParityServerHandle> {
   const devScript = join(repoRoot, "framework/product/os/dev/script.ts");
   const logPath = join(parityOutDir(), `boot-${renderer}-${variant}.log`);
-  const logFile = Bun.file(logPath);
-  const proc = Bun.spawn(["bun", devScript, "dev"], {
+  const logStream = createWriteStream(logPath);
+  const daemon = spawnDaemon("bun", [devScript, "dev"], {
     cwd: join(repoRoot, "framework/product/os/dev"),
     env: { ...process.env, SEMIO_PLUGIN: variant, SEMIO_RENDERER: renderer, S_OS_PORT: String(port) },
-    stdout: logFile,
-    stderr: logFile,
+    stdio: "pipe",
   });
+  daemon.child.stdout?.pipe(logStream);
+  daemon.child.stderr?.pipe(logStream);
   const deadline = Date.now() + PARITY_DEV_SERVER_BOOT_BUDGET_MS;
   while (Date.now() < deadline) {
-    if (isDevPortInUse("127.0.0.1", port)) return { proc, port };
-    if (proc.exitCode !== null) throw new Error(`${renderer} dev server for ${variant} exited early (code ${proc.exitCode}) — see ${logPath}`);
+    if (isDevPortInUse("127.0.0.1", port)) return { daemon, port };
+    if (daemon.child.exitCode !== null) throw new Error(`${renderer} dev server for ${variant} exited early (code ${daemon.child.exitCode}) — see ${logPath}`);
     await Bun.sleep(500);
   }
-  proc.kill();
+  daemon.kill();
   throw new Error(`${renderer} dev server for ${variant} did not open port ${port} within ${PARITY_DEV_SERVER_BOOT_BUDGET_MS}ms — see ${logPath}`);
 }
 
@@ -2063,7 +2056,7 @@ async function startParityDevServer(renderer: ParityRenderer, variant: string, p
  * fork their own child processes that a plain wrapper-kill doesn't always reap. */
 function stopParityDevServer(handle: ParityServerHandle): void {
   try {
-    handle.proc.kill();
+    handle.daemon.kill();
   } catch {
     /* already gone */
   }

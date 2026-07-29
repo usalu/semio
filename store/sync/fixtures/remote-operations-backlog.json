@@ -26,5 +26,5 @@
     }
   ],
   "expectedEvents": ["remoteOperations"],
-  "expectedEditIds": ["backlog-1", "backlog-2"]
+  "expectedEditIds": ["backlog-1#0", "backlog-2#0"]
 }

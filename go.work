@@ -5,11 +5,6 @@ use (
 	./coda/client/lib/programming/go
 	./repo/client/cli/go
 	./repo/client/mcp/go
-	./repo/client/mcp/claude/go
-	./repo/client/mcp/codex/go
-	./repo/client/mcp/copilot/go
-	./repo/client/mcp/cursor/go
-	./repo/client/mcp/kiro/go
 	./repo/lib/go
 	./repo/server/coordinator/go
 	./compose/client/lib/go

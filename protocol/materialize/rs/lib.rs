@@ -585,7 +585,7 @@ mod tests {
 
     //#region 🔖Plan
     fn sample_edit(id: &str, op_text: &str) -> HistoryEdit {
-        HistoryEdit { id: id.to_string(), actor: None, started_at: format!("t-{id}"), finished_at: None, coalesce_key: None, description: None, ops: vec![OpPayload { text: op_text.to_string(), binary: None }], backwards: Vec::new(), meta: None }
+        HistoryEdit { id: id.to_string(), actor: None, started_at: format!("t-{id}"), finished_at: None, coalesce_key: None, description: None, ops: vec![OpPayload { text: Some(op_text.to_string()), binary: None }], backwards: Vec::new(), meta: None }
     }
 
     fn flush_dict_delta<S: pack_core::PackSink>(writer: &mut SprWriter<S>, dict: &DictBuilder, base: &mut u32) {

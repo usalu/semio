@@ -13,8 +13,8 @@
 //! - **WASI-P2 plugins never link this crate** — inside the sandbox a store attaches vcs's pure
 //!   `PortBackbone` (an in-memory queue relayed to the host). This actor is a host-side concern only.
 
-use protocol::{AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, ServerFrame, decode_server_frame, encode_client_frame};
-use semio_framework_core::{ActorId, DocumentDiff, DocumentVersion, InverseOperation, OperationEnvelope, OperationId, PayloadHash, PresencePeer, SchemaId, SchemaVersion, UndoPolicy};
+use protocol::{AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, OperationEnvelope, ServerFrame, decode_server_frame, encode_client_frame};
+use semio_framework_core::{ActorId, OperationId, PresencePeer};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::sync::{broadcast, mpsc};
@@ -149,12 +149,9 @@ pub enum CommandAckOutcome {
 //#endregion 🔖Protocol
 
 //#region 🔖Endpoints
-// 🧱 Most `semio_framework_core` id/diff/inverse types this region and 🔖WireBridge below build
-// envelopes from are imported once, unconditionally, at the top of the file (both the native
-// folder-reconstruction path here and the cross-target wire bridge need them). `DocumentId` is the
-// one exception: only this native-only region names it explicitly (the wire bridge never spells the
-// type, just moves values through it), so it stays a native-only import to avoid an unused-import
-// warning on the wasm32 build.
+// 🧱 `DocumentId` is used only by native-only test helpers below (the wire bridge and production
+// folder-reconstruction path move `protocol::OperationEnvelope`s without spelling this type), so it
+// stays a native-only import to avoid an unused-import warning on the wasm32 build.
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_core::DocumentId;
 
@@ -170,32 +167,16 @@ fn envelope_edits(value: &Value) -> Vec<Value> {
     value.get("vcs").and_then(|v| v.get("edits")).and_then(|e| e.as_array()).cloned().unwrap_or_default()
 }
 
-/// @emoji 📦 Rebuilds an {@link OperationEnvelope} from a stored `Edit` JSON so an appended external edit can
-/// flow through the store's causal DAG (`ingest_remote` → `edit_from_operation_envelope`). Mirrors vcs's
-/// `operation_envelope_from_edit` field-for-field.
+/// @emoji 📦 Rebuilds real {@link OperationEnvelope}s (one per forward op, genuine `OpBinary`
+/// payloads) from a stored `Edit` JSON so an appended external edit can flow through the store's
+/// causal DAG (`ingest_remote` → `edit_from_operation_envelope`, which expects `diff.payload` to
+/// decode via `Operation::decode_op`, not raw JSON bytes). This actor stays schema-agnostic
+/// (`serde_json::Value` end to end), so the actual `Edit<Operation>` parse + `OpBinary` encode
+/// happens behind `store::document_codec(schema)`'s `envelopes_from_edit_json` bridge — a missing
+/// codec or malformed edit yields no envelopes rather than a payload that fails to decode downstream.
 #[cfg(not(target_arch = "wasm32"))]
-fn operation_envelope_from_stored_edit(schema: &str, document_id: &str, edit: Value) -> OperationEnvelope {
-    let id = edit.get("id").and_then(|v| v.as_str()).unwrap_or_default().to_string();
-    let actor = edit.get("actor").and_then(|v| v.as_str()).unwrap_or("external").to_string();
-    let sequence = edit.get("sequenceNumber").and_then(|v| v.as_i64()).unwrap_or(0);
-    let backwards = edit.get("backwards").cloned().unwrap_or_else(|| Value::Array(Vec::new()));
-    let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(&edit).unwrap_or_default());
-    OperationEnvelope {
-        id: OperationId(id.clone()),
-        actor: ActorId(actor),
-        document: DocumentId(document_id.to_string()),
-        schema_version: SchemaVersion(schema.to_string()),
-        deps: Vec::new(),
-        payload_hash: PayloadHash(payload_hash),
-        diff: DocumentDiff { schema_id: SchemaId(schema.to_string()), payload: edit },
-        inverse: InverseOperation {
-            target_operation: OperationId(id),
-            inverse_diff: DocumentDiff { schema_id: SchemaId(schema.to_string()), payload: serde_json::json!({ "backwards": backwards }) },
-            base_version: DocumentVersion(sequence.max(0) as u64),
-            dependencies: Vec::new(),
-            undo_policy: UndoPolicy::ExactBaseOnly,
-        },
-    }
+fn operation_envelopes_from_stored_edit(schema: &str, document_id: &str, edit: &Value) -> Vec<OperationEnvelope> {
+    store::document_codec(schema).and_then(|codec| (codec.envelopes_from_edit_json)(edit, document_id, schema).ok()).unwrap_or_default()
 }
 
 /// @emoji 🔗 Derives a hub WebSocket URL: `remote://host:port` (or `http(s)://`, `ws(s)://`) →
@@ -209,98 +190,50 @@ fn hub_ws_url(base_url: &str, studio_id: &str, document_id: &str) -> String {
 //#endregion 🔖Endpoints
 
 //#region 🔖WireBridge
-/// @emoji 🌉 Converts between this actor's local, schema-agnostic {@link OperationEnvelope}
-/// (`semio_framework_core`, the shape `store::DocumentStore`/`ChannelBackbone` speak) and
-/// `protocol_causal::OperationEnvelope` (the shape `protocol_wire::ClientFrame::Commands`/
-/// `ServerFrame::Commands` carry on the wire). `ActorId`/`DocumentId`/`OperationId` are literally
-/// the same type on both sides (`semio_framework_core` re-exports them from `protocol_core`
-/// verbatim — see that re-export's doc comment), so only `schema_version`/`payload_hash` (local-
-/// only, recomputed on receipt exactly like {@link operation_envelope_from_stored_edit} already
-/// does) and `inverse.{target_operation,base_version,dependencies,undo_policy}` (no wire
-/// counterpart — `protocol_causal::InverseOperation` is deliberately simpler, see its frozen-
-/// contract doc comment) need real bridging.
-fn to_wire_envelope(envelope: &OperationEnvelope, timestamp: protocol::HybridLogicalTimestamp) -> protocol::OperationEnvelope {
-    protocol::OperationEnvelope {
-        operation_id: envelope.id.clone(),
-        document_id: envelope.document.clone(),
-        actor: envelope.actor.clone(),
-        dependencies: envelope.deps.clone(),
-        diff: protocol::DocumentDiff {
-            schema: protocol::SchemaId(envelope.diff.schema_id.0.clone()),
-            payload: serde_json::to_vec(&envelope.diff.payload).unwrap_or_default(),
-        },
-        inverse: protocol::InverseOperation {
-            schema: protocol::SchemaId(envelope.inverse.inverse_diff.schema_id.0.clone()),
-            payload: serde_json::to_vec(&envelope.inverse.inverse_diff.payload).unwrap_or_default(),
-        },
-        timestamp,
-    }
-}
-
-/// @emoji 🌉 The inverse of {@link to_wire_envelope}: rebuilds a full local envelope from one that
-/// crossed the wire, recomputing `payload_hash`/`base_version` the same way
-/// {@link operation_envelope_from_stored_edit} does (this actor's payloads are always edit-shaped
-/// JSON carrying their own `sequenceNumber`/`backwards`), and defaulting `undo_policy` to
-/// `ExactBaseOnly` (the only policy this schema-agnostic actor ever assigns, mirrored from that
-/// same function). 🎯 W5: `diff`/`inverse` payloads are opaque bytes on the wire now — this actor's
-/// own convention is still JSON underneath, so it decodes the bytes back into a `Value` here (the
-/// wire/storage boundary is binary; this local envelope shape stays JSON, per this crate's own
-/// schema-agnostic design).
-fn from_wire_envelope(envelope: protocol::OperationEnvelope) -> OperationEnvelope {
-    let schema = envelope.diff.schema.0.clone();
-    let diff_payload: Value = serde_json::from_slice(&envelope.diff.payload).unwrap_or(Value::Null);
-    let sequence = diff_payload.get("sequenceNumber").and_then(|value| value.as_i64()).unwrap_or(0).max(0) as u64;
-    let payload_hash = semio_framework_hash::hash_bytes(&envelope.diff.payload);
-    let inverse_schema = envelope.inverse.schema.0.clone();
-    let inverse_payload: Value = serde_json::from_slice(&envelope.inverse.payload).unwrap_or(Value::Null);
-    OperationEnvelope {
-        id: envelope.operation_id.clone(),
-        actor: envelope.actor,
-        document: envelope.document_id,
-        schema_version: SchemaVersion(schema.clone()),
-        deps: envelope.dependencies,
-        payload_hash: PayloadHash(payload_hash),
-        diff: DocumentDiff { schema_id: SchemaId(schema), payload: diff_payload },
-        inverse: InverseOperation {
-            target_operation: envelope.operation_id,
-            inverse_diff: DocumentDiff { schema_id: SchemaId(inverse_schema), payload: inverse_payload },
-            base_version: DocumentVersion(sequence),
-            dependencies: Vec::new(),
-            undo_policy: UndoPolicy::ExactBaseOnly,
-        },
-    }
-}
+// 🎯 W6 kernel unification: `to_wire_envelope`/`from_wire_envelope` are DELETED — this actor's
+// local envelope shape (`LocalOperations`/`RemoteOperations`/`ChannelBackbone`) and the wire shape
+// (`protocol_wire::ClientFrame::Commands`/`ServerFrame::Commands`) are now the SAME type,
+// `protocol::OperationEnvelope`, throughout: `store::BackboneMessage::Operations` already carries
+// it natively (W6's `store` repoint), so there is no local/wire boundary left to bridge across.
+// The old local-only fields (`payload_hash`, `schema_version` separate from `diff.schema`) are
+// dropped, not replaced — a repo-wide grep confirmed neither was ever read outside this
+// now-deleted bridge (`payload_hash` was write-only; `schema_version`/`deps` were only read back
+// by these same two functions and two test assertions, both updated alongside this change).
 
 /// @emoji ↩️ Synthesizes a local "undo" envelope from a speculative envelope's own precomputed
 /// `inverse`, so a hub `Ack::Applied::{Rejected,Transformed}` outcome can roll back (or replace)
-/// the local speculative head without a second round trip. This actor stays `serde_json::Value`-
-/// typed end to end (never touches `vcs`/`protocol_command`'s typed `Operation`/`OperationDiff`
-/// trait machinery — see the crate doc), so "the inverse machinery" it uses is simply replaying the
-/// envelope's own already-computed `InverseOperation` diff as a synthetic remote operation, the
-/// same path {@link DocumentActor::deliver_remote_operations} already uses for any other remote edit.
+/// the local speculative head without a second round trip. This actor stays JSON-payload-typed end
+/// to end (never touches `vcs`/`protocol_command`'s typed `Operation`/`OperationDiff` trait
+/// machinery — see the crate doc), so "the inverse machinery" it uses is simply replaying the
+/// envelope's own already-computed inverse payload as a synthetic remote operation, the same path
+/// {@link DocumentActor::deliver_remote_operations} already uses for any other remote edit. 🎯 W6:
+/// re-emits `envelope.inverse` as the rollback's forward diff; the rollback's OWN inverse is the
+/// original forward diff (inverse-of-inverse) — `protocol_causal::InverseOperation` carries no
+/// `target_operation`/`base_version`/`dependencies`/`undo_policy` (a deliberately simpler shape
+/// than the old kernel-local one), so those are gone, not defaulted.
 fn rollback_envelope(envelope: &OperationEnvelope) -> OperationEnvelope {
-    let undo_id = OperationId(format!("{}~undo", envelope.id.0));
+    let undo_id = OperationId(format!("{}~undo", envelope.operation_id.0));
     OperationEnvelope {
-        id: undo_id.clone(),
+        operation_id: undo_id.clone(),
+        document_id: envelope.document_id.clone(),
         actor: envelope.actor.clone(),
-        document: envelope.document.clone(),
-        schema_version: envelope.schema_version.clone(),
-        deps: vec![envelope.id.clone()],
-        payload_hash: PayloadHash(semio_framework_hash::hash_bytes(&serde_json::to_vec(&envelope.inverse.inverse_diff.payload).unwrap_or_default())),
-        diff: envelope.inverse.inverse_diff.clone(),
-        inverse: InverseOperation { target_operation: undo_id, inverse_diff: envelope.diff.clone(), base_version: envelope.inverse.base_version, dependencies: Vec::new(), undo_policy: envelope.inverse.undo_policy },
+        dependencies: vec![envelope.operation_id.clone()],
+        diff: protocol::DocumentDiff { schema: envelope.inverse.schema.clone(), payload: envelope.inverse.payload.clone() },
+        inverse: protocol::InverseOperation { schema: envelope.diff.schema.clone(), payload: envelope.diff.payload.clone() },
+        timestamp: envelope.timestamp,
     }
 }
 
-/// @emoji 📡 `PresencePeer` -> the pre-serialized JSON string `protocol_wire::ClientFrame::Presence`
-/// carries (🎯 W5: `String`, not `serde_json::Value` — see `protocol_wire`'s module doc).
-fn presence_to_json(peer: &PresencePeer) -> String {
-    serde_json::to_string(peer).unwrap_or_else(|_| "null".to_string())
+/// @emoji 📡 `PresencePeer` -> the binary blob `protocol_wire::ClientFrame::Presence` carries
+/// opaquely (`semio_framework_core::encode_presence_peer` — `protocol_wire` has no dependency on
+/// this crate's `PresencePeer` type, so the frame only ever moves the pre-encoded bytes).
+fn presence_to_bytes(peer: &PresencePeer) -> Vec<u8> {
+    semio_framework_core::encode_presence_peer(peer)
 }
 
-/// @emoji 📡 The inverse of {@link presence_to_json}, for `ServerFrame::Presence`'s peer roster.
-fn presence_from_json(json: &str) -> Option<PresencePeer> {
-    serde_json::from_str(json).ok()
+/// @emoji 📡 The inverse of {@link presence_to_bytes}, for `ServerFrame::Presence`'s peer roster.
+fn presence_from_bytes(bytes: &[u8]) -> Option<PresencePeer> {
+    semio_framework_core::decode_presence_peer(bytes).ok()
 }
 
 /// @emoji ⏰ Millisecond wall-clock reads for {@link next_timestamp}: `SystemTime` natively,
@@ -326,8 +259,9 @@ fn actor_seed(actor: &str) -> u64 {
 }
 
 /// @emoji ⏰ Advances `counter` and stamps a fresh {@link protocol::HybridLogicalTimestamp} for an
-/// outbound wire envelope. Wire-only metadata: `semio_framework_core::OperationEnvelope` carries no
-/// timestamp field, so this never needs to round-trip back through {@link from_wire_envelope}.
+/// outbound envelope — freshly stamped on every send (this actor never round-trips a locally-
+/// authored envelope's own timestamp back in; a remote-delivered envelope's `timestamp` is simply
+/// carried through unchanged).
 fn next_timestamp(seed: u64, counter: &mut u64) -> protocol::HybridLogicalTimestamp {
     *counter = counter.wrapping_add(1);
     protocol::HybridLogicalTimestamp { actor: seed, physical_ms: now_ms(), logical: *counter }
@@ -340,8 +274,8 @@ fn next_timestamp(seed: u64, counter: &mut u64) -> protocol::HybridLogicalTimest
 /// channel and event stream, drains status on {@link SyncSession::tick}, and delegates store IO.
 pub struct SyncSession<P, Operation>
 where
-    P: Clone + serde::Serialize + serde::de::DeserializeOwned,
-    Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P>,
+    P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
 {
     pub store: DocumentStore<P, Operation>,
     cmd_tx: Option<mpsc::UnboundedSender<DocumentActorMsg>>,
@@ -351,8 +285,8 @@ where
 
 impl<P, Operation> SyncSession<P, Operation>
 where
-    P: Clone + serde::Serialize + serde::de::DeserializeOwned,
-    Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P>,
+    P: Clone + serde::Serialize + serde::de::DeserializeOwned + store::DocumentPack,
+    Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + protocol::Operation<P> + protocol::OpBinary + protocol::OpText,
 {
     pub fn new(store: DocumentStore<P, Operation>) -> Self {
         Self { store, cmd_tx: None, events: None, status: DocumentSyncStatus::default() }
@@ -412,7 +346,7 @@ where
 
     /// @emoji 🕸️ Feeds a remote envelope through the store's causal DAG, materializing it (and any
     /// now-unblocked dependents) into the edit timeline. Kept for direct/test injection.
-    pub fn receive(&mut self, envelope: semio_framework_core::OperationEnvelope) -> Result<(), SyncError> {
+    pub fn receive(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), SyncError> {
         self.store.ingest_remote(envelope).map_err(|error| SyncError::Vcs(error.to_string()))
     }
 
@@ -800,7 +734,7 @@ mod native_actor {
                     false
                 }
                 DocumentActorMsg::PresenceHeartbeat { peer } => {
-                    self.send_client_frame(ClientFrame::Presence { peer_json: presence_to_json(&peer) }, Lane::Preview).await;
+                    self.send_client_frame(ClientFrame::Presence { peer: presence_to_bytes(&peer) }, Lane::Preview).await;
                     false
                 }
                 DocumentActorMsg::PublishPreview { key, seq, payload } => {
@@ -829,8 +763,14 @@ mod native_actor {
                         self.persist_operations(&envelopes);
                         self.relay_operations_to_hub(&envelopes).await;
                     }
-                    BackboneMessage::Snapshot { envelope_json } => {
-                        self.persist_snapshot(&envelope_json);
+                    BackboneMessage::Snapshot { pack, spr } => {
+                        // 🚧 B2/B3 seam: the wire/store-facing `BackboneMessage::Snapshot` is real
+                        // pack+spr bytes now; this actor's own internals stay JSON-typed until B3's
+                        // bytes-native actor rewrite, so bridge back to JSON here via the (still
+                        // JSON-in/out) codec — a temporary seam, not a new JSON wire hop.
+                        if let Some(envelope_json) = store::document_codec(&self.schema).and_then(|codec| (codec.parse)(&pack, &spr).ok()) {
+                            self.persist_snapshot(&envelope_json);
+                        }
                         // 📸 No client -> hub whole-envelope push exists in wire v2
                         // (`protocol_wire::ClientFrame` has no snapshot-put variant — only
                         // causally-ordered `Commands`; the hub -> client snapshot direction is
@@ -878,10 +818,13 @@ mod native_actor {
                 return;
             }
             let Some(mut value) = self.current_envelope.clone() else { return };
+            let codec = store::document_codec(&self.schema);
             if let Some(edits) = value.get_mut("vcs").and_then(|vcs| vcs.get_mut("edits")).and_then(|edits| edits.as_array_mut()) {
                 for envelope in envelopes {
-                    if self.known_edit_ids.insert(envelope.id.0.clone()) {
-                        edits.push(envelope.diff.payload.clone());
+                    if self.known_edit_ids.insert(envelope.operation_id.0.clone()) {
+                        if let Some(edit_value) = codec.as_ref().and_then(|codec| (codec.edit_json_from_envelope)(envelope).ok()) {
+                            edits.push(edit_value);
+                        }
                     }
                 }
             }
@@ -906,7 +849,7 @@ mod native_actor {
 
             if lost.is_empty() && !new_ids.is_empty() {
                 let appended: Vec<OperationEnvelope> =
-                    envelope_edits(&value).into_iter().filter(|edit| edit.get("id").and_then(|id| id.as_str()).map(|id| new_ids.contains(id)).unwrap_or(false)).map(|edit| operation_envelope_from_stored_edit(&self.schema, &self.document_id, edit)).collect();
+                    envelope_edits(&value).into_iter().filter(|edit| edit.get("id").and_then(|id| id.as_str()).map(|id| new_ids.contains(id)).unwrap_or(false)).flat_map(|edit| operation_envelopes_from_stored_edit(&self.schema, &self.document_id, &edit)).collect();
                 self.known_edit_ids.extend(new_ids);
                 self.current_envelope = Some(value);
                 self.last_written_hash = Some(hash);
@@ -1006,7 +949,7 @@ mod native_actor {
                 ServerFrame::Commands { envelopes, origin, frontier } => {
                     self.server_frontier = Some(frontier);
                     if origin != ActorId(self.actor.clone()) {
-                        let converted: Vec<OperationEnvelope> = envelopes.into_iter().map(from_wire_envelope).collect();
+                        let converted = envelopes;
                         self.persist_operations(&converted);
                         self.deliver_remote_operations(converted);
                     }
@@ -1020,8 +963,8 @@ mod native_actor {
                         self.emit(DocumentEvent::Preview { actor: actor.0, key, seq, payload });
                     }
                 }
-                ServerFrame::Presence { peers_json } => {
-                    let peers: Vec<PresencePeer> = peers_json.iter().filter_map(|p| presence_from_json(p)).collect();
+                ServerFrame::Presence { peers } => {
+                    let peers: Vec<PresencePeer> = peers.iter().filter_map(|p| presence_from_bytes(p)).collect();
                     self.set_remote_state(RemoteState::Live { peer_count: peers.len() });
                     self.emit(DocumentEvent::Presence { peers });
                 }
@@ -1052,7 +995,7 @@ mod native_actor {
                         let rollbacks: Vec<OperationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
                         self.persist_operations(&rollbacks);
                         self.deliver_remote_operations(rollbacks);
-                        let converted = from_wire_envelope(*envelope);
+                        let converted = *envelope;
                         self.persist_operations(std::slice::from_ref(&converted));
                         self.deliver_remote_operations(vec![converted]);
                         self.emit(DocumentEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed });
@@ -1074,7 +1017,7 @@ mod native_actor {
             }
             let batch_id = self.next_batch_id;
             self.next_batch_id = self.next_batch_id.wrapping_add(1);
-            let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| to_wire_envelope(envelope, next_timestamp(self.hlc_seed, &mut self.hlc_counter))).collect();
+            let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
             self.pending_batches.insert(batch_id, envelopes.to_vec());
             self.send_client_frame(ClientFrame::Commands { batch_id, envelopes: wire_envelopes }, Lane::Command).await;
             self.emit_status_if_changed();
@@ -1111,7 +1054,14 @@ mod native_actor {
 
         /// @emoji 📸 Pushes a full-envelope snapshot into the store's inbound queue and notifies subscribers.
         fn deliver_snapshot(&mut self, envelope_json: String) {
-            let _ = self.remote.push(BackboneMessage::Snapshot { envelope_json: envelope_json.clone() });
+            // 🚧 B2/B3 seam: see the matching comment in `drain_and_relay`'s `Snapshot` arm — the
+            // wire-facing push is real pack+spr bytes; this actor's own event stays JSON-typed
+            // until B3.
+            if let Some(codec) = store::document_codec(&self.schema) {
+                if let Ok((pack_files, _dsl_mirror)) = (codec.print)(&envelope_json) {
+                    let _ = self.remote.push(BackboneMessage::Snapshot { pack: pack_files.pack, spr: pack_files.spr });
+                }
+            }
             self.emit(DocumentEvent::SnapshotReplaced { envelope_json });
         }
 
@@ -1308,7 +1258,7 @@ mod wasm_actor {
             }
             let batch_id = self.next_batch_id;
             self.next_batch_id = self.next_batch_id.wrapping_add(1);
-            let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| to_wire_envelope(envelope, next_timestamp(self.hlc_seed, &mut self.hlc_counter))).collect();
+            let wire_envelopes: Vec<protocol::OperationEnvelope> = envelopes.iter().map(|envelope| protocol::OperationEnvelope { timestamp: next_timestamp(self.hlc_seed, &mut self.hlc_counter), ..envelope.clone() }).collect();
             self.pending_batches.insert(batch_id, envelopes.to_vec());
             self.send_frame(&ClientFrame::Commands { batch_id, envelopes: wire_envelopes }, Lane::Command);
         }
@@ -1343,7 +1293,7 @@ mod wasm_actor {
                     self.drain_and_relay();
                 }
                 DocumentActorMsg::PresenceHeartbeat { peer } => {
-                    self.send_frame(&ClientFrame::Presence { peer_json: presence_to_json(&peer) }, Lane::Preview);
+                    self.send_frame(&ClientFrame::Presence { peer: presence_to_bytes(&peer) }, Lane::Preview);
                 }
                 DocumentActorMsg::PublishPreview { key, seq, payload } => {
                     self.send_frame(&ClientFrame::PreviewPublish { key, seq, payload }, Lane::Preview);
@@ -1369,7 +1319,7 @@ mod wasm_actor {
                 ServerFrame::Commands { envelopes, origin, frontier } => {
                     self.server_frontier = Some(frontier);
                     if origin != ActorId(self.actor.clone()) {
-                        let converted: Vec<OperationEnvelope> = envelopes.into_iter().map(from_wire_envelope).collect();
+                        let converted = envelopes;
                         self.deliver_remote_operations(converted);
                     }
                 }
@@ -1382,8 +1332,8 @@ mod wasm_actor {
                         let _ = self.events.send(DocumentEvent::Preview { actor: actor.0, key, seq, payload });
                     }
                 }
-                ServerFrame::Presence { peers_json } => {
-                    let peers: Vec<PresencePeer> = peers_json.iter().filter_map(|p| presence_from_json(p)).collect();
+                ServerFrame::Presence { peers } => {
+                    let peers: Vec<PresencePeer> = peers.iter().filter_map(|p| presence_from_bytes(p)).collect();
                     let _ = self.events.send(DocumentEvent::Presence { peers });
                 }
                 ServerFrame::CreditGrant { .. } => {}
@@ -1405,7 +1355,7 @@ mod wasm_actor {
                     ApplyOutcome::Transformed { envelope } => {
                         let rollbacks: Vec<OperationEnvelope> = sent.iter().rev().map(rollback_envelope).collect();
                         self.deliver_remote_operations(rollbacks);
-                        let converted = from_wire_envelope(*envelope);
+                        let converted = *envelope;
                         self.deliver_remote_operations(vec![converted]);
                         let _ = self.events.send(DocumentEvent::CommandOutcome { batch_id, outcome: CommandAckOutcome::Transformed });
                     }
@@ -1811,8 +1761,8 @@ mod tests {
     use super::*;
     use serde::{Deserialize, Serialize};
     use store::{
-        create_document_envelope, document_codec, operation_envelope_from_edit, parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines,
-        register_document_codec, BlobStore, DocumentCodec, DocumentCommand, DocumentDsl, DocumentEnvelope, DocumentPack, ParsedDocumentText,
+        create_document_envelope, parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines, register_document_codec, BlobStore, DocumentCodec,
+        DocumentCommand, DocumentDsl, ParsedDocumentText,
     };
     use protocol::{Edit, Operation, OperationDiff};
 
@@ -1871,7 +1821,7 @@ mod tests {
         });
     }
 
-    fn sample_operation_envelope(edit_id: &str, n: i32) -> semio_framework_core::OperationEnvelope {
+    fn sample_operation_envelope(edit_id: &str, n: i32) -> protocol::OperationEnvelope {
         let edit = Edit {
             id: edit_id.into(),
             actor: None,
@@ -1884,8 +1834,10 @@ mod tests {
             started_at: "0".into(),
             finished_at: None,
         };
-        let placeholder: store::DocumentEnvelope<DemoProjection, DemoOperation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        operation_envelope_from_edit(&placeholder, &edit, Vec::new()).expect("operation envelope")
+        let document_id = protocol::DocumentId("demo".to_string());
+        let schema = protocol::SchemaId("demo/v1".to_string());
+        let mut envelopes = protocol::operation_envelope_from_edit::<DemoProjection, DemoOperation>(&edit, &document_id, &schema).expect("operation envelope");
+        envelopes.pop().expect("exactly one op envelope for a single-op edit")
     }
 
     //#region 🧪SyncSession
@@ -1904,11 +1856,12 @@ mod tests {
         let envelope: store::DocumentEnvelope<DemoProjection, DemoOperation> = create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let store = DocumentStore::new(envelope);
         let mut session = SyncSession::new(store);
+        let first = sample_operation_envelope("edit-1", 5);
         let mut second = sample_operation_envelope("edit-2", 9);
-        second.deps = vec![semio_framework_core::OperationId("edit-1".into())];
+        second.dependencies = vec![first.operation_id.clone()];
         session.receive(second).expect("receive second first");
         assert_eq!(session.store.envelope().vcs.edits.len(), 0, "buffered until edit-1 arrives");
-        session.receive(sample_operation_envelope("edit-1", 5)).expect("receive first");
+        session.receive(first).expect("receive first");
         assert_eq!(session.store.envelope().vcs.edits.len(), 2, "both edits now applied");
         assert_eq!(session.store.projection().expect("projection").n, 9);
     }
@@ -1924,31 +1877,17 @@ mod tests {
     //#endregion 🧪Helpers
 
     //#region 🧪WireBridge
-    #[test]
-    fn wire_bridge_round_trips_identity_and_diff_through_protocol_causal() {
-        let envelope = sample_operation_envelope("edit-1", 5);
-        let wire = to_wire_envelope(&envelope, protocol::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 });
-        assert_eq!(wire.operation_id, envelope.id);
-        assert_eq!(wire.actor, envelope.actor);
-        assert_eq!(wire.document_id, envelope.document);
-        let decoded_wire_payload: Value = serde_json::from_slice(&wire.diff.payload).expect("wire diff payload decodes as json");
-        assert_eq!(decoded_wire_payload, envelope.diff.payload);
-
-        let recovered = from_wire_envelope(wire);
-        assert_eq!(recovered.id, envelope.id);
-        assert_eq!(recovered.actor, envelope.actor);
-        assert_eq!(recovered.document, envelope.document);
-        assert_eq!(recovered.diff.payload, envelope.diff.payload);
-        assert_eq!(recovered.inverse.inverse_diff.payload, envelope.inverse.inverse_diff.payload);
-    }
-
+    // 🎯 W6: `wire_bridge_round_trips_identity_and_diff_through_protocol_causal` is DELETED — the
+    // local/wire bridge it tested (`to_wire_envelope`/`from_wire_envelope`) no longer exists; local
+    // and wire envelopes are the same `protocol::OperationEnvelope` type now, an identity the type
+    // system enforces, not something a round-trip test needs to prove.
     #[test]
     fn rollback_envelope_synthesizes_an_undo_from_the_original_inverse() {
         let envelope = sample_operation_envelope("edit-1", 5);
         let rollback = rollback_envelope(&envelope);
-        assert_eq!(rollback.deps, vec![envelope.id.clone()], "the undo depends on the operation it undoes");
-        assert_eq!(rollback.diff.payload, envelope.inverse.inverse_diff.payload, "the undo's forward diff IS the original's inverse");
-        assert_ne!(rollback.id, envelope.id, "the undo gets its own operation id");
+        assert_eq!(rollback.dependencies, vec![envelope.operation_id.clone()], "the undo depends on the operation it undoes");
+        assert_eq!(rollback.diff.payload, envelope.inverse.payload, "the undo's forward diff IS the original's inverse");
+        assert_ne!(rollback.operation_id, envelope.operation_id, "the undo gets its own operation id");
     }
 
     /// @emoji 🎬 Canonical wire-frame byte fixtures shared with `backbone-worker.ts`'s vitest suite
@@ -2017,7 +1956,7 @@ mod tests {
         write_client(&fixtures_dir, "client-commands.bin", &ClientFrame::Commands { batch_id: 1, envelopes: vec![wire_envelope.clone()] }, Lane::Command);
         write_client(&fixtures_dir, "client-frontier-advertise.bin", &ClientFrame::FrontierAdvertise { frontier: frontier.clone() }, Lane::Command);
         write_client(&fixtures_dir, "client-preview-publish.bin", &ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, Lane::Preview);
-        write_client(&fixtures_dir, "client-presence.bin", &ClientFrame::Presence { peer_json: "{\"cursor\":[1,2]}".to_string() }, Lane::Preview);
+        write_client(&fixtures_dir, "client-presence.bin", &ClientFrame::Presence { peer: b"{\"cursor\":[1,2]}".to_vec() }, Lane::Preview);
         write_client(&fixtures_dir, "client-credit-grant.bin", &ClientFrame::CreditGrant { n: 16 }, Lane::Command);
         write_client(&fixtures_dir, "client-bye.bin", &ClientFrame::Bye, Lane::Command);
         //#endregion 🔖ClientFrame
@@ -2071,7 +2010,7 @@ mod tests {
             Lane::Command,
         );
         write_server(&fixtures_dir, "server-preview.bin", &ServerFrame::Preview { actor: protocol::ActorId("actor-1".to_string()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview);
-        write_server(&fixtures_dir, "server-presence.bin", &ServerFrame::Presence { peers_json: vec!["{\"id\":\"a\"}".to_string(), "{\"id\":\"b\"}".to_string()] }, Lane::Preview);
+        write_server(&fixtures_dir, "server-presence.bin", &ServerFrame::Presence { peers: vec![b"{\"id\":\"a\"}".to_vec(), b"{\"id\":\"b\"}".to_vec()] }, Lane::Preview);
         write_server(&fixtures_dir, "server-credit-grant.bin", &ServerFrame::CreditGrant { n: 32 }, Lane::Command);
         write_server(&fixtures_dir, "server-error.bin", &ServerFrame::Error { code: "rejected".to_string(), message: "bad batch".to_string() }, Lane::Command);
         //#endregion 🔖ServerFrame
@@ -2098,6 +2037,7 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn op_envelope_from_stored_edit_round_trips_through_ingest() {
+        ensure_demo_codec_registered();
         let edit_json = serde_json::json!({
             "id": "ext-1",
             "actor": "peer",
@@ -2106,10 +2046,10 @@ mod tests {
             "sequenceNumber": 3,
             "startedAt": "0"
         });
-        let envelope = operation_envelope_from_stored_edit("demo/v1", "demo", edit_json);
-        assert_eq!(envelope.id.0, "ext-1");
-        let recovered: Edit<DemoOperation> = serde_json::from_value(envelope.diff.payload.clone()).expect("recover edit");
-        assert_eq!(recovered.forwards, vec![DemoOperation::SetN { n: 42 }]);
+        let envelopes = operation_envelopes_from_stored_edit("demo/v1", "demo", &edit_json);
+        assert_eq!(envelopes.len(), 1, "single-op edit yields one envelope");
+        let recovered = <DemoOperation as protocol::OpBinary>::decode_op(&envelopes[0].diff.payload).expect("decode op");
+        assert_eq!(recovered, DemoOperation::SetN { n: 42 });
     }
     //#endregion 🧪Helpers
 
@@ -2126,6 +2066,29 @@ mod tests {
 
         fn demo_envelope(document_id: &str) -> store::DocumentEnvelope<DemoProjection, DemoOperation> {
             create_document_envelope("demo/v1", document_id, DemoProjection { n: 0 }, None)
+        }
+
+        async fn wait_until(label: &str, mut predicate: impl FnMut() -> bool) {
+            let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+            while !predicate() {
+                if tokio::time::Instant::now() >= deadline {
+                    panic!("{label} not satisfied before 5s deadline");
+                }
+                tokio::time::sleep(Duration::from_millis(20)).await;
+            }
+        }
+
+        async fn wait_until_value<T>(label: &str, mut predicate: impl FnMut() -> Option<T>) -> T {
+            let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+            loop {
+                if let Some(value) = predicate() {
+                    return value;
+                }
+                if tokio::time::Instant::now() >= deadline {
+                    panic!("{label} not satisfied before 5s deadline");
+                }
+                tokio::time::sleep(Duration::from_millis(20)).await;
+            }
         }
 
         async fn wait_for_event(events: &mut broadcast::Receiver<DocumentEvent>, mut predicate: impl FnMut(&DocumentEvent) -> bool) -> DocumentEvent {
@@ -2162,15 +2125,16 @@ mod tests {
             // Wait until the actor has persisted the local edit to the folder db (pack+spr bytes,
             // decoded back to envelope JSON through the same codec `FolderEndpoint` uses).
             let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
-            let stored = loop {
+            let stored = wait_until_value("persisted edit on disk", || {
                 if let Some((pack, spr)) = storage.read("doc-a").expect("read") {
                     let json = (codec.parse)(&pack, &spr).expect("codec parse");
                     if json.contains("\"edits\":[{") {
-                        break json;
+                        return Some(json);
                     }
                 }
-                tokio::time::sleep(Duration::from_millis(20)).await;
-            };
+                None
+            })
+            .await;
 
             // Out-of-band: append a foreign edit directly to the stored envelope, then re-encode
             // through the codec (mirroring exactly what `FolderEndpoint::write` does internally)
@@ -2195,13 +2159,14 @@ mod tests {
             match event {
                 DocumentEvent::RemoteOperations { envelopes } => {
                     assert_eq!(envelopes.len(), 1);
-                    assert_eq!(envelopes[0].id.0, "external-1");
+                    assert_eq!(envelopes[0].operation_id.0, "external-1#0", "single-op edit -> operation_id is edit.id#0 (protocol::operation_envelope_from_edit's ordinal-suffix convention)");
                 }
                 other => panic!("expected RemoteOperations, got {other:?}"),
             }
 
             // The store ingests the pushed operation on tick(); the timeline grows and projection updates.
             store.tick().expect("tick");
+            eprintln!("[DEBUG] edits: {:?}", store.envelope().vcs.edits.iter().map(|e| (e.id.clone(), e.forwards.clone())).collect::<Vec<_>>());
             assert_eq!(store.envelope().vcs.edits.len(), 2, "external edit joined the timeline");
             assert_eq!(store.projection().expect("projection").n, 42);
             host.close("doc-a");
@@ -2533,13 +2498,7 @@ mod tests {
             let mut store = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>(&fixture.schema, &fixture.document_id, DemoProjection { n: 0 }, None));
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
             let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
-            // Wait for the seed snapshot to land on disk.
-            loop {
-                if storage.read(&fixture.document_id).expect("read").is_some() {
-                    break;
-                }
-                tokio::time::sleep(Duration::from_millis(10)).await;
-            }
+            wait_until(&format!("seed snapshot for {} on disk", fixture.document_id), || storage.read(&fixture.document_id).expect("read").is_some()).await;
 
             // Lockstep: apply each stimulus, then wait for its paired expected event before the next
             // (removes any write/poke race). Folder-replayable fixtures pair inbound 1:1 with events.

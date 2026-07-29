@@ -1,8 +1,9 @@
 #!/usr/bin/env bun
 /** 🧭 Repo CLI task router. */
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { FileLinter } from "../../lib/js/index.ts";
-import { BundleScript, ScriptRouter, defineLint, runBundleScriptMain, runCmd, runTestBudgeted } from "../../lib/js/index.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, defineLint, resolveCliBin, runBundleScriptMain, runCmd, runTestBudgeted } from "../../lib/js/index.ts";
 
 export const policyFile = "main.go";
 
@@ -25,7 +26,15 @@ export const policy = defineLint("repo-client-cli-main-go", (l: FileLinter) => {
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {
-    runCmd("go", ["run", "./repo/client/mcp/go", ...segments], {
+    const bin = resolveCliBin(this.repoRoot);
+    if (!existsSync(bin)) {
+      runCmd("go", ["build", "-o", bin, "./repo/client/mcp/go"], {
+        cwd: this.repoRoot,
+        env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") },
+        budgetMs: buildBudgetMs(),
+      });
+    }
+    runCmd(bin, [...segments], {
       cwd: this.repoRoot,
       env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") },
     });
@@ -37,6 +46,7 @@ class BuildScript extends BundleScript {
     runCmd("go", ["build", "-o", join(this.repoRoot, "repo", "client", process.platform === "win32" ? "client.exe" : "client"), "./repo/client/mcp/go"], {
       cwd: this.repoRoot,
       env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") },
+      budgetMs: buildBudgetMs(),
     });
   }
 }

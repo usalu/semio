@@ -2,13 +2,13 @@
 /**
  * 🧭 Monorepo command router: `bun ./script.ts <verb> [segments…]` (e.g. `script.ts dev`, `script.ts dev mcp`, `script.ts generate neo4j compose`).
  */
-import { spawn, spawnSync } from "node:child_process";
 import {
   Script,
   ScriptRouter,
   buildBudgetMs,
   coverageDir,
   coverageEnabled,
+  daemonBudgetOpts,
   devToolingEnv,
   dispatchPolicyArgv,
   dispatchSubcommand,
@@ -21,12 +21,17 @@ import {
   goProfileToLcov,
   loadFrameworkOsPlaygroundCatalog,
   mergeLcov,
+  orchestratorBudgetOpts,
   parseLcov,
   renderLcov,
+  resolveCliBin,
   resolveFrameworkOsPlaygroundPlugin,
   resolveTestLevel,
   runCmd,
+  runCmdStatus,
+  runProbe,
   runTestBudgeted,
+  spawnDaemon,
   summarizeCoverage,
   installMicroCommitGitHooks,
   runCommit,
@@ -62,7 +67,7 @@ function runFrameworkOsPlaygroundDev(plugin: string, rest: string[] = []): void 
   runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:dev", ...rest], {
     cwd: WORKSPACE_ROOT,
     env: frameworkOsPlaygroundDevEnv(loadFrameworkOsPlaygroundCatalog(), plugin),
-    budgetMs: null, // dev server — runs until stopped
+    ...daemonBudgetOpts(),
   });
 }
 
@@ -101,8 +106,11 @@ const SCCACHE_VERSION = "0.10.0";
 
 /** ⚡Ensures `sccache` is on PATH for `.cargo/config.toml` rustc-wrapper. */
 function ensureSccache(): void {
-  const probe = spawnSync("sccache", ["--version"], { encoding: "utf8" });
-  if (probe.status === 0) return;
+  try {
+    if (runProbe("sccache", ["--version"]).status === 0) return;
+  } catch {
+    /* install below */
+  }
 
   const asset = sccacheReleaseAsset();
   if (!asset) {
@@ -204,16 +212,15 @@ export class SetupScript extends Script {
 
   private runGit(): void {
     runCmd("git", ["config", "--local", "core.symlinks", "true"], { cwd: this.root });
-    const repoClientCandidates = [join(this.root, "repo", "client", "client.exe"), join(this.root, "repo", "client", "client")];
-    const repoClientPath = repoClientCandidates.find((p) => existsSync(p));
-    if (repoClientPath) {
-      runCmd(repoClientPath, ["configure"], { cwd: this.root });
-    } else {
-      runCmd("go", ["run", "./repo/client/mcp/go", "configure"], {
+    const repoClientPath = resolveCliBin(this.root);
+    if (!existsSync(repoClientPath)) {
+      runCmd("go", ["build", "-o", repoClientPath, "./repo/client/mcp/go"], {
         cwd: this.root,
         env: { ...process.env, GOWORK: join(this.root, "go.work") },
+        budgetMs: buildBudgetMs(),
       });
     }
+    runCmd(repoClientPath, ["configure"], { cwd: this.root });
     installMicroCommitGitHooks(this.root);
     const source = "AGENTS.md";
     for (const alias of ["CLAUDE.md", "GEMINI.md"]) {
@@ -240,6 +247,8 @@ export class SetupScript extends Script {
     tryRun("uvx", ["--quiet", "mcp-neo4j-cypher", "--help"]);
     console.log("[setup] cargo fetch…");
     tryRun("cargo", ["fetch", "--manifest-path", "Cargo.toml"]);
+    console.log("[setup] cargo-nextest…");
+    tryRun("cargo", ["install", "cargo-nextest", "--locked"]);
     console.log("[setup] C++ toolchain and vcpkg…");
     tryRun("bun", [join(this.root, "script.ts"), "cpp", "setup"], { cwd: this.root });
     console.log("[setup] go build repo client…");
@@ -294,8 +303,7 @@ export class StartScript extends Script {
   run(_segments: string[]): void {
     process.chdir(this.root);
     const runGenerate = () => {
-      const r = spawnSync(BUN, [join(this.root, "script.ts"), "generate"], { stdio: "inherit", cwd: this.root });
-      if (r.status !== 0) {
+      if (runCmdStatus(BUN, [join(this.root, "script.ts"), "generate"], { cwd: this.root, ...orchestratorBudgetOpts() }) !== 0) {
         console.log("[start] `bun run generate` did not refresh all `.repo/🛂` bundles (Neo4j may be offline).");
       }
     };
@@ -345,7 +353,7 @@ export class DevScript extends Script {
       this.runMcp(segments.slice(1));
       return;
     }
-    runCmd("bun", ["nx", "run", "@semio-tech/compose-desktop:dev"], { cwd: this.root, budgetMs: null }); // dev server — runs until stopped
+    runCmd("bun", ["nx", "run", "@semio-tech/compose-desktop:dev"], { cwd: this.root, ...daemonBudgetOpts() });
   }
 
   private parseStorybookSegments(segments: string[]): { scope: string; args: string[] } {
@@ -400,7 +408,7 @@ export class DevScript extends Script {
         WATCHPACK_POLLING: process.env.WATCHPACK_POLLING ?? "true",
         CHOKIDAR_USEPOLLING: process.env.CHOKIDAR_USEPOLLING ?? "true",
       },
-      budgetMs: null, // dev server — runs until stopped
+      ...daemonBudgetOpts(),
     });
   }
 
@@ -443,7 +451,7 @@ export class DevScript extends Script {
   private runMcp(segments: string[]): void {
     const a = segments[0];
     if (a === "engine") {
-      runCmd("bun", [join(this.root, "compose", "client", "bin", "engine", "script.ts"), "dev", "mcp"], { cwd: this.root, budgetMs: null }); // mcp server — runs until stopped
+      runCmd("bun", [join(this.root, "compose", "client", "bin", "engine", "script.ts"), "dev", "mcp"], { cwd: this.root, ...daemonBudgetOpts() });
       return;
     }
     if (a === "neo4j") {
@@ -456,15 +464,15 @@ export class DevScript extends Script {
     }
     const mode = a === "repo" ? "repo" : "default";
     const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
-    const child =
-      mode === "repo"
-        ? spawn("npx", ["--yes", "@modelcontextprotocol/inspector", "--config", ".cursor/mcp.json", "--server", "repo"], { stdio: "inherit", shell: true, cwd: this.root, env: { ...process.env, HOST: host } })
-        : spawn("npx", ["--yes", "@modelcontextprotocol/inspector"], {
-            stdio: "inherit",
-            shell: true,
-            cwd: this.root,
-          });
-    child.on("exit", (c) => process.exit(c ?? 0));
+    if (mode === "repo") {
+      runCmd("npx", ["--yes", "@modelcontextprotocol/inspector", "--config", ".cursor/mcp.json", "--server", "repo"], {
+        cwd: this.root,
+        env: { ...process.env, HOST: host },
+        ...daemonBudgetOpts(),
+      });
+      return;
+    }
+    runCmd("npx", ["--yes", "@modelcontextprotocol/inspector"], { cwd: this.root, ...daemonBudgetOpts() });
   }
 
   private runMcpNeo4j(neoSegments: string[]): void {
@@ -473,8 +481,8 @@ export class DevScript extends Script {
     const graphDatabase = hasName ? joinNeo4jGraphDatabaseName(nameParts) : process.env.NEO4J_DATABASE || "compose";
     const args = [...passthrough];
     if (hasName && !args.includes("--namespace")) args.push("--namespace", graphDatabase);
-    const r = spawnSync("uvx", ["mcp-neo4j-cypher", ...args], {
-      stdio: "inherit",
+    runCmd("uvx", ["mcp-neo4j-cypher", ...args], {
+      cwd: this.root,
       env: {
         ...process.env,
         NEO4J_URI: process.env.NEO4J_URI || "bolt://localhost:7687",
@@ -483,32 +491,26 @@ export class DevScript extends Script {
         NEO4J_DATABASE: graphDatabase,
         NEO4J_TELEMETRY: process.env.NEO4J_TELEMETRY || "false",
       },
+      ...daemonBudgetOpts(),
     });
-    process.exit(r.status ?? 1);
   }
 
   private runMcpStdioRepo(slugs: string[]): void {
     const slug = (slugs[0] ?? "client").trim().toLowerCase();
     const extra = slugs.slice(1);
-    const packages: Record<string, string> = {
-      client: "./repo/client/mcp/go",
-      codex: "./repo/client/mcp/codex/go",
-      copilot: "./repo/client/mcp/copilot/go",
-      cursor: "./repo/client/mcp/cursor/go",
-      kiro: "./repo/client/mcp/kiro/go",
-      claude: "./repo/client/mcp/claude/go",
-    };
-    const pkg = packages[slug];
-    if (!pkg) {
-      console.error(`[dev.mcp.stdio] unknown profile ${JSON.stringify(slug)}`);
-      process.exit(1);
+    const bin = resolveCliBin(this.root);
+    if (!existsSync(bin)) {
+      runCmd("go", ["build", "-o", bin, "./repo/client/mcp/go"], {
+        cwd: this.root,
+        env: { ...process.env, GOWORK: join(this.root, "go.work") },
+        budgetMs: buildBudgetMs(),
+      });
     }
-    const r = spawnSync("go", ["run", pkg, ...extra], {
+    runCmd(bin, ["mcp", slug, ...extra], {
       cwd: this.root,
-      stdio: "inherit",
       env: { ...process.env, GOWORK: join(this.root, "go.work") },
+      ...daemonBudgetOpts(),
     });
-    process.exit(r.status ?? 1);
   }
 }
 //#endregion 🔖DevScript
@@ -519,7 +521,7 @@ export class NxScript extends Script {
     runCmd("node", [join(this.root, "node_modules", "nx", "bin", "nx.js"), ...segments], {
       cwd: this.root,
       env: devToolingEnv(),
-      budgetMs: null, // opaque nx passthrough — target may itself be a dev server; leaves are individually budgeted
+      ...orchestratorBudgetOpts(),
     });
   }
 }
@@ -568,10 +570,10 @@ export class LintScript extends Script {
     // nx orchestrators: exempt — total wall time spans every project and legitimately exceeds any single
     // command's budget; each leaf project's own build/test/lint commands are individually budgeted.
     if (segments[0] === "repo") {
-      runCmd("bun", ["nx", "run-many", "-t", "lint", "-p", "@repo/*"], { cwd: this.root, budgetMs: null });
+      runCmd("bun", ["nx", "run-many", "-t", "lint", "-p", "@repo/*"], { cwd: this.root, ...orchestratorBudgetOpts() });
       return;
     }
-    runCmd("bun", ["nx", "run-many", "-t", "lint", "--all", "--exclude", "workspace"], { cwd: this.root, budgetMs: null });
+    runCmd("bun", ["nx", "run-many", "-t", "lint", "--all", "--exclude", "workspace"], { cwd: this.root, ...orchestratorBudgetOpts() });
     runCmd("bunx", ["dependency-cruiser@16", "compose", "framework", "flow", "layout", "puzzle", "ui", "draw", "note", "sequence", "s", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
   }
 }
@@ -583,7 +585,7 @@ export class VerifyScript extends Script {
   async run(segments: string[]): Promise<void> {
     await this.runGate();
     if (segments[0] === "gate") return;
-    runCmd("bun", ["nx", "run-many", "-t", "test", "--all", "--exclude", "workspace"], { cwd: this.root, budgetMs: null }); // nx orchestrator — leaves individually budgeted
+    runCmd("bun", ["nx", "run-many", "-t", "test", "--all", "--exclude", "workspace"], { cwd: this.root, ...orchestratorBudgetOpts() });
   }
 
   private async runGate(): Promise<void> {
@@ -595,11 +597,11 @@ export class VerifyScript extends Script {
     runCmd("bunx", ["dependency-cruiser@16", "compose", "framework", "flow", "layout", "puzzle", "ui", "draw", "note", "sequence", "s", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
     console.log("[verify] generated catalog freshness…");
     // nx orchestrators: exempt — leaves individually budgeted.
-    runCmd("bun", ["nx", "run", "@semio-tech/plugin-registry:check"], { cwd: this.root, budgetMs: null });
+    runCmd("bun", ["nx", "run", "@semio-tech/plugin-registry:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] region/host-contract script lints…");
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-react:lint"], { cwd: this.root, budgetMs: null });
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:plugin", "lint"], { cwd: this.root, budgetMs: null });
-    runCmd("bun", ["nx", "run", "@semio-tech/ui-styling-tokens:check-no-px"], { cwd: this.root, budgetMs: null });
+    runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-react:lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:plugin", "lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["nx", "run", "@semio-tech/ui-styling-tokens:check-no-px"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] leveled test target coverage…");
     this.checkLeveledTestTargets();
     console.log("[verify] gate passed.");
@@ -666,10 +668,12 @@ export class TestScript extends Script {
       return;
     }
     if (rest[0] === "repo-mcp") {
-      runCmd("go", ["build", "-o", join(this.root, process.platform === "win32" ? "repo/client/client.exe" : "repo/client/client"), "./repo/client/mcp/go"], { cwd: this.root, env: { ...process.env, GOWORK: join(this.root, "go.work") } });
-      for (const pkg of ["./repo/client/mcp/go", "./repo/client/mcp/cursor/go", "./repo/client/mcp/copilot/go", "./repo/client/mcp/claude/go", "./repo/client/mcp/codex/go", "./repo/client/mcp/kiro/go"]) {
-        runCmd("go", ["build", pkg], { cwd: this.root, env: { ...process.env, GOWORK: join(this.root, "go.work") } });
-      }
+      const clientOut = resolveCliBin(this.root);
+      runCmd("go", ["build", "-o", clientOut, "./repo/client/mcp/go"], {
+        cwd: this.root,
+        env: { ...process.env, GOWORK: join(this.root, "go.work") },
+        budgetMs: buildBudgetMs(),
+      });
       await this.runRepoGoTest("./repo/client/cli/go", level, ["-run", "Mcp|MCP|mcp", ...rest.slice(1)]);
       return;
     }
@@ -681,9 +685,9 @@ export class TestScript extends Script {
     }
 
     // nx orchestrators: exempt — leaves individually budgeted.
-    runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio-tech/compose-js", "@semio-tech/compose-react"], { cwd: this.root, budgetMs: null });
-    runCmd("bun", ["nx", "run", "compose/graphql:build"], { cwd: this.root, budgetMs: null });
-    runCmd("bun", ["nx", "run-many", "-t", testTargetForLevel(level), "--all", "--exclude", "workspace"], { cwd: this.root, budgetMs: null });
+    runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio-tech/compose-js", "@semio-tech/compose-react"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["nx", "run", "compose/graphql:build"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["nx", "run-many", "-t", testTargetForLevel(level), "--all", "--exclude", "workspace"], { cwd: this.root, ...orchestratorBudgetOpts() });
     if (TEST_LEVELS.indexOf(level) >= TEST_LEVELS.indexOf("long")) {
       await this.runStorybookPlaywright();
     }
@@ -760,10 +764,9 @@ export class TestScript extends Script {
     const preferred = Number(process.env.STORYBOOK_PORT ?? 6010);
     const storybookPort = String(await this.pickStorybookStaticPort(preferred, 50));
     const baseUrl = `http://127.0.0.1:${storybookPort}/`;
-    runCmd("bun", [join(this.root, "script.ts"), "build", "storybook"], { cwd: this.root, budgetMs: null }); // recurses into nx build orchestrators — leaves individually budgeted
-    const server = spawn("bun", [join(this.root, "script.ts"), "dev", "storybook-static"], {
+    runCmd("bun", [join(this.root, "script.ts"), "build", "storybook"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    const server = spawnDaemon("bun", [join(this.root, "script.ts"), "dev", "storybook-static"], {
       cwd: this.root,
-      stdio: "inherit",
       env: { ...process.env, STORYBOOK_PORT: storybookPort },
     });
     try {
@@ -802,8 +805,8 @@ export class BuildScript extends Script {
 
     // nx orchestrators: exempt — leaves individually budgeted.
     if (!slice) {
-      runCmd("bun", ["nx", "run-many", "-t", "build", "--all", "--exclude", "workspace"], { cwd: this.root, budgetMs: null });
-      runCmd("bun", ["nx", "run", "workspace:build-storybook"], { cwd: this.root, budgetMs: null });
+      runCmd("bun", ["nx", "run-many", "-t", "build", "--all", "--exclude", "workspace"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      runCmd("bun", ["nx", "run", "workspace:build-storybook"], { cwd: this.root, ...orchestratorBudgetOpts() });
       return;
     }
     if (slice === "storybook") {
@@ -811,7 +814,7 @@ export class BuildScript extends Script {
       return;
     }
     if (slice === "sites") {
-      runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio-tech/compose-sketchpad-play", "@semio-tech/compose-sketchpad-docs"], { cwd: this.root, budgetMs: null });
+      runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio-tech/compose-sketchpad-play", "@semio-tech/compose-sketchpad-docs"], { cwd: this.root, ...orchestratorBudgetOpts() });
       return;
     }
     const target = single[slice];
@@ -819,7 +822,7 @@ export class BuildScript extends Script {
       console.error(`[build] unknown slice ${JSON.stringify(slice)}`);
       process.exit(1);
     }
-    runCmd("bun", ["nx", "run", target], { cwd: this.root, budgetMs: null });
+    runCmd("bun", ["nx", "run", target], { cwd: this.root, ...orchestratorBudgetOpts() });
   }
 }
 //#endregion 🔖BuildScript
@@ -836,7 +839,7 @@ function queryVisualStudio2026InstallPath(): string | undefined {
   if (process.platform !== "win32") return undefined;
   const vswhere = vswhereExecutable();
   if (!existsSync(vswhere)) return undefined;
-  const result = spawnSync(vswhere, ["-latest", "-version", "[18.0,19.0)", "-products", "*", "-requires", "Microsoft.VisualStudio.Component.VC.Tools.x86.x64", "-property", "installationPath"], { encoding: "utf8" });
+  const result = runProbe(vswhere, ["-latest", "-version", "[18.0,19.0)", "-products", "*", "-requires", "Microsoft.VisualStudio.Component.VC.Tools.x86.x64", "-property", "installationPath"]);
   if (result.status !== 0) return undefined;
   const installPath = result.stdout.trim();
   return installPath || undefined;
@@ -907,12 +910,11 @@ export class CppScript extends Script {
   }
 
   private hasTool(command: string): boolean {
-    const result = spawnSync(this.resolveTool(command), ["--version"], {
-      stdio: "ignore",
-      shell: process.platform === "win32" && !this.resolveTool(command).includes("\\"),
-      env: this.cppEnv(),
-    });
-    return result.status === 0;
+    try {
+      return runProbe(this.resolveTool(command), ["--version"], { env: this.cppEnv() }).status === 0;
+    } catch {
+      return false;
+    }
   }
 
   private resolveTool(command: string): string {
@@ -994,7 +996,7 @@ export class PublishScript extends Script {
       console.error(`[publish] unknown slice ${JSON.stringify(slice)}`);
       process.exit(1);
     }
-    runCmd("bun", ["nx", "run", target], { cwd: this.root, budgetMs: null }); // nx orchestrator — leaves individually budgeted
+    runCmd("bun", ["nx", "run", target], { cwd: this.root, ...orchestratorBudgetOpts() }); // nx orchestrator — leaves individually budgeted
   }
 }
 //#endregion 🔖PublishScript
@@ -1033,10 +1035,7 @@ export class PurgeScript extends Script {
     const uri = process.env.NEO4J_URI || "bolt://localhost:7687";
     const user = process.env.NEO4J_USERNAME || "neo4j";
     const password = process.env.NEO4J_PASSWORD || "password";
-    const r = spawnSync("cypher-shell", ["-a", uri, "-u", user, "-p", password, "-d", database, "--format", "plain", "RETURN 1 AS ok;"], {
-      stdio: "inherit",
-    });
-    if (r.status !== 0) {
+    if (runCmdStatus("cypher-shell", ["-a", uri, "-u", user, "-p", password, "-d", database, "--format", "plain", "RETURN 1 AS ok;"], { cwd: this.root }) !== 0) {
       console.warn("[purge.neo4j] cypher-shell unavailable — skip.");
       process.exit(0);
     }
@@ -1076,7 +1075,7 @@ export class OsScript extends Script {
         process.exit(1);
       }
       const watch = rest.includes("--watch");
-      runCmd("cargo", ["run", "--release", "-p", "semio-framework-os-run", "--", ...rest], { cwd: this.root, budgetMs: watch ? null : buildBudgetMs() }); // --watch runs indefinitely by design
+      runCmd("cargo", ["run", "--release", "-p", "semio-framework-os-run", "--", ...rest], { cwd: this.root, ...(watch ? daemonBudgetOpts() : { budgetMs: buildBudgetMs() }) });
       return;
     }
     console.error(`[os] unknown subcommand ${JSON.stringify(sub)}`);
@@ -1111,7 +1110,6 @@ const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
 /**
  * 🛂 Neo4j → `.repo/🛂/<graph>.cypher` export (pure module; invoked from root `script.ts`). Product graphs are fixed specs; extra Bolt graphs use `NEO4J_EXTRA_GRAPH_DATABASES` (comma-separated). Argv segments join with `-` via `joinNeo4jGraphDatabaseName`.
  */
-import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -1178,8 +1176,11 @@ export class Neo4jCypherExport {
         if (existsSync(candidate)) return candidate;
         continue;
       }
-      const probe = spawnSync(candidate, ["--version"], { stdio: "ignore" });
-      if (probe.status === 0) return candidate;
+      try {
+        if (runProbe(candidate, ["--version"]).status === 0) return candidate;
+      } catch {
+        /* try next */
+      }
     }
     return null;
   }
@@ -1209,16 +1210,15 @@ export class Neo4jCypherExport {
     writeFileSync(queryPath, `${cypher.trim()}\n`, "utf8");
 
     try {
-      const result = spawnSync(shell, ["-a", process.env.NEO4J_URI || "bolt://localhost:7687", "-u", process.env.NEO4J_USERNAME || "neo4j", "-p", process.env.NEO4J_PASSWORD || "password", "-d", database, "--format", "plain", "-f", queryPath], {
+      const result = runProbe(shell, ["-a", process.env.NEO4J_URI || "bolt://localhost:7687", "-u", process.env.NEO4J_USERNAME || "neo4j", "-p", process.env.NEO4J_PASSWORD || "password", "-d", database, "--format", "plain", "-f", queryPath], {
         cwd: this.repoRoot,
-        encoding: "utf8",
         env: this.buildCypherEnv(),
       });
 
       return {
         ok: result.status === 0,
-        stdout: typeof result.stdout === "string" ? result.stdout : (result.stdout?.toString() ?? ""),
-        stderr: typeof result.stderr === "string" ? result.stderr : (result.stderr?.toString() ?? ""),
+        stdout: result.stdout,
+        stderr: result.stderr,
       };
     } finally {
       try {
@@ -2557,6 +2557,217 @@ function policyNoPackFilesBreaches(repoRoot: string): BreachRecord[] {
 }
 //#endregion 🔧PolicyRuleNoPackFiles
 
+//#region 🔧PolicyRuleNoRawSpawn
+const POLICY_RAW_SPAWN_EXEMPT = new Set(["repo/lib/js/index.ts"]);
+const POLICY_RAW_SPAWN_RE = /\b(spawnSync|execSync|execFileSync|Bun\.spawn|spawn)\s*\(/g;
+
+/** 🔎Strips TS/JS comments and string literals so policy regexes only see executable code. */
+function policyStripTsCommentsAndStrings(content: string): string {
+  const out: string[] = [];
+  let i = 0;
+  while (i < content.length) {
+    const ch = content[i]!;
+    const next = content[i + 1];
+    if (ch === "/" && next === "/") {
+      while (i < content.length && content[i] !== "\n") {
+        out.push(" ");
+        i++;
+      }
+      continue;
+    }
+    if (ch === "/" && next === "*") {
+      i += 2;
+      while (i < content.length && !(content[i] === "*" && content[i + 1] === "/")) {
+        out.push(" ");
+        i++;
+      }
+      if (i < content.length) i += 2;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === "`") {
+      const quote = ch;
+      out.push(" ");
+      i++;
+      while (i < content.length) {
+        if (content[i] === "\\") {
+          out.push(" ");
+          out.push(" ");
+          i += 2;
+          continue;
+        }
+        if (content[i] === quote) {
+          out.push(" ");
+          i++;
+          break;
+        }
+        out.push(" ");
+        i++;
+      }
+      continue;
+    }
+    out.push(ch);
+    i++;
+  }
+  return out.join("");
+}
+
+/** 🔎Repo-wide `script.ts` file paths (repo-relative), skipping node_modules/target/.repo and other policy skip dirs. */
+function policyDiscoverScriptTsFiles(repoRoot: string): string[] {
+  const found: string[] = [];
+  const walk = (relDir: string): void => {
+    const abs = join(repoRoot, relDir);
+    let entries: ReturnType<typeof readdirSync>;
+    try {
+      entries = readdirSync(abs, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const ent of entries) {
+      const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
+      if (ent.isDirectory()) {
+        if (POLICY_SKIP_DIRS.has(ent.name)) continue;
+        walk(childRel);
+        continue;
+      }
+      if (ent.name === "script.ts") found.push(childRel);
+    }
+  };
+  walk("");
+  return found.sort();
+}
+
+/**
+ * 📏Budgeted-spawn rule: every `script.ts` must route subprocesses through the budgeted runners in
+ * `repo/lib/js/index.ts` — raw `spawn`/`spawnSync`/`execSync`/`execFileSync`/`Bun.spawn` bypass
+ * wall-clock budgets and are forbidden outside the budget implementation itself.
+ */
+function policyRawSpawnBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyDiscoverScriptTsFiles(repoRoot)) {
+    if (POLICY_RAW_SPAWN_EXEMPT.has(relPath)) continue;
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const stripped = policyStripTsCommentsAndStrings(content);
+    const seenLines = new Set<number>();
+    const lineOf = (index: number): number => content.slice(0, index).split(/\r?\n/).length;
+    let m: RegExpExecArray | null;
+    POLICY_RAW_SPAWN_RE.lastIndex = 0;
+    while ((m = POLICY_RAW_SPAWN_RE.exec(stripped))) {
+      const token = m[1] ?? "spawn";
+      const line = lineOf(m.index);
+      if (seenLines.has(line)) continue;
+      seenLines.add(line);
+      breaches.push({
+        id: `no-raw-spawn-${relPath}-${line}`,
+        summary: `"${relPath}:${line}" uses raw ${token}( — route subprocesses through runCmd/runCmdStatus/runProbe/runTestBudgeted from repo/lib/js/index.ts`,
+        kind: "budget/no-raw-spawn",
+        scope: relPath,
+        line,
+        priority: "high",
+        reason: "Raw child_process/Bun.spawn calls bypass the repo's wall-clock budget layer; script.ts files must use the budgeted runners so orchestrators, tool calls and tests cannot hang forever.",
+        solution: `Replace ${token}( at ${relPath}:${line} with runCmd, runCmdStatus, runProbe, or runTestBudgeted from repo/lib/js/index.ts (or orchestratorBudgetOpts/daemonBudgetOpts for long-running classes).`,
+      });
+    }
+  }
+  return breaches;
+}
+//#endregion 🔧PolicyRuleNoRawSpawn
+
+//#region 🔧PolicyRuleNoBudgetNull
+/**
+ * 📏Budget-null rule: `budgetMs: null` is not a supported escape hatch — use orchestratorBudgetOpts()
+ * or daemonBudgetOpts() (or an explicit positive budget) so every subprocess has a named budget class.
+ */
+function policyBudgetNullBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyDiscoverScriptTsFiles(repoRoot)) {
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const seenLines = new Set<number>();
+    const lineOf = (index: number): number => content.slice(0, index).split(/\r?\n/).length;
+    const re = /budgetMs:\s*null/g;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(content))) {
+      const line = lineOf(m.index);
+      if (seenLines.has(line)) continue;
+      seenLines.add(line);
+      breaches.push({
+        id: `no-budget-null-${relPath}-${line}`,
+        summary: `"${relPath}:${line}" passes budgetMs: null — use orchestratorBudgetOpts() or daemonBudgetOpts() instead`,
+        kind: "budget/no-budget-null",
+        scope: relPath,
+        line,
+        priority: "high",
+        reason: "budgetMs: null disables wall-clock budgeting for that subprocess; named orchestrator/daemon budget classes keep long-running work bounded without anonymous unbounded escapes.",
+        solution: `At ${relPath}:${line}, replace budgetMs: null with orchestratorBudgetOpts() for nx/script fan-outs or daemonBudgetOpts() for dev servers/MCP stdio, or pass an explicit positive budgetMs.`,
+      });
+    }
+  }
+  return breaches;
+}
+//#endregion 🔧PolicyRuleNoBudgetNull
+
+//#region 🔧PolicyRuleMcpConfig
+const POLICY_MCP_CONFIG_PATHS = [".cursor/mcp.json", ".mcp.json", ".vscode/mcp.json", ".windsurf/mcp.json", ".kiro/settings/mcp.json", ".codex/config.toml"] as const;
+
+type PolicyMcpServerEntry = { type?: string; command?: string; args?: string[] };
+
+/** 🔎True when a repo MCP server still launches via bun script.ts mcp stdio instead of repo/client/client. */
+function policyMcpRepoServerUsesBunScript(entry: PolicyMcpServerEntry): boolean {
+  if ((entry.type ?? "stdio") !== "stdio") return false;
+  const cmd = (entry.command ?? "").trim();
+  const args = entry.args ?? [];
+  if (cmd !== "bun") return false;
+  const hasScript = args.some((a) => a.includes("script.ts"));
+  const hasMcp = args.includes("mcp") || args.some((a) => a.includes("mcp"));
+  return hasScript && hasMcp;
+}
+
+function policyMcpRepoServerFromJson(doc: unknown): PolicyMcpServerEntry | undefined {
+  if (!doc || typeof doc !== "object") return undefined;
+  const root = doc as Record<string, unknown>;
+  const servers = (root.mcpServers ?? root.servers) as Record<string, PolicyMcpServerEntry> | undefined;
+  return servers?.repo;
+}
+
+function policyMcpRepoServerFromToml(content: string): PolicyMcpServerEntry | undefined {
+  const section = /\[mcp_servers\.repo\]([\s\S]*?)(?:\n\[|$)/.exec(content);
+  if (!section) return undefined;
+  const block = section[1] ?? "";
+  const command = /^\s*command\s*=\s*"([^"]*)"/m.exec(block)?.[1];
+  const argsMatch = /^\s*args\s*=\s*\[([^\]]*)\]/m.exec(block);
+  const args = argsMatch?.[1]
+    ?.split(",")
+    .map((s) => s.trim().replace(/^"|"$/g, ""))
+    .filter(Boolean);
+  const type = /^\s*type\s*=\s*"([^"]*)"/m.exec(block)?.[1];
+  return { type, command, args };
+}
+
+/**
+ * 📏MCP-config rule: the repo MCP server must exec `repo/client/client mcp <kind>` directly — not
+ * `bun script.ts … mcp …`, which recompiles through go run and bypasses the budgeted binary path.
+ */
+function policyMcpConfigBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of POLICY_MCP_CONFIG_PATHS) {
+    const abs = join(repoRoot, relPath);
+    if (!existsSync(abs)) continue;
+    const content = readFileSync(abs, "utf8");
+    const entry = relPath.endsWith(".toml") ? policyMcpRepoServerFromToml(content) : policyMcpRepoServerFromJson(JSON.parse(content) as unknown);
+    if (!entry || !policyMcpRepoServerUsesBunScript(entry)) continue;
+    breaches.push({
+      id: `mcp-config-${relPath}`,
+      summary: `"${relPath}" repo MCP server still uses bun script.ts mcp — point it at repo/client/client`,
+      kind: "budget/mcp-config-repo-binary",
+      scope: relPath,
+      priority: "high",
+      reason: "The repo MCP server must exec the prebuilt repo/client/client binary (args: mcp <kind>) so IDE tool calls skip bun script.ts and go run recompilation.",
+      solution: `In ${relPath}, set the repo server to command "repo/client/client" with args ["mcp", "<kind>"] (e.g. cursor, codex, client) and type stdio.`,
+    });
+  }
+  return breaches;
+}
+//#endregion 🔧PolicyRuleMcpConfig
+
 //#region 🔖PolicyExport
 /** ⚖️Runs every Wave 4 rule over every discovered `…/plugin/rs` crate; `framework/plugin/rs` is exempted from the SDK-mechanism rules (it *is* the SDK). */
 export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency", (_l: TechnologyLinter): BreachRecord[] => {
@@ -2591,6 +2802,9 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyProtocolMigrationBreaches(repoRoot));
   breaches.push(...policyDbServerOnlyBreaches(repoRoot));
   breaches.push(...policyNoPackFilesBreaches(repoRoot));
+  breaches.push(...policyRawSpawnBreaches(repoRoot));
+  breaches.push(...policyBudgetNullBreaches(repoRoot));
+  breaches.push(...policyMcpConfigBreaches(repoRoot));
   return breaches;
 });
 //#endregion 🔖PolicyExport

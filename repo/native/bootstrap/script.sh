@@ -561,6 +561,10 @@ repo_bootstrap() {
   mkdir -p "$NX_WORKSPACE_DATA_DIRECTORY"
   configure_git_safe_directories
   ensure_bun
+  if command -v go >/dev/null 2>&1; then
+    log "Building repo client binary…"
+    (cd "$REPO_ROOT" && go build -o repo/client/client ./repo/client/mcp/go) || log "repo client build failed."
+  fi
   log "bun install…"
   bun install
   log "workspace:setup…"

@@ -191,7 +191,7 @@ pub mod app {
 use semio_framework_core::{
     effective_action_args, element_id_segment, history_action_definitions, is_element_id, missing_required_args, kernel::{
         ActorId, AppEvent, CapabilityRequirement, InvocationId, InvocationResult, HostEffect, HybridLogicalTimestamp,
-        InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OperationEnvelope, OperationId, Rights,
+        InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OperationId, Rights,
         ResourceKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
     set_active_tool_action_definition, set_active_utility_action_definition, start_introduction_action_definition, record_tutorial_action_definition,
@@ -3630,42 +3630,33 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             let inverse_payload = serde_json::json!({ "backwards": backwards });
             for (index, forward) in forwards.iter().enumerate() {
                 let entry = operation_meta.get(index);
-                // 🎞️ CW3 kernel cut-over: `operation_meta` entries are now `protocol::OperationMeta`
-                // (moved struct — `vcs`'s temporary shim), whose `operation_id`/`author_id` are
-                // `Option<protocol::{OperationId,ActorId}>` (were required `String`) and whose
-                // `undo_policy`/`timestamp` are `protocol::{UndoPolicy,HybridLogicalTimestamp}` —
-                // distinct types from this kernel's own `semio_framework_core::{UndoPolicy,
-                // HybridLogicalTimestamp}` (kept unmoved this wave, see `framework/core`'s kernel
-                // cut-over note), so both are converted at this edge.
+                // 🎯 W6 kernel unification: `operation_meta` entries are `protocol::OperationMeta`,
+                // and this kernel's own `DocumentDiff`/`UndoPolicy`/`HybridLogicalTimestamp` are now
+                // `pub use` re-exports of the SAME `protocol`/`protocol_core` types (see
+                // `framework/core`'s kernel cut-over note) — no bridging left to do, just direct
+                // field moves. `DocumentDiff.schema`/`.payload` are `SchemaId`/`Vec<u8>` now (was
+                // `schema_id`/`Value`), so the payload is JSON-encoded to bytes at construction.
                 let operation_id = entry
                     .and_then(|entry_meta| entry_meta.operation_id.clone())
                     .unwrap_or_else(|| OperationId(format!("{}:{index}", invocation_id.0)));
                 let base_version = DocumentVersion(entry.map(|entry_meta| entry_meta.base_version).unwrap_or(0));
-                let undo_policy = match entry.map(|entry_meta| entry_meta.undo_policy) {
-                    Some(::protocol::UndoPolicy::ExactBaseOnly) | None => UndoPolicy::ExactBaseOnly,
-                    Some(::protocol::UndoPolicy::TransformAgainstConcurrent) => UndoPolicy::TransformAgainstConcurrent,
-                    Some(::protocol::UndoPolicy::SemanticUndo) => UndoPolicy::SemanticUndo,
-                    Some(::protocol::UndoPolicy::CompensatingAction) => UndoPolicy::CompensatingAction,
-                };
+                let undo_policy = entry.map(|entry_meta| entry_meta.undo_policy).unwrap_or(UndoPolicy::ExactBaseOnly);
                 let author = entry.and_then(|entry_meta| entry_meta.author_id.clone()).unwrap_or_else(|| ActorId(meta.actor.clone()));
-                let timestamp = entry
-                    .map(|entry_meta| entry_meta.timestamp)
-                    .map(|t| HybridLogicalTimestamp { actor: t.actor, physical_ms: t.physical_ms, logical: t.logical })
-                    .unwrap_or_else(|| HybridLogicalTimestamp::new(0, 0));
+                let timestamp = entry.map(|entry_meta| entry_meta.timestamp).unwrap_or_else(|| HybridLogicalTimestamp::new(0, 0));
                 operations.push(KernelOperation {
                     id: operation_id.clone(),
                     document,
                     base_version,
                     invocation_id: invocation_id.clone(),
                     diff: DocumentDiff {
-                        schema_id: SchemaId(format!("{schema}.operation")),
-                        payload: serde_json::to_value(forward).unwrap_or(Value::Null),
+                        schema: SchemaId(format!("{schema}.operation")),
+                        payload: serde_json::to_vec(forward).unwrap_or_default(),
                     },
                     inverse: InverseOperation {
                         target_operation: operation_id,
                         inverse_diff: DocumentDiff {
-                            schema_id: SchemaId(format!("{schema}.operation.inverse")),
-                            payload: inverse_payload.clone(),
+                            schema: SchemaId(format!("{schema}.operation.inverse")),
+                            payload: serde_json::to_vec(&inverse_payload).unwrap_or_default(),
                         },
                         base_version,
                         dependencies: Vec::new(),
@@ -3833,7 +3824,7 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
     }
 
     fn ingest_operations(&mut self, operations_json: &str) -> Result<(), String> {
-        let envelopes: Vec<OperationEnvelope> =
+        let envelopes: Vec<protocol::OperationEnvelope> =
             serde_json::from_str(operations_json).map_err(|error| error.to_string())?;
         for envelope in envelopes {
             self.store.ingest_remote(envelope).map_err(|error| error.to_string())?;
@@ -3843,7 +3834,12 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
     }
 
     fn document_json(&self) -> Result<String, String> {
-        self.store.envelope_json().map_err(|error| error.to_string())
+        // 🚧 B2/B5 seam: `DocumentStore::envelope_json()` is deleted (the store keeps bytes now,
+        // `snapshot_pack()` is the real path) — this JSON trait method itself is B5's WIT-flip
+        // scope (`document_json`/`load_document` -> `document_pack`/`load_document_pack`, already
+        // present below), kept working meanwhile via a direct serialize of the still-public
+        // `envelope()` getter.
+        serde_json::to_string(self.store.envelope()).map_err(|error| error.to_string())
     }
 
     fn load_document(&mut self, document_json: &str) -> Result<(), String> {
@@ -4970,10 +4966,10 @@ mod semio_plugin_macro_tests {
         let mut app = VcsDocumentApp::new(TestApp::default());
         let result = app.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment");
         assert_eq!(result.operations.len(), 1);
-        assert_eq!(result.operations[0].diff.payload, json!({ "operation": "setCount", "value": 1 }));
+        assert_eq!(result.operations[0].diff.payload, serde_json::to_vec(&json!({ "operation": "setCount", "value": 1 })).unwrap());
         assert_eq!(
             result.operations[0].inverse.inverse_diff.payload,
-            json!({ "backwards": [{ "operation": "setCount", "value": 0 }] })
+            serde_json::to_vec(&json!({ "backwards": [{ "operation": "setCount", "value": 0 }] })).unwrap()
         );
         assert_eq!(result.inverse_group.operations.len(), 1);
         assert_eq!(app.test_projection().count, 1);
@@ -5185,10 +5181,10 @@ mod semio_plugin_macro_tests {
             .handle_action("amendLabel", Some(&json!({ "value": "abc" })), &ViewState::default(), &meta())
             .expect("amendLabel abc");
         assert_eq!(result.operations.len(), 1, "must report only this dispatch's new operation, not the whole coalesced edit");
-        assert_eq!(result.operations[0].diff.payload, json!({ "operation": "setLabel", "value": "abc" }));
+        assert_eq!(result.operations[0].diff.payload, serde_json::to_vec(&json!({ "operation": "setLabel", "value": "abc" })).unwrap());
         assert_eq!(
             result.operations[0].inverse.inverse_diff.payload,
-            json!({ "backwards": [{ "operation": "setLabel", "value": "ab" }] }),
+            serde_json::to_vec(&json!({ "backwards": [{ "operation": "setLabel", "value": "ab" }] })).unwrap(),
             "the new operation's own inverse undoes back to the pre-dispatch label, not the whole gesture"
         );
         assert_eq!(result.inverse_group.operations.len(), 1);
@@ -5206,10 +5202,10 @@ mod semio_plugin_macro_tests {
             .handle_command("incrementViaCommand", None, &ViewState::default(), &meta())
             .expect("incrementViaCommand");
         assert_eq!(result.operations.len(), 1);
-        assert_eq!(result.operations[0].diff.payload, json!({ "operation": "setCount", "value": 1 }));
+        assert_eq!(result.operations[0].diff.payload, serde_json::to_vec(&json!({ "operation": "setCount", "value": 1 })).unwrap());
         assert_eq!(
             result.operations[0].inverse.inverse_diff.payload,
-            json!({ "backwards": [{ "operation": "setCount", "value": 0 }] })
+            serde_json::to_vec(&json!({ "backwards": [{ "operation": "setCount", "value": 0 }] })).unwrap()
         );
         assert_eq!(app.test_projection().count, 1);
     }

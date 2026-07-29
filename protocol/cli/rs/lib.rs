@@ -835,7 +835,7 @@ mod tests {
             finished_at: None,
             coalesce_key: coalesce_key.map(str::to_string),
             description: description.map(str::to_string),
-            ops: vec![protocol::OpPayload { text: format!("set {id} = 1"), binary: None }],
+            ops: vec![protocol::OpPayload { text: Some(format!("set {id} = 1")), binary: None }],
             backwards: Vec::new(),
             meta: None,
         }

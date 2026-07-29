@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv } from "../../../script.ts";
-import { BundleScript, ScriptRouter, budgetTimeoutHint, canReuseDevPort, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, isDevPortInUse, resolveDevPort, runCmd, runCmdStatus, wgpuDevPlayUrl } from "./index.ts";
+import { BundleScript, ScriptRouter, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, budgetTimeoutHint, canReuseDevPort, daemonBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, goLevelTestArgs, isDevPortInUse, orchestratorBudgetMs, orchestratorBudgetOpts, resolveDevPort, runCmd, runCmdStatus, runProbe, testLevelBudgetMs, vitestLevelArgs, wgpuDevPlayUrl } from "./index.ts";
 import { defineLint, type FileLinter } from "./index.ts";
 import { dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, isAdapterBoundaryFile, parseTsImportSpecs } from "./index.ts";
 import {
@@ -961,8 +961,71 @@ describe("command budgets", () => {
     expect(result.stderr).toContain("[budget]");
   });
 
-  test("budgetMs: null exempts a command from any timeout", () => {
-    expect(() => runCmd(process.execPath, ["-e", "1"], { budgetMs: null })).not.toThrow();
+  test("orchestratorBudgetOpts supplies a bounded orchestrator budget", () => {
+    expect(orchestratorBudgetOpts()).toEqual({ budgetMs: orchestratorBudgetMs() });
+    expect(() => runCmd(process.execPath, ["-e", "1"], orchestratorBudgetOpts())).not.toThrow();
+  });
+
+  test("daemonBudgetOpts returns the daemon budget class", () => {
+    expect(daemonBudgetOpts()).toEqual({ budgetMs: daemonBudgetMs() });
+    expect(daemonBudgetMs()).toBe(DAEMON_BUDGET_MS);
+    expect(orchestratorBudgetMs()).toBe(ORCHESTRATOR_BUDGET_MS);
+  });
+
+  test("goLevelTestArgs includes -timeout derived from the level budget", () => {
+    const args = goLevelTestArgs("fundamental");
+    expect(args[0]).toBe("-timeout");
+    expect(args[1]).toMatch(/^\d+s$/);
+    expect(args[1]).toBe(`${Math.ceil(testLevelBudgetMs("fundamental") / 1000)}s`);
+  });
+
+  test("vitestLevelArgs returns per-test timeout flags", () => {
+    const ms = String(testLevelBudgetMs("quick"));
+    expect(vitestLevelArgs("quick")).toEqual(["--testTimeout", ms, "--hookTimeout", ms, "--teardownTimeout", ms]);
+  });
+
+  test("orchestratorBudgetMs defaults to 4h and honors SEMIO_ORCHESTRATOR_BUDGET_MS", () => {
+    expect(orchestratorBudgetMs()).toBe(4 * 60 * 60 * 1000);
+    const prev = process.env.SEMIO_ORCHESTRATOR_BUDGET_MS;
+    process.env.SEMIO_ORCHESTRATOR_BUDGET_MS = "12345";
+    try {
+      expect(orchestratorBudgetMs()).toBe(12345);
+    } finally {
+      if (prev === undefined) delete process.env.SEMIO_ORCHESTRATOR_BUDGET_MS;
+      else process.env.SEMIO_ORCHESTRATOR_BUDGET_MS = prev;
+    }
+  });
+
+  test("daemonBudgetMs defaults to 24h and honors SEMIO_DAEMON_BUDGET_MS", () => {
+    expect(daemonBudgetMs()).toBe(24 * 60 * 60 * 1000);
+    const prev = process.env.SEMIO_DAEMON_BUDGET_MS;
+    process.env.SEMIO_DAEMON_BUDGET_MS = "67890";
+    try {
+      expect(daemonBudgetMs()).toBe(67890);
+    } finally {
+      if (prev === undefined) delete process.env.SEMIO_DAEMON_BUDGET_MS;
+      else process.env.SEMIO_DAEMON_BUDGET_MS = prev;
+    }
+  });
+
+  test("testLevelBudgetMs maps levels and honors SEMIO_TEST_BUDGET_MS", async () => {
+    const { TEST_LEVEL_BUDGET_MS } = await import("./index.ts");
+    expect(testLevelBudgetMs("fundamental")).toBe(TEST_LEVEL_BUDGET_MS.fundamental);
+    expect(testLevelBudgetMs("exhaustive")).toBe(TEST_LEVEL_BUDGET_MS.exhaustive);
+    const prev = process.env.SEMIO_TEST_BUDGET_MS;
+    process.env.SEMIO_TEST_BUDGET_MS = "42000";
+    try {
+      expect(testLevelBudgetMs("quick")).toBe(42000);
+    } finally {
+      if (prev === undefined) delete process.env.SEMIO_TEST_BUDGET_MS;
+      else process.env.SEMIO_TEST_BUDGET_MS = prev;
+    }
+  });
+
+  test("runProbe captures stdout under budget", () => {
+    const { status, stdout } = runProbe(process.execPath, ["-e", "console.log('probe-ok')"]);
+    expect(status).toBe(0);
+    expect(stdout.trim()).toBe("probe-ok");
   });
 
   test("runCmdStatus returns the exit status instead of throwing", () => {

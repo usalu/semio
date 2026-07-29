@@ -155,6 +155,20 @@ function placeholderPayloadHash(payload: unknown): string {
   return (hash >>> 0).toString(16).padStart(8, "0");
 }
 
+/** 🎞️ `JSON.stringify` -> UTF-8 bytes, for {@link toWireEnvelope}'s wire payload — the TS twin of
+ * the Rust actor's `serde_json::to_vec` call in `to_wire_envelope`. This actor's own convention
+ * stays JSON underneath (see the crate doc this file mirrors); only the wire/storage boundary is
+ * binary now (W5). */
+function encodeJsonPayload(value: unknown): number[] {
+  return Array.from(new TextEncoder().encode(JSON.stringify(value) ?? "null"));
+}
+
+/** 🎞️ The inverse of {@link encodeJsonPayload} — the TS twin of `serde_json::from_slice` in the
+ * Rust actor's `from_wire_envelope`. */
+function decodeJsonPayload(bytes: readonly number[]): unknown {
+  return JSON.parse(new TextDecoder().decode(new Uint8Array(bytes)));
+}
+
 /** 🌉 Converts this fallback's local, camelCase {@link OperationEnvelope} into the snake_case
  * {@link WireOperationEnvelope} `protocol_wire::ClientFrame::Commands`/`ServerFrame::Commands`
  * carry — the TS twin of the Rust actor's `to_wire_envelope`. */
@@ -164,8 +178,8 @@ function toWireEnvelope(envelope: OperationEnvelope, timestamp: WireOperationEnv
     document_id: envelope.document,
     actor: envelope.actor,
     dependencies: [...(envelope.deps ?? [])],
-    diff: { schema: envelope.diff.schemaId, payload: envelope.diff.payload },
-    inverse: { schema: envelope.inverse.inverseDiff.schemaId, inverse_diff: envelope.inverse.inverseDiff.payload },
+    diff: { schema: envelope.diff.schemaId, payload: encodeJsonPayload(envelope.diff.payload) },
+    inverse: { schema: envelope.inverse.inverseDiff.schemaId, payload: encodeJsonPayload(envelope.inverse.inverseDiff.payload) },
     timestamp,
   };
 }
@@ -174,7 +188,7 @@ function toWireEnvelope(envelope: OperationEnvelope, timestamp: WireOperationEnv
  * `baseVersion` is recovered from the payload's own `sequenceNumber` (this actor's payloads are
  * always edit-shaped JSON), mirroring the Rust side's identical recovery. */
 function fromWireEnvelope(envelope: WireOperationEnvelope): OperationEnvelope {
-  const payload = envelope.diff.payload;
+  const payload = decodeJsonPayload(envelope.diff.payload);
   const sequenceNumber = payload !== null && typeof payload === "object" && "sequenceNumber" in payload ? Number((payload as Record<string, unknown>).sequenceNumber) : 0;
   return {
     id: envelope.operation_id,
@@ -186,7 +200,7 @@ function fromWireEnvelope(envelope: WireOperationEnvelope): OperationEnvelope {
     diff: { schemaId: envelope.diff.schema, payload },
     inverse: {
       targetOperation: envelope.operation_id,
-      inverseDiff: { schemaId: envelope.inverse.schema, payload: envelope.inverse.inverse_diff },
+      inverseDiff: { schemaId: envelope.inverse.schema, payload: decodeJsonPayload(envelope.inverse.payload) },
       baseVersion: Number.isFinite(sequenceNumber) ? Math.max(0, sequenceNumber) : 0,
       dependencies: [],
       undoPolicy: "exactBaseOnly",
@@ -290,10 +304,10 @@ function connectHub(state: DocumentState, binding: Extract<PersistenceBinding, {
         wire_version: 1,
         protocol_version: 1,
         schema: state.config.schema,
-        // 🔖 No client-side schema pack hashing wired this wave (matches the Rust actor's identical
-        // placeholder — see `framework/sync/rs/lib.rs` `try_connect_hub`); the hub is JSON-only until
-        // CW6 anyway, so this is never validated yet.
-        pack_schema_hash: new Array(32).fill(0),
+        // 🧬 W5.7: real hash when the shell supplied one via `DocumentActorConfig.packSchemaHash`
+        // (from the wasm renderer's `document_pack_schema_hash` export); zeros otherwise, which the
+        // hub treats as "schema-agnostic client" and never validates.
+        pack_schema_hash: [...(state.config.packSchemaHash ?? new Array(32).fill(0))],
         actor: state.config.actor,
         token: binding.token ?? null,
         resume_token: state.resumeToken,
@@ -401,10 +415,18 @@ function handleHubFrame(state: DocumentState, frame: ServerFrame): void {
     return;
   }
   if ("Presence" in frame) {
-    // 📡 `ServerFrame::Presence.peers` is opaque JSON on the wire (`Vec<serde_json::Value>`);
-    // trusted-cast to the locally-known peer shape, same trust boundary the Rust actor's
-    // `presence_from_json` (`serde_json::from_value`) crosses.
-    emitEvent(state.config.documentId, { kind: "presence", peers: frame.Presence.peers as DocumentPresencePeer[] });
+    // 📡 `ServerFrame::Presence.peers_json` is a `Vec<String>` of pre-serialized JSON peer blobs on
+    // the wire now (W5: was opaque JSON `Vec<Value>`) — parsed and trusted-cast to the locally-known
+    // peer shape, same trust boundary the Rust actor's `presence_from_json` (`serde_json::from_str`)
+    // crosses. A malformed entry is dropped rather than failing the whole roster.
+    const peers = frame.Presence.peers_json.flatMap((json) => {
+      try {
+        return [JSON.parse(json) as DocumentPresencePeer];
+      } catch {
+        return [];
+      }
+    });
+    emitEvent(state.config.documentId, { kind: "presence", peers });
     return;
   }
   if ("CreditGrant" in frame) {
@@ -633,7 +655,7 @@ async function handleLocalMsg(state: DocumentState, message: DocumentActorMsg): 
       break;
     }
     case "presenceHeartbeat":
-      sendWireFrame(state, { Presence: { peer: message.peer } }, "preview");
+      sendWireFrame(state, { Presence: { peer_json: JSON.stringify(message.peer) } }, "preview");
       break;
     case "publishPreview":
       sendWireFrame(state, { PreviewPublish: { key: message.key, seq: message.seq, payload: message.payload } }, "preview");
@@ -695,7 +717,7 @@ if (import.meta.vitest) {
       expect(wire.operation_id).toBe(envelope.id);
       expect(wire.document_id).toBe(envelope.document);
       expect(wire.actor).toBe(envelope.actor);
-      expect(wire.diff.payload).toEqual(envelope.diff.payload);
+      expect(decodeJsonPayload(wire.diff.payload)).toEqual(envelope.diff.payload);
 
       const recovered = fromWireEnvelope(wire);
       expect(recovered.id).toBe(envelope.id);
@@ -720,43 +742,118 @@ if (import.meta.vitest) {
       expect(decoded.frame).toEqual(frame);
     });
 
-    // 🎬 Shared fixtures: the exact same bytes `framework/sync/rs/lib.rs`'s
-    // `wire_fixtures_stay_byte_identical_across_rust_and_ts` test generates and verifies Rust-side.
-    // Decoding them here, then re-encoding the decoded value and diffing against the original bytes,
-    // proves the TS codec agrees with `protocol_wire`'s Rust codec byte-for-byte, not just shape-wise.
+    // 🎬 Shared fixtures: the exact same bytes `store/sync/rs/lib.rs`'s
+    // `wire_fixtures_stay_byte_identical_across_rust_and_ts` test generates and verifies Rust-side
+    // (19 fixtures, one per `ClientFrame`/`ServerFrame` variant plus a `Bootstrap`/`ApplyOutcome`
+    // sub-variant each — see that test's doc). Decoding them here, then re-encoding the decoded
+    // value and diffing against the original bytes, proves the TS codec agrees with
+    // `protocol_wire`'s Rust codec byte-for-byte, not just shape-wise. `diff.payload`/
+    // `inverse.payload` are opaque `DemoOperation::encode_op()` bytes (W5) — this test only checks
+    // they're non-empty and format-tagged (`op_rt::OP_BINARY_FORMAT = 1`), not their semantic
+    // content (decoding a real op needs `DslVariants`, which this TS-only fallback has no twin of).
     it("decodes the Rust-generated binary wire fixtures byte-identically", async () => {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
       const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), "../../../../../store/sync/fixtures/wire");
 
-      const helloBytes = new Uint8Array(readFileSync(join(fixturesDir, "client-hello.bin")));
-      const hello = decodeClientFrame(helloBytes);
+      function loadClient(name: string) {
+        const bytes = new Uint8Array(readFileSync(join(fixturesDir, name)));
+        const decoded = decodeClientFrame(bytes);
+        expect(encodeClientFrame(decoded.frame, decoded.lane)).toEqual(bytes);
+        return decoded;
+      }
+      function loadServer(name: string) {
+        const bytes = new Uint8Array(readFileSync(join(fixturesDir, name)));
+        const decoded = decodeServerFrame(bytes);
+        expect(encodeServerFrame(decoded.frame, decoded.lane)).toEqual(bytes);
+        return decoded;
+      }
+      function assertOpBinaryPayload(payload: readonly number[]) {
+        expect(payload.length).toBeGreaterThan(0);
+        expect(payload[0]).toBe(1); // dsl::op_rt::OP_BINARY_FORMAT
+      }
+
+      const hello = loadClient("client-hello.bin");
       expect(hello.lane).toBe("command");
       if (typeof hello.frame === "string" || !("Hello" in hello.frame)) throw new Error("expected a Hello frame");
       expect(hello.frame.Hello.schema).toBe("demo/v1");
       expect(hello.frame.Hello.actor).toBe("actor-1");
-      expect(encodeClientFrame(hello.frame, "command")).toEqual(helloBytes);
 
-      const commandsBytes = new Uint8Array(readFileSync(join(fixturesDir, "client-commands.bin")));
-      const commands = decodeClientFrame(commandsBytes);
+      const commands = loadClient("client-commands.bin");
       if (typeof commands.frame === "string" || !("Commands" in commands.frame)) throw new Error("expected a Commands frame");
       expect(commands.frame.Commands.envelopes).toHaveLength(1);
-      expect(commands.frame.Commands.envelopes[0]?.diff.payload).toEqual({ n: 5, sequenceNumber: 1 });
-      expect(encodeClientFrame(commands.frame, "command")).toEqual(commandsBytes);
+      assertOpBinaryPayload(commands.frame.Commands.envelopes[0]?.diff.payload ?? []);
 
-      const welcomeBytes = new Uint8Array(readFileSync(join(fixturesDir, "server-welcome.bin")));
-      const welcome = decodeServerFrame(welcomeBytes);
-      if (typeof welcome.frame === "string" || !("Welcome" in welcome.frame)) throw new Error("expected a Welcome frame");
-      expect(welcome.frame.Welcome.resume_token).toBe("resume-1");
-      expect(encodeServerFrame(welcome.frame, "command")).toEqual(welcomeBytes);
+      const frontierAdvertise = loadClient("client-frontier-advertise.bin");
+      if (typeof frontierAdvertise.frame === "string" || !("FrontierAdvertise" in frontierAdvertise.frame)) throw new Error("expected a FrontierAdvertise frame");
 
-      const ackBytes = new Uint8Array(readFileSync(join(fixturesDir, "server-ack.bin")));
-      const ack = decodeServerFrame(ackBytes);
-      if (typeof ack.frame === "string" || !("Ack" in ack.frame)) throw new Error("expected an Ack frame");
-      expect(ack.frame.Ack.batch_id).toBe(1);
-      expect(ack.frame.Ack.stages).toHaveLength(3);
-      expect(encodeServerFrame(ack.frame, "command")).toEqual(ackBytes);
+      const previewPublish = loadClient("client-preview-publish.bin");
+      if (typeof previewPublish.frame === "string" || !("PreviewPublish" in previewPublish.frame)) throw new Error("expected a PreviewPublish frame");
+      expect(previewPublish.frame.PreviewPublish.key).toBe("cursor");
+
+      const presence = loadClient("client-presence.bin");
+      if (typeof presence.frame === "string" || !("Presence" in presence.frame)) throw new Error("expected a Presence frame");
+      expect(JSON.parse(presence.frame.Presence.peer_json)).toEqual({ cursor: [1, 2] });
+
+      const creditGrant = loadClient("client-credit-grant.bin");
+      if (typeof creditGrant.frame === "string" || !("CreditGrant" in creditGrant.frame)) throw new Error("expected a CreditGrant frame");
+      expect(creditGrant.frame.CreditGrant.n).toBe(16);
+
+      const bye = loadClient("client-bye.bin");
+      expect(bye.frame).toBe("Bye");
+
+      const welcomeTail = loadServer("server-welcome-tail.bin");
+      if (typeof welcomeTail.frame === "string" || !("Welcome" in welcomeTail.frame)) throw new Error("expected a Welcome frame");
+      expect(welcomeTail.frame.Welcome.resume_token).toBe("resume-1");
+      expect(welcomeTail.frame.Welcome.bootstrap).toBe("Tail");
+
+      const welcomeSnapshot = loadServer("server-welcome-snapshot-inline.bin");
+      if (typeof welcomeSnapshot.frame === "string" || !("Welcome" in welcomeSnapshot.frame)) throw new Error("expected a Welcome frame");
+      if (welcomeSnapshot.frame.Welcome.bootstrap === "None" || welcomeSnapshot.frame.Welcome.bootstrap === "Tail" || !("Snapshot" in welcomeSnapshot.frame.Welcome.bootstrap)) throw new Error("expected a Snapshot bootstrap");
+      expect(welcomeSnapshot.frame.Welcome.bootstrap.Snapshot.inline).toEqual([9, 9, 9]);
+
+      const snapshotChunk = loadServer("server-snapshot-chunk.bin");
+      if (typeof snapshotChunk.frame === "string" || !("SnapshotChunk" in snapshotChunk.frame)) throw new Error("expected a SnapshotChunk frame");
+      expect(snapshotChunk.frame.SnapshotChunk.bytes).toEqual([1, 2, 3, 4]);
+
+      const snapshotDone = loadServer("server-snapshot-done.bin");
+      if (typeof snapshotDone.frame === "string" || !("SnapshotDone" in snapshotDone.frame)) throw new Error("expected a SnapshotDone frame");
+      expect(snapshotDone.frame.SnapshotDone.seq_count).toBe(4);
+
+      const serverCommands = loadServer("server-commands.bin");
+      if (typeof serverCommands.frame === "string" || !("Commands" in serverCommands.frame)) throw new Error("expected a Commands frame");
+      expect(serverCommands.frame.Commands.envelopes).toHaveLength(1);
+
+      const ackAccepted = loadServer("server-ack-accepted.bin");
+      if (typeof ackAccepted.frame === "string" || !("Ack" in ackAccepted.frame)) throw new Error("expected an Ack frame");
+      expect(ackAccepted.frame.Ack.batch_id).toBe(1);
+      expect(ackAccepted.frame.Ack.stages).toHaveLength(3);
+
+      const ackTransformed = loadServer("server-ack-transformed.bin");
+      if (typeof ackTransformed.frame === "string" || !("Ack" in ackTransformed.frame)) throw new Error("expected an Ack frame");
+      expect(ackTransformed.frame.Ack.batch_id).toBe(2);
+
+      const ackRejected = loadServer("server-ack-rejected.bin");
+      if (typeof ackRejected.frame === "string" || !("Ack" in ackRejected.frame)) throw new Error("expected an Ack frame");
+      expect(ackRejected.frame.Ack.batch_id).toBe(3);
+
+      const preview = loadServer("server-preview.bin");
+      if (typeof preview.frame === "string" || !("Preview" in preview.frame)) throw new Error("expected a Preview frame");
+      expect(preview.frame.Preview.key).toBe("cursor");
+
+      const serverPresence = loadServer("server-presence.bin");
+      if (typeof serverPresence.frame === "string" || !("Presence" in serverPresence.frame)) throw new Error("expected a Presence frame");
+      expect(serverPresence.frame.Presence.peers_json.map((json) => JSON.parse(json)))
+        .toEqual([{ id: "a" }, { id: "b" }]);
+
+      const creditGrantServer = loadServer("server-credit-grant.bin");
+      if (typeof creditGrantServer.frame === "string" || !("CreditGrant" in creditGrantServer.frame)) throw new Error("expected a CreditGrant frame");
+      expect(creditGrantServer.frame.CreditGrant.n).toBe(32);
+
+      const error = loadServer("server-error.bin");
+      if (typeof error.frame === "string" || !("Error" in error.frame)) throw new Error("expected an Error frame");
+      expect(error.frame.Error.code).toBe("rejected");
     });
   });
 }

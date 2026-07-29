@@ -85,6 +85,27 @@ func writeExecutableFile(t *testing.T, path string, content string) {
 	}
 }
 
+func execCommandWithTimeout(t *testing.T, timeout time.Duration, dir string, env []string, name string, args ...string) []byte {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, name, args...)
+	if dir != "" {
+		cmd.Dir = dir
+	}
+	if env != nil {
+		cmd.Env = env
+	}
+	output, err := cmd.CombinedOutput()
+	if ctx.Err() == context.DeadlineExceeded {
+		t.Fatalf("%s %v timed out after %s:\n%s", name, args, timeout, output)
+	}
+	if err != nil {
+		t.Fatalf("%s %v failed: %v\n%s", name, args, err, output)
+	}
+	return output
+}
+
 func parseTicketOpenResult(t *testing.T, output string) (int, int, int, string) {
 	t.Helper()
 	data, ok := firstJSONLine(output)
@@ -326,9 +347,7 @@ exit 0
 			t.Fatalf("failed to seed Codex config: %v", err)
 		}
 
-		cmd := exec.Command("bash", ".devcontainer/post-attach.sh")
-		cmd.Dir = repoRoot
-		cmd.Env = append(os.Environ(),
+		execCommandWithTimeout(t, 60*time.Second, repoRoot, append(os.Environ(),
 			"PATH="+binDir+":"+os.Getenv("PATH"),
 			"HOME="+homeDir,
 			"XDG_CONFIG_HOME="+filepath.Join(homeDir, ".config"),
@@ -337,11 +356,7 @@ exit 0
 			"SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL=1",
 			"SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL=1",
 			"SEMIO_GITKRAKEN_WORKSPACE_NAME=Compose Test Workspace",
-		)
-		output, err := cmd.CombinedOutput()
-		if err != nil {
-			t.Fatalf("post-attach failed: %v\n%s", err, output)
-		}
+		), "bash", ".devcontainer/post-attach.sh")
 
 		logData, err := os.ReadFile(logPath)
 		if err != nil {
@@ -451,9 +466,7 @@ fi
 exit 0
 `, logPath, workspaceDir))
 
-		cmd := exec.Command("bash", ".devcontainer/post-attach.sh")
-		cmd.Dir = repoRoot
-		cmd.Env = append(os.Environ(),
+		execCommandWithTimeout(t, 60*time.Second, repoRoot, append(os.Environ(),
 			"PATH="+binDir+":"+os.Getenv("PATH"),
 			"HOME="+homeDir,
 			"XDG_CONFIG_HOME="+filepath.Join(homeDir, ".config"),
@@ -462,11 +475,7 @@ exit 0
 			"SEMIO_POST_ATTACH_SKIP_EXTENSION_INSTALL=1",
 			"SEMIO_POST_ATTACH_SKIP_TOOL_INSTALL=1",
 			"SEMIO_GITKRAKEN_WORKSPACE_NAME=Compose Existing Workspace",
-		)
-		output, err := cmd.CombinedOutput()
-		if err != nil {
-			t.Fatalf("post-attach failed: %v\n%s", err, output)
-		}
+		), "bash", ".devcontainer/post-attach.sh")
 
 		logData, err := os.ReadFile(logPath)
 		if err != nil {
@@ -6524,11 +6533,7 @@ func TestTicketOpenNoticketKeyword(t *testing.T) {
 func TestTicketOpenContinueKeyword(t *testing.T) {
 	tmpDir := t.TempDir()
 	run := func(name string, args ...string) {
-		cmd := exec.Command(name, args...)
-		cmd.Dir = tmpDir
-		if out, err := cmd.CombinedOutput(); err != nil {
-			t.Fatalf("run %s %v: %v\n%s", name, args, err, out)
-		}
+		execCommandWithTimeout(t, 30*time.Second, tmpDir, nil, name, args...)
 	}
 	run("git", "init")
 	run("git", "config", "user.email", "test@test.com")
@@ -11846,7 +11851,7 @@ func TestIdUriRoundTrip(t *testing.T) {
 
 // 🧪#endregion 🧬Consolidated
 func TestMcpToolsSchemas(t *testing.T) {
-	s := CreateMcpServer(McpClientGeneric)
+	s := CreateMcpServer(McpClientGeneric, DefaultCommandTimeout)
 	tools := s.ListTools()
 	allowedTools := []string{
 		"search",
@@ -23222,4 +23227,77 @@ func TestLocCommand(t *testing.T) {
 			t.Fatal("missing by-contributor flag")
 		}
 	})
+}
+
+func TestParseMcpClientKind(t *testing.T) {
+	cases := []struct {
+		raw  string
+		want McpClientKind
+	}{
+		{"", McpClientGeneric},
+		{"generic", McpClientGeneric},
+		{"client", McpClientGeneric},
+		{"cursor", McpClientCursor},
+		{"kiro", McpClientKiro},
+		{"copilot", McpClientCopilot},
+		{"claude", McpClientClaude},
+		{"codex", McpClientCodex},
+		{"CURSOR", McpClientCursor},
+		{"  codex  ", McpClientCodex},
+	}
+	for _, tc := range cases {
+		got, err := ParseMcpClientKind(tc.raw)
+		if err != nil {
+			t.Fatalf("ParseMcpClientKind(%q) error: %v", tc.raw, err)
+		}
+		if got != tc.want {
+			t.Fatalf("ParseMcpClientKind(%q) = %q, want %q", tc.raw, got, tc.want)
+		}
+	}
+	if _, err := ParseMcpClientKind("unknown"); err == nil {
+		t.Fatal("expected error for unknown kind")
+	}
+}
+
+func TestMcpCommandKinds(t *testing.T) {
+	cases := []struct {
+		kind McpClientKind
+		want string
+	}{
+		{McpClientGeneric, "repo"},
+		{McpClientCursor, "repo-cursor"},
+		{McpClientKiro, "repo-kiro"},
+		{McpClientCopilot, "repo-copilot"},
+		{McpClientClaude, "repo-claude"},
+		{McpClientCodex, "repo-codex"},
+	}
+	for _, tc := range cases {
+		parsed, err := ParseMcpClientKind(string(tc.kind))
+		if err != nil {
+			t.Fatalf("ParseMcpClientKind(%q): %v", tc.kind, err)
+		}
+		if parsed != tc.kind {
+			t.Fatalf("ParseMcpClientKind(%q) = %q, want %q", tc.kind, parsed, tc.kind)
+		}
+		if got := McpServerName(tc.kind); got != tc.want {
+			t.Fatalf("McpServerName(%q) = %q, want %q", tc.kind, got, tc.want)
+		}
+	}
+}
+
+func TestMicroCommitCommandExists(t *testing.T) {
+	root, _ := NewRootWithConfig(testEngineFactory)
+	var found *cobra.Command
+	for _, c := range root.Commands() {
+		if c.Name() == "micro-commit" {
+			found = c
+			break
+		}
+	}
+	if found == nil {
+		t.Fatal("root command tree missing micro-commit")
+	}
+	if found.Use != "micro-commit [subcommand] [args...]" {
+		t.Fatalf("unexpected micro-commit use: %q", found.Use)
+	}
 }

@@ -7,11 +7,11 @@
 //! `frame tag: u8` (the frame enum's variant declaration order) and its fields in declaration
 //! order, with no body-length prefix (one frame per WS message) and no per-field tags. This
 //! matches `protocol_core::🔖WireCodec`'s convention (also used by `protocol_causal::🔖EnvelopeCodec`
-//! and `dsl::op_rt`). The previous `serde_json`-body deviation is gone: `DocumentDiff`/
-//! `InverseOperation` payloads are opaque `Vec<u8>` now (not `serde_json::Value`), and
-//! `ClientFrame::Presence`/`ServerFrame::Presence` carry pre-serialized JSON `String`s instead of
-//! `serde_json::Value` so a peer's presence blob round-trips byte-for-byte without a JSON
-//! re-encode (needed for the Rust/TS fixture byte-identity canary). `protocol_core` supplies the
+//! and `dsl::op_rt`). `DocumentDiff`/`InverseOperation` payloads are opaque `Vec<u8>` (never
+//! `serde_json::Value`). `ClientFrame::Presence`/`ServerFrame::Presence` carry opaque presence
+//! payload bytes (`peer: Vec<u8>` / `peers: Vec<Vec<u8>>`) — this crate has no dependency on
+//! `framework_core` (where the concrete `PresencePeer` type and its binary codec live), so the
+//! frame only ever moves the already-encoded blob a caller supplies. `protocol_core` supplies the
 //! primitive codec (`write_varint_u64`/`write_str`/`write_bytes`/`write_hash32`/`write_bool` and
 //! their `read_*` twins); this crate adds only the option/vec combinators and the frame/nested-enum
 //! tag dispatch below.
@@ -67,7 +67,7 @@ pub enum ClientFrame {
         payload: Vec<u8>,
     },
     Presence {
-        peer_json: String,
+        peer: Vec<u8>,
     },
     CreditGrant {
         n: u32,
@@ -137,7 +137,7 @@ pub enum ServerFrame {
         payload: Vec<u8>,
     },
     Presence {
-        peers_json: Vec<String>,
+        peers: Vec<Vec<u8>>,
     },
     CreditGrant {
         n: u32,
@@ -192,16 +192,16 @@ fn read_opt_frontier(bytes: &[u8], pos: &mut usize) -> Result<Option<protocol_ca
     if protocol_core::read_bool(bytes, pos)? { Ok(Some(protocol_causal::decode_frontier(bytes, pos)?)) } else { Ok(None) }
 }
 
-fn write_vec_str(out: &mut Vec<u8>, values: &[String]) {
+fn write_vec_bytes(out: &mut Vec<u8>, values: &[Vec<u8>]) {
     protocol_core::write_varint_u64(out, values.len() as u64);
     for value in values {
-        protocol_core::write_str(out, value);
+        protocol_core::write_bytes(out, value);
     }
 }
 
-fn read_vec_str(bytes: &[u8], pos: &mut usize) -> Result<Vec<String>, protocol_core::ProtocolError> {
+fn read_vec_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<Vec<u8>>, protocol_core::ProtocolError> {
     let count = protocol_core::read_varint_u64(bytes, pos)?;
-    (0..count).map(|_| protocol_core::read_str(bytes, pos)).collect()
+    (0..count).map(|_| protocol_core::read_bytes(bytes, pos)).collect()
 }
 
 fn write_vec_envelope(out: &mut Vec<u8>, values: &[protocol_causal::OperationEnvelope]) {
@@ -336,9 +336,9 @@ pub fn encode_client_frame(frame: &ClientFrame, lane: Lane) -> Vec<u8> {
             protocol_core::write_varint_u64(&mut out, *seq);
             protocol_core::write_bytes(&mut out, payload);
         }
-        ClientFrame::Presence { peer_json } => {
+        ClientFrame::Presence { peer } => {
             out.push(4);
-            protocol_core::write_str(&mut out, peer_json);
+            protocol_core::write_bytes(&mut out, peer);
         }
         ClientFrame::CreditGrant { n } => {
             out.push(5);
@@ -370,7 +370,7 @@ pub fn decode_client_frame(bytes: &[u8]) -> Result<(Lane, ClientFrame), protocol
         1 => ClientFrame::Commands { batch_id: protocol_core::read_varint_u64(bytes, &mut pos)?, envelopes: read_vec_envelope(bytes, &mut pos)? },
         2 => ClientFrame::FrontierAdvertise { frontier: protocol_causal::decode_frontier(bytes, &mut pos)? },
         3 => ClientFrame::PreviewPublish { key: protocol_core::read_str(bytes, &mut pos)?, seq: protocol_core::read_varint_u64(bytes, &mut pos)?, payload: protocol_core::read_bytes(bytes, &mut pos)? },
-        4 => ClientFrame::Presence { peer_json: protocol_core::read_str(bytes, &mut pos)? },
+        4 => ClientFrame::Presence { peer: protocol_core::read_bytes(bytes, &mut pos)? },
         5 => ClientFrame::CreditGrant { n: protocol_core::read_varint_u64(bytes, &mut pos)? as u32 },
         6 => ClientFrame::Bye,
         other => return Err(malformed("wire client-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
@@ -418,9 +418,9 @@ pub fn encode_server_frame(frame: &ServerFrame, lane: Lane) -> Vec<u8> {
             protocol_core::write_varint_u64(&mut out, *seq);
             protocol_core::write_bytes(&mut out, payload);
         }
-        ServerFrame::Presence { peers_json } => {
+        ServerFrame::Presence { peers } => {
             out.push(6);
-            write_vec_str(&mut out, peers_json);
+            write_vec_bytes(&mut out, peers);
         }
         ServerFrame::CreditGrant { n } => {
             out.push(7);
@@ -454,7 +454,7 @@ pub fn decode_server_frame(bytes: &[u8]) -> Result<(Lane, ServerFrame), protocol
         3 => ServerFrame::Commands { envelopes: read_vec_envelope(bytes, &mut pos)?, origin: protocol_core::ActorId(protocol_core::read_str(bytes, &mut pos)?), frontier: protocol_causal::decode_frontier(bytes, &mut pos)? },
         4 => ServerFrame::Ack { batch_id: protocol_core::read_varint_u64(bytes, &mut pos)?, stages: read_vec_ack_stage(bytes, &mut pos)?, frontier: protocol_causal::decode_frontier(bytes, &mut pos)? },
         5 => ServerFrame::Preview { actor: protocol_core::ActorId(protocol_core::read_str(bytes, &mut pos)?), key: protocol_core::read_str(bytes, &mut pos)?, seq: protocol_core::read_varint_u64(bytes, &mut pos)?, payload: protocol_core::read_bytes(bytes, &mut pos)? },
-        6 => ServerFrame::Presence { peers_json: read_vec_str(bytes, &mut pos)? },
+        6 => ServerFrame::Presence { peers: read_vec_bytes(bytes, &mut pos)? },
         7 => ServerFrame::CreditGrant { n: protocol_core::read_varint_u64(bytes, &mut pos)? as u32 },
         8 => ServerFrame::Error { code: protocol_core::read_str(bytes, &mut pos)?, message: protocol_core::read_str(bytes, &mut pos)? },
         other => return Err(malformed("wire server-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),
@@ -560,7 +560,7 @@ mod tests {
 
     #[test]
     fn client_frame_presence_round_trips() {
-        assert_client_round_trips(&ClientFrame::Presence { peer_json: "{\"cursor\":[1,2]}".to_string() }, Lane::Preview);
+        assert_client_round_trips(&ClientFrame::Presence { peer: b"{\"cursor\":[1,2]}".to_vec() }, Lane::Preview);
     }
 
     #[test]
@@ -627,7 +627,7 @@ mod tests {
 
     #[test]
     fn server_frame_presence_round_trips() {
-        assert_server_round_trips(&ServerFrame::Presence { peers_json: vec!["{\"id\":\"a\"}".to_string(), "{\"id\":\"b\"}".to_string()] }, Lane::Preview);
+        assert_server_round_trips(&ServerFrame::Presence { peers: vec![b"{\"id\":\"a\"}".to_vec(), b"{\"id\":\"b\"}".to_vec()] }, Lane::Preview);
     }
 
     #[test]

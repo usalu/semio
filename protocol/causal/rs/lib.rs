@@ -396,6 +396,52 @@ pub fn decode_frontier(bytes: &[u8], pos: &mut usize) -> Result<FrontierSummary,
     let chain_hash = protocol_core::read_hash32(bytes, pos)?;
     Ok(FrontierSummary { document_id, head_edit_ordinal, head_edit_id, last_commit_seq, chain_hash })
 }
+
+/// @emoji 🎯 `count varint | encode_envelope each` — for boundaries that move a whole batch of
+/// envelopes as one opaque byte blob (the WIT ABI, worker frames) instead of one wire frame per
+/// envelope (`ClientFrame::Commands`, which already carries `Vec<OperationEnvelope>` typed).
+pub fn encode_envelopes(envelopes: &[OperationEnvelope]) -> Vec<u8> {
+    let mut out = Vec::new();
+    protocol_core::write_varint_u64(&mut out, envelopes.len() as u64);
+    for envelope in envelopes {
+        encode_envelope(envelope, &mut out);
+    }
+    out
+}
+
+/// @emoji 🎯 Inverse of [`encode_envelopes`].
+pub fn decode_envelopes(bytes: &[u8]) -> Result<Vec<OperationEnvelope>, protocol_core::ProtocolError> {
+    let mut pos = 0usize;
+    let count = protocol_core::read_varint_u64(bytes, &mut pos)?;
+    let mut envelopes = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        envelopes.push(decode_envelope(bytes, &mut pos)?);
+    }
+    Ok(envelopes)
+}
+
+/// @emoji 🎯 `count varint | (len varint | bytes) each` — a binary vec-of-op-payloads framing,
+/// replacing the `serde_json::json!({"backwards": [...]})` convention for `InverseOperation`
+/// payloads that carry more than one composed op (e.g. framework/plugin's `result_from_last_edit`).
+pub fn encode_ops_vec(ops: &[Vec<u8>]) -> Vec<u8> {
+    let mut out = Vec::new();
+    protocol_core::write_varint_u64(&mut out, ops.len() as u64);
+    for op in ops {
+        protocol_core::write_bytes(&mut out, op);
+    }
+    out
+}
+
+/// @emoji 🎯 Inverse of [`encode_ops_vec`].
+pub fn decode_ops_vec(bytes: &[u8]) -> Result<Vec<Vec<u8>>, protocol_core::ProtocolError> {
+    let mut pos = 0usize;
+    let count = protocol_core::read_varint_u64(bytes, &mut pos)?;
+    let mut ops = Vec::with_capacity(count as usize);
+    for _ in 0..count {
+        ops.push(protocol_core::read_bytes(bytes, &mut pos)?);
+    }
+    Ok(ops)
+}
 //#endregion 🔖EnvelopeCodec
 
 //#region 🧪Tests
@@ -828,6 +874,24 @@ mod tests {
         let mut pos = 0;
         assert_eq!(decode_frontier(&out, &mut pos).unwrap(), f);
         assert_eq!(pos, out.len());
+    }
+
+    #[test]
+    fn envelopes_batch_binary_round_trips_including_empty() {
+        let empty: Vec<OperationEnvelope> = Vec::new();
+        assert_eq!(decode_envelopes(&encode_envelopes(&empty)).unwrap(), empty);
+
+        let batch = vec![sample_envelope("operation-1", vec!["operation-0"]), sample_envelope("operation-2", Vec::new())];
+        assert_eq!(decode_envelopes(&encode_envelopes(&batch)).unwrap(), batch);
+    }
+
+    #[test]
+    fn ops_vec_binary_round_trips_including_empty() {
+        let empty: Vec<Vec<u8>> = Vec::new();
+        assert_eq!(decode_ops_vec(&encode_ops_vec(&empty)).unwrap(), empty);
+
+        let ops = vec![vec![1u8, 2, 3], Vec::new(), vec![9u8; 5]];
+        assert_eq!(decode_ops_vec(&encode_ops_vec(&ops)).unwrap(), ops);
     }
     //#endregion 🔖EnvelopeCodec
 }

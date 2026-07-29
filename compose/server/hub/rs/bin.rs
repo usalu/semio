@@ -1686,11 +1686,14 @@ mod actor {
                 document_id: document_id(self.session_id),
                 actor: protocol::ActorId(envelope.actor_person_id.0.to_string()),
                 dependencies: Vec::new(),
-                diff: protocol::DocumentDiff { schema: "generic".to_string(), payload: serde_json::Value::Object(payload) },
+                diff: protocol::DocumentDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default() },
                 // 🎯 No real inverse yet — compose-hub has no undo/redo feature today (the original
                 // Postgres implementation didn't have one either); a per-command-kind inverse is
                 // future work, flagged in this ticket's report.
-                inverse: protocol::InverseOperation { schema: "generic".to_string(), inverse_diff: serde_json::Value::Object(serde_json::Map::new()) },
+                inverse: protocol::InverseOperation {
+                    schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()),
+                    payload: serde_json::to_vec(&serde_json::Value::Object(serde_json::Map::new())).unwrap_or_default(),
+                },
                 timestamp: now_hlc(envelope.actor_person_id.0),
             };
             let batch = db::document::CommandBatch::new(vec![op_envelope.clone()]).map_err(SessionError::Database)?;
@@ -2485,8 +2488,11 @@ mod api {
             document_id: document_id(session_id),
             actor: protocol::ActorId("system".to_string()),
             dependencies: Vec::new(),
-            diff: protocol::DocumentDiff { schema: "generic".to_string(), payload: serde_json::Value::Object(payload) },
-            inverse: protocol::InverseOperation { schema: "generic".to_string(), inverse_diff: serde_json::Value::Object(serde_json::Map::new()) },
+            diff: protocol::DocumentDiff { schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default() },
+            inverse: protocol::InverseOperation {
+                schema: protocol::SchemaId(db::document::DB_PATHMAP_SCHEMA.to_string()),
+                payload: serde_json::to_vec(&serde_json::Value::Object(serde_json::Map::new())).unwrap_or_default(),
+            },
             timestamp: now_hlc(Uuid::nil()),
         };
         let batch = db::document::CommandBatch::new(vec![envelope])?;
@@ -2753,8 +2759,8 @@ mod ws {
                 let _ = session.wire_tx.send(WireEvent::Preview { actor: protocol::ActorId(session_id.to_string()), key, seq, payload });
                 Ok(())
             }
-            protocol::ClientFrame::Presence { peer } => {
-                let frame = protocol::ServerFrame::Presence { peers: vec![peer] };
+            protocol::ClientFrame::Presence { peer_json } => {
+                let frame = protocol::ServerFrame::Presence { peers_json: vec![peer_json] };
                 ws_tx.send(Message::Binary(protocol::encode_server_frame(&frame, protocol::Lane::Preview).into())).await.map_err(|_| ())
             }
             protocol::ClientFrame::Bye => Err(()),
@@ -4773,6 +4779,14 @@ mod tests {
             format!("http://{}", addr)
         }
 
+        async fn recv_broadcast<T: Clone>(rx: &mut tokio::sync::broadcast::Receiver<T>, label: &str) -> T {
+            match tokio::time::timeout(std::time::Duration::from_secs(5), rx.recv()).await {
+                Ok(Ok(value)) => value,
+                Ok(Err(error)) => panic!("{label} broadcast recv error: {error:?}"),
+                Err(_) => panic!("{label} not received before 5s deadline"),
+            }
+        }
+
         #[tokio::test]
         async fn session_lifecycle() {
             let state = test_app_state("session-lifecycle");
@@ -4816,9 +4830,9 @@ mod tests {
             assert_eq!(types[0]["name"].as_str().unwrap(), "Tower");
 
             // Both broadcast channels fired.
-            let event = event_rx.recv().await.unwrap();
+            let event = recv_broadcast(&mut event_rx, "domain command accepted event").await;
             assert!(matches!(event, SessionEvent::DomainCommandAccepted { .. }));
-            let wire_event = wire_rx.recv().await.unwrap();
+            let wire_event = recv_broadcast(&mut wire_rx, "commands wire event").await;
             assert!(matches!(wire_event, WireEvent::Commands { .. }));
 
             // db itself is the durable frontier authority.

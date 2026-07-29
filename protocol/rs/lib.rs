@@ -25,7 +25,8 @@ pub use protocol_command::{
 };
 pub use protocol_causal::{
     FrontierComparison as RuntimeFrontierComparison, FrontierSummary as RuntimeFrontierSummary, InsertResult, InverseOperation, OpDag, OpDagError, DocumentDiff, OperationEnvelope, OperationTransform,
-    TransformOutcome, decode_envelope, decode_frontier, encode_envelope, encode_frontier, frontier_delta as runtime_frontier_delta, operation_envelope_from_edit,
+    TransformOutcome, decode_envelope, decode_envelopes, decode_frontier, decode_ops_vec, encode_envelope, encode_envelopes, encode_frontier, encode_ops_vec, frontier_delta as runtime_frontier_delta,
+    operation_envelope_from_edit,
 };
 pub use protocol_crdt::merge_concurrent_diffs;
 pub use protocol_wire::{AckStage, ApplyOutcome, Bootstrap, ClientFrame, Lane, ServerFrame, decode_client_frame, decode_server_frame, encode_client_frame, encode_server_frame};
@@ -39,7 +40,7 @@ pub fn compile_ops(ops: &str, options: &EncodeOptions) -> Result<Vec<u8>, Protoc
 
 /// 🎬 `.spr` binary -> ops text, the inverse of `compile_ops`.
 pub fn decompile_ops(bytes: &[u8], options: &DecodeOptions) -> Result<String, ProtocolError> {
-    Ok(print_ops_text(&decode_history(bytes, options)?))
+    print_ops_text(&decode_history(bytes, options)?)
 }
 //#endregion 🔖Compile
 
@@ -197,7 +198,7 @@ mod tests {
                 finished_at: None,
                 coalesce_key: None,
                 description: None,
-                ops: vec![OpPayload { text: format!("op-{i}"), binary: None }],
+                ops: vec![OpPayload { text: Some(format!("op-{i}")), binary: None }],
                 backwards: Vec::new(),
                 meta: None,
             };
@@ -232,7 +233,7 @@ mod tests {
                 finished_at: Some("2026-07-27T00:00:01Z".to_string()),
                 coalesce_key: None,
                 description: Some("first edit".to_string()),
-                ops: vec![OpPayload { text: "set foo = 1".to_string(), binary: None }],
+                ops: vec![OpPayload { text: Some("set foo = 1".to_string()), binary: None }],
                 backwards: Vec::new(),
                 meta: None,
             }],
@@ -245,7 +246,7 @@ mod tests {
             // it byte-for-byte, same as every other structural line.
             cursor: Some(HistoryCursor { applied_edit_ids: vec!["e0".to_string()], redo_edit_ids: Vec::new(), checkpoint_id: None }),
         };
-        let ops_text = protocol_history::print_ops_text(&log);
+        let ops_text = protocol_history::print_ops_text(&log).unwrap();
 
         let compiled = compile_ops(&ops_text, &EncodeOptions::default()).unwrap();
         let decompiled = decompile_ops(&compiled, &DecodeOptions::default()).unwrap();

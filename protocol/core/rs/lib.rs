@@ -829,6 +829,21 @@ pub fn read_bool(bytes: &[u8], pos: &mut usize) -> Result<bool, ProtocolError> {
     *pos += 1;
     Ok(byte != 0)
 }
+
+/// @emoji 🔢 `f64` as 8 little-endian bytes — for wire fields with no varint-friendly shape
+/// (coordinates, zoom levels).
+pub fn write_f64(out: &mut Vec<u8>, value: f64) {
+    out.extend_from_slice(&value.to_le_bytes());
+}
+
+pub fn read_f64(bytes: &[u8], pos: &mut usize) -> Result<f64, ProtocolError> {
+    let end = *pos + 8;
+    let slice = bytes.get(*pos..end).ok_or(ProtocolError::Malformed { what: "wire f64", offset: *pos as u64, detail: "truncated".to_string() })?;
+    let mut buf = [0u8; 8];
+    buf.copy_from_slice(slice);
+    *pos = end;
+    Ok(f64::from_le_bytes(buf))
+}
 //#endregion 🔖WireCodec
 
 //#region 🧪Tests

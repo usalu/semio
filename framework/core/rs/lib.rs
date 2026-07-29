@@ -5830,56 +5830,15 @@ pub struct WindowKindId(pub String);
 //#endregion 🔖Identifiers
 
 //#region 🔖HybridLogicalTimestamp
-// 🎞️ CW3 kernel cut-over NOTE: `protocol_core::HybridLogicalTimestamp` is the new canonical home
-// (identical `{actor, physical_ms, logical}` shape, plus a real actor-tiebroken `Ord`/`PartialOrd`
-// this local struct lacks) — but it is deliberately NOT re-exported here this wave: this struct
-// derives `#[serde(rename_all = "camelCase")]` (`physicalMs` on the wire), while
-// `protocol_core::HybridLogicalTimestamp` has no such attribute (`physical_ms` on the wire). A
-// straight re-export would silently change this type's JSON shape for every existing serialized
-// use (kernel operations/undo groups, `framework/sync`'s wire frames) — a wire-format break outside
-// this wave's verified scope. Left local and unchanged; reconciling the two shapes is deferred to
-// whichever wave actually rewires the JSON/wire boundary (CW5) so the format change can be verified
-// end-to-end rather than assumed compatible.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct HybridLogicalTimestamp {
-    pub actor: u64,
-    pub physical_ms: u64,
-    pub logical: u64,
-}
-
-impl HybridLogicalTimestamp {
-    pub fn new(actor: u64, physical_ms: u64) -> Self {
-        Self {
-            actor,
-            physical_ms,
-            logical: 0,
-        }
-    }
-
-    pub fn tick(&mut self, physical_ms: u64) {
-        if physical_ms > self.physical_ms {
-            self.physical_ms = physical_ms;
-            self.logical = 0;
-        } else {
-            self.logical = self.logical.saturating_add(1);
-        }
-    }
-
-    pub fn merge(&mut self, other: &Self) {
-        if other.physical_ms > self.physical_ms {
-            self.physical_ms = other.physical_ms;
-            self.logical = other.logical;
-        } else if other.physical_ms == self.physical_ms && other.logical > self.logical {
-            self.logical = other.logical;
-        }
-        self.logical = self.logical.saturating_add(1);
-    }
-
-    pub fn cmp_key(&self) -> (u64, u64) {
-        (self.physical_ms, self.logical)
-    }
-}
+// 🎯 W6 kernel unification: re-exports `protocol_core::HybridLogicalTimestamp` now (identical
+// `{actor, physical_ms, logical}` shape, plus a real actor-tiebroken `Ord`/`PartialOrd` the old
+// local struct lacked). The CW3-era deferral note this region used to carry (kept local because
+// this struct's `#[serde(rename_all = "camelCase")]` put `physicalMs` on the wire, vs.
+// `protocol_core`'s unrenamed `physical_ms`) is resolved: this wave already rewired the JSON/wire
+// boundary end-to-end (W5's binary `protocol_wire` codec, its TS twin, and the fixture
+// byte-identity canary all speak `physical_ms`), so the wire-format reconciliation this note
+// deferred is verified, not assumed.
+pub use protocol_core::HybridLogicalTimestamp;
 //#endregion 🔖HybridLogicalTimestamp
 
 //#region 🔖Capability
@@ -6118,24 +6077,18 @@ pub struct AppEvent {
     pub payload: Value,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DocumentDiff {
-    pub schema_id: SchemaId,
-    pub payload: Value,
-}
+// 🎯 W6 kernel unification: re-exports `protocol::DocumentDiff` (schema: `SchemaId`, payload:
+// `Vec<u8>` — the binary shape from W5's causal envelope reshape) in place of the old kernel-local
+// `{schema_id, payload: Value}` shape. Zero external consumers of the old shape existed outside
+// this crate's own (now-deleted) OS JSON-patch kernel and `store`/`store_sync` (both repointed to
+// `protocol::DocumentDiff` directly in this same wave) — verified by a repo-wide grep before this
+// change, not assumed.
+pub use protocol::DocumentDiff;
 
-// 🎞️ CW3 kernel cut-over NOTE: `protocol_core::UndoPolicy` has identical variants but no
-// `#[serde(rename_all = "camelCase")]` (unlike this local enum) — left local and unchanged for the
-// same wire-format-preservation reason documented on `HybridLogicalTimestamp` above.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum UndoPolicy {
-    ExactBaseOnly,
-    TransformAgainstConcurrent,
-    SemanticUndo,
-    CompensatingAction,
-}
+// 🎯 W6 kernel unification: re-exports `protocol_core::UndoPolicy` (identical variants; the old
+// CW3-era deferral note about a `#[serde(rename_all = "camelCase")]` mismatch no longer applies —
+// see `HybridLogicalTimestamp`'s doc above for the same reconciliation).
+pub use protocol_core::UndoPolicy;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -6241,150 +6194,16 @@ pub struct CommandContext {
 }
 //#endregion 🔖Invocation
 
-//#region 🔖Sync
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(transparent)]
-pub struct PayloadHash(pub String);
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct OperationEnvelope {
-    pub id: OperationId,
-    pub actor: ActorId,
-    pub document: DocumentId,
-    pub schema_version: SchemaVersion,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub deps: Vec<OperationId>,
-    pub payload_hash: PayloadHash,
-    pub diff: DocumentDiff,
-    pub inverse: InverseOperation,
-}
-
-#[derive(Debug, thiserror::Error, PartialEq, Eq)]
-pub enum OpDagError {
-    #[error("duplicate operation id: {0}")]
-    Duplicate(String),
-}
-
-/// @emoji 🕸️ Causal DAG of exchanged {@link OperationEnvelope}s: buffers envelopes until their deps are applied.
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct OpDag {
-    envelopes: std::collections::HashMap<String, OperationEnvelope>,
-    applied: std::collections::HashSet<String>,
-    applied_order: Vec<String>,
-    drained: usize,
-    pending: Vec<String>,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum InsertResult {
-    Applied,
-    Pending,
-    AlreadyApplied,
-}
-
-impl OpDag {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn insert(&mut self, envelope: OperationEnvelope) -> Result<InsertResult, OpDagError> {
-        let id = envelope.id.0.clone();
-        if self.applied.contains(&id) {
-            return Ok(InsertResult::AlreadyApplied);
-        }
-        if self.envelopes.contains_key(&id) {
-            return Err(OpDagError::Duplicate(id));
-        }
-        for dependency in &envelope.deps {
-            if !self.applied.contains(&dependency.0) && !self.envelopes.contains_key(&dependency.0) {
-                self.envelopes.insert(id.clone(), envelope);
-                if !self.pending.contains(&id) {
-                    self.pending.push(id);
-                }
-                return Ok(InsertResult::Pending);
-            }
-        }
-        self.envelopes.insert(id.clone(), envelope);
-        self.mark_applied(&id);
-        self.drain_ready();
-        Ok(InsertResult::Applied)
-    }
-
-    pub fn ready(&self) -> Vec<&OperationEnvelope> {
-        self.pending
-            .iter()
-            .filter_map(|id| self.envelopes.get(id))
-            .filter(|envelope| {
-                envelope
-                    .deps
-                    .iter()
-                    .all(|dependency| self.applied.contains(&dependency.0))
-            })
-            .collect()
-    }
-
-    pub fn applied_ids(&self) -> Vec<String> {
-        self.applied.iter().cloned().collect()
-    }
-
-    /// @emoji 🧺 Drains envelopes applied since the last drain, in causal application order.
-    pub fn drain_applied_envelopes(&mut self) -> Vec<OperationEnvelope> {
-        let fresh: Vec<String> = self.applied_order[self.drained..].to_vec();
-        self.drained = self.applied_order.len();
-        fresh
-            .iter()
-            .filter_map(|id| self.envelopes.get(id).cloned())
-            .collect()
-    }
-
-    fn mark_applied(&mut self, id: &str) {
-        self.applied.insert(id.to_string());
-        self.applied_order.push(id.to_string());
-        self.pending.retain(|pending| pending != id);
-    }
-
-    /// 🌱 Seeds the applied-set from ids the caller already knows about via an out-of-band mechanism
-    /// (e.g. a full-document snapshot merge) — without this, a later envelope whose `deps` reference
-    /// one of these ids stays `Pending` forever, since `insert` only recognizes a dependency as
-    /// satisfied through this dag's own `envelopes`/`applied` bookkeeping, never through edits a peer
-    /// adopted by some other route.
-    pub fn seed_applied(&mut self, ids: impl IntoIterator<Item = String>) {
-        for id in ids {
-            if !self.applied.contains(&id) {
-                self.mark_applied(&id);
-            }
-        }
-    }
-
-    fn drain_ready(&mut self) {
-        loop {
-            let ready: Vec<String> = self
-                .pending
-                .iter()
-                .filter(|id| {
-                    self.envelopes
-                        .get(*id)
-                        .is_some_and(|envelope| {
-                            envelope
-                                .deps
-                                .iter()
-                                .all(|dependency| self.applied.contains(&dependency.0))
-                        })
-                })
-                .cloned()
-                .collect();
-            if ready.is_empty() {
-                break;
-            }
-            for id in ready {
-                self.mark_applied(&id);
-            }
-        }
-    }
-}
-
-//#region 🔖HubProtocol
+//#region 🔖Presence
+// 🎯 W6 kernel unification: `PayloadHash`/`OperationEnvelope`/`OpDagError`/`OpDag`/`InsertResult`
+// (the local causal-sync types) and `HubClientFrame`/`HubServerFrame` (the local hub wire frames)
+// are DELETED — `store`/`store_sync` (their only consumers outside this crate) now speak
+// `protocol::{OperationEnvelope, OpDag, OpDagError, InsertResult}`/`protocol::{ClientFrame,
+// ServerFrame}` directly (W5 already made these real binary types; this wave just stops
+// duplicating them here). `PresencePoint`/`PresenceViewport`/`PresencePeer` below are NOT
+// duplicates of anything in `protocol` — no equivalent exists there — so they stay, kept in their
+// own region since the `🔖HubProtocol` name they used to share with the now-deleted frame enums no
+// longer fits.
 /// @emoji 📍 A live cursor position in document space, broadcast as part of a peer's presence frame.
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -6430,152 +6249,126 @@ pub struct PresencePeer {
     pub drag_ghost_json: Option<String>,
 }
 
-/// @emoji 📨 Client→server hub wire frames; the counterpart is {@link HubServerFrame}.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
-pub enum HubClientFrame {
-    Hello {
-        actor: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        token: Option<String>,
-        since_version: i64,
-    },
-    Operations {
-        envelopes: Vec<OperationEnvelope>,
-    },
-    PutEnvelope {
-        version: i64,
-        envelope: Value,
-    },
-    Presence {
-        peer: PresencePeer,
-    },
-    Bye,
+/// @emoji 🎯 Binary `PresencePeer` codec: `actor str | presence bitmask u8 | connected_at_ms
+/// varint | fields present per bitmask`. `protocol_wire::ClientFrame::Presence`/`ServerFrame::
+/// Presence` carry the resulting bytes opaquely (that crate has no dependency on this one) —
+/// this is the encode/decode pair store_sync calls on either side of the wire.
+/// `selection_json`/`drag_ghost_json` stay opaque app-owned text (never re-parsed as JSON here,
+/// same as `DocumentDiff.payload` staying opaque bytes).
+pub fn encode_presence_peer(peer: &PresencePeer) -> Vec<u8> {
+    let mut out = Vec::new();
+    protocol_core::write_str(&mut out, &peer.actor);
+    let mut presence = 0u8;
+    if peer.label.is_some() {
+        presence |= 1 << 0;
+    }
+    if peer.selection_json.is_some() {
+        presence |= 1 << 1;
+    }
+    if peer.user_id.is_some() {
+        presence |= 1 << 2;
+    }
+    if peer.role.is_some() {
+        presence |= 1 << 3;
+    }
+    if peer.cursor.is_some() {
+        presence |= 1 << 4;
+    }
+    if peer.viewport.is_some() {
+        presence |= 1 << 5;
+    }
+    if peer.drag_ghost_json.is_some() {
+        presence |= 1 << 6;
+    }
+    out.push(presence);
+    protocol_core::write_varint_u64(&mut out, peer.connected_at_ms as u64);
+    if let Some(label) = &peer.label {
+        protocol_core::write_str(&mut out, label);
+    }
+    if let Some(selection_json) = &peer.selection_json {
+        protocol_core::write_str(&mut out, selection_json);
+    }
+    if let Some(user_id) = &peer.user_id {
+        protocol_core::write_str(&mut out, user_id);
+    }
+    if let Some(role) = &peer.role {
+        protocol_core::write_str(&mut out, role);
+    }
+    if let Some(cursor) = &peer.cursor {
+        protocol_core::write_f64(&mut out, cursor.x);
+        protocol_core::write_f64(&mut out, cursor.y);
+    }
+    if let Some(viewport) = &peer.viewport {
+        protocol_core::write_f64(&mut out, viewport.x);
+        protocol_core::write_f64(&mut out, viewport.y);
+        protocol_core::write_f64(&mut out, viewport.zoom);
+    }
+    if let Some(drag_ghost_json) = &peer.drag_ghost_json {
+        protocol_core::write_str(&mut out, drag_ghost_json);
+    }
+    out
 }
 
-/// @emoji 📬 Server→client hub wire frames; the counterpart is {@link HubClientFrame}.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
-pub enum HubServerFrame {
-    Welcome {
-        version: i64,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        envelope: Option<Value>,
-        presence: Vec<PresencePeer>,
-        backlog: Vec<OperationEnvelope>,
-    },
-    Operations {
-        version: i64,
-        envelopes: Vec<OperationEnvelope>,
-        origin: String,
-    },
-    SnapshotReplaced {
-        version: i64,
-        envelope: Value,
-    },
-    Presence {
-        peers: Vec<PresencePeer>,
-    },
-    Ack {
-        operation_id: String,
-        version: i64,
-    },
-    Conflict {
-        message: String,
-    },
-    Error {
-        message: String,
-    },
+/// @emoji 🎯 Inverse of [`encode_presence_peer`].
+pub fn decode_presence_peer(bytes: &[u8]) -> Result<PresencePeer, protocol_core::ProtocolError> {
+    let mut pos = 0usize;
+    let actor = protocol_core::read_str(bytes, &mut pos)?;
+    let presence = *bytes.get(pos).ok_or(protocol_core::ProtocolError::Malformed { what: "presence peer", offset: pos as u64, detail: "truncated".to_string() })?;
+    pos += 1;
+    let connected_at_ms = protocol_core::read_varint_u64(bytes, &mut pos)? as i64;
+    let label = if presence & (1 << 0) != 0 { Some(protocol_core::read_str(bytes, &mut pos)?) } else { None };
+    let selection_json = if presence & (1 << 1) != 0 { Some(protocol_core::read_str(bytes, &mut pos)?) } else { None };
+    let user_id = if presence & (1 << 2) != 0 { Some(protocol_core::read_str(bytes, &mut pos)?) } else { None };
+    let role = if presence & (1 << 3) != 0 { Some(protocol_core::read_str(bytes, &mut pos)?) } else { None };
+    let cursor = if presence & (1 << 4) != 0 {
+        let x = protocol_core::read_f64(bytes, &mut pos)?;
+        let y = protocol_core::read_f64(bytes, &mut pos)?;
+        Some(PresencePoint { x, y })
+    } else {
+        None
+    };
+    let viewport = if presence & (1 << 5) != 0 {
+        let x = protocol_core::read_f64(bytes, &mut pos)?;
+        let y = protocol_core::read_f64(bytes, &mut pos)?;
+        let zoom = protocol_core::read_f64(bytes, &mut pos)?;
+        Some(PresenceViewport { x, y, zoom })
+    } else {
+        None
+    };
+    let drag_ghost_json = if presence & (1 << 6) != 0 { Some(protocol_core::read_str(bytes, &mut pos)?) } else { None };
+    Ok(PresencePeer { actor, label, selection_json, connected_at_ms, user_id, role, cursor, viewport, drag_ghost_json })
 }
-//#endregion 🔖HubProtocol
 
 #[cfg(test)]
-mod op_dag_tests {
-    use super::*;
+mod presence_codec_tests {
+    use super::{PresencePeer, PresencePoint, PresenceViewport, decode_presence_peer, encode_presence_peer};
 
-    fn sample_envelope(id: &str, deps: Vec<&str>) -> OperationEnvelope {
-        OperationEnvelope {
-            id: OperationId(id.into()),
-            actor: ActorId("actor-1".into()),
-            document: DocumentId("document-1".into()),
-            schema_version: SchemaVersion("test.v1".into()),
-            deps: deps.into_iter().map(|dep| OperationId(dep.into())).collect(),
-            payload_hash: PayloadHash("hash".into()),
-            diff: DocumentDiff {
-                schema_id: SchemaId("diff.v1".into()),
-                payload: serde_json::json!({"value": id}),
-            },
-            inverse: InverseOperation {
-                target_operation: OperationId(id.into()),
-                inverse_diff: DocumentDiff {
-                    schema_id: SchemaId("diff.v1".into()),
-                    payload: serde_json::json!({}),
-                },
-                base_version: DocumentVersion(0),
-                dependencies: Vec::new(),
-                undo_policy: UndoPolicy::ExactBaseOnly,
-            },
-        }
+    #[test]
+    fn presence_peer_binary_round_trips_with_every_field_absent() {
+        let peer = PresencePeer { actor: "peer-1".into(), label: None, selection_json: None, connected_at_ms: 1000, user_id: None, role: None, cursor: None, viewport: None, drag_ghost_json: None };
+        let bytes = encode_presence_peer(&peer);
+        assert_eq!(decode_presence_peer(&bytes).unwrap(), peer);
     }
 
     #[test]
-    fn inserts_pending_until_dependencies_arrive() {
-        let mut dag = OpDag::new();
-        assert!(matches!(
-            dag.insert(sample_envelope("operation-2", vec!["operation-1"])),
-            Ok(InsertResult::Pending)
-        ));
-        assert!(matches!(
-            dag.insert(sample_envelope("operation-1", vec![])),
-            Ok(InsertResult::Applied)
-        ));
-        assert_eq!(dag.applied_ids().len(), 2);
-    }
-
-    #[test]
-    fn drains_applied_envelopes_in_causal_order() {
-        let mut dag = OpDag::new();
-        dag.insert(sample_envelope("operation-2", vec!["operation-1"])).unwrap();
-        dag.insert(sample_envelope("operation-1", vec![])).unwrap();
-        let drained = dag.drain_applied_envelopes();
-        assert_eq!(
-            drained.iter().map(|envelope| envelope.id.0.clone()).collect::<Vec<_>>(),
-            vec!["operation-1".to_string(), "operation-2".to_string()]
-        );
-        assert!(dag.drain_applied_envelopes().is_empty(), "second drain yields nothing new");
-        dag.insert(sample_envelope("operation-3", vec![])).unwrap();
-        let drained = dag.drain_applied_envelopes();
-        assert_eq!(drained.len(), 1);
-        assert_eq!(drained[0].id.0, "operation-3");
-    }
-
-    #[test]
-    fn insert_duplicate_pending_operation_id_errors() {
-        let mut dag = OpDag::new();
-        dag.insert(sample_envelope("operation-2", vec!["operation-1"])).unwrap();
-        let err = dag.insert(sample_envelope("operation-2", vec!["operation-1"])).unwrap_err();
-        assert_eq!(err, OpDagError::Duplicate("operation-2".to_string()));
-    }
-
-    #[test]
-    fn insert_already_applied_operation_returns_already_applied_without_erroring() {
-        let mut dag = OpDag::new();
-        dag.insert(sample_envelope("operation-1", vec![])).unwrap();
-        let result = dag.insert(sample_envelope("operation-1", vec![])).unwrap();
-        assert_eq!(result, InsertResult::AlreadyApplied);
-    }
-
-    #[test]
-    fn seed_applied_unblocks_pending_envelopes_that_reference_out_of_band_deps() {
-        let mut dag = OpDag::new();
-        assert_eq!(dag.insert(sample_envelope("operation-2", vec!["operation-1"])).unwrap(), InsertResult::Pending);
-        assert!(dag.ready().is_empty(), "dependency is not yet known to this dag");
-        dag.seed_applied(vec!["operation-1".to_string()]);
-        let ready_ids: Vec<String> = dag.ready().iter().map(|envelope| envelope.id.0.clone()).collect();
-        assert_eq!(ready_ids, vec!["operation-2".to_string()]);
+    fn presence_peer_binary_round_trips_with_every_field_present() {
+        let peer = PresencePeer {
+            actor: "peer-2".into(),
+            label: Some("Ada".into()),
+            selection_json: Some("{\"ids\":[1,2]}".into()),
+            connected_at_ms: 1_700_000_000_000,
+            user_id: Some("user-9".into()),
+            role: Some("owner".into()),
+            cursor: Some(PresencePoint { x: 1.5, y: -2.25 }),
+            viewport: Some(PresenceViewport { x: 0.0, y: 10.0, zoom: 1.75 }),
+            drag_ghost_json: Some("{\"kind\":\"move\"}".into()),
+        };
+        let bytes = encode_presence_peer(&peer);
+        assert_eq!(decode_presence_peer(&bytes).unwrap(), peer);
     }
 }
-//#endregion 🔖Sync
+
+//#endregion 🔖Presence
 
 //#region 🔖Window
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -8002,10 +7795,10 @@ pub use ui::*;
 pub use ui::kernel::{
     ActorId, AppEvent, AppInstanceId, AssetHandle, Capability, CapabilityGrant, CapabilityRequirement,
     CapabilityToken, ActionContext, ActionDef, ActionId, ActionInvocation, CommandContext, CommandId, CommandInvocation,
-    ActionRequest, InvocationId, InvocationResult, Diagnostic, HostEffect, HubClientFrame, HubServerFrame, HybridLogicalTimestamp, IconRenderExportItem, InverseOperation,
-    InsertResult, KernelOperation, MergeStrategyKind, DocumentDiff, DocumentHandle, DocumentId, DocumentKind,
-    DocumentVersion, OpDag, OpDagError, OperationEnvelope, OperationId, PayloadHash, PhysicalSize, PluginInstanceId, PresencePeer,
-    PresencePoint, PresenceViewport,
+    ActionRequest, InvocationId, InvocationResult, Diagnostic, HostEffect, HybridLogicalTimestamp, IconRenderExportItem, InverseOperation,
+    KernelOperation, MergeStrategyKind, DocumentDiff, DocumentHandle, DocumentId, DocumentKind,
+    DocumentVersion, OperationId, PhysicalSize, PluginInstanceId, PresencePeer,
+    PresencePoint, PresenceViewport, decode_presence_peer, encode_presence_peer,
     ResourceId, ResourceKind, Appearance, Rights, SchemaId, SchemaVersion, Scope, UndoGroup, UndoPolicy,
     WindowEvent, WindowHandle, WindowInput, WindowKindDef, WindowKindId, WindowOutput,
 };

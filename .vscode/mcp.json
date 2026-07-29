@@ -3,8 +3,8 @@
   "servers": {
     "repo": {
       "type": "stdio",
-      "command": "bun",
-      "args": ["script.ts", "dev", "mcp", "stdio", "copilot"]
+      "command": "repo/client/client",
+      "args": ["mcp", "copilot"]
     },
     "neo4j-compose": {
       "type": "stdio",

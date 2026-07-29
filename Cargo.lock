@@ -9640,6 +9640,7 @@ version = "0.1.0"
 dependencies = [
  "gltf",
  "pretty_assertions",
+ "protocol",
  "protocol_core",
  "semio-framework-hash",
  "serde",
@@ -10466,7 +10467,6 @@ dependencies = [
  "pack",
  "protocol",
  "semio-framework-core",
- "semio-framework-hash",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",

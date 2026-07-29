@@ -4,7 +4,7 @@
 //#endregion 🧲Header
 
 //#region 🔌Adapters
-import { execFileSync, spawn, spawnSync } from "node:child_process";
+import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -923,25 +923,55 @@ function levelsAbove(level: TestLevel): readonly TestLevel[] {
   return TEST_LEVELS.slice(TEST_LEVELS.indexOf(level) + 1);
 }
 
-/** ⏱️Cumulative `go test` args for the active level: keeps `-short` through `quick`, adds `-skip` for `Test<Level>`-prefixed tests above it. */
+/** ⏱️Wall-clock budget (ms) for the given test level — `SEMIO_TEST_BUDGET_MS` override, else [[TEST_LEVEL_BUDGET_MS]]. */
+export function testLevelBudgetMs(level: TestLevel = activeTestLevel()): number {
+  return Number(process.env.SEMIO_TEST_BUDGET_MS ?? TEST_LEVEL_BUDGET_MS[level]);
+}
+
+/** ⏱️Wall-clock budget (seconds, rounded up) for the given test level — for toolchains that take second-granularity timeouts. */
+export function testLevelBudgetSeconds(level: TestLevel = activeTestLevel()): number {
+  return Math.ceil(testLevelBudgetMs(level) / 1000);
+}
+
+/** ⏱️Cumulative `go test` args for the active level: per-level `-timeout`, keeps `-short` through `quick`, adds `-skip` for `Test<Level>`-prefixed tests above it. */
 export function goLevelTestArgs(level: TestLevel = activeTestLevel()): string[] {
-  const args: string[] = [];
+  const args: string[] = ["-timeout", `${testLevelBudgetSeconds(level)}s`];
   if (TEST_LEVELS.indexOf(level) <= TEST_LEVELS.indexOf("quick")) args.push("-short");
   const skipped = levelsAbove(level).map((l) => l[0]!.toUpperCase() + l.slice(1));
   if (skipped.length) args.push("-skip", `^Test(${skipped.join("|")})`);
   return args;
 }
 
-/** ⏱️Cumulative pytest `-m` marker expression for the active level: excludes markers registered for levels above it. */
-export function pytestLevelArgs(level: TestLevel = activeTestLevel()): string[] {
-  const excluded = levelsAbove(level);
-  return excluded.length ? ["-m", excluded.map((l) => `not ${l}`).join(" and ")] : [];
+/** ⏱️Vitest per-test/hook/teardown timeouts (ms) for the active level budget. */
+export function vitestLevelArgs(level: TestLevel = activeTestLevel()): string[] {
+  const ms = String(testLevelBudgetMs(level));
+  return ["--testTimeout", ms, "--hookTimeout", ms, "--teardownTimeout", ms];
 }
 
-/** ⏱️Cumulative dotnet xunit `--filter` expression for the active level: excludes `Category` traits above it (an absent trait counts as `fundamental`). */
+/** ⏱️`bun test` `--timeout` (ms) for the active level budget. */
+export function bunTestLevelArgs(level: TestLevel = activeTestLevel()): string[] {
+  return ["--timeout", String(testLevelBudgetMs(level))];
+}
+
+/** ⏱️Cumulative pytest args for the active level: `-m` marker filter, per-test `--timeout`, and `--timeout-method=thread`. */
+export function pytestLevelArgs(level: TestLevel = activeTestLevel()): string[] {
+  const excluded = levelsAbove(level);
+  const args = excluded.length ? ["-m", excluded.map((l) => `not ${l}`).join(" and ")] : [];
+  args.push(`--timeout=${testLevelBudgetSeconds(level)}`, "--timeout-method=thread");
+  return args;
+}
+
+/** ⏱️Cumulative dotnet xunit args for the active level: `--filter` for levels above it and `--blame-hang` with a per-test timeout (ms). */
 export function dotnetLevelArgs(level: TestLevel = activeTestLevel()): string[] {
   const excluded = levelsAbove(level);
-  return excluded.length ? ["--filter", excluded.map((l) => `Category!=${l}`).join("&")] : [];
+  const args = excluded.length ? ["--filter", excluded.map((l) => `Category!=${l}`).join("&")] : [];
+  args.push("--blame-hang", "--blame-hang-timeout", String(testLevelBudgetMs(level)));
+  return args;
+}
+
+/** ⏱️Playwright per-spec timeout (ms) — active level budget via [[testLevelBudgetMs]]. */
+export function playwrightTestTimeoutMs(level: TestLevel = activeTestLevel()): number {
+  return testLevelBudgetMs(level);
 }
 
 /**
@@ -977,6 +1007,22 @@ export function cmdBudgetMs(): number {
   return Number(process.env.SEMIO_CMD_BUDGET_MS ?? CMD_BUDGET_MS);
 }
 
+/** ⏱️Default hard wall-clock budget (ms) for nx/script orchestrators fanning out to individually budgeted leaves — overridable via `SEMIO_ORCHESTRATOR_BUDGET_MS`. */
+export const ORCHESTRATOR_BUDGET_MS = 4 * 60 * 60 * 1000;
+
+/** ⏱️Default hard wall-clock budget (ms) for dev servers and long-lived daemons — overridable via `SEMIO_DAEMON_BUDGET_MS`. */
+export const DAEMON_BUDGET_MS = 24 * 60 * 60 * 1000;
+
+/** ⏱️Resolves the active orchestrator budget: `SEMIO_ORCHESTRATOR_BUDGET_MS` env override, else [[ORCHESTRATOR_BUDGET_MS]]. */
+export function orchestratorBudgetMs(): number {
+  return Number(process.env.SEMIO_ORCHESTRATOR_BUDGET_MS ?? ORCHESTRATOR_BUDGET_MS);
+}
+
+/** ⏱️Resolves the active daemon budget: `SEMIO_DAEMON_BUDGET_MS` env override, else [[DAEMON_BUDGET_MS]]. */
+export function daemonBudgetMs(): number {
+  return Number(process.env.SEMIO_DAEMON_BUDGET_MS ?? DAEMON_BUDGET_MS);
+}
+
 /** ⏱️The default budget class for `cmd`: `cargo` invocations (build/clippy/check/install) default to the longer [[buildBudgetMs]] since compiles routinely exceed the generic command budget; everything else defaults to [[cmdBudgetMs]]. */
 function defaultBudgetMs(cmd: string): number {
   return cmd === "cargo" ? buildBudgetMs() : cmdBudgetMs();
@@ -998,7 +1044,7 @@ export function budgetTimeoutHint(cmd: string, override?: string): string {
  * the pending child/timer handles regardless, and the eventual `process.exit()` below still takes effect.
  */
 export async function runTestBudgeted(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv; budgetMs?: number; onTimeoutHint?: string } = {}): Promise<void> {
-  const budgetMs = opts.budgetMs ?? Number(process.env.SEMIO_TEST_BUDGET_MS ?? TEST_LEVEL_BUDGET_MS[activeTestLevel()]);
+  const budgetMs = opts.budgetMs ?? testLevelBudgetMs();
   const child = spawn(cmd, args, { stdio: "inherit", cwd: opts.cwd, env: opts.env ?? process.env, detached: process.platform !== "win32" });
   let timedOut = false;
   const timer = setTimeout(() => {
@@ -1019,10 +1065,11 @@ export async function runTestBudgeted(cmd: string, args: string[], opts: { cwd?:
 
 /**
  * 🦀Warm-builds test binaries — bounded by [[buildBudgetMs]], NOT the test-level budget, but never unbounded —
- * then runs `cargo test` under the active level's budget, appending cumulative `--skip <level>::` filters for every
- * level above it (tests live in `mod quick`/`mod long`/`mod exhaustive` submodules inside `mod tests`; unscoped
- * tests are `fundamental`). Splits `extraArgs` on an existing `--` so callers passing their own libtest args (e.g.
- * `--nocapture`) still compose correctly.
+ * then runs `cargo nextest run` under the active level's budget and [[nextest.toml]] profile (per-test
+ * `slow-timeout`), appending cumulative `--skip <level>::` filters for every level above it (tests live in
+ * `mod quick`/`mod long`/`mod exhaustive` submodules inside `mod tests`; unscoped tests are `fundamental`).
+ * Splits `extraArgs` on an existing `--` so callers passing their own libtest args (e.g. `--nocapture`) still
+ * compose correctly.
  */
 export async function runCargoTestBudgeted(packages: string[], cwd: string, extraArgs: string[] = [], env: NodeJS.ProcessEnv = process.env): Promise<void> {
   const packageArgs = packages.flatMap((pkg) => ["-p", pkg]);
@@ -1031,25 +1078,16 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
   const libtestArgs = dashIdx === -1 ? [] : extraArgs.slice(dashIdx + 1);
   const level = isTestLevel(env.SEMIO_TEST_LEVEL) ? (env.SEMIO_TEST_LEVEL as TestLevel) : activeTestLevel();
   const skipArgs = levelsAbove(level).flatMap((l) => ["--skip", `${l}::`]);
+  const profileArgs = ["--profile", level];
 
   if (coverageEnabled()) {
-    // 🦀`cargo-llvm-cov` has no build/run split (unlike plain `cargo test --no-run`) — the combined budget
-    // below covers both the instrumented compile and the test run; report generation gets its own build-class
-    // budget since it only reads existing profraw data and is comparatively fast even for large crates.
-    // `--release`: LLVM's source-based coverage (`-C instrument-coverage`) stays accurate under optimization
-    // (unlike legacy gcov-style coverage) — building unoptimized (`cargo-llvm-cov`'s default) makes CPU-heavy
-    // numeric algorithms (e.g. algebraic-number/root-isolation code) 10-100x slower than their normal
-    // `--release` runtime, which blew the test budget for real crates before this flag was added.
-    const testBudgetMs = Number(env.SEMIO_TEST_BUDGET_MS ?? TEST_LEVEL_BUDGET_MS[level]);
-    await runTestBudgeted("cargo", ["llvm-cov", "test", "--release", "--no-report", ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], {
+    const testBudgetMs = testLevelBudgetMs(level);
+    await runTestBudgeted("cargo", ["llvm-cov", "nextest", "--release", "--no-report", ...profileArgs, ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], {
       cwd,
       env,
       budgetMs: buildBudgetMs() + testBudgetMs,
       onTimeoutHint: budgetTimeoutHint("cargo"),
     });
-    // Slug by package name(s), not `cwd` — many crates' `script.ts` invoke cargo from `this.repoRoot` rather
-    // than their own bundle dir (workspace-root builds), which would otherwise collapse dozens of unrelated
-    // crates onto the same `coverageSlug(cwd)` filename and silently overwrite each other's coverage report.
     const lcovPath = join(coverageDir(findRepoRoot(cwd), "rust"), `${coverageSlug(packages.join("_"))}.lcov`);
     await runTestBudgeted("cargo", ["llvm-cov", "report", "--release", "--lcov", ...packageArgs, "--output-path", lcovPath], {
       cwd,
@@ -1066,21 +1104,30 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
     budgetMs: buildBudgetMs(),
     onTimeoutHint: budgetTimeoutHint("cargo"),
   });
-  await runTestBudgeted("cargo", ["test", ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], { cwd, env });
+  await runTestBudgeted("cargo", ["nextest", "run", ...profileArgs, ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], { cwd, env });
 }
 
 export interface RunCmdOpts {
   cwd?: string;
   env?: NodeJS.ProcessEnv;
-  /** ⏱️Wall-clock budget (ms). `null` exempts the command entirely — ONLY for dev servers, interactive
-   *  apps, and orchestrators whose own children are individually budgeted. Default: [[defaultBudgetMs]]. */
-  budgetMs?: number | null;
+  /** ⏱️Wall-clock budget (ms). Default: [[defaultBudgetMs]]. Use [[orchestratorBudgetOpts]] / [[daemonBudgetOpts]] for named long-running classes. */
+  budgetMs?: number;
   onTimeoutHint?: string;
+}
+
+/** ⏱️[[RunCmdOpts]] preset for nx/script orchestrators — [[orchestratorBudgetMs]]. */
+export function orchestratorBudgetOpts(): RunCmdOpts {
+  return { budgetMs: orchestratorBudgetMs() };
+}
+
+/** ⏱️[[RunCmdOpts]] preset for dev servers and long-lived daemons — [[daemonBudgetMs]]. */
+export function daemonBudgetOpts(): RunCmdOpts {
+  return { budgetMs: daemonBudgetMs() };
 }
 
 /** ⏱️Shared `spawnSync` core for [[runCmd]]/[[runCmdStatus]]: throws on spawn error, budget timeout, or signal kill (printing `[budget]` first on timeout); otherwise returns the exit status. */
 function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
-  const budgetMs = opts.budgetMs === null ? undefined : (opts.budgetMs ?? defaultBudgetMs(cmd));
+  const budgetMs = opts.budgetMs ?? defaultBudgetMs(cmd);
   const result = spawnSync(cmd, args, {
     stdio: "inherit",
     cwd: opts.cwd,
@@ -1099,8 +1146,8 @@ function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
 }
 
 /**
- * 🏃Runs a subprocess with inherited stdio under a hard wall-clock budget (default [[defaultBudgetMs]],
- * `null` to exempt); throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+ * 🏃Runs a subprocess with inherited stdio under a hard wall-clock budget (default [[defaultBudgetMs]]);
+ * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
  */
 export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
@@ -1121,6 +1168,64 @@ export function tryRun(cmd: string, args: string[], opts: RunCmdOpts = {}): void
   } catch {
     /* optional */
   }
+}
+
+export interface RunProbeResult {
+  status: number | null;
+  stdout: string;
+  stderr: string;
+  signal: NodeJS.Signals | null;
+}
+
+/** 🔍Budgeted capability probe with captured stdout/stderr — for `--version` checks that must not inherit stdio. */
+export function runProbe(cmd: string, args: string[], opts: RunCmdOpts = {}): RunProbeResult {
+  const budgetMs = opts.budgetMs ?? defaultBudgetMs(cmd);
+  const result = spawnSync(cmd, args, {
+    encoding: "utf8",
+    cwd: opts.cwd,
+    env: opts.env ?? process.env,
+    timeout: budgetMs,
+    killSignal: "SIGKILL",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  if (result.error) {
+    if ((result.error as NodeJS.ErrnoException).code === "ETIMEDOUT") {
+      console.error(`[budget] ${cmd} ${args.join(" ")} exceeded ${budgetMs}ms — killed. ${budgetTimeoutHint(cmd, opts.onTimeoutHint)}`);
+    }
+    throw result.error;
+  }
+  return {
+    status: result.status,
+    stdout: typeof result.stdout === "string" ? result.stdout : (result.stdout?.toString() ?? ""),
+    stderr: typeof result.stderr === "string" ? result.stderr : (result.stderr?.toString() ?? ""),
+    signal: result.signal,
+  };
+}
+
+export interface SpawnDaemonHandle {
+  child: ChildProcess;
+  kill: () => void;
+}
+
+/** 🌙Spawns a long-lived daemon under [[daemonBudgetMs]]; [[SpawnDaemonHandle.kill]] tears down the whole process tree. */
+export function spawnDaemon(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv; stdio?: "inherit" | "pipe" } = {}): SpawnDaemonHandle {
+  const child = spawn(cmd, args, {
+    cwd: opts.cwd,
+    env: opts.env ?? process.env,
+    stdio: opts.stdio ?? "inherit",
+    detached: process.platform !== "win32",
+  });
+  let killed = false;
+  const timer = setTimeout(() => {
+    killed = true;
+    if (child.pid) killBudgetTree(child.pid);
+  }, daemonBudgetMs());
+  const kill = () => {
+    clearTimeout(timer);
+    if (!killed && child.pid) killBudgetTree(child.pid);
+  };
+  child.on("exit", () => clearTimeout(timer));
+  return { child, kill };
 }
 //#endregion ⏱️Budget
 
@@ -1423,7 +1528,7 @@ export async function runVitest(bundleRoot: string, segments: string[], config =
     : [];
   const vitestBin = join(findRepoRoot(bundleRoot), "node_modules", "vitest", "vitest.mjs");
   const runtime = collectingCoverage ? "node" : process.execPath;
-  await runTestBudgeted(runtime, [vitestBin, "run", "--config", config, "--passWithNoTests", ...coverageArgs, ...segments], { cwd: bundleRoot, env: devToolingEnv() });
+  await runTestBudgeted(runtime, [vitestBin, "run", "--config", config, "--passWithNoTests", ...vitestLevelArgs(), ...coverageArgs, ...segments], { cwd: bundleRoot, env: devToolingEnv() });
 }
 
 //#region 🔌PlaygroundDevPorts
@@ -3200,54 +3305,23 @@ compose_micro_commit_wipe() {
   fi
 }`;
 
-const MICRO_COMMIT_RESOLVE_BUN_SH = `compose_resolve_bun() {
+const MICRO_COMMIT_RESOLVE_REPO_CLI_SH = `compose_resolve_repo_cli() {
   ROOT="$1"
-  if [ -n "$COMPOSE_BUN" ] && [ -x "$COMPOSE_BUN" ]; then
-    echo "$COMPOSE_BUN"
+  if [ -n "$REPO_CLI_BIN" ] && [ -x "$REPO_CLI_BIN" ]; then
+    echo "$REPO_CLI_BIN"
     return
   fi
-  if [ -f "$ROOT/.repo/${MICRO_COMMIT_BUN_PIN}" ]; then
-    B=$(head -n 1 "$ROOT/.repo/${MICRO_COMMIT_BUN_PIN}" | tr -d '\\r')
-    if [ -n "$B" ] && [ -x "$B" ]; then
-      echo "$B"
-      return
-    fi
-  fi
-  if [ -n "$BUN_INSTALL" ] && [ -x "$BUN_INSTALL/bin/bun" ]; then
-    echo "$BUN_INSTALL/bin/bun"
+  if [ -x "$ROOT/repo/client/client" ]; then
+    echo "$ROOT/repo/client/client"
     return
   fi
-  if [ -n "$BUN_INSTALL" ] && [ -x "$BUN_INSTALL/bin/bun.exe" ]; then
-    echo "$BUN_INSTALL/bin/bun.exe"
+  if [ -x "$ROOT/repo/client/client.exe" ]; then
+    echo "$ROOT/repo/client/client.exe"
     return
-  fi
-  if [ -x "$ROOT/node_modules/.bin/bun" ]; then
-    echo "$ROOT/node_modules/.bin/bun"
-    return
-  fi
-  if [ -x "$ROOT/node_modules/.bin/bun.cmd" ]; then
-    echo "$ROOT/node_modules/.bin/bun.cmd"
-    return
-  fi
-  if [ -x "$ROOT/node_modules/.bin/bun.exe" ]; then
-    echo "$ROOT/node_modules/.bin/bun.exe"
-    return
-  fi
-  if [ -x "$HOME/.bun/bin/bun" ]; then
-    echo "$HOME/.bun/bin/bun"
-    return
-  fi
-  if [ -x "$HOME/.bun/bin/bun.exe" ]; then
-    echo "$HOME/.bun/bin/bun.exe"
-    return
-  fi
-  B=$(command -v bun 2>/dev/null || true)
-  if [ -n "$B" ]; then
-    echo "$B"
   fi
 }`;
 
-/** 🪝Renders a portable `sh` git hook (LF, inline wipe; Bun only when needed). */
+/** 🪝Renders a portable `sh` git hook (LF, inline wipe; repo client binary for micro-commit). */
 export function renderMicroCommitGitHook(name: "prepare-commit-msg" | (typeof MICRO_COMMIT_POST_WIPE_HOOKS)[number]): string {
   const isPostWipe = (MICRO_COMMIT_POST_WIPE_HOOKS as readonly string[]).includes(name);
   const lines = [
@@ -3256,19 +3330,19 @@ export function renderMicroCommitGitHook(name: "prepare-commit-msg" | (typeof MI
     "ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0",
     'cd "$ROOT" || exit 0',
     "GIT_DIR=$(git rev-parse --git-dir 2>/dev/null) || exit 0",
+    MICRO_COMMIT_RESOLVE_REPO_CLI_SH,
   ];
   if (isPostWipe) {
-    lines.push(MICRO_COMMIT_RESOLVE_BUN_SH, 'BUN=$(compose_resolve_bun "$ROOT")', '[ -n "$BUN" ] && "$BUN" ./script.ts micro-commit reset 2>/dev/null || true', "compose_micro_commit_wipe", "exit 0");
+    lines.push('CLI=$(compose_resolve_repo_cli "$ROOT")', '[ -n "$CLI" ] && "$CLI" micro-commit reset 2>/dev/null || true', "compose_micro_commit_wipe", "exit 0");
   } else {
     lines.push(
-      MICRO_COMMIT_RESOLVE_BUN_SH,
       '[ ! -f "$GIT_DIR/compose-micro-commit-active" ] && {',
       "  compose_micro_commit_seed_empty_gk",
       "  exit 0",
       "}",
-      'BUN=$(compose_resolve_bun "$ROOT")',
-      '[ -z "$BUN" ] && exit 0',
-      'exec "$BUN" ./script.ts micro-commit prepare-commit-msg "$1" "$2"',
+      'CLI=$(compose_resolve_repo_cli "$ROOT")',
+      '[ -z "$CLI" ] && exit 0',
+      'exec "$CLI" micro-commit prepare-commit-msg "$1" "$2"',
     );
   }
   return `${lines.join("\n")}\n`;

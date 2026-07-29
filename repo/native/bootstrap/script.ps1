@@ -862,6 +862,9 @@ if (-not $SkipRepoBootstrap) {
 
     Configure-GitSafeDirectories -RepoRoot $repoRoot
     Stop-RepoPythonProcesses -RepoRoot $repoRoot
+    $goPath = Get-CommandPathOrThrow -Label "go" -Candidates @("go.exe", "go")
+    Write-Step "Building repo client binary…"
+    Invoke-RepoCommand -FilePath $goPath -ArgumentList @("build", "-o", (Join-Path $repoRoot "repo/client/client.exe"), "./repo/client/mcp/go") -WorkingDirectory $repoRoot
     Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("install") -WorkingDirectory $repoRoot
     Invoke-RepoCommand -FilePath $bunPath -ArgumentList @("nx", "run", "workspace:setup") -WorkingDirectory $repoRoot
     Configure-GitKrakenWorkspace -RepoRoot $repoRoot

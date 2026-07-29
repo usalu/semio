@@ -18,5 +18,5 @@
     }
   ],
   "expectedEvents": ["remoteOperations"],
-  "expectedEditIds": ["basic-1"]
+  "expectedEditIds": ["basic-1#0"]
 }

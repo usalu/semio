@@ -19548,7 +19548,8 @@ mod tests {
         use store::{create_document_envelope, materialize_document_projection, DocumentCommand, DocumentStore};
         use protocol::{Operation, OperationDiff};
 
-        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+        #[dsl(extension = "kit-test")]
         struct KitProjection {
             id: String,
         }
@@ -19570,9 +19571,10 @@ mod tests {
             }
         }
 
-        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
         #[serde(tag = "operation")]
         enum KitOperation {
+            #[dsl(key = "set-id")]
             SetId { id: String },
         }
 

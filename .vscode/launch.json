@@ -1610,6 +1610,34 @@
       }
     },
     {
+      "name": "🛠️dev🧰repo🤖mcp⌨️cursor",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "./repo/client/client mcp cursor",
+      "env": {
+        "GOWORK": "${workspaceFolder}/go.work"
+      },
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 280.1
+      }
+    },
+    {
+      "name": "🛠️dev🧰repo⌨️client",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "go build -o repo/client/client ./repo/client/mcp/go && ./repo/client/client --help",
+      "env": {
+        "GOWORK": "${workspaceFolder}/go.work"
+      },
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 280.2
+      }
+    },
+    {
       "name": "🛠️dev📸shooting⚛️react",
       "type": "node-terminal",
       "request": "launch",

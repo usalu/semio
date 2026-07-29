@@ -1,21 +1,20 @@
 #!/usr/bin/env bun
 /** 📊 `@semio-tech/compose-gql` router: `bun script.ts <build|dev|test>`. `compose-gql/rs` is a
  * regular root-workspace member (not a standalone Cargo workspace — that was a stale claim). */
-import { execFileSync } from "node:child_process";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, resolveTestLevel } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargoTestBudgeted, resolveTestLevel, runCmd } from "../../../../repo/lib/js/index.ts";
 import { join } from "node:path";
 
 const crate = "compose-gql";
 
 class BuildScript extends BundleScript {
   run(segments: string[]): void {
-    execFileSync("cargo", ["build", "--release", "-p", crate, ...segments], { stdio: "inherit", cwd: join(this.root, "rs") });
+    runCmd("cargo", ["build", "--release", "-p", crate, ...segments], { cwd: join(this.root, "rs"), budgetMs: buildBudgetMs() });
   }
 }
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {
-    execFileSync("cargo", ["run", "-p", crate, ...segments], { stdio: "inherit", cwd: join(this.root, "rs") });
+    runCmd("cargo", ["run", "-p", crate, ...segments], { cwd: join(this.root, "rs"), budgetMs: buildBudgetMs() });
   }
 }
 

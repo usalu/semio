@@ -23,7 +23,6 @@ dsl_core = { path = "../../dsl/core/rs" }
 dsl = { path = "../../dsl/rs" }
 pack = { path = "../../pack/rs" }
 semio-framework-core = { path = "../../framework/core/rs" }
-semio-framework-hash = { path = "../../framework/hash/rs" }
 protocol = { path = "../../protocol/rs" }
 vcs = { path = "../../vcs/rs" }
 blake3 = "1"

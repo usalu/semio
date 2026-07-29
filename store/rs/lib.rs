@@ -15,14 +15,7 @@
 extern crate self as store;
 
 use dsl::{DslOps, DslRecord};
-use semio_framework_core::{
-    ActorId, DocumentDiff, DocumentId, DocumentVersion, HybridLogicalTimestamp, InverseOperation, OperationEnvelope, OperationId, PayloadHash, SchemaId, SchemaVersion, UndoPolicy,
-};
-// 🎞️ Unconditional — `operation_envelope_from_edit` below calls `hash_bytes` on every target (not
-// just native), so gating the import to `not(wasm32)` broke the wasm32 build entirely (`store` is a
-// dependency of `store_sync`'s wasm actor). `semio-framework-hash` itself is an unconditional
-// dependency (pure blake3, no OS dependency).
-use semio_framework_hash::hash_bytes;
+use semio_framework_core::{ActorId, DocumentId, HybridLogicalTimestamp, OperationId, SchemaId, UndoPolicy};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
@@ -225,6 +218,17 @@ pub trait DocumentPack: Sized {
     fn decode_pack(bytes: &[u8]) -> Result<Self, PackError> {
         Self::decode_pack_with(bytes, &PackDecodeOptions::default())
     }
+
+    /// @emoji 🧬 This document kind's structural field spec, for `DocumentCodec::pack_schema_hash`
+    /// (W5.7's hub schema-hash validation — see that field's doc). Default `None` for hand-written
+    /// `DocumentPack` impls with no `RecordSpec` (schema-erased or synthetic fixture types, e.g.
+    /// `serde_json::Value` above): those document kinds simply opt out (a zero hash reads as
+    /// "schema-agnostic" everywhere this is consumed). `#[derive(dsl::DslDocument)]` overrides this
+    /// with the real generated `__dsl_spec()`, giving every derive-based app kind (the overwhelming
+    /// majority) a genuine structural fingerprint with zero manual per-app wiring.
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        None
+    }
 }
 
 /// @emoji 📦 Binary counterpart to `DocumentTextFiles`. `pack` (whole `.spk` container bytes) and
@@ -278,6 +282,14 @@ pub use dsl::op_rt;
 pub struct DocumentCodec {
     pub schema: String,
     pub extension: &'static str,
+    /// @emoji 🧬 W5.7: a structural fingerprint of this document kind's field shape —
+    /// `pack::schema_hash(&spec)` over `P::record_spec()`, or `[0u8; 32]` when `P` has no
+    /// `RecordSpec` (hand-written `DocumentPack` impls, see that trait method's doc). Hub actors
+    /// send this in `ClientFrame::Hello`; the hub pins the first non-zero hash it sees per
+    /// `(studio, document)` scope and rejects a later mismatching one before `Welcome` — a zero
+    /// hash always skips validation (schema-agnostic client). Durable pinning belongs in the db
+    /// catalog once it grows a column for it; this in-memory pin is this wave's scope.
+    pub pack_schema_hash: [u8; 32],
     /// @emoji 📤 `envelope_json -> (pack files, dsl mirror text)` — the write path: `pack`+`spr`
     /// are what `FolderTextStorage::write_pack`/`FolderSqliteStorage::write_pack` persist as
     /// authoritative, the returned `String` is the always-written DSL mirror (`print_dsl` on the
@@ -290,6 +302,17 @@ pub struct DocumentCodec {
     /// `.pack`/`.spr` yet: hand-authored or freshly imported documents; backwards/meta/cursor are
     /// replay-recomputed, matching pre-W4 behavior).
     pub parse_dsl: fn(&str, &str) -> Result<String, VcsError>,
+    /// @emoji 🧩 `OperationEnvelope -> one edit-shaped JSON value` — decodes the envelope's opaque
+    /// `OpBinary` payload back into a concrete `Operation` and re-serializes it as an `Edit<Operation>`
+    /// JSON object, for schema-agnostic callers (`store_sync`'s `DocumentActor`) that only ever see
+    /// `serde_json::Value` and cannot otherwise turn a binary payload into JSON matching this
+    /// document kind's op shape.
+    pub edit_json_from_envelope: fn(&protocol::OperationEnvelope) -> Result<serde_json::Value, VcsError>,
+    /// @emoji 🧩 The inverse of {@link edit_json_from_envelope}: one edit-shaped JSON value ->
+    /// real `protocol::OperationEnvelope`s with genuine `OpBinary`-encoded payloads (never raw
+    /// JSON bytes), for schema-agnostic callers turning a folder-mirror or externally-authored
+    /// edit back into wire-shaped envelopes.
+    pub envelopes_from_edit_json: fn(&serde_json::Value, &str, &str) -> Result<Vec<protocol::OperationEnvelope>, VcsError>,
 }
 
 impl DocumentCodec {
@@ -331,12 +354,32 @@ impl DocumentCodec {
             serde_json::to_string(&parsed.envelope).map_err(|error| VcsError::Serialize(error.to_string()))
         }
 
+        fn edit_json_from_envelope_impl<P, Operation>(envelope: &protocol::OperationEnvelope) -> Result<serde_json::Value, VcsError>
+        where
+            Operation: protocol::OpBinary + Serialize,
+        {
+            let edit = edit_from_operation_envelope::<Operation>(envelope)?;
+            serde_json::to_value(&edit).map_err(|error| VcsError::Serialize(error.to_string()))
+        }
+
+        fn envelopes_from_edit_json_impl<P, Operation>(edit_json: &serde_json::Value, document_id: &str, schema: &str) -> Result<Vec<protocol::OperationEnvelope>, VcsError>
+        where
+            Operation: crate::Operation<P> + protocol::OpBinary + DeserializeOwned,
+        {
+            let edit: Edit<Operation> = serde_json::from_value(edit_json.clone()).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+            protocol::operation_envelope_from_edit::<P, Operation>(&edit, &protocol::DocumentId(document_id.to_string()), &protocol::SchemaId(schema.to_string()))
+                .map_err(|error| VcsError::Serialize(error.to_string()))
+        }
+
         Self {
             schema: schema.into(),
             extension: P::EXTENSION,
+            pack_schema_hash: P::record_spec().map(|spec| pack::schema_hash(&spec)).unwrap_or([0u8; 32]),
             print: print_impl::<P, Operation>,
             parse: parse_impl::<P, Operation>,
             parse_dsl: parse_dsl_impl::<P, Operation>,
+            edit_json_from_envelope: edit_json_from_envelope_impl::<P, Operation>,
+            envelopes_from_edit_json: envelopes_from_edit_json_impl::<P, Operation>,
         }
     }
 }
@@ -794,21 +837,21 @@ where
 /// distinct from `undo_policy_ordinal` above, which maps THIS crate's `DocumentCommand`-facing
 /// `UndoPolicy` (currently `semio_framework_core::UndoPolicy`; the two enums have identical
 /// variants and will merge in the kernel-unification wave, see `protocol_core`'s own doc note).
-fn protocol_undo_policy_ordinal(policy: protocol::UndoPolicy) -> u8 {
+fn protocol_undo_policy_ordinal(policy: UndoPolicy) -> u8 {
     match policy {
-        protocol::UndoPolicy::ExactBaseOnly => 0,
-        protocol::UndoPolicy::TransformAgainstConcurrent => 1,
-        protocol::UndoPolicy::SemanticUndo => 2,
-        protocol::UndoPolicy::CompensatingAction => 3,
+        UndoPolicy::ExactBaseOnly => 0,
+        UndoPolicy::TransformAgainstConcurrent => 1,
+        UndoPolicy::SemanticUndo => 2,
+        UndoPolicy::CompensatingAction => 3,
     }
 }
 
-fn protocol_undo_policy_from_ordinal(ordinal: u8) -> protocol::UndoPolicy {
+fn protocol_undo_policy_from_ordinal(ordinal: u8) -> UndoPolicy {
     match ordinal {
-        1 => protocol::UndoPolicy::TransformAgainstConcurrent,
-        2 => protocol::UndoPolicy::SemanticUndo,
-        3 => protocol::UndoPolicy::CompensatingAction,
-        _ => protocol::UndoPolicy::ExactBaseOnly,
+        1 => UndoPolicy::TransformAgainstConcurrent,
+        2 => UndoPolicy::SemanticUndo,
+        3 => UndoPolicy::CompensatingAction,
+        _ => UndoPolicy::ExactBaseOnly,
     }
 }
 
@@ -831,7 +874,7 @@ fn operation_meta_from_history_op_meta(meta: protocol::HistoryOpMeta) -> Operati
         dependencies: meta.dependencies.into_iter().map(OperationId).collect(),
         base_version: meta.base_version,
         author_id: meta.author_id.map(ActorId),
-        timestamp: protocol::HybridLogicalTimestamp { actor, physical_ms: physical_ms as u64, logical },
+        timestamp: HybridLogicalTimestamp { actor, physical_ms: physical_ms as u64, logical },
         undo_policy: protocol_undo_policy_from_ordinal(meta.undo_policy),
         payload_hash: meta.payload_hash.map(protocol::PayloadHash),
     }
@@ -842,14 +885,14 @@ fn operation_meta_from_history_op_meta(meta: protocol::HistoryOpMeta) -> Operati
 /// with `write_backwards_section: true`. Unlike the `.ops` text mirror (forwards-only, see
 /// `print_ops_log`'s doc), this is the AUTHORITATIVE persisted form: `parse_document_spr` recovers
 /// backwards/meta byte-for-byte instead of recomputing them via replay.
-fn history_op_payloads<Operation: OpText + protocol::OpBinary>(operations: &[Operation]) -> Result<Vec<protocol::OpPayload>, VcsError> {
+fn history_op_payloads<Operation: protocol::OpBinary>(operations: &[Operation]) -> Result<Vec<protocol::OpPayload>, VcsError> {
     operations
         .iter()
-        .map(|op| Ok(protocol::OpPayload { text: op.print_op(), binary: Some(op.encode_op().map_err(|error| VcsError::Serialize(error.to_string()))?) }))
+        .map(|op| Ok(protocol::OpPayload { text: None, binary: Some(op.encode_op().map_err(|error| VcsError::Serialize(error.to_string()))?) }))
         .collect()
 }
 
-fn history_edit_from_edit<Operation: OpText + protocol::OpBinary>(edit: &Edit<Operation>) -> Result<protocol::HistoryEdit, VcsError> {
+fn history_edit_from_edit<Operation: protocol::OpBinary>(edit: &Edit<Operation>) -> Result<protocol::HistoryEdit, VcsError> {
     Ok(protocol::HistoryEdit {
         id: edit.id.clone(),
         actor: edit.actor.clone(),
@@ -879,9 +922,29 @@ pub fn empty_document_spr(doc_id: &str, schema: &str) -> Vec<u8> {
     protocol::encode_history(&log, &protocol::EncodeOptions::default()).expect("encoding an edit-free HistoryLog is infallible")
 }
 
+/// @emoji ➕ Appends `edits` to an already-encoded `.spr` byte log — decode, extend, re-encode.
+/// **Also refreshes `log.cursor.applied_edit_ids`** with the newly-appended edits' own ids: the
+/// live projection a later `parse_document_spr` call folds is exactly `cursor.applied_edit_ids`
+/// (see that function's doc); skipping this step would make appended edits durable but invisible
+/// to the next reader. Only touches the cursor if one is already present (an edit-free/cursor-free
+/// log has no undo/redo position to preserve). O(history) per call — a caller appending many
+/// batches back-to-back pays the whole decode/encode cost each time; a streaming variant
+/// (`SprWriter::resume` + a seeded `DictBuilder`/`edit_ordinals`) is a follow-up optimization, not
+/// required for correctness (this function's asymptotics match the JSON-envelope full rewrite it
+/// replaces).
+pub fn append_history_edits_to_spr(spr: &[u8], edits: &[protocol::HistoryEdit]) -> Result<Vec<u8>, VcsError> {
+    let mut log = protocol::decode_history(spr, &protocol::DecodeOptions::default()).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    if let Some(cursor) = &mut log.cursor {
+        cursor.applied_edit_ids.extend(edits.iter().map(|edit| edit.id.clone()));
+    }
+    log.edits.extend(edits.iter().cloned());
+    let options = protocol::EncodeOptions { write_backwards_section: true, ..protocol::EncodeOptions::default() };
+    protocol::encode_history(&log, &options).map_err(|error| VcsError::Serialize(error.to_string()))
+}
+
 pub fn print_document_spr<P, Operation>(envelope: &DocumentEnvelope<P, Operation>) -> Result<Vec<u8>, VcsError>
 where
-    Operation: OpText + protocol::OpBinary,
+    Operation: protocol::OpBinary,
 {
     let mut edits = Vec::with_capacity(envelope.vcs.edits.len());
     for edit in &envelope.vcs.edits {
@@ -941,9 +1004,10 @@ where
     let log = protocol::decode_history(spr, &protocol::DecodeOptions::default()).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
 
     let decode_op = |payload: &protocol::OpPayload| -> Result<Operation, TextError> {
-        match &payload.binary {
-            Some(bytes) => Operation::decode_op(bytes).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1))),
-            None => Operation::parse_op(&payload.text),
+        match (&payload.binary, &payload.text) {
+            (Some(bytes), _) => Operation::decode_op(bytes).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1))),
+            (None, Some(text)) => Operation::parse_op(text),
+            (None, None) => Err(TextError::new("op payload carries neither binary nor text".to_string(), TextSpan::at(1, 1))),
         }
     };
 
@@ -967,7 +1031,7 @@ where
                     dependencies: operation.dependencies(),
                     base_version: operation.base_version().map(|version| version.0).unwrap_or(0),
                     author_id: Some(operation.author_id().unwrap_or_else(|| ActorId("local".into()))),
-                    timestamp: operation.timestamp().unwrap_or_else(|| protocol::HybridLogicalTimestamp::new(0, now_ms())),
+                    timestamp: operation.timestamp().unwrap_or_else(|| HybridLogicalTimestamp::new(0, now_ms())),
                     undo_policy: operation.undo_policy(),
                     payload_hash: None,
                 });
@@ -1109,7 +1173,7 @@ where
                     dependencies: operation.dependencies(),
                     base_version: operation.base_version().map(|version| version.0).unwrap_or(0),
                     author_id: Some(operation.author_id().unwrap_or_else(|| ActorId("local".into()))),
-                    timestamp: operation.timestamp().unwrap_or_else(|| protocol::HybridLogicalTimestamp::new(0, now_ms())),
+                    timestamp: operation.timestamp().unwrap_or_else(|| HybridLogicalTimestamp::new(0, now_ms())),
                     undo_policy: operation.undo_policy(),
                     payload_hash: None,
                 });
@@ -1761,7 +1825,7 @@ where
 {
     envelope: DocumentEnvelope<P, Operation>,
     backbone: Option<Box<dyn Backbone>>,
-    dag: semio_framework_core::OpDag,
+    dag: protocol::OpDag,
     applied_edit_ids: Vec<String>,
     redo_edit_ids: Vec<String>,
     edit_sequence: i32,
@@ -1805,8 +1869,8 @@ fn edit_actor_from_meta(operation_meta: &[OperationMeta]) -> Option<String> {
 
 impl<P, Operation> DocumentStore<P, Operation>
 where
-    P: Clone + Serialize + DeserializeOwned,
-    Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P>,
+    P: Clone + Serialize + DeserializeOwned + DocumentPack,
+    Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P> + protocol::OpBinary + OpText,
 {
     /// @emoji 🚫 A store is always constructed with no backbone attached — the envelope's
     /// `backbone` field is a descriptor of the last attachment, never an instruction to
@@ -1843,7 +1907,7 @@ where
         Self {
             envelope,
             backbone: None,
-            dag: semio_framework_core::OpDag::new(),
+            dag: protocol::OpDag::new(),
             applied_edit_ids,
             redo_edit_ids,
             edit_sequence: 0,
@@ -1943,7 +2007,9 @@ where
         // satisfied — seed it or a later remote envelope whose `deps` reference one would sit `Pending`
         // forever (see `OpDag::seed_applied`). Covers every `set_state` caller: `set_envelope`
         // (store reconstruction from a persisted/cloned document), checkpoint checkout, etc.
-        self.dag.seed_applied(applied_edit_ids.iter().cloned());
+        for edit_id in &applied_edit_ids {
+            self.dag.seed_applied(OperationId(edit_id.clone()));
+        }
         self.applied_edit_ids = applied_edit_ids;
         self.redo_edit_ids = redo_edit_ids;
         self.conflicts = Vec::new();
@@ -2328,13 +2394,15 @@ where
                 author_id: Some(operation.author_id().unwrap_or_else(|| ActorId("local".into()))),
                 timestamp: operation
                     .timestamp()
-                    .unwrap_or_else(|| protocol::HybridLogicalTimestamp::new(0, now_ms())),
+                    .unwrap_or_else(|| HybridLogicalTimestamp::new(0, now_ms())),
                 undo_policy: operation.undo_policy(),
                 // 🎞️ CW3: direct blake3 (same primitive `pack_core::ContentHash` uses) replaces the
                 // old `semio_framework_hash::hash_bytes` String hash — `protocol_core::PayloadHash` is
                 // now `[u8; 32]`, not a hex string. NOT `pack::content_hash`, which reads a pack
-                // FILE's footer rather than hashing arbitrary bytes.
-                payload_hash: Some(protocol::PayloadHash(*blake3::hash(&serde_json::to_vec(&operation).unwrap_or_default()).as_bytes())),
+                // FILE's footer rather than hashing arbitrary bytes. 🎯 B2: hashes the real
+                // `OpBinary` encoding, not a JSON serialization — two ops that encode identically
+                // via `encode_op()` but differ in JSON shape (or vice versa) must hash identically.
+                payload_hash: Some(protocol::PayloadHash(*blake3::hash(&operation.encode_op().unwrap_or_default()).as_bytes())),
             });
             projection = apply_operation(&projection, &operation);
             forwards.push(operation);
@@ -2363,8 +2431,11 @@ where
         self.dispatch(command)
     }
 
-    pub fn envelope_json(&self) -> Result<String, VcsError> {
-        serde_json::to_string(&self.envelope).map_err(|e| VcsError::Serialize(e.to_string()))
+    /// @emoji 📸 The whole-document snapshot as real `pack`+`spr` bytes — what `flush_outbound`
+    /// sends over `BackboneMessage::Snapshot` and what any other caller needing a full-fidelity
+    /// binary snapshot (never JSON) should call.
+    pub fn snapshot_pack(&self) -> Result<DocumentPackFiles, VcsError> {
+        print_document_pack(&self.envelope)
     }
 
     pub fn projection_json(&self) -> Result<String, VcsError> {
@@ -2412,7 +2483,7 @@ where
     /// @emoji 🕸️ Feeds a remote {@link OperationEnvelope} through the causal DAG, applying it (and any
     /// now-unblocked dependents) into the edit timeline. Closes the sync gap between
     /// `framework/sync`'s `OpDag` and the vcs edit history.
-    pub fn ingest_remote(&mut self, envelope: OperationEnvelope) -> Result<(), VcsError> {
+    pub fn ingest_remote(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), VcsError> {
         self.dag
             .insert(envelope)
             .map_err(|error| VcsError::Backbone(error.to_string()))?;
@@ -2422,13 +2493,15 @@ where
         Ok(())
     }
 
-    fn ingest_envelope(&mut self, envelope: OperationEnvelope) -> Result<(), VcsError> {
+    fn ingest_envelope(&mut self, envelope: protocol::OperationEnvelope) -> Result<(), VcsError> {
         let mut edit: Edit<Operation> = edit_from_operation_envelope(&envelope)?;
         edit.actor = Some(envelope.actor.0.clone());
         if self.envelope.vcs.edits.iter().any(|existing| existing.id == edit.id) {
             return Ok(());
         }
-        self.edit_sequence = self.edit_sequence.max(edit.sequence_number);
+        self.edit_sequence += 1;
+        edit.sequence_number = self.edit_sequence;
+        edit.started_at = now_iso();
         let edit_id = edit.id.clone();
         // ⚡ Fold just the new edit's forwards onto the existing `current` (which already reflects
         // every prior applied edit) — algebraically identical to a full raw-fold replay, in O(new ops).
@@ -2446,9 +2519,8 @@ where
         Ok(())
     }
 
-    fn merge_remote_snapshot(&mut self, envelope_json: &str) -> Result<(), VcsError> {
-        let remote: DocumentEnvelope<P, Operation> =
-            serde_json::from_str(envelope_json).map_err(|e| VcsError::Deserialize(e.to_string()))?;
+    fn merge_remote_snapshot(&mut self, pack: &[u8], spr: &[u8]) -> Result<(), VcsError> {
+        let remote: DocumentEnvelope<P, Operation> = parse_document_pack(pack, spr).map_err(|error| VcsError::Deserialize(error.to_string()))?.envelope;
         if self.envelope.vcs.edits.is_empty() {
             let applied: Vec<String> = remote.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
             self.edit_sequence = remote
@@ -2464,7 +2536,9 @@ where
             // 🌱 A snapshot adopts these edits directly (not through `dag.insert`), so the dag never
             // learns they're satisfied — seed it here or a later envelope whose `deps` point back at
             // one of these ids would sit `Pending` forever (see `OpDag::seed_applied`).
-            self.dag.seed_applied(applied.iter().cloned());
+            for edit_id in &applied {
+                self.dag.seed_applied(OperationId(edit_id.clone()));
+            }
             self.applied_edit_ids = applied;
             self.redo_edit_ids.clear();
             self.tail_undo_cache = None;
@@ -2489,22 +2563,15 @@ where
             }
             self.envelope.vcs.edits.push(edit);
         }
-        self.dag.seed_applied(newly_merged_ids);
+        for edit_id in &newly_merged_ids {
+            self.dag.seed_applied(OperationId(edit_id.clone()));
+        }
         merge_by_id(&mut self.envelope.vcs.changes, remote.vcs.changes, |change| &change.id);
         merge_by_id(&mut self.envelope.vcs.checkpoints, remote.vcs.checkpoints, |checkpoint| &checkpoint.id);
         merge_by_id(&mut self.envelope.vcs.alternatives, remote.vcs.alternatives, |alternative| &alternative.id);
         self.tail_undo_cache = None;
         self.bump();
         Ok(())
-    }
-
-    fn previous_edit_dependency(&self) -> Vec<OperationId> {
-        let len = self.applied_edit_ids.len();
-        if len >= 2 {
-            vec![OperationId(self.applied_edit_ids[len - 2].clone())]
-        } else {
-            Vec::new()
-        }
     }
 
     /// @emoji 📥 Pumps every queued inbound message from the attached backbone into the timeline.
@@ -2521,9 +2588,9 @@ where
         let mut acked_op_ids: Vec<String> = Vec::new();
         for message in messages {
             match message {
-                BackboneMessage::Snapshot { envelope_json } => self.merge_remote_snapshot(&envelope_json)?,
+                BackboneMessage::Snapshot { pack, spr } => self.merge_remote_snapshot(&pack, &spr)?,
                 BackboneMessage::Operations { envelopes } => {
-                    let op_ids: Vec<String> = envelopes.iter().map(|envelope| envelope.id.0.clone()).collect();
+                    let op_ids: Vec<String> = envelopes.iter().map(|envelope| envelope.operation_id.0.clone()).collect();
                     for envelope in envelopes {
                         self.ingest_remote(envelope)?;
                     }
@@ -2543,7 +2610,8 @@ where
         Ok(true)
     }
 
-    /// @emoji 📤 Sends the just-applied change outward: a single {@link OperationEnvelope} for `Apply`,
+    /// @emoji 📤 Sends the just-applied change outward: one {@link protocol::OperationEnvelope} per
+    /// forward op for `Apply` (`protocol::operation_envelope_from_edit`'s per-op fan-out — W5/W6),
     /// or a full snapshot for every structural command (undo/redo/checkpoint/alternative/amend).
     fn flush_outbound(&mut self, is_apply: bool) -> Result<(), VcsError> {
         let Some(mut backbone) = self.backbone.take() else {
@@ -2552,22 +2620,24 @@ where
         let result = if is_apply {
             match self.envelope.vcs.edits.last() {
                 Some(edit) => {
-                    let deps = self.previous_edit_dependency();
-                    match operation_envelope_from_edit(&self.envelope, edit, deps) {
-                        Ok(op_envelope) => {
-                            // Registers this locally-authored edit as already-applied in our own
-                            // DAG, so a later remote envelope that depends on it doesn't stall as pending.
-                            let _ = self.dag.insert(op_envelope.clone());
-                            backbone.send(BackboneMessage::Operations { envelopes: vec![op_envelope] })
+                    let document_id = DocumentId(self.envelope.id.clone());
+                    let schema = SchemaId(self.envelope.schema.clone());
+                    match protocol::operation_envelope_from_edit::<P, Operation>(edit, &document_id, &schema) {
+                        Ok(op_envelopes) => {
+                            // Registers these locally-authored ops as already-applied in our own
+                            // DAG, so a later remote envelope depending on one doesn't stall as pending.
+                            for op_envelope in &op_envelopes {
+                                let _ = self.dag.insert(op_envelope.clone());
+                            }
+                            backbone.send(BackboneMessage::Operations { envelopes: op_envelopes })
                         }
-                        Err(error) => Err(error),
+                        Err(error) => Err(VcsError::Serialize(error.to_string())),
                     }
                 }
                 None => Ok(()),
             }
         } else {
-            self.envelope_json()
-                .and_then(|json| backbone.send(BackboneMessage::Snapshot { envelope_json: json }))
+            self.snapshot_pack().and_then(|files| backbone.send(BackboneMessage::Snapshot { pack: files.pack, spr: files.spr }))
         };
         self.backbone = Some(backbone);
         result
@@ -2611,63 +2681,48 @@ fn merge_by_id<T: Clone>(local: &mut Vec<T>, remote: Vec<T>, id_of: impl Fn(&T) 
     }
 }
 
-/// @emoji 📦 Serializes an `Edit` into the causal wire envelope exchanged over a backbone channel.
-pub fn operation_envelope_from_edit<P, Operation>(
-    envelope: &DocumentEnvelope<P, Operation>,
-    edit: &Edit<Operation>,
-    deps: Vec<OperationId>,
-) -> Result<OperationEnvelope, VcsError>
-where
-    Operation: Serialize,
-{
-    let payload = serde_json::to_value(edit).map_err(|e| VcsError::Serialize(e.to_string()))?;
-    let payload_hash = hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
-    let author_id = edit
-        .operation_meta
-        .last()
-        .and_then(|meta| meta.author_id.clone())
-        .map(|actor_id| actor_id.0)
-        .unwrap_or_else(|| "local".into());
-    // 🎞️ CW3: `OperationMeta.undo_policy` is now `protocol::UndoPolicy` (the moved struct's field
-    // type), while this envelope's `InverseOperation.undo_policy` stays `semio_framework_core`'s own
-    // (kept local this wave — see the kernel cut-over note on `framework/core`'s `UndoPolicy`); both
-    // enums share identical variants, so this is a plain, lossless re-tag, not a real conversion.
-    let undo_policy = match edit.operation_meta.last().map(|meta| meta.undo_policy) {
-        Some(protocol::UndoPolicy::ExactBaseOnly) | None => UndoPolicy::ExactBaseOnly,
-        Some(protocol::UndoPolicy::TransformAgainstConcurrent) => UndoPolicy::TransformAgainstConcurrent,
-        Some(protocol::UndoPolicy::SemanticUndo) => UndoPolicy::SemanticUndo,
-        Some(protocol::UndoPolicy::CompensatingAction) => UndoPolicy::CompensatingAction,
-    };
-    Ok(OperationEnvelope {
-        id: OperationId(edit.id.clone()),
-        actor: ActorId(author_id),
-        document: DocumentId(envelope.id.clone()),
-        schema_version: SchemaVersion(envelope.schema.clone()),
-        deps: deps.clone(),
-        payload_hash: PayloadHash(payload_hash),
-        diff: DocumentDiff {
-            schema_id: SchemaId(envelope.schema.clone()),
-            payload,
-        },
-        inverse: InverseOperation {
-            target_operation: OperationId(edit.id.clone()),
-            inverse_diff: DocumentDiff {
-                schema_id: SchemaId(envelope.schema.clone()),
-                payload: serde_json::json!({ "backwards": edit.backwards }),
-            },
-            base_version: DocumentVersion(edit.sequence_number as u64),
-            dependencies: deps,
-            undo_policy,
-        },
-    })
-}
+// 🎯 W6 kernel unification: this crate's own `operation_envelope_from_edit` (whole-edit-per-
+// envelope, JSON payload) is DELETED — `flush_outbound` now calls `protocol::
+// operation_envelope_from_edit` directly (one `protocol::OperationEnvelope` per forward op,
+// `OpBinary`-encoded payloads — W5's frozen-contract signature). `hash_bytes`'s import above this
+// region stays needed elsewhere in this file (`replay_operations`'s `payload_hash`, unaffected).
 
-/// @emoji 📦 Recovers an `Edit` from the causal wire envelope produced by `operation_envelope_from_edit`.
-pub fn edit_from_operation_envelope<Operation>(envelope: &OperationEnvelope) -> Result<Edit<Operation>, VcsError>
-where
-    Operation: DeserializeOwned,
-{
-    serde_json::from_value(envelope.diff.payload.clone()).map_err(|e| VcsError::Deserialize(e.to_string()))
+/// @emoji 📦 Recovers a single-op `Edit` from one causal wire envelope. `protocol_causal::
+/// OperationEnvelope` carries exactly one op per envelope (W5's binary reshape) — the receiving-
+/// side half of the per-op fan-out `protocol::operation_envelope_from_edit` performs when sending
+/// (see `flush_outbound`). `sequence_number`/`started_at` are placeholders `ingest_envelope`
+/// overwrites (mirroring the local-edit convention: `self.edit_sequence += 1` then `now_iso()`).
+/// `undo_policy` defaults to `ExactBaseOnly` — not a lossy conversion: `protocol_causal::
+/// OperationEnvelope` carries no undo_policy at all (only the local `Edit`/`OperationMeta` shape
+/// does), and a remote edit is always foreign, so this field is never consulted for it anyway
+/// (`edit_is_local` gates undo eligibility on authorship, not `undo_policy`).
+pub fn edit_from_operation_envelope<Operation: protocol::OpBinary>(envelope: &protocol::OperationEnvelope) -> Result<Edit<Operation>, VcsError> {
+    let forward = Operation::decode_op(&envelope.diff.payload).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    let backwards = if envelope.inverse.payload.is_empty() {
+        Vec::new()
+    } else {
+        vec![Operation::decode_op(&envelope.inverse.payload).map_err(|error| VcsError::Deserialize(error.to_string()))?]
+    };
+    Ok(Edit {
+        id: envelope.operation_id.0.clone(),
+        actor: Some(envelope.actor.0.clone()),
+        forwards: vec![forward],
+        backwards,
+        operation_meta: vec![OperationMeta {
+            operation_id: Some(envelope.operation_id.clone()),
+            dependencies: envelope.dependencies.clone(),
+            base_version: 0,
+            author_id: Some(envelope.actor.clone()),
+            timestamp: envelope.timestamp,
+            undo_policy: UndoPolicy::ExactBaseOnly,
+            payload_hash: None,
+        }],
+        description: None,
+        coalesce_key: None,
+        sequence_number: 0,
+        started_at: String::new(),
+        finished_at: None,
+    })
 }
 //#endregion 🔖DocumentStore
 
@@ -2707,8 +2762,8 @@ impl From<ReconcileReport> for StudioConflict {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum BackboneMessage {
-    Snapshot { envelope_json: String },
-    Operations { envelopes: Vec<OperationEnvelope> },
+    Snapshot { pack: Vec<u8>, spr: Vec<u8> },
+    Operations { envelopes: Vec<protocol::OperationEnvelope> },
     /// @emoji ✅ Acknowledges inbound operations the store has ingested (store→actor). Lets a future actor
     /// implement at-least-once redelivery with id-based dedupe — safe across store crashes/reloads.
     Ack { op_ids: Vec<String> },
@@ -3072,8 +3127,8 @@ pub trait StudioMember {
     fn create_alternative(&mut self, name: String) -> Result<String, VcsError>;
     // 🎞️ CW3: `protocol::HybridLogicalTimestamp` (not `semio_framework_core`'s local one) — these
     // read `OperationMeta.timestamp`, which is the moved struct's field, typed against protocol_core.
-    fn last_local_edit_timestamp(&self) -> Option<protocol::HybridLogicalTimestamp>;
-    fn last_undone_local_edit_timestamp(&self) -> Option<protocol::HybridLogicalTimestamp>;
+    fn last_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp>;
+    fn last_undone_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp>;
     fn undo(&mut self) -> Result<(), VcsError>;
     fn redo(&mut self) -> Result<(), VcsError>;
     /// @emoji 🪄 Downcast escape hatch: a studio host UI (or a test) needs the concrete
@@ -3085,8 +3140,8 @@ pub trait StudioMember {
 
 impl<P, Operation> StudioMember for DocumentStore<P, Operation>
 where
-    P: Clone + Serialize + DeserializeOwned + 'static,
-    Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P> + 'static,
+    P: Clone + Serialize + DeserializeOwned + DocumentPack + 'static,
+    Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P> + protocol::OpBinary + OpText + 'static,
 {
     fn document_id(&self) -> &str {
         self.envelope().id.as_str()
@@ -3140,7 +3195,7 @@ where
         self.envelope().active_alternative_id.clone().ok_or(VcsError::NoCheckpoint)
     }
 
-    fn last_local_edit_timestamp(&self) -> Option<protocol::HybridLogicalTimestamp> {
+    fn last_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
         self.applied_edit_ids().iter().rev().find_map(|edit_id| {
             if !self.edit_is_local(edit_id) {
                 return None;
@@ -3155,7 +3210,7 @@ where
         })
     }
 
-    fn last_undone_local_edit_timestamp(&self) -> Option<protocol::HybridLogicalTimestamp> {
+    fn last_undone_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
         self.redo_edit_ids().iter().rev().find_map(|edit_id| {
             if !self.edit_is_local(edit_id) {
                 return None;
@@ -3370,6 +3425,79 @@ impl Operation<StudioHistoryProjection> for StudioHistoryOperation {
         }
     }
 }
+
+// 🎯 B2: `DocumentStore`'s shared impl block now requires `P: DocumentPack` + `Operation: OpText
+// + OpBinary` for every instantiation (the pack+spr binary snapshot pipeline, needed by
+// `StudioHost::attach_backbone`'s real backbone-attach path — this dogfooded meta-document DOES
+// cross a real wire once a backbone is attached, see `studio_vcs_host_meta_document_is_backbone_
+// attachable_and_detachable`). `StudioCheckpoint`/`StudioAlternative` embed foreign types
+// (`vcs::Author`, `protocol_core::HybridLogicalTimestamp`) that cannot derive `dsl::DslRecord`
+// (orphan rule; `dsl`'s own dependency graph would cycle back through `protocol`), so a full
+// `#[derive(DslDocument)]`/`#[derive(DslOps)]` grammar is out of reach here without a larger
+// dedicated field-mirroring effort (tracked as a B9 follow-up, same as the `serde_json::Value`-
+// projected apps' analogous DSL-quality gap — see `impl DocumentPack for serde_json::Value`
+// above). BINARY face: real pack `Shape::Value` TLV bytes via `pack_rt::encode_json_value`
+// (compliant structured binary per this wave's scope ruling — NOT raw JSON text bytes, unlike
+// the deleted `serde_json::to_vec` hatch this replaces). TEXT face: JSON text, the same
+// documented, scoped exception the `Value`-projected apps already have.
+/// @emoji 🔧 `pack_rt::{encode,decode}_json_value`'s `DslValue` bridge normalizes every JSON
+/// number to `f64` (matching JS/JSON dynamic-value semantics, `dsl/schema/rs/lib.rs`'s `🔖Value`
+/// region) — lossless for the schema-less `serde_json::Value` projections it was built for, but
+/// lossy for a whole-number field a `serde`-derived struct expects to deserialize as `u64`/`i32`
+/// (serde_json's `Number` is float-tagged once round-tripped through `f64`, and integer
+/// `Deserialize` impls reject a float-tagged `Number` even at a whole value like `0.0`). Walks
+/// the decoded tree and rewrites every fractionless float back to an integer `Number` before the
+/// final `serde_json::from_value`, restoring round-trip fidelity for `StudioCheckpoint`'s nested
+/// `HybridLogicalTimestamp`.
+fn renormalize_whole_number_floats(value: serde_json::Value) -> serde_json::Value {
+    match value {
+        serde_json::Value::Number(n) => match n.as_f64() {
+            Some(f) if f.fract() == 0.0 && f.is_finite() && f.abs() < (1u64 << 53) as f64 => serde_json::json!(f as i64),
+            _ => serde_json::Value::Number(n),
+        },
+        serde_json::Value::Array(items) => serde_json::Value::Array(items.into_iter().map(renormalize_whole_number_floats).collect()),
+        serde_json::Value::Object(map) => serde_json::Value::Object(map.into_iter().map(|(k, v)| (k, renormalize_whole_number_floats(v))).collect()),
+        other => other,
+    }
+}
+
+impl protocol::OpText for StudioHistoryOperation {
+    fn print_op(&self) -> String {
+        serde_json::to_string(self).expect("StudioHistoryOperation serializes infallibly")
+    }
+    fn parse_op(line: &str) -> Result<Self, TextError> {
+        serde_json::from_str(line).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
+    }
+}
+impl protocol::OpBinary for StudioHistoryOperation {
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        let value = serde_json::to_value(self).map_err(|error| protocol::ProtocolError::Malformed { what: "studio history op", offset: 0, detail: error.to_string() })?;
+        Ok(pack_rt::encode_json_value(&value))
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+        let value = pack_rt::decode_json_value(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "studio history op", offset: 0, detail: error.to_string() })?;
+        serde_json::from_value(renormalize_whole_number_floats(value)).map_err(|error| protocol::ProtocolError::Malformed { what: "studio history op", offset: 0, detail: error.to_string() })
+    }
+}
+impl DocumentDsl for StudioHistoryProjection {
+    const EXTENSION: &'static str = "studio-history";
+    fn parse_dsl(text: &str) -> Result<Self, TextError> {
+        serde_json::from_str(text).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
+    }
+    fn print_dsl(&self) -> String {
+        serde_json::to_string(self).expect("StudioHistoryProjection serializes infallibly")
+    }
+}
+impl DocumentPack for StudioHistoryProjection {
+    fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+        let value = serde_json::to_value(self).map_err(|error| PackError::Schema(error.to_string()))?;
+        Ok(pack_rt::encode_json_value(&value))
+    }
+    fn decode_pack_with(bytes: &[u8], _options: &PackDecodeOptions) -> Result<Self, PackError> {
+        let value = pack_rt::decode_json_value(bytes)?;
+        serde_json::from_value(renormalize_whole_number_floats(value)).map_err(|error| PackError::Schema(error.to_string()))
+    }
+}
 //#endregion StudioHistoryDocument
 
 //#region StudioHost
@@ -3468,7 +3596,15 @@ impl StudioHost {
             timestamp: HybridLogicalTimestamp::new(0, now_ms()),
             members: pins,
         };
-        self.meta.dispatch(DocumentCommand::Apply {
+        // 🎯 W6: the `Apply` below uses `dispatch_inner` (not `dispatch`), skipping its automatic
+        // per-dispatch `flush_outbound` — the very next `CommitCheckpoint` dispatch flushes a full
+        // snapshot that already includes this `Apply`'s edit, so a separate incremental flush here
+        // would resend the same change twice. Before W5/W6's per-op wire envelopes this was
+        // harmless (both flushes tagged the change with the same `edit.id`, so a receiver's
+        // id-based dedup silently absorbed the duplicate); now that `Operations` messages carry
+        // per-OP ids (distinct from the edit's own id — see `flush_outbound`), the two flushes are
+        // no longer accidentally deduplicable, so avoiding the redundant one is the real fix.
+        self.meta.dispatch_inner(DocumentCommand::Apply {
             operations: vec![StudioHistoryOperation::CommitStudioCheckpoint { checkpoint }],
             description: Some(message),
         })?;
@@ -3592,8 +3728,8 @@ pub mod test_support {
     /// post-apply projection, and replay-materialization agrees with the live store projection.
     pub fn assert_store_roundtrip<P, Operation>(initial: P, operation: Operation)
     where
-        P: Clone + Serialize + DeserializeOwned + PartialEq + std::fmt::Debug,
-        Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P>,
+        P: Clone + Serialize + DeserializeOwned + DocumentPack + PartialEq + std::fmt::Debug,
+        Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P> + protocol::OpBinary + OpText,
     {
         let envelope = create_document_envelope("test/v1", "test", initial.clone(), None);
         let mut store = DocumentStore::new(envelope);
@@ -3709,8 +3845,8 @@ pub mod test_support {
     /// {@link parse_document_text} on any technology once it implements `DocumentDsl` + `OpText`.
     pub fn assert_document_text_round_trip<P, Operation>(store: &DocumentStore<P, Operation>)
     where
-        P: Clone + DocumentDsl + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
-        Operation: Clone + OpText + crate::Operation<P> + PartialEq + Serialize + DeserializeOwned,
+        P: Clone + DocumentDsl + DocumentPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
+        Operation: Clone + OpText + crate::Operation<P> + PartialEq + Serialize + DeserializeOwned + protocol::OpBinary,
     {
         let live = store.projection().expect("store projection");
         let files = print_document_text(store.envelope()).expect("print document text");
@@ -3804,8 +3940,8 @@ pub mod test_support {
     /// the replay ground truth.
     pub fn assert_live_equals_replay<P, Operation>(store: &DocumentStore<P, Operation>)
     where
-        P: Clone + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
-        Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P>,
+        P: Clone + DocumentPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
+        Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P> + protocol::OpBinary + OpText,
     {
         let live = store.projection().expect("store projection");
         let replayed = materialize_document_projection(store.envelope(), store.applied_edit_ids()).expect("replay");
@@ -3872,7 +4008,7 @@ mod tests {
     /// @emoji 🛰️ Builds a foreign {@link OperationEnvelope} (as if authored by `actor` on another peer) by
 
     /// applying `operation` in a throwaway peer store and stamping the envelope's actor id.
-    fn foreign_operation_envelope(actor: &str, operation: DemoOperation) -> OperationEnvelope {
+    fn foreign_operation_envelope(actor: &str, operation: DemoOperation) -> protocol::OperationEnvelope {
         let mut peer = DocumentStore::new(create_document_envelope::<DemoProjection, DemoOperation>(
             "demo/v1",
             "demo",
@@ -3885,7 +4021,10 @@ mod tests {
         })
         .expect("peer apply");
         let edit = peer.envelope().vcs.edits.last().expect("peer edit").clone();
-        let mut envelope = operation_envelope_from_edit(peer.envelope(), &edit, Vec::new()).expect("operation envelope");
+        let document_id = DocumentId(peer.envelope().id.clone());
+        let schema = SchemaId(peer.envelope().schema.clone());
+        let mut envelopes = protocol::operation_envelope_from_edit::<DemoProjection, DemoOperation>(&edit, &document_id, &schema).expect("operation envelope");
+        let mut envelope = envelopes.pop().expect("exactly one op envelope for a single-op edit");
         envelope.actor = ActorId(actor.to_string());
         envelope
     }
@@ -4378,10 +4517,9 @@ mod tests {
                 description: None,
             })
             .expect("apply");
+        let seed_files = seed_store.snapshot_pack().expect("seed snapshot");
         remote
-            .push(BackboneMessage::Snapshot {
-                envelope_json: seed_store.envelope_json().expect("seed json"),
-            })
+            .push(BackboneMessage::Snapshot { pack: seed_files.pack, spr: seed_files.spr })
             .expect("push snapshot");
 
         let fresh: DocumentEnvelope<DemoProjection, DemoOperation> =
@@ -4435,7 +4573,7 @@ mod tests {
         let _ = remote.drain().expect("drain attach snapshot");
 
         let inbound = foreign_operation_envelope("peer", DemoOperation::SetN { n: 7 });
-        let operation_id = inbound.id.0.clone();
+        let operation_id = inbound.operation_id.0.clone();
         remote
             .push(BackboneMessage::Operations { envelopes: vec![inbound] })
             .expect("push inbound operations");
@@ -4490,7 +4628,7 @@ mod tests {
             .expect("local apply");
         let local_edit_id = store.applied_edit_ids()[0].clone();
         let foreign = foreign_operation_envelope("peer", DemoOperation::SetN { n: 2 });
-        let foreign_id = foreign.id.0.clone();
+        let foreign_id = foreign.operation_id.0.clone();
         store.ingest_remote(foreign).expect("ingest foreign");
         assert_eq!(store.applied_edit_ids().len(), 2, "local + foreign are both applied");
 
@@ -4710,8 +4848,8 @@ mod tests {
                 dependencies: vec![OperationId("op-0".into())],
                 base_version: 0,
                 author_id: Some(ActorId("actor-explicit".into())),
-                timestamp: protocol::HybridLogicalTimestamp::new(1, 1000),
-                undo_policy: protocol::UndoPolicy::ExactBaseOnly,
+                timestamp: HybridLogicalTimestamp::new(1, 1000),
+                undo_policy: UndoPolicy::ExactBaseOnly,
                 payload_hash: None,
             }],
             description: None,
@@ -4956,9 +5094,10 @@ mod tests {
     //#region 🏛️StudioTests
     /// @emoji ⏱️ Like `DemoOperation` but with an explicit, test-controlled `timestamp()` override, so
     /// undo-ordering-by-HLT tests don't depend on real wall-clock resolution.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
     #[serde(tag = "operation")]
     enum TimestampedOperation {
+        #[dsl(key = "set-n")]
         SetN { n: i32, physical_ms: u64 },
     }
 
@@ -4978,9 +5117,9 @@ mod tests {
             }]
         }
 
-        fn timestamp(&self) -> Option<protocol::HybridLogicalTimestamp> {
+        fn timestamp(&self) -> Option<HybridLogicalTimestamp> {
             match self {
-                TimestampedOperation::SetN { physical_ms, .. } => Some(protocol::HybridLogicalTimestamp::new(0, *physical_ms)),
+                TimestampedOperation::SetN { physical_ms, .. } => Some(HybridLogicalTimestamp::new(0, *physical_ms)),
             }
         }
     }
@@ -5791,9 +5930,8 @@ mod tests {
         let (channel, remote_end) = ChannelBackbone::pair("chan");
         store.attach_backbone(Box::new(channel)).expect("attach");
         let _ = remote_end.drain().expect("drain attach snapshot");
-        remote_end
-            .push(BackboneMessage::Snapshot { envelope_json: remote_store.envelope_json().expect("remote json") })
-            .expect("push snapshot");
+        let remote_files = remote_store.snapshot_pack().expect("remote snapshot");
+        remote_end.push(BackboneMessage::Snapshot { pack: remote_files.pack, spr: remote_files.spr }).expect("push snapshot");
         store.tick().expect("tick merges the pushed snapshot");
 
         assert_eq!(store.envelope().vcs.edits.len(), 2, "the shared original edit is deduped, only the new remote edit is added");

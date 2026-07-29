@@ -1,0 +1,13 @@
+# ⏱️Per-level nextest profiles — `slow-timeout.period` matches [[TEST_LEVEL_BUDGET_MS]] in repo/lib/js/index.ts.
+
+[profile.fundamental]
+slow-timeout = { period = "15s", terminate-after = 1 }
+
+[profile.quick]
+slow-timeout = { period = "30s", terminate-after = 1 }
+
+[profile.long]
+slow-timeout = { period = "300s", terminate-after = 1 }
+
+[profile.exhaustive]
+slow-timeout = { period = "900s", terminate-after = 1 }

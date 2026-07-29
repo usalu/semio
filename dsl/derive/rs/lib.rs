@@ -578,6 +578,9 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
                 let (record, _report) = ::store::pack_rt::decode_document(bytes, &Self::__dsl_spec(), options)?;
                 Self::__dsl_from_record(&record).map_err(::store::text_error_to_pack_error)
             }
+            fn record_spec() -> Option<::dsl::RecordSpec> {
+                Some(Self::__dsl_spec())
+            }
         }
     };
     expanded.into()

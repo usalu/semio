@@ -130,8 +130,14 @@ impl WorkloadGen {
                     document_id: document.clone(),
                     actor,
                     dependencies: Vec::new(),
-                    diff: protocol::DocumentDiff { schema: "db_testkit".to_string(), payload: serde_json::Value::Object(payload) },
-                    inverse: protocol::InverseOperation { schema: "db_testkit".to_string(), inverse_diff: serde_json::Value::Object(inverse_payload) },
+                    diff: protocol::DocumentDiff {
+                        schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()),
+                        payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default(),
+                    },
+                    inverse: protocol::InverseOperation {
+                        schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()),
+                        payload: serde_json::to_vec(&serde_json::Value::Object(inverse_payload)).unwrap_or_default(),
+                    },
                     timestamp: protocol::HybridLogicalTimestamp::new(0, index as u64),
                 }
             })
@@ -779,8 +785,11 @@ fn schema_erased_envelope(document: &protocol::DocumentId, operation_id: &str, a
         document_id: document.clone(),
         actor: protocol::ActorId(actor.to_string()),
         dependencies: Vec::new(),
-        diff: protocol::DocumentDiff { schema: "db_testkit".to_string(), payload: serde_json::Value::Object(payload) },
-        inverse: protocol::InverseOperation { schema: "db_testkit".to_string(), inverse_diff: serde_json::Value::Object(inverse_payload) },
+        diff: protocol::DocumentDiff { schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()), payload: serde_json::to_vec(&serde_json::Value::Object(payload)).unwrap_or_default() },
+        inverse: protocol::InverseOperation {
+            schema: protocol::SchemaId(db_document::DB_PATHMAP_SCHEMA.to_string()),
+            payload: serde_json::to_vec(&serde_json::Value::Object(inverse_payload)).unwrap_or_default(),
+        },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
     }
 }
@@ -974,7 +983,10 @@ mod tests {
         let ops_c = WorkloadGen::new(43).disjoint_batch(&document, 8);
         assert_eq!(ops_a, ops_b, "same seed must generate byte-identical envelopes");
         assert_ne!(ops_a, ops_c, "a different seed must generate different actor/value draws");
-        let paths: std::collections::HashSet<String> = ops_a.iter().flat_map(|envelope| envelope.diff.payload.as_object().unwrap().keys().cloned()).collect();
+        let paths: std::collections::HashSet<String> = ops_a
+            .iter()
+            .flat_map(|envelope| serde_json::from_slice::<serde_json::Value>(&envelope.diff.payload).unwrap().as_object().unwrap().keys().cloned().collect::<Vec<_>>())
+            .collect();
         assert_eq!(paths.len(), 8, "disjoint_batch must touch exactly `count` distinct paths");
     }
     //#endregion 🔖Prng + Generators

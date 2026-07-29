@@ -149,7 +149,7 @@ impl HistoryLogGen {
             let op_count = if profile.adversarial && rng.next_bool() { 0 } else { rng.next_range(profile.max_ops_per_edit as u64 + 1) as usize };
             let mut ops = Vec::with_capacity(op_count);
             for _ in 0..op_count {
-                ops.push(protocol::OpPayload { text: next_text(&mut rng, profile.adversarial), binary: None });
+                ops.push(protocol::OpPayload { text: Some(next_text(&mut rng, profile.adversarial)), binary: None });
             }
             edits.push(protocol::HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, ops, backwards: Vec::new(), meta: None });
         }
@@ -333,10 +333,10 @@ pub fn assert_ops_protocol_bidirectional(ops_text: &str) {
     let log = protocol_history::parse_ops_text(ops_text).expect("parse_ops_text must succeed for well-formed ops text");
     let bytes = protocol_history::encode_history(&log, &encode_options).expect("encode_history must succeed for a well-formed HistoryLog");
     let decoded = protocol_history::decode_history(&bytes, &decode_options).expect("decode_history must succeed on encode_history's own output");
-    let printed = protocol_history::print_ops_text(&decoded);
+    let printed = protocol_history::print_ops_text(&decoded).expect("print_ops_text must succeed for text-only generated ops");
 
     let reparsed = protocol_history::parse_ops_text(&printed).expect("parse_ops_text must succeed on print_ops_text's own output");
-    assert_eq!(protocol_history::print_ops_text(&reparsed), printed, "print_ops_text(parse_ops_text(text)) must be a fixpoint under a second parse/print pass");
+    assert_eq!(protocol_history::print_ops_text(&reparsed).unwrap(), printed, "print_ops_text(parse_ops_text(text)) must be a fixpoint under a second parse/print pass");
 }
 
 /// ✅ LAW: streaming `log` through `protocol::HistoryAppender` one commit per record decodes
@@ -647,10 +647,11 @@ mod tests {
             let log = HistoryLogGen::new(seed).generate(&profile);
             for edit in &log.edits {
                 for op in &edit.ops {
-                    assert!(!op.text.is_empty(), "generated op text must never be empty");
-                    assert!(!op.text.contains('\n'), "generated op text must never contain a newline");
-                    assert_eq!(op.text.trim(), op.text, "generated op text must have no leading/trailing whitespace");
-                    assert!(!op.text.starts_with('#'), "generated op text must never look like a comment line");
+                    let text = op.text.as_deref().expect("generator always sets text");
+                    assert!(!text.is_empty(), "generated op text must never be empty");
+                    assert!(!text.contains('\n'), "generated op text must never contain a newline");
+                    assert_eq!(text.trim(), text, "generated op text must have no leading/trailing whitespace");
+                    assert!(!text.starts_with('#'), "generated op text must never look like a comment line");
                 }
             }
         }

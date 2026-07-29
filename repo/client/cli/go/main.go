@@ -619,6 +619,9 @@ type Config struct {
 	Timeout time.Duration
 }
 
+// DefaultCommandTimeout is the wall-clock budget for MCP tool calls, hooks, and other repo CLI work when --timeout is not set.
+const DefaultCommandTimeout = 5 * time.Minute
+
 // 📋IsJSON MUST return true only when the condition is met.
 // ❓IsJSON reports whether the Config is j s o n.
 func (c *Config) IsJSON() bool {
@@ -684,7 +687,7 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	}
 	root.PersistentFlags().BoolVar(&config.Verbose, "verbose", false, "Verbose output")
 	root.PersistentFlags().StringVar(&config.Repo, "repo", "", "Repo root path")
-	root.PersistentFlags().DurationVar(&config.Timeout, "timeout", 0, "Timeout for command execution")
+	root.PersistentFlags().DurationVar(&config.Timeout, "timeout", DefaultCommandTimeout, "Timeout for command execution")
 	root.AddCommand(mcpCommand(factory, &config))
 	root.AddCommand(graphqlCommand(factory, &config))
 	root.AddCommand(testCommand(factory, &config))
@@ -712,6 +715,7 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	root.AddCommand(analyzeCommand(factory, &config))
 	root.AddCommand(entityEmojisCommand(&config))
 	root.AddCommand(configureCommand(factory, &config))
+	root.AddCommand(microCommitCommand(factory, &config))
 	root.AddCommand(benchmarkCmd)
 	root.AddCommand(updateCmd)
 	root.AddCommand(authCommand(&config))
@@ -754,9 +758,9 @@ func RunCLI() error {
 	return nil
 }
 
-// 🦀RunMCP runs the repo MCP entry point.
+// 🦀RunMCP runs the repo MCP entry point (generic kind).
 func RunMCP() error {
-	return runMcpServer(nil, nil)
+	return RunMcpServerFor(McpClientGeneric, DefaultCommandTimeout)
 }
 
 // #region 🎵Auth Command
@@ -866,33 +870,45 @@ func runSyncManagementMutation(cmd *cobra.Command, factory EngineFactory, config
 func mcpCommand(factory EngineFactory, config *Config) *cobra.Command {
 	var dryRun bool
 	cmd := &cobra.Command{
-		Use:   "mcp",
-		Short: "Run MCP server",
+		Use:   "mcp [kind]",
+		Short: "Run MCP server (optional kind: client, cursor, copilot, claude, codex, kiro)",
+		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if dryRun {
 				return nil
 			}
-			engine, err := factory(*config)
-			if err != nil {
-				return err
+			kind := McpClientGeneric
+			if len(args) > 0 {
+				parsed, err := ParseMcpClientKind(args[0])
+				if err != nil {
+					return err
+				}
+				kind = parsed
 			}
-			ctx := context.Background()
+			ctx := cmd.Context()
 			if config.Timeout > 0 {
 				ctxWithTimeout, cancel := context.WithTimeout(ctx, config.Timeout)
 				defer cancel()
 				ctx = ctxWithTimeout
 			}
-			return serveMcp(ctx, engine)
+			return serveMcp(ctx, kind, config.Timeout)
 		},
 	}
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "Initialize and exit without starting server")
 	return cmd
 }
 
-func serveMcp(ctx context.Context, engine *Engine) error {
-	_ = ctx
-	_ = engine
-	return runMcpServer(nil, nil)
+func serveMcp(ctx context.Context, kind McpClientKind, toolTimeout time.Duration) error {
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- RunMcpServerFor(kind, toolTimeout)
+	}()
+	select {
+	case err := <-errCh:
+		return err
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 // 🕸️graphqlCommand holds the data fields for a graphqlCommand record.
@@ -34116,9 +34132,17 @@ type RepoResolver interface {
 // #region 🦀Mcp
 // MCP protocol handlers for the model context protocol server.
 
-// 💿runMcpServer holds the data fields for a runMcpServer record.
+// 💿runMcpServer is kept for cobra wiring compatibility.
 func runMcpServer(cmd *cobra.Command, args []string) error {
-	return RunMcpServerFor(McpClientGeneric)
+	kind := McpClientGeneric
+	if len(args) > 0 {
+		parsed, err := ParseMcpClientKind(args[0])
+		if err != nil {
+			return err
+		}
+		kind = parsed
+	}
+	return serveMcp(cmd.Context(), kind, DefaultCommandTimeout)
 }
 
 // 📝textResult holds the data fields for a textResult record.
@@ -38345,6 +38369,23 @@ func hookEventStrings() []string {
 
 // runHookExecution runs the hook pipeline (shared by CLI `hook` and per-IDE `RunHookFor`).
 func runHookExecution(client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot string, input json.RawMessage, jsonMode bool, stdout, stderr io.Writer) error {
+	return runHookExecutionCtx(context.Background(), client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot, input, jsonMode, stdout, stderr)
+}
+
+func runHookExecutionCtx(ctx context.Context, client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot string, input json.RawMessage, jsonMode bool, stdout, stderr io.Writer) error {
+	done := make(chan error, 1)
+	go func() {
+		done <- runHookExecutionInner(client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot, input, jsonMode, stdout, stderr)
+	}()
+	select {
+	case err := <-done:
+		return err
+	case <-ctx.Done():
+		return fmt.Errorf("hook timed out: %w", ctx.Err())
+	}
+}
+
+func runHookExecutionInner(client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot string, input json.RawMessage, jsonMode bool, stdout, stderr io.Writer) error {
 	if toolName == "" {
 		if tn := extractToolNameFromStdin(input); tn != "" {
 			toolName = tn
@@ -38468,7 +38509,13 @@ Accepts neutral repo events or native client events (inlet adapter resolves to n
 					input = json.RawMessage(data)
 				}
 			}
-			return runHookExecution(client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot, input, config.IsJSON(), cmd.OutOrStdout(), cmd.ErrOrStderr())
+			ctx := cmd.Context()
+			if config.Timeout > 0 {
+				ctxWithTimeout, cancel := context.WithTimeout(ctx, config.Timeout)
+				defer cancel()
+				ctx = ctxWithTimeout
+			}
+			return runHookExecutionCtx(ctx, client, eventStr, toolName, toolArgs, filePath, parentInfo, repoRoot, input, config.IsJSON(), cmd.OutOrStdout(), cmd.ErrOrStderr())
 		},
 	}
 	cmd.Flags().String("tool-name", "", "Tool name for tool-related events")
@@ -38584,6 +38631,93 @@ func configureCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 // #endregion 🔷Configure
+
+// #region 🔖MicroCommit
+// micro-commit delegates to the monorepo script.ts implementation (entry point is always the repo binary).
+
+func microCommitCommand(factory EngineFactory, config *Config) *cobra.Command {
+	return &cobra.Command{
+		Use:   "micro-commit [subcommand] [args...]",
+		Short: "Micro-commit workflow (reset, prepare-commit-msg, stage, diff, prepare)",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			repoRoot := config.Repo
+			if repoRoot == "" {
+				cwd, err := os.Getwd()
+				if err != nil {
+					return err
+				}
+				repoRoot = findRepoRoot(cwd)
+			}
+			if repoRoot == "" {
+				return fmt.Errorf("repository root not found")
+			}
+			ctx := cmd.Context()
+			if config.Timeout > 0 {
+				ctxWithTimeout, cancel := context.WithTimeout(ctx, config.Timeout)
+				defer cancel()
+				ctx = ctxWithTimeout
+			}
+			return runMicroCommitScript(ctx, repoRoot, args)
+		},
+	}
+}
+
+func runMicroCommitScript(ctx context.Context, repoRoot string, args []string) error {
+	bun, err := resolveBunBinary(repoRoot)
+	if err != nil {
+		return err
+	}
+	cmdArgs := append([]string{"./script.ts", "micro-commit"}, args...)
+	c := exec.CommandContext(ctx, bun, cmdArgs...)
+	c.Dir = repoRoot
+	c.Stdout = os.Stdout
+	c.Stderr = os.Stderr
+	c.Stdin = os.Stdin
+	if err := c.Run(); err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			return ExitError{Code: exitErr.ExitCode()}
+		}
+		return err
+	}
+	return nil
+}
+
+func resolveBunBinary(repoRoot string) (string, error) {
+	if pinned := strings.TrimSpace(os.Getenv("COMPOSE_BUN")); pinned != "" {
+		if _, err := os.Stat(pinned); err == nil {
+			return pinned, nil
+		}
+	}
+	pinPath := filepath.Join(repoRoot, ".repo", "compose-micro-commit-bun")
+	if data, err := os.ReadFile(pinPath); err == nil {
+		if line := strings.TrimSpace(strings.Split(string(data), "\n")[0]); line != "" {
+			if _, statErr := os.Stat(line); statErr == nil {
+				return line, nil
+			}
+		}
+	}
+	if bunInstall := strings.TrimSpace(os.Getenv("BUN_INSTALL")); bunInstall != "" {
+		for _, name := range []string{"bun", "bun.exe"} {
+			candidate := filepath.Join(bunInstall, "bin", name)
+			if _, err := os.Stat(candidate); err == nil {
+				return candidate, nil
+			}
+		}
+	}
+	for _, rel := range []string{"node_modules/.bin/bun", "node_modules/.bin/bun.exe"} {
+		candidate := filepath.Join(repoRoot, rel)
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate, nil
+		}
+	}
+	if path, err := exec.LookPath("bun"); err == nil {
+		return path, nil
+	}
+	return "", fmt.Errorf("bun not found — install bun or set COMPOSE_BUN")
+}
+
+// #endregion 🔖MicroCommit
 // Update command implementation for dependency updates.
 // ✏️updateCmd holds the data fields for a updateCmd record.
 var updateCmd = &cobra.Command{
@@ -45141,6 +45275,26 @@ const (
 	McpClientCodex   McpClientKind = "codex"
 )
 
+// ParseMcpClientKind maps a CLI/MCP profile slug to an MCP server kind.
+func ParseMcpClientKind(raw string) (McpClientKind, error) {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "", "generic", "client":
+		return McpClientGeneric, nil
+	case "cursor":
+		return McpClientCursor, nil
+	case "kiro":
+		return McpClientKiro, nil
+	case "copilot":
+		return McpClientCopilot, nil
+	case "claude":
+		return McpClientClaude, nil
+	case "codex":
+		return McpClientCodex, nil
+	default:
+		return "", fmt.Errorf("unknown mcp kind %q (expected client, cursor, copilot, claude, codex, or kiro)", raw)
+	}
+}
+
 // HookClientForMcpKind maps an MCP entry binary to the hook client id used by ResolveHookEvent.
 func HookClientForMcpKind(kind McpClientKind) string {
 	switch kind {
@@ -45796,9 +45950,34 @@ var mcpDescriptionTable = map[string]map[McpClientKind]string{
 // #endregion 🗣️McpDescriptions
 
 // #region 🦀McpServerFactory
-// 🦀CreateMcpServer builds the MCP server for the given IDE kind (stdio).
+// wrapMcpToolHandler enforces a wall-clock budget on each MCP tool invocation.
+func wrapMcpToolHandler(timeout time.Duration, handler func(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error)) func(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+		if timeout <= 0 {
+			return handler(ctx, request)
+		}
+		toolCtx, cancel := context.WithTimeout(ctx, timeout)
+		defer cancel()
+		type outcome struct {
+			result *mcp.CallToolResult
+			err    error
+		}
+		ch := make(chan outcome, 1)
+		go func() {
+			r, e := handler(toolCtx, request)
+			ch <- outcome{r, e}
+		}()
+		select {
+		case o := <-ch:
+			return o.result, o.err
+		case <-toolCtx.Done():
+			return nil, fmt.Errorf("tool call timed out after %s: %w", timeout, toolCtx.Err())
+		}
+	}
+}
 
-func CreateMcpServer(kind McpClientKind) *server.MCPServer {
+// 🦀CreateMcpServer builds the MCP server for the given IDE kind (stdio).
+func CreateMcpServer(kind McpClientKind, toolTimeout time.Duration) *server.MCPServer {
 	if kind == "" {
 		kind = McpClientGeneric
 	}
@@ -45947,7 +46126,7 @@ func CreateMcpServer(kind McpClientKind) *server.MCPServer {
 	case McpClientKiro:
 		openOpts = append(openOpts, mcp.WithString("spec_id", mcp.Description(mcpDesc(kind, "arg_spec_id"))))
 	}
-	s.AddTool(mcp.NewTool("ticket_open", openOpts...), newTicketOpenHandler(kind))
+	s.AddTool(mcp.NewTool("ticket_open", openOpts...), wrapMcpToolHandler(toolTimeout, newTicketOpenHandler(kind)))
 
 	closeOpts := []mcp.ToolOption{
 		mcp.WithDescription(mcpDesc(kind, "tool_ticket_close")),
@@ -45957,7 +46136,7 @@ func CreateMcpServer(kind McpClientKind) *server.MCPServer {
 		mcp.WithString("title", mcp.Description("Updated title for the ticket.")),
 		mcp.WithBoolean("no_management", mcp.Description("Skip updating the GitHub issue.")),
 	}
-	s.AddTool(mcp.NewTool("ticket_close", closeOpts...), newTicketCloseHandler(kind))
+	s.AddTool(mcp.NewTool("ticket_close", closeOpts...), wrapMcpToolHandler(toolTimeout, newTicketCloseHandler(kind)))
 
 	reopenOpts := []mcp.ToolOption{
 		mcp.WithDescription(mcpDesc(kind, "tool_ticket_reopen")),
@@ -45975,7 +46154,7 @@ func CreateMcpServer(kind McpClientKind) *server.MCPServer {
 	case McpClientKiro:
 		reopenOpts = append(reopenOpts, mcp.WithString("spec_id", mcp.Description(mcpDesc(kind, "arg_spec_id"))))
 	}
-	s.AddTool(mcp.NewTool("ticket_reopen", reopenOpts...), newTicketReopenHandler(kind))
+	s.AddTool(mcp.NewTool("ticket_reopen", reopenOpts...), wrapMcpToolHandler(toolTimeout, newTicketReopenHandler(kind)))
 
 	s.AddTool(
 		mcp.NewTool("section_move",
@@ -45984,7 +46163,7 @@ func CreateMcpServer(kind McpClientKind) *server.MCPServer {
 			mcp.WithString("old_name", mcp.Required(), mcp.Description("Current name of the section.")),
 			mcp.WithString("new_name", mcp.Required(), mcp.Description("New name for the section.")),
 		),
-		sectionMove,
+		wrapMcpToolHandler(toolTimeout, sectionMove),
 	)
 	s.AddTool(
 		mcp.NewTool("file_integrate",
@@ -45994,7 +46173,7 @@ func CreateMcpServer(kind McpClientKind) *server.MCPServer {
 			mcp.WithString("target_file", mcp.Required(), mcp.Description("Path to the target file.")),
 			mcp.WithString("target_parent_section", mcp.Description("Name of the parent section in the target file.")),
 		),
-		sectionIntegrate,
+		wrapMcpToolHandler(toolTimeout, sectionIntegrate),
 	)
 	s.AddTool(
 		mcp.NewTool("section_extract",
@@ -46003,14 +46182,14 @@ func CreateMcpServer(kind McpClientKind) *server.MCPServer {
 			mcp.WithString("source_section", mcp.Required(), mcp.Description("Name of the section to extract.")),
 			mcp.WithString("target_file", mcp.Required(), mcp.Description("Path to the target file where the section will be written.")),
 		),
-		sectionExtract,
+		wrapMcpToolHandler(toolTimeout, sectionExtract),
 	)
 	return s
 }
 
 // RunMcpServerFor starts the MCP stdio server for the given kind.
-func RunMcpServerFor(kind McpClientKind) error {
-	s := CreateMcpServer(kind)
+func RunMcpServerFor(kind McpClientKind, toolTimeout time.Duration) error {
+	s := CreateMcpServer(kind, toolTimeout)
 	return server.ServeStdio(s)
 }
 
@@ -46052,12 +46231,14 @@ func RunHookFor(kind McpClientKind, eventStr string, stdin []byte) error {
 	if len(stdin) > 0 {
 		input = json.RawMessage(stdin)
 	}
-	return runHookExecution(client, eventStr, "", "", "", "", repoRoot, input, false, os.Stdout, os.Stderr)
+	ctx, cancel := context.WithTimeout(context.Background(), DefaultCommandTimeout)
+	defer cancel()
+	return runHookExecutionCtx(ctx, client, eventStr, "", "", "", "", repoRoot, input, false, os.Stdout, os.Stderr)
 }
 
 // RunMCPFor starts the MCP stdio server for the given IDE kind.
 func RunMCPFor(kind McpClientKind) error {
-	return RunMcpServerFor(kind)
+	return RunMcpServerFor(kind, DefaultCommandTimeout)
 }
 
 // #endregion 🪝TicketMcpHandlers

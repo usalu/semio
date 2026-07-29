@@ -354,7 +354,7 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 The final goal for s is to capture design knowledge.
 This involves two parts:
 - library 
-  - collection (static knowledge through a tree of puzzles, meshes, breps, layouts, flows, files, etc)
+  - collection (static knowledge through a tree of folders, puzzles, meshes, breps, layouts, flows, files, workflows, etc)
     - Exportable and importable as zip file
   - workflows (dynamic knowledge through editable non-destructive media pipelines of connected apps)
   - Input is a collection and flow parameters and output is a collection

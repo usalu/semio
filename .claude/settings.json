@@ -14,7 +14,7 @@
   //     {
   //       "hooks": [
   //         {
-  //           "command": "bun ./script.ts dev mcp stdio claude hook Notification",
+  //           "command": "repo/client/client hook Notification claude-code",
   //           "type": "command"
   //         }
   //       ],
@@ -25,7 +25,7 @@
   //     {
   //       "hooks": [
   //         {
-  //           "command": "bun ./script.ts dev mcp stdio claude hook PermissionRequest",
+  //           "command": "repo/client/client hook PermissionRequest claude-code",
   //           "type": "command"
   //         }
   //       ],
@@ -36,7 +36,7 @@
   //     {
   //       "hooks": [
   //         {
-  //           "command": "bun ./script.ts dev mcp stdio claude hook TaskCompleted",
+  //           "command": "repo/client/client hook TaskCompleted claude-code",
   //           "type": "command"
   //         }
   //       ],
@@ -47,7 +47,7 @@
   //     {
   //       "hooks": [
   //         {
-  //           "command": "bun ./script.ts dev mcp stdio claude hook TeammateIdle",
+  //           "command": "repo/client/client hook TeammateIdle claude-code",
   //           "type": "command"
   //         }
   //       ],

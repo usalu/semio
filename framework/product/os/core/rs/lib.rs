@@ -7,10 +7,7 @@ pub mod host {
     use crate::instance::{create_default_os_parameter, create_os_document_id, create_os_id, patch_os_parameter, OsAppInstance, OsDocumentRef, OsInstanceState, OsParameter, OsParameterFieldBinding, OsParameterType};
     use crate::media_graph::{empty_media_graph, media_graph_node_for_instance, sync_media_graph_parameter_ports, MediaGraphPosition, OsMediaGraph, OsMediaGraphEdge, OsMediaGraphNode, OS_MEDIA_GRAPH_SCHEMA, OS_STUDIO_SCHEMA};
     use crate::registry::{os_app_primary_output_kind, os_app_registration, PluginRegistry};
-    use semio_framework_core::{
-        ActionContext, ActionInvocation, AppDefinition, Contribution, DocumentDiff, DocumentHandle, DocumentVersion, HybridLogicalTimestamp, InverseOperation, InvocationResult, KernelOperation, OperationId, PluginManifest, SchemaId, UndoGroup,
-        UndoPolicy, ViewState,
-    };
+    use semio_framework_core::{AppDefinition, Contribution, PluginManifest, ViewState};
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
     use std::collections::{HashMap, HashSet};
@@ -185,50 +182,6 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             self.instances.get_mut(&instance_id)
         }
 
-        pub fn commit_action_result(&mut self, instance_id: u32, result: &InvocationResult) -> Result<(), String> {
-            let Some(instance) = self.instances.get_mut(&instance_id) else {
-                return Err("instance not found".into());
-            };
-            for operation in &result.operations {
-                if operation.diff.schema_id.0 != JSON_PATCH_SCHEMA_ID {
-                    continue;
-                }
-                let operation_json = serde_json::to_string(&operation.diff.payload).map_err(|error| error.to_string())?;
-                instance.document_json = apply_kernel_patch_operation(&instance.document_json, &operation_json)?;
-                instance.generation += 1;
-            }
-            Ok(())
-        }
-        pub fn invoke_action(&mut self, invocation: ActionInvocation) -> Result<InvocationResult, String> {
-            if invocation.action.0.trim().is_empty() {
-                return Err("action id must not be empty".into());
-            }
-            let instance_id: u32 = invocation.app.0.parse().map_err(|_| "invalid app instance id".to_string())?;
-            let (document_json, view_state, generation) = {
-                let instance = self.instances.get(&instance_id).ok_or_else(|| "instance not found".to_string())?;
-                (instance.document_json.clone(), instance.view_state.clone(), instance.generation)
-            };
-            let document_projection = serde_json::from_str(&document_json).unwrap_or(Value::Null);
-            let _context = ActionContext { invocation: invocation.clone(), document_projection, view_state, granted_capabilities: vec![] };
-            let document = DocumentHandle(instance_id as u128);
-            let base_version = DocumentVersion(generation);
-            let patch_operations = extract_patch_operations(&invocation.input);
-            let operations: Vec<KernelOperation> = patch_operations.iter().enumerate().map(|(index, operation)| kernel_operation_from_patch_operation(&invocation, operation, index, base_version, document)).collect::<Result<Vec<_>, _>>()?;
-            let operation_ids: Vec<OperationId> = operations.iter().map(|operation| operation.id.clone()).collect();
-            let inverse_operations: Vec<InverseOperation> = operations.iter().map(|operation| operation.inverse.clone()).collect();
-            let result = InvocationResult {
-                output: invocation.input.clone(),
-                operations,
-                inverse_group: UndoGroup { invocation_id: invocation.id.clone(), operations: operation_ids, inverse_operations },
-                diagnostics: vec![],
-                requested_effects: vec![],
-                events: vec![],
-                ui_scope: Default::default(),
-            };
-            self.commit_action_result(instance_id, &result)?;
-            Ok(result)
-        }
-
         //#region 🔖ActionKernel
 
         /// @emoji 🩺 Delegates to `ui_wgpu::ui_recovery_panel`'s `🔖StatusBuilders` builder — this host
@@ -316,8 +269,6 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         }
     }
 
-    const JSON_PATCH_SCHEMA_ID: &str = "semio.kernel.json-patch";
-
     struct HotSwapRollback {
         previous_plugin: Option<LoadedPlugin>,
         instance_generations: HashMap<u32, u64>,
@@ -361,64 +312,6 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             return Err("plugin_id must match manifest.plugin_id".into());
         }
         Ok(())
-    }
-
-    fn extract_patch_operations(input: &Value) -> Vec<String> {
-        input.get("operations").and_then(|value| value.as_array()).map(|operations| operations.iter().filter_map(|operation| operation.as_str().map(str::to_string).or_else(|| serde_json::to_string(operation).ok())).collect()).unwrap_or_default()
-    }
-
-    fn kernel_operation_from_patch_operation(invocation: &ActionInvocation, operation_json: &str, index: usize, base_version: DocumentVersion, document: DocumentHandle) -> Result<KernelOperation, String> {
-        let payload: Value = serde_json::from_str(operation_json).map_err(|error| error.to_string())?;
-        let operation_id = OperationId(format!("{}:{index}", invocation.id.0));
-        let inverse_diff = DocumentDiff { schema_id: SchemaId("semio.kernel.json-patch.inverse".into()), payload: Value::Null };
-        Ok(KernelOperation {
-            id: operation_id.clone(),
-            document,
-            base_version,
-            invocation_id: invocation.id.clone(),
-            diff: DocumentDiff { schema_id: SchemaId(JSON_PATCH_SCHEMA_ID.into()), payload },
-            inverse: InverseOperation { target_operation: operation_id, inverse_diff, base_version, dependencies: vec![], undo_policy: UndoPolicy::ExactBaseOnly },
-            dependencies: invocation.causal_context.clone(),
-            author: invocation.actor.clone(),
-            timestamp: HybridLogicalTimestamp::new(0, 0),
-        })
-    }
-
-    fn apply_kernel_patch_operation(document_json: &str, operation_json: &str) -> Result<String, String> {
-        let mut document: serde_json::Value = serde_json::from_str(document_json).map_err(|error| error.to_string())?;
-        let operation: serde_json::Value = serde_json::from_str(operation_json).map_err(|error| error.to_string())?;
-        match operation.get("operation").and_then(|value| value.as_str()) {
-            Some("setDocument") => {
-                if let Some(next) = operation.get("document") {
-                    document = next.clone();
-                }
-            }
-            Some("patch") => {
-                if let Some(patch) = operation.get("patch") {
-                    merge_json(&mut document, patch);
-                }
-            }
-            _ => {}
-        }
-        serde_json::to_string(&document).map_err(|error| error.to_string())
-    }
-
-    fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
-        match (target, patch) {
-            (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
-                for (key, value) in patch_map {
-                    if value.is_null() {
-                        target_map.remove(key);
-                    } else {
-                        let entry = target_map.entry(key.clone()).or_insert(serde_json::Value::Null);
-                        merge_json(entry, value);
-                    }
-                }
-            }
-            (target_slot, patch_value) => {
-                *target_slot = patch_value.clone();
-            }
-        }
     }
 
     //#region 🔖OsDocument
@@ -1396,7 +1289,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         use super::*;
         use crate::media_graph::{empty_media_graph, placeholder_media_contract, validate_media_graph, MediaContract, OsMediaPort};
         use crate::registry::{merge_os_program_definition, os_baseline_resource, os_in_port, OsAppResourceSpec, OsPlatformAppInput, OsPlatformInput};
-        use semio_framework_core::{ActionId, ActorId, AppInstanceId, InvocationId, MediaClass, MediaForm, MediaType, MediaWireFormat, ModeDefinition, OsMediaFormat, PluginManifest, WindowKindDefinition};
+        use semio_framework_core::{MediaClass, MediaForm, MediaType, MediaWireFormat, ModeDefinition, OsMediaFormat, PluginManifest, WindowKindDefinition};
         use std::sync::Arc;
         use ui_wgpu::SurfaceKind;
         use store::{MemoryBackbone, MemoryBackbonePort};
@@ -1669,82 +1562,6 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 artifact_uri: "plugin://playbook-module-procedural".into(),
             });
             assert!(host.contributions().is_empty());
-        }
-
-        #[test]
-        fn invoke_action_applies_patch_ops_and_returns_kernel_operations() {
-            let mut host = PluginHost::new();
-            let manifest = PluginManifest {
-                plugin_id: "draw".into(),
-                label: "Draw".into(),
-                version: "0.1.0".into(),
-                apps: vec![AppDefinition {
-                    id: "draw-play".into(),
-                    label: "Draw".into(),
-                    document: vec!["semio".into(), "draw".into()],
-                    icon_id: None,
-                    controller_id: "draw-play".into(),
-                    modes: semio_framework_core::Modes::one(ModeDefinition { id: "edit".into(), label: "Edit".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }),
-                    default_mode_id: "edit".into(),
-                    window_kinds: semio_framework_core::WindowKinds::one(WindowKindDefinition {
-                        id: "composite".into(),
-                        label: "Canvas".into(),
-                        body_key: "composite".into(),
-                        surface_kind: SurfaceKind::Canvas2d,
-                        icon_id: "pen-tool".into(),
-                        options: ui_wgpu::WindowOptions::default(),
-                        actions: Vec::new(),
-                        utilities: Vec::new(),
-                        params_schema: None,
-                        document_projection_schema: None,
-                        input_event_schema: None,
-                        output_schema: None,
-                        capabilities: vec![],
-                    }),
-                    panel_tabs: vec![],
-                    keybindings: vec![],
-                    actions: vec![],
-                    utilities: Vec::new(),
-                    tools: Vec::new(),
-                    commands: Vec::new(),
-                    named_layouts: Vec::new(),
-                    default_layout: None,
-                    terminologies: Vec::new(),
-                    terminology_documents: std::collections::HashMap::new(),
-                    introduction: None,
-                    dialogs: Vec::new(),
-                    media_inputs: Vec::new(),
-                    media_outputs: Vec::new(),
-                    resource_kinds: Vec::new(),
-                    tutorials: Vec::new(),
-                }],
-                programs: vec![],
-                capabilities: vec![],
-                contributions: vec![],
-                examples: vec![],
-                commands: vec![],
-            };
-            host.load_plugin(LoadedPlugin { plugin_id: "draw".into(), manifest, artifact_uri: "plugin://draw".into() });
-            let instance_id = host.create_instance("draw-play", "{}".into()).expect("instance");
-            let patch_operation = serde_json::json!({
-                "operation": "patch",
-                "patch": { "title": "Hello" }
-            })
-            .to_string();
-            let result = host
-                .invoke_action(ActionInvocation {
-                    id: InvocationId("invoke-1".into()),
-                    app: AppInstanceId(instance_id.to_string()),
-                    action: ActionId("setTitle".into()),
-                    input: serde_json::json!({ "operations": [patch_operation] }),
-                    actor: ActorId("tester".into()),
-                    causal_context: vec![],
-                })
-                .expect("invoke");
-            assert_eq!(result.operations.len(), 1);
-            assert_eq!(result.inverse_group.operations.len(), 1);
-            let document: serde_json::Value = serde_json::from_str(&host.instance(instance_id).expect("instance").document_json).expect("document json");
-            assert_eq!(document.get("title").and_then(|value| value.as_str()), Some("Hello"));
         }
 
         #[test]

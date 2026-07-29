@@ -179,8 +179,9 @@ fn replay_history(storage: &dyn DbStorage, core_document: &db_core::DocumentId, 
         match record {
             db_wal::WalRecord::TxBegin { .. } => pending_operation_ids.clear(),
             db_wal::WalRecord::Command(bytes) => {
-                let envelope: protocol::OperationEnvelope =
-                    serde_json::from_slice(&bytes).map_err(|err| DbError::Corrupt(format!("history: wal command record is not a valid operation envelope: {err}")))?;
+                let mut pos = 0usize;
+                let envelope = protocol::decode_envelope(&bytes, &mut pos)
+                    .map_err(|err| DbError::Corrupt(format!("history: wal command record is not a valid operation envelope: {err}")))?;
                 pending_operation_ids.push(envelope.operation_id);
             }
             db_wal::WalRecord::Frontier(frontier)
@@ -311,6 +312,16 @@ pub mod vcs_integration {
         }
     }
 
+    impl store::DocumentPack for HashProjection {
+        fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
+            Ok(self.latest_hash.to_vec())
+        }
+        fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
+            let latest_hash: [u8; 32] = bytes.try_into().map_err(|_| store::PackError::Schema("HashProjection pack must be exactly 32 bytes".to_string()))?;
+            Ok(HashProjection { latest_hash })
+        }
+    }
+
     #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
     pub struct HashDiff {
         pub hash: Option<[u8; 32]>,
@@ -331,7 +342,7 @@ pub mod vcs_integration {
         }
     }
 
-    #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
     pub struct HashOperation {
         pub hash: [u8; 32],
         pub author: Option<protocol::ActorId>,
@@ -357,6 +368,112 @@ pub mod vcs_integration {
 
         fn timestamp(&self) -> Option<protocol::HybridLogicalTimestamp> {
             self.timestamp
+        }
+    }
+
+    fn hex_encode(bytes: &[u8; 32]) -> String {
+        use std::fmt::Write;
+        let mut out = String::with_capacity(64);
+        for byte in bytes {
+            let _ = write!(out, "{byte:02x}");
+        }
+        out
+    }
+
+    fn hex_decode(text: &str) -> Result<[u8; 32], String> {
+        if text.len() != 64 || !text.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+            return Err("expected 64 lowercase hex characters".to_string());
+        }
+        let mut out = [0u8; 32];
+        for (index, slot) in out.iter_mut().enumerate() {
+            *slot = u8::from_str_radix(&text[index * 2..index * 2 + 2], 16).map_err(|error| error.to_string())?;
+        }
+        Ok(out)
+    }
+
+    /// @emoji 🎯 Single-line text form: `hash=<hex64>[ author=<id>][ ts=<actor>,<physical_ms>,<logical>]`.
+    impl protocol::OpText for HashOperation {
+        fn print_op(&self) -> String {
+            let mut out = format!("hash={}", hex_encode(&self.hash));
+            if let Some(author) = &self.author {
+                out.push_str(&format!(" author={}", author.0));
+            }
+            if let Some(ts) = &self.timestamp {
+                out.push_str(&format!(" ts={},{},{}", ts.actor, ts.physical_ms, ts.logical));
+            }
+            out
+        }
+        fn parse_op(line: &str) -> Result<Self, store::TextError> {
+            let err = |detail: String| store::TextError::new(detail, store::TextSpan::at(1, 1));
+            let mut hash = None;
+            let mut author = None;
+            let mut timestamp = None;
+            for token in line.split_whitespace() {
+                let (key, value) = token.split_once('=').ok_or_else(|| err(format!("malformed token '{token}'")))?;
+                match key {
+                    "hash" => hash = Some(hex_decode(value).map_err(err)?),
+                    "author" => author = Some(protocol::ActorId(value.to_string())),
+                    "ts" => {
+                        let parts: Vec<&str> = value.split(',').collect();
+                        if parts.len() != 3 {
+                            return Err(err(format!("malformed ts '{value}'")));
+                        }
+                        let actor = parts[0].parse::<u64>().map_err(|error| err(error.to_string()))?;
+                        let physical_ms = parts[1].parse::<u64>().map_err(|error| err(error.to_string()))?;
+                        let logical = parts[2].parse::<u64>().map_err(|error| err(error.to_string()))?;
+                        timestamp = Some(protocol::HybridLogicalTimestamp { actor, physical_ms, logical });
+                    }
+                    other => return Err(err(format!("unknown key '{other}'"))),
+                }
+            }
+            Ok(HashOperation { hash: hash.ok_or_else(|| err("missing hash".to_string()))?, author, timestamp })
+        }
+    }
+
+    /// @emoji 🎯 Binary form: `hash 32 bytes | presence u8 (bit0=author, bit1=timestamp) | [author
+    /// len varint + utf8 bytes] | [timestamp: actor/physical_ms/logical varint each]`.
+    impl protocol::OpBinary for HashOperation {
+        fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+            let mut out = self.hash.to_vec();
+            let presence = (self.author.is_some() as u8) | ((self.timestamp.is_some() as u8) << 1);
+            out.push(presence);
+            if let Some(author) = &self.author {
+                pack_core::write_varint_u64(&mut out, author.0.len() as u64);
+                out.extend_from_slice(author.0.as_bytes());
+            }
+            if let Some(ts) = &self.timestamp {
+                pack_core::write_varint_u64(&mut out, ts.actor);
+                pack_core::write_varint_u64(&mut out, ts.physical_ms);
+                pack_core::write_varint_u64(&mut out, ts.logical);
+            }
+            Ok(out)
+        }
+        fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
+            let malformed = |detail: String| protocol::ProtocolError::Malformed { what: "hash op", offset: 0, detail };
+            if bytes.len() < 33 {
+                return Err(malformed("truncated hash op".to_string()));
+            }
+            let hash: [u8; 32] = bytes[..32].try_into().expect("checked len");
+            let presence = bytes[32];
+            let mut pos = 33usize;
+            let author = if presence & 0b01 != 0 {
+                let len = pack_core::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))? as usize;
+                let end = pos + len;
+                let text = std::str::from_utf8(bytes.get(pos..end).ok_or_else(|| malformed("truncated author".to_string()))?).map_err(|error| malformed(error.to_string()))?.to_string();
+                pos = end;
+                Some(protocol::ActorId(text))
+            } else {
+                None
+            };
+            let timestamp = if presence & 0b10 != 0 {
+                let actor = pack_core::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+                let physical_ms = pack_core::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+                let logical = pack_core::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+                Some(protocol::HybridLogicalTimestamp { actor, physical_ms, logical })
+            } else {
+                None
+            };
+            Ok(HashOperation { hash, author, timestamp })
         }
     }
     //#endregion 🔖SchemaErasedTypes
@@ -916,6 +1033,36 @@ impl DocumentHandle {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::vcs_integration::{HashOperation, HashProjection};
+    use protocol::{OpBinary, OpText};
+    use store::DocumentPack;
+
+    #[test]
+    fn hash_operation_text_and_binary_round_trip_with_every_field_present_and_absent() {
+        let bare = HashOperation { hash: [7u8; 32], author: None, timestamp: None };
+        assert_eq!(HashOperation::parse_op(&bare.print_op()).unwrap().hash, bare.hash);
+        assert!(HashOperation::parse_op(&bare.print_op()).unwrap().author.is_none());
+        assert_eq!(HashOperation::decode_op(&bare.encode_op().unwrap()).unwrap(), bare);
+
+        let full = HashOperation {
+            hash: [9u8; 32],
+            author: Some(protocol::ActorId("actor-1".into())),
+            timestamp: Some(protocol::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 }),
+        };
+        let reparsed = HashOperation::parse_op(&full.print_op()).unwrap();
+        assert_eq!(reparsed.hash, full.hash);
+        assert_eq!(reparsed.author, full.author);
+        assert_eq!(reparsed.timestamp, full.timestamp);
+        let redecoded = HashOperation::decode_op(&full.encode_op().unwrap()).unwrap();
+        assert_eq!(redecoded, full);
+    }
+
+    #[test]
+    fn hash_projection_pack_round_trips() {
+        let projection = HashProjection { latest_hash: [3u8; 32] };
+        let bytes = projection.encode_pack();
+        assert_eq!(HashProjection::decode_pack(&bytes).unwrap(), projection);
+    }
 
     //#region 🧸Fixtures
     fn tempdir(name: &str) -> std::path::PathBuf {

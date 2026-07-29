@@ -1,13 +1,12 @@
 #!/usr/bin/env bun
 /** 🖨️ `@semio-tech/print` router: `bun ./script.ts generate|fonts|build|watch|test|test-e2e`. */
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { arch, platform } from "node:os";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BundleScript, ScriptRouter, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, TEST_LEVELS } from "../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, runCmd, runCmdStatus, runProbe, tryRun, TEST_LEVELS } from "../repo/lib/js/index.ts";
 
 const printRoot = import.meta.dir;
 const repoRoot = getWorkspaceRoot();
@@ -437,17 +436,14 @@ async function downloadTectonicBinary(): Promise<string> {
     writeFileSync(archivePath, new Uint8Array(await res.arrayBuffer()));
   }
   if (isZip) {
-    const unzip = spawnSync("unzip", ["-o", archivePath, "-d", cacheDir], { stdio: "inherit" });
-    if (unzip.status !== 0) {
-      const extract = spawnSync("tar", ["-xf", archivePath, "-C", cacheDir], { stdio: "inherit" });
-      if (extract.status !== 0) throw new Error("tectonic archive extract failed");
+    if (runCmdStatus("unzip", ["-o", archivePath, "-d", cacheDir]) !== 0) {
+      if (runCmdStatus("tar", ["-xf", archivePath, "-C", cacheDir]) !== 0) throw new Error("tectonic archive extract failed");
     }
   } else {
-    const extract = spawnSync("tar", ["-xzf", archivePath, "-C", cacheDir], { stdio: "inherit" });
-    if (extract.status !== 0) throw new Error("tectonic archive extract failed");
+    if (runCmdStatus("tar", ["-xzf", archivePath, "-C", cacheDir]) !== 0) throw new Error("tectonic archive extract failed");
   }
   if (!existsSync(binPath)) throw new Error(`tectonic binary missing after extract: ${binPath}`);
-  if (platform() !== "win32") spawnSync("chmod", ["+x", binPath], { stdio: "inherit" });
+  if (platform() !== "win32") tryRun("chmod", ["+x", binPath]);
   return binPath;
 }
 
@@ -455,7 +451,7 @@ let tectonicCommandCache: string | undefined;
 
 async function ensureTectonic(): Promise<string> {
   if (tectonicCommandCache) return tectonicCommandCache;
-  const probe = spawnSync("tectonic", ["--version"], { encoding: "utf8" });
+  const probe = runProbe("tectonic", ["--version"]);
   if (probe.status === 0) {
     tectonicCommandCache = "tectonic";
     return tectonicCommandCache;
@@ -493,8 +489,7 @@ function compilePrintDocument(tectonic: string, texAbs: string, outDir: string, 
   clearStaleTocAuxFiles(dirname(texAbs), outDir, jobname);
   const args = ["--keep-logs", "--keep-intermediates", "--synctex", "--reruns", "2", "-Z", `search-path=${texDir}`, "-Z", `search-path=${workDir}`, "--outdir", outDir, texFile];
   const env = tectonicEnv(workDir);
-  const build = spawnSync(tectonic, args, { cwd: workDir, stdio: "inherit", env });
-  if (build.status !== 0) throw new Error(`tectonic build failed for ${texAbs}`);
+  runCmd(tectonic, args, { cwd: workDir, env });
   const pdf = join(outDir, `${basename(texAbs, ".tex")}.pdf`);
   if (!existsSync(pdf)) throw new Error(`missing PDF output: ${pdf}`);
   console.log(`[DEBUG] print built ${relative(repoRoot, pdf)}`);

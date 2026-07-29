@@ -93,6 +93,14 @@ struct HubState {
     /// @emoji 👥 `(scope_key, actor)` -> that actor's last-published presence peer JSON — ephemeral,
     /// never durable (mirrors the preview lane's own law), rebuilt from nothing on hub restart.
     presence: Arc<DashMap<(String, String), String>>,
+    /// @emoji 🧬 W5.7: `scope_key` -> the first non-zero `store::DocumentCodec::pack_schema_hash`
+    /// a client's `Hello` declared for that document — pinned in-memory, never durable (durable
+    /// pinning belongs in the db catalog once it grows a column for it; this wave's scope is the
+    /// in-memory pin only). A later `Hello` with a different non-zero hash for the same document is
+    /// rejected with an `error_frame("schema-hash-mismatch", ...)` before `Welcome` — catches two
+    /// builds of the same app disagreeing on a document's field shape. A zero hash always skips
+    /// validation (schema-agnostic client, see `DocumentCodec::pack_schema_hash`'s own doc).
+    schema_hashes: Arc<DashMap<String, [u8; 32]>>,
 }
 
 impl HubState {
@@ -447,10 +455,19 @@ async fn handle_ws(socket: WebSocket, studio_id: String, document_id: String, st
         Some(Ok(Message::Binary(bytes))) => decode_client_frame(&bytes).ok().map(|(_lane, frame)| frame),
         _ => None,
     };
-    let Some(ClientFrame::Hello { actor, token, frontier, .. }) = hello else {
+    let Some(ClientFrame::Hello { pack_schema_hash, actor, token, frontier, .. }) = hello else {
         let _ = sender.send(error_frame("protocol", "expected hello frame")).await;
         return;
     };
+
+    let key = scope_key(&studio_id, &document_id);
+    if pack_schema_hash != [0u8; 32] {
+        let pinned = *state.schema_hashes.entry(key.clone()).or_insert(pack_schema_hash);
+        if pinned != pack_schema_hash {
+            let _ = sender.send(error_frame("schema-hash-mismatch", "pack schema hash does not match the hash already pinned for this document")).await;
+            return;
+        }
+    }
 
     let auth = resolve_auth(&state, &studio_id, &document_id, token.as_deref()).await;
     let (user_id, role) = match &auth {
@@ -492,7 +509,6 @@ async fn handle_ws(socket: WebSocket, studio_id: String, document_id: String, st
         }
     }
 
-    let key = scope_key(&studio_id, &document_id);
     let fanout = state.fanout_for(&key);
     let mut broadcast_rx = fanout.subscribe();
 
@@ -635,7 +651,7 @@ async fn main() -> Result<(), HubError> {
     let db = connect_db(&data_dir)?;
     let directory = connect_directory(&data_dir).await?;
     let admin_token = std::env::var("OS_HUB_ADMIN_TOKEN").ok().filter(|value| !value.is_empty());
-    let state = HubState { db: Arc::new(db), directory, admin_token, fanout: Arc::new(DashMap::new()), presence: Arc::new(DashMap::new()) };
+    let state = HubState { db: Arc::new(db), directory, admin_token, fanout: Arc::new(DashMap::new()), presence: Arc::new(DashMap::new()), schema_hashes: Arc::new(DashMap::new()) };
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
     tracing::info!("os-hub listening on http://{addr}");
     let listener = tokio::net::TcpListener::bind(addr).await?;
@@ -670,7 +686,7 @@ mod tests {
         let database = db::Database::open_at(&tempdir("db"), db::Profile::Test).expect("open db");
         let directory = SqliteDirectory::connect(":memory:").await.expect("connect directory");
         directory.seed().await.expect("seed");
-        HubState { db: Arc::new(database), directory: Arc::new(directory), admin_token: None, fanout: Arc::new(DashMap::new()), presence: Arc::new(DashMap::new()) }
+        HubState { db: Arc::new(database), directory: Arc::new(directory), admin_token: None, fanout: Arc::new(DashMap::new()), presence: Arc::new(DashMap::new()), schema_hashes: Arc::new(DashMap::new()) }
     }
 
     fn sample_envelope(id: &str, document: &WireDocumentId) -> OperationEnvelope {
@@ -705,11 +721,14 @@ mod tests {
     where
         S: StreamExt<Item = Result<WsMessage, tokio_tungstenite::tungstenite::Error>> + Unpin,
     {
+        let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(5);
         loop {
-            match ws.next().await {
-                Some(Ok(WsMessage::Binary(bytes))) => return protocol::decode_server_frame(&bytes).expect("server frame").1,
-                Some(Ok(_)) => continue,
-                other => panic!("expected binary frame, got {other:?}"),
+            match tokio::time::timeout_at(deadline, ws.next()).await {
+                Ok(Some(Ok(WsMessage::Binary(bytes)))) => return protocol::decode_server_frame(&bytes).expect("server frame").1,
+                Ok(Some(Ok(_))) => continue,
+                Ok(Some(other)) => panic!("expected binary frame, got {other:?}"),
+                Ok(None) => panic!("stream ended before server frame"),
+                Err(_) => panic!("no server frame before 5s deadline"),
             }
         }
     }
