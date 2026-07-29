@@ -2807,28 +2807,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "forms"
-version = "0.1.0"
-dependencies = [
- "semio-framework-kernel-vcs",
- "semio-s-kernel-playbook",
- "semio-s-kernel-store",
- "serde",
- "serde_json",
-]
-
-[[package]]
 name = "forms-plugin"
 version = "0.1.0"
 dependencies = [
- "forms",
- "semio-framework-core",
- "semio-framework-kernel-vcs",
  "semio-framework-plugin",
- "semio-s-kernel-playbook",
- "semio-s-kernel-store",
- "serde",
- "serde_json",
+ "semio-s-app-forms",
+ "semio-s-app-forms-ui",
 ]
 
 [[package]]
@@ -7138,13 +7122,12 @@ checksum = "ca45419789ae5a7899559e9512e58ca889e41f04f1f2445e9f4b290ceccd1d08"
 name = "raster-plugin"
 version = "0.1.0"
 dependencies = [
- "semio-framework-kernel-dsl",
- "semio-framework-kernel-protocol",
- "semio-framework-kernel-vcs",
  "semio-framework-os",
  "semio-framework-plugin",
- "semio-s-kernel-store",
- "serde",
+ "semio-s-app-raster",
+ "semio-s-app-raster-engine",
+ "semio-s-app-raster-op",
+ "semio-s-app-raster-ui",
  "serde_json",
  "wasm-bindgen",
 ]
@@ -9419,6 +9402,79 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-app-forms"
+version = "0.1.0"
+dependencies = [
+ "semio-s-kernel-playbook",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-forms-dsl"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-forms",
+ "semio-s-kernel-store",
+]
+
+[[package]]
+name = "semio-s-app-forms-engine"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-forms",
+ "semio-s-app-forms-dsl",
+ "semio-s-kernel-playbook",
+ "semio-s-kernel-store",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-forms-op"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-forms",
+ "semio-s-app-forms-engine",
+ "semio-s-kernel-playbook",
+]
+
+[[package]]
+name = "semio-s-app-forms-pack"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-forms",
+ "semio-s-app-forms-dsl",
+ "semio-s-kernel-pack",
+ "semio-s-kernel-store",
+]
+
+[[package]]
+name = "semio-s-app-forms-protocol"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-protocol",
+ "semio-s-app-forms",
+ "semio-s-app-forms-engine",
+ "semio-s-app-forms-op",
+ "semio-s-kernel-playbook",
+ "semio-s-kernel-store",
+]
+
+[[package]]
+name = "semio-s-app-forms-ui"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-plugin",
+ "semio-s-app-forms",
+ "semio-s-app-forms-dsl",
+ "semio-s-app-forms-engine",
+ "semio-s-app-forms-op",
+ "semio-s-kernel-playbook",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-s-app-note"
 version = "0.1.0"
 dependencies = [
@@ -9490,6 +9546,159 @@ dependencies = [
  "semio-s-app-note-dsl",
  "semio-s-app-note-engine",
  "semio-s-app-note-op",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-raster"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-dsl",
+ "semio-s-kernel-store",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-raster-dsl"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-raster",
+ "semio-s-kernel-store",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-raster-engine"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os",
+ "semio-s-app-raster",
+ "semio-s-app-raster-dsl",
+ "semio-s-kernel-store",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-raster-op"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-dsl",
+ "semio-framework-kernel-protocol",
+ "semio-framework-kernel-vcs",
+ "semio-s-app-raster",
+ "semio-s-app-raster-engine",
+ "semio-s-kernel-store",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-raster-pack"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-raster",
+ "semio-s-app-raster-dsl",
+ "semio-s-kernel-pack",
+ "semio-s-kernel-store",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-raster-protocol"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-protocol",
+ "semio-s-app-raster",
+ "semio-s-app-raster-engine",
+ "semio-s-app-raster-op",
+ "semio-s-kernel-store",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-raster-ui"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-plugin",
+ "semio-s-app-raster",
+ "semio-s-app-raster-engine",
+ "semio-s-app-raster-op",
+ "semio-s-kernel-store",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-vcs"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-dsl",
+ "semio-s-kernel-store",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-vcs-dsl"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-vcs",
+ "semio-s-app-vcs-engine",
+ "semio-s-kernel-store",
+]
+
+[[package]]
+name = "semio-s-app-vcs-engine"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-vcs",
+ "semio-s-kernel-store",
+]
+
+[[package]]
+name = "semio-s-app-vcs-op"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-dsl",
+ "semio-framework-kernel-protocol",
+ "semio-s-app-vcs",
+ "semio-s-kernel-store",
+ "serde",
+]
+
+[[package]]
+name = "semio-s-app-vcs-pack"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-vcs",
+ "semio-s-app-vcs-engine",
+ "semio-s-kernel-pack",
+ "semio-s-kernel-store",
+]
+
+[[package]]
+name = "semio-s-app-vcs-protocol"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-protocol",
+ "semio-s-app-vcs",
+ "semio-s-app-vcs-op",
+ "semio-s-kernel-store",
+]
+
+[[package]]
+name = "semio-s-app-vcs-ui"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-vcs",
+ "semio-framework-plugin",
+ "semio-s-app-vcs",
+ "semio-s-app-vcs-engine",
+ "semio-s-app-vcs-op",
+ "semio-s-kernel-store",
  "serde",
  "serde_json",
 ]
@@ -9913,6 +10122,15 @@ dependencies = [
  "semio-s-app-note",
  "semio-s-app-note-engine",
  "semio-s-app-note-ui",
+]
+
+[[package]]
+name = "semio-s-plugin-vcs"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-plugin",
+ "semio-s-app-vcs",
+ "semio-s-app-vcs-ui",
 ]
 
 [[package]]
@@ -12131,19 +12349,6 @@ name = "vcpkg"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
-
-[[package]]
-name = "vcs-plugin"
-version = "0.1.0"
-dependencies = [
- "semio-framework-kernel-dsl",
- "semio-framework-kernel-protocol",
- "semio-framework-kernel-vcs",
- "semio-framework-plugin",
- "semio-s-kernel-store",
- "serde",
- "serde_json",
-]
 
 [[package]]
 name = "vello"
