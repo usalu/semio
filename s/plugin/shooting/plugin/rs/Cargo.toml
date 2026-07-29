@@ -30,7 +30,7 @@ path = "lib.rs"
 [dependencies]
 semio-framework-os = { path = "../../../../../framework/product/os/core/rs" }
 semio-framework-plugin = { path = "../../../../../framework/plugin/rs" }
-shooting = { path = "../../app/shooting/rs", package = "semio-s-app-shooting" }
-shooting_engine = { path = "../../app/shooting/engine/rs", package = "semio-s-app-shooting-engine" }
-shooting_ui = { path = "../../app/shooting/ui/rs", package = "semio-s-app-shooting-ui" }
+shooting = { path = "../../app/rs", package = "semio-s-app-shooting" }
+shooting_engine = { path = "../../app/engine/rs", package = "semio-s-app-shooting-engine" }
+shooting_ui = { path = "../../app/ui/rs", package = "semio-s-app-shooting-ui" }
 

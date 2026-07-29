@@ -89,35 +89,39 @@ A spectator is auser with only read permission.
 
 ```
 ui
-    …
+    component
+        <component>
+            js
+                react
+                    index.tsx
+            rs
+                wgpu
+                    lib.rs
 os
     kernel
         math
-            …
-
         2d
-        3d‚
+        3d
         dsl
         vcs
         protocol
+        neural
+        flow
+        workflow
+        …
     renderer
-        react
-            components
-                
-            index.tsx
-        wgpu
-            components
-
-s
-    plugin
-        <plugin> # puzzle, draw, shooting, fem, energy, …
-            app
-                <app> # single crate
-                    engine.rs
-                    manifest
-                        document.rs
-                        pack.rs
-                        command
-                            <command>.rs # each cd
+    s
+        kernel
+        plugin
+            <plugin> # puzzle, draw, shooting, fem, energy, …
+                app
+                    <app> # single crate
+                        engine.rs
+                        manifest
+                            document.rs
+                            pack.rs
+                            command
+                                <command>.rs # each cd
+    hub
 
 ```

@@ -1,8 +1,8 @@
 //! 🎞️ Animate present app — DocumentApp impl, render, manifest (constitutional: ui).
 
-use present::{FigureTileFrame, FigureTileSource, PresentDeck, PRESENT_DECK_SCHEMA};
+use present::{FigureTileDraft, FigureTileDraftPatch, FigureTileFrame, FigureTileSource, PresentDeck, PRESENT_DECK_SCHEMA};
 use present_engine::{build_tile_morph_prompt, clamp_tile_crop, export_video_from_scene, parse_grid_engagement, populate_tile_drafts_from_grid, FigureTileGridSeedSpec, PresentScene};
-use present_op::{FigureTileDraft, FigureTileDraftPatch, PresentOperation};
+use present_op::PresentOperation;
 use semio_framework_plugin::{
     build_canvas_2d_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption,
     ActionDescriptor, ActionEmit, App, Canvas2dScene, DocumentApp, DocumentView, HostEffect, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ArtifactKindSpec, SurfaceKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,

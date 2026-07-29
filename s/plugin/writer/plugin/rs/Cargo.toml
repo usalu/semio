@@ -23,9 +23,9 @@ path = "lib.rs"
 [dependencies]
 semio-framework-plugin = { path = "../../../../../framework/plugin/rs" }
 framework_editor = { path = "../../../../../framework/editor/rs" }
-writer = { path = "../../app/writer/rs", package = "semio-s-app-writer" }
-writer_op = { path = "../../app/writer/op/rs", package = "semio-s-app-writer-op" }
-writer_ui = { path = "../../app/writer/ui/rs", package = "semio-s-app-writer-ui" }
+writer = { path = "../../app/rs", package = "semio-s-app-writer" }
+writer_op = { path = "../../app/op/rs", package = "semio-s-app-writer-op" }
+writer_ui = { path = "../../app/ui/rs", package = "semio-s-app-writer-ui" }
 store = { path = "../../../../kernel/store/rs", package = "semio-s-kernel-store" }
 serde_json = "1.0.140"
 

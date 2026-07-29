@@ -1,39 +1,15 @@
 //! ⚡ Animate present app — operation enum + laws (constitutional: op).
 
-use present::{FigureTileDraft, FigureTileFrame, FigureTileSource, PresentDeck};
-use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Identified, Operation, OperationDiff, Patchable};
+use present::{FigureTileDraft, FigureTileDraftPatch, FigureTileSource, PresentDeck};
+use protocol::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Operation, OperationDiff, Patchable};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖Operations
 //#region 🔖CollectionSupport
-impl Identified<String> for FigureTileDraft {
-    fn id(&self) -> &String {
-        &self.id
-    }
-}
-
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
-pub struct FigureTileDraftPatch {
-    pub name: Option<String>,
-    #[dsl(block)]
-    pub crop: Option<FigureTileFrame>,
-}
-
-impl Patchable<FigureTileDraftPatch> for FigureTileDraft {
-    fn apply_patch(&mut self, patch: &FigureTileDraftPatch) {
-        if let Some(name) = &patch.name {
-            self.name = name.clone();
-        }
-        if let Some(crop) = &patch.crop {
-            self.crop = crop.clone();
-        }
-    }
-
-    fn diff_patch(&self, other: &Self) -> Option<FigureTileDraftPatch> {
-        Some(FigureTileDraftPatch { name: (self.name != other.name).then(|| other.name.clone()), crop: (self.crop != other.crop).then(|| other.crop.clone()) })
-    }
-}
+// 🪪 `Identified<String> for FigureTileDraft` / `Patchable<FigureTileDraftPatch> for FigureTileDraft`
+// live in `present` (the `rs` crate), not here — Rust's orphan rules require a foreign-trait impl
+// (`protocol::Identified`/`protocol::Patchable`) to share a crate with the type it's implemented for,
+// and `FigureTileDraft` is defined in `present`.
 
 fn apply_tile_diff(tiles: &mut Vec<FigureTileDraft>, diff: &CollectionDiff<String, FigureTileDraftPatch, FigureTileDraft>) {
     for id in &diff.removed {
@@ -231,7 +207,7 @@ impl protocol::OpBinary for PresentOperation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use present::{default_figure_tile_source, default_present_deck};
+    use present::{default_figure_tile_source, default_present_deck, FigureTileFrame};
     use present_engine::{populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
     use store::test_support;
 

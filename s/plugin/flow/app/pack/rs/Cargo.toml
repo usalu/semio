@@ -1,0 +1,19 @@
+[package]
+name = "semio-s-app-flow-pack"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Flow app - binary document surface + laws (constitutional: pack)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+flow = { path = "../../rs", package = "semio-s-app-flow" }
+pack = { path = "../../../../../kernel/pack/rs", package = "semio-s-kernel-pack" }
+store = { path = "../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+
+[dev-dependencies]
+flow_dsl = { path = "../../dsl/rs", package = "semio-s-app-flow-dsl" }

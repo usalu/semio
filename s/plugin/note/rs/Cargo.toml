@@ -23,6 +23,6 @@ path = "lib.rs"
 [dependencies]
 semio-framework-os = { path = "../../../../framework/product/os/core/rs" }
 semio-framework-plugin = { path = "../../../../framework/plugin/rs" }
-note = { path = "../app/note/rs", package = "semio-s-app-note" }
-note_engine = { path = "../app/note/engine/rs", package = "semio-s-app-note-engine" }
-note_ui = { path = "../app/note/ui/rs", package = "semio-s-app-note-ui" }
+note = { path = "../app/rs", package = "semio-s-app-note" }
+note_engine = { path = "../app/engine/rs", package = "semio-s-app-note-engine" }
+note_ui = { path = "../app/ui/rs", package = "semio-s-app-note-ui" }

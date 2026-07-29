@@ -22,6 +22,6 @@ path = "lib.rs"
 
 [dependencies]
 semio-framework-plugin = { path = "../../../../../framework/plugin/rs" }
-vcs = { path = "../../app/vcs/rs", package = "semio-s-app-vcs" }
-vcs_ui = { path = "../../app/vcs/ui/rs", package = "semio-s-app-vcs-ui" }
+vcs = { path = "../../app/rs", package = "semio-s-app-vcs" }
+vcs_ui = { path = "../../app/ui/rs", package = "semio-s-app-vcs-ui" }
 

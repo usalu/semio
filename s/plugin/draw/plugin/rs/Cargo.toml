@@ -21,9 +21,9 @@ crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
 
 [dependencies]
-draw = { path = "../../app/draw/rs", package = "semio-s-app-draw" }
-draw_engine = { path = "../../app/draw/engine/rs", package = "semio-s-app-draw-engine" }
-draw_ui = { path = "../../app/draw/ui/rs", package = "semio-s-app-draw-ui" }
+draw = { path = "../../app/rs", package = "semio-s-app-draw" }
+draw_engine = { path = "../../app/engine/rs", package = "semio-s-app-draw-engine" }
+draw_ui = { path = "../../app/ui/rs", package = "semio-s-app-draw-ui" }
 semio-framework-os = { path = "../../../../../framework/product/os/core/rs" }
 semio-framework-plugin = { path = "../../../../../framework/plugin/rs" }
 base64 = "0.22"

@@ -3,7 +3,7 @@
 //! `PresentOperation` (from `present_op`) alongside `PresentDeck` (from `present`), so this is the
 //! first constitutional crate in the stack where that pairing is available.
 
-use present::{default_present_deck, PresentDeck, PRESENT_DECK_SCHEMA};
+use present::{PresentDeck, PRESENT_DECK_SCHEMA};
 use present_engine::empty_present_deck;
 use present_op::PresentOperation;
 use protocol::OpBinary;
@@ -97,6 +97,7 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use present::default_present_deck;
     use protocol::CollectionOperation;
     use store::{test_support, DocumentCommand};
 

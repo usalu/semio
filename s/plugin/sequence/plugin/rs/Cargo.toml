@@ -21,9 +21,9 @@ crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
 
 [dependencies]
-sequence = { path = "../../app/sequence/rs", package = "semio-s-app-sequence" }
-sequence_engine = { path = "../../app/sequence/engine/rs", package = "semio-s-app-sequence-engine" }
-sequence_ui = { path = "../../app/sequence/ui/rs", package = "semio-s-app-sequence-ui" }
+sequence = { path = "../../app/rs", package = "semio-s-app-sequence" }
+sequence_engine = { path = "../../app/engine/rs", package = "semio-s-app-sequence-engine" }
+sequence_ui = { path = "../../app/ui/rs", package = "semio-s-app-sequence-ui" }
 infinite_board_port_directed_dag = { path = "../../../../../framework/kernel/infinite/board/port/directed/dag/rs", package = "semio-framework-kernel-infinite-board-port-directed-dag" }
 infinite_cavas = { path = "../../../../../framework/kernel/infinite/canvas/rs", package = "semio-framework-kernel-infinite-canvas" }
 semio-framework-plugin = { path = "../../../../../framework/plugin/rs" }

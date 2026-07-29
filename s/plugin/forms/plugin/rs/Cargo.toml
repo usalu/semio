@@ -22,6 +22,6 @@ crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
 
 [dependencies]
-forms = { path = "../../app/forms/rs", package = "semio-s-app-forms" }
-forms_ui = { path = "../../app/forms/ui/rs", package = "semio-s-app-forms-ui" }
+forms = { path = "../../app/rs", package = "semio-s-app-forms" }
+forms_ui = { path = "../../app/ui/rs", package = "semio-s-app-forms-ui" }
 semio-framework-plugin = { path = "../../../../../framework/plugin/rs" }

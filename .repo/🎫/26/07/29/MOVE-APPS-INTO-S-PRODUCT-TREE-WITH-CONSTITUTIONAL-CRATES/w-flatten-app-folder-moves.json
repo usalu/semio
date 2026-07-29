@@ -1,0 +1,422 @@
+[
+  {
+    "oldDir": "s/plugin/note/app/note/rs",
+    "newDir": "s/plugin/note/app/rs",
+    "newPkg": "semio-s-app-note"
+  },
+  {
+    "oldDir": "s/plugin/note/app/note/engine/rs",
+    "newDir": "s/plugin/note/app/engine/rs",
+    "newPkg": "semio-s-app-note-engine"
+  },
+  {
+    "oldDir": "s/plugin/note/app/note/dsl/rs",
+    "newDir": "s/plugin/note/app/dsl/rs",
+    "newPkg": "semio-s-app-note-dsl"
+  },
+  {
+    "oldDir": "s/plugin/note/app/note/op/rs",
+    "newDir": "s/plugin/note/app/op/rs",
+    "newPkg": "semio-s-app-note-op"
+  },
+  {
+    "oldDir": "s/plugin/note/app/note/pack/rs",
+    "newDir": "s/plugin/note/app/pack/rs",
+    "newPkg": "semio-s-app-note-pack"
+  },
+  {
+    "oldDir": "s/plugin/note/app/note/protocol/rs",
+    "newDir": "s/plugin/note/app/protocol/rs",
+    "newPkg": "semio-s-app-note-protocol"
+  },
+  {
+    "oldDir": "s/plugin/note/app/note/ui/rs",
+    "newDir": "s/plugin/note/app/ui/rs",
+    "newPkg": "semio-s-app-note-ui"
+  },
+  {
+    "oldDir": "s/plugin/vcs/app/vcs/rs",
+    "newDir": "s/plugin/vcs/app/rs",
+    "newPkg": "semio-s-app-vcs"
+  },
+  {
+    "oldDir": "s/plugin/vcs/app/vcs/engine/rs",
+    "newDir": "s/plugin/vcs/app/engine/rs",
+    "newPkg": "semio-s-app-vcs-engine"
+  },
+  {
+    "oldDir": "s/plugin/vcs/app/vcs/dsl/rs",
+    "newDir": "s/plugin/vcs/app/dsl/rs",
+    "newPkg": "semio-s-app-vcs-dsl"
+  },
+  {
+    "oldDir": "s/plugin/vcs/app/vcs/op/rs",
+    "newDir": "s/plugin/vcs/app/op/rs",
+    "newPkg": "semio-s-app-vcs-op"
+  },
+  {
+    "oldDir": "s/plugin/vcs/app/vcs/pack/rs",
+    "newDir": "s/plugin/vcs/app/pack/rs",
+    "newPkg": "semio-s-app-vcs-pack"
+  },
+  {
+    "oldDir": "s/plugin/vcs/app/vcs/protocol/rs",
+    "newDir": "s/plugin/vcs/app/protocol/rs",
+    "newPkg": "semio-s-app-vcs-protocol"
+  },
+  {
+    "oldDir": "s/plugin/vcs/app/vcs/ui/rs",
+    "newDir": "s/plugin/vcs/app/ui/rs",
+    "newPkg": "semio-s-app-vcs-ui"
+  },
+  {
+    "oldDir": "s/plugin/forms/app/forms/rs",
+    "newDir": "s/plugin/forms/app/rs",
+    "newPkg": "semio-s-app-forms"
+  },
+  {
+    "oldDir": "s/plugin/forms/app/forms/engine/rs",
+    "newDir": "s/plugin/forms/app/engine/rs",
+    "newPkg": "semio-s-app-forms-engine"
+  },
+  {
+    "oldDir": "s/plugin/forms/app/forms/dsl/rs",
+    "newDir": "s/plugin/forms/app/dsl/rs",
+    "newPkg": "semio-s-app-forms-dsl"
+  },
+  {
+    "oldDir": "s/plugin/forms/app/forms/op/rs",
+    "newDir": "s/plugin/forms/app/op/rs",
+    "newPkg": "semio-s-app-forms-op"
+  },
+  {
+    "oldDir": "s/plugin/forms/app/forms/pack/rs",
+    "newDir": "s/plugin/forms/app/pack/rs",
+    "newPkg": "semio-s-app-forms-pack"
+  },
+  {
+    "oldDir": "s/plugin/forms/app/forms/protocol/rs",
+    "newDir": "s/plugin/forms/app/protocol/rs",
+    "newPkg": "semio-s-app-forms-protocol"
+  },
+  {
+    "oldDir": "s/plugin/forms/app/forms/ui/rs",
+    "newDir": "s/plugin/forms/app/ui/rs",
+    "newPkg": "semio-s-app-forms-ui"
+  },
+  {
+    "oldDir": "s/plugin/raster/app/raster/rs",
+    "newDir": "s/plugin/raster/app/rs",
+    "newPkg": "semio-s-app-raster"
+  },
+  {
+    "oldDir": "s/plugin/raster/app/raster/engine/rs",
+    "newDir": "s/plugin/raster/app/engine/rs",
+    "newPkg": "semio-s-app-raster-engine"
+  },
+  {
+    "oldDir": "s/plugin/raster/app/raster/dsl/rs",
+    "newDir": "s/plugin/raster/app/dsl/rs",
+    "newPkg": "semio-s-app-raster-dsl"
+  },
+  {
+    "oldDir": "s/plugin/raster/app/raster/op/rs",
+    "newDir": "s/plugin/raster/app/op/rs",
+    "newPkg": "semio-s-app-raster-op"
+  },
+  {
+    "oldDir": "s/plugin/raster/app/raster/pack/rs",
+    "newDir": "s/plugin/raster/app/pack/rs",
+    "newPkg": "semio-s-app-raster-pack"
+  },
+  {
+    "oldDir": "s/plugin/raster/app/raster/protocol/rs",
+    "newDir": "s/plugin/raster/app/protocol/rs",
+    "newPkg": "semio-s-app-raster-protocol"
+  },
+  {
+    "oldDir": "s/plugin/raster/app/raster/ui/rs",
+    "newDir": "s/plugin/raster/app/ui/rs",
+    "newPkg": "semio-s-app-raster-ui"
+  },
+  {
+    "oldDir": "s/plugin/imperative/app/imperative/rs",
+    "newDir": "s/plugin/imperative/app/rs",
+    "newPkg": "semio-s-app-imperative"
+  },
+  {
+    "oldDir": "s/plugin/imperative/app/imperative/engine/rs",
+    "newDir": "s/plugin/imperative/app/engine/rs",
+    "newPkg": "semio-s-app-imperative-engine"
+  },
+  {
+    "oldDir": "s/plugin/imperative/app/imperative/dsl/rs",
+    "newDir": "s/plugin/imperative/app/dsl/rs",
+    "newPkg": "semio-s-app-imperative-dsl"
+  },
+  {
+    "oldDir": "s/plugin/imperative/app/imperative/op/rs",
+    "newDir": "s/plugin/imperative/app/op/rs",
+    "newPkg": "semio-s-app-imperative-op"
+  },
+  {
+    "oldDir": "s/plugin/imperative/app/imperative/pack/rs",
+    "newDir": "s/plugin/imperative/app/pack/rs",
+    "newPkg": "semio-s-app-imperative-pack"
+  },
+  {
+    "oldDir": "s/plugin/imperative/app/imperative/protocol/rs",
+    "newDir": "s/plugin/imperative/app/protocol/rs",
+    "newPkg": "semio-s-app-imperative-protocol"
+  },
+  {
+    "oldDir": "s/plugin/imperative/app/imperative/ui/rs",
+    "newDir": "s/plugin/imperative/app/ui/rs",
+    "newPkg": "semio-s-app-imperative-ui"
+  },
+  {
+    "oldDir": "s/plugin/shooting/app/shooting/rs",
+    "newDir": "s/plugin/shooting/app/rs",
+    "newPkg": "semio-s-app-shooting"
+  },
+  {
+    "oldDir": "s/plugin/shooting/app/shooting/engine/rs",
+    "newDir": "s/plugin/shooting/app/engine/rs",
+    "newPkg": "semio-s-app-shooting-engine"
+  },
+  {
+    "oldDir": "s/plugin/shooting/app/shooting/dsl/rs",
+    "newDir": "s/plugin/shooting/app/dsl/rs",
+    "newPkg": "semio-s-app-shooting-dsl"
+  },
+  {
+    "oldDir": "s/plugin/shooting/app/shooting/op/rs",
+    "newDir": "s/plugin/shooting/app/op/rs",
+    "newPkg": "semio-s-app-shooting-op"
+  },
+  {
+    "oldDir": "s/plugin/shooting/app/shooting/pack/rs",
+    "newDir": "s/plugin/shooting/app/pack/rs",
+    "newPkg": "semio-s-app-shooting-pack"
+  },
+  {
+    "oldDir": "s/plugin/shooting/app/shooting/protocol/rs",
+    "newDir": "s/plugin/shooting/app/protocol/rs",
+    "newPkg": "semio-s-app-shooting-protocol"
+  },
+  {
+    "oldDir": "s/plugin/shooting/app/shooting/ui/rs",
+    "newDir": "s/plugin/shooting/app/ui/rs",
+    "newPkg": "semio-s-app-shooting-ui"
+  },
+  {
+    "oldDir": "s/plugin/sequence/app/sequence/rs",
+    "newDir": "s/plugin/sequence/app/rs",
+    "newPkg": "semio-s-app-sequence"
+  },
+  {
+    "oldDir": "s/plugin/sequence/app/sequence/engine/rs",
+    "newDir": "s/plugin/sequence/app/engine/rs",
+    "newPkg": "semio-s-app-sequence-engine"
+  },
+  {
+    "oldDir": "s/plugin/sequence/app/sequence/dsl/rs",
+    "newDir": "s/plugin/sequence/app/dsl/rs",
+    "newPkg": "semio-s-app-sequence-dsl"
+  },
+  {
+    "oldDir": "s/plugin/sequence/app/sequence/op/rs",
+    "newDir": "s/plugin/sequence/app/op/rs",
+    "newPkg": "semio-s-app-sequence-op"
+  },
+  {
+    "oldDir": "s/plugin/sequence/app/sequence/pack/rs",
+    "newDir": "s/plugin/sequence/app/pack/rs",
+    "newPkg": "semio-s-app-sequence-pack"
+  },
+  {
+    "oldDir": "s/plugin/sequence/app/sequence/protocol/rs",
+    "newDir": "s/plugin/sequence/app/protocol/rs",
+    "newPkg": "semio-s-app-sequence-protocol"
+  },
+  {
+    "oldDir": "s/plugin/sequence/app/sequence/ui/rs",
+    "newDir": "s/plugin/sequence/app/ui/rs",
+    "newPkg": "semio-s-app-sequence-ui"
+  },
+  {
+    "oldDir": "s/plugin/mathematical/app/mathematical/rs",
+    "newDir": "s/plugin/mathematical/app/rs",
+    "newPkg": "semio-s-app-mathematical"
+  },
+  {
+    "oldDir": "s/plugin/mathematical/app/mathematical/engine/rs",
+    "newDir": "s/plugin/mathematical/app/engine/rs",
+    "newPkg": "semio-s-app-mathematical-engine"
+  },
+  {
+    "oldDir": "s/plugin/mathematical/app/mathematical/dsl/rs",
+    "newDir": "s/plugin/mathematical/app/dsl/rs",
+    "newPkg": "semio-s-app-mathematical-dsl"
+  },
+  {
+    "oldDir": "s/plugin/mathematical/app/mathematical/op/rs",
+    "newDir": "s/plugin/mathematical/app/op/rs",
+    "newPkg": "semio-s-app-mathematical-op"
+  },
+  {
+    "oldDir": "s/plugin/mathematical/app/mathematical/pack/rs",
+    "newDir": "s/plugin/mathematical/app/pack/rs",
+    "newPkg": "semio-s-app-mathematical-pack"
+  },
+  {
+    "oldDir": "s/plugin/mathematical/app/mathematical/protocol/rs",
+    "newDir": "s/plugin/mathematical/app/protocol/rs",
+    "newPkg": "semio-s-app-mathematical-protocol"
+  },
+  {
+    "oldDir": "s/plugin/mathematical/app/mathematical/ui/rs",
+    "newDir": "s/plugin/mathematical/app/ui/rs",
+    "newPkg": "semio-s-app-mathematical-ui"
+  },
+  {
+    "oldDir": "s/plugin/flow/app/flow/rs",
+    "newDir": "s/plugin/flow/app/rs",
+    "newPkg": "semio-s-app-flow"
+  },
+  {
+    "oldDir": "s/plugin/flow/app/flow/engine/rs",
+    "newDir": "s/plugin/flow/app/engine/rs",
+    "newPkg": "semio-s-app-flow-engine"
+  },
+  {
+    "oldDir": "s/plugin/flow/app/flow/dsl/rs",
+    "newDir": "s/plugin/flow/app/dsl/rs",
+    "newPkg": "semio-s-app-flow-dsl"
+  },
+  {
+    "oldDir": "s/plugin/flow/app/flow/op/rs",
+    "newDir": "s/plugin/flow/app/op/rs",
+    "newPkg": "semio-s-app-flow-op"
+  },
+  {
+    "oldDir": "s/plugin/flow/app/flow/pack/rs",
+    "newDir": "s/plugin/flow/app/pack/rs",
+    "newPkg": "semio-s-app-flow-pack"
+  },
+  {
+    "oldDir": "s/plugin/flow/app/flow/protocol/rs",
+    "newDir": "s/plugin/flow/app/protocol/rs",
+    "newPkg": "semio-s-app-flow-protocol"
+  },
+  {
+    "oldDir": "s/plugin/flow/app/flow/ui/rs",
+    "newDir": "s/plugin/flow/app/ui/rs",
+    "newPkg": "semio-s-app-flow-ui"
+  },
+  {
+    "oldDir": "s/plugin/writer/app/writer/rs",
+    "newDir": "s/plugin/writer/app/rs",
+    "newPkg": "semio-s-app-writer"
+  },
+  {
+    "oldDir": "s/plugin/writer/app/writer/engine/rs",
+    "newDir": "s/plugin/writer/app/engine/rs",
+    "newPkg": "semio-s-app-writer-engine"
+  },
+  {
+    "oldDir": "s/plugin/writer/app/writer/dsl/rs",
+    "newDir": "s/plugin/writer/app/dsl/rs",
+    "newPkg": "semio-s-app-writer-dsl"
+  },
+  {
+    "oldDir": "s/plugin/writer/app/writer/op/rs",
+    "newDir": "s/plugin/writer/app/op/rs",
+    "newPkg": "semio-s-app-writer-op"
+  },
+  {
+    "oldDir": "s/plugin/writer/app/writer/pack/rs",
+    "newDir": "s/plugin/writer/app/pack/rs",
+    "newPkg": "semio-s-app-writer-pack"
+  },
+  {
+    "oldDir": "s/plugin/writer/app/writer/protocol/rs",
+    "newDir": "s/plugin/writer/app/protocol/rs",
+    "newPkg": "semio-s-app-writer-protocol"
+  },
+  {
+    "oldDir": "s/plugin/writer/app/writer/ui/rs",
+    "newDir": "s/plugin/writer/app/ui/rs",
+    "newPkg": "semio-s-app-writer-ui"
+  },
+  {
+    "oldDir": "s/plugin/draw/app/draw/rs",
+    "newDir": "s/plugin/draw/app/rs",
+    "newPkg": "semio-s-app-draw"
+  },
+  {
+    "oldDir": "s/plugin/draw/app/draw/engine/rs",
+    "newDir": "s/plugin/draw/app/engine/rs",
+    "newPkg": "semio-s-app-draw-engine"
+  },
+  {
+    "oldDir": "s/plugin/draw/app/draw/dsl/rs",
+    "newDir": "s/plugin/draw/app/dsl/rs",
+    "newPkg": "semio-s-app-draw-dsl"
+  },
+  {
+    "oldDir": "s/plugin/draw/app/draw/op/rs",
+    "newDir": "s/plugin/draw/app/op/rs",
+    "newPkg": "semio-s-app-draw-op"
+  },
+  {
+    "oldDir": "s/plugin/draw/app/draw/pack/rs",
+    "newDir": "s/plugin/draw/app/pack/rs",
+    "newPkg": "semio-s-app-draw-pack"
+  },
+  {
+    "oldDir": "s/plugin/draw/app/draw/protocol/rs",
+    "newDir": "s/plugin/draw/app/protocol/rs",
+    "newPkg": "semio-s-app-draw-protocol"
+  },
+  {
+    "oldDir": "s/plugin/draw/app/draw/ui/rs",
+    "newDir": "s/plugin/draw/app/ui/rs",
+    "newPkg": "semio-s-app-draw-ui"
+  },
+  {
+    "oldDir": "s/plugin/layout/app/layout/rs",
+    "newDir": "s/plugin/layout/app/rs",
+    "newPkg": "semio-s-app-layout"
+  },
+  {
+    "oldDir": "s/plugin/layout/app/layout/engine/rs",
+    "newDir": "s/plugin/layout/app/engine/rs",
+    "newPkg": "semio-s-app-layout-engine"
+  },
+  {
+    "oldDir": "s/plugin/layout/app/layout/dsl/rs",
+    "newDir": "s/plugin/layout/app/dsl/rs",
+    "newPkg": "semio-s-app-layout-dsl"
+  },
+  {
+    "oldDir": "s/plugin/layout/app/layout/op/rs",
+    "newDir": "s/plugin/layout/app/op/rs",
+    "newPkg": "semio-s-app-layout-op"
+  },
+  {
+    "oldDir": "s/plugin/layout/app/layout/pack/rs",
+    "newDir": "s/plugin/layout/app/pack/rs",
+    "newPkg": "semio-s-app-layout-pack"
+  },
+  {
+    "oldDir": "s/plugin/layout/app/layout/protocol/rs",
+    "newDir": "s/plugin/layout/app/protocol/rs",
+    "newPkg": "semio-s-app-layout-protocol"
+  },
+  {
+    "oldDir": "s/plugin/layout/app/layout/ui/rs",
+    "newDir": "s/plugin/layout/app/ui/rs",
+    "newPkg": "semio-s-app-layout-ui"
+  }
+]

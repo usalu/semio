@@ -102,16 +102,11 @@ checksum = "4b46cbb362ab8752921c97e041f5e366ee6297bd428a31275b9fcf1e380f7299"
 name = "animate-plugin"
 version = "0.1.0"
 dependencies = [
- "animate_present",
- "animate_video",
- "semio-framework-core",
- "semio-framework-kernel-protocol",
- "semio-framework-kernel-vcs",
  "semio-framework-os",
  "semio-framework-plugin",
- "semio-s-kernel-store",
- "serde",
- "serde_json",
+ "semio-s-app-animate-present",
+ "semio-s-app-animate-present-engine",
+ "semio-s-app-animate-present-ui",
 ]
 
 [[package]]
@@ -133,22 +128,6 @@ dependencies = [
  "typst-assets",
  "typst-svg",
  "usvg 0.45.1",
-]
-
-[[package]]
-name = "animate_present"
-version = "0.1.0"
-dependencies = [
- "animate_core",
- "animate_video",
- "semio-framework-kernel-dsl",
- "semio-framework-kernel-protocol",
- "semio-framework-kernel-vcs",
- "semio-s-kernel-store",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -9241,6 +9220,91 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-s-app-animate-present"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-dsl",
+ "semio-framework-kernel-protocol",
+ "semio-s-kernel-store",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-animate-present-dsl"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-animate-present",
+ "semio-s-app-animate-present-engine",
+ "semio-s-kernel-store",
+]
+
+[[package]]
+name = "semio-s-app-animate-present-engine"
+version = "0.1.0"
+dependencies = [
+ "animate_core",
+ "animate_video",
+ "semio-framework-core",
+ "semio-framework-kernel-vcs",
+ "semio-framework-os",
+ "semio-s-app-animate-present",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "semio-s-app-animate-present-op"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-dsl",
+ "semio-framework-kernel-protocol",
+ "semio-framework-kernel-vcs",
+ "semio-s-app-animate-present",
+ "semio-s-app-animate-present-engine",
+ "semio-s-kernel-store",
+ "serde",
+]
+
+[[package]]
+name = "semio-s-app-animate-present-pack"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-animate-present",
+ "semio-s-app-animate-present-engine",
+ "semio-s-kernel-pack",
+ "semio-s-kernel-store",
+]
+
+[[package]]
+name = "semio-s-app-animate-present-protocol"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-protocol",
+ "semio-s-app-animate-present",
+ "semio-s-app-animate-present-engine",
+ "semio-s-app-animate-present-op",
+ "semio-s-kernel-store",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-app-animate-present-ui"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-protocol",
+ "semio-framework-plugin",
+ "semio-s-app-animate-present",
+ "semio-s-app-animate-present-engine",
+ "semio-s-app-animate-present-op",
+ "semio-s-kernel-store",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

@@ -1,5 +1,6 @@
 //! 🎞️ Animate present app — document entities (constitutional: general).
 
+use protocol::{Identified, Patchable};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖Domain
@@ -59,6 +60,39 @@ pub fn default_present_deck() -> PresentDeck {
     PresentDeck { schema: PRESENT_DECK_SCHEMA.into(), source: default_figure_tile_source(), tiles: Vec::new() }
 }
 //#endregion 🔖Domain
+
+//#region 🔖CollectionSupport
+/// 🪪 Orphan-rule anchor: `Identified`/`Patchable` (from `protocol`) can only be implemented for
+/// `FigureTileDraft` in the crate that defines it — this is that crate.
+impl Identified<String> for FigureTileDraft {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct FigureTileDraftPatch {
+    pub name: Option<String>,
+    #[dsl(block)]
+    pub crop: Option<FigureTileFrame>,
+}
+
+impl Patchable<FigureTileDraftPatch> for FigureTileDraft {
+    fn apply_patch(&mut self, patch: &FigureTileDraftPatch) {
+        if let Some(name) = &patch.name {
+            self.name = name.clone();
+        }
+        if let Some(crop) = &patch.crop {
+            self.crop = crop.clone();
+        }
+    }
+
+    fn diff_patch(&self, other: &Self) -> Option<FigureTileDraftPatch> {
+        Some(FigureTileDraftPatch { name: (self.name != other.name).then(|| other.name.clone()), crop: (self.crop != other.crop).then(|| other.crop.clone()) })
+    }
+}
+//#endregion 🔖CollectionSupport
 
 //#region 🔖Dsl
 /// 📜 `PresentDeck`'s `.present` DSL grammar (`schema=... source { ... } tiles [ ... ]`) is declared

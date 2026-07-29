@@ -24,10 +24,10 @@ path = "lib.rs"
 [dependencies]
 semio-framework-os = { path = "../../../../../framework/product/os/core/rs" }
 semio-framework-plugin = { path = "../../../../../framework/plugin/rs" }
-raster = { path = "../../app/raster/rs", package = "semio-s-app-raster" }
-raster_engine = { path = "../../app/raster/engine/rs", package = "semio-s-app-raster-engine" }
-raster_op = { path = "../../app/raster/op/rs", package = "semio-s-app-raster-op" }
-raster_ui = { path = "../../app/raster/ui/rs", package = "semio-s-app-raster-ui" }
+raster = { path = "../../app/rs", package = "semio-s-app-raster" }
+raster_engine = { path = "../../app/engine/rs", package = "semio-s-app-raster-engine" }
+raster_op = { path = "../../app/op/rs", package = "semio-s-app-raster-op" }
+raster_ui = { path = "../../app/ui/rs", package = "semio-s-app-raster-ui" }
 serde_json = "1.0.140"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
