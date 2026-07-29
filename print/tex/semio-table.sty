@@ -210,7 +210,7 @@
 \newcommand{\semio@table@padendL}{{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+2\semio@table@long@cellpad\relax}\hspace{-\semio@table@long@cellpad}}
 \newcommand{\semio@table@padendR}{\hspace{-\semio@table@long@cellpad}{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+2\semio@table@long@cellpad\relax}}
 
-\newcommand{\semio@table@colspec@register@long}{|@{\semio@table@padendL}>{\semio@cell@pre}m{\dimexpr0.12\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@pre}m{\dimexpr0.78\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@preR}m{\dimexpr0.10\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padendR}|}
+\newcommand{\semio@table@colspec@register@long}{|@{\semio@table@padendL}>{\semio@cell@pre}m{\dimexpr0.12\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@pre}m{\dimexpr0.78\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@preR}m{\dimexpr0.10\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@register@lastclose}@{\semio@table@padendR}|}
 
 \newcommand{\semio@table@colspec@glossary@long}{|@{\semio@table@padendL}>{\semio@cell@pre}m{\dimexpr0.22\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@pre}m{\dimexpr0.56\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@preR}m{\dimexpr0.22\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padendR}|}
 
@@ -250,6 +250,20 @@
 \newcommand{\semio@cell@struttop}{\rule[\z@]{\z@}{\semio@table@vtop}}
 % Bottom strut: zero-width rule that only sets the last line's depth.
 \newcommand{\semio@cell@strutbot}{\rule[-\semio@table@vbot]{\z@}{\z@}}
+% 🩹 Inset variant of the bottom strut for a right-aligned last column. The
+% register/glossary long tables close their right edge with the seam-filling
+% \semio@table@padendR, which backs up one cellpad INTO the cell and — being
+% emitted after the cell — paints canvas ON TOP of it. Left-aligned columns hide
+% that overlap in their empty left inset; a right-aligned column (\semio@cell@preR)
+% sits flush against it, so its digits / the "Seite" label lose their right
+% ~cellpad. This closer prepends exactly one cellpad of inset so the content abuts
+% the fill instead of hiding under it — the same inset every other cell already has.
+\newcommand{\semio@cell@strutbotR}{\hspace*{\semio@table@long@cellpad}\semio@cell@strutbot}
+% Last-column closer for the register colspec (below). Defaults to the plain strut
+% so the shared appendix register renders byte-identically to before; ONLY the
+% Inhaltsverzeichnis render group locally \renews this to \semio@cell@strutbotR
+% (see the TOC-only exception in semio-window.sty). No other table is affected.
+\newcommand{\semio@register@lastclose}{\semio@cell@strutbot}
 % Unified cell openers: alignment + top strut + no-indent glue. The matching
 % bottom strut goes in the column's <{} slot.
 % 🪢 Hyphenation: the \hspace{0pt} glue MUST come *after* \semio@cell@struttop,

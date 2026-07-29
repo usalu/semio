@@ -459,6 +459,12 @@
     % \semio_window_appendix_register_render: — is affected.
     \renewcommand{\semio@table@vtop}{\semio@table@vtop@toc}%
     \renewcommand{\semio@table@vbot}{\semio@table@vbot@toc}%
+    % Inhaltsverzeichnis exception (2): inset the right-aligned page column so its
+    % digits AND the "Seite" header clear the seam-fill \semio@table@padendR, which
+    % otherwise overpaints their right edge (multi-digit page numbers rendered as a
+    % "1"+sliver; the header lost its last glyph). Local to this group → the
+    % appendix register keeps the plain closer and is unchanged.
+    \renewcommand{\semio@register@lastclose}{\semio@cell@strutbotR}%
     \semio@register@window@open{\SemioTocTitle}%
     \SemioTableRegister{\semio@register@table@body}%
     \semio@register@window@close
@@ -1948,10 +1954,15 @@
 \newcommand{\semio@register@table@body}{}
 
 \newcommand{\semio@register@table@header}{%
+  % 4-arg form {col1-frac}{col1-label}{col2-label}{col3-label} — matching
+  % \semio@table@long@header@repeat@three's signature and the continuation header
+  % \semio@register@table@header@long@repeat below. The col2/col3 widths come from
+  % the body colspec (the header cells drop into it), so no per-column fraction is
+  % passed here; passing the old 6-arg form leaked "0.78"/"0.10" into the header row.
   \semio@table@long@header@repeat@three
     {0.12}{\semio@register@header@key}
-    {0.78}{\semio@register@header@title}
-    {0.10}{\semio@register@header@page}%
+    {\semio@register@header@title}
+    {\semio@register@header@page}%
 }
 
 \newcommand{\semio@register@list@begin}[1]{%
