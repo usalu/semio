@@ -22,7 +22,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/usalu/semio.git",
-    "directory": "kernel/3d/brep/js"
+    "directory": "s/kernel/geometry/3d/brep/js"
   },
   "bundleKind": "library"
 }

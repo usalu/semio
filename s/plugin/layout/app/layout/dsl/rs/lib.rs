@@ -1,6 +1,6 @@
 //! 📜 Layout app — textual document grammar surface + laws (constitutional: dsl).
 
-use layout::{Frame, GridSettings, Layer, LayoutBounds, LayoutCamera, LayoutDocument, Page, PageColumns, PageMargins, PageOverride, LAYOUT_FIXTURE_SCHEMA};
+use layout::LayoutDocument;
 
 /// 📄 The bundled sample fixture, handcrafted in the `.layout` DSL.
 pub const LAYOUT_SAMPLE_TEXT: &str = include_str!("../../../../example/sample.layout");
@@ -19,6 +19,7 @@ pub fn print_dsl(document: &LayoutDocument) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use layout::{Frame, GridSettings, Layer, LayoutBounds, LayoutCamera, Page, PageColumns, PageMargins, PageOverride, LAYOUT_FIXTURE_SCHEMA};
 
     fn minimal_document_with_character_style() -> LayoutDocument {
         LayoutDocument {

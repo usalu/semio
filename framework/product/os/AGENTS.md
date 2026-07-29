@@ -14,13 +14,13 @@ A manifest for an app with schema, commands (along with cmd and cde),
 
 # Schema
 
-A schema for a document with entity schemas.
+A schema for a document with entity definitions.
 
-# EntitySchema
+# EntityDefinition
 
 # Entity
 
-An entity inside a document
+An entity inside a document.
 
 # Engine
 
@@ -50,6 +50,7 @@ An operation is a command that modifies the document.
 
 # Document
 
+A document is the data for an app.
 
 # Pack
 
@@ -88,14 +89,14 @@ A spectator is auser with only read permission.
 
 ```
 ui
-
+    …
 os
     kernel
         math
-            ...
+            …
 
         2d
-        3d
+        3d‚
         dsl
         vcs
         protocol

@@ -1,11 +1,11 @@
 {
   "name": "@semio-tech/dag-core",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "wasm": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "infinite/board/port/directed/dag",
+        "cwd": "s/plugin/dag",
         "command": "bun ./script.ts wasm"
       }
     }

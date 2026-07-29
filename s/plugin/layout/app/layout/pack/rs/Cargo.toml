@@ -12,8 +12,8 @@ path = "lib.rs"
 
 [dependencies]
 layout = { path = "../../rs", package = "semio-s-app-layout" }
-pack = { path = "../../../../../kernel/pack/rs", package = "semio-s-kernel-pack" }
-store = { path = "../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+pack = { path = "../../../../../../kernel/pack/rs", package = "semio-s-kernel-pack" }
+store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
 
 [dev-dependencies]
 layout_dsl = { path = "../../dsl/rs", package = "semio-s-app-layout-dsl" }

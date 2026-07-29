@@ -3195,23 +3195,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gis-plugin"
-version = "0.1.0"
-dependencies = [
- "framework_surface_terrain",
- "framework_surface_tiled_map",
- "semio-framework-kernel-dsl",
- "semio-framework-kernel-protocol",
- "semio-framework-kernel-vcs",
- "semio-framework-os",
- "semio-framework-plugin",
- "semio-s-kernel-store",
- "serde",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "gl_generator"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4638,48 +4621,6 @@ dependencies = [
  "euclid",
  "polycool",
  "smallvec",
-]
-
-[[package]]
-name = "layout-plugin"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "layout_rs",
- "semio-framework-core",
- "semio-framework-kernel-protocol",
- "semio-framework-kernel-vcs",
- "semio-framework-os",
- "semio-framework-plugin",
- "semio-s-kernel-store",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "layout_rs"
-version = "0.1.0"
-dependencies = [
- "fontique 0.4.0",
- "image",
- "js-sys",
- "parley",
- "png 0.17.16",
- "semio-framework-kernel-dsl",
- "semio-framework-kernel-infinite-canvas",
- "semio-framework-kernel-protocol",
- "semio-framework-kernel-vcs",
- "semio-s-kernel-store",
- "serde",
- "serde-wasm-bindgen",
- "serde_json",
- "sha2",
- "swash",
- "thiserror 2.0.18",
- "wasm-bindgen",
- "wasm-bindgen-futures",
- "web-sys",
- "zip 2.4.2",
 ]
 
 [[package]]
@@ -9525,6 +9466,162 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-app-gis-2d"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-dsl",
+ "semio-framework-kernel-protocol",
+ "semio-s-kernel-store",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-gis-2d-dsl"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-gis-2d",
+ "semio-s-kernel-store",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-gis-2d-engine"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os",
+ "semio-framework-plugin",
+ "semio-s-app-gis-2d",
+ "semio-s-app-gis-2d-dsl",
+ "semio-s-kernel-store",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-gis-2d-op"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-dsl",
+ "semio-framework-kernel-protocol",
+ "semio-framework-kernel-vcs",
+ "semio-s-app-gis-2d",
+ "semio-s-app-gis-2d-engine",
+ "semio-s-kernel-store",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-gis-2d-pack"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-gis-2d",
+ "semio-s-app-gis-2d-dsl",
+ "semio-s-kernel-pack",
+ "semio-s-kernel-store",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-gis-2d-protocol"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-protocol",
+ "semio-s-app-gis-2d",
+ "semio-s-app-gis-2d-engine",
+ "semio-s-app-gis-2d-op",
+ "semio-s-kernel-store",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-gis-2d-ui"
+version = "0.1.0"
+dependencies = [
+ "framework_surface_tiled_map",
+ "semio-framework-kernel-protocol",
+ "semio-framework-plugin",
+ "semio-s-app-gis-2d",
+ "semio-s-app-gis-2d-engine",
+ "semio-s-app-gis-2d-op",
+ "semio-s-kernel-store",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-app-gis-3d"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-dsl",
+ "semio-s-kernel-store",
+ "serde",
+]
+
+[[package]]
+name = "semio-s-app-gis-3d-dsl"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-gis-3d",
+ "semio-s-kernel-store",
+]
+
+[[package]]
+name = "semio-s-app-gis-3d-engine"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-gis-3d",
+ "semio-s-app-gis-3d-dsl",
+ "semio-s-kernel-store",
+]
+
+[[package]]
+name = "semio-s-app-gis-3d-op"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-dsl",
+ "semio-framework-kernel-protocol",
+ "semio-s-app-gis-3d",
+ "semio-s-kernel-store",
+ "serde",
+]
+
+[[package]]
+name = "semio-s-app-gis-3d-pack"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-gis-3d",
+ "semio-s-app-gis-3d-dsl",
+ "semio-s-kernel-pack",
+ "semio-s-kernel-store",
+]
+
+[[package]]
+name = "semio-s-app-gis-3d-protocol"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-protocol",
+ "semio-s-app-gis-3d",
+ "semio-s-app-gis-3d-op",
+ "semio-s-kernel-store",
+]
+
+[[package]]
+name = "semio-s-app-gis-3d-ui"
+version = "0.1.0"
+dependencies = [
+ "framework_surface_terrain",
+ "semio-framework-plugin",
+ "semio-s-app-gis-3d",
+ "semio-s-app-gis-3d-dsl",
+ "semio-s-app-gis-3d-engine",
+ "semio-s-app-gis-3d-op",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-s-app-imperative"
 version = "0.1.0"
 dependencies = [
@@ -9605,6 +9702,103 @@ dependencies = [
  "semio-s-app-imperative-op",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-layout"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-dsl",
+ "semio-framework-kernel-protocol",
+ "semio-s-kernel-store",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-layout-dsl"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-layout",
+ "semio-s-kernel-store",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-layout-engine"
+version = "0.1.0"
+dependencies = [
+ "fontique 0.4.0",
+ "image",
+ "parley",
+ "png 0.17.16",
+ "semio-framework-kernel-infinite-canvas",
+ "semio-framework-os",
+ "semio-s-app-layout",
+ "semio-s-app-layout-dsl",
+ "semio-s-kernel-store",
+ "serde_json",
+ "sha2",
+ "swash",
+ "thiserror 2.0.18",
+ "zip 2.4.2",
+]
+
+[[package]]
+name = "semio-s-app-layout-op"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-dsl",
+ "semio-framework-kernel-protocol",
+ "semio-framework-kernel-vcs",
+ "semio-s-app-layout",
+ "semio-s-app-layout-engine",
+ "semio-s-kernel-store",
+ "serde",
+]
+
+[[package]]
+name = "semio-s-app-layout-pack"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-layout",
+ "semio-s-app-layout-dsl",
+ "semio-s-kernel-pack",
+ "semio-s-kernel-store",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-layout-protocol"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-protocol",
+ "semio-s-app-layout",
+ "semio-s-app-layout-engine",
+ "semio-s-app-layout-op",
+ "semio-s-kernel-store",
+]
+
+[[package]]
+name = "semio-s-app-layout-ui"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "js-sys",
+ "semio-framework-core",
+ "semio-framework-kernel-infinite-canvas",
+ "semio-framework-kernel-protocol",
+ "semio-framework-plugin",
+ "semio-s-app-layout",
+ "semio-s-app-layout-dsl",
+ "semio-s-app-layout-engine",
+ "semio-s-app-layout-op",
+ "serde",
+ "serde-wasm-bindgen",
+ "serde_json",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]
@@ -10800,6 +10994,30 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
+]
+
+[[package]]
+name = "semio-s-plugin-gis"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os",
+ "semio-framework-plugin",
+ "semio-s-app-gis-2d",
+ "semio-s-app-gis-2d-engine",
+ "semio-s-app-gis-2d-ui",
+ "semio-s-app-gis-3d",
+ "semio-s-app-gis-3d-ui",
+]
+
+[[package]]
+name = "semio-s-plugin-layout"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os",
+ "semio-framework-plugin",
+ "semio-s-app-layout",
+ "semio-s-app-layout-engine",
+ "semio-s-app-layout-ui",
 ]
 
 [[package]]

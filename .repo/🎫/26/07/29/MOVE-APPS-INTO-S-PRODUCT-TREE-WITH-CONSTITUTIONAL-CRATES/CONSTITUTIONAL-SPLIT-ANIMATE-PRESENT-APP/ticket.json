@@ -1,0 +1,13 @@
+{
+  "title": "Constitutional Split — Animate Present App",
+  "emoji": "🎞️",
+  "status": "open",
+  "description": "Split the `animate` plugin's single app (AnimatePresentPlayApp / create_animate_present_app, id \"animate\") into the constitutional crate layout per the validated recipe at .repo/🎫/26/07/29/MOVE-APPS-INTO-S-PRODUCT-TREE-WITH-CONSTITUTIONAL-CRATES/w31-constitutional-split-recipe.md. Source files: s/plugin/animate/present/rs/lib.rs (1022 lines) and s/plugin/animate/plugin/rs/lib.rs (1312 lines). Target: s/plugin/animate/app/present/{rs,engine,dsl,op,pack,protocol,ui}/rs/{Cargo.toml,lib.rs} (folder name \"present\" since that's the app's actual identity, not \"animate\"). Rewrite s/plugin/animate/plugin/rs/lib.rs + Cargo.toml as the thin bundle. animate_core (s/plugin/animate/core/rs) and animate_video (s/plugin/animate/video/rs) are large pre-existing shared engine crates that must be left COMPLETELY untouched — new engine/protocol crates depend on them as external deps. Register 7 new crate paths as explicit root Cargo.toml workspace members; remove the old present/rs member entry (root Cargo.toml may be concurrently edited by another agent doing the same split for gis — check for conflict markers before editing, touch only animate-related lines). Verify with cargo metadata + cargo check + cargo test, then clean up any dead sibling wrapper files under the now-emptied s/plugin/animate/present/rs.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2378"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪a6082cc0bb534b218b1f6014bc571d10"
+  ]
+}

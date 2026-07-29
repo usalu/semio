@@ -1,0 +1,17 @@
+[package]
+name = "semio-s-app-gis-3d-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "GIS 3D app - binary command protocol surface + laws (constitutional: protocol)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+gis3d = { path = "../../rs", package = "semio-s-app-gis-3d" }
+gis3d_op = { path = "../../op/rs", package = "semio-s-app-gis-3d-op" }
+protocol = { path = "../../../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
+store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
