@@ -1,0 +1,16 @@
+[package]
+name = "semio-framework-kernel-infinite-board-port-undirected"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+name = "infinite_board_port_undirected"
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+infinite_board_port = { path = "../../rs", package = "semio-framework-kernel-infinite-board-port" }

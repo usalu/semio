@@ -5,6 +5,7 @@ edition = "2021"
 rust-version = "1.88"
 
 [lib]
+name = "kernel_2d_rs"
 path = "lib.rs"
 
 [features]

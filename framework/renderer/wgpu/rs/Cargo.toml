@@ -17,8 +17,8 @@ path = "lib.rs"
 semio-framework-core = { path = "../../../core/rs" }
 framework_surface_node_graph = { path = "../../../surface/node-graph/rs" }
 framework_editor = { path = "../../../editor/rs" }
-infinite_cavas = { path = "../../../../s/kernel/infinite/canvas/rs", package = "semio-s-kernel-infinite-canvas" }
-infinite_world = { path = "../../../../s/kernel/infinite/world/rs", package = "semio-s-kernel-infinite-world" }
+infinite_cavas = { path = "../../../kernel/infinite/canvas/rs", package = "semio-framework-kernel-infinite-canvas" }
+infinite_world = { path = "../../../kernel/infinite/world/rs", package = "semio-framework-kernel-infinite-world" }
 # 🎬 Direct dependency (rather than reaching through `infinite_world`, which imports these privately)
 # so the Tutorial track's camera keyframes can convert to/from `OrbitController`/`Camera3d` — see
 # `//#region 🎬Tutorial` in lib.rs.
@@ -50,9 +50,9 @@ required-features = ["native-bin"]
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 semio-framework-program-host = { path = "../../../program/host/rs" }
 store_sync = { path = "../../../../s/kernel/store/sync/rs", package = "semio-s-kernel-store-sync" }
-vcs = { path = "../../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+vcs = { path = "../../../kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
 store = { path = "../../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
-protocol = { path = "../../../../s/kernel/protocol/rs", package = "semio-s-kernel-protocol" }
+protocol = { path = "../../../kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
 tokio = { version = "1", features = ["sync"], default-features = false }
 ureq = "2.12.1"
 rfd = "0.15.4"

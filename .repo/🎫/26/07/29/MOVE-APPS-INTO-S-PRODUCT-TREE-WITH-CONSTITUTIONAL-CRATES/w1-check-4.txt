@@ -1,0 +1,1210 @@
+warning: s/kernel/pack/cli/rs/Cargo.toml: file `/Users/ueli/Documents/semio/s/kernel/pack/cli/rs/lib.rs` found to be present in multiple build targets:
+  * `lib` target `semio_s_kernel_pack_cli`
+  * `bin` target `pack`
+warning: `semio-s-kernel-pack-cli` (manifest) generated 1 warning
+warning: s/kernel/protocol/cli/rs/Cargo.toml: file `/Users/ueli/Documents/semio/s/kernel/protocol/cli/rs/lib.rs` found to be present in multiple build targets:
+  * `lib` target `semio_s_kernel_protocol_cli`
+  * `bin` target `protocol`
+warning: `semio-s-kernel-protocol-cli` (manifest) generated 1 warning
+warning: s/kernel/db/cli/rs/Cargo.toml: file `/Users/ueli/Documents/semio/s/kernel/db/cli/rs/lib.rs` found to be present in multiple build targets:
+  * `lib` target `semio_s_kernel_db_cli`
+  * `bin` target `db`
+warning: `semio-s-kernel-db-cli` (manifest) generated 1 warning
+   Compiling semio-s-kernel-mathematical-graph-manifest v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/manifest/rs)
+ui/wgpu/rs/lib.rs:6202:32: warning: unused import: `Level`
+ui/wgpu/rs/lib.rs:14093:5: warning: unused import: `crate::IconName`
+ui/wgpu/rs/lib.rs:16891:52: warning: unnecessary qualification
+warning: `ui_wgpu` (lib) generated 3 warnings (run `cargo fix --lib -p ui_wgpu` to apply 3 suggestions)
+framework/core/rs/lib.rs:1803:42: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+framework/core/rs/lib.rs:1816:43: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+framework/core/rs/lib.rs:1931:53: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+warning: `semio-framework-core` (lib) generated 3 warnings
+s/kernel/store/rs/lib.rs:3583:6: warning: unnecessary qualification
+warning: `semio-s-kernel-store` (lib) generated 1 warning (run `cargo fix --lib -p semio-s-kernel-store` to apply 1 suggestion)
+framework/program/rs/lib.rs:207:79: warning: unused import: `DocumentEnvelope`
+warning: `semio-framework-program` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-program` to apply 1 suggestion)
+s/kernel/geometry/3d/brep/rs/lib.rs:5861:28: warning: unnecessary qualification
+s/kernel/geometry/3d/brep/rs/lib.rs:5864:28: warning: unnecessary qualification
+s/kernel/geometry/3d/brep/rs/lib.rs:7007:28: warning: unnecessary qualification
+s/kernel/geometry/3d/brep/rs/lib.rs:7007:106: warning: unnecessary qualification
+s/kernel/geometry/3d/brep/rs/lib.rs:7050:28: warning: unnecessary qualification
+s/kernel/geometry/3d/brep/rs/lib.rs:7050:106: warning: unnecessary qualification
+warning: `semio-s-kernel-geometry-3d-brep` (lib) generated 6 warnings (run `cargo fix --lib -p semio-s-kernel-geometry-3d-brep` to apply 6 suggestions)
+norm/core/rs/lib.rs:484:21: warning: unnecessary qualification
+warning: `norm_core` (lib) generated 1 warning (run `cargo fix --lib -p norm_core` to apply 1 suggestion)
+s/kernel/store/sync/rs/lib.rs:19:5: warning: unused import: `serde_json::Value`
+s/kernel/store/sync/rs/lib.rs:349:16: warning: unnecessary qualification
+s/kernel/store/sync/rs/lib.rs:350:24: warning: unnecessary qualification
+s/kernel/store/sync/rs/lib.rs:360:16: warning: unnecessary qualification
+s/kernel/store/sync/rs/lib.rs:361:24: warning: unnecessary qualification
+s/kernel/store/sync/rs/lib.rs:421:41: warning: unnecessary qualification
+s/kernel/store/sync/rs/lib.rs:603:42: warning: unnecessary qualification
+s/kernel/store/sync/rs/lib.rs:607:38: warning: unnecessary qualification
+s/kernel/store/sync/rs/lib.rs:1075:37: warning: unnecessary qualification
+s/kernel/store/sync/rs/lib.rs:1075:100: warning: unnecessary qualification
+s/kernel/store/sync/rs/lib.rs:1142:37: warning: unnecessary qualification
+s/kernel/store/sync/rs/lib.rs:100:9: warning: structure field `pendingOperations` should have a snake case name: help: convert the identifier to snake case: `pending_operations`
+warning: `semio-s-kernel-store-sync` (lib) generated 12 warnings (run `cargo fix --lib -p semio-s-kernel-store-sync` to apply 11 suggestions)
+framework/product/os/core/rs/lib.rs:501:50: warning: unnecessary qualification
+framework/product/os/core/rs/lib.rs:501:124: warning: unnecessary qualification
+framework/product/os/core/rs/lib.rs:2723:41: warning: unnecessary qualification
+framework/product/os/core/rs/lib.rs:3237:30: warning: unnecessary qualification
+framework/product/os/core/rs/lib.rs:4091:21: warning: unnecessary qualification
+framework/product/os/core/rs/lib.rs:4091:72: warning: unnecessary qualification
+framework/product/os/core/rs/lib.rs:4091:127: warning: unnecessary qualification
+framework/product/os/core/rs/lib.rs:4091:177: warning: unnecessary qualification
+framework/product/os/core/rs/lib.rs:4100:29: warning: unnecessary qualification
+framework/product/os/core/rs/lib.rs:4100:82: warning: unnecessary qualification
+framework/product/os/core/rs/lib.rs:4100:139: warning: unnecessary qualification
+framework/product/os/core/rs/lib.rs:4100:191: warning: unnecessary qualification
+framework/product/os/core/rs/lib.rs:4114:33: warning: unnecessary qualification
+framework/product/os/core/rs/lib.rs:4114:86: warning: unnecessary qualification
+framework/product/os/core/rs/lib.rs:4114:143: warning: unnecessary qualification
+framework/product/os/core/rs/lib.rs:4114:195: warning: unnecessary qualification
+framework/product/os/core/rs/lib.rs:4122:30: warning: unnecessary qualification
+framework/product/os/core/rs/lib.rs:4140:30: warning: unnecessary qualification
+framework/product/os/core/rs/lib.rs:4876:36: warning: unnecessary qualification
+warning: `semio-framework-os` (lib) generated 19 warnings (run `cargo fix --lib -p semio-framework-os` to apply 19 suggestions)
+framework/editor/rs/lib.rs:52:9: warning: unnecessary qualification
+framework/editor/rs/lib.rs:1095:9: warning: unnecessary qualification
+warning: `framework_editor` (lib) generated 2 warnings (run `cargo fix --lib -p framework_editor` to apply 2 suggestions)
+compose/client/lib/rs/lib.rs:660:18: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:664:18: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1619:24: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1635:38: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1660:50: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1671:50: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1685:24: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1694:38: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1698:50: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1721:24: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1733:38: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1740:58: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1741:50: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1742:58: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1743:52: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1744:54: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1806:31: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1806:46: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1807:33: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1807:48: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1826:88: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1827:13: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1830:113: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1831:13: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1888:60: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:1890:52: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:3297:86: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:5697:57: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:5937:49: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:5944:32: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:5957:42: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:5971:44: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:6035:34: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:6035:64: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:6038:29: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:6039:25: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:6051:61: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:6164:23: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:6191:21: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:6216:21: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:6264:22: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:6264:69: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:6411:54: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:6428:55: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:6841:45: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7021:54: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7063:6: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7064:31: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7070:41: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7073:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7074:14: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7088:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7089:9: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7092:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7092:64: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7098:6: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7099:31: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7105:41: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7108:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7109:14: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7123:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7124:9: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7127:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7127:64: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7133:6: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7134:31: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7140:41: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7143:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7144:14: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7164:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7165:9: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7167:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7168:9: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7171:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7171:64: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7839:17: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7843:17: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7911:17: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:7915:17: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8069:41: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8083:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8090:64: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8096:27: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8303:119: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8303:163: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8461:65: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8476:52: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8493:65: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8509:52: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8590:27: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8591:24: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8592:24: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8603:73: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8679:13: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8686:57: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8696:64: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8701:71: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8708:59: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8718:66: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8723:68: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8762:57: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8812:13: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8813:17: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8814:17: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8815:23: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:8816:24: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11027:62: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11041:17: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11096:13: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11139:13: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11182:13: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11236:13: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11279:13: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11317:33: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11319:54: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11320:52: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11321:36: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11322:36: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11323:43: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11394:13: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11396:41: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11400:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11401:18: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11412:33: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11414:36: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11415:35: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11426:28: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11441:32: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11447:24: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11463:13: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11465:41: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11469:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11470:18: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11475:42: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11487:33: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11489:36: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11490:35: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11492:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11493:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11736:44: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11736:104: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11738:13: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11744:48: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11744:112: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11746:13: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11752:42: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11754:13: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11755:13: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11761:66: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11774:94: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11821:81: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11833:65: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11846:71: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11867:85: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11879:69: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11892:75: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11910:62: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11912:21: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11920:83: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11932:72: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11934:21: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11945:9: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11948:62: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11969:58: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11984:53: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:11994:79: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12011:66: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12015:61: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12025:87: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12042:66: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12066:61: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12078:89: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12097:55: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12164:69: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12172:55: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12246:93: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12278:32: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12279:9: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12282:48: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12283:23: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12283:73: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12288:23: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12288:73: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12305:45: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12310:46: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12485:32: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12564:38: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12573:32: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12692:52: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12729:58: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12739:28: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12750:24: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12757:71: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12766:60: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12766:96: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12770:30: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12783:48: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12785:47: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12792:44: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12795:51: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12798:44: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12804:30: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12810:32: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12813:47: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12818:58: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12823:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12829:51: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12832:62: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12845:42: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12857:42: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12866:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12867:45: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12868:50: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12873:31: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12879:33: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12908:41: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12909:46: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12914:24: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12915:34: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12916:36: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12918:43: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12921:47: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12924:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12927:41: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12930:43: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12933:42: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12936:44: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12939:43: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12942:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12945:45: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12948:45: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12950:32: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12962:53: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12965:46: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12975:97: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12978:95: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12980:35: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12990:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12991:42: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12994:42: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:12997:35: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13003:96: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13007:9: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13010:51: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13010:102: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13024:76: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13024:158: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13029:27: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13029:104: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13031:62: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13035:33: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13045:62: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13049:33: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13052:83: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13054:44: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13068:71: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13068:111: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13068:170: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13071:57: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13073:29: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13084:188: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13085:28: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13092:69: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13092:109: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13092:168: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13095:53: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13097:29: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13118:153: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13119:28: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13129:14: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13130:18: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13131:61: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13132:21: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13134:21: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13135:46: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13139:31: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13139:65: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13140:31: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13140:65: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13141:22: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13142:25: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13143:29: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13159:64: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13164:74: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13173:64: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13175:33: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13178:83: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13180:44: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13200:74: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13202:33: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13221:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13233:73: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13235:33: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13249:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13266:73: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13266:113: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13266:172: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13304:9: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13305:9: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13311:31: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13312:25: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13315:19: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13316:27: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13317:27: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13318:14: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13319:69: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13328:27: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13329:19: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13330:26: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13331:65: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13332:25: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13336:34: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13339:17: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13340:77: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13346:54: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13346:104: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13346:151: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13346:211: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13350:34: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13355:76: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13361:62: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13363:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13363:85: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13378:65: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13382:69: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13387:56: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13388:60: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13399:15: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13400:15: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13401:18: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13402:21: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13409:51: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13410:25: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13412:75: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13414:22: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13415:22: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13415:136: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13417:32: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13421:76: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13446:15: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13447:15: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13448:18: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13449:21: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13454:56: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13455:25: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13457:75: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13462:27: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13463:32: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13468:27: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13469:32: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13470:102: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13471:100: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13472:172: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13473:169: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13486:30: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13489:23: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13490:30: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13491:23: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13492:25: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13493:24: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13494:22: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13495:24: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13496:23: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13497:27: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13498:23: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13499:23: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13500:20: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13501:20: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13502:29: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13504:55: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13505:60: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13514:71: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13514:126: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13514:141: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13514:161: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13515:17: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13565:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13567:36: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13579:26: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13583:42: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13664:20: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13667:30: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13671:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13731:21: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13731:36: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13732:28: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13733:18: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13735:18: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13745:35: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13756:38: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13779:51: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13779:66: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13779:101: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13779:121: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13795:53: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13795:68: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13795:103: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13811:41: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13814:27: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13857:13: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13863:36: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13883:58: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13887:31: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13898:57: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13898:169: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13902:31: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13913:52: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13924:71: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13924:125: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13928:66: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13941:31: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13956:49: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13956:64: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13957:32: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:13966:21: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14011:83: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14016:119: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14016:181: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14035:25: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14046:88: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14065:20: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14066:30: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14175:20: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14187:9: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14219:104: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14219:167: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14236:104: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14236:167: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14239:30: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14241:33: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14260:28: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14260:74: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14261:38: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14262:58: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14307:104: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14307:167: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14324:47: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14324:107: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14329:64: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14407:45: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14412:32: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14421:42: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14437:62: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14438:28: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14519:114: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14519:165: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14572:36: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14573:38: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14578:24: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14599:79: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14599:145: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14605:36: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14606:38: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14611:24: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14632:58: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14632:124: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14635:25: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14635:92: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14644:79: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14645:20: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14645:66: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14645:131: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14697:17: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14716:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14869:96: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14965:22: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14930:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14932:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:14933:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:15040:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:15046:97: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:15070:43: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:15564:98: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:15578:58: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:15616:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:15618:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:15619:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16982:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16984:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:16985:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17002:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17004:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17005:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17006:41: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17007:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17008:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17025:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17027:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17028:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17038:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17040:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17041:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17045:67: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17046:67: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17047:69: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17048:67: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17049:76: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17050:76: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17051:76: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17052:42: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17053:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17064:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17066:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17067:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17068:44: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17069:43: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17079:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17081:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17082:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17086:67: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17087:67: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17097:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17099:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17100:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17104:67: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17105:67: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17106:69: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17107:67: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17108:76: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17109:76: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17110:76: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17111:42: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17112:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17122:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17124:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17125:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17169:41: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17188:41: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17204:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17206:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17207:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17208:45: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17210:73: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17211:77: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17293:33: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17295:36: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17296:35: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17298:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17445:33: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17447:36: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17448:35: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17449:40: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17450:56: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17450:79: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17487:93: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17508:119: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17513:54: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17553:55: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17559:65: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17564:61: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17576:64: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17576:119: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17582:68: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17582:123: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17585:75: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17586:77: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17587:78: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17588:83: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17589:84: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17590:73: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17591:76: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17592:75: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17593:73: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17594:77: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17595:77: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17601:59: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17603:69: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17618:53: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17621:92: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17625:51: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17651:56: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17664:87: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17674:80: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17677:76: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17688:64: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17698:70: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17702:32: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17708:52: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17724:82: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17751:52: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17776:55: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17782:70: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17795:101: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17809:127: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17817:143: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17844:66: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17850:73: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17856:147: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17883:70: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17889:77: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17911:14: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17938:70: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17944:78: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17965:14: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17991:67: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:17997:74: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18018:14: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18048:14: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18070:156: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18080:69: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18086:76: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18107:101: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18112:127: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18119:106: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18124:109: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18129:72: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18134:79: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18148:101: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18153:127: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18160:106: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18165:109: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18170:72: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18175:79: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18189:99: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18194:127: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18199:106: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18204:109: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18209:72: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18214:79: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18228:101: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18233:127: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18238:106: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18243:109: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18248:72: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18253:79: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18266:14: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18274:67: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18279:74: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18291:14: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18299:72: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18304:79: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18319:158: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18324:127: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18329:106: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18334:109: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18339:72: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18344:79: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18359:101: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18364:127: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18369:106: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18383:101: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18388:127: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18393:106: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18397:55: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18402:109: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18407:72: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18412:79: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18424:14: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18457:14: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18473:14: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18484:68: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18489:75: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18499:14: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18514:101: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18519:127: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18523:73: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18540:79: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18544:51: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18549:115: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18554:109: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18559:72: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18564:79: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18578:73: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18595:75: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18599:51: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18604:115: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18623:52: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18624:54: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18629:55: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18640:58: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18666:57: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18742:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18743:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18744:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18745:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18746:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18747:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18748:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18749:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18750:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18751:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18752:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18753:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18754:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18755:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18756:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18757:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18758:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18759:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18760:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18761:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18762:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18763:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18764:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18765:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18774:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18775:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18776:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18777:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18778:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18779:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18780:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18781:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18782:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18783:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18784:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18785:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18786:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18787:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18788:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18789:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18790:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18791:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18792:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18793:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18794:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18795:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18796:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18797:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18798:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18799:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18800:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18801:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18802:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18803:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18804:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18805:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18806:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18807:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18808:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18809:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18810:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18811:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18812:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18813:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18814:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18815:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18816:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18817:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18818:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18819:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18820:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18821:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18822:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18823:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18824:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18825:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18826:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18827:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18828:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18829:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18830:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18831:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18832:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18833:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18834:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18835:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18836:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18837:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18838:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18839:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18840:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18841:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18842:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18843:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18844:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18845:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18846:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18847:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18848:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18849:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18850:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18851:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18852:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18853:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18854:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18855:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18856:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18857:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18858:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18859:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18860:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18861:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18862:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18863:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18864:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18865:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18866:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18867:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18868:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18869:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18870:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18871:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18872:37: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18885:36: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:18887:36: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19005:64: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19007:16: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19007:62: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19009:23: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19212:50: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19212:124: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19218:41: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19298:101: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19326:94: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19345:45: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19357:62: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19361:23: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19363:25: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19363:71: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19410:63: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19427:62: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19427:113: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19445:39: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19472:38: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19475:157: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19488:66: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19491:23: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19491:69: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19492:18: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19492:64: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19530:43: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19538:51: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19541:23: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19541:69: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19542:18: warning: unnecessary qualification
+compose/client/lib/rs/lib.rs:19542:64: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:103:39: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:103:73: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:148:29: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:148:63: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:153:39: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:153:73: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:166:32: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:166:66: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:184:57: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:184:91: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:199:46: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:202:59: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:214:54: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:219:46: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:219:80: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:243:34: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:243:68: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:1081:25: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:1088:6: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:1354:17: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:1355:19: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:1359:53: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:1382:17: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:1501:24: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:1541:32: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:1803:59: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:2496:17: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:2695:43: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:2710:13: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:2820:21: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:2855:6: warning: unnecessary qualification
+warning: `compose` (lib) generated 827 warnings (run `cargo fix --lib -p compose` to apply 827 suggestions)
+warning: `framework_surface_tiled_map` (lib) generated 31 warnings (run `cargo fix --lib -p framework_surface_tiled_map` to apply 31 suggestions)
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:796:32
+    |
+796 |     fn parse_typed_item(input: ParseStream) -> syn::Result<Type> {
+    |                                ^^^^^^^^^^^ expected lifetime parameter
+    |
+    = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+    = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+    |
+796 |     fn parse_typed_item(input: ParseStream<'_>) -> syn::Result<Type> {
+    |                                           ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:803:32
+    |
+803 |     fn parse_ident_item(input: ParseStream) -> syn::Result<Ident> {
+    |                                ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+803 |     fn parse_ident_item(input: ParseStream<'_>) -> syn::Result<Ident> {
+    |                                           ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:810:33
+    |
+810 |     fn parse_event_block(input: ParseStream) -> syn::Result<(Ident, Vec<EventVariantAst>)> {
+    |                                 ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+810 |     fn parse_event_block(input: ParseStream<'_>) -> syn::Result<(Ident, Vec<EventVariantAst>)> {
+    |                                            ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:852:27
+    |
+852 |     fn parse_after(input: ParseStream) -> syn::Result<AfterAst> {
+    |                           ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+852 |     fn parse_after(input: ParseStream<'_>) -> syn::Result<AfterAst> {
+    |                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:867:24
+    |
+867 |     fn parse_on(input: ParseStream) -> syn::Result<OnAst> {
+    |                        ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+867 |     fn parse_on(input: ParseStream<'_>) -> syn::Result<OnAst> {
+    |                                   ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:893:28
+    |
+893 |     fn parse_always(input: ParseStream) -> syn::Result<AlwaysAst> {
+    |                            ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+893 |     fn parse_always(input: ParseStream<'_>) -> syn::Result<AlwaysAst> {
+    |                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:912:29
+    |
+912 |     fn parse_history(input: ParseStream) -> syn::Result<HistoryAst> {
+    |                             ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+912 |     fn parse_history(input: ParseStream<'_>) -> syn::Result<HistoryAst> {
+    |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:925:32
+    |
+925 |     fn parse_state_body(input: ParseStream, name: Option<Ident>) -> syn::Result<StateAst> {
+    |                                ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+925 |     fn parse_state_body(input: ParseStream<'_>, name: Option<Ident>) -> syn::Result<StateAst> {
+    |                                           ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:974:27
+    |
+974 |     fn parse_final(input: ParseStream) -> syn::Result<FinalAst> {
+    |                           ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+974 |     fn parse_final(input: ParseStream<'_>) -> syn::Result<FinalAst> {
+    |                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:994:30
+    |
+994 |     fn parse_parallel(input: ParseStream) -> syn::Result<ParallelAst> {
+    |                              ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+994 |     fn parse_parallel(input: ParseStream<'_>) -> syn::Result<ParallelAst> {
+    |                                         ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> fsm/macros/rs/lib.rs:1025:25
+     |
+1025 |         fn parse(input: ParseStream) -> syn::Result<Self> {
+     |                         ^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1025 |         fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+     |                                    ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> fsm/macros/rs/lib.rs:1208:33
+     |
+1208 |     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+     |                     ------------^^^^^^^^^^^
+     |                     |
+     |                     expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1208 |     fn parse(input: syn::parse::ParseStream<'_>) -> syn::Result<Self> {
+     |                                            ++++
+
+warning: `fsm_macros` (lib) generated 12 warnings
+cad/rs/lib.rs:1003:41: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+cad/rs/lib.rs:1429:43: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+warning: `cad_document` (lib) generated 2 warnings
+warning: unused extern crate
+ --> fsm/rs/lib.rs:6:1
+  |
+6 | extern crate self as fsm;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+6 - extern crate self as fsm;
+  |
+
+warning: unnecessary qualification
+    --> fsm/rs/lib.rs:2037:33
+     |
+2037 |     fn definition() -> &'static kernel::MachineDefinition<Self>;
+     |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2037 -     fn definition() -> &'static kernel::MachineDefinition<Self>;
+2037 +     fn definition() -> &'static MachineDefinition<Self>;
+     |
+
+warning: `fsm` (lib) generated 2 warnings (run `cargo fix --lib -p fsm` to apply 2 suggestions)
+    Checking lowpoly_core v0.1.0 (/Users/ueli/Documents/semio/lowpoly/core/rs)
+    Checking layout_rs v0.1.0 (/Users/ueli/Documents/semio/layout/rs)
+warning: hidden lifetime parameters in types are deprecated
+   --> framework/product/os/hub/directory/sqlite/rs/lib.rs:151:43
+    |
+151 |         let row_mapper = |row: &rusqlite::Row| -> rusqlite::Result<NodeRecord> {
+    |                                 ----------^^^
+    |                                 |
+    |                                 expected lifetime parameter
+    |
+    = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+    = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+    |
+151 |         let row_mapper = |row: &rusqlite::Row<'_>| -> rusqlite::Result<NodeRecord> {
+    |                                              ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> framework/product/os/hub/directory/sqlite/rs/lib.rs:481:29
+    |
+481 | fn user_row(row: &rusqlite::Row) -> rusqlite::Result<UserRecord> {
+    |                   ----------^^^
+    |                   |
+    |                   expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+481 | fn user_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<UserRecord> {
+    |                                ++++
+
+s/kernel/db/cli/rs/lib.rs:1040:4: warning: function `main` is never used
+warning: `os-hub-directory-sqlite` (lib) generated 2 warnings
+warning: `semio-s-kernel-db-cli` (lib) generated 1 warning
+    Checking draw v0.1.0 (/Users/ueli/Documents/semio/draw/rs)
+    Checking fem_3d v0.1.0 (/Users/ueli/Documents/semio/fem/3d/rs)
+    Checking fem_2d v0.1.0 (/Users/ueli/Documents/semio/fem/2d/rs)
+    Checking norm_iso_16757 v0.1.0 (/Users/ueli/Documents/semio/norm/iso/16757/rs)
+    Checking norm_vdi_3805 v0.1.0 (/Users/ueli/Documents/semio/norm/vdi/3805/rs)
+    Checking process_3d v0.1.0 (/Users/ueli/Documents/semio/process/3d/rs)
+    Checking remodel_document v0.1.0 (/Users/ueli/Documents/semio/remodel/rs)
+layout/rs/lib.rs:595:33: error: couldn't read `layout/rs/../../infinite/cavas/rs/asset/MapLabelSans.ttf`: No such file or directory (os error 2)
+layout/rs/lib.rs:849:63: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+layout/rs/lib.rs:856:73: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+    Checking shooting v0.1.0 (/Users/ueli/Documents/semio/shooting/rs)
+fem/2d/rs/lib.rs:857:27: warning: unused variable: `regions`: help: if this is intentional, prefix it with an underscore: `_regions`
+    Checking semio-s-kernel-mathematical-graph v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/rs)
+    Checking semio-s-kernel-mathematical-graph-dsl v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/dsl/rs)
+    Checking semio-s-kernel-mathematical-graph-drawing v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/drawing/rs)
+    Checking semio-s-kernel-mathematical-graph-traversal v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/traversal/rs)
+warning: `fem_2d` (lib) generated 1 warning (run `cargo fix --lib -p fem_2d` to apply 1 suggestion)
+    Checking semio-s-kernel-neural-dag v0.1.0 (/Users/ueli/Documents/semio/s/kernel/neural/dag/rs)
+    Checking semio-s-kernel-infinite-board v0.1.0 (/Users/ueli/Documents/semio/s/kernel/infinite/board/rs)
+    Checking semio-s-kernel-mathematical-graph-matching v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/matching/rs)
+    Checking trinity_ram v0.1.0 (/Users/ueli/Documents/semio/trinity/ram/rs)
+    Checking semio-s-kernel-mathematical-graph-components v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/components/rs)
+    Checking semio-s-kernel-mathematical-graph-paths v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/paths/rs)
+s/kernel/infinite/board/rs/lib.rs:99:44: warning: unnecessary qualification
+s/kernel/infinite/board/rs/lib.rs:1523:22: warning: unnecessary qualification
+    Checking semio-s-kernel-mathematical-graph-structure v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/structure/rs)
+    Checking semio-s-kernel-mathematical-graph-centrality v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/centrality/rs)
+    Checking semio-s-kernel-mathematical-graph-cliques v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/cliques/rs)
+    Checking semio-s-kernel-mathematical-graph-flow v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/flow/rs)
+    Checking semio-s-kernel-mathematical-graph-trees v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/trees/rs)
+    Checking semio-s-kernel-mathematical-graph-generate v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/generate/rs)
+    Checking trinity_jack v0.1.0 (/Users/ueli/Documents/semio/trinity/jack/core/rs)
+warning: `semio-s-kernel-infinite-board` (lib) generated 2 warnings (run `cargo fix --lib -p semio-s-kernel-infinite-board` to apply 2 suggestions)
+    Checking semio-s-kernel-infinite-board-normal-undirected v0.1.0 (/Users/ueli/Documents/semio/s/kernel/infinite/board/normal/undirected/rs)
+    Checking semio-s-kernel-infinite-board-port v0.1.0 (/Users/ueli/Documents/semio/s/kernel/infinite/board/port/rs)
+    Checking semio-s-kernel-infinite-board-normal-directed v0.1.0 (/Users/ueli/Documents/semio/s/kernel/infinite/board/normal/directed/rs)
+    Checking semio-s-kernel-mathematical-graph-approximation v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/approximation/rs)
+    Checking semio-s-kernel-mathematical-graph-connectivity v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/connectivity/rs)
+s/kernel/infinite/board/port/rs/lib.rs:73:21: warning: unnecessary qualification
+    Checking semio-s-kernel-mathematical-graph-generate-random v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/generate/random/rs)
+trinity/jack/core/rs/lib.rs:482:7: warning: constant `CLAUSE_KEYWORDS` is never used
+trinity/jack/core/rs/lib.rs:483:7: warning: constant `LOGIC_KEYWORDS` is never used
+trinity/jack/core/rs/lib.rs:485:4: warning: function `completion_prefix` is never used
+trinity/jack/core/rs/lib.rs:500:4: warning: function `tokens_before_cursor` is never used
+trinity/jack/core/rs/lib.rs:511:4: warning: function `after_colon_kind_context` is never used
+trinity/jack/core/rs/lib.rs:530:4: warning: function `after_dot_property_context` is never used
+trinity/jack/core/rs/lib.rs:539:4: warning: function `open_bracket_kind` is never used
+trinity/jack/core/rs/lib.rs:556:4: warning: function `collect_bound_vars` is never used
+trinity/jack/core/rs/lib.rs:572:4: warning: function `in_where_clause` is never used
+trinity/jack/core/rs/lib.rs:585:4: warning: function `graph_node_kinds` is never used
+trinity/jack/core/rs/lib.rs:596:4: warning: function `graph_edge_kinds` is never used
+trinity/jack/core/rs/lib.rs:607:4: warning: function `graph_property_names` is never used
+trinity/jack/core/rs/lib.rs:617:4: warning: function `filter_completions` is never used
+trinity/jack/core/rs/lib.rs:641:4: warning: function `collect_pattern_vars` is never used
+trinity/jack/core/rs/lib.rs:653:4: warning: function `collect_clause_bound_vars` is never used
+trinity/jack/core/rs/lib.rs:669:4: warning: function `collect_referenced_vars` is never used
+trinity/jack/core/rs/lib.rs:698:4: warning: function `collect_expr_vars` is never used
+trinity/jack/core/rs/lib.rs:708:4: warning: function `semantic_lints` is never used
+trinity/jack/core/rs/lib.rs:781:4: warning: function `find_kind_span` is never used
+trinity/jack/core/rs/lib.rs:787:4: warning: function `find_ident_span` is never used
+    Checking semio-s-kernel-mathematical-graph-community v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/community/rs)
+    Checking semio-s-kernel-mathematical-graph-distance v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/distance/rs)
+    Checking reasoning_mindmap v0.1.0 (/Users/ueli/Documents/semio/reasoning/mindmap/rs)
+warning: `semio-s-kernel-infinite-board-port` (lib) generated 1 warning (run `cargo fix --lib -p semio-s-kernel-infinite-board-port` to apply 1 suggestion)
+    Checking semio-s-kernel-infinite-board-port-directed v0.1.0 (/Users/ueli/Documents/semio/s/kernel/infinite/board/port/directed/rs)
+    Checking semio-s-kernel-mathematical-graph-cycles v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/cycles/rs)
+warning: `trinity_jack` (lib) generated 20 warnings
+    Checking semio-s-kernel-mathematical-graph-similarity v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/similarity/rs)
+    Checking semio-s-kernel-mathematical-graph-bipartite v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/bipartite/rs)
+    Checking semio-s-kernel-mathematical-graph-planarity v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/planarity/rs)
+    Checking semio-s-kernel-mathematical-graph-dag v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/dag/rs)
+    Checking semio-s-kernel-mathematical-graph-coloring v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/coloring/rs)
+    Checking semio-s-kernel-mathematical-graph-isomorphism v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/isomorphism/rs)
+    Checking semio-s-kernel-mathematical-graph-operators v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/operators/rs)
+    Checking semio-s-kernel-mathematical-graph-clustering v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/clustering/rs)
+    Checking semio-s-kernel-mathematical-graph-spectral v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/spectral/rs)
+    Checking semio-s-kernel-mathematical-graph-io v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/io/rs)
+warning: `layout_rs` (lib) generated 2 warnings
+error: could not compile `layout_rs` (lib) due to 1 previous error; 2 warnings emitted
+warning: build failed, waiting for other jobs to finish...

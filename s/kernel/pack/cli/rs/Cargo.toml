@@ -9,6 +9,7 @@ description = "Pack binary document format CLI — inspect, verify, hash, to-dsl
 [lints]
 workspace = true
 [lib]
+name = "pack_cli"
 path = "lib.rs"
 
 [[bin]]
@@ -17,4 +18,4 @@ path = "lib.rs"
 
 [dependencies]
 pack = { path = "../../rs", package = "semio-s-kernel-pack" }
-dsl_schema = { path = "../../../dsl/schema/rs", package = "semio-s-kernel-dsl-schema" }
+dsl_schema = { path = "../../../../../framework/kernel/dsl/schema/rs", package = "semio-framework-kernel-dsl-schema" }

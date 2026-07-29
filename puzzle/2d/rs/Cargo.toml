@@ -19,12 +19,12 @@ path = "lib.rs"
 serde_json = "1.0.140"
 
 [dependencies]
-vcs = { path = "../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+vcs = { path = "../../../framework/kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
 store = { path = "../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
-protocol = { path = "../../../s/kernel/protocol/rs", package = "semio-s-kernel-protocol" }
-dsl = { path = "../../../s/kernel/dsl/rs", package = "semio-s-kernel-dsl" }
-mathematical_geometry = { path = "../../../s/kernel/mathematical/geometry/rs", package = "semio-s-kernel-mathematical-geometry" }
-infinite_board_port_directed_normal = { path = "../../../s/kernel/infinite/board/port/directed/normal/rs", package = "semio-s-kernel-infinite-board-port-directed-normal" }
+protocol = { path = "../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
+dsl = { path = "../../../framework/kernel/dsl/rs", package = "semio-framework-kernel-dsl" }
+mathematical_geometry = { path = "../../../framework/kernel/mathematical/geometry/rs", package = "semio-framework-kernel-mathematical-geometry" }
+infinite_board_port_directed_normal = { path = "../../../framework/kernel/infinite/board/port/directed/normal/rs", package = "semio-framework-kernel-infinite-board-port-directed-normal" }
 reasoning_mindmap = { path = "../../../reasoning/mindmap/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

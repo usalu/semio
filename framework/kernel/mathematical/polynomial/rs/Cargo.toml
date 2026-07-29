@@ -1,0 +1,17 @@
+[package]
+name = "semio-framework-kernel-mathematical-polynomial"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+name = "mathematical_polynomial"
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+mathematical_number = { path = "../../number/rs", package = "semio-framework-kernel-mathematical-number" }
+mathematical_random = { path = "../../random/rs", package = "semio-framework-kernel-mathematical-random" }

@@ -23,11 +23,11 @@ semio-framework-hash = { path = "../../hash/rs" }
 # flavored id newtypes (OperationId/ActorId/DocumentId/DocumentVersion/SchemaId) now canonically
 # live in `protocol_core`; framework/core re-exports them under their existing names (see `kernel`
 # module) so every existing internal/external reference keeps resolving unchanged.
-protocol_core = { path = "../../../s/kernel/protocol/core/rs", package = "semio-s-kernel-protocol-core" }
+protocol_core = { path = "../../kernel/protocol/core/rs", package = "semio-framework-kernel-protocol-core" }
 # 🎯 W6 kernel unification: `kernel::DocumentDiff` re-exports `protocol::DocumentDiff` (the binary
 # causal-envelope shape from W5), needing the full facade (protocol_causal's `DocumentDiff`, not
 # just protocol_core).
-protocol = { path = "../../../s/kernel/protocol/rs", package = "semio-s-kernel-protocol" }
+protocol = { path = "../../kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"

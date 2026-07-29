@@ -12,6 +12,7 @@ workspace = true
 wasm-opt = false
 
 [lib]
+name = "store"
 crate-type = ["rlib", "cdylib"]
 path = "lib.rs"
 
@@ -19,12 +20,12 @@ path = "lib.rs"
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"
-dsl_core = { path = "../../dsl/core/rs", package = "semio-s-kernel-dsl-core" }
-dsl = { path = "../../dsl/rs", package = "semio-s-kernel-dsl" }
+dsl_core = { path = "../../../../framework/kernel/dsl/core/rs", package = "semio-framework-kernel-dsl-core" }
+dsl = { path = "../../../../framework/kernel/dsl/rs", package = "semio-framework-kernel-dsl" }
 pack = { path = "../../pack/rs", package = "semio-s-kernel-pack" }
 semio-framework-core = { path = "../../../../framework/core/rs" }
-protocol = { path = "../../protocol/rs", package = "semio-s-kernel-protocol" }
-vcs = { path = "../../vcs/rs", package = "semio-s-kernel-vcs" }
+protocol = { path = "../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
+vcs = { path = "../../../../framework/kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
 blake3 = "1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

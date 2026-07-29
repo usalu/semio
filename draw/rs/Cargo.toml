@@ -15,10 +15,10 @@ crate-type = ["rlib", "cdylib"]
 path = "lib.rs"
 
 [dependencies]
-vcs = { path = "../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+vcs = { path = "../../framework/kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
 store = { path = "../../s/kernel/store/rs", package = "semio-s-kernel-store" }
-protocol = { path = "../../s/kernel/protocol/rs", package = "semio-s-kernel-protocol" }
-dsl = { path = "../../s/kernel/dsl/rs", package = "semio-s-kernel-dsl" }
+protocol = { path = "../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
+dsl = { path = "../../framework/kernel/dsl/rs", package = "semio-framework-kernel-dsl" }
 kernel_2d_engine = { path = "../../s/kernel/geometry/2d/engine/rs", package = "semio-s-kernel-geometry-2d-engine" }
 kernel_2d_rs = { path = "../../s/kernel/geometry/2d/rs", package = "semio-s-kernel-geometry-2d" }
 semio-framework-core = { path = "../../framework/core/rs" }

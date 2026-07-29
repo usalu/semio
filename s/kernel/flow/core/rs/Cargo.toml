@@ -11,14 +11,15 @@ workspace = true
 wasm-opt = false
 
 [lib]
+name = "flow_core"
 crate-type = ["rlib", "cdylib"]
 path = "lib.rs"
 
 [dependencies]
-vcs = { path = "../../../vcs/rs", package = "semio-s-kernel-vcs" }
+vcs = { path = "../../../../../framework/kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
 store = { path = "../../../store/rs", package = "semio-s-kernel-store" }
-protocol = { path = "../../../protocol/rs", package = "semio-s-kernel-protocol" }
-dsl = { path = "../../../dsl/rs", package = "semio-s-kernel-dsl" }
+protocol = { path = "../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
+dsl = { path = "../../../../../framework/kernel/dsl/rs", package = "semio-framework-kernel-dsl" }
 flow_module_brep = { path = "../../module/brep/rs", default-features = false, package = "semio-s-kernel-flow-module-brep" }
 flow_module_draw = { path = "../../module/draw/rs", default-features = false, package = "semio-s-kernel-flow-module-draw" }
 flow_module_bim = { path = "../../module/bim/rs", default-features = false, package = "semio-s-kernel-flow-module-bim" }
@@ -30,11 +31,11 @@ flow_module_math = { path = "../../module/math/rs", default-features = false, pa
 flow_module_text = { path = "../../module/text/rs", default-features = false, package = "semio-s-kernel-flow-module-text" }
 kernel_3d_engine = { path = "../../../geometry/3d/brep/engine/rs", features = ["parallel"], package = "semio-s-kernel-geometry-3d-brep-engine" }
 semio-framework-core = { path = "../../../../../framework/core/rs" }
-neural_engine = { path = "../../../neural/engine/rs", features = ["parallel"], package = "semio-s-kernel-neural-engine" }
-neural_dag = { path = "../../../neural/dag/rs", package = "semio-s-kernel-neural-dag" }
-mathematical_graph_manifest = { path = "../../../mathematical/graph/manifest/rs", package = "semio-s-kernel-mathematical-graph-manifest" }
-infinite_board_port_directed_dag = { path = "../../../infinite/board/port/directed/dag/rs", package = "semio-s-kernel-infinite-board-port-directed-dag" }
-infinite_cavas = { path = "../../../infinite/canvas/rs", package = "semio-s-kernel-infinite-canvas" }
+neural_engine = { path = "../../../../../framework/kernel/neural/engine/rs", features = ["parallel"], package = "semio-framework-kernel-neural-engine" }
+neural_dag = { path = "../../../../../framework/kernel/neural/dag/rs", package = "semio-framework-kernel-neural-dag" }
+mathematical_graph_manifest = { path = "../../../../../framework/kernel/mathematical/graph/manifest/rs", package = "semio-framework-kernel-mathematical-graph-manifest" }
+infinite_board_port_directed_dag = { path = "../../../../../framework/kernel/infinite/board/port/directed/dag/rs", package = "semio-framework-kernel-infinite-board-port-directed-dag" }
+infinite_cavas = { path = "../../../../../framework/kernel/infinite/canvas/rs", package = "semio-framework-kernel-infinite-canvas" }
 ui_styling = { path = "../../../../../ui/styling/rs" }
 playbook = { path = "../../../playbook/rs", package = "semio-s-kernel-playbook" }
 serde = { version = "1.0.219", features = ["derive"] }

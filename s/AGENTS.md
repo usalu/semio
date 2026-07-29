@@ -16,7 +16,7 @@ An app has a manifest, engine, commands (with op),
 
 # Engine
 
-A engine is a stateful headless computational unit with bidirectional streaming.
+A stateful headless computational engine with bidirectional streaming.
 
 # Command
 

@@ -1,0 +1,506 @@
+warning: s/kernel/pack/cli/rs/Cargo.toml: file `/Users/ueli/Documents/semio/s/kernel/pack/cli/rs/lib.rs` found to be present in multiple build targets:
+  * `lib` target `pack_cli`
+  * `bin` target `pack`
+warning: `semio-s-kernel-pack-cli` (manifest) generated 1 warning
+warning: s/kernel/db/cli/rs/Cargo.toml: file `/Users/ueli/Documents/semio/s/kernel/db/cli/rs/lib.rs` found to be present in multiple build targets:
+  * `lib` target `db_cli`
+  * `bin` target `db`
+warning: `semio-s-kernel-db-cli` (manifest) generated 1 warning
+warning: s/kernel/protocol/cli/rs/Cargo.toml: file `/Users/ueli/Documents/semio/s/kernel/protocol/cli/rs/lib.rs` found to be present in multiple build targets:
+  * `lib` target `protocol_cli`
+  * `bin` target `protocol`
+warning: `semio-s-kernel-protocol-cli` (manifest) generated 1 warning
+    Checking semio-s-kernel-pack-core v0.1.0 (/Users/ueli/Documents/semio/s/kernel/pack/core/rs)
+    Checking semio-s-kernel-dsl-core v0.1.0 (/Users/ueli/Documents/semio/s/kernel/dsl/core/rs)
+   Compiling semio-s-kernel-dsl-derive v0.1.0 (/Users/ueli/Documents/semio/s/kernel/dsl/derive/rs)
+    Checking semio-s-kernel-mathematical-number v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/number/rs)
+    Checking semio-s-kernel-neural-engine v0.1.0 (/Users/ueli/Documents/semio/s/kernel/neural/engine/rs)
+    Checking semio-s-kernel-mathematical-geometry v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/geometry/rs)
+   Compiling semio-s-kernel-mathematical-graph-manifest v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/manifest/rs)
+    Checking semio-s-kernel-mathematical-random v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/random/rs)
+    Checking semio-s-kernel-geometry-3d-brep-engine v0.1.0 (/Users/ueli/Documents/semio/s/kernel/geometry/3d/brep/engine/rs)
+    Checking semio-s-kernel-geometry-2d-engine v0.1.0 (/Users/ueli/Documents/semio/s/kernel/geometry/2d/engine/rs)
+    Checking semio-s-kernel-mathematical-spatial v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/spatial/rs)
+    Checking semio-s-kernel-mathematical-probability v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/probability/rs)
+    Checking semio-s-kernel-pack-format v0.1.0 (/Users/ueli/Documents/semio/s/kernel/pack/format/rs)
+    Checking semio-s-kernel-protocol-core v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/core/rs)
+    Checking semio-s-kernel-infinite-canvas v0.1.0 (/Users/ueli/Documents/semio/s/kernel/infinite/canvas/rs)
+    Checking semio-s-kernel-db-core v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/core/rs)
+    Checking semio-s-kernel-dsl-schema v0.1.0 (/Users/ueli/Documents/semio/s/kernel/dsl/schema/rs)
+    Checking semio-s-kernel-mathematical-algebra v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/algebra/rs)
+    Checking remodel_feature v0.1.0 (/Users/ueli/Documents/semio/remodel/feature/rs)
+    Checking semio-s-kernel-db-state v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/state/rs)
+    Checking semio-s-kernel-db-actor v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/actor/rs)
+    Checking semio-s-kernel-pack-io v0.1.0 (/Users/ueli/Documents/semio/s/kernel/pack/io/rs)
+    Checking semio-s-kernel-protocol-format v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/format/rs)
+    Checking semio-s-kernel-protocol-command v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/command/rs)
+    Checking semio-s-kernel-pack-value v0.1.0 (/Users/ueli/Documents/semio/s/kernel/pack/value/rs)
+    Checking semio-s-kernel-pack-async v0.1.0 (/Users/ueli/Documents/semio/s/kernel/pack/async/rs)
+    Checking semio-s-kernel-geometry-3d-scene v0.1.0 (/Users/ueli/Documents/semio/s/kernel/geometry/3d/scene/rs)
+    Checking semio-s-kernel-flow-module-wasm v0.1.0 (/Users/ueli/Documents/semio/s/kernel/flow/module/wasm/rs)
+    Checking fem_core v0.1.0 (/Users/ueli/Documents/semio/fem/core/rs)
+    Checking semio-s-kernel-mathematical-optimize v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/optimize/rs)
+    Checking semio-s-kernel-protocol-history v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/history/rs)
+    Checking semio-s-kernel-pack-http v0.1.0 (/Users/ueli/Documents/semio/s/kernel/pack/http/rs)
+    Checking ui_wgpu v0.1.0 (/Users/ueli/Documents/semio/ui/wgpu/rs)
+    Checking semio-s-kernel-pack-index v0.1.0 (/Users/ueli/Documents/semio/s/kernel/pack/index/rs)
+    Checking semio-s-kernel-mathematical-lie v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/lie/rs)
+    Checking semio-s-kernel-protocol-causal v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/causal/rs)
+    Checking semio-s-kernel-protocol-crdt v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/crdt/rs)
+    Checking semio-s-kernel-flow-module-logic v0.1.0 (/Users/ueli/Documents/semio/s/kernel/flow/module/logic/rs)
+    Checking semio-s-kernel-protocol-io v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/io/rs)
+    Checking semio-s-kernel-protocol-materialize v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/materialize/rs)
+    Checking semio-s-kernel-pack v0.1.0 (/Users/ueli/Documents/semio/s/kernel/pack/rs)
+    Checking remodel_camera v0.1.0 (/Users/ueli/Documents/semio/remodel/camera/rs)
+    Checking semio-s-kernel-flow-module-dictionary v0.1.0 (/Users/ueli/Documents/semio/s/kernel/flow/module/dictionary/rs)
+    Checking semio-s-kernel-db-storage v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/storage/rs)
+    Checking semio-s-kernel-flow-module-bim v0.1.0 (/Users/ueli/Documents/semio/s/kernel/flow/module/bim/rs)
+    Checking semio-s-kernel-flow-module-list v0.1.0 (/Users/ueli/Documents/semio/s/kernel/flow/module/list/rs)
+    Checking semio-s-kernel-flow-module-math v0.1.0 (/Users/ueli/Documents/semio/s/kernel/flow/module/math/rs)
+    Checking semio-s-kernel-flow-module-text v0.1.0 (/Users/ueli/Documents/semio/s/kernel/flow/module/text/rs)
+    Checking semio-s-kernel-protocol-wire v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/wire/rs)
+    Checking semio-s-kernel-flow-module-core v0.1.0 (/Users/ueli/Documents/semio/s/kernel/flow/module/core/rs)
+    Checking semio-s-kernel-db-observe v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/observe/rs)
+ui/wgpu/rs/lib.rs:6202:32: warning: unused import: `Level`
+ui/wgpu/rs/lib.rs:14093:5: warning: unused import: `crate::IconName`
+ui/wgpu/rs/lib.rs:16891:52: warning: unnecessary qualification
+    Checking imperative_module_logic v0.1.0 (/Users/ueli/Documents/semio/imperative/module/logic/rs)
+    Checking imperative_module_text v0.1.0 (/Users/ueli/Documents/semio/imperative/module/text/rs)
+    Checking imperative_module_math v0.1.0 (/Users/ueli/Documents/semio/imperative/module/math/rs)
+    Checking semio-s-kernel-db-index v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/index/rs)
+    Checking semio-s-kernel-db-snapshot v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/snapshot/rs)
+    Checking semio-s-kernel-protocol v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/rs)
+    Checking semio-s-kernel-db-storage-sqlite v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/storage/sqlite/rs)
+    Checking semio-s-kernel-db-storage-neo4j v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/storage/neo4j/rs)
+    Checking semio-s-kernel-db-storage-postgres v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/storage/postgres/rs)
+    Checking imperative_module_core v0.1.0 (/Users/ueli/Documents/semio/imperative/module/core/rs)
+    Checking remodel_dense v0.1.0 (/Users/ueli/Documents/semio/remodel/dense/rs)
+    Checking semio-s-kernel-vcs v0.1.0 (/Users/ueli/Documents/semio/s/kernel/vcs/rs)
+    Checking semio-s-kernel-db-wal v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/wal/rs)
+    Checking semio-s-kernel-db-conflict v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/conflict/rs)
+    Checking semio-s-kernel-db-security v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/security/rs)
+    Checking semio-s-kernel-db-projection v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/projection/rs)
+    Checking remodel_sfm v0.1.0 (/Users/ueli/Documents/semio/remodel/sfm/rs)
+    Checking semio-s-kernel-pack-testkit v0.1.0 (/Users/ueli/Documents/semio/s/kernel/pack/testkit/rs)
+    Checking semio-s-kernel-db-preview v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/preview/rs)
+    Checking semio-s-kernel-db-sync v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/sync/rs)
+    Checking semio-s-kernel-db-compact v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/compact/rs)
+    Checking semio-s-kernel-db-query v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/query/rs)
+    Checking semio-s-kernel-mathematical-signal v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/signal/rs)
+    Checking animate_core v0.1.0 (/Users/ueli/Documents/semio/animate/core/rs)
+    Checking framework_surface_tiled_map v0.1.0 (/Users/ueli/Documents/semio/framework/surface/tiled-map/rs)
+    Checking semio-s-kernel-db-cluster v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/cluster/rs)
+    Checking semio-s-kernel-geometry-3d-mesh v0.1.0 (/Users/ueli/Documents/semio/s/kernel/geometry/3d/mesh/rs)
+    Checking semio-s-kernel-mathematical-tabular v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/tabular/rs)
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:796:32
+    |
+796 |     fn parse_typed_item(input: ParseStream) -> syn::Result<Type> {
+    |                                ^^^^^^^^^^^ expected lifetime parameter
+    |
+    = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+    = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+    |
+796 |     fn parse_typed_item(input: ParseStream<'_>) -> syn::Result<Type> {
+    |                                           ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:803:32
+    |
+803 |     fn parse_ident_item(input: ParseStream) -> syn::Result<Ident> {
+    |                                ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+803 |     fn parse_ident_item(input: ParseStream<'_>) -> syn::Result<Ident> {
+    |                                           ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:810:33
+    |
+810 |     fn parse_event_block(input: ParseStream) -> syn::Result<(Ident, Vec<EventVariantAst>)> {
+    |                                 ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+810 |     fn parse_event_block(input: ParseStream<'_>) -> syn::Result<(Ident, Vec<EventVariantAst>)> {
+    |                                            ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:852:27
+    |
+852 |     fn parse_after(input: ParseStream) -> syn::Result<AfterAst> {
+    |                           ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+852 |     fn parse_after(input: ParseStream<'_>) -> syn::Result<AfterAst> {
+    |                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:867:24
+    |
+867 |     fn parse_on(input: ParseStream) -> syn::Result<OnAst> {
+    |                        ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+867 |     fn parse_on(input: ParseStream<'_>) -> syn::Result<OnAst> {
+    |                                   ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:893:28
+    |
+893 |     fn parse_always(input: ParseStream) -> syn::Result<AlwaysAst> {
+    |                            ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+893 |     fn parse_always(input: ParseStream<'_>) -> syn::Result<AlwaysAst> {
+    |                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:912:29
+    |
+912 |     fn parse_history(input: ParseStream) -> syn::Result<HistoryAst> {
+    |                             ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+912 |     fn parse_history(input: ParseStream<'_>) -> syn::Result<HistoryAst> {
+    |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:925:32
+    |
+925 |     fn parse_state_body(input: ParseStream, name: Option<Ident>) -> syn::Result<StateAst> {
+    |                                ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+925 |     fn parse_state_body(input: ParseStream<'_>, name: Option<Ident>) -> syn::Result<StateAst> {
+    |                                           ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:974:27
+    |
+974 |     fn parse_final(input: ParseStream) -> syn::Result<FinalAst> {
+    |                           ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+974 |     fn parse_final(input: ParseStream<'_>) -> syn::Result<FinalAst> {
+    |                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:994:30
+    |
+994 |     fn parse_parallel(input: ParseStream) -> syn::Result<ParallelAst> {
+    |                              ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+994 |     fn parse_parallel(input: ParseStream<'_>) -> syn::Result<ParallelAst> {
+    |                                         ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> fsm/macros/rs/lib.rs:1025:25
+     |
+1025 |         fn parse(input: ParseStream) -> syn::Result<Self> {
+     |                         ^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1025 |         fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+     |                                    ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> fsm/macros/rs/lib.rs:1208:33
+     |
+1208 |     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+     |                     ------------^^^^^^^^^^^
+     |                     |
+     |                     expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1208 |     fn parse(input: syn::parse::ParseStream<'_>) -> syn::Result<Self> {
+     |                                            ++++
+
+warning: `fsm_macros` (lib) generated 12 warnings
+    Checking semio-s-kernel-db-document v0.1.0 (/Users/ueli/Documents/semio/s/kernel/db/document/rs)
+warning: unused extern crate
+ --> fsm/rs/lib.rs:6:1
+  |
+6 | extern crate self as fsm;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+6 - extern crate self as fsm;
+  |
+
+warning: unnecessary qualification
+    --> fsm/rs/lib.rs:2037:33
+     |
+2037 |     fn definition() -> &'static kernel::MachineDefinition<Self>;
+     |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2037 -     fn definition() -> &'static kernel::MachineDefinition<Self>;
+2037 +     fn definition() -> &'static MachineDefinition<Self>;
+     |
+
+warning: `fsm` (lib) generated 2 warnings (run `cargo fix --lib -p fsm` to apply 2 suggestions)
+    Checking semio-s-kernel-protocol-cli v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/cli/rs)
+    Checking remodel_motion v0.1.0 (/Users/ueli/Documents/semio/remodel/motion/rs)
+framework/surface/tiled-map/rs/lib.rs:103:39: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:103:73: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:148:29: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:148:63: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:153:39: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:153:73: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:166:32: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:166:66: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:184:57: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:184:91: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:199:46: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:202:59: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:214:54: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:219:46: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:219:80: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:243:34: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:243:68: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:1081:25: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:1088:6: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:1354:17: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:1355:19: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:1359:53: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:1382:17: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:1501:24: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:1541:32: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:1803:59: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:2496:17: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:2695:43: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:2710:13: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:2820:21: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:2855:6: warning: unnecessary qualification
+    Checking semio-s-kernel-pack-cli v0.1.0 (/Users/ueli/Documents/semio/s/kernel/pack/cli/rs)
+s/kernel/protocol/cli/rs/lib.rs:810:4: warning: function `main` is never used
+warning: `semio-s-kernel-protocol-cli` (lib) generated 1 warning
+    Checking semio-s-kernel-mathematical-polynomial v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/polynomial/rs)
+    Checking semio-s-kernel-mathematical-statistics v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/statistics/rs)
+    Checking semio-s-kernel-dsl-token v0.1.0 (/Users/ueli/Documents/semio/s/kernel/dsl/token/rs)
+s/kernel/pack/cli/rs/lib.rs:521:4: warning: function `main` is never used
+warning: hidden lifetime parameters in types are deprecated
+   --> framework/product/os/hub/directory/sqlite/rs/lib.rs:151:43
+    |
+151 |         let row_mapper = |row: &rusqlite::Row| -> rusqlite::Result<NodeRecord> {
+    |                                 ----------^^^
+    |                                 |
+    |                                 expected lifetime parameter
+    |
+    = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+    = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+    |
+151 |         let row_mapper = |row: &rusqlite::Row<'_>| -> rusqlite::Result<NodeRecord> {
+    |                                              ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> framework/product/os/hub/directory/sqlite/rs/lib.rs:481:29
+    |
+481 | fn user_row(row: &rusqlite::Row) -> rusqlite::Result<UserRecord> {
+    |                   ----------^^^
+    |                   |
+    |                   expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+481 | fn user_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<UserRecord> {
+    |                                ++++
+
+warning: `os-hub-directory-sqlite` (lib) generated 2 warnings
+    Checking semio-s-kernel-protocol-testkit v0.1.0 (/Users/ueli/Documents/semio/s/kernel/protocol/testkit/rs)
+warning: `semio-s-kernel-pack-cli` (lib) generated 1 warning
+    Checking semio-s-kernel-mathematical-entropy v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/entropy/rs)
+    Checking semio-s-kernel-dsl-editor v0.1.0 (/Users/ueli/Documents/semio/s/kernel/dsl/editor/rs)
+    Checking semio-s-kernel-mathematical-cas v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/cas/rs)
+warning: `framework_surface_tiled_map` (lib) generated 31 warnings (run `cargo fix --lib -p framework_surface_tiled_map` to apply 31 suggestions)
+    Checking animate_video v0.1.0 (/Users/ueli/Documents/semio/animate/video/rs)
+animate/video/rs/lib.rs:1113:28: warning: unnecessary qualification
+    Checking semio-s-kernel-dsl v0.1.0 (/Users/ueli/Documents/semio/s/kernel/dsl/rs)
+warning: `fsm` (lib test) generated 1 warning (1 duplicate)
+warning: `animate_video` (lib test) generated 1 warning (run `cargo fix --lib -p animate_video --tests` to apply 1 suggestion)
+s/kernel/mathematical/graph/manifest/rs/lib.rs:562:17: warning: unnecessary qualification
+s/kernel/mathematical/graph/manifest/rs/lib.rs:570:17: warning: unnecessary qualification
+s/kernel/mathematical/graph/manifest/rs/lib.rs:577:17: warning: unnecessary qualification
+s/kernel/protocol/rs/lib.rs:249:24: warning: unnecessary qualification
+s/kernel/protocol/rs/lib.rs:254:20: warning: unnecessary qualification
+s/kernel/protocol/rs/lib.rs:254:76: warning: unnecessary qualification
+s/kernel/protocol/rs/lib.rs:255:20: warning: unnecessary qualification
+    Checking framework_surface_paint v0.1.0 (/Users/ueli/Documents/semio/framework/surface/paint/rs)
+warning: `semio-s-kernel-protocol` (lib test) generated 4 warnings (run `cargo fix --lib -p semio-s-kernel-protocol --tests` to apply 4 suggestions)
+framework/surface/tiled-map/rs/lib.rs:3203:29: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:3203:76: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:3204:29: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:3204:76: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:3472:30: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:3518:20: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:3871:20: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:3929:20: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:4076:24: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:4209:20: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:4210:20: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:4211:20: warning: unnecessary qualification
+framework/surface/tiled-map/rs/lib.rs:4212:20: warning: unnecessary qualification
+warning: `ui_wgpu` (lib) generated 3 warnings (run `cargo fix --lib -p ui_wgpu` to apply 3 suggestions)
+    Checking semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/framework/core/rs)
+framework/surface/paint/rs/lib.rs:312:13: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:338:27: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:339:65: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:344:21: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:365:9: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:366:65: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:385:28: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:389:9: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:393:9: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:594:25: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:597:17: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:647:19: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:651:9: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:657:19: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:666:9: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:670:6: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:767:21: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:928:28: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:939:75: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:941:30: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:942:34: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:943:24: warning: unnecessary qualification
+framework/surface/paint/rs/lib.rs:944:28: warning: unnecessary qualification
+    Checking semio-s-kernel-mathematical-graph v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/rs)
+    Checking semio-s-kernel-mathematical-graph-dsl v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/dsl/rs)
+warning: `semio-s-kernel-mathematical-graph-manifest` (lib test) generated 3 warnings (run `cargo fix --lib -p semio-s-kernel-mathematical-graph-manifest --tests` to apply 3 suggestions)
+framework/surface/paint/rs/lib.rs:17:9: warning: fields `name`, `clip_to_below`, and `filters` are never read
+framework/surface/paint/rs/lib.rs:38:9: warning: fields `name` and `clip_to_below` are never read
+framework/surface/paint/rs/lib.rs:54:9: warning: fields `name` and `transform` are never read
+framework/surface/paint/rs/lib.rs:100:5: warning: field `linked` is never read
+framework/surface/paint/rs/lib.rs:110:5: warning: fields `kind`, `radius`, and `amount` are never read
+framework/surface/paint/rs/lib.rs:120:5: warning: fields `hue`, `saturation`, `levels_black`, and `levels_white` are never read
+framework/surface/paint/rs/lib.rs:129:5: warning: fields `x`, `y`, and `zoom` are never read
+framework/surface/paint/rs/lib.rs:140:5: warning: fields `id`, `camera`, `brush_size`, and `brush_opacity` are never read
+framework/surface/paint/rs/lib.rs:154:18: warning: field `id` is never read
+framework/surface/paint/rs/lib.rs:265:4: warning: function `apply_brightness_contrast` is never used
+framework/surface/paint/rs/lib.rs:277:4: warning: function `apply_blur_box` is never used
+framework/core/rs/lib.rs:1803:42: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+framework/core/rs/lib.rs:1816:43: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+framework/core/rs/lib.rs:1931:53: warning: hidden lifetime parameters in types are deprecated: expected lifetime parameter
+warning: `framework_surface_paint` (lib test) generated 32 warnings (run `cargo fix --lib -p framework_surface_paint --tests` to apply 23 suggestions)
+warning: `framework_surface_paint` (lib) generated 34 warnings (32 duplicates)
+    Checking semio-s-kernel-neural-dag v0.1.0 (/Users/ueli/Documents/semio/s/kernel/neural/dag/rs)
+    Checking semio-s-kernel-mathematical-graph-drawing v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/drawing/rs)
+warning: `framework_surface_tiled_map` (lib test) generated 44 warnings (31 duplicates) (run `cargo fix --lib -p framework_surface_tiled_map --tests` to apply 13 suggestions)
+    Checking semio-s-kernel-mathematical-graph-traversal v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/traversal/rs)
+    Checking semio-s-kernel-mathematical-graph-matching v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/matching/rs)
+    Checking semio-s-kernel-mathematical-graph-generate v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/generate/rs)
+    Checking semio-s-kernel-mathematical-graph-operators v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/operators/rs)
+    Checking semio-s-kernel-infinite-board v0.1.0 (/Users/ueli/Documents/semio/s/kernel/infinite/board/rs)
+    Checking semio-s-kernel-mathematical-graph-isomorphism v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/isomorphism/rs)
+    Checking semio-s-kernel-mathematical-graph-paths v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/paths/rs)
+    Checking semio-s-kernel-mathematical-graph-components v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/components/rs)
+    Checking semio-s-kernel-mathematical-graph-structure v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/structure/rs)
+    Checking semio-s-kernel-mathematical-graph-bipartite v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/bipartite/rs)
+    Checking semio-s-kernel-mathematical-graph-coloring v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/coloring/rs)
+    Checking semio-s-kernel-mathematical-graph-cliques v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/cliques/rs)
+    Checking semio-s-kernel-mathematical-graph-flow v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/flow/rs)
+    Checking semio-s-kernel-mathematical-graph-centrality v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/centrality/rs)
+s/kernel/infinite/board/rs/lib.rs:99:44: warning: unnecessary qualification
+s/kernel/infinite/board/rs/lib.rs:1523:22: warning: unnecessary qualification
+    Checking semio-s-kernel-mathematical-graph-trees v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/trees/rs)
+    Checking semio-s-kernel-mathematical-graph-distance v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/distance/rs)
+    Checking semio-s-kernel-mathematical-graph-generate-random v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/generate/random/rs)
+    Checking semio-s-kernel-mathematical-graph-similarity v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/similarity/rs)
+    Checking semio-s-kernel-mathematical-graph-cycles v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/cycles/rs)
+    Checking semio-s-kernel-mathematical-graph-connectivity v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/connectivity/rs)
+    Checking semio-s-kernel-mathematical-graph-community v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/community/rs)
+    Checking semio-s-kernel-mathematical-graph-approximation v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/approximation/rs)
+    Checking semio-s-kernel-mathematical-graph-dag v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/dag/rs)
+    Checking semio-s-kernel-mathematical-graph-planarity v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/planarity/rs)
+    Checking semio-s-kernel-mathematical-graph-clustering v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/clustering/rs)
+    Checking semio-s-kernel-mathematical-graph-io v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/io/rs)
+    Checking semio-s-kernel-mathematical-graph-spectral v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/spectral/rs)
+    Checking semio-s-kernel-mathematical-graph-port-undirected v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/port/undirected/rs)
+    Checking semio-s-kernel-mathematical-graph-normal-undirected v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/normal/undirected/rs)
+    Checking semio-s-kernel-mathematical-graph-normal-directed v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/normal/directed/rs)
+    Checking semio-s-kernel-mathematical-graph-port-directed-normal v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/graph/port/directed/normal/rs)
+warning: `semio-s-kernel-infinite-board` (lib) generated 2 warnings (run `cargo fix --lib -p semio-s-kernel-infinite-board` to apply 2 suggestions)
+    Checking semio-s-kernel-infinite-board-port v0.1.0 (/Users/ueli/Documents/semio/s/kernel/infinite/board/port/rs)
+s/kernel/infinite/board/port/rs/lib.rs:73:21: warning: unnecessary qualification
+    Checking semio-s-kernel-infinite-board-normal-undirected v0.1.0 (/Users/ueli/Documents/semio/s/kernel/infinite/board/normal/undirected/rs)
+    Checking semio-s-kernel-infinite-board-normal-directed v0.1.0 (/Users/ueli/Documents/semio/s/kernel/infinite/board/normal/directed/rs)
+warning: `semio-s-kernel-infinite-board-port` (lib) generated 1 warning (run `cargo fix --lib -p semio-s-kernel-infinite-board-port` to apply 1 suggestion)
+    Checking semio-s-kernel-infinite-board-port-undirected v0.1.0 (/Users/ueli/Documents/semio/s/kernel/infinite/board/port/undirected/rs)
+warning: `semio-s-kernel-infinite-board-port` (lib test) generated 1 warning (1 duplicate)
+    Checking semio-s-kernel-infinite-board-port-directed v0.1.0 (/Users/ueli/Documents/semio/s/kernel/infinite/board/port/directed/rs)
+    Checking semio-s-kernel-mathematical-wfc v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/wfc/rs)
+    Checking semio-s-kernel-mathematical-causal v0.1.0 (/Users/ueli/Documents/semio/s/kernel/mathematical/causal/rs)
+    Checking semio-s-kernel-infinite-board-port-directed-normal v0.1.0 (/Users/ueli/Documents/semio/s/kernel/infinite/board/port/directed/normal/rs)
+warning: `semio-s-kernel-infinite-board` (lib test) generated 2 warnings (2 duplicates)
+s/kernel/infinite/board/port/directed/normal/rs/lib.rs:2835:41: warning: unnecessary qualification
+s/kernel/infinite/board/port/directed/normal/rs/lib.rs:2861:41: warning: unnecessary qualification
+s/kernel/infinite/board/port/directed/normal/rs/lib.rs:2889:41: warning: unnecessary qualification
+s/kernel/infinite/board/port/directed/normal/rs/lib.rs:3010:24: warning: unnecessary qualification
+s/kernel/infinite/board/port/directed/normal/rs/lib.rs:4437:32: warning: unnecessary qualification
+s/kernel/infinite/board/port/directed/normal/rs/lib.rs:4505:32: warning: unnecessary qualification
+warning: `semio-framework-core` (lib) generated 3 warnings
+    Checking semio-s-kernel-store v0.1.0 (/Users/ueli/Documents/semio/s/kernel/store/rs)
+    Checking semio-s-kernel-geometry-3d-brep v0.1.0 (/Users/ueli/Documents/semio/s/kernel/geometry/3d/brep/rs)
+    Checking semio-s-kernel-geometry-2d v0.1.0 (/Users/ueli/Documents/semio/s/kernel/geometry/2d/rs)
+    Checking remodel_mesh v0.1.0 (/Users/ueli/Documents/semio/remodel/mesh/rs)
+    Checking semio-s-kernel-infinite-world v0.1.0 (/Users/ueli/Documents/semio/s/kernel/infinite/world/rs)
+s/kernel/store/rs/lib.rs:3583:6: warning: unnecessary qualification
+warning: `semio-s-kernel-infinite-board-port-directed-normal` (lib) generated 6 warnings (run `cargo fix --lib -p semio-s-kernel-infinite-board-port-directed-normal` to apply 6 suggestions)
+s/kernel/geometry/3d/brep/rs/lib.rs:5861:28: warning: unnecessary qualification
+s/kernel/geometry/3d/brep/rs/lib.rs:5864:28: warning: unnecessary qualification
+s/kernel/geometry/3d/brep/rs/lib.rs:7007:28: warning: unnecessary qualification
+s/kernel/geometry/3d/brep/rs/lib.rs:7007:106: warning: unnecessary qualification
+s/kernel/geometry/3d/brep/rs/lib.rs:7050:28: warning: unnecessary qualification
+s/kernel/geometry/3d/brep/rs/lib.rs:7050:106: warning: unnecessary qualification
+warning: `semio-s-kernel-infinite-board-port-directed-normal` (lib test) generated 6 warnings (6 duplicates)
+s/kernel/infinite/world/rs/lib.rs:3915:42: error: couldn't read `s/kernel/infinite/world/rs/../../../asset/metabolism/representation/capsule_J.glb`: No such file or directory (os error 2)
+    Checking semio-s-kernel-flow-module-draw v0.1.0 (/Users/ueli/Documents/semio/s/kernel/flow/module/draw/rs)
+warning: `semio-framework-core` (lib test) generated 3 warnings (3 duplicates)
+    Checking remodel_geo v0.1.0 (/Users/ueli/Documents/semio/remodel/geo/rs)
+warning: `semio-s-kernel-store` (lib) generated 1 warning (run `cargo fix --lib -p semio-s-kernel-store` to apply 1 suggestion)
+    Checking semio-framework-program v0.1.0 (/Users/ueli/Documents/semio/framework/program/rs)
+    Checking semio-s-kernel-store-sync v0.1.0 (/Users/ueli/Documents/semio/s/kernel/store/sync/rs)
+    Checking norm_core v0.1.0 (/Users/ueli/Documents/semio/norm/core/rs)
+framework/program/rs/lib.rs:207:79: warning: unused import: `DocumentEnvelope`
+norm/core/rs/lib.rs:484:21: warning: unnecessary qualification
+s/kernel/store/sync/rs/lib.rs:19:5: warning: unused import: `serde_json::Value`
+s/kernel/store/sync/rs/lib.rs:349:16: warning: unnecessary qualification
+s/kernel/store/sync/rs/lib.rs:350:24: warning: unnecessary qualification
+s/kernel/store/sync/rs/lib.rs:360:16: warning: unnecessary qualification
+s/kernel/store/sync/rs/lib.rs:361:24: warning: unnecessary qualification
+s/kernel/store/sync/rs/lib.rs:421:41: warning: unnecessary qualification
+s/kernel/store/sync/rs/lib.rs:603:42: warning: unnecessary qualification
+s/kernel/store/sync/rs/lib.rs:607:38: warning: unnecessary qualification
+s/kernel/store/sync/rs/lib.rs:1075:37: warning: unnecessary qualification
+s/kernel/store/sync/rs/lib.rs:1075:100: warning: unnecessary qualification
+s/kernel/store/sync/rs/lib.rs:1142:37: warning: unnecessary qualification
+error: could not compile `semio-s-kernel-infinite-world` (lib test) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+warning: `norm_core` (lib) generated 1 warning (run `cargo fix --lib -p norm_core` to apply 1 suggestion)
+s/kernel/store/sync/rs/lib.rs:100:9: warning: structure field `pendingOperations` should have a snake case name: help: convert the identifier to snake case: `pending_operations`
+warning: `semio-s-kernel-store-sync` (lib) generated 12 warnings (run `cargo fix --lib -p semio-s-kernel-store-sync` to apply 11 suggestions)
+warning: `semio-s-kernel-store` (lib test) generated 1 warning (1 duplicate)
+warning: `semio-framework-program` (lib) generated 1 warning (run `cargo fix --lib -p semio-framework-program` to apply 1 suggestion)
+warning: `semio-s-kernel-geometry-3d-brep` (lib) generated 6 warnings (run `cargo fix --lib -p semio-s-kernel-geometry-3d-brep` to apply 6 suggestions)
+warning: `semio-s-kernel-geometry-3d-brep` (lib test) generated 6 warnings (6 duplicates)
+warning: `ui_wgpu` (lib test) generated 1 warning (1 duplicate)

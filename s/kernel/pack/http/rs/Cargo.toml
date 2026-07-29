@@ -9,6 +9,7 @@ description = "Pack binary document format HTTP layer — range-request transpor
 [lints]
 workspace = true
 [lib]
+name = "pack_http"
 path = "lib.rs"
 
 [dependencies]

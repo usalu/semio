@@ -11,10 +11,10 @@ workspace = true
 path = "lib.rs"
 
 [dependencies]
-dsl = { path = "../../../../../s/kernel/dsl/rs", package = "semio-s-kernel-dsl" }
+dsl = { path = "../../../../../framework/kernel/dsl/rs", package = "semio-framework-kernel-dsl" }
 norm_core = { path = "../../../../core/rs" }
 norm_din_4108 = { path = "../../../4108/rs" }
 norm_din_en_16798 = { path = "../../../en/16798/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
-vcs = { path = "../../../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+vcs = { path = "../../../../../framework/kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
 store = { path = "../../../../../s/kernel/store/rs", package = "semio-s-kernel-store" }

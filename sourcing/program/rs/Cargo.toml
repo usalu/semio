@@ -26,7 +26,7 @@ crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
 
 [dependencies]
-vcs = { path = "../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+vcs = { path = "../../../framework/kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
 store = { path = "../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
 sourcing_curate = { path = "../../curate/rs" }
 semio-framework-program = { path = "../../../framework/program/rs" }

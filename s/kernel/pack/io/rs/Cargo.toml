@@ -9,6 +9,7 @@ description = "Pack binary document format native IO — file source/sink, atomi
 [lints]
 workspace = true
 [lib]
+name = "pack_io"
 path = "lib.rs"
 
 [dependencies]

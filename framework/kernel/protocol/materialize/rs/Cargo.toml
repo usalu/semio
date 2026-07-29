@@ -1,0 +1,19 @@
+[package]
+name = "semio-framework-kernel-protocol-materialize"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Protocol materialization — checkpoint/tail plan resolution and closure-generic replay driver"
+
+
+[lints]
+workspace = true
+[lib]
+name = "protocol_materialize"
+path = "lib.rs"
+
+[dependencies]
+protocol_core = { path = "../../core/rs", package = "semio-framework-kernel-protocol-core" }
+protocol_format = { path = "../../format/rs", package = "semio-framework-kernel-protocol-format" }
+protocol_history = { path = "../../history/rs", package = "semio-framework-kernel-protocol-history" }
+pack_core = { path = "../../../../../s/kernel/pack/core/rs", package = "semio-s-kernel-pack-core" }

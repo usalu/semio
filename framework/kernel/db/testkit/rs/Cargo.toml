@@ -1,0 +1,46 @@
+[package]
+name = "semio-framework-kernel-db-testkit"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db testkit — SimRuntime, FaultStorage, CrashHarness, generators, cross-crate laws, benchmarks"
+
+[lints]
+workspace = true
+[lib]
+name = "db_testkit"
+path = "lib.rs"
+
+[dependencies]
+db = { path = "../../rs", package = "semio-framework-kernel-db" }
+pack_testkit = { path = "../../../../../s/kernel/pack/testkit/rs", package = "semio-s-kernel-pack-testkit" }
+# 🎯 Genuinely missing additions (not in the stub's dependency list), noted per this wave's
+# instructions: the `db` facade (above) is still an unimplemented stub as of this wave — every law/
+# harness below drives the family's REAL, already-implemented crates directly (`db_engine::Database`
+# for the facade-shaped laws, `db_document::DocumentEngine` one layer below it for laws `db_engine`
+# doesn't yet expose a path to — snapshot, preview, undo, projections — see this crate's module doc).
+# `db_core`/`db_storage`/`db_state`/`db_document`/`db_engine`/`db_projection`/`db_sync`/`db_actor`
+# are the crates this testkit's laws/harnesses actually call by name; `protocol` for the
+# `OperationEnvelope` family the whole `db` command pipeline is built on; `pack` for
+# `ByteRange`/`ContentHash`, named directly because `FaultStorage`'s trait impls must repeat
+# `db_storage`'s own `WalStorage`/`PayloadStorage` method signatures verbatim; `serde_json` to build
+# schema-erased command payloads the same way `db_document`'s own tests do.
+db_core = { path = "../../core/rs", package = "semio-framework-kernel-db-core" }
+db_storage = { path = "../../storage/rs", package = "semio-framework-kernel-db-storage" }
+db_state = { path = "../../state/rs", package = "semio-framework-kernel-db-state" }
+db_document = { path = "../../document/rs", package = "semio-framework-kernel-db-document" }
+db_engine = { path = "../../engine/rs", package = "semio-framework-kernel-db-engine" }
+db_projection = { path = "../../projection/rs", package = "semio-framework-kernel-db-projection" }
+db_sync = { path = "../../sync/rs", package = "semio-framework-kernel-db-sync" }
+db_actor = { path = "../../actor/rs", package = "semio-framework-kernel-db-actor" }
+protocol = { path = "../../../protocol/rs", package = "semio-framework-kernel-protocol" }
+pack = { path = "../../../../../s/kernel/pack/rs", package = "semio-s-kernel-pack" }
+serde_json = "1"
+
+[[bench]]
+name = "db"
+harness = false
+
+[dev-dependencies]
+criterion = { version = "0.5", default-features = false, features = ["html_reports"] }
+

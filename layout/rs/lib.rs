@@ -592,7 +592,7 @@ mod engine {
     use crate::display::{bounds_to_display_rect, page_margin_guides, DisplayColor, DisplayGlyph, DisplayGuide, DisplayImage, DisplayList, DisplayTextRun};
     use crate::document::{parse_layout_document, resolve_page, Frame, LayoutDocument, Page, ParagraphStyle, TextStory};
 
-    static LAYOUT_SANS: &[u8] = include_bytes!("../../infinite/cavas/rs/asset/MapLabelSans.ttf");
+    static LAYOUT_SANS: &[u8] = include_bytes!("../../framework/kernel/infinite/canvas/rs/asset/MapLabelSans.ttf");
 
     pub struct LayoutEngine {
         pub font_context: FontContext,

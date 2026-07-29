@@ -9,6 +9,7 @@ description = "Pack binary document format foundation — ids, errors, limits, v
 [lints]
 workspace = true
 [lib]
+name = "pack_core"
 path = "lib.rs"
 
 [dependencies]

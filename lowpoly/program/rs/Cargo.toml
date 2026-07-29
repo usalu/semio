@@ -23,7 +23,7 @@ path = "lib.rs"
 [dependencies]
 semio-framework-program = { path = "../../../framework/program/rs" }
 semio-framework-os = { path = "../../../framework/product/os/core/rs" }
-vcs = { path = "../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+vcs = { path = "../../../framework/kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
 store = { path = "../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
 lowpoly_core = { path = "../../core/rs" }
 kernel_3d_mesh = { path = "../../../s/kernel/geometry/3d/mesh/rs", package = "semio-s-kernel-geometry-3d-mesh" }

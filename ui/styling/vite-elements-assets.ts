@@ -164,7 +164,7 @@ export function playgroundFlowWasmDevStubPlugin(repoRoot: string): Plugin {
       const abs = cleanId.startsWith(".")
         ? resolve(dirname(importer), cleanId)
         : cleanId.startsWith("@semio-tech/flow-core/pkg/")
-          ? resolve(repoRoot, "flow/core/rs/pkg", cleanId.slice("@semio-tech/flow-core/pkg/".length))
+          ? resolve(repoRoot, "s/kernel/flow/core/rs/pkg", cleanId.slice("@semio-tech/flow-core/pkg/".length))
           : cleanId.startsWith("@semio-tech/framework-surface-node-graph-rs/pkg/")
             ? resolve(repoRoot, "framework/surface/node-graph/rs/pkg", cleanId.slice("@semio-tech/framework-surface-node-graph-rs/pkg/".length))
             : cleanId.startsWith("@semio-tech/framework-editor-rs/pkg/")

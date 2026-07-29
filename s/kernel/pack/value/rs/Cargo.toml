@@ -9,10 +9,11 @@ description = "Pack binary document format value layer — DSL schema-aware wire
 [lints]
 workspace = true
 [lib]
+name = "pack_value"
 path = "lib.rs"
 
 [dependencies]
 pack_core = { path = "../../core/rs", package = "semio-s-kernel-pack-core" }
 pack_format = { path = "../../format/rs", package = "semio-s-kernel-pack-format" }
-dsl_schema = { path = "../../../dsl/schema/rs", package = "semio-s-kernel-dsl-schema" }
+dsl_schema = { path = "../../../../../framework/kernel/dsl/schema/rs", package = "semio-framework-kernel-dsl-schema" }
 blake3 = "1"

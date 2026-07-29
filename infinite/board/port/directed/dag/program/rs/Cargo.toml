@@ -21,9 +21,9 @@ crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
 
 [dependencies]
-infinite_board_port_directed_dag = { path = "../../../../../../../s/kernel/infinite/board/port/directed/dag/rs", package = "semio-s-kernel-infinite-board-port-directed-dag" }
-protocol = { path = "../../../../../../../s/kernel/protocol/rs", package = "semio-s-kernel-protocol" }
-vcs = { path = "../../../../../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+infinite_board_port_directed_dag = { path = "../../../../../../../framework/kernel/infinite/board/port/directed/dag/rs", package = "semio-framework-kernel-infinite-board-port-directed-dag" }
+protocol = { path = "../../../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
+vcs = { path = "../../../../../../../framework/kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
 store = { path = "../../../../../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
 semio-framework-program = { path = "../../../../../../../framework/program/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

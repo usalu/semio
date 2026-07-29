@@ -8,6 +8,7 @@ rust-version = "1.88"
 [lints]
 workspace = true
 [lib]
+name = "kernel_3d_brepkit"
 path = "lib.rs"
 
 [dependencies]
@@ -23,12 +24,12 @@ brepkit-check = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c
 base64 = "0.22"
 rayon = "1.10.0"
 serde = { version = "1.0.219", features = ["derive"] }
-mathematical_number = { path = "../../../../mathematical/number/rs", package = "semio-s-kernel-mathematical-number" }
+mathematical_number = { path = "../../../../../../framework/kernel/mathematical/number/rs", package = "semio-framework-kernel-mathematical-number" }
 
 [dev-dependencies]
 criterion = { version = "0.5", default-features = false, features = ["html_reports"] }
 serde_json = "1.0.140"
-mathematical_random = { path = "../../../../mathematical/random/rs", package = "semio-s-kernel-mathematical-random" }
+mathematical_random = { path = "../../../../../../framework/kernel/mathematical/random/rs", package = "semio-framework-kernel-mathematical-random" }
 
 [[bench]]
 name = "kernel"

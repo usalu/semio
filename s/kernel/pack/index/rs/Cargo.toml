@@ -9,6 +9,7 @@ description = "Pack binary document format field index — path-to-byte-range se
 [lints]
 workspace = true
 [lib]
+name = "pack_index"
 path = "lib.rs"
 
 [dependencies]

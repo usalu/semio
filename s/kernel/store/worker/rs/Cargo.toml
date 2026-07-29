@@ -9,6 +9,7 @@ description = "Browser Web Worker WASM actor for store's DocumentHost"
 workspace = true
 
 [lib]
+name = "store_worker"
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
 

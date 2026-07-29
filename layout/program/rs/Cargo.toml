@@ -25,8 +25,8 @@ semio-framework-os = { path = "../../../framework/product/os/core/rs" }
 semio-framework-program = { path = "../../../framework/program/rs" }
 semio-framework-core = { path = "../../../framework/core/rs" }
 layout_rs = { path = "../../rs" }
-protocol = { path = "../../../s/kernel/protocol/rs", package = "semio-s-kernel-protocol" }
-vcs = { path = "../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+protocol = { path = "../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
+vcs = { path = "../../../framework/kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
 store = { path = "../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

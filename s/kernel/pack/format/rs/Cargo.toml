@@ -9,6 +9,7 @@ description = "Pack binary document format container — header/footer/manifest 
 [lints]
 workspace = true
 [lib]
+name = "pack_format"
 path = "lib.rs"
 
 [dependencies]

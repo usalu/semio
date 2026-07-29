@@ -5,6 +5,7 @@ edition = "2021"
 rust-version = "1.88"
 
 [lib]
+name = "flow_module_core"
 crate-type = ["rlib", "cdylib"]
 path = "lib.rs"
 
@@ -14,6 +15,6 @@ standalone-wasm = ["dep:wasm-bindgen"]
 
 [dependencies]
 flow_module_wasm = { path = "../../wasm/rs", package = "semio-s-kernel-flow-module-wasm" }
-neural_engine = { path = "../../../../neural/engine/rs", features = ["parallel"], package = "semio-s-kernel-neural-engine" }
+neural_engine = { path = "../../../../../../framework/kernel/neural/engine/rs", features = ["parallel"], package = "semio-framework-kernel-neural-engine" }
 serde_json = "1.0.140"
 wasm-bindgen = { version = "0.2.106", optional = true }

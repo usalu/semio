@@ -9,6 +9,7 @@ description = "Pack binary document format async layer — runtime-neutral async
 [lints]
 workspace = true
 [lib]
+name = "pack_async"
 path = "lib.rs"
 
 [dependencies]

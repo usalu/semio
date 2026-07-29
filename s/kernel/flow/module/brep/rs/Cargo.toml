@@ -5,6 +5,7 @@ edition = "2021"
 rust-version = "1.88"
 
 [lib]
+name = "flow_module_brep"
 crate-type = ["rlib", "cdylib"]
 path = "lib.rs"
 
@@ -16,7 +17,7 @@ standalone-wasm = ["dep:wasm-bindgen"]
 flow_module_wasm = { path = "../../wasm/rs", package = "semio-s-kernel-flow-module-wasm" }
 kernel_3d_brepkit = { path = "../../../../geometry/3d/brep/rs", package = "semio-s-kernel-geometry-3d-brep" }
 kernel_3d_engine = { path = "../../../../geometry/3d/brep/engine/rs", package = "semio-s-kernel-geometry-3d-brep-engine" }
-neural_engine = { path = "../../../../neural/engine/rs", package = "semio-s-kernel-neural-engine" }
+neural_engine = { path = "../../../../../../framework/kernel/neural/engine/rs", package = "semio-framework-kernel-neural-engine" }
 semio-framework-core = { path = "../../../../../../framework/core/rs" }
 base64 = "0.22"
 serde = { version = "1.0.219", features = ["derive"] }

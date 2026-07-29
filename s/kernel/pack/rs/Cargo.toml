@@ -9,6 +9,7 @@ description = "Pack binary document format facade — re-exports the core/format
 [lints]
 workspace = true
 [lib]
+name = "pack"
 path = "lib.rs"
 
 [dependencies]
@@ -19,7 +20,7 @@ pack_io = { path = "../io/rs", package = "semio-s-kernel-pack-io" }
 pack_async = { path = "../async/rs", package = "semio-s-kernel-pack-async" }
 pack_http = { path = "../http/rs", package = "semio-s-kernel-pack-http" }
 pack_index = { path = "../index/rs", package = "semio-s-kernel-pack-index" }
-dsl_schema = { path = "../../dsl/schema/rs", package = "semio-s-kernel-dsl-schema" }
+dsl_schema = { path = "../../../../framework/kernel/dsl/schema/rs", package = "semio-framework-kernel-dsl-schema" }
 
 [features]
 default = ["deflate"]

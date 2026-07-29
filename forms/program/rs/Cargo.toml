@@ -23,7 +23,7 @@ path = "lib.rs"
 
 [dependencies]
 forms = { path = "../../rs" }
-vcs = { path = "../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+vcs = { path = "../../../framework/kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
 store = { path = "../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
 playbook = { path = "../../../s/kernel/playbook/rs", package = "semio-s-kernel-playbook" }
 semio-framework-program = { path = "../../../framework/program/rs" }

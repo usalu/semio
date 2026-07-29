@@ -1,0 +1,22 @@
+{
+  "name": "@semio-tech/db-testkit-rs",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "framework/kernel/db/testkit/rs", "command": "bun ./script.ts test" }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "framework/kernel/db/testkit/rs", "command": "bun ./script.ts test quick" }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "framework/kernel/db/testkit/rs", "command": "bun ./script.ts test long" }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "framework/kernel/db/testkit/rs", "command": "bun ./script.ts test exhaustive" }
+    }
+  }
+}

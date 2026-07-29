@@ -9,10 +9,11 @@ description = "Pack binary document format test kit — seeded generators, round
 [lints]
 workspace = true
 [lib]
+name = "pack_testkit"
 path = "lib.rs"
 
 [dependencies]
 pack = { path = "../../rs", package = "semio-s-kernel-pack" }
-dsl_schema = { path = "../../../dsl/schema/rs", package = "semio-s-kernel-dsl-schema" }
-dsl_core = { path = "../../../dsl/core/rs", package = "semio-s-kernel-dsl-core" }
+dsl_schema = { path = "../../../../../framework/kernel/dsl/schema/rs", package = "semio-framework-kernel-dsl-schema" }
+dsl_core = { path = "../../../../../framework/kernel/dsl/core/rs", package = "semio-framework-kernel-dsl-core" }
 blake3 = "1"

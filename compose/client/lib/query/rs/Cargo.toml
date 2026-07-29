@@ -17,8 +17,8 @@ path = "lib.rs"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 thiserror = "2.0.18"
-mathematical_graph_dsl = { path = "../../../../../s/kernel/mathematical/graph/dsl/rs", package = "semio-s-kernel-mathematical-graph-dsl" }
-mathematical_graph_manifest = { path = "../../../../../s/kernel/mathematical/graph/manifest/rs", package = "semio-s-kernel-mathematical-graph-manifest" }
+mathematical_graph_dsl = { path = "../../../../../framework/kernel/mathematical/graph/dsl/rs", package = "semio-framework-kernel-mathematical-graph-dsl" }
+mathematical_graph_manifest = { path = "../../../../../framework/kernel/mathematical/graph/manifest/rs", package = "semio-framework-kernel-mathematical-graph-manifest" }
 futures-util = { version = "0.3.31", default-features = false, features = ["std"] }
 pin-project-lite = "0.2"
 

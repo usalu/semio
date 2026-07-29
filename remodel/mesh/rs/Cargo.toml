@@ -16,8 +16,8 @@ remodel_dense = { path = "../../dense/rs" }
 remodel_image = { path = "../../image/rs" }
 remodel_camera = { path = "../../camera/rs" }
 semio-framework-core = { path = "../../../framework/core/rs" }
-mathematical_algebra = { path = "../../../s/kernel/mathematical/algebra/rs", package = "semio-s-kernel-mathematical-algebra" }
-mathematical_spatial = { path = "../../../s/kernel/mathematical/spatial/rs", package = "semio-s-kernel-mathematical-spatial" }
-mathematical_graph = { path = "../../../s/kernel/mathematical/graph/rs", package = "semio-s-kernel-mathematical-graph" }
-mathematical_lie = { path = "../../../s/kernel/mathematical/lie/rs", package = "semio-s-kernel-mathematical-lie" }
+mathematical_algebra = { path = "../../../framework/kernel/mathematical/algebra/rs", package = "semio-framework-kernel-mathematical-algebra" }
+mathematical_spatial = { path = "../../../framework/kernel/mathematical/spatial/rs", package = "semio-framework-kernel-mathematical-spatial" }
+mathematical_graph = { path = "../../../framework/kernel/mathematical/graph/rs", package = "semio-framework-kernel-mathematical-graph" }
+mathematical_lie = { path = "../../../framework/kernel/mathematical/lie/rs", package = "semio-framework-kernel-mathematical-lie" }
 base64 = "0.22"

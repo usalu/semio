@@ -1,0 +1,16 @@
+[package]
+name = "semio-framework-kernel-mathematical-graph-matching"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+name = "mathematical_graph_matching"
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+mathematical_graph = { path = "../../rs", package = "semio-framework-kernel-mathematical-graph" }

@@ -8,7 +8,8 @@ rust-version = "1.88"
 [lints]
 workspace = true
 [lib]
+name = "kernel_3d_scene"
 path = "lib.rs"
 
 [dependencies]
-mathematical_algebra = { path = "../../../../mathematical/algebra/rs", package = "semio-s-kernel-mathematical-algebra" }
+mathematical_algebra = { path = "../../../../../../framework/kernel/mathematical/algebra/rs", package = "semio-framework-kernel-mathematical-algebra" }

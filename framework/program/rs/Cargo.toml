@@ -17,12 +17,12 @@ ui_wgpu = { path = "../../../ui/wgpu/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"
-vcs = { path = "../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+vcs = { path = "../../kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
 store = { path = "../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
 # 🎞️ CW3 kernel cut-over: `DocumentApp::Operation`'s trait bound now references `protocol::Operation`/
 # `protocol::OpText` directly.
-protocol = { path = "../../../s/kernel/protocol/rs", package = "semio-s-kernel-protocol" }
+protocol = { path = "../../kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
 wit-bindgen = { version = "0.36.0", features = ["macros"] }
 
 [dev-dependencies]
-dsl = { path = "../../../s/kernel/dsl/rs", package = "semio-s-kernel-dsl" }
+dsl = { path = "../../kernel/dsl/rs", package = "semio-framework-kernel-dsl" }

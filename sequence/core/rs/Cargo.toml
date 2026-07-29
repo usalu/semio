@@ -17,14 +17,14 @@ path = "lib.rs"
 [dependencies]
 imperative_engine = { path = "../../../imperative/engine/rs" }
 imperative_module_core = { path = "../../../imperative/module/core/rs" }
-neural_engine = { path = "../../../s/kernel/neural/engine/rs", package = "semio-s-kernel-neural-engine" }
-infinite_board_port_directed_dag = { path = "../../../s/kernel/infinite/board/port/directed/dag/rs", package = "semio-s-kernel-infinite-board-port-directed-dag" }
-mathematical_graph_manifest = { path = "../../../s/kernel/mathematical/graph/manifest/rs", package = "semio-s-kernel-mathematical-graph-manifest" }
-infinite_cavas = { path = "../../../s/kernel/infinite/canvas/rs", package = "semio-s-kernel-infinite-canvas" }
-vcs = { path = "../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+neural_engine = { path = "../../../framework/kernel/neural/engine/rs", package = "semio-framework-kernel-neural-engine" }
+infinite_board_port_directed_dag = { path = "../../../framework/kernel/infinite/board/port/directed/dag/rs", package = "semio-framework-kernel-infinite-board-port-directed-dag" }
+mathematical_graph_manifest = { path = "../../../framework/kernel/mathematical/graph/manifest/rs", package = "semio-framework-kernel-mathematical-graph-manifest" }
+infinite_cavas = { path = "../../../framework/kernel/infinite/canvas/rs", package = "semio-framework-kernel-infinite-canvas" }
+vcs = { path = "../../../framework/kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
 store = { path = "../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
-protocol = { path = "../../../s/kernel/protocol/rs", package = "semio-s-kernel-protocol" }
-dsl = { path = "../../../s/kernel/dsl/rs", package = "semio-s-kernel-dsl" }
+protocol = { path = "../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
+dsl = { path = "../../../framework/kernel/dsl/rs", package = "semio-framework-kernel-dsl" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"

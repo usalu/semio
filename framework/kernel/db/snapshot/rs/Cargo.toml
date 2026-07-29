@@ -1,0 +1,18 @@
+[package]
+name = "semio-framework-kernel-db-snapshot"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db snapshots — pack files with pages in KIND_CHUNK, descriptor in KIND_SNAPSHOT, incremental generations via footer chaining"
+
+[lints]
+workspace = true
+[lib]
+name = "db_snapshot"
+path = "lib.rs"
+
+[dependencies]
+db_core = { path = "../../core/rs", package = "semio-framework-kernel-db-core" }
+db_state = { path = "../../state/rs", package = "semio-framework-kernel-db-state" }
+db_storage = { path = "../../storage/rs", package = "semio-framework-kernel-db-storage" }
+pack = { path = "../../../../../s/kernel/pack/rs", package = "semio-s-kernel-pack" }

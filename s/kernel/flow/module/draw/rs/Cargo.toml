@@ -5,6 +5,7 @@ edition = "2021"
 rust-version = "1.88"
 
 [lib]
+name = "flow_module_draw"
 crate-type = ["rlib", "cdylib"]
 path = "lib.rs"
 
@@ -16,7 +17,7 @@ standalone-wasm = ["dep:wasm-bindgen"]
 flow_module_wasm = { path = "../../wasm/rs", package = "semio-s-kernel-flow-module-wasm" }
 kernel_2d_engine = { path = "../../../../geometry/2d/engine/rs", package = "semio-s-kernel-geometry-2d-engine" }
 kernel_2d_rs = { path = "../../../../geometry/2d/rs", package = "semio-s-kernel-geometry-2d" }
-neural_engine = { path = "../../../../neural/engine/rs", package = "semio-s-kernel-neural-engine" }
+neural_engine = { path = "../../../../../../framework/kernel/neural/engine/rs", package = "semio-framework-kernel-neural-engine" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"

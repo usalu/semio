@@ -23,14 +23,14 @@ crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
 
 [dependencies]
-mathematical_graph = { path = "../../../s/kernel/mathematical/graph/rs", package = "semio-s-kernel-mathematical-graph" }
-mathematical_graph_drawing = { path = "../../../s/kernel/mathematical/graph/drawing/rs", package = "semio-s-kernel-mathematical-graph-drawing" }
-mathematical_geometry = { path = "../../../s/kernel/mathematical/geometry/rs", package = "semio-s-kernel-mathematical-geometry" }
-mathematical_algebra = { path = "../../../s/kernel/mathematical/algebra/rs", package = "semio-s-kernel-mathematical-algebra" }
+mathematical_graph = { path = "../../../framework/kernel/mathematical/graph/rs", package = "semio-framework-kernel-mathematical-graph" }
+mathematical_graph_drawing = { path = "../../../framework/kernel/mathematical/graph/drawing/rs", package = "semio-framework-kernel-mathematical-graph-drawing" }
+mathematical_geometry = { path = "../../../framework/kernel/mathematical/geometry/rs", package = "semio-framework-kernel-mathematical-geometry" }
+mathematical_algebra = { path = "../../../framework/kernel/mathematical/algebra/rs", package = "semio-framework-kernel-mathematical-algebra" }
 semio-framework-program = { path = "../../../framework/program/rs" }
-vcs = { path = "../../../s/kernel/vcs/rs", package = "semio-s-kernel-vcs" }
+vcs = { path = "../../../framework/kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
 store = { path = "../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
-protocol = { path = "../../../s/kernel/protocol/rs", package = "semio-s-kernel-protocol" }
-dsl = { path = "../../../s/kernel/dsl/rs", package = "semio-s-kernel-dsl" }
+protocol = { path = "../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
+dsl = { path = "../../../framework/kernel/dsl/rs", package = "semio-framework-kernel-dsl" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

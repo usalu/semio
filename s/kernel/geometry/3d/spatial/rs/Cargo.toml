@@ -8,6 +8,7 @@ rust-version = "1.88"
 [lints]
 workspace = true
 [lib]
+name = "kernel_3d_spatial"
 path = "lib.rs"
 
 [dependencies]
