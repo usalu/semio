@@ -103,6 +103,15 @@
 \AbbreviationDefine{KET}{Konstruktives Entwerfen und Tragwerksplanung}{Die an diesem Projekt beteiligte Abteilung der Universität der Künste Berlin.}
 \AbbreviationDefine{BBSR}{Bundesinstitut für Bau-, Stadt- und Raumforschung}{Die Bundesbehörde, die dieses Forschungsvorhaben fördert.}
 
+% Reset bold to normal (scoped to this document): the table header cells get a
+% synthetic FakeBold via \SemioSansBold (defined in semio-window.sty). Redefine it
+% here — after the class/window.sty have loaded — to the plain Regular face so
+% header rows (Plattform, Land, …) render at normal weight without touching the
+% shared style files or any other report.
+\makeatletter
+\renewfontfamily\SemioSansBold[Path=\semio@font@root anta/]{Anta-Regular.ttf}
+\makeatother
+
 \begin{document}
 
 \makecoverpages
@@ -144,7 +153,7 @@ Ziel ist die Entwicklung einer digitalen Arbeitsumgebung, in der heterogene Baut
 
 \subsection{AP-Erfahrung}
 
-Im Arbeitspaket \textbf{\Abbr{AP}-Erfahrung} wurden bestehende Grundlagen, Prozesse und Anforderungen für den Umgang mit wiederverwendbaren Baukomponenten untersucht. Die daraus gewonnenen Erkenntnisse bilden die fachliche und methodische Grundlage für die weiteren Arbeitspakete.
+Im Arbeitspaket \Abbr{AP}-Erfahrung wurden bestehende Grundlagen, Prozesse und Anforderungen für den Umgang mit wiederverwendbaren Baukomponenten untersucht. Die daraus gewonnenen Erkenntnisse bilden die fachliche und methodische Grundlage für die weiteren Arbeitspakete.
 
 \subsubsection{Recherche}
 Die Recherche erfasste die Informationslage zu wiederverwendbaren Baukomponenten über verschiedene Phasen und Beteiligte hinweg. Untersucht wurde, welche Angaben verfügbar sind, wie sie dokumentiert werden und in welchem Umfang sie zwischen Erfassung, Vermittlung, Planung und fachlicher Bewertung weitergegeben werden. Dabei zeigte sich, dass relevante Informationen häufig verteilt, uneinheitlich und unvollständig vorliegen und beim Übergang zwischen Quellen, Dokumenten und Modellen an Zusammenhang verlieren können.
@@ -186,7 +195,7 @@ Auswahl und Entwurf verlaufen daher iterativ: Geeignete Komponenten können Anpa
 \paragraph{Nachweise}
 Die fachliche Beurteilung einer Baukomponente ist an ihre vorgesehene Verwendung und Einbausituation gebunden. Je nach Bauteilart und Projekt sind insbesondere Geometrie, Material, Zustand, Tragfähigkeit, Anschlussmöglichkeiten und Umweltauswirkungen zu prüfen. Gegebenenfalls sind zusätzliche Untersuchungen oder projektspezifische Nachweise erforderlich.
 
-In frühen Entwurfsphasen liegen die dafür notwendigen Grundlagen meist nur teilweise vor. Einzelne Angaben können bereits belegt, nachvollziehbar abgeleitet, vorläufig angenommen oder noch offen sein. Die vier Nachweiszustände \textbf{vorhanden}, \textbf{abgeleitet}, \textbf{angenommen} und \textbf{offen} bilden diese unterschiedlichen Informationsstände auf Ebene einzelner Angaben ab und machen weiteren Prüfbedarf sichtbar. Sie dienen der transparenten Einordnung der verfügbaren Informationen, ersetzen jedoch keine fachlichen, ingenieurtechnischen oder baurechtlichen Nachweise.
+In frühen Entwurfsphasen liegen die dafür notwendigen Grundlagen meist nur teilweise vor. Einzelne Angaben können bereits belegt, nachvollziehbar abgeleitet, vorläufig angenommen oder noch offen sein. Die vier Nachweiszustände vorhanden, abgeleitet, angenommen und offen bilden diese unterschiedlichen Informationsstände auf Ebene einzelner Angaben ab und machen weiteren Prüfbedarf sichtbar. Sie dienen der transparenten Einordnung der verfügbaren Informationen, ersetzen jedoch keine fachlichen, ingenieurtechnischen oder baurechtlichen Nachweise.
 \end{SemioNest}
 
 \paragraph{Typologiefamilien und Entwurfsrollen}
@@ -371,11 +380,11 @@ Der formale Durchführungszeitraum reicht vom 03.11.2025 bis 02.05.2027. Die ope
 
 Gegenüber dem Antrag sind drei Punkte relevant:
 
-\begin{enumerate}
+\begin{itemize}
 \item Operativer Projektbeginn: Die Bearbeitung begann später als im formalen Durchführungszeitraum vorgesehen.
 \item Methodische Präzisierung der Geometrieerzeugung: Die Arbeitsgeometrie der Baukomponenten wird parametrisch durch einen Generator erzeugt. Der Generator überführt die erfassten Angaben in eine einheitliche und anpassbare Arbeitsgeometrie. Fotografien und Scans können ergänzend als Referenz- und Belegquellen genutzt werden. Die methodische Präzisierung betrifft die technische Umsetzung, nicht das Ziel der digitalen Objektbildung.
 \item Interviews: Drei der acht genehmigten Fachgespräche sind ausgewertet. Die fünf weiteren Gespräche ergänzen in den nächsten Projektphasen die Architektur- und Ingenieurperspektiven und unterstützen die spätere Fach- und Nutzungsvalidierung.
-\end{enumerate}
+\end{itemize}
 
 Projektziel und grundsätzliche Abfolge der Arbeitspakete bleiben unverändert. [ERGÄNZEN: formalen Status der Startverschiebung, Datum und Empfänger eintragen.]
 
@@ -394,81 +403,81 @@ Die Statusdarstellung fasst Verantwortung, derzeitigen Stand und weiteres Vorgeh
 
 \subsection{AP-Erfahrung}
 
-\textbf{Verantwortung.} \Abbr{NGS} und \Abbr{KET} bearbeiten das Arbeitspaket gemeinsam. \Abbr{NGS} übernimmt den technischen, \Abbr{KET} den gestalterischen Schwerpunkt der Interviewleitfäden.
+Verantwortung. \Abbr{NGS} und \Abbr{KET} bearbeiten das Arbeitspaket gemeinsam. \Abbr{NGS} übernimmt den technischen, \Abbr{KET} den gestalterischen Schwerpunkt der Interviewleitfäden.
 
-\textbf{Derzeitiger Stand.} Aus Recherche, externer Studie und drei eigenen Fachgesprächen liegen 35 User Stories und 17 funktionale Anforderungscluster vor.
+Derzeitiger Stand. Aus Recherche, externer Studie und drei eigenen Fachgesprächen liegen 35 User Stories und 17 funktionale Anforderungscluster vor.
 
-\textbf{Weiteres Vorgehen.} Fünf weitere Fachgespräche ergänzen die Architektur- und Ingenieurperspektiven und unterstützen die spätere Fach- und Nutzungsvalidierung.
+Weiteres Vorgehen. Fünf weitere Fachgespräche ergänzen die Architektur- und Ingenieurperspektiven und unterstützen die spätere Fach- und Nutzungsvalidierung.
 
 \subsection{AP-Plattform}
 
-\textbf{Verantwortung und Einordnung.} \Abbr{NGS} verantwortet \Abbr{AP}-Plattform und die Eingabeoberfläche; \Abbr{KET} bringt die übergreifende User-Experience-Perspektive ein. Im Bericht umfasst \Abbr{AP}-Plattform die Bauteileinspeisung und digitale Objektbildung. Der Bauteilkatalog wird funktional unter \Abbr{AP}-Tool behandelt, ohne die formale Zuordnung des Arbeitsplans zu verändern.
+Verantwortung und Einordnung. \Abbr{NGS} verantwortet \Abbr{AP}-Plattform und die Eingabeoberfläche; \Abbr{KET} bringt die übergreifende User-Experience-Perspektive ein. Im Bericht umfasst \Abbr{AP}-Plattform die Bauteileinspeisung und digitale Objektbildung. Der Bauteilkatalog wird funktional unter \Abbr{AP}-Tool behandelt, ohne die formale Zuordnung des Arbeitsplans zu verändern.
 
 \subsubsection{Eingabe und Objektbildung}
 
-\textbf{Derzeitiger Stand.} Für Wizard, Generatorinfrastruktur und Stützengenerator liegen prototypische Implementierungen vor. Ein gemeinsames Datenschema und typologieabhängige Eingaben sind angelegt. Das Bauteilobjekt verfügt über die Infrastruktur für fachliche Repräsentationen.
+Derzeitiger Stand. Für Wizard, Generatorinfrastruktur und Stützengenerator liegen prototypische Implementierungen vor. Ein gemeinsames Datenschema und typologieabhängige Eingaben sind angelegt. Das Bauteilobjekt verfügt über die Infrastruktur für fachliche Repräsentationen.
 
-\textbf{Weiteres Vorgehen.} Ein Referenzbauteil wird vollständig vom Wizard bis zum Bauteilobjekt mit Quellen, Nachweiszuständen, Anschlüssen und Repräsentationen dokumentiert. Anschließend werden die Konsensfunktion, URI-basierte Verknüpfungen mit der Dokumentation sowie Angaben zu Hosting, Nutzerzugängen und Rollen ergänzt.
+Weiteres Vorgehen. Ein Referenzbauteil wird vollständig vom Wizard bis zum Bauteilobjekt mit Quellen, Nachweiszuständen, Anschlüssen und Repräsentationen dokumentiert. Anschließend werden die Konsensfunktion, URI-basierte Verknüpfungen mit der Dokumentation sowie Angaben zu Hosting, Nutzerzugängen und Rollen ergänzt.
 
-\textbf{Methodische Präzisierung.} Die Arbeitsgeometrie wird parametrisch durch einen Generator erzeugt. Fotografien und Scans dienen ergänzend als Referenz- und Belegquellen. Die Abstimmung mit der Fachbetreuung wird im Abschnitt Soll-Ist-Vergleich dokumentiert.
+Methodische Präzisierung. Die Arbeitsgeometrie wird parametrisch durch einen Generator erzeugt. Fotografien und Scans dienen ergänzend als Referenz- und Belegquellen. Die Abstimmung mit der Fachbetreuung wird im Abschnitt Soll-Ist-Vergleich dokumentiert.
 
 \subsubsection{Schnittstelle}
 
-\textbf{Derzeitiger Stand.} Eine prototypische \Abbr{REST}-Schnittstelleninfrastruktur liegt vor.
+Derzeitiger Stand. Eine prototypische \Abbr{REST}-Schnittstelleninfrastruktur liegt vor.
 
-\textbf{Weiteres Vorgehen.} Eine externe Referenzquelle wird ausgewählt und über eine API oder eine statische, intervallbasierte Übertragung angebunden. Schnittstellen- und Schemabeschreibung, Fehlerfälle und Integrationstest werden versioniert dokumentiert. Auch die Einbindung eines Transferpartners wird dokumentiert.
+Weiteres Vorgehen. Eine externe Referenzquelle wird ausgewählt und über eine API oder eine statische, intervallbasierte Übertragung angebunden. Schnittstellen- und Schemabeschreibung, Fehlerfälle und Integrationstest werden versioniert dokumentiert. Auch die Einbindung eines Transferpartners wird dokumentiert.
 
 \subsection{AP-Tool}
 
-\textbf{Verantwortung.} \Abbr{NGS} verantwortet semio, technische Infrastruktur, \Abbr{HID}, Lebenszyklusanalyse und \Abbr{KI}-Assistenz. \Abbr{KET} bearbeitet die User-Experience-Perspektive und die Tragwerksanalyse.
+Verantwortung. \Abbr{NGS} verantwortet semio, technische Infrastruktur, \Abbr{HID}, Lebenszyklusanalyse und \Abbr{KI}-Assistenz. \Abbr{KET} bearbeitet die User-Experience-Perspektive und die Tragwerksanalyse.
 
-\textbf{Derzeitiger Stand.} Infrastrukturelle Grundlagen und Integrationsstrukturen liegen vor. Sie ermöglichen es, Informationen und fachliche Repräsentationen einer Baukomponente gemeinsam im Entwurfswerkzeug weiterzuführen.
+Derzeitiger Stand. Infrastrukturelle Grundlagen und Integrationsstrukturen liegen vor. Sie ermöglichen es, Informationen und fachliche Repräsentationen einer Baukomponente gemeinsam im Entwurfswerkzeug weiterzuführen.
 
 \subsubsection{Human-Interface-Design}
 
-\textbf{Derzeitiger Stand.} Für den Bauteilkatalog und die Entwurfsumgebung liegen Oberflächen-, Navigations- und Ansichtsvarianten in unterschiedlichen Reifegraden vor.
+Derzeitiger Stand. Für den Bauteilkatalog und die Entwurfsumgebung liegen Oberflächen-, Navigations- und Ansichtsvarianten in unterschiedlichen Reifegraden vor.
 
-\textbf{Weiteres Vorgehen.} Die priorisierten Ansichten werden zu einem durchgängigen Ablauf zusammengeführt.
+Weiteres Vorgehen. Die priorisierten Ansichten werden zu einem durchgängigen Ablauf zusammengeführt.
 
 \subsubsection{Lebenszyklusanalyse}
 
-\textbf{Derzeitiger Stand.} Die Infrastruktur für die Zuordnung ökologischer Bewertungsinformationen zu Baukomponenten und Varianten liegt vor.
+Derzeitiger Stand. Die Infrastruktur für die Zuordnung ökologischer Bewertungsinformationen zu Baukomponenten und Varianten liegt vor.
 
-\textbf{Weiteres Vorgehen.} Die ökologische Berechnung wird auf dieser Grundlage auf Variantenebene umgesetzt.
+Weiteres Vorgehen. Die ökologische Berechnung wird auf dieser Grundlage auf Variantenebene umgesetzt.
 
 \subsubsection{Tragwerksanalyse}
 
-\textbf{Derzeitiger Stand.} Vorbereitet wurde die Infrastruktur für die Erzeugung und Zuordnung tragwerklicher Repräsentationen.
+Derzeitiger Stand. Vorbereitet wurde die Infrastruktur für die Erzeugung und Zuordnung tragwerklicher Repräsentationen.
 
-\textbf{Weiteres Vorgehen.} Zu entwickeln sind vereinfachte Tragsysteme, regelbasierte Anschluss- und Kompatibilitätsprüfungen sowie Berechnungen für ausgewählte Komponenten oder Teilsysteme.
+Weiteres Vorgehen. Zu entwickeln sind vereinfachte Tragsysteme, regelbasierte Anschluss- und Kompatibilitätsprüfungen sowie Berechnungen für ausgewählte Komponenten oder Teilsysteme.
 
 \subsubsection{KI-Assistenz}
 
-\textbf{Derzeitiger Stand.} Vorgesehen sind eine \Abbr{LLM}-basierte Entwurfsassistenz sowie ergänzend die Unterstützung der Dokumentauswertung und Dateneingabe im Wizard. Eine technische Umsetzung lag noch nicht vor.
+Derzeitiger Stand. Vorgesehen sind eine \Abbr{LLM}-basierte Entwurfsassistenz sowie ergänzend die Unterstützung der Dokumentauswertung und Dateneingabe im Wizard. Eine technische Umsetzung lag noch nicht vor.
 
-\textbf{Weiteres Vorgehen.} Ein erster Anwendungsfall ist mit Eingaben, erwarteten Ergebnissen und Prüfkriterien abzugrenzen. Vorschläge müssen überprüfbar und korrigierbar bleiben.
+Weiteres Vorgehen. Ein erster Anwendungsfall ist mit Eingaben, erwarteten Ergebnissen und Prüfkriterien abzugrenzen. Vorschläge müssen überprüfbar und korrigierbar bleiben.
 
 \subsubsection{Konfigurator}
 
-\textbf{Derzeitiger Stand.} Der Konfigurator leitet sich aus den User Stories und dem Anforderungsmapping ab und soll die Abstimmung mit Bauteilbörsen unterstützen.
+Derzeitiger Stand. Der Konfigurator leitet sich aus den User Stories und dem Anforderungsmapping ab und soll die Abstimmung mit Bauteilbörsen unterstützen.
 
-\textbf{Weiteres Vorgehen.} Es wird festgelegt, welche Funktionen intern umgesetzt werden können und welche eine externe Börsen-, Bestell- oder Serviceanbindung voraussetzen.
+Weiteres Vorgehen. Es wird festgelegt, welche Funktionen intern umgesetzt werden können und welche eine externe Börsen-, Bestell- oder Serviceanbindung voraussetzen.
 
 \subsection{AP-Validierung}
 
-\textbf{Verantwortung.} \Abbr{NGS} und \Abbr{KET} bearbeiten die erste Test-Case-Phase gemeinsam. \Abbr{KET} übernimmt schwerpunktmäßig die nutzungsnahe Weiterentwicklung und Workshopvorbereitung; Durchführung und Auswertung erfolgen gemeinsam.
+Verantwortung. \Abbr{NGS} und \Abbr{KET} bearbeiten die erste Test-Case-Phase gemeinsam. \Abbr{KET} übernimmt schwerpunktmäßig die nutzungsnahe Weiterentwicklung und Workshopvorbereitung; Durchführung und Auswertung erfolgen gemeinsam.
 
 \subsubsection{Test-Case und Entwurfsgrammatik}
 
-\textbf{Derzeitiger Stand.} Der Stahlbetonbestand aus „Abbau/Aufbau“ wurde als Test-Case aufbereitet. Seine inhomogenen Fragmente wurden im Entwurfswerkzeug verwendet. Bauteilkatalog, 3D-, Diagramm- und Detailansicht waren mit den Test-Case-Daten verbunden. Eine durchgängige Verbindung mit Bauteilportal, Wizard und Generator lag noch nicht vor.
+Derzeitiger Stand. Der Stahlbetonbestand aus „Abbau/Aufbau“ wurde als Test-Case aufbereitet. Seine inhomogenen Fragmente wurden im Entwurfswerkzeug verwendet. Bauteilkatalog, 3D-, Diagramm- und Detailansicht waren mit den Test-Case-Daten verbunden. Eine durchgängige Verbindung mit Bauteilportal, Wizard und Generator lag noch nicht vor.
 
-\textbf{Weiteres Vorgehen.} Die bestehende Kette innerhalb des Entwurfswerkzeugs ist mit der Einspeiseplattform und der digitalen Objektbildung zu verbinden. Anschließend ist der vollständige Ablauf vom Bauteilportal bis zur Entwurfsvariante zu prüfen.
+Weiteres Vorgehen. Die bestehende Kette innerhalb des Entwurfswerkzeugs ist mit der Einspeiseplattform und der digitalen Objektbildung zu verbinden. Anschließend ist der vollständige Ablauf vom Bauteilportal bis zur Entwurfsvariante zu prüfen.
 
 \subsubsection{Workshop}
 
-\textbf{Derzeitiger Stand.} Der Workshop ist für eine spätere Projektphase vorgesehen.
+Derzeitiger Stand. Der Workshop ist für eine spätere Projektphase vorgesehen.
 
-\textbf{Weiteres Vorgehen.} Zielgruppe, Entwurfsaufgabe, Ablauf, Erhebungsmethode und Auswertung werden festgelegt. Für den 80-Prozent-Indikator werden Frage, Bezugsgruppe und positive Antwort vorab definiert.
+Weiteres Vorgehen. Zielgruppe, Entwurfsaufgabe, Ablauf, Erhebungsmethode und Auswertung werden festgelegt. Für den 80-Prozent-Indikator werden Frage, Bezugsgruppe und positive Antwort vorab definiert.
 
 \part{Mittelverwendung}
 
@@ -535,25 +544,25 @@ Die Ergebnisse richten sich vorrangig an Architektur- und Ingenieurbüros, die m
 \end{SemioTable}
 \end{Table}
 
-\textbf{Softwarebasis.} semio ist als offene Werkzeugbasis öffentlich auf GitHub verfügbar: \url{https://github.com/usalu/semio}. [ERGÄNZEN: projektbezogenen Release oder Tag eintragen.]
+Softwarebasis. semio ist als offene Werkzeugbasis öffentlich auf GitHub verfügbar: \url{https://github.com/usalu/semio}. [ERGÄNZEN: projektbezogenen Release oder Tag eintragen.]
 
-\textbf{Dauerhafte Bereitstellung.} Für eine reproduzierbare Nutzung werden Installationsweg, Abhängigkeiten und Betriebsvoraussetzungen dokumentiert. Die technische und organisatorische Bereitstellung soll mindestens während der zweijährigen Verwertungspflicht nach Projektende gewährleistet werden.
+Dauerhafte Bereitstellung. Für eine reproduzierbare Nutzung werden Installationsweg, Abhängigkeiten und Betriebsvoraussetzungen dokumentiert. Die technische und organisatorische Bereitstellung soll mindestens während der zweijährigen Verwertungspflicht nach Projektende gewährleistet werden.
 
-\textbf{Community-Bereich.} Ein Discourse-Server dient bereits dem projektbezogenen Austausch. Der formale Community-Indikator gilt jedoch erst als erfüllt, wenn öffentliche Zugänglichkeit, Durchsuchbarkeit, dauerhafte Sicherung relevanter Inhalte und die Beteiligung von mindestens 25 Personen nachvollziehbar dokumentiert sind. Link, Zugriffsstatus, Archivierung und Zählmethode sind noch zu ergänzen.
+Community-Bereich. Ein Discourse-Server dient bereits dem projektbezogenen Austausch. Der formale Community-Indikator gilt jedoch erst als erfüllt, wenn öffentliche Zugänglichkeit, Durchsuchbarkeit, dauerhafte Sicherung relevanter Inhalte und die Beteiligung von mindestens 25 Personen nachvollziehbar dokumentiert sind. Link, Zugriffsstatus, Archivierung und Zählmethode sind noch zu ergänzen.
 
 \section{Zusätzliche Verwertungsperspektiven}
 
-\textbf{Open-Access-Repositorium.}
+Open-Access-Repositorium.
 \begin{Blockquote}
 \textit{[ERGÄNZEN: zu veröffentlichende Daten oder Ergebnisse, gewähltes Repositorium, dauerhafte Kennung und Status. Falls nicht konkret geplant, in der Einreichungsfassung weglassen.]}
 \end{Blockquote}
 
-\textbf{Wissenschaftliche Veröffentlichung und Fachmedien.}
+Wissenschaftliche Veröffentlichung und Fachmedien.
 \begin{Blockquote}
 \textit{[ERGÄNZEN: konkretes Thema, Publikationsform und Status. Falls nicht konkret geplant, in der Einreichungsfassung weglassen.]}
 \end{Blockquote}
 
-\textbf{Entwurfsstudio.}
+Entwurfsstudio.
 \begin{Blockquote}
 \textit{[ERGÄNZEN: konkrete Einbindung in die Lehre, Semester oder Zeitraum und erwarteter Ergebnisbeleg. Falls nicht konkret geplant, in der Einreichungsfassung weglassen.]}
 \end{Blockquote}

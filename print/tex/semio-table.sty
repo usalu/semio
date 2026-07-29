@@ -250,10 +250,19 @@
 \newcommand{\semio@cell@struttop}{\rule[\z@]{\z@}{\semio@table@vtop}}
 % Bottom strut: zero-width rule that only sets the last line's depth.
 \newcommand{\semio@cell@strutbot}{\rule[-\semio@table@vbot]{\z@}{\z@}}
-% Unified cell openers: alignment + no-indent + top strut. The matching bottom
-% strut goes in the column's <{} slot.
-\newcommand{\semio@cell@pre}{\raggedright\arraybackslash\hspace{0pt}\semio@cell@struttop}
-\newcommand{\semio@cell@preR}{\raggedleft\arraybackslash\hspace{0pt}\semio@cell@struttop}
+% Unified cell openers: alignment + top strut + no-indent glue. The matching
+% bottom strut goes in the column's <{} slot.
+% 🪢 Hyphenation: the \hspace{0pt} glue MUST come *after* \semio@cell@struttop,
+% not before it. TeX only hyphenates a run of letters that is immediately
+% preceded by glue; \semio@cell@struttop is a \rule, so with the glue before it
+% the first word of the cell sits directly after a rule and never hyphenates —
+% a long compound ("Beschaffungsschritte", "Mitgliedschaft") then overflows a
+% narrow column and collides with the next one. Emitting the strut first and the
+% zero glue last restores the "word preceded by glue" precondition (see the
+% Hyphenation Safety note in semio-core.sty). The strut still sets the first
+% line's height either way; the glue is zero-width, so nothing shifts visually.
+\newcommand{\semio@cell@pre}{\raggedright\arraybackslash\semio@cell@struttop\hspace{0pt}}
+\newcommand{\semio@cell@preR}{\raggedleft\arraybackslash\semio@cell@struttop\hspace{0pt}}
 
 \newcolumntype{T}[1]{%
   >{\semio@cell@pre}%
@@ -879,10 +888,13 @@
   \begingroup
   \setlength{\extrarowheight}{0pt}%
   \renewcommand{\arraystretch}{1.2}%
-  % Labels bold + chrome-foreground to match the component table's column headers
-  % (\semio@table@header@cell = \semio@text@emphasized{\bfseries …}); values stay
-  % regular weight in the normal text colour.
-  \begin{tabular}[t]{@{}>{\bfseries\color{semio-chrome-foreground}}l@{\hspace{1.2em}}>{\color{semio-chrome-text-normal}}l@{}}
+  % Labels use the SAME synthetic-bold face as the component column headers. Anta
+  % ships Regular only, so \bfseries is a no-op here; the headers get their weight
+  % from the \SemioSansBold family (fontspec FakeBold, see semio-window.sty, where
+  % \semio@table@header@cell is redefined to \SemioSansBold\semio@table@fontsize@apply).
+  % Mirror that exactly in the label column so labels and headers share one face
+  % and size. Values stay regular weight in the muted text colour.
+  \begin{tabular}[t]{@{}>{\SemioSansBold\semio@table@fontsize@apply\color{semio-chrome-foreground}}l@{\hspace{1.2em}}>{\color{semio-chrome-text-normal}}l@{}}
     Stadt & #1\tabularnewline
     Land & #2\tabularnewline
     Jahr & #3\tabularnewline
