@@ -83,7 +83,7 @@ In [framework/core/rs/ui.rs](framework/core/rs/ui.rs), mirrored in [framework/re
 - `instances_json`: `[{ id, meshId, position, rotationQuat, scale, color, selected, hovered, label }]`.
 - `selection_json`: `{ method: "rectangle"|"lasso", mode, ids, hoveredId }`.
 
-Standard renderer-to-program commands (handled by every world-3d program): `worldSelect { ids, merge }`, `worldHover { id }`, `setSelectionMethod { method }`. No back-compat shims — all emitters and both renderers move at once.
+Standard renderer-to-plugin commands (handled by every world-3d program): `worldSelect { ids, merge }`, `worldHover { id }`, `setSelectionMethod { method }`. No back-compat shims — all emitters and both renderers move at once.
 
 ## 3. `ui_wgpu` toolkit 3D layer — `ui/wgpu/rs`
 
@@ -110,8 +110,8 @@ New `scene3d.rs` module plus targeted extensions to existing files:
 
 ## 5. Plugin updates (all world-3d emitters, all at once)
 
-- **lowpoly** ([lowpoly/program/rs/lib.rs](lowpoly/program/rs/lib.rs)): store real `MeshData` per object (primitives from the core mesh module), emit mesh library + instances with selection/hover state, handle `worldSelect`/`worldHover`/`setSelectionMethod`, register `obj`/`glb` export handlers via `register_os_media_export_handler` using the core encoders; fix the default fixture.
-- **procedural3d** ([procedural/3d/program/rs/lib.rs](procedural/3d/program/rs/lib.rs)): preview emits real meshes (primitive geometry per node kind), selection wiring, obj/glb export of the preview meshes.
+- **lowpoly** ([lowpoly/plugin/rs/lib.rs](lowpoly/plugin/rs/lib.rs)): store real `MeshData` per object (primitives from the core mesh module), emit mesh library + instances with selection/hover state, handle `worldSelect`/`worldHover`/`setSelectionMethod`, register `obj`/`glb` export handlers via `register_os_media_export_handler` using the core encoders; fix the default fixture.
+- **procedural3d** ([procedural/3d/plugin/rs/lib.rs](procedural/3d/plugin/rs/lib.rs)): preview emits real meshes (primitive geometry per node kind), selection wiring, obj/glb export of the preview meshes.
 - **puzzle3d, puzzle5d, cad, shooting**: emit the extended payload — GLB `url` mesh entries where fixtures carry `meshUrl`, primitives otherwise — and handle the standard selection commands. Design/type apps (compose sketchpad, React-only) are covered by the GLB-url + selection capabilities without touching compose.
 
 ## 6. React renderer parity — `framework/renderer/react`

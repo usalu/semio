@@ -57,7 +57,7 @@ public interface IWebViewHost
 
 #region ⭐AssemblyAttributes
 // Assembly-level attributes required by Rhino to identify this program.
-// The Id is the program ID. PlugInDescription attributes show in Rhino Options > Plug-ins.
+// The Id is the plugin ID. PlugInDescription attributes show in Rhino Options > Plug-ins.
 #if RHINO_PLUGIN
 [assembly: Guid("A1B2C3D4-E5F6-7890-ABCD-EF1234567890")]
 [assembly: PlugInDescription(DescriptionType.Address, "")]
@@ -571,7 +571,7 @@ public class ComposeWebViewControl : System.Windows.Controls.UserControl
             var program = ComposeRhinoPlugin.Instance;
             if (program == null) return;
 
-            var response = await program.Bridge.HandleAsync(request);
+            var response = await plugin.Bridge.HandleAsync(request);
             var responseJson = JsonConvert.SerializeObject(response);
 
             _webView?.CoreWebView2?.PostWebMessageAsJson(responseJson);

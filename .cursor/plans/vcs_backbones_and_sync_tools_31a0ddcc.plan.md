@@ -78,7 +78,7 @@ Replace the current `DevJsonFileBackbone` / `SqliteFolderBackbone` / `RemoteHttp
 ## 2. Collapse duplicate backbones in os core and s
 
 - [framework/product/os/core/rs/lib.rs](framework/product/os/core/rs/lib.rs): delete `DevJsonBackbone`, `LocalJsonBackbone`, `RemoteOsBackbone`, `OsBackboneRef`, `NativeFileBackbonePort`, `SqliteFolderBackbonePort`; use vcs `Backbone`/`BackbonePort` and `DocumentBackboneRef` directly. Studio catalog keeps working over ports with `temp://` (memory) and browser localStorage.
-- [s/program/rs/lib.rs](s/program/rs/lib.rs): rewire `bind_studio_file`, `create_folder_studio`, catalog ports, and demo fixtures onto the new kinds/URIs; fix all touched fixtures at once.
+- [s/plugin/rs/lib.rs](s/plugin/rs/lib.rs): rewire `bind_studio_file`, `create_folder_studio`, catalog ports, and demo fixtures onto the new kinds/URIs; fix all touched fixtures at once.
 
 ## 3. Hub envelope sync — [framework/product/os/hub/rs/bin.rs](framework/product/os/hub/rs/bin.rs)
 

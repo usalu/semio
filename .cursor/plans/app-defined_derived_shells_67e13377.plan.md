@@ -1,6 +1,6 @@
 ---
 name: App-defined derived shells
-overview: "Invert ownership: each app exports one complete self-describing definition (runtime + renderer contribution + OS program registration), and both the playground and the OS shell become fully generic hosts that derive everything from registered definitions — no per-app boot functions, no per-technology framework APIs, no hardcoded S registries."
+overview: "Invert ownership: each app exports one complete self-describing definition (runtime + renderer contribution + OS plugin registration), and both the playground and the OS shell become fully generic hosts that derive everything from registered definitions — no per-app boot functions, no per-technology framework APIs, no hardcoded S registries."
 todos:
  - id: contract
    content: Define AppRendererContribution + generic UiSurfaceHostNode in platform-core; replace bootRenderer/PlaygroundChromeBoot with loadRenderer in playground-core
@@ -14,11 +14,11 @@ todos:
  - id: os-derived
    content: "Derive S/OS from registry: delete registerSPlaySurfaceHosts fan-out, replace SAppHostRouter switch with contribution.instanceHost lookup"
    status: completed
- - id: os-programs
-   content: Move TECHNOLOGY_APP_RESOURCE_BY_PROGRAM rows and per-format VCS handlers into owning app cores as program contributions; derive program registration from manifests
+ - id: os-plugins
+   content: Move TECHNOLOGY_APP_RESOURCE_BY_PROGRAM rows and per-format VCS handlers into owning app cores as program contributions; derive plugin registration from manifests
    status: completed
  - id: manifest-virtual
-   content: Extend semio.app manifest + scanner + virtual module program to expose program exports
+   content: Extend semio.app manifest + scanner + virtual module program to expose plugin exports
    status: completed
  - id: enforcement
    content: Tighten dependency-cruiser (framework/s must not import app packages) and repo guard tests
@@ -105,7 +105,7 @@ Each app core's definition points at it: `loadRenderer: async () => (await impor
 
 - `registerSPlaySurfaceHosts` cross-app fan-out deleted. OS boot (`bootstrapSPlayExtensions`) iterates the manifest registry and applies each app's contribution lazily — on program first-use (spawn/openInstance), load definition → `applyContribution`.
 - `SAppHostRouter` switch replaced by lookup: resolve instance → app definition → `contribution.instanceHost`; render generically.
-- Delete `TECHNOLOGY_APP_RESOURCE_BY_PROGRAM` and [s/core/program-extensions.ts](s/core/program-extensions.ts) explicit import list; program registration is derived by iterating manifests (extend the virtual module to also expose each app's program export).
+- Delete `TECHNOLOGY_APP_RESOURCE_BY_PROGRAM` and [s/core/program-extensions.ts](s/core/program-extensions.ts) explicit import list; plugin registration is derived by iterating manifests (extend the virtual module to also expose each app's plugin export).
 - Move per-format `create*AppVcsHandler` factories from [framework/product/os/core/js/index.ts](framework/product/os/core/js/index.ts) into the owning app cores, registered via the definition's `program` contribution.
 - S keeps exactly one declared library dependency (`@semio-tech/flow-react` for its own media-graph canvas) — a deliberate library use, not app aggregation.
 

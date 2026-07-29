@@ -18,7 +18,7 @@ todos:
    content: Real pixel-based paint + chrome-structure assertions in E2E script
    status: completed
  - id: verify
-   content: Rebuild wasm, cargo test, run 25-program suite, inspect screenshots for navbar/footer/panels/text
+   content: Rebuild wasm, cargo test, run 25-plugin suite, inspect screenshots for navbar/footer/panels/text
    status: completed
 isProject: false
 ---
@@ -60,4 +60,4 @@ In `UiPipelines::render` ([ui/wgpu/rs/draw.rs](ui/wgpu/rs/draw.rs) ~line 1329), 
 ## Verification (make it impossible to pass blank)
 
 - Strengthen the paint check in [.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts](.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts): in-page `page.evaluate` draws the WebGPU canvas into a 2D canvas and reads real pixels via `getImageData`; assert (a) ≥1% of pixels differ from the background color and (b) a navbar-height strip at top and footer strip at bottom differ from the window body (chrome structure present).
-- Rebuild wasm (`bun ./framework/renderer/wgpu/script.ts wasm`), run `cargo test -p ui_wgpu`, run the 25-program suite, and visually inspect regenerated `screenshot-s.png` / `screenshot-flow.png` for navbar, footer, floating panels, and text.
+- Rebuild wasm (`bun ./framework/renderer/wgpu/script.ts wasm`), run `cargo test -p ui_wgpu`, run the 25-plugin suite, and visually inspect regenerated `screenshot-s.png` / `screenshot-flow.png` for navbar, footer, floating panels, and text.

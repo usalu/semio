@@ -10,7 +10,7 @@
 //! (`CommandReceipt`, `Frontier`, `Consistency`, `DurabilityClass`, …) already live in `db_engine`
 //! — this crate promotes exactly that surface to its own root (`//#region 🔖Database`), unchanged,
 //! since that is the "primary entry point" every downstream caller (`os-hub`, `compose-hub`,
-//! program crates) is meant to reach for. `db_engine` already exposes `Database::open_at` verbatim
+//! plugin crates) is meant to reach for. `db_engine` already exposes `Database::open_at` verbatim
 //! (`FsStorage`, zero-touch) — no extra convenience wrapper is needed here. Every other `db_*`
 //! crate is additionally reachable in full through a same-named (minus the `db_` prefix)
 //! submodule (`db::core`, `db::state`, `db::query`, …) so nothing in the family is hidden behind

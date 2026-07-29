@@ -101,7 +101,7 @@ Rust board path: upgrade `ThemedSvgLookup` from `fn(&str) -> Option<&'static str
 
 **Rust**
 
-- [`framework/core/rs/lib.rs`](framework/core/rs/lib.rs) + builder APIs in [`framework/program/rs/lib.rs`](framework/program/rs/lib.rs): `icon_id: IconName` (required) / `Option<IconName>` where optional today. Drop `impl Into<String>` for icon params; accept `IconName` (and `FromStr` only at JSON boundaries).
+- [`framework/core/rs/lib.rs`](framework/core/rs/lib.rs) + builder APIs in [`framework/plugin/rs/lib.rs`](framework/plugin/rs/lib.rs): `icon_id: IconName` (required) / `Option<IconName>` where optional today. Drop `impl Into<String>` for icon params; accept `IconName` (and `FromStr` only at JSON boundaries).
 - [`ui/wgpu/rs/lib.rs`](ui/wgpu/rs/lib.rs) declarative nodes (`UiButtonNode`, toggles, tree actions, etc.): `icon_id: IconName`.
 - Plugin call sites already pass Lucide kebab strings — switch to `IconName::PenTool` (or `IconName::from_str("pen-tool").unwrap()` only in tests if needed; prefer enum variants at declaration sites).
 

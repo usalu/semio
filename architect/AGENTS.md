@@ -5,7 +5,7 @@ emoji: 🏛️
 
 # Architect
 
-Headless architectural programming technology: [architect/program](program/rs/lib.rs) domain model and analysis (`architect_spine`), [architect/program](program/rs/lib.rs) s/OS DocumentApp for program editing with undirected adjacency-matrix UI.
+Headless architectural __KEEP_pluginming__ technology: [architect/plugin](plugin/rs/lib.rs) domain model and analysis (`architect_spine`), [architect/plugin](plugin/rs/lib.rs) s/OS DocumentApp for program editing with undirected adjacency-matrix UI.
 
 ## Program (`architect_spine`)
 
@@ -26,4 +26,4 @@ Headless architectural programming technology: [architect/program](program/rs/li
 - Rust crate `architect_spine`
 - `mathematical_graph` for undirected topology helpers
 - `vcs` for document operations and undo
-- Plugin: `semio-framework-program`, WASM `semio:architect`
+- Plugin: `semio-framework-plugin`, WASM `semio:architect`

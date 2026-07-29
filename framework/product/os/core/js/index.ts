@@ -4,7 +4,7 @@
  * envelopes, `backbone-worker.ts` request/response wire types, `PersistenceBinding`/`OperationEnvelope`,
  * {@link buildFrameworkSyncUtilities}) consumed by `framework/renderer/react/index.tsx` and
  * `framework/product/os/dev/script.ts`. The OS kernel's *stateful* logic (operation application, program
- * registry) is Rust/wasm-only, hosted by the s-program wasm — this file is not a JS port of that. The
+ * registry) is Rust/wasm-only, hosted by the s-plugin wasm — this file is not a JS port of that. The
  * one exception is {@link planWorkflow}: a pure, side-effect-free scheduling function has no state
  * to keep in sync with a live wasm host, so it's hand-mirrored here against the Rust `plan_workflow`
  * (`framework/product/os/core/rs/lib.rs`) with shared fixtures (`framework/product/os/core/fixtures/`)
@@ -16,7 +16,7 @@
 
 import type { UtilityLeaf } from "@semio-tech/framework-core";
 
-export type OsProgramArtifactMap = Readonly<Record<string, { readonly kind: string; readonly id: string; readonly label: string }>>;
+export type OsPluginArtifactMap = Readonly<Record<string, { readonly kind: string; readonly id: string; readonly label: string }>>;
 
 const programDefinitions = new Map<string, unknown>();
 const vcsHandlers = new Set<() => void>();
@@ -25,8 +25,8 @@ export function osBaselineArtifact(kind: string, id: string, label: string) {
   return { kind, id, label };
 }
 
-export function mergeOsWorkflowDefinition(programId: string, definition: unknown, resources?: OsProgramArtifactMap): void {
-  programDefinitions.set(programId, { definition, resources });
+export function mergeOsWorkflowDefinition(pluginId: string, definition: unknown, resources?: OsPluginArtifactMap): void {
+  programDefinitions.set(pluginId, { definition, resources });
 }
 
 export function registerAppVcsHandler(handler: () => void): void {

@@ -1,0 +1,11 @@
+[
+  {"oldDir": "writer/rs", "newDir": "s/plugin/writer/rs", "newPkg": "writer"},
+  {"oldDir": "writer/plugin/rs", "newDir": "s/plugin/writer/plugin/rs", "newPkg": "writer-plugin"},
+  {"oldDir": "raster/plugin/rs", "newDir": "s/plugin/raster/plugin/rs", "newPkg": "raster-plugin"},
+  {"oldDir": "forms/rs", "newDir": "s/plugin/forms/rs", "newPkg": "forms"},
+  {"oldDir": "forms/plugin/rs", "newDir": "s/plugin/forms/plugin/rs", "newPkg": "forms-plugin"},
+  {"oldDir": "shooting/rs", "newDir": "s/plugin/shooting/rs", "newPkg": "shooting"},
+  {"oldDir": "shooting/plugin/rs", "newDir": "s/plugin/shooting/plugin/rs", "newPkg": "shooting-plugin"},
+  {"oldDir": "layout/rs", "newDir": "s/plugin/layout/rs", "newPkg": "layout_rs"},
+  {"oldDir": "layout/plugin/rs", "newDir": "s/plugin/layout/plugin/rs", "newPkg": "layout-plugin"}
+]

@@ -23,7 +23,7 @@ isProject: false
 
 Source already removed `DownloadMediaExport` from `createStudio`, but default create still calls [`create_os_space`](framework/product/os/core/rs/lib.rs) which:
 
-- writes through `LocalStorageBackbonePort` (`CATALOG_PORT` in [`s/program/rs/lib.rs`](s/program/rs/lib.rs))
+- writes through `LocalStorageBackbonePort` (`CATALOG_PORT` in [`s/plugin/rs/lib.rs`](s/plugin/rs/lib.rs))
 - sets `document.backbone = space://{id}` via `sync_os_space_document`
 
 That is not `DocumentHost` sync, but it **is** a backbone attach on the document and persists to browser storage. Demo can still appear via catalog seed (`id: "default"`), `openStudio` example fallback (`"demo"`), or a **stale WASM** build of the old download path.
@@ -59,7 +59,7 @@ Keep existing `create_os_space(port)` for explicit later persistence (file/folde
 
 ### 2. Default `createStudio` uses ephemeral registry only
 
-In [`s/program/rs/lib.rs`](s/program/rs/lib.rs) home app:
+In [`s/plugin/rs/lib.rs`](s/plugin/rs/lib.rs) home app:
 
 - Add an in-memory map `EPHEMERAL_STUDIOS: Mutex<HashMap<String, OsDocument>>` (or reuse `STUDIO_PORTS` + `MemoryBackbonePort` **without** setting `document.backbone`).
 - Default Meta+N / `createStudio` (no kind / `"catalog"` / `"file"`):
@@ -72,7 +72,7 @@ In [`s/program/rs/lib.rs`](s/program/rs/lib.rs) home app:
 
 ### 3. `openStudio` loads empty doc, never demo by accident
 
-In studio app `openStudio` ([`s/program/rs/lib.rs`](s/program/rs/lib.rs) ~2771):
+In studio app `openStudio` ([`s/plugin/rs/lib.rs`](s/plugin/rs/lib.rs) ~2771):
 
 - Resolve ephemeral → then catalog ports.
 - On miss: emit `LoadDocument` of `create_empty_os_document(space_id, "Untitled Studio")` (or no-operation empty), **not** `parse_demo_space_document()`.
@@ -91,7 +91,7 @@ Do not call shell `openDocument` or program `attachBackbone` from create/open pa
 ### 6. Tests + rebuild
 
 - Extend home tests: default create → Navigate to fresh id; **no** DownloadMediaExport; resolved document has `backbone == None` and empty `app_instances`; `openStudio` → LoadDocument with empty instances.
-- Rebuild/reload `s` program WASM (`bun run dev:s` or OS dev build) so runtime matches source — this is why the user may still see the old download.
+- Rebuild/reload `s` plugin WASM (`bun run dev:s` or OS dev build) so runtime matches source — this is why the user may still see the old download.
 
 ## Out of scope
 

@@ -1,5 +1,5 @@
-/** @module Interface semio:framework/program **/
-export function manifest(): ProgramManifestJson;
+/** @module Interface semio:framework/plugin **/
+export function manifest(): PluginManifestJson;
 export function instantiateApp(appId: string, instanceId: string): number;
 export function handleAction(instanceId: number, action: ActionInvocationJson, context: InvocationContextJson): InvocationResponseJson;
 export function handleCommand(instanceId: number, command: CommandInvocationJson, context: InvocationContextJson): InvocationResponseJson;
@@ -13,7 +13,7 @@ export function attachBackbone(instanceId: number, uri: string): void;
 export function detachBackbone(instanceId: number): void;
 export function consumeMedia(instanceId: number, portId: string, artifact: MediaArtifact): void;
 export function produceMedia(instanceId: number, portId: string, requestJson: string): MediaArtifact;
-export type ProgramManifestJson = import('./semio-framework-types.js').ProgramManifestJson;
+export type PluginManifestJson = import('./semio-framework-types.js').PluginManifestJson;
 export type ActionInvocationJson = import('./semio-framework-types.js').ActionInvocationJson;
 export type CommandInvocationJson = import('./semio-framework-types.js').CommandInvocationJson;
 export type InvocationContextJson = import('./semio-framework-types.js').InvocationContextJson;
@@ -25,4 +25,4 @@ export type UiRefreshResponseJson = import('./semio-framework-types.js').UiRefre
 export type MigrateDocumentInput = import('./semio-framework-types.js').MigrateDocumentInput;
 export type MigrateDocumentOutput = import('./semio-framework-types.js').MigrateDocumentOutput;
 export type MediaArtifact = import('./semio-framework-types.js').MediaArtifact;
-export type ProgramError = import('./semio-framework-types.js').ProgramError;
+export type PluginError = import('./semio-framework-types.js').PluginError;

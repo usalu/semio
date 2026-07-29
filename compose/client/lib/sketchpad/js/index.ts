@@ -16,7 +16,7 @@ import {
   ObservableCell,
   Panel,
   Platform,
-  ProgramHost,
+  PluginHost,
   Store,
   PlatformTopologyStore,
   PlatformTopologyPayload,
@@ -45,7 +45,7 @@ import {
   type PanelModel,
   type PlatformSpec,
   type PlatformDefinition,
-  type ProgramManifest,
+  type PluginManifest,
   type PluginModule,
   type Puzzle2dModel,
   type Puzzle5dModel,
@@ -15264,7 +15264,7 @@ export class SketchpadShellController extends VirtualFileSystemController {
 }
 
 let sketchpadPlatformSingleton: Platform | null = null;
-let sketchpadProgramHostSingleton: ProgramHost | null = null;
+let sketchpadPluginHostSingleton: PluginHost | null = null;
 let sketchpadPlatformReady: Promise<Platform> | null = null;
 let sketchpadBodiesRegistered = false;
 
@@ -15344,7 +15344,7 @@ function sketchpadKitPanelTabs(): readonly SideTabSpec[] {
   ];
 }
 
-function buildSketchpadExtensionManifest(): ProgramManifest {
+function buildSketchpadExtensionManifest(): PluginManifest {
   const l = SKETCHPAD_MANIFEST_LABELS[composeCurrentUiLocale()];
   return {
     id: SKETCHPAD_EXTENSION_ID,
@@ -15610,7 +15610,7 @@ export async function buildSketchpadPlatform(): Promise<Platform> {
   const platform = new Platform(SKETCHPAD_PLATFORM_SPEC);
   const controller = new SketchpadShellController(platform.actionBus, () => platform.notify());
   sketchpadShellControllerSingleton = controller;
-  const host = new ProgramHost(platform);
+  const host = new PluginHost(platform);
   host.register(buildSketchpadExtensionManifest(), {
     id: SKETCHPAD_EXTENSION_ID,
     activate() {},
@@ -15624,7 +15624,7 @@ export async function buildSketchpadPlatform(): Promise<Platform> {
     platform.notify();
   }
   sketchpadPlatformSingleton = platform;
-  sketchpadProgramHostSingleton = host;
+  sketchpadPluginHostSingleton = host;
   if (typeof window !== "undefined") {
     sketchpadInstallHomeDropzone();
   }
@@ -17558,7 +17558,7 @@ export function createComposeKitAppVcsHandler() {
 
 /** @emoji 🧩 OS program contribution for compose sketchpad. */
 export const sketchpadProgramContribution: OsProgramContribution = {
-  programId: "compose.sketchpad",
+  pluginId: "compose.sketchpad",
   register() {
     const l = SKETCHPAD_MANIFEST_LABELS[composeCurrentUiLocale()];
     mergeOsWorkflowDefinition("compose.sketchpad", buildSketchpadPlatformDefinition(), {

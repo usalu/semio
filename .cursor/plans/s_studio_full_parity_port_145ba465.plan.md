@@ -14,13 +14,13 @@ todos:
  - id: os-core-rs
    content: "Port remaining os-core JS to Rust: programs, resources, parameters, media export, backbones, studio catalog, media-graph VFS"
    status: completed
- - id: s-program
+ - id: s-plugin
    content: "Full S program port: home studios VFS, studio media-graph/media-vfs/compiled-dag windows, catalogue/parameters/inspector, checkpoints, URI, export"
    status: completed
  - id: composition
    content: "Host composition: spawn other plugins' apps as windows inside S layout with media-graph document flow"
    status: completed
- - id: tech-programs
+ - id: tech-plugins
    content: Port tech plugins to real logic/scenes, demo-studio apps first (draw, writer, raster), then all 25
    status: completed
  - id: verify
@@ -50,9 +50,9 @@ The migration commit `5ecbe3dbf` deleted the TS meta-framework (110k lines) and 
 ```mermaid
 flowchart LR
     subgraph rust [Rust WASM Plugins]
-        splugin[s/program/rs full S studio]
+        splugin[s/plugin/rs full S studio]
         techplugins[25 tech plugins real logic]
-        sdk[framework/program/rs SDK]
+        sdk[framework/plugin/rs SDK]
         oscore[framework/product/os/core/rs]
     end
     subgraph renderer [Trusted React Renderer]
@@ -70,7 +70,7 @@ flowchart LR
 
 ## Phase 1 — UiTree schema parity (Rust core + WIT)
 
-Extend [framework/core/rs/ui.rs](framework/core/rs/ui.rs) and [framework/wit/world.wit](framework/wit/world.wit) to the full old `UiNode` vocabulary from platform core: sections, fields, inspector groups (`uiInspectorAllEqual` mixed-value semantics), trees with drag data, toolbars/tools (`toolCollection`), controls, VFS surfaces, and component scenes with `paneId`/`bindingId`. Extend `AppDefinition`/`ProgramManifest` in the same file with: window layouts (`createDefaultLayout`, `createTabStackLayout`, golden measures), side-panel tab groups (workbench/details), engagement specs, examples catalog, navigation levels, and parameter field specs. Mirror the additions in the SDK builder [framework/program/rs/app.rs](framework/program/rs/app.rs).
+Extend [framework/core/rs/ui.rs](framework/core/rs/ui.rs) and [framework/wit/world.wit](framework/wit/world.wit) to the full old `UiNode` vocabulary from platform core: sections, fields, inspector groups (`uiInspectorAllEqual` mixed-value semantics), trees with drag data, toolbars/tools (`toolCollection`), controls, VFS surfaces, and component scenes with `paneId`/`bindingId`. Extend `AppDefinition`/`PluginManifest` in the same file with: window layouts (`createDefaultLayout`, `createTabStackLayout`, golden measures), side-panel tab groups (workbench/details), engagement specs, examples catalog, navigation levels, and parameter field specs. Mirror the additions in the SDK builder [framework/plugin/rs/app.rs](framework/plugin/rs/app.rs).
 
 ## Phase 2 — Renderer shell parity (React)
 
@@ -93,11 +93,11 @@ Replace the stub hosts in [framework/renderer/react/components/](framework/rende
 
 ## Phase 4 — OS core port to Rust
 
-Complete [framework/product/os/core/rs](framework/product/os/core/rs) with everything left in `f8376e848` os-core JS: program registry + resource descriptors, parameter types/bindings/compatibility, media export handlers + coverage assertion, dev/local/remote backbones, studio catalog (create/delete/import/list studios), media-graph VFS controller, `OsStore` projection/checkpoint/alternative materialization (leveraging existing [s/rs/lib.rs](s/rs/lib.rs) and vcs crates).
+Complete [framework/product/os/core/rs](framework/product/os/core/rs) with everything left in `f8376e848` os-core JS: plugin registry + resource descriptors, parameter types/bindings/compatibility, media export handlers + coverage assertion, dev/local/remote backbones, studio catalog (create/delete/import/list studios), media-graph VFS controller, `OsStore` projection/checkpoint/alternative materialization (leveraging existing [s/rs/lib.rs](s/rs/lib.rs) and vcs crates).
 
 ## Phase 5 — Full S program port
 
-Rewrite [s/program/rs/lib.rs](s/program/rs/lib.rs) porting every behavior from [s/core/js/index.ts](s/core/js/index.ts):
+Rewrite [s/plugin/rs/lib.rs](s/plugin/rs/lib.rs) porting every behavior from [s/core/js/index.ts](s/core/js/index.ts):
 
 - Home app: studios-catalog VFS window (`Studios` tab-stack layout), create/open/delete/import studio
 - Studio app: media-graph window (node-graph scene with app-instance nodes, typed in/out ports, cross-instance edges), media VFS window, compiled DAG window; default layout identical to `S_PLAY_LAYOUT`
@@ -107,7 +107,7 @@ Rewrite [s/program/rs/lib.rs](s/program/rs/lib.rs) porting every behavior from [
 
 ## Phase 6 — Host composition for spawned apps
 
-In the renderer host: spawning a program from the catalogue creates an instance in that plugin's WASM module and mounts its window body inside the studio window layout (old behavior: app windows open within S), with document flow across the media graph edges.
+In the renderer host: spawning a plugin from the catalogue creates an instance in that plugin's WASM module and mounts its window body inside the studio window layout (old behavior: app windows open within S), with document flow across the media graph edges.
 
 ## Phase 7 — Technology program parity
 
@@ -115,7 +115,7 @@ Port real document logic and scene rendering for each tech program (currently `r
 
 ## Phase 8 — Verification
 
-- Behavior checklist derived from [s/core/js/index.ts](s/core/js/index.ts) tests (demo projection, checkpoint round-trip, media edge, catalogue programs) reproduced as Rust tests in `s/program/rs`
+- Behavior checklist derived from [s/core/js/index.ts](s/core/js/index.ts) tests (demo projection, checkpoint round-trip, media edge, catalogue programs) reproduced as Rust tests in `s/plugin/rs`
 - Browser run via `SEMIO_PLUGIN=s` on port 6066 (launch config `🛠️dev🖥️s`): verify navbar, panels, media graph rendering, spawn, parameters, checkpoint, export against old-S screenshots/spec
 - All work inside reopened ticket `26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION`; temp comparison notes in the ticket folder
 

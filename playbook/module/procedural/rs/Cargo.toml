@@ -25,7 +25,7 @@ protocol = { path = "../../../../framework/kernel/protocol/rs", package = "semio
 flow_core = { path = "../../../../s/kernel/flow/core/rs", package = "semio-s-kernel-flow-core" }
 flow_module_brep = { path = "../../../../s/kernel/flow/module/brep/rs", default-features = false, package = "semio-s-kernel-flow-module-brep" }
 kernel_3d_engine = { path = "../../../../s/kernel/geometry/3d/brep/engine/rs", features = ["parallel"], package = "semio-s-kernel-geometry-3d-brep-engine" }
-semio-framework-program = { path = "../../../../framework/program/rs" }
+semio-framework-plugin = { path = "../../../../framework/plugin/rs" }
 semio-framework-core = { path = "../../../../framework/core/rs" }
 dsl = { path = "../../../../framework/kernel/dsl/rs", package = "semio-framework-kernel-dsl" }
 serde = { version = "1.0.219", features = ["derive"] }

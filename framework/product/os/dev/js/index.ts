@@ -4,8 +4,8 @@
 
 import "../globals.css";
 
-export type { ProgramBuildTarget } from "../../../../program/registry/generated/programs.ts";
-export { PROGRAM_BUILD_TARGETS, PROGRAM_TARGETS, programModuleUrl } from "../../../../program/registry/generated/programs.ts";
+export type { PluginBuildTarget } from "../../../../plugin/registry/generated/plugins.ts";
+export { PLUGIN_BUILD_TARGETS, PROGRAM_TARGETS, pluginModuleUrl } from "../../../../plugin/registry/generated/plugins.ts";
 export { PLAYGROUND_SESSION } from "../generated/session.ts";
 
 import { resolvePlaygroundBoot } from "@semio-tech/framework-core";

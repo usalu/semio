@@ -26,8 +26,8 @@ import { fileURLToPath } from "url";
 import { defineConfig, type Plugin } from "vite";
 import { createWorkspaceViteResolveConfig, meshCollectionVitePlugin, playgroundIframeEmbedHeadersPlugin, semioFaviconVitePlugin, type PlaygroundAssetSpec } from "../../../../../../ui/styling/vite-elements-assets.ts";
 import { readInitialKitFixtureFromPath } from "../../../../fixture/script.ts";
-import topLevelAwait from "vite-program-top-level-await";
-import wasm from "vite-program-wasm";
+import topLevelAwait from "__KEEP_vite_plugin__-top-level-await";
+import wasm from "__KEEP_vite_plugin__-wasm";
 // #endregion 🔌Adapters
 
 /**
@@ -42,7 +42,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /** @emoji 🧊 Kit mesh GLB serving spec for puzzle 3d world views embedded in the sketchpad play app —
- * mirrors puzzle/program/rs's `[[package.metadata.semio.assets]]` `mesh-collection` row. */
+ * mirrors puzzle/plugin/rs's `[[package.metadata.semio.assets]]` `mesh-collection` row. */
 const PUZZLE_3D_MESH_ASSET_SPEC: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }> = {
   kind: "mesh-collection",
   route: "/mesh",

@@ -15,7 +15,7 @@ todos:
     content: Wire WorldVolumeLayer interactive select/gumball; gate voxel plane on Volume Brush
     status: completed
   - id: tests-verify
-    content: Update/extend puzzle-program tests and verify fill vs volume-brush measures
+    content: Update/extend puzzle-plugin tests and verify fill vs volume-brush measures
     status: completed
   - id: ticket-close
     content: Close ticket with summary and touched files
@@ -58,7 +58,7 @@ flowchart LR
 
 ### 1. Register Volume Brush utility (plugin)
 
-In `[puzzle/program/rs/lib.rs](puzzle/program/rs/lib.rs)`:
+In `[puzzle/plugin/rs/lib.rs](puzzle/plugin/rs/lib.rs)`:
 
 - Add `.utility(UtilityDefinition::new("volumeBrush", "Volume Brush", "box"))` and include it in `.window_kind_utilities(...)` next to `brush`.
 - Add labels / i18n (`volume_brush`, keep `voxel` W/D/H labels).
@@ -88,7 +88,7 @@ In `[framework/renderer/react/index.tsx](framework/renderer/react/index.tsx)`:
   - `onRelocate` → new or extended relocate actions that write origin/orientation/scale on selected volumes.
   - Honor Transform utility move/rotate flags via existing gumball config (same pattern as objects); volumes already support gumball in `[infinite/world/r3f/index.tsx](infinite/world/r3f/index.tsx)` (`WorldVolumeBoxItem`).
 
-In `[puzzle/program/rs/lib.rs](puzzle/program/rs/lib.rs)`:
+In `[puzzle/plugin/rs/lib.rs](puzzle/plugin/rs/lib.rs)`:
 
 - Extend `translateSelection` / `rotateSelection` / `scaleSelection` (or add a dedicated `relocateTargetVolume` path used by volume gumball) so selected `target_volume_ids` update pose, not only objects.
 - Include selection/hidden/locked flags in `world_target_volumes_json` so the host can dim locked volumes and skip picking them.
@@ -104,8 +104,8 @@ Clarify in docs/comments near volume types: volumes are oriented boxes; Volume B
 
 - Open ticket via repo MCP (`ticket_open`) under `🎯r2602`, title like **First-Class Target Volumes and Volume Brush**.
 - Put any notes/logs under the ticket folder.
-- Extend existing tests in `puzzle/program/rs/lib.rs` (fill measures, utility registration, addTargetVolume, selection/context menu). Add coverage that Volume Brush options appear under window measures and Fill no longer includes edit-volumes.
-- Run targeted `cargo test -p puzzle-program` filters for fill/volume/brush; confirm React host still compiles for touched types.
+- Extend existing tests in `puzzle/plugin/rs/lib.rs` (fill measures, utility registration, addTargetVolume, selection/context menu). Add coverage that Volume Brush options appear under window measures and Fill no longer includes edit-volumes.
+- Run targeted `cargo test -p puzzle-plugin` filters for fill/volume/brush; confirm React host still compiles for touched types.
 - Close ticket with `ticket_close` when done.
 
 ## Out of scope

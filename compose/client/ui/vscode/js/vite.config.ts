@@ -23,8 +23,8 @@ import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
-import topLevelAwait from "vite-program-top-level-await";
-import wasm from "vite-program-wasm";
+import topLevelAwait from "__KEEP_vite_plugin__-top-level-await";
+import wasm from "__KEEP_vite_plugin__-wasm";
 // #endregion 🔌Adapters
 
 const __filename = fileURLToPath(import.meta.url);

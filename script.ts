@@ -597,7 +597,7 @@ export class VerifyScript extends Script {
     runCmd("bunx", ["dependency-cruiser@16", "compose", "framework", "flow", "layout", "puzzle", "ui", "draw", "note", "sequence", "s", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
     console.log("[verify] generated catalog freshness…");
     // nx orchestrators: exempt — leaves individually budgeted.
-    runCmd("bun", ["nx", "run", "@semio-tech/program-registry:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["nx", "run", "@semio-tech/plugin-registry:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("[verify] region/host-contract script lints…");
     runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-react:lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
     runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:plugin", "lint"], { cwd: this.root, ...orchestratorBudgetOpts() });
@@ -1328,9 +1328,9 @@ export class Neo4jCypherExport {
 
 //#region 🔖Policy
 /**
- * ⚖️ Wave 4 app-program consistency policy — the machine-checkable subset of the Wave 4 V1 (duplication),
+ * ⚖️ Wave 4 app-plugin consistency policy — the machine-checkable subset of the Wave 4 V1 (duplication),
  * V2 (structure), V3 (coupling) audit findings under `.repo/🎫/26/07/18/WAVE-4-*-AUDIT`, wired via
- * `repo/lib/js/nx-program.mjs` into the synthetic `breach-script_ts` nx lint target (`bun ./script.ts policy`).
+ * `repo/lib/js/nx-plugin.mjs` into the synthetic `breach-script_ts` nx lint target (`bun ./script.ts policy`).
  * Judgment-call findings (a real SDK/primitive gap, e.g. the terminology native/reuse Labels axis, or
  * puzzle's icon-based `tree_item_with_action`) are encoded as explicit low-priority allowlisted/tracked
  * breaches, never as a hard `policy` failure — see `POLICY_SDK_GAP_ALLOWLIST` below.
@@ -1339,7 +1339,7 @@ export class Neo4jCypherExport {
 //#region 🔧PolicyFsScan
 const POLICY_SKIP_DIRS = new Set(["node_modules", ".git", ".repo", "target", "dist", ".claude", "vendor", ".venv", ".turbo", ".nx", ".storybook", "storybook-static"]);
 
-/** 🔎Repo-relative `…/program/rs` dirs holding a `lib.rs` + `Cargo.toml` (app program crates, plus `framework/program/rs` itself). */
+/** 🔎Repo-relative `…/plugin/rs` dirs holding a `lib.rs` + `Cargo.toml` (app plugin crates, plus `framework/plugin/rs` itself). */
 function policyDiscoverPluginCrateDirs(repoRoot: string): string[] {
   const found: string[] = [];
   const walk = (relDir: string): void => {
@@ -1501,14 +1501,14 @@ function policyPascalAppStructName(id: string): string {
  * primitive can't express. Flagged for a Wave-4 decision (extend the primitive to two axes, or formally
  * accept the gap) — tracked here as a low-priority, non-failing breach until that decision lands.
  */
-const POLICY_LABELS_TWO_AXIS_ALLOWLIST = new Set<string>(["cad/program/rs#CadLabels", "puzzle/program/rs#Puzzle2dLabels", "puzzle/program/rs#Puzzle3dLabels", "puzzle/program/rs#Puzzle5dLabels"]);
+const POLICY_LABELS_TWO_AXIS_ALLOWLIST = new Set<string>(["cad/plugin/rs#CadLabels", "puzzle/plugin/rs#Puzzle2dLabels", "puzzle/plugin/rs#Puzzle3dLabels", "puzzle/plugin/rs#Puzzle5dLabels"]);
 
 /**
  * 🎫 Wave 4 V1 duplication audit: puzzle's d3/d5 `tree_item_with_action` redefinitions add an `icon_id`
  * param the SDK's description-based primitive can't express (icon rendering) — documented real gap,
  * tracked here as a low-priority, non-failing breach rather than a should-fix duplicate.
  */
-const POLICY_TREE_ITEM_REDEFINITION_ALLOWLIST = new Set<string>(["puzzle/program/rs#d3", "puzzle/program/rs#d5"]);
+const POLICY_TREE_ITEM_REDEFINITION_ALLOWLIST = new Set<string>(["puzzle/plugin/rs#d3", "puzzle/plugin/rs#d5"]);
 
 /**
  * 🎫 Wave 4 V3 coupling audit (`.repo/🎫/26/07/18/WAVE-4-APP-TO-APP-COUPLING-AND-FRAMEWORK-IDENTITY-LEAK-AUDIT`):
@@ -1518,7 +1518,7 @@ const POLICY_TREE_ITEM_REDEFINITION_ALLOWLIST = new Set<string>(["puzzle/program
 const POLICY_SHARED_DOMAIN_CRATE_ALLOWLIST = new Set<string>(["flow_core", "flow_module_draw", "flow_module_brep", "trinity_jack", "trinity_ram", "mathematical_graph_drawing", "mathematical_geometry", "infinite_board_port_directed", "infinite_board_port_directed_dag"]);
 
 /**
- * 🛡️Path prefixes (repo-relative) always allowed as program/rs dependency targets: generic shared
+ * 🛡️Path prefixes (repo-relative) always allowed as plugin/rs dependency targets: generic shared
  * infra. `"protocol/"` was added at CW8 — every app now imports `protocol::` directly (CW7's import
  * sweep) the same way it already reaches `vcs`/`ui`/`framework`. Deliberately NOT `"db/"`: db stays
  * reachable only through the hub servers (and, behind a feature, `db_engine`), enforced by
@@ -1566,18 +1566,15 @@ const POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST = new Set<string>([
   "cad/rs/lib.rs",
   "compose/client/lib/rs/lib.rs",
   "draw/rs/lib.rs",
-  "dsl/rs/lib.rs",
   "fem/2d/rs/lib.rs",
   "fem/3d/rs/lib.rs",
-  "flow/core/rs/lib.rs",
-  "forms/rs/lib.rs",
+  "s/plugin/forms/rs/lib.rs",
   "framework/product/os/core/rs/lib.rs",
-  "gis/program/rs/lib.rs",
+  "gis/plugin/rs/lib.rs",
   "imperative/core/rs/lib.rs",
-  "infinite/board/port/directed/dag/rs/lib.rs",
-  "layout/rs/lib.rs",
+  "s/plugin/layout/rs/lib.rs",
   "lowpoly/core/rs/lib.rs",
-  "mathematical/program/rs/lib.rs",
+  "mathematical/plugin/rs/lib.rs",
   "norm/core/rs/lib.rs",
   "norm/din/4108/rs/lib.rs",
   "norm/din/en/16798/rs/lib.rs",
@@ -1594,28 +1591,31 @@ const POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST = new Set<string>([
   "norm/en/1999/rs/lib.rs",
   "norm/iso/16757/rs/lib.rs",
   "norm/vdi/3805/rs/lib.rs",
-  "note/program/rs/lib.rs",
+  "s/plugin/note/rs/lib.rs",
   "playbook/module/procedural/rs/lib.rs",
-  "playbook/rs/lib.rs",
   "procedural/2d/rs/lib.rs",
   "procedural/3d/rs/lib.rs",
   "process/3d/rs/lib.rs",
   "puzzle/2d/rs/lib.rs",
   "puzzle/3d/rs/lib.rs",
   "puzzle/5d/rs/lib.rs",
-  "puzzle/program/rs/lib.rs",
-  "raster/program/rs/lib.rs",
+  "puzzle/plugin/rs/lib.rs",
+  "s/plugin/raster/plugin/rs/lib.rs",
   "reasoning/mindmap/rs/lib.rs",
   "remodel/rs/lib.rs",
-  "s/program/rs/lib.rs",
+  "framework/kernel/dsl/rs/lib.rs",
+  "s/kernel/flow/core/rs/lib.rs",
+  "framework/kernel/infinite/board/port/directed/dag/rs/lib.rs",
+  "s/kernel/playbook/rs/lib.rs",
+  "s/plugin/rs/lib.rs",
   "s/rs/lib.rs",
   "sequence/core/rs/lib.rs",
-  "shooting/rs/lib.rs",
+  "s/plugin/shooting/rs/lib.rs",
   "sourcing/curate/rs/lib.rs",
   "trinity/ram/rs/lib.rs",
   "trinity/rewrite/engine/rs/lib.rs",
-  "vcs/program/rs/lib.rs",
-  "writer/rs/lib.rs",
+  "vcs/plugin/rs/lib.rs",
+  "s/plugin/writer/rs/lib.rs",
 ]);
 
 /**
@@ -1644,7 +1644,7 @@ function policyRegionFormatBreaches(scope: string, lines: readonly string[]): Br
       breaches.push({
         id: `region-format-space-${scope}-${ev.line}`,
         summary: `Region marker has a space after "//" (must be "//#${marker}", not "// #${marker}")`,
-        kind: "app-program/region-marker-format",
+        kind: "app-plugin/region-marker-format",
         scope,
         line: ev.line,
         priority: "high",
@@ -1656,7 +1656,7 @@ function policyRegionFormatBreaches(scope: string, lines: readonly string[]): Br
       breaches.push({
         id: `region-format-missing-label-${scope}-${ev.line}`,
         summary: `//#${marker} marker is missing its label`,
-        kind: "app-program/region-marker-format",
+        kind: "app-plugin/region-marker-format",
         scope,
         line: ev.line,
         priority: "medium",
@@ -1671,7 +1671,7 @@ function policyRegionFormatBreaches(scope: string, lines: readonly string[]): Br
       breaches.push({
         id: `region-tests-label-${scope}-${span.startLine}`,
         summary: `Tests region labeled "${span.label}" must be exactly "🧪Tests"`,
-        kind: "app-program/region-tests-label",
+        kind: "app-plugin/region-tests-label",
         scope,
         line: span.startLine,
         priority: "medium",
@@ -1683,7 +1683,7 @@ function policyRegionFormatBreaches(scope: string, lines: readonly string[]): Br
       breaches.push({
         id: `region-label-mismatch-${scope}-${span.startLine}`,
         summary: `//#endregion label "${span.closeLabel}" does not match its //#region label "${span.label}"`,
-        kind: "app-program/region-marker-format",
+        kind: "app-plugin/region-marker-format",
         scope,
         line: span.endLine,
         priority: "medium",
@@ -1711,7 +1711,7 @@ function policyManifestRegionBreaches(scope: string, lines: readonly string[]): 
       breaches.push({
         id: `manifest-region-${scope}-${lineNo}`,
         summary: `App::builder(...) call is not enclosed in a "🔖Manifest" region`,
-        kind: "app-program/manifest-region",
+        kind: "app-plugin/manifest-region",
         scope,
         line: lineNo,
         priority: "medium",
@@ -1746,7 +1746,7 @@ function policyStructNamingBreaches(scope: string, content: string): BreachRecor
       breaches.push({
         id: `struct-naming-${scope}-${structName}`,
         summary: `App struct "${structName}" for id "${id}" should be named "${expected}"`,
-        kind: "app-program/struct-naming",
+        kind: "app-plugin/struct-naming",
         scope,
         line: policyLineOfIndex(content, m.index),
         priority: "medium",
@@ -1775,7 +1775,7 @@ function policyModLayoutBreaches(scope: string, lines: readonly string[]): Breac
       breaches.push({
         id: `mod-layout-${scope}-${lineNo}`,
         summary: `Multi-app crate declares an app (DocumentApp impl at line ${lineNo}) outside any "pub mod app_<name>" wrapper`,
-        kind: "app-program/mod-layout",
+        kind: "app-plugin/mod-layout",
         scope,
         line: lineNo,
         priority: "high",
@@ -1794,7 +1794,7 @@ function policyResolveImportAlias(content: string, importedName: string): string
   return content.match(new RegExp(`\\b${importedName}\\s+as\\s+(\\w+)\\b`))?.[1];
 }
 
-/** 📏V1 rule: local `fn selection_ids` must delegate to `semio_framework_program::selection_ids` before adding a fallback key. */
+/** 📏V1 rule: local `fn selection_ids` must delegate to `semio_framework_plugin::selection_ids` before adding a fallback key. */
 function policySelectionIdsBreaches(scope: string, content: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const alias = policyResolveImportAlias(content, "selection_ids");
@@ -1802,17 +1802,17 @@ function policySelectionIdsBreaches(scope: string, content: string): BreachRecor
   let m: RegExpExecArray | null;
   while ((m = re.exec(content))) {
     const body = policyExtractFnBody(content, m.index);
-    if (body.includes("semio_framework_program::selection_ids(") || (alias && new RegExp(`\\b${alias}\\(`).test(body))) continue;
+    if (body.includes("semio_framework_plugin::selection_ids(") || (alias && new RegExp(`\\b${alias}\\(`).test(body))) continue;
     const lineNo = policyLineOfIndex(content, m.index);
     breaches.push({
       id: `sdk-selection-ids-${scope}-${lineNo}`,
-      summary: `Local "fn selection_ids" does not delegate to semio_framework_program::selection_ids`,
-      kind: "app-program/sdk-selection-ids",
+      summary: `Local "fn selection_ids" does not delegate to semio_framework_plugin::selection_ids`,
+      kind: "app-plugin/sdk-selection-ids",
       scope,
       line: lineNo,
       priority: "medium",
       reason: "Wave 4 V1 duplication audit: apps needing an extra fallback key must still call the SDK's selection_ids core first (see procedural::app_3d, reasoning/mindmap for the reference shape).",
-      solution: `Rewrite selection_ids at line ${lineNo} to call semio_framework_program::selection_ids(args) first and only add the extra fallback key on top.`,
+      solution: `Rewrite selection_ids at line ${lineNo} to call semio_framework_plugin::selection_ids(args) first and only add the extra fallback key on top.`,
     });
   }
   return breaches;
@@ -1834,8 +1834,8 @@ function policyTestkitDelegateBreaches(scope: string, content: string): BreachRe
       const lineNo = policyLineOfIndex(content, m.index);
       breaches.push({
         id: `sdk-testkit-delegate-${scope}-${lineNo}`,
-        summary: `Local "${m[0]!.trim()}" does not delegate to semio_framework_program::${label}`,
-        kind: "app-program/sdk-testkit-delegate",
+        summary: `Local "${m[0]!.trim()}" does not delegate to semio_framework_plugin::${label}`,
+        kind: "app-plugin/sdk-testkit-delegate",
         scope,
         line: lineNo,
         priority: "medium",
@@ -1861,12 +1861,12 @@ function policyTreeItemBreaches(scope: string, content: string, lines: readonly 
     breaches.push({
       id: `sdk-tree-item-redefinition-${scope}-${lineNo}`,
       summary: `Local "fn tree_item_with_action" shadows the SDK primitive of the same name`,
-      kind: "app-program/sdk-tree-item",
+      kind: "app-plugin/sdk-tree-item",
       scope,
       line: lineNo,
       priority: "medium",
       reason: "Wave 4 V1 duplication audit: redefining tree_item_with_action locally is only accepted for a documented SDK gap (e.g. icon rendering).",
-      solution: `Delete this and call semio_framework_program::tree_item_with_action directly, or if it exists for a genuine SDK gap, add it to POLICY_TREE_ITEM_REDEFINITION_ALLOWLIST citing the ticket.`,
+      solution: `Delete this and call semio_framework_plugin::tree_item_with_action directly, or if it exists for a genuine SDK gap, add it to POLICY_TREE_ITEM_REDEFINITION_ALLOWLIST citing the ticket.`,
     });
   }
 
@@ -1883,7 +1883,7 @@ function policyTreeItemBreaches(scope: string, content: string, lines: readonly 
     breaches.push({
       id: `sdk-tree-item-wrapper-${scope}-${lineNo}`,
       summary: `Local "fn ${fnName}" does not delegate to tree_item_with_action`,
-      kind: "app-program/sdk-tree-item",
+      kind: "app-plugin/sdk-tree-item",
       scope,
       line: lineNo,
       priority: "medium",
@@ -1894,7 +1894,7 @@ function policyTreeItemBreaches(scope: string, content: string, lines: readonly 
   return breaches;
 }
 
-/** 📏V1 rule: `struct XLabels` must be defined inside `semio_framework_program::app_labels! { ... }`, unless allowlisted as a documented SDK gap. */
+/** 📏V1 rule: `struct XLabels` must be defined inside `semio_framework_plugin::app_labels! { ... }`, unless allowlisted as a documented SDK gap. */
 function policyLabelsStructBreaches(scope: string, content: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   const re = /struct\s+(\w*Labels)\s*\{/g;
@@ -1909,15 +1909,15 @@ function policyLabelsStructBreaches(scope: string, content: string): BreachRecor
     const allowed = POLICY_LABELS_TWO_AXIS_ALLOWLIST.has(`${scope}#${structName}`);
     breaches.push({
       id: `sdk-labels-struct-${scope}-${structName}`,
-      summary: allowed ? `"struct ${structName}" is a tracked SDK-primitive gap (terminology axis) — Wave 4 decision pending` : `"struct ${structName}" hand-rolls its label set instead of semio_framework_program::app_labels!/LocaleLabels`,
-      kind: "app-program/sdk-labels-struct",
+      summary: allowed ? `"struct ${structName}" is a tracked SDK-primitive gap (terminology axis) — Wave 4 decision pending` : `"struct ${structName}" hand-rolls its label set instead of semio_framework_plugin::app_labels!/LocaleLabels`,
+      kind: "app-plugin/sdk-labels-struct",
       scope,
       line: lineNo,
       priority: allowed ? "low" : "medium",
       reason: allowed
         ? "Wave 4 V1 duplication audit flagged this for a Wave-4 design decision (extend LocaleLabels/app_labels! to a two-axis resolver, or formally accept the gap) — tracked, not a lint failure."
-        : "Wave 4 V1 duplication audit: hand-rolled Labels structs (NATIVE/REUSE-style consts + resolver fn) should route through semio_framework_program::app_labels!/LocaleLabels unless there's a documented SDK-primitive gap.",
-      solution: allowed ? `See .repo/🎫/26/07/18/WAVE-4-V1-DUPLICATION-HUNTER-AUDIT for the pending decision; if formally accepted, keep this allowlisted with that citation.` : `Route ${structName} through semio_framework_program::app_labels! { ... }, or if it needs a second axis, add it to POLICY_LABELS_TWO_AXIS_ALLOWLIST citing a ticket.`,
+        : "Wave 4 V1 duplication audit: hand-rolled Labels structs (NATIVE/REUSE-style consts + resolver fn) should route through semio_framework_plugin::app_labels!/LocaleLabels unless there's a documented SDK-primitive gap.",
+      solution: allowed ? `See .repo/🎫/26/07/18/WAVE-4-V1-DUPLICATION-HUNTER-AUDIT for the pending decision; if formally accepted, keep this allowlisted with that citation.` : `Route ${structName} through semio_framework_plugin::app_labels! { ... }, or if it needs a second axis, add it to POLICY_LABELS_TWO_AXIS_ALLOWLIST citing a ticket.`,
     });
   }
   return breaches;
@@ -1925,7 +1925,7 @@ function policyLabelsStructBreaches(scope: string, content: string): BreachRecor
 //#endregion 🔧PolicyRuleSdkMechanisms
 
 //#region 🔧PolicyRuleCargoArtifacts
-/** 📏V2 rule: no stray `Cargo.lock`/`target/` checked into a `…/program/rs` crate dir. */
+/** 📏V2 rule: no stray `Cargo.lock`/`target/` checked into a `…/plugin/rs` crate dir. */
 function policyCargoArtifactBreaches(repoRoot: string, crateDirs: readonly string[]): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const dir of crateDirs) {
@@ -1934,10 +1934,10 @@ function policyCargoArtifactBreaches(repoRoot: string, crateDirs: readonly strin
         breaches.push({
           id: `stray-cargo-artifact-${dir}-${stray}`,
           summary: `Stray "${stray}" checked into ${dir}/`,
-          kind: "app-program/stray-cargo-artifact",
+          kind: "app-plugin/stray-cargo-artifact",
           scope: dir,
           priority: "high",
-          reason: "Wave 4 V2 structure audit: */program/rs crates must not carry their own Cargo.lock or target/ (workspace-managed).",
+          reason: "Wave 4 V2 structure audit: */plugin/rs crates must not carry their own Cargo.lock or target/ (workspace-managed).",
           solution: `Remove ${dir}/${stray} (and add it to .gitignore if missing).`,
         });
       }
@@ -1950,7 +1950,7 @@ function policyCargoArtifactBreaches(repoRoot: string, crateDirs: readonly strin
 //#region 🔧PolicyRuleAppCoupling
 const POLICY_CARGO_DEP_RE = /^([\w.-]+)\s*=\s*\{[^\n]*?\bpath\s*=\s*"([^"]+)"[^\n]*\}\s*$/gm;
 
-/** 📏V3 rule: a `…/program/rs` crate's path-dependencies must not reach into another app's program crate (blocking) or undocumented domain crate (tracked). */
+/** 📏V3 rule: a `…/plugin/rs` crate's path-dependencies must not reach into another app's plugin crate (blocking) or undocumented domain crate (tracked). */
 function policyAppCouplingBreaches(repoRoot: string, crateDirs: readonly string[]): BreachRecord[] {
   const appTops = crateDirs.map((d) => d.replace(/\/plugin\/rs$/, ""));
   const breaches: BreachRecord[] = [];
@@ -1969,16 +1969,16 @@ function policyAppCouplingBreaches(repoRoot: string, crateDirs: readonly string[
       if (POLICY_ALWAYS_ALLOWED_DEP_PREFIXES.some((p) => resolvedRel.startsWith(p))) continue;
       const otherTop = appTops.find((top) => top !== selfTop && (resolvedRel === top || resolvedRel.startsWith(`${top}/`)));
       if (!otherTop) continue;
-      const otherPluginDir = `${otherTop}/program/rs`;
+      const otherPluginDir = `${otherTop}/plugin/rs`;
       if (resolvedRel === otherPluginDir) {
         breaches.push({
-          id: `app-coupling-program-${dir}-${depName}`,
-          summary: `${dir} depends directly on another app's program crate (${depName} -> ${resolvedRel})`,
-          kind: "app-program/app-coupling",
+          id: `app-coupling-plugin-${dir}-${depName}`,
+          summary: `${dir} depends directly on another app's plugin crate (${depName} -> ${resolvedRel})`,
+          kind: "app-plugin/app-coupling",
           scope: dir,
           priority: "high",
-          reason: "Wave 4 V3 coupling audit: no program crate may depend on another app's program crate.",
-          solution: `Remove the "${depName}" dependency from ${dir}/Cargo.toml, or move the shared logic into a neutral domain crate outside any app's program/rs.`,
+          reason: "Wave 4 V3 coupling audit: no plugin crate may depend on another app's plugin crate.",
+          solution: `Remove the "${depName}" dependency from ${dir}/Cargo.toml, or move the shared logic into a neutral domain crate outside any app's plugin/rs.`,
         });
         continue;
       }
@@ -1986,7 +1986,7 @@ function policyAppCouplingBreaches(repoRoot: string, crateDirs: readonly string[
       breaches.push({
         id: `app-coupling-domain-${dir}-${depName}`,
         summary: `${dir} depends on a crate under another app's tree (${depName} -> ${resolvedRel}) not yet vetted as shared infra`,
-        kind: "app-program/app-coupling",
+        kind: "app-plugin/app-coupling",
         scope: dir,
         priority: "low",
         reason: "Wave 4 V3 coupling audit: dependencies into another app's folder are only acceptable for documented neutral shared domain crates (see that app's AGENTS.md); everything else needs a look.",
@@ -2239,7 +2239,7 @@ function policyResolveAlias(aliasOf: ReadonlyMap<string, string>, typeName: stri
  * on the real type behind a `RealName as AliasName` import rename), a hand-rolled `impl DocumentDsl`/
  * `impl OpText`, or a documented generic bridge (see `POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST`).
  * Advisory/textual — the real compile-time gate is `DocumentApp`'s `Projection: vcs::DocumentDsl` /
- * `Operation: vcs::OpText` bounds in `framework/program/rs/lib.rs`; this catches the same gap without
+ * `Operation: vcs::OpText` bounds in `framework/plugin/rs/lib.rs`; this catches the same gap without
  * needing a full `cargo build`. A single pass builds the DSL-complete type-name sets once
  * (`policyDslCompleteTypeNames`) so checking every app's usage stays O(1) instead of re-scanning the
  * whole corpus per usage.
@@ -2385,7 +2385,7 @@ const POLICY_PROTOCOL_MIGRATION_USE_BLOCK_RE = /use\s+(?:::)?vcs::\{([^}]*)\}/gs
 function policyProtocolMigrationBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const relPath of policyAllRustFiles(repoRoot)) {
-    if (relPath === "vcs/rs/lib.rs") continue; // the crate that used to own the shim; never reaches itself via "vcs::"
+    if (relPath === "framework/kernel/vcs/rs/lib.rs") continue; // the crate that used to own the shim; never reaches itself via "vcs::"
     const content = readFileSync(join(repoRoot, relPath), "utf8");
     const seenLines = new Set<number>();
     const lineOf = (index: number): number => content.slice(0, index).split(/\r?\n/).length;
@@ -2769,8 +2769,8 @@ function policyMcpConfigBreaches(repoRoot: string): BreachRecord[] {
 //#endregion 🔧PolicyRuleMcpConfig
 
 //#region 🔖PolicyExport
-/** ⚖️Runs every Wave 4 rule over every discovered `…/program/rs` crate; `framework/program/rs` is exempted from the SDK-mechanism rules (it *is* the SDK). */
-export const policy = defineLint("@semio-tech/workspace-app-program-consistency", (_l: TechnologyLinter): BreachRecord[] => {
+/** ⚖️Runs every Wave 4 rule over every discovered `…/plugin/rs` crate; `framework/plugin/rs` is exempted from the SDK-mechanism rules (it *is* the SDK). */
+export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency", (_l: TechnologyLinter): BreachRecord[] => {
   const repoRoot = getWorkspaceRoot();
   const crateDirs = policyDiscoverPluginCrateDirs(repoRoot);
   const breaches: BreachRecord[] = [];
@@ -2785,7 +2785,7 @@ export const policy = defineLint("@semio-tech/workspace-app-program-consistency"
     breaches.push(...policyStructNamingBreaches(dir, content));
     breaches.push(...policyModLayoutBreaches(dir, lines));
 
-    if (dir === "framework/program/rs") continue; // the SDK itself, not a consumer of its own primitives
+    if (dir === "framework/plugin/rs") continue; // the SDK itself, not a consumer of its own primitives
     breaches.push(...policySelectionIdsBreaches(dir, content));
     breaches.push(...policyTestkitDelegateBreaches(dir, content));
     breaches.push(...policyTreeItemBreaches(dir, content, lines));

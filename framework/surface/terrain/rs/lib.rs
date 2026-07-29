@@ -229,7 +229,7 @@ fn normalize3(x: f64, y: f64, z: f64) -> (f64, f64, f64) {
 
 //#region TerrainDescriptor
 /// 📄 Terrain fixture DTO — the `.gis.json` shape a `gis/3d` example is authored in, mirroring
-/// `framework_surface_tiled_map`'s `MapDescriptorJson`/`PositionData` pattern. Consumed by `gis-program`'s `app_3d`.
+/// `framework_surface_tiled_map`'s `MapDescriptorJson`/`PositionData` pattern. Consumed by `gis-plugin`'s `app_3d`.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TerrainProjectOrigin {

@@ -9,23 +9,23 @@ isProject: false
 
 ## Context
 
-The Rust port of lowpoly (`lowpoly/program/rs/lib.rs` + `framework/renderer/react/components/world-3d-host.tsx`) is functionally scaffolded but diverges significantly from the old TypeScript editor (`git show 32693795d:lowpoly/core/js/index.ts`, `git show f8376e848:lowpoly/react/index.tsx`) in exactly the areas reported: document tree, gumball, selection, hover, colors. Investigation confirmed concrete gaps and bugs (see below); this plan restores parity and fixes the bugs found along the way.
+The Rust port of lowpoly (`lowpoly/plugin/rs/lib.rs` + `framework/renderer/react/components/world-3d-host.tsx`) is functionally scaffolded but diverges significantly from the old TypeScript editor (`git show 32693795d:lowpoly/core/js/index.ts`, `git show f8376e848:lowpoly/react/index.tsx`) in exactly the areas reported: document tree, gumball, selection, hover, colors. Investigation confirmed concrete gaps and bugs (see below); this plan restores parity and fixes the bugs found along the way.
 
 ## Confirmed gaps and bugs
 
-- **Document tree** ([lowpoly/program/rs/lib.rs:414-439](lowpoly/program/rs/lib.rs)) is a flat object list with hardcoded `"box"` icons and no selection state. The old tree nested `Vertices`/`Edges`/`Faces` groups per object (icons `circle`/`minus`/`square`), synced `selectedIds`/`highlightedIds` with the live selection/hover, and exposed a hover-reveal "flip normal" action on faces.
-- **Colors** are hardcoded hex (`#60a5fa` selected / `#94a3b8` default) in Rust ([lowpoly/program/rs/lib.rs:333](lowpoly/program/rs/lib.rs)), and hover is never visually distinct because Rust's explicit `color` always wins over the React hover ternary. The old editor resolved live theme tokens (`--active-base`, `--hover-base`, `--border-normal-color`, `--panel`) via `resolveSemanticColorHex`, with distinct opacity/linewidth/size per selected vs hovered state for mesh, edges, vertices, and faces.
+- **Document tree** ([lowpoly/plugin/rs/lib.rs:414-439](lowpoly/plugin/rs/lib.rs)) is a flat object list with hardcoded `"box"` icons and no selection state. The old tree nested `Vertices`/`Edges`/`Faces` groups per object (icons `circle`/`minus`/`square`), synced `selectedIds`/`highlightedIds` with the live selection/hover, and exposed a hover-reveal "flip normal" action on faces.
+- **Colors** are hardcoded hex (`#60a5fa` selected / `#94a3b8` default) in Rust ([lowpoly/plugin/rs/lib.rs:333](lowpoly/plugin/rs/lib.rs)), and hover is never visually distinct because Rust's explicit `color` always wins over the React hover ternary. The old editor resolved live theme tokens (`--active-base`, `--hover-base`, `--border-normal-color`, `--panel`) via `resolveSemanticColorHex`, with distinct opacity/linewidth/size per selected vs hovered state for mesh, edges, vertices, and faces.
 - **Gumball** is attached to the object's transform group ([framework/renderer/react/components/world-3d-host.tsx](framework/renderer/react/components/world-3d-host.tsx)), not the selection centroid. The old gumball attached to a synthetic pivot positioned at the centroid of selected vertex/edge/face geometry (`lowpoly_core::selection_transform_pivot` already exists and matches this but is unused by the renderer). Drag-end dispatch also never sends the current `mode`/`ids`, so `apply_translate`/`apply_rotate`/`apply_scale` call `doc.apply_selection("mesh", [])` and silently wipe any component selection before transforming.
-- **Selection merge** for components is missing: `worldPick` ([lowpoly/program/rs/lib.rs:1225-1233](lowpoly/program/rs/lib.rs)) always replaces with a single id — no shift/ctrl multi-select for vertices/edges/faces, unlike the object-level `worldSelect` which already has `merge_world_selection_ids`.
+- **Selection merge** for components is missing: `worldPick` ([lowpoly/plugin/rs/lib.rs:1225-1233](lowpoly/plugin/rs/lib.rs)) always replaces with a single id — no shift/ctrl multi-select for vertices/edges/faces, unlike the object-level `worldSelect` which already has `merge_world_selection_ids`.
 - **Marquee selection** is drawn but never dispatched (`handlePointerUp` just clears the path) — old editor supported live marquee add/remove.
 - **Vertex pick id bug**: `buildVertexPickGeometry` deduplicates positions into pick geometry, but the click handler indexes the original `meshData.vertexIds` array by the click event's point index, causing wrong ids on shared vertices.
 - **Face highlight bug**: the "selected face" overlay renders the entire mesh as one translucent overlay instead of only the selected face triangles.
 
 ## Phase 1 — Component-level selection system (Rust)
 
-In [lowpoly/program/rs/lib.rs](lowpoly/program/rs/lib.rs):
+In [lowpoly/plugin/rs/lib.rs](lowpoly/plugin/rs/lib.rs):
 
-- Add `merge_selection_ids(existing: &[u32], incoming: &[u32], merge: &str) -> Vec<u32>` mirroring `merge_world_selection_ids` in [framework/program/rs/world3d_host.rs](framework/program/rs/world3d_host.rs) (`add`/`toggle`/`replace`/`invertive`).
+- Add `merge_selection_ids(existing: &[u32], incoming: &[u32], merge: &str) -> Vec<u32>` mirroring `merge_world_selection_ids` in [framework/plugin/rs/world3d_host.rs](framework/plugin/rs/world3d_host.rs) (`add`/`toggle`/`replace`/`invertive`).
 - Rework `worldPick` to accept a `merge` arg and use `merge_selection_ids`, auto-enabling the matching `targets.*` flag (like `toggleSelectionKind` does) and setting `selection.mode`.
 - Add `toggleSelectionTarget` command (object id + granularity + component id) for document-tree row clicks, using invertive merge by default, setting `active_object_id`, matching old `lowpolyDocumentTargetRowId` semantics.
 - Maintain `selection.keys` (`lowpoly:{objectId}:{index}:{mode}:{id}`) whenever ids change, so both the document tree and 3D picking agree on stable row identifiers.
@@ -34,7 +34,7 @@ In [lowpoly/program/rs/lib.rs](lowpoly/program/rs/lib.rs):
 
 ## Phase 2 — Document tree with vertex/edge/face nesting
 
-In [lowpoly/program/rs/lib.rs](lowpoly/program/rs/lib.rs) `build_document_tree`:
+In [lowpoly/plugin/rs/lib.rs](lowpoly/plugin/rs/lib.rs) `build_document_tree`:
 
 - For each object, nest three child groups: `Vertices` (icon `circle`), `Edges` (icon `minus`), `Faces` (icon `square`), each populated from the tessellated mesh's counts, mirroring `buildLowpolyPlayDocumentTree` (`git show 32693795d:lowpoly/core/js/index.ts` lines ~218-299).
 - Each leaf row's `command` dispatches `toggleSelectionTarget`; populate `UiTreeNode.selected_ids`/`highlighted_ids` from `envelope.fixture.selection` + `runtime.hovered_target`.
@@ -45,7 +45,7 @@ In [lowpoly/program/rs/lib.rs](lowpoly/program/rs/lib.rs) `build_document_tree`:
 
 ## Phase 3 — Gumball on selection centroid
 
-In [lowpoly/program/rs/lib.rs](lowpoly/program/rs/lib.rs):
+In [lowpoly/plugin/rs/lib.rs](lowpoly/plugin/rs/lib.rs):
 
 - Compute and emit a `gumballTarget: [x,y,z]` (world space) in `world_selection_json_for`, using `lowpoly_core::LowpolyDocument::selection_transform_pivot()` (already implemented, currently unused) plus the active object's transform offset.
 - Include the current `selection.mode` and `selection.ids` (or the object-level `selected_object_ids`) in the selection JSON so the renderer can pass them back on transform commands.
@@ -75,11 +75,11 @@ In [framework/renderer/react/components/world-3d-host.tsx](framework/renderer/re
 
 ## Phase 6 — Verification
 
-- Extend `lowpoly-program`'s `#[cfg(test)]` module: component selection merge (add/toggle/invertive), `toggleSelectionTarget`, hover target round-trip, gumball target/pivot computation, document tree selected/highlighted ids and nested vertex/edge/face counts.
-- Run `cargo test -p lowpoly-program` and `cargo test -p lowpoly_core`.
+- Extend `lowpoly-plugin`'s `#[cfg(test)]` module: component selection merge (add/toggle/invertive), `toggleSelectionTarget`, hover target round-trip, gumball target/pivot computation, document tree selected/highlighted ids and nested vertex/edge/face counts.
+- Run `cargo test -p lowpoly-plugin` and `cargo test -p lowpoly_core`.
 - Run the framework renderer vitest suite (`bun nx run @semio-tech/framework-renderer-react:test`).
-- Run the React E2E sweep (`.repo/🎫/26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS/verify-react-playgrounds-e2e.ts --program lowpoly`) plus a manual live-browser pass: document multi-select + hover sync with canvas, face flip action, light/dark theme color correctness, gumball at centroid transforming the correct vertices without losing selection, marquee selecting components, and per-element (not whole-mesh) highlight overlays.
+- Run the React E2E sweep (`.repo/🎫/26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS/verify-react-playgrounds-e2e.ts --plugin lowpoly`) plus a manual live-browser pass: document multi-select + hover sync with canvas, face flip action, light/dark theme color correctness, gumball at centroid transforming the correct vertices without losing selection, marquee selecting components, and per-element (not whole-mesh) highlight overlays.
 - Reopen/update the ticket `.repo/🎫/26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS` with a summary of every file touched, then close it.
   </plan>
-  <todos>[{"id": "selection-merge-rust", "content": "Add merge_selection_ids + rework worldPick/toggleSelectionTarget/setHover in lowpoly/program/rs/lib.rs"}, {"id": "selection-transform-fix", "content": "Fix apply_translate/rotate/scale to not destructively reset selection"}, {"id": "document-tree-nesting", "content": "Add nested Vertices/Edges/Faces groups with selected/highlighted ids to build_document_tree"}, {"id": "tree-actions-schema", "content": "Add actions + hover_command/unhover_command to UiTreeItemNode (Rust + TS types + ui-interpreter mapping)"}, {"id": "gumball-centroid", "content": "Emit gumballTarget from selection_transform_pivot; attach gumball to synthetic Object3D at centroid instead of instance transform group"}, {"id": "gumball-selection-passthrough", "content": "Pass current granularity/componentIds through gumball drag-end dispatch"}, {"id": "semantic-colors", "content": "Resolve theme colors via resolveSemanticColorHex in world-3d-host.tsx; remove hardcoded Rust color field; fix hover visibility"}, {"id": "style-table-overlays", "content": "Apply old opacity/linewidth/size table for mesh/face/edge/vertex selected vs hovered overlays"}, {"id": "fix-vertex-pick-bug", "content": "Fix vertex pick id indexing to use deduplicated geometry's parallel id array"}, {"id": "fix-face-highlight-bug", "content": "Fix face highlight overlay to render only selected/hovered face triangles, not the whole mesh"}, {"id": "wire-marquee-selection", "content": "Dispatch worldSelect/worldPick from marquee pointer-up instead of only clearing the path"}, {"id": "parity-tests-verify", "content": "Extend Rust tests, run full test/E2E suite, manually verify in browser, update and close ticket"}]</todos>
+  <todos>[{"id": "selection-merge-rust", "content": "Add merge_selection_ids + rework worldPick/toggleSelectionTarget/setHover in lowpoly/plugin/rs/lib.rs"}, {"id": "selection-transform-fix", "content": "Fix apply_translate/rotate/scale to not destructively reset selection"}, {"id": "document-tree-nesting", "content": "Add nested Vertices/Edges/Faces groups with selected/highlighted ids to build_document_tree"}, {"id": "tree-actions-schema", "content": "Add actions + hover_command/unhover_command to UiTreeItemNode (Rust + TS types + ui-interpreter mapping)"}, {"id": "gumball-centroid", "content": "Emit gumballTarget from selection_transform_pivot; attach gumball to synthetic Object3D at centroid instead of instance transform group"}, {"id": "gumball-selection-passthrough", "content": "Pass current granularity/componentIds through gumball drag-end dispatch"}, {"id": "semantic-colors", "content": "Resolve theme colors via resolveSemanticColorHex in world-3d-host.tsx; remove hardcoded Rust color field; fix hover visibility"}, {"id": "style-table-overlays", "content": "Apply old opacity/linewidth/size table for mesh/face/edge/vertex selected vs hovered overlays"}, {"id": "fix-vertex-pick-bug", "content": "Fix vertex pick id indexing to use deduplicated geometry's parallel id array"}, {"id": "fix-face-highlight-bug", "content": "Fix face highlight overlay to render only selected/hovered face triangles, not the whole mesh"}, {"id": "wire-marquee-selection", "content": "Dispatch worldSelect/worldPick from marquee pointer-up instead of only clearing the path"}, {"id": "parity-tests-verify", "content": "Extend Rust tests, run full test/E2E suite, manually verify in browser, update and close ticket"}]</todos>
   </CreatePlan>

@@ -51,16 +51,16 @@ This plan closes the framework-wide bridge gap (tools/engagements) for all six p
 
 Context menu on right-click and touch gestures remain explicitly deferred, matching the prior plan (not requested in scope).
 
-## Phase 0 — Wire `tools()` / `windowEngagements()` through the wgpu program bridge (all 6 plugins)
+## Phase 0 — Wire `tools()` / `windowEngagements()` through the wgpu plugin bridge (all 6 plugins)
 
-The JS side is already fully ready: `PluginWasmHandle.tools`/`windowEngagements` and `pluginHandleForBridge()` already expose both (`[framework/core/js/index.ts](framework/core/js/index.ts)` lines 645-649, 727-732), and the WASM exports `semio_program_tools`/`semio_program_window_engagements` already exist (`[framework/program/rs/program_runtime.rs](framework/program/rs/program_runtime.rs)` lines 119-150, 246-253). Only the Rust-side `ProgramBridgeEntry` in wgpu and the shell's use of it are missing.
+The JS side is already fully ready: `PluginWasmHandle.tools`/`windowEngagements` and `pluginHandleForBridge()` already expose both (`[framework/core/js/index.ts](framework/core/js/index.ts)` lines 645-649, 727-732), and the WASM exports `semio_plugin_tools`/`semio_plugin_window_engagements` already exist (`[framework/plugin/rs/plugin_runtime.rs](framework/plugin/rs/plugin_runtime.rs)` lines 119-150, 246-253). Only the Rust-side `ProgramBridgeEntry` in wgpu and the shell's use of it are missing.
 
 1. Add `tools()` and `window_engagements()` async methods to `ProgramBridgeEntry` in [framework/renderer/wgpu/rs/program_bridge.rs](framework/renderer/wgpu/rs/program_bridge.rs), mirroring the existing `render()` method (lines 104-129): call the JS `tools`/`windowEngagements` functions on `self.handle`, await the promise, and deserialize into `Vec<ToolNode>` / `HashMap<String, WindowEngagement>`.
 2. In `ShellState::refresh_ui` ([framework/renderer/wgpu/rs/shell.rs](framework/renderer/wgpu/rs/shell.rs) lines 522-585), after the existing per-window `plugin.render(...)` loop, call `plugin.tools(instance_id, view_state)` and `plugin.window_engagements(instance_id, view_state)` once per refresh; cache results in new `ShellState` fields (`active_tools: Vec<ToolNode>`, `window_engagements: HashMap<String, WindowEngagement>`).
 3. Replace the static `kind.engagement` read in `render_window_engagement_rail` ([shell.rs](framework/renderer/wgpu/rs/shell.rs) line 4006) with `self.window_engagements.get(&kind.id).or(kind.engagement.as_ref())`, matching React's `windowEngagementsByKind[kind.id] ?? kind.engagement` fallback pattern (`os-shell.tsx` line 1643).
 4. Wire the `engagementInput` on-change command: `render_engagement_input` ([shell.rs](framework/renderer/wgpu/rs/shell.rs) lines 4171-4177) currently sets `on_change: None`; dispatch `spec.on_change` through the input state like other text fields.
 5. Render `self.active_tools` in `render_footer` ([shell.rs](framework/renderer/wgpu/rs/shell.rs) lines 2897-2971): recurse the `ToolNode` tree into `ChromeGroupItem`s — `Separator` → visual divider, `Button`/`Toggle` → `ChromeGroupItem` (icon/label/pressed), `Collection` → a toggle `ChromeGroupItem` that expands its leaf children inline when open, tracked via a new `tool_collection_expanded: HashMap<String, bool>` field (follow the existing `engagement_expanded` precedent at [shell.rs](framework/renderer/wgpu/rs/shell.rs) line 212). Keep the existing app-label chip; keep the studio-mode generic undo/redo/checkpoint chip only when `session.app.controller_id == S_PLAY_CONTROLLER_ID` (unchanged), and render `active_tools` alongside it for all plugins.
-6. This automatically surfaces lowpoly's `editUndo`/`editRedo`/paint-undo tool buttons (already implemented in `edit_tools()`/`paint_tools()`, `lowpoly/program/rs/lib.rs` lines 1143-1144, 1213-1214) in the wgpu footer — no plugin-side change needed. Verify this explicitly.
+6. This automatically surfaces lowpoly's `editUndo`/`editRedo`/paint-undo tool buttons (already implemented in `edit_tools()`/`paint_tools()`, `lowpoly/plugin/rs/lib.rs` lines 1143-1144, 1213-1214) in the wgpu footer — no plugin-side change needed. Verify this explicitly.
 
 ## Phase 1 — UV canvas full rendering + interaction parity (lowpoly)
 
@@ -69,7 +69,7 @@ The JS side is already fully ready: `PluginWasmHandle.tools`/`windowEngagements`
 1. Extend `CanvasLayer` with `data_url: Option<String>`, `points: Option<Vec<f64>>` (flat x,y pairs), `seams: Option<Vec<bool>>`.
 2. Add image decode + GPU texture upload for `dataUrl` layers (base64 PNG from lowpoly's paint texture) — decode once per unique `dataUrl` and cache by a hash/id (mirror the mesh GPU cache pattern in `MeshGpuStore` at [ui/wgpu/rs/draw.rs](ui/wgpu/rs/draw.rs) lines 405-424), then draw via a textured quad in `render_canvas_2d`.
 3. Add `kind == "polyline"` rendering: connect `points` pairs with `ctx.draw.push_line`, using dashed segments where the parallel `seams[i]` is true (mirror React's dash logic in `canvas-2d-host.tsx` lines 146-166) plus a checkerboard background under the UV wireframe.
-4. Fix pointer coordinate mapping: `render_canvas_2d`'s hit target (lines 885-892) currently passes raw screen pixels to `canvasPointerDown`; convert through the existing `Viewport::world_to_screen`/inverse so lowpoly's UV-space fallback mapping (`lowpoly/program/rs/lib.rs` lines 1922-1927) receives canvas-world coordinates like React's `toCanvasCoords` (`canvas-2d-host.tsx` lines 200-220).
+4. Fix pointer coordinate mapping: `render_canvas_2d`'s hit target (lines 885-892) currently passes raw screen pixels to `canvasPointerDown`; convert through the existing `Viewport::world_to_screen`/inverse so lowpoly's UV-space fallback mapping (`lowpoly/plugin/rs/lib.rs` lines 1922-1927) receives canvas-world coordinates like React's `toCanvasCoords` (`canvas-2d-host.tsx` lines 200-220).
 5. Dispatch `paintStrokeBegin`/`paintStrokeEnd` around the canvas pointer-down/up drag lifecycle (mirror React `canvas-2d-host.tsx` lines 297-302), and add a `canvasWheel` handler path if none exists for zoom, matching React's zoom-on-wheel.
 6. Ensure a mode switch (edit ↔ paint) triggers `refresh_ui()` so `interactionMode`/UV window content updates — currently the navbar mode click only mutates local view state (`shell.rs` lines 1383-1388); route it through the same operation-apply path used by command dispatch (`shell.rs` line 815).
 
@@ -97,7 +97,7 @@ React overlays hovered/selected components (`buildFaceOverlayGeometry`, edge lin
 
 `WorldSelectionRecord` in wgpu ([framework/renderer/wgpu/rs/world3d.rs](framework/renderer/wgpu/rs/world3d.rs) lines 53-60) only parses `method`/`mode`/`ids`/`hoveredId`, and wgpu misreads `selection.mode` as the transform tool (lines 896-898) when lowpoly's `mode` field is actually the merge mode ("replace"/"add"/"toggle") — the transform tool lives in `transformTool`.
 
-1. Extend `WorldSelectionRecord` to also parse `granularity`, `component_ids`, `transform_tool`, `interaction_mode`, `gumball_target` (matching the fields lowpoly emits in `world_selection_json_for`, `lowpoly/program/rs/lib.rs` lines 450-483, and what React reads at `world-3d-host.tsx` line 713).
+1. Extend `WorldSelectionRecord` to also parse `granularity`, `component_ids`, `transform_tool`, `interaction_mode`, `gumball_target` (matching the fields lowpoly emits in `world_selection_json_for`, `lowpoly/plugin/rs/lib.rs` lines 450-483, and what React reads at `world-3d-host.tsx` line 713).
 2. Fix the transform-tool read to use `selection.transform_tool` instead of `selection.mode` (lines 896-898).
 3. Use `gumball_target` (when present) instead of averaging all selected instance origins in `selection_centroid` (`world3d.rs` lines 278-297), so component-level gumball positioning matches React.
 4. Use `interaction_mode` to drive whether picking dispatches `worldSelect` (object) vs `worldPick` (component) in Phase 3, and whether Phase 4's overlays render.
@@ -113,7 +113,7 @@ Painting directly on the model (not just the UV window) needs a UV-mapped textur
 
 ## Verification
 
-1. `cargo test -p ui_wgpu -p semio-framework-renderer-wgpu -p lowpoly-program` for new frustum/pick/UV-layer/selection-parsing unit tests.
+1. `cargo test -p ui_wgpu -p semio-framework-renderer-wgpu -p lowpoly-plugin` for new frustum/pick/UV-layer/selection-parsing unit tests.
 2. Rebuild wgpu WASM (`bun ./framework/renderer/wgpu/script.ts wasm`).
 3. Run the existing wgpu playground e2e sweep (`.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts`) with body-content assertions for all six world3d plugins plus lowpoly's UV window.
 4. Manual browser verification (cursor-ide-browser) for lowpoly under the wgpu renderer: footer shows dynamic edit/paint tool trees with working undo/redo, window engagement rail updates live, UV window renders the paint texture + dashed-seam wireframe with pan/zoom and paints correctly, 3D viewport supports vertex/edge/face click-select and marquee with visible overlays, painting directly on the mesh surface works, and gumball operates at the correct component-level centroid.

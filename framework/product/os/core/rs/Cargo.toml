@@ -3,7 +3,7 @@ name = "semio-framework-os"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "Plugin-based OS kernel: hot-swappable WASM programs, workflow, document VCS"
+description = "Plugin-based OS kernel: hot-swappable WASM plugins, workflow, document VCS"
 
 
 [lints]
@@ -13,7 +13,7 @@ path = "lib.rs"
 
 [dependencies]
 semio-framework-core = { path = "../../../../core/rs" }
-semio-framework-program = { path = "../../../../program/rs" }
+semio-framework-plugin = { path = "../../../../plugin/rs" }
 ui_wgpu = { path = "../../../../../ui/wgpu/rs" }
 kernel_3d_brepkit = { path = "../../../../../s/kernel/geometry/3d/brep/rs", package = "semio-s-kernel-geometry-3d-brep" }
 kernel_3d_engine = { path = "../../../../../s/kernel/geometry/3d/brep/engine/rs", package = "semio-s-kernel-geometry-3d-brep-engine" }

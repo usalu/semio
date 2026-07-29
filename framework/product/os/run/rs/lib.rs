@@ -34,7 +34,7 @@ pub enum RunError {
 //#endregion 🔖Types
 
 //#region 🔖MediaNodeHost
-/// 🔌 The one seam `SpaceRunner` calls through — every concrete program host (native wasmtime,
+/// 🔌 The one seam `SpaceRunner` calls through — every concrete plugin host (native wasmtime,
 /// browser worker, or an in-process fake for tests) implements this the same way. `node` is an
 /// opaque handle the host mints in `instantiate` and the runner threads back on every later call.
 pub trait MediaNodeHost {
@@ -458,15 +458,15 @@ impl<H: MediaNodeHost> SpaceRunner<H> {
 //#endregion 🔖SpaceRunner
 
 //#region 🔖WasmtimeNodeHost
-/// 🧩 Native `MediaNodeHost` over `semio-framework-program-host`'s wasmtime runtime. `instantiate` /
+/// 🧩 Native `MediaNodeHost` over `semio-framework-plugin-host`'s wasmtime runtime. `instantiate` /
 /// `load_document` / `read_document` are real today. `import_media`/`export_media`/
-/// `media_fingerprint` are **not yet wired** — `world.wit` and both program hosts don't expose those
+/// `media_fingerprint` are **not yet wired** — `world.wit` and both plugin hosts don't expose those
 /// three calls on the wire yet (a deliberately separate, follow-up ticket once the concurrently
 /// in-flight media-lattice/reconcile tickets land); they return `RunError::Host` naming the gap
 /// rather than silently doing nothing.
 #[cfg(not(target_arch = "wasm32"))]
 pub struct WasmtimeNodeHost {
-    runtimes: HashMap<String, semio_framework_program_host::WasmProgramRuntime>,
+    runtimes: HashMap<String, semio_framework_plugin_host::WasmPluginRuntime>,
     plugin_path_for_app: HashMap<String, PathBuf>,
     next_handle: u32,
     instances: HashMap<u32, (String, u32)>,
@@ -475,15 +475,15 @@ pub struct WasmtimeNodeHost {
 #[cfg(not(target_arch = "wasm32"))]
 impl WasmtimeNodeHost {
     /// 🗺️ `plugin_path_for_app` maps an app id to the compiled `.wasm` component path the dev-shell
-    /// build already produces under `framework/product/os/dev/program-modules/<app>/`.
+    /// build already produces under `framework/product/os/dev/plugin-modules/<app>/`.
     pub fn new(plugin_path_for_app: HashMap<String, PathBuf>) -> Self {
         Self { runtimes: HashMap::new(), plugin_path_for_app, next_handle: 1, instances: HashMap::new() }
     }
 
-    fn runtime_for(&mut self, app_id: &str) -> Result<&semio_framework_program_host::WasmProgramRuntime, RunError> {
+    fn runtime_for(&mut self, app_id: &str) -> Result<&semio_framework_plugin_host::WasmPluginRuntime, RunError> {
         if !self.runtimes.contains_key(app_id) {
             let path = self.plugin_path_for_app.get(app_id).ok_or_else(|| RunError::Host(format!("no compiled program registered for app `{app_id}`")))?;
-            let runtime = semio_framework_program_host::WasmProgramRuntime::load(path).map_err(|error| RunError::Host(error.to_string()))?;
+            let runtime = semio_framework_plugin_host::WasmPluginRuntime::load(path).map_err(|error| RunError::Host(error.to_string()))?;
             self.runtimes.insert(app_id.to_string(), runtime);
         }
         Ok(self.runtimes.get(app_id).expect("just inserted"))
@@ -502,20 +502,20 @@ impl MediaNodeHost for WasmtimeNodeHost {
 
     fn load_document(&mut self, node: u32, pack: &[u8], spr: &[u8]) -> Result<(), RunError> {
         let (app_id, instance_id) = self.instances.get(&node).ok_or_else(|| RunError::Host(format!("unknown node handle {node}")))?;
-        let files = semio_framework_program_host::semio::framework::types::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+        let files = semio_framework_plugin_host::semio::framework::types::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
         self.runtimes.get(app_id).ok_or_else(|| RunError::Host(format!("no runtime for `{app_id}`")))?.load_app_document_pack(*instance_id, files).map_err(|error| RunError::Host(error.to_string()))
     }
 
     fn import_media(&mut self, _node: u32, port: &str, _media: &Media) -> Result<(), RunError> {
-        Err(RunError::Host(format!("import-media (`{port}`) is not yet on the program WIT surface — see HEADLESS-MEDIA-CONTRACT follow-up")))
+        Err(RunError::Host(format!("import-media (`{port}`) is not yet on the plugin WIT surface — see HEADLESS-MEDIA-CONTRACT follow-up")))
     }
 
     fn export_media(&mut self, _node: u32, port: &str) -> Result<Media, RunError> {
-        Err(RunError::Host(format!("export-media (`{port}`) is not yet on the program WIT surface — see HEADLESS-MEDIA-CONTRACT follow-up")))
+        Err(RunError::Host(format!("export-media (`{port}`) is not yet on the plugin WIT surface — see HEADLESS-MEDIA-CONTRACT follow-up")))
     }
 
     fn media_fingerprint(&mut self, _node: u32, port: &str) -> Result<MediaFingerprint, RunError> {
-        Err(RunError::Host(format!("media-fingerprint (`{port}`) is not yet on the program WIT surface — see HEADLESS-MEDIA-CONTRACT follow-up")))
+        Err(RunError::Host(format!("media-fingerprint (`{port}`) is not yet on the plugin WIT surface — see HEADLESS-MEDIA-CONTRACT follow-up")))
     }
 
     fn read_document(&mut self, node: u32) -> Result<(Vec<u8>, Vec<u8>), RunError> {
@@ -608,8 +608,8 @@ mod tests {
         let edge = OsWorkflowEdge { id: "edge-1".into(), source_node_id: "node-a".into(), source_port_id: "out".into(), target_node_id: "node-b".into(), target_port_id: "in".into(), contract: placeholder_media_contract("data.value") };
         let graph = OsWorkflow { schema: "s.workflow".into(), nodes: vec![source, target], edges: vec![edge] };
         let instances = vec![
-            OsAppInstance { id: "instance-a".into(), program_id: "program".into(), app_id: "app-a".into(), label: "A".into(), yields: "data.value".into(), document: semio_framework_os::OsDocumentRef { document_id: "instance-a".into(), schema: "app-a.document".into() } },
-            OsAppInstance { id: "instance-b".into(), program_id: "program".into(), app_id: "app-b".into(), label: "B".into(), yields: "".into(), document: semio_framework_os::OsDocumentRef { document_id: "instance-b".into(), schema: "app-b.document".into() } },
+            OsAppInstance { id: "instance-a".into(), plugin_id: "program".into(), app_id: "app-a".into(), label: "A".into(), yields: "data.value".into(), document: semio_framework_os::OsDocumentRef { document_id: "instance-a".into(), schema: "app-a.document".into() } },
+            OsAppInstance { id: "instance-b".into(), plugin_id: "program".into(), app_id: "app-b".into(), label: "B".into(), yields: "".into(), document: semio_framework_os::OsDocumentRef { document_id: "instance-b".into(), schema: "app-b.document".into() } },
         ];
         (graph, instances)
     }

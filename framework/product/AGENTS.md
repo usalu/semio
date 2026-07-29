@@ -8,4 +8,4 @@ A lightweight product framework for interactive playground apps. Standalone dev 
 
 # Os
 
-Composable operating system shell (media graph, program registry, app hosting). `s` is an Os instance.
+Composable operating system shell (media graph, plugin registry, app hosting). `s` is an Os instance.

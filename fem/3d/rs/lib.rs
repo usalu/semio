@@ -210,7 +210,7 @@ pub struct FemSolid {
     pub material_id: String,
 }
 
-/// 🎥 Opaque camera state string; the program layer owns and interprets its shape. No
+/// 🎥 Opaque camera state string; the plugin layer owns and interprets its shape. No
 /// `#[dsl(keyword = ...)]`: every field embedding this type is itself `#[dsl(block)]` (see
 /// `FemAnalysisSettings`'s doc comment above for why that means the keyword stays off here).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
@@ -840,7 +840,7 @@ pub fn build_model(doc: &Fem3dDocument, case_id: &str) -> Result<Model, Fem3dErr
 }
 
 /// 🚀 Frozen entry point: builds the model for `case_id` and runs `fem_core::solve_linear_static`.
-/// Consumed directly by `fem-program` — do not rename or change this signature.
+/// Consumed directly by `fem-plugin` — do not rename or change this signature.
 pub fn fem3d_solve(doc: &Fem3dDocument, case_id: &str) -> Result<fem_core::StaticResult, String> {
     let model = build_model(doc, case_id).map_err(|e| e.to_string())?;
     fem_core::solve_linear_static(&model).map_err(|e| e.to_string())
@@ -990,7 +990,7 @@ pub fn fem3d_mesh_preview(doc: &Fem3dDocument) -> Result<Vec<SolidMesh>, Fem3dEr
 
 /// 🎨 Nodal-averaged von Mises stress for `case_id`'s solved result, keyed by node id — the
 /// document-layer bridge to `fem_core::analyses::nodal_averaged_scalar`, mirroring `fem_2d`'s
-/// `fem2d_nodal_von_mises`, feeding `fem-program`'s solid stress contour rendering.
+/// `fem2d_nodal_von_mises`, feeding `fem-plugin`'s solid stress contour rendering.
 pub fn fem3d_nodal_von_mises(doc: &Fem3dDocument, case_id: &str) -> Result<HashMap<String, f64>, Fem3dError> {
     let (nodes, elements, _solids, supports) = resolve_geometry(doc)?;
     let model = analyses::AnalysisModel { nodes, elements, supports };

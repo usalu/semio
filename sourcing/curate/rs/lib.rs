@@ -65,7 +65,7 @@ pub enum GeometryRecipe {
     Mesh { positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32> },
 }
 
-/// 🧱 Flat indexed triangle mesh data, ready for `mesh_from_indexed` at the program boundary.
+/// 🧱 Flat indexed triangle mesh data, ready for `mesh_from_indexed` at the plugin boundary.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct MeshDataSpec {
     pub positions: Vec<f32>,

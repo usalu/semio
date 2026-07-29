@@ -1,6 +1,6 @@
 ---
 name: Note Infinite Canvas App
-overview: Create a new fully-featured S technology app "note" — an infinite canvas with text, image, table, math, and pencil-ink blocks — fully integrated with hover/selection/document/window options, VCS persistence, playground dev host, and S program registration.
+overview: Create a new fully-featured S technology app "note" — an infinite canvas with text, image, table, math, and pencil-ink blocks — fully integrated with hover/selection/document/window options, VCS persistence, playground dev host, and S plugin registration.
 todos:
  - id: ticket
    content: Read repo://goals and open ticket via ticket_open

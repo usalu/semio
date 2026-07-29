@@ -12,10 +12,10 @@ todos:
    content: Build framework/core/rs kernel (Platform, CommandBus, windows, UiTree)
    status: completed
  - id: os
-   content: Build framework/product/os/core/rs (program host, hot-swap, media graph, VCS store)
+   content: Build framework/product/os/core/rs (plugin host, hot-swap, media graph, VCS store)
    status: completed
  - id: sdk
-   content: Build framework/program/rs SDK (declarative app builder, export_program! macro)
+   content: Build framework/plugin/rs SDK (declarative app builder, export_plugin! macro)
    status: completed
  - id: renderer
    content: "Build framework/renderer/react (UiTree interpreter + compile-time components: canvas-2d, world-3d, node-graph, editor, table, raster)"
@@ -42,7 +42,7 @@ todos:
    content: Delete TS framework packages, all <tech>/react packages, semio.app manifests, playground-manifest.ts, virtual module program
    status: completed
  - id: verify
-   content: "Full verification: kernel/program/renderer tests, browser boot of OS with all plugins, hot-swap check, close ticket"
+   content: "Full verification: kernel/plugin/renderer tests, browser boot of OS with all plugins, hot-swap check, close ticket"
    status: completed
 isProject: false
 ---
@@ -88,7 +88,7 @@ flowchart TB
 Key design decisions (from your answers):
 
 - Renderer-independent core: the kernel and all plugins are pure Rust with zero renderer knowledge; exactly one React renderer is implemented now, others can follow.
-- Plugin mechanism: WASM Component Model. WIT interfaces define the program world; `cargo component` builds plugins; `jco` transpiles them for the browser host. Hot-swap = re-instantiate the component; all durable state (VCS operation logs) lives in the kernel, so plugins are logic-only and swap losslessly.
+- Plugin mechanism: WASM Component Model. WIT interfaces define the plugin world; `cargo component` builds plugins; `jco` transpiles them for the browser host. Hot-swap = re-instantiate the component; all durable state (VCS operation logs) lives in the kernel, so plugins are logic-only and swap losslessly.
 - Compile-time UI vocabulary: the per-app surface nodes (`UiDrawHostSurfaceNode`, `UiNoteHostSurfaceNode`, … 25+ kinds in `framework/product/platform/core/js/index.ts` lines 305–560) are replaced by a small set of general components any app can use: `infinite-canvas-2d`, `world-3d`, `node-graph`, `text-editor`, `table`, `raster-viewport`, `code-editor`, plus primitives (stack, text, button, tree, inspector, field, slider, …). Apps describe _scenes_ for these components declaratively; they never contribute React code.
 
 ## New Structure
@@ -97,16 +97,16 @@ Key design decisions (from your answers):
   - `ui.wit`: `ui-node` variant (all primitives + component-scene nodes), `component-scene` types per compile-time component (canvas-2d scene: paths, images, text runs; world-3d scene: meshes, instances, camera; node-graph scene: nodes, ports, edges; editor scene: text buffer operations; table scene: columns/rows)
   - `plugin.wit`: world `program` — exports `manifest() -> plugin-manifest` (apps, modes, window kinds, keybindings, programs, examples), `create-app(app-id) -> instance`, `handle-command(instance, command, doc-snapshot) -> list<edit-operation>`, `render(instance, doc-snapshot, view-state) -> ui-tree`; imports `host` (log, clock, asset fetch)
 - `framework/core/rs` — kernel crate `semio-framework-core`: `Platform`, `CommandBus`, window layouts, mode/window/panel model, UiTree types (shared with WIT bindings), ported 1:1 from `framework/core/js/index.ts` and the runtime parts of `framework/product/platform/core/js/index.ts`
-- `framework/product/os/core/rs` — crate `semio-framework-os`: program host (load/instantiate/hot-swap components), app instance lifecycle, media graph + program registry (port of `framework/product/os/core/js/index.ts`), document store on top of existing `vcs/rs`
-- `framework/program/rs` — program SDK crate `semio-framework-program`: declarative app builder (`App::new(id).mode(...).window(...).panel(...)`), typed edit-operation/document traits, `export_program!` macro wrapping wit-bindgen so a program is one `lib.rs` with pure functions
+- `framework/product/os/core/rs` — crate `semio-framework-os`: plugin host (load/instantiate/hot-swap components), app instance lifecycle, media graph + plugin registry (port of `framework/product/os/core/js/index.ts`), document store on top of existing `vcs/rs`
+- `framework/plugin/rs` — plugin SDK crate `semio-framework-plugin`: declarative app builder (`App::new(id).mode(...).window(...).panel(...)`), typed edit-operation/document traits, `export_plugin!` macro wrapping wit-bindgen so a plugin is one `lib.rs` with pure functions
 - `framework/renderer/react/` — the single trusted renderer package `@semio-tech/framework-renderer-react`: boots the kernel WASM, runs the jco-loaded program components, interprets `UiTree`, and owns the compile-time component implementations by wrapping the existing engines: `infinite/cavas` (wgpu/Vello 2D), `infinite/world/r3f` (3D), the flow/dag graph canvas, editor, table. Shell chrome (navbar, panels, golden layout) ported from `framework/product/platform/renderer/react/index.tsx` + `framework/product/playground/renderer/react/index.tsx` but reduced to pure UiTree interpretation.
-- `framework/product/os/dev/` — dev host: builds all program components (`cargo component build`), transpiles with `jco`, serves via Vite, watches program crates and hot-swaps over WebSocket without page reload.
+- `framework/product/os/dev/` — dev host: builds all program components (`cargo component build`), transpiles with `jco`, serves via Vite, watches plugin crates and hot-swaps over WebSocket without page reload.
 
 Playground product collapses into the OS dev host booted with a single program (`PLUGIN=draw`); presentation becomes an ordinary program. `framework/product/platform` and `framework/product/playground` TS packages are deleted after migration.
 
 ## App Migration
 
-Every technology gets a program crate `<tech>/program/rs` (extending its existing `<tech>/rs` domain crate where present — most already have Rust document/engine code). The program declares its apps fully in Rust:
+Every technology gets a plugin crate `<tech>/plugin/rs` (extending its existing `<tech>/rs` domain crate where present — most already have Rust document/engine code). The program declares its apps fully in Rust:
 
 - document model + edit operations (port from `<tech>/core/js/internal.ts` where still TS-only, e.g. draw, note; reuse existing Rust for flow, puzzle, layout, …)
 - controller logic (port `*PlayController` command handling)
@@ -121,7 +121,7 @@ Migration order (each app boots and is verified in the new OS before the next): 
 
 1. Kernel owns all state: per-instance `DocumentVcs` operation logs (via `vcs/rs`), window layout, selection/view state as serialized data.
 2. Plugins are stateless between calls (pure `render`/`handle-command` over snapshots), so swapping is: unload component → instantiate new artifact → replay `manifest()` → re-render.
-3. Dev host watches `<tech>/program/rs`, rebuilds the component, pushes the new artifact over WebSocket; renderer swaps it in place. Manifest diffs (added/removed apps) update the OS app registry live.
+3. Dev host watches `<tech>/plugin/rs`, rebuilds the component, pushes the new artifact over WebSocket; renderer swaps it in place. Manifest diffs (added/removed apps) update the OS app registry live.
 
 ## Toolchain & Repo Integration
 

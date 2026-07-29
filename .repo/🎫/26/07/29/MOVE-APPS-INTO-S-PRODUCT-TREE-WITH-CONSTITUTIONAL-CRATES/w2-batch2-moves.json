@@ -1,0 +1,372 @@
+[
+  {
+    "oldDir": "animate/present/rs",
+    "newDir": "s/plugin/animate/present/rs",
+    "newPkg": "animate_present"
+  },
+  {
+    "oldDir": "animate/video/rs",
+    "newDir": "s/plugin/animate/video/rs",
+    "newPkg": "animate_video"
+  },
+  {
+    "oldDir": "animate/core/rs",
+    "newDir": "s/plugin/animate/core/rs",
+    "newPkg": "animate_core"
+  },
+  {
+    "oldDir": "animate/plugin/rs",
+    "newDir": "s/plugin/animate/plugin/rs",
+    "newPkg": "animate-plugin"
+  },
+  {
+    "oldDir": "fem/3d/rs",
+    "newDir": "s/plugin/fem/3d/rs",
+    "newPkg": "fem_3d"
+  },
+  {
+    "oldDir": "fem/core/rs",
+    "newDir": "s/plugin/fem/core/rs",
+    "newPkg": "fem_core"
+  },
+  {
+    "oldDir": "fem/plugin/rs",
+    "newDir": "s/plugin/fem/plugin/rs",
+    "newPkg": "fem-plugin"
+  },
+  {
+    "oldDir": "fem/2d/rs",
+    "newDir": "s/plugin/fem/2d/rs",
+    "newPkg": "fem_2d"
+  },
+  {
+    "oldDir": "flow/plugin/rs",
+    "newDir": "s/plugin/flow/plugin/rs",
+    "newPkg": "flow-plugin"
+  },
+  {
+    "oldDir": "gis/plugin/rs",
+    "newDir": "s/plugin/gis/plugin/rs",
+    "newPkg": "gis-plugin"
+  },
+  {
+    "oldDir": "imperative/core/rs",
+    "newDir": "s/plugin/imperative/core/rs",
+    "newPkg": "imperative_core"
+  },
+  {
+    "oldDir": "imperative/module/core/rs",
+    "newDir": "s/plugin/imperative/module/core/rs",
+    "newPkg": "imperative_module_core"
+  },
+  {
+    "oldDir": "imperative/module/logic/rs",
+    "newDir": "s/plugin/imperative/module/logic/rs",
+    "newPkg": "imperative_module_logic"
+  },
+  {
+    "oldDir": "imperative/module/math/rs",
+    "newDir": "s/plugin/imperative/module/math/rs",
+    "newPkg": "imperative_module_math"
+  },
+  {
+    "oldDir": "imperative/module/text/rs",
+    "newDir": "s/plugin/imperative/module/text/rs",
+    "newPkg": "imperative_module_text"
+  },
+  {
+    "oldDir": "imperative/module/control/rs",
+    "newDir": "s/plugin/imperative/module/control/rs",
+    "newPkg": "imperative_module_control"
+  },
+  {
+    "oldDir": "imperative/plugin/rs",
+    "newDir": "s/plugin/imperative/plugin/rs",
+    "newPkg": "imperative-plugin"
+  },
+  {
+    "oldDir": "imperative/engine/rs",
+    "newDir": "s/plugin/imperative/engine/rs",
+    "newPkg": "imperative_engine"
+  },
+  {
+    "oldDir": "mathematical/plugin/rs",
+    "newDir": "s/plugin/mathematical/plugin/rs",
+    "newPkg": "mathematical-plugin"
+  },
+  {
+    "oldDir": "norm/core/rs",
+    "newDir": "s/plugin/norm/core/rs",
+    "newPkg": "norm_core"
+  },
+  {
+    "oldDir": "norm/iso/16757/rs",
+    "newDir": "s/plugin/norm/iso/16757/rs",
+    "newPkg": "norm_iso_16757"
+  },
+  {
+    "oldDir": "norm/plugin/rs",
+    "newDir": "s/plugin/norm/plugin/rs",
+    "newPkg": "norm-plugin"
+  },
+  {
+    "oldDir": "norm/din/4108/rs",
+    "newDir": "s/plugin/norm/din/4108/rs",
+    "newPkg": "norm_din_4108"
+  },
+  {
+    "oldDir": "norm/din/en/16798/rs",
+    "newDir": "s/plugin/norm/din/en/16798/rs",
+    "newPkg": "norm_din_en_16798"
+  },
+  {
+    "oldDir": "norm/din/v/18599/rs",
+    "newDir": "s/plugin/norm/din/v/18599/rs",
+    "newPkg": "norm_din_v_18599"
+  },
+  {
+    "oldDir": "norm/en/1993/rs",
+    "newDir": "s/plugin/norm/en/1993/rs",
+    "newPkg": "norm_en_1993"
+  },
+  {
+    "oldDir": "norm/en/1994/rs",
+    "newDir": "s/plugin/norm/en/1994/rs",
+    "newPkg": "norm_en_1994"
+  },
+  {
+    "oldDir": "norm/en/1995/rs",
+    "newDir": "s/plugin/norm/en/1995/rs",
+    "newPkg": "norm_en_1995"
+  },
+  {
+    "oldDir": "norm/en/1992/rs",
+    "newDir": "s/plugin/norm/en/1992/rs",
+    "newPkg": "norm_en_1992"
+  },
+  {
+    "oldDir": "norm/en/1997/rs",
+    "newDir": "s/plugin/norm/en/1997/rs",
+    "newPkg": "norm_en_1997"
+  },
+  {
+    "oldDir": "norm/en/1990/rs",
+    "newDir": "s/plugin/norm/en/1990/rs",
+    "newPkg": "norm_en_1990"
+  },
+  {
+    "oldDir": "norm/en/1999/rs",
+    "newDir": "s/plugin/norm/en/1999/rs",
+    "newPkg": "norm_en_1999"
+  },
+  {
+    "oldDir": "norm/en/1998/rs",
+    "newDir": "s/plugin/norm/en/1998/rs",
+    "newPkg": "norm_en_1998"
+  },
+  {
+    "oldDir": "norm/en/1991/rs",
+    "newDir": "s/plugin/norm/en/1991/rs",
+    "newPkg": "norm_en_1991"
+  },
+  {
+    "oldDir": "norm/en/1996/rs",
+    "newDir": "s/plugin/norm/en/1996/rs",
+    "newPkg": "norm_en_1996"
+  },
+  {
+    "oldDir": "norm/vdi/3805/rs",
+    "newDir": "s/plugin/norm/vdi/3805/rs",
+    "newPkg": "norm_vdi_3805"
+  },
+  {
+    "oldDir": "procedural/3d/rs",
+    "newDir": "s/plugin/procedural/3d/rs",
+    "newPkg": "procedural_3d"
+  },
+  {
+    "oldDir": "procedural/plugin/rs",
+    "newDir": "s/plugin/procedural/plugin/rs",
+    "newPkg": "procedural-plugin"
+  },
+  {
+    "oldDir": "procedural/2d/rs",
+    "newDir": "s/plugin/procedural/2d/rs",
+    "newPkg": "procedural_2d"
+  },
+  {
+    "oldDir": "process/3d/rs",
+    "newDir": "s/plugin/process/3d/rs",
+    "newPkg": "process_3d"
+  },
+  {
+    "oldDir": "process/plugin/rs",
+    "newDir": "s/plugin/process/plugin/rs",
+    "newPkg": "process-plugin"
+  },
+  {
+    "oldDir": "puzzle/3d/rs",
+    "newDir": "s/plugin/puzzle/3d/rs",
+    "newPkg": "puzzle_3d"
+  },
+  {
+    "oldDir": "puzzle/plugin/rs",
+    "newDir": "s/plugin/puzzle/plugin/rs",
+    "newPkg": "puzzle-plugin"
+  },
+  {
+    "oldDir": "puzzle/5d/rs",
+    "newDir": "s/plugin/puzzle/5d/rs",
+    "newPkg": "puzzle_5d"
+  },
+  {
+    "oldDir": "puzzle/2d/rs",
+    "newDir": "s/plugin/puzzle/2d/rs",
+    "newPkg": "puzzle_2d"
+  },
+  {
+    "oldDir": "remodel/mesh/rs",
+    "newDir": "s/plugin/remodel/mesh/rs",
+    "newPkg": "remodel_mesh"
+  },
+  {
+    "oldDir": "remodel/video/rs",
+    "newDir": "s/plugin/remodel/video/rs",
+    "newPkg": "remodel_video"
+  },
+  {
+    "oldDir": "remodel/camera/rs",
+    "newDir": "s/plugin/remodel/camera/rs",
+    "newPkg": "remodel_camera"
+  },
+  {
+    "oldDir": "remodel/sfm/rs",
+    "newDir": "s/plugin/remodel/sfm/rs",
+    "newPkg": "remodel_sfm"
+  },
+  {
+    "oldDir": "remodel/plugin/rs",
+    "newDir": "s/plugin/remodel/plugin/rs",
+    "newPkg": "remodel-plugin"
+  },
+  {
+    "oldDir": "remodel/geo/rs",
+    "newDir": "s/plugin/remodel/geo/rs",
+    "newPkg": "remodel_geo"
+  },
+  {
+    "oldDir": "remodel/dense/rs",
+    "newDir": "s/plugin/remodel/dense/rs",
+    "newPkg": "remodel_dense"
+  },
+  {
+    "oldDir": "remodel/motion/rs",
+    "newDir": "s/plugin/remodel/motion/rs",
+    "newPkg": "remodel_motion"
+  },
+  {
+    "oldDir": "remodel/rs",
+    "newDir": "s/plugin/remodel/rs",
+    "newPkg": "remodel_document"
+  },
+  {
+    "oldDir": "remodel/image/rs",
+    "newDir": "s/plugin/remodel/image/rs",
+    "newPkg": "remodel_image"
+  },
+  {
+    "oldDir": "remodel/feature/rs",
+    "newDir": "s/plugin/remodel/feature/rs",
+    "newPkg": "remodel_feature"
+  },
+  {
+    "oldDir": "remodel/engine/rs",
+    "newDir": "s/plugin/remodel/engine/rs",
+    "newPkg": "remodel_engine"
+  },
+  {
+    "oldDir": "sequence/core/rs",
+    "newDir": "s/plugin/sequence/core/rs",
+    "newPkg": "sequence_core"
+  },
+  {
+    "oldDir": "sequence/plugin/rs",
+    "newDir": "s/plugin/sequence/plugin/rs",
+    "newPkg": "sequence-plugin"
+  },
+  {
+    "oldDir": "sourcing/module/slabs/rs",
+    "newDir": "s/plugin/sourcing/module/slabs/rs",
+    "newPkg": "sourcing-module-slabs"
+  },
+  {
+    "oldDir": "sourcing/module/beams/rs",
+    "newDir": "s/plugin/sourcing/module/beams/rs",
+    "newPkg": "sourcing-module-beams"
+  },
+  {
+    "oldDir": "sourcing/module/windows/rs",
+    "newDir": "s/plugin/sourcing/module/windows/rs",
+    "newPkg": "sourcing-module-windows"
+  },
+  {
+    "oldDir": "sourcing/plugin/rs",
+    "newDir": "s/plugin/sourcing/plugin/rs",
+    "newPkg": "sourcing-plugin"
+  },
+  {
+    "oldDir": "sourcing/curate/rs",
+    "newDir": "s/plugin/sourcing/curate/rs",
+    "newPkg": "sourcing_curate"
+  },
+  {
+    "oldDir": "trinity/rewrite/engine/rs",
+    "newDir": "s/plugin/trinity/rewrite/engine/rs",
+    "newPkg": "trinity_rewrite"
+  },
+  {
+    "oldDir": "trinity/plugin/rs",
+    "newDir": "s/plugin/trinity/plugin/rs",
+    "newPkg": "trinity-plugin"
+  },
+  {
+    "oldDir": "trinity/jack/core/rs",
+    "newDir": "s/plugin/trinity/jack/core/rs",
+    "newPkg": "trinity_jack"
+  },
+  {
+    "oldDir": "trinity/jack/shell/rs",
+    "newDir": "s/plugin/trinity/jack/shell/rs",
+    "newPkg": "trinity_jack_shell"
+  },
+  {
+    "oldDir": "trinity/jack/lsp/rs",
+    "newDir": "s/plugin/trinity/jack/lsp/rs",
+    "newPkg": "trinity_jack_lsp"
+  },
+  {
+    "oldDir": "trinity/ram/rs",
+    "newDir": "s/plugin/trinity/ram/rs",
+    "newPkg": "trinity_ram"
+  },
+  {
+    "oldDir": "vcs/plugin/rs",
+    "newDir": "s/plugin/vcs/plugin/rs",
+    "newPkg": "vcs-plugin"
+  },
+  {
+    "oldDir": "reasoning/mindmap/wires/rs",
+    "newDir": "s/plugin/reasoning/wires/rs",
+    "newPkg": "reasoning_mindmap_wires"
+  },
+  {
+    "oldDir": "reasoning/mindmap/plugin/rs",
+    "newDir": "s/plugin/reasoning/plugin/rs",
+    "newPkg": "reasoning-mindmap-plugin"
+  },
+  {
+    "oldDir": "reasoning/mindmap/rs",
+    "newDir": "s/plugin/reasoning/rs",
+    "newPkg": "reasoning_mindmap"
+  }
+]

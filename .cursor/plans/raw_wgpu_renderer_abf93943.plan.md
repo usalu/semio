@@ -9,7 +9,7 @@ todos:
    content: Scaffold framework/renderer/wgpu (Cargo crate, package.json, project.json, script.ts, js glue)
    status: completed
  - id: shared-loader
-   content: Move program module loader into framework/core/js and re-export from renderer/react
+   content: Move plugin module loader into framework/core/js and re-export from renderer/react
    status: completed
  - id: devhost
    content: Add SEMIO_RENDERER switch to os-dev script.ts, vite.config.ts, js/index.ts and renderer wasm build step
@@ -30,7 +30,7 @@ todos:
    content: "componentScene hosts: raster, table, canvas-2d, node-graph, flow-canvas, virtualFileSystem, text-editor, world-3d"
    status: completed
  - id: verify
-   content: Extend tests and verify s studio and draw single-program modes at runtime under wgpu
+   content: Extend tests and verify s studio and draw single-plugin modes at runtime under wgpu
    status: completed
 isProject: false
 ---
@@ -54,7 +54,7 @@ flowchart LR
     OsShell["os-shell.tsx + ui-interpreter.tsx"]
   end
   subgraph wgpuR [renderer/wgpu]
-    JsGlue["js/index.ts boot + canvas + program bridge"]
+    JsGlue["js/index.ts boot + canvas + plugin bridge"]
     RsCore["rs/ WASM: shell, interpreter, widgets, gpu"]
   end
   PluginLoader["framework/core/js program loading (moved from renderer/react)"]
@@ -83,12 +83,12 @@ Plugins stay separate wasm-bindgen modules (unchanged). The wgpu renderer WASM r
   - `widgets` — immediate-per-frame widget layer: stack layout, text, button, separator, input, select, toggle, vec3, key-value, slider, number-stepper, ring, icon-select, field, section, tree — one widget per `UiNode` variant, emitting commands identical to what [framework/renderer/react/ui-interpreter.tsx](framework/renderer/react/ui-interpreter.tsx) emits.
   - `shell` — OS chrome parity with [framework/renderer/react/os-shell.tsx](framework/renderer/react/os-shell.tsx): program manifests, session lifecycle (createApp/handleCommand/render round-trips), studio mode (`plugin == "s"`), navbar, panel tabs, window layouts and engagement from [framework/core/rs/layout.rs](framework/core/rs/layout.rs).
   - `scenes` — `componentScene` hosts rendered natively: `raster` (texture quad), `table`, `canvas-2d` (interpret the scene payload from `build_canvas_2d_scene`), `node-graph`, `flow-canvas`, `virtualFileSystem`, `text-editor` (read/edit-basic), `world-3d` (own 3D mesh pipeline: depth buffer, orbit camera, flat/lambert shading).
-- `js/index.ts` — `bootFrameworkOsWgpu(options)`: create fullscreen canvas, load renderer WASM module (built to `framework/product/os/dev/public/renderer-modules/wgpu/`), load program modules via the shared loader, hand the bridge to Rust.
+- `js/index.ts` — `bootFrameworkOsWgpu(options)`: create fullscreen canvas, load renderer WASM module (built to `framework/product/os/dev/public/renderer-modules/wgpu/`), load plugin modules via the shared loader, hand the bridge to Rust.
 - `package.json` (`@semio-tech/framework-renderer-wgpu`), `project.json` (tags `scope:framework`, `type:renderer`, targets via script), `script.ts` (test + wasm build helpers), `index.test.ts` extending the existing test pattern of [framework/renderer/react/index.test.ts](framework/renderer/react/index.test.ts).
 
 ## Refactor: shared program loading
 
-Move the program module loader from [framework/renderer/react/plugin-runtime.ts](framework/renderer/react/plugin-runtime.ts) into [framework/core/js/index.ts](framework/core/js/index.ts) (region `PluginRuntime`), since both renderers need identical wasm-bindgen program loading. `renderer/react` re-exports it to keep its public API (`loadPluginWasm`, `PluginWasmHandle`).
+Move the plugin module loader from [framework/renderer/react/plugin-runtime.ts](framework/renderer/react/plugin-runtime.ts) into [framework/core/js/index.ts](framework/core/js/index.ts) (region `PluginRuntime`), since both renderers need identical wasm-bindgen program loading. `renderer/react` re-exports it to keep its public API (`loadPluginWasm`, `PluginWasmHandle`).
 
 ## Dev host wiring: `framework/product/os/dev`
 
@@ -112,7 +112,7 @@ Phased so the renderer is bootable early and gains parity incrementally; each ph
 3. UiNode interpreter + all control widgets with input handling and command emission.
 4. Shell chrome parity: sessions, manifest-driven navbar/panels/layouts, studio mode.
 5. componentScene hosts, easiest first: raster, table, canvas-2d, node-graph, flow-canvas, virtualFileSystem, text-editor, world-3d.
-6. Tests (extend existing test files; cargo unit tests for tessellation/atlas/layout in `rs/`) and end-to-end verification of `s` studio mode plus a single-program mode (e.g. `draw`) under the wgpu renderer.
+6. Tests (extend existing test files; cargo unit tests for tessellation/atlas/layout in `rs/`) and end-to-end verification of `s` studio mode plus a single-plugin mode (e.g. `draw`) under the wgpu renderer.
 
 ## Scope notes
 

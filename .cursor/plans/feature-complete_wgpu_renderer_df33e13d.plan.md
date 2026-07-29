@@ -39,7 +39,7 @@ todos:
    content: Canvas-2d pointer commands, text-editor editing, VFS selection/routing
    status: completed
  - id: verify-e2e
-   content: Extend E2E with interaction smoke + zero-warning assertion, run 25-program suite
+   content: Extend E2E with interaction smoke + zero-warning assertion, run 25-plugin suite
    status: completed
 isProject: false
 ---
@@ -95,9 +95,9 @@ The blockers for everything else:
 
 ## Phase 5 — Verify end to end
 
-- Extend [.repo tickets E2E script](.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts): per program assert boot, zero console errors/warnings (including WebGPU validation), canvas paint, and screenshot capture for manual chrome inspection.
+- Extend [.repo tickets E2E script](.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts): per plugin assert boot, zero console errors/warnings (including WebGPU validation), canvas paint, and screenshot capture for manual chrome inspection.
 - Add interaction smoke: click a panel tab, toggle a panel, open a select dropdown via Playwright coordinates on `s` and one scene-heavy program (`flow`, `cad`).
-- `cargo test -p ui_wgpu` for layout/text/scissor units; rebuild wasm; run full 25-program suite.
+- `cargo test -p ui_wgpu` for layout/text/scissor units; rebuild wasm; run full 25-plugin suite.
 
 ## Notes
 

@@ -8,7 +8,7 @@ import { loadPluginModule, pluginHandleForBridge } from "@semio-tech/framework-c
 export type FrameworkOsWgpuBootOptions = {
   readonly rootId?: string;
   readonly plugin?: string;
-  readonly plugins?: readonly { readonly programId: string; readonly moduleUrl: string }[];
+  readonly plugins?: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
   readonly rendererModuleUrl?: string;
 };
 
@@ -115,8 +115,8 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
   const [handles, iconAtlas] = await Promise.all([
     Promise.all(
       pluginEntries.map(async (entry) => ({
-        programId: entry.programId,
-        handle: pluginHandleForBridge(await loadPluginModule(entry.programId, entry.moduleUrl)),
+        pluginId: entry.pluginId,
+        handle: pluginHandleForBridge(await loadPluginModule(entry.pluginId, entry.moduleUrl)),
       })),
     ),
     buildIconAtlas(),
@@ -125,7 +125,7 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
   const rendererUrl = options.rendererModuleUrl ?? DEFAULT_RENDERER_MODULE_URL;
   const rendererModule = (await import(/* @vite-ignore */ rendererUrl)) as {
     default?: (input?: WebAssembly.Module | BufferSource | Response) => Promise<void>;
-    semioRendererBoot?: (plugins: { programId: string; handle: ReturnType<typeof pluginHandleForBridge> }[], pluginFilter: string) => Promise<void>;
+    semioRendererBoot?: (plugins: { pluginId: string; handle: ReturnType<typeof pluginHandleForBridge> }[], pluginFilter: string) => Promise<void>;
     uploadIconAtlas?: (width: number, height: number, pixels: Uint8Array, entriesJson: string) => void;
   };
   if (rendererModule.default) await rendererModule.default();

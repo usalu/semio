@@ -1,5 +1,5 @@
 /** @module Interface semio:framework/types **/
-export interface ProgramManifestJson {
+export interface PluginManifestJson {
   json: string,
 }
 export interface ActionInvocationJson {
@@ -37,8 +37,8 @@ export interface MigrateDocumentInput {
 export interface MigrateDocumentOutput {
   data: Uint8Array,
 }
-export type ProgramError = ProgramErrorMessage;
-export interface ProgramErrorMessage {
+export type PluginError = PluginErrorMessage;
+export interface PluginErrorMessage {
   tag: 'message',
   val: string,
 }

@@ -1,17 +1,17 @@
 ---
 name: Architect Feature Complete
-overview: Close every remaining gap so architect_spine and architect/program match all 65 feature areas at bullet-level typed fields, real analysis/report/search/exchange/trace behavior, and full register CRUD UI — using an isolated Cargo target dir so builds never wait on workspace locks.
+overview: Close every remaining gap so architect_spine and architect/plugin match all 65 feature areas at bullet-level typed fields, real analysis/report/search/exchange/trace behavior, and full register CRUD UI — using an isolated Cargo target dir so builds never wait on workspace locks.
 todos:
   - id: reopen-ticket
     content: Reopen ARCHITECT-PROGRAM-AND-PLUGIN ticket; write gap checklist in ticket folder
     status: completed
   - id: phase1-fields
-    content: Add all missing typed fields/enums/collections across §1–§65 in registers/kernel/program/operations
+    content: Add all missing typed fields/enums/collections across §1–§65 in registers/kernel/plugin/operations
     status: completed
   - id: phase2-behavior
     content: Deepen validate/analyze/report/search/trace/exchange/template/status/adjacency + new outputs.rs
     status: completed
-  - id: phase3-program
+  - id: phase3-plugin
     content: Full program CRUD for all registers, inspectors, search/import/templates/trace/all analysis+report kinds
     status: completed
   - id: phase4-verify
@@ -61,7 +61,7 @@ Edit primarily `[architect/spine/rs/src/registers.rs](architect/spine/rs/src/reg
 
 - Assumption register, Constraint register, Compliance register, Approval record, Meeting record (§48) — add to `Program` + `ProgramOperation` CollectionOperation variants
 
-Update patches (`*Patch`), `Identified`/`Patchable` macros, `empty_program`/`sample_program` factories, and `operations.rs` for any new collections.
+Update patches (`*Patch`), `Identified`/`Patchable` macros, `empty_plugin`/`sample_plugin` factories, and `operations.rs` for any new collections.
 
 ## Phase 2 — Real behavioral APIs (no stubs)
 
@@ -94,7 +94,7 @@ Rewrite/extend `[architect/spine/rs/lib.rs](architect/spine/rs/lib.rs)`:
 
 ## Phase 4 — Tests and verify
 
-- Co-located tests per module: every analysis/report kind has a non-empty finding; search hits every register class; CSV round-trips all registers; validate catches broken refs; §65 outputs build from `sample_program`
+- Co-located tests per module: every analysis/report kind has a non-empty finding; search hits every register class; CSV round-trips all registers; validate catches broken refs; §65 outputs build from `sample_plugin`
 - Plugin tests: CRUD for representative registers; adjacency field edit; import/export; search UI path
 - Always: `CARGO_TARGET_DIR=/tmp/semio-architect-target cargo test -p architect_spine --lib` and `cargo test -p architect-spine --lib` (never wait on default target lock)
 - Update ticket `feature-checklist.md` only after verified; `ticket_close`

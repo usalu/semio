@@ -17,7 +17,7 @@ Confirmed with the user:
 - **Folder** persistence (`.semio/studio.db` SQLite) is **native-wgpu-only** for now (SQLite crate `rusqlite` is native-only; no browser OPFS/sqlite-wasm infra exists). In the browser/wasm build, the Folder button is disabled/hidden.
 - **Temporary** = pure in-memory, lost on reload. **File** = user picks/saves one standalone `.json` file (native: `rfd` dialog; wasm: existing download/upload operation flow).
 
-Plugins (`s/plugin`) are compiled **natively** for native wgpu (`cargo build -p semio-framework-renderer-wgpu --bin semio-wgpu-native --features native-bin`, program built as a native cdylib loaded via `libloading`, see [framework/renderer/wgpu/script.ts](framework/renderer/wgpu/script.ts) `NativeBuildScript`) and to **wasm32** for the browser build. So `#[cfg(not(target_arch = "wasm32"))]` inside `s/program/rs/lib.rs` correctly gates native-only code (e.g. `rusqlite`).
+Plugins (`s/plugin`) are compiled **natively** for native wgpu (`cargo build -p semio-framework-renderer-wgpu --bin semio-wgpu-native --features native-bin`, program built as a native cdylib loaded via `libloading`, see [framework/renderer/wgpu/script.ts](framework/renderer/wgpu/script.ts) `NativeBuildScript`) and to **wasm32** for the browser build. So `#[cfg(not(target_arch = "wasm32"))]` inside `s/plugin/rs/lib.rs` correctly gates native-only code (e.g. `rusqlite`).
 
 ---
 
@@ -65,13 +65,13 @@ if self.active_tools.is_empty() {
 }
 ```
 
-Without this, the `mode_tools("explore", …)` declared on `create_home_app()` ([s/program/rs/lib.rs:2277-2283](s/program/rs/lib.rs)) never reaches the footer, regardless of what's added in Phase 2.
+Without this, the `mode_tools("explore", …)` declared on `create_home_app()` ([s/plugin/rs/lib.rs:2277-2283](s/plugin/rs/lib.rs)) never reaches the footer, regardless of what's added in Phase 2.
 
 ---
 
 ## Phase 2 — Footer "Create" tool group
 
-File: [s/program/rs/lib.rs](s/program/rs/lib.rs), `create_home_app()` (line ~2271-2294). Replace the standalone `"New Studio"` button with a `tool_collection` (same pattern as `s-play.history`, `lib.rs:2338-2354`, and CAD's `tool_collection("view", …)`, `cad/program/rs/lib.rs:1969-1979`):
+File: [s/plugin/rs/lib.rs](s/plugin/rs/lib.rs), `create_home_app()` (line ~2271-2294). Replace the standalone `"New Studio"` button with a `tool_collection` (same pattern as `s-play.history`, `lib.rs:2338-2354`, and CAD's `tool_collection("view", …)`, `cad/plugin/rs/lib.rs:1969-1979`):
 
 ```rust
 .mode_tools(
@@ -98,15 +98,15 @@ Collection expand/collapse and click dispatch already work generically (`render_
 
 ## Phase 3 — Three persistence kinds behind `createStudio`
 
-File: [s/program/rs/lib.rs](s/program/rs/lib.rs) `createStudio` handler (`lib.rs:1356-1372`) and [framework/product/os/core/rs/lib.rs](framework/product/os/core/rs/lib.rs).
+File: [s/plugin/rs/lib.rs](s/plugin/rs/lib.rs) `createStudio` handler (`lib.rs:1356-1372`) and [framework/product/os/core/rs/lib.rs](framework/product/os/core/rs/lib.rs).
 
 Read `args.kind` (`"temporary" | "file" | "folder"`, default `"file"` for the existing `mod+n` keybinding). Introduce a small `OsStudioPersistenceKind` distinction and route to the right backbone `Arc<dyn OsBackbonePort>`:
 
 ### Temporary
 
-- Add a process-lifetime `TEMP_CATALOG_PORT: LazyLock<Arc<dyn OsBackbonePort>>` (a `vcs::MemoryBackbonePort`, `vcs/rs/lib.rs:606-634`) alongside the existing `CATALOG_PORT` (`s/program/rs/lib.rs:155-176`) — never touches `LocalStorageBackbonePort`, so nothing survives reload.
+- Add a process-lifetime `TEMP_CATALOG_PORT: LazyLock<Arc<dyn OsBackbonePort>>` (a `vcs::MemoryBackbonePort`, `vcs/rs/lib.rs:606-634`) alongside the existing `CATALOG_PORT` (`s/plugin/rs/lib.rs:155-176`) — never touches `LocalStorageBackbonePort`, so nothing survives reload.
 - `create_os_space(name, TEMP_CATALOG_PORT.clone())` (same function, different port — `STUDIO_CATALOG_URIS` tracking in `framework/product/os/core/rs/lib.rs:1233-1247` is already keyed per-port-pointer, so this isolates cleanly).
-- `openStudio` (`s/program/rs/lib.rs:2030-2046`) currently hardcodes `catalog_port()`; change `load_os_space_document` lookup to try the persistent port, then the temp port (small `resolve_studio_port(id)` helper), so navigating into a just-created temporary studio still loads.
+- `openStudio` (`s/plugin/rs/lib.rs:2030-2046`) currently hardcodes `catalog_port()`; change `load_os_space_document` lookup to try the persistent port, then the temp port (small `resolve_studio_port(id)` helper), so navigating into a just-created temporary studio still loads.
 
 ### File
 
@@ -118,7 +118,7 @@ Read `args.kind` (`"temporary" | "file" | "folder"`, default `"file"` for the ex
 ### Folder (native-only)
 
 - New operation emitted by S program, e.g. `{"operation": "requestFolderPick", "importCommand": "createStudio", "args": {"kind": "folder", "name": ...}}`, handled in `apply_operations` next to `requestFileOpen` (`lib.rs:7613-7639`) using a new native-only `pick_folder() -> Option<String>` (`rfd::FileDialog::new().pick_folder()`, `#[cfg(not(target_arch = "wasm32"))]`; returns `None` on wasm32, so the flow silently no-operations in the browser — pair with hiding/disabling the Folder button when compiled for `wasm32` via `#[cfg(...)]` around that `tool_button` in Phase 2's `create_home_app()`).
-- On the resulting `createStudio` dispatch (now carrying `folderPath`), native-only code (`#[cfg(not(target_arch = "wasm32"))]` in `s/program/rs/lib.rs`) creates `<folder>/.semio/` and opens/creates `<folder>/.semio/studio.db` via `rusqlite` (add as `[target.'cfg(not(target_arch = "wasm32"))'.dependencies]` in [s/program/rs/Cargo.toml](s/program/rs/Cargo.toml), matching `compose/client/lib/rs/Cargo.toml:51-52`).
+- On the resulting `createStudio` dispatch (now carrying `folderPath`), native-only code (`#[cfg(not(target_arch = "wasm32"))]` in `s/plugin/rs/lib.rs`) creates `<folder>/.semio/` and opens/creates `<folder>/.semio/studio.db` via `rusqlite` (add as `[target.'cfg(not(target_arch = "wasm32"))'.dependencies]` in [s/plugin/rs/Cargo.toml](s/plugin/rs/Cargo.toml), matching `compose/client/lib/rs/Cargo.toml:51-52`).
 - New `SqliteFolderBackbonePort` implementing `OsBackbonePort::read(uri)/write(uri, payload)` over a simple `documents(uri TEXT PRIMARY KEY, payload TEXT)` table in that `studio.db` (one DB per opened folder; reuses `DevJsonBackbone.sync`/`create_os_space` unchanged — only the port differs).
 
 ---

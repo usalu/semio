@@ -1,7 +1,7 @@
 //! 🏗️ FEM core: the headless finite-element calculation library — model, element trait, assembly
 //! pipeline, and linear-static analysis, extended by sibling modules for sparse solvers,
 //! quadrature/element formulation, the 2D/3D element libraries, meshing, and multi-case analyses.
-//! No UI, no VCS, no framework dependency — `fem_2d`/`fem_3d`/`fem-program` are the UI layer built
+//! No UI, no VCS, no framework dependency — `fem_2d`/`fem_3d`/`fem-plugin` are the UI layer built
 //! on top of this crate.
 
 pub mod analyses {

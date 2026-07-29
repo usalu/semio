@@ -1,6 +1,6 @@
 # Neural
 
-Neural is headless procedural programming language that follows the philosophy dictionary in - dictionary out.
+Neural is headless procedural __KEEP_pluginming__ language that follows the philosophy dictionary in - dictionary out.
 
 # Tree
 

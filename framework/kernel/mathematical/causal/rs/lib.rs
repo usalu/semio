@@ -1060,7 +1060,7 @@ impl LinearGaussianScm {
     }
 
     /// 🎯 `∂E[y]/∂(do x)`: sum over directed `x -> ... -> y` paths of the product of edge
-    /// weights, via topological dynamic programming.
+    /// weights, via topological dynamic __KEEP_pluginming__.
     pub fn total_effect(&self, x: usize, y: usize) -> f64 {
         let mut sensitivity = vec![0.0f64; self.dag.n()];
         sensitivity[x] = 1.0;

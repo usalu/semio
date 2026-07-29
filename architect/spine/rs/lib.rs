@@ -1,4 +1,4 @@
-//! 🏛️ Headless architectural programming — program registers, adjacency, analysis, and exchange.
+//! 🏛️ Headless architectural __KEEP_pluginming__ — __KEEP_plugin_registers__, adjacency, analysis, and exchange.
 
 mod adjacency {
     //! ↔️ Undirected adjacency logic — canonical pairs, matrix view, conflicts, and graph edges.
@@ -152,7 +152,7 @@ mod adjacency {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::program::sample_program;
+        use crate::program::sample_plugin;
 
         #[test]
         fn normalize_pair_orders_endpoints() {
@@ -162,8 +162,8 @@ mod adjacency {
         }
 
         #[test]
-        fn sample_program_matrix_has_one_cell() {
-            let program = sample_program();
+        fn sample_plugin_matrix_has_one_cell() {
+            let program = sample_plugin();
             let matrix = adjacency_matrix(&program);
             assert_eq!(matrix.element_ids.len(), 2);
             let populated: usize = matrix.cells.iter().flat_map(|row| row.iter()).filter(|cell| cell.is_some()).count();
@@ -172,7 +172,7 @@ mod adjacency {
 
         #[test]
         fn detects_distance_min_max_violation() {
-            let mut program = sample_program();
+            let mut program = sample_plugin();
             program.adjacencies[0].distance_min_m = Some(10.0);
             program.adjacencies[0].distance_max_m = Some(5.0);
             let conflicts = detect_adjacency_conflicts(&program);
@@ -216,7 +216,7 @@ mod analyze {
     // #endregion
 
     // #region 🔖RunAnalysis
-    /// @emoji 🧮 Runs the requested analysis kind over a program snapshot.
+    /// @emoji 🧮 Runs the requested analysis kind over a plugin snapshot.
     pub fn run_analysis(program: &Program, kind: AnalysisKind) -> AnalysisResult {
         match kind {
             AnalysisKind::Gap => analyze_gap(program),
@@ -630,25 +630,25 @@ mod analyze {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::program::sample_program;
+        use crate::program::sample_plugin;
 
         #[test]
-        fn gap_analysis_on_sample_program() {
-            let result = run_analysis(&sample_program(), AnalysisKind::Gap);
+        fn gap_analysis_on_sample_plugin() {
+            let result = run_analysis(&sample_plugin(), AnalysisKind::Gap);
             assert_eq!(result.kind, AnalysisKind::Gap);
             assert!(!result.findings.is_empty());
         }
 
         #[test]
         fn capacity_analysis_sums_area() {
-            let result = run_analysis(&sample_program(), AnalysisKind::Capacity);
+            let result = run_analysis(&sample_plugin(), AnalysisKind::Capacity);
             assert!(result.metrics.iter().any(|m| m.name == "total_target_area"));
             assert!(result.metrics.iter().any(|m| m.value > 0.0));
         }
 
         #[test]
         fn run_analysis_and_record_persists() {
-            let mut program = sample_program();
+            let mut program = sample_plugin();
             let before = program.analyses.len();
             run_analysis_and_record(&mut program, AnalysisKind::Risk);
             assert_eq!(program.analyses.len(), before + 1);
@@ -656,16 +656,16 @@ mod analyze {
 
         #[test]
         fn requirement_clustering_produces_clusters() {
-            let result = run_analysis(&sample_program(), AnalysisKind::RequirementClustering);
+            let result = run_analysis(&sample_plugin(), AnalysisKind::RequirementClustering);
             assert_eq!(result.kind, AnalysisKind::RequirementClustering);
         }
     }
 }
 
 mod exchange {
-    //! 📤 Data exchange — JSON and CSV import/export for program registers.
+    //! 📤 Data exchange — JSON and CSV import/export for __KEEP_plugin_registers__.
 
-    use crate::kernel::{EntityHeader, EntityId, ProgramError, TextField};
+    use crate::kernel::{EntityHeader, EntityId, PluginError, TextField};
     use crate::program::{Program, ARCHITECT_PROGRAM_SCHEMA};
     use crate::registers::*;
     use serde::{Deserialize, Serialize};
@@ -683,16 +683,16 @@ mod exchange {
     // #endregion
 
     // #region 🔖JsonExchange
-    /// @emoji 📤 Serializes a program to pretty JSON.
-    pub fn export_json(program: &Program) -> Result<String, ProgramError> {
-        serde_json::to_string_pretty(program).map_err(|e| ProgramError::Serialize(e.to_string()))
+    /// @emoji 📤 Serializes a plugin to pretty JSON.
+    pub fn export_json(program: &Program) -> Result<String, PluginError> {
+        serde_json::to_string_pretty(program).map_err(|e| PluginError::Serialize(e.to_string()))
     }
 
-    /// @emoji 📥 Deserializes a program from JSON with schema validation.
-    pub fn import_json(json: &str) -> Result<Program, ProgramError> {
-        let program: Program = serde_json::from_str(json).map_err(|e| ProgramError::Deserialize(e.to_string()))?;
+    /// @emoji 📥 Deserializes a plugin from JSON with schema validation.
+    pub fn import_json(json: &str) -> Result<Program, PluginError> {
+        let program: Program = serde_json::from_str(json).map_err(|e| PluginError::Deserialize(e.to_string()))?;
         if program.schema != ARCHITECT_PROGRAM_SCHEMA {
-            return Err(ProgramError::InvalidSchema { expected: ARCHITECT_PROGRAM_SCHEMA.into(), actual: program.schema });
+            return Err(PluginError::InvalidSchema { expected: ARCHITECT_PROGRAM_SCHEMA.into(), actual: program.schema });
         }
         Ok(program)
     }
@@ -713,27 +713,27 @@ mod exchange {
     }
 
     /// @emoji 📤 Flattens all registers into CSV rows.
-    pub fn export_registers_csv(program: &Program) -> Result<String, ProgramError> {
+    pub fn export_registers_csv(program: &Program) -> Result<String, PluginError> {
         Ok(write_delimited(&collect_rows(program), ','))
     }
 
     /// @emoji 📥 Merges CSV rows into matching register collections.
-    pub fn import_registers_csv(program: &mut Program, csv: &str, strategy: MergeStrategy) -> Result<Vec<EntityId>, ProgramError> {
+    pub fn import_registers_csv(program: &mut Program, csv: &str, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
         import_delimited(program, csv, ',', strategy)
     }
 
     /// @emoji 📤 Flattens all registers into TSV rows.
-    pub fn export_registers_tsv(program: &Program) -> Result<String, ProgramError> {
+    pub fn export_registers_tsv(program: &Program) -> Result<String, PluginError> {
         Ok(write_delimited(&collect_rows(program), '\t'))
     }
 
     /// @emoji 📥 Merges TSV rows into matching register collections.
-    pub fn import_registers_tsv(program: &mut Program, tsv: &str, strategy: MergeStrategy) -> Result<Vec<EntityId>, ProgramError> {
+    pub fn import_registers_tsv(program: &mut Program, tsv: &str, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
         import_delimited(program, tsv, '\t', strategy)
     }
 
     /// @emoji ↔️ Exports relationships as CSV rows preserving endpoints.
-    pub fn export_relationships_csv(program: &Program) -> Result<String, ProgramError> {
+    pub fn export_relationships_csv(program: &Program) -> Result<String, PluginError> {
         let mut out = String::from("id,source_id,target_id,kind,name\n");
         for rel in &program.relationships {
             out.push_str(&format!("{},{},{},{:?},{}\n", escape_field(&rel.header.id.to_string(), ','), escape_field(&rel.source_id.to_string(), ','), escape_field(&rel.target_id.to_string(), ','), rel.kind, escape_field(&rel.header.name, ','),));
@@ -849,12 +849,12 @@ mod exchange {
         }
     }
 
-    fn parse_delimited(input: &str, delimiter: char) -> Result<Vec<RegisterCsvRow>, ProgramError> {
+    fn parse_delimited(input: &str, delimiter: char) -> Result<Vec<RegisterCsvRow>, PluginError> {
         let mut lines = input.lines();
-        let header = lines.next().ok_or_else(|| ProgramError::Csv("empty delimited file".into()))?;
+        let header = lines.next().ok_or_else(|| PluginError::Csv("empty delimited file".into()))?;
         let expected = format!("register{}id{}name{}status{}priority{}tags{}source", delimiter, delimiter, delimiter, delimiter, delimiter, delimiter);
         if header != expected {
-            return Err(ProgramError::Csv(format!("unexpected header: {header}")));
+            return Err(PluginError::Csv(format!("unexpected header: {header}")));
         }
         let mut rows = Vec::new();
         for line in lines {
@@ -863,7 +863,7 @@ mod exchange {
             }
             let fields = parse_record(line, delimiter);
             if fields.len() < 7 {
-                return Err(ProgramError::Csv(format!("malformed row: {line}")));
+                return Err(PluginError::Csv(format!("malformed row: {line}")));
             }
             rows.push(RegisterCsvRow { register: fields[0].clone(), id: EntityId(fields[1].clone()), name: fields[2].clone(), status: fields[3].clone(), priority: fields[4].clone(), tags: fields[5].clone(), source: fields[6].clone() });
         }
@@ -897,14 +897,14 @@ mod exchange {
         fields
     }
 
-    fn import_delimited(program: &mut Program, input: &str, delimiter: char, strategy: MergeStrategy) -> Result<Vec<EntityId>, ProgramError> {
+    fn import_delimited(program: &mut Program, input: &str, delimiter: char, strategy: MergeStrategy) -> Result<Vec<EntityId>, PluginError> {
         let rows = parse_delimited(input, delimiter)?;
         let mut touched = Vec::new();
         let mut seen: HashSet<(String, EntityId)> = HashSet::new();
         for row in rows {
             let key = (row.register.clone(), row.id.clone());
             if !seen.insert(key.clone()) {
-                return Err(ProgramError::Csv(format!("duplicate import id {} in register {}", row.id, row.register)));
+                return Err(PluginError::Csv(format!("duplicate import id {} in register {}", row.id, row.register)));
             }
             if strategy == MergeStrategy::SkipDuplicates && register_contains(program, &row.register, &row.id) {
                 continue;
@@ -940,7 +940,7 @@ mod exchange {
         }
     }
 
-    fn upsert_register_row(program: &mut Program, row: RegisterCsvRow) -> Result<(), ProgramError> {
+    fn upsert_register_row(program: &mut Program, row: RegisterCsvRow) -> Result<(), PluginError> {
         match row.register.as_str() {
             "elements" => upsert_element(program, row),
             "stakeholders" => upsert_stakeholder(program, row),
@@ -948,7 +948,7 @@ mod exchange {
             "relationships" => upsert_relationship_stub(program, row),
             "adjacencies" => upsert_adjacency_stub(program, row),
             other => {
-                return Err(ProgramError::Csv(format!("unsupported register import: {other}")));
+                return Err(PluginError::Csv(format!("unsupported register import: {other}")));
             }
         }
         Ok(())
@@ -1126,11 +1126,11 @@ mod exchange {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::program::sample_program;
+        use crate::program::sample_plugin;
 
         #[test]
         fn json_round_trip() {
-            let program = sample_program();
+            let program = sample_plugin();
             let json = export_json(&program).expect("export");
             let imported = import_json(&json).expect("import");
             assert_eq!(imported.elements.len(), program.elements.len());
@@ -1139,9 +1139,9 @@ mod exchange {
 
         #[test]
         fn csv_round_trip_preserves_element_names() {
-            let program = sample_program();
+            let program = sample_plugin();
             let csv = export_registers_csv(&program).expect("csv export");
-            let mut reloaded = crate::program::empty_program();
+            let mut reloaded = crate::program::empty_plugin();
             import_registers_csv(&mut reloaded, &csv, MergeStrategy::Upsert).expect("csv import");
             assert_eq!(reloaded.elements.len(), program.elements.len());
         }
@@ -1157,7 +1157,7 @@ mod exchange {
         #[test]
         fn duplicate_import_is_rejected() {
             let csv = "register,id,name,status,priority,tags,source\nelements,e1,A,Draft,Preferred,,\nelements,e1,B,Draft,Preferred,,\n";
-            let mut program = crate::program::empty_program();
+            let mut program = crate::program::empty_plugin();
             assert!(import_registers_csv(&mut program, csv, MergeStrategy::Upsert).is_err());
         }
     }
@@ -1402,7 +1402,7 @@ mod kernel {
         FullAuditTrail,
     }
 
-    /// @emoji 🧭 Directed trace edge stored in the program trace register.
+    /// @emoji 🧭 Directed trace edge stored in the plugin trace register.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct TraceLink {
@@ -1456,7 +1456,7 @@ mod kernel {
     /// 💥 Fatal program operation or exchange error.
     #[derive(Clone, Debug, thiserror::Error, PartialEq, Eq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub enum ProgramError {
+    pub enum PluginError {
         #[error("invalid schema: expected {expected}, got {actual}")]
         InvalidSchema { expected: String, actual: String },
         #[error("missing entity {id}")]
@@ -1661,8 +1661,8 @@ mod operations {
     // #endregion
 
     // #region 🔖Apply
-    /// @emoji ▶️ Applies one program operation to the document in place.
-    pub fn apply_program_operation(program: &mut Program, operation: &ProgramOperation) {
+    /// @emoji ▶️ Applies one plugin operation to the document in place.
+    pub fn apply_plugin_operation(program: &mut Program, operation: &ProgramOperation) {
         match operation {
             ProgramOperation::Stakeholders(collection_operation) => apply_collection_operation(&mut program.stakeholders, collection_operation),
             ProgramOperation::Users(collection_operation) => apply_collection_operation(&mut program.users, collection_operation),
@@ -1748,7 +1748,7 @@ mod operations {
     }
 
     /// @emoji ↩️ Computes the inverse operation from pre-state for undo.
-    pub fn invert_program_operation(program: &Program, operation: &ProgramOperation) -> ProgramOperation {
+    pub fn invert_plugin_operation(program: &Program, operation: &ProgramOperation) -> ProgramOperation {
         match operation {
             ProgramOperation::Stakeholders(collection_operation) => ProgramOperation::Stakeholders(invert_collection_operation(&program.stakeholders, collection_operation)),
             ProgramOperation::Users(collection_operation) => ProgramOperation::Users(invert_collection_operation(&program.users, collection_operation)),
@@ -1865,7 +1865,7 @@ mod operations {
         fn apply(&self, projection: &Program) -> Program {
             let mut next = projection.clone();
             for operation in &self.operations {
-                apply_program_operation(&mut next, operation);
+                apply_plugin_operation(&mut next, operation);
             }
             next
         }
@@ -1883,7 +1883,7 @@ mod operations {
         }
 
         fn backwards(&self, projection: &Program) -> Vec<Self> {
-            vec![invert_program_operation(projection, self)]
+            vec![invert_plugin_operation(projection, self)]
         }
     }
     // #endregion
@@ -1892,23 +1892,23 @@ mod operations {
     mod tests {
         use super::*;
         use crate::kernel::*;
-        use crate::program::{empty_program, sample_program};
+        use crate::program::{empty_plugin, sample_plugin};
         use protocol::OpText;
 
         #[test]
         fn update_meta_round_trips_undo() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let operation = ProgramOperation::UpdateMeta { patch: ProgramMetaPatch { title: Some("Clinic".into()), ..Default::default() } };
-            let inverse = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &operation);
+            let inverse = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.meta.title, "Clinic");
-            apply_program_operation(&mut program, &inverse);
+            apply_plugin_operation(&mut program, &inverse);
             assert_ne!(program.meta.title, "Clinic");
         }
 
         #[test]
         fn add_stakeholder_via_collection_operation() {
-            let mut program = sample_program();
+            let mut program = sample_plugin();
             let before = program.stakeholders.len();
             let stakeholder = Stakeholder {
                 header: EntityHeader::new(EntityId::new_serial("stakeholder"), "Nurse Lead"),
@@ -1939,46 +1939,46 @@ mod operations {
             };
             let id = stakeholder.header.id.clone();
             let operation = ProgramOperation::Stakeholders(CollectionOperation::Add { id: id.clone(), item: stakeholder, at: program.stakeholders.len() });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.stakeholders.len(), before + 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(!program.stakeholders.iter().any(|s| s.header.id == id));
         }
 
         #[test]
-        fn set_program_bulk_replace() {
-            let mut program = empty_program();
-            let sample = sample_program();
-            apply_program_operation(&mut program, &ProgramOperation::SetProgram { program: Box::new(sample.clone()) });
+        fn set_plugin_bulk_replace() {
+            let mut program = empty_plugin();
+            let sample = sample_plugin();
+            apply_plugin_operation(&mut program, &ProgramOperation::SetProgram { program: Box::new(sample.clone()) });
             assert_eq!(program.elements.len(), sample.elements.len());
         }
 
         #[test]
         fn update_project_round_trips_undo() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let operation = ProgramOperation::UpdateProject { patch: ProjectDefinitionPatch { code: Some("CLN-002".into()), ..Default::default() } };
-            let inverse = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &operation);
+            let inverse = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.project.code, "CLN-002");
-            apply_program_operation(&mut program, &inverse);
+            apply_plugin_operation(&mut program, &inverse);
             assert_ne!(program.project.code, "CLN-002");
         }
 
         #[test]
         fn update_governance_round_trips_undo() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let operation = ProgramOperation::UpdateGovernance { patch: GovernancePatch { framework: Some("RACI".into()), ..Default::default() } };
-            let inverse = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &operation);
+            let inverse = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.governance.framework, "RACI");
-            apply_program_operation(&mut program, &inverse);
+            apply_plugin_operation(&mut program, &inverse);
             assert_ne!(program.governance.framework, "RACI");
         }
 
         #[test]
         fn set_and_clear_adjacency_round_trips_undo() {
-            let mut program = sample_program();
+            let mut program = sample_plugin();
             let before = program.adjacencies.clone();
             let mut new_adjacency = before[0].clone();
             new_adjacency.header.id = EntityId::new_serial("adjacency");
@@ -1986,813 +1986,813 @@ mod operations {
             new_adjacency.element_b_id = EntityId::new_serial("element");
             new_adjacency.weight = 5.0;
             let set_op = ProgramOperation::SetAdjacency { adjacency: new_adjacency.clone() };
-            let set_undo = invert_program_operation(&program, &set_op);
+            let set_undo = invert_plugin_operation(&program, &set_op);
             assert!(matches!(set_undo, ProgramOperation::ClearAdjacency { .. }));
-            apply_program_operation(&mut program, &set_op);
+            apply_plugin_operation(&mut program, &set_op);
             assert_eq!(program.adjacencies.len(), before.len() + 1);
             assert!(program.adjacencies.iter().any(|a| a.header.id == new_adjacency.header.id));
-            apply_program_operation(&mut program, &set_undo);
+            apply_plugin_operation(&mut program, &set_undo);
             assert_eq!(program.adjacencies.len(), before.len());
             assert!(!program.adjacencies.iter().any(|a| a.header.id == new_adjacency.header.id));
 
             let clear_op = ProgramOperation::ClearAdjacency { id: before[0].header.id.clone() };
-            let clear_undo = invert_program_operation(&program, &clear_op);
+            let clear_undo = invert_plugin_operation(&program, &clear_op);
             assert!(matches!(clear_undo, ProgramOperation::SetAdjacency { .. }));
-            apply_program_operation(&mut program, &clear_op);
+            apply_plugin_operation(&mut program, &clear_op);
             assert!(!program.adjacencies.iter().any(|a| a.header.id == before[0].header.id));
-            apply_program_operation(&mut program, &clear_undo);
+            apply_plugin_operation(&mut program, &clear_undo);
             assert!(program.adjacencies.iter().any(|a| a.header.id == before[0].header.id));
         }
 
         #[test]
         fn dispatches_traces_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let link = TraceLink::new(EntityId::new_serial("tfrom"), EntityId::new_serial("tto"), TraceKind::RequirementToDecision);
             let operation = ProgramOperation::Traces(CollectionOperation::Add { id: link.id.clone(), item: link, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.traces.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.traces.is_empty());
         }
 
         #[test]
         fn dispatches_access_rules_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = AccessRule { header: EntityHeader::new(EntityId::new_serial("accessrule0"), "AccessRule 0"), subject_ids: Vec::new(), resource_ids: Vec::new(), access_level: AccessLevel::Public, access_mode: AccessMode::Unrestricted, authentication: Vec::new(), authorization: Vec::new(), time_restrictions: Vec::new(), escort_policy: None, visitor_policy: None, emergency_override: false, audit_required: false, badge_required: false, biometric_required: false, zone_ids: Vec::new(), exceptions: Vec::new(), regulatory_basis: Vec::new(), enforcement_method: None, revocation_policy: None, training_required: false, owner_id: None, };
             let operation = ProgramOperation::AccessRules(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.access_rules.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.access_rules.is_empty());
         }
 
         #[test]
         fn dispatches_accessibility_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = AccessibilityRequirement { header: EntityHeader::new(EntityId::new_serial("accessibilityrequirement1"), "AccessibilityRequirement 1"), standard: String::new(), level: None, user_profile_ids: Vec::new(), element_ids: Vec::new(), route_ids: Vec::new(), clear_width_m: None, clear_height_m: None, turning_circle_m: None, ramp_slope: None, lift_required: false, tactile_guidance: false, hearing_loop: false, visual_contrast: false, signage_requirements: Vec::new(), controls_height: None, emergency_evacuation: Vec::new(), service_animal_policy: None, companion_seating: false, verification_plan: None, exceptions: Vec::new(), wcag_conformance: None, universal_design_principles: Vec::new(), };
             let operation = ProgramOperation::Accessibility(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.accessibility.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.accessibility.is_empty());
         }
 
         #[test]
         fn dispatches_activities_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = Activity { header: EntityHeader::new(EntityId::new_serial("activity2"), "Activity 2"), code: String::new(), category: String::new(), frequency: None, duration: None, intensity: None, participants: QuantitySpec::default(), equipment_ids: Vec::new(), space_requirements: Vec::new(), environmental_needs: Vec::new(), privacy_needs: Vec::new(), accessibility_needs: Vec::new(), adjacent_activities: Vec::new(), sequencing: Vec::new(), peak_periods: Vec::new(), workflow_steps: Vec::new(), inputs: Vec::new(), outputs: Vec::new(), user_profile_ids: Vec::new(), function_ids: Vec::new(), performance_indicators: Vec::new(), activity_type: String::new(), location_context: None, temporal_pattern: None, supervision_level: None, };
             let operation = ProgramOperation::Activities(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.activities.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.activities.is_empty());
         }
 
         #[test]
         fn dispatches_adjacencies_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = Adjacency { header: EntityHeader::new(EntityId::new_serial("adjacency3"), "Adjacency 3"), element_a_id: EntityId::new_serial("base3"), element_b_id: EntityId::new_serial("base3"), kind: AdjacencyKind::Required, connection: ConnectionKind::Direct, separations: Vec::new(), weight: 0.0, rationale: None, distance_max_m: None, distance_min_m: None, level_constraint: None, access_path: None, shared_wall: false, shared_entry: false, traffic_isolation: false, circulation_overlap: false, conflict_ids: Vec::new(), normalized: false, verification_status: ValidationStatus::Pending, source_relationship_id: None, internal_external_access: None, };
             let operation = ProgramOperation::Adjacencies(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.adjacencies.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.adjacencies.is_empty());
         }
 
         #[test]
         fn dispatches_analyses_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = AnalysisRecord { header: EntityHeader::new(EntityId::new_serial("analysisrecord4"), "AnalysisRecord 4"), kind: AnalysisKind::Gap, title: String::new(), parameters: Vec::new(), input_entity_ids: Vec::new(), output_summary: TextField::default(), findings: Vec::new(), metrics: Vec::new(), charts: Vec::new(), run_by: None, run_at: None, duration_ms: None, tool_version: None, scenario_id: None, report_id: None, confidence: None, limitations: Vec::new(), recommendations: Vec::new(), raw_result_ref: None, };
             let operation = ProgramOperation::Analyses(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.analyses.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.analyses.is_empty());
         }
 
         #[test]
         fn dispatches_approvals_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = ApprovalRecord { header: EntityHeader::new(EntityId::new_serial("approvalrecord5"), "ApprovalRecord 5"), approval_type: String::new(), subject_id: EntityId::new_serial("base5"), approver_ids: Vec::new(), approval_date: None, conditions: Vec::new(), approval_status: LifecycleStatus::Draft, expiry_date: None, delegation_chain: Vec::new(), evidence_refs: Vec::new(), related_decision_id: None, related_change_id: None, authority_basis: Vec::new(), signature_method: None, rejection_reason: None, resubmission_date: None, notification_list: Vec::new(), workflow_step: None, version: None, audit_trail_ref: None, };
             let operation = ProgramOperation::Approvals(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.approvals.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.approvals.is_empty());
         }
 
         #[test]
         fn dispatches_assumptions_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = Assumption { header: EntityHeader::new(EntityId::new_serial("assumption6"), "Assumption 6"), statement: TextField::default(), basis: None, confidence_level: None, impact_if_false: None, related_entity_ids: Vec::new(), validation_status: ValidationStatus::Pending, validated_by: None, validation_date: None, owner_id: None, review_cycle: None, source: None, category: None, dependencies: Vec::new(), mitigation: Vec::new(), linked_requirement_ids: Vec::new(), linked_risk_ids: Vec::new(), expiration_date: None, status_notes: Vec::new(), document_refs: Vec::new(), };
             let operation = ProgramOperation::Assumptions(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.assumptions.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.assumptions.is_empty());
         }
 
         #[test]
         fn dispatches_audit_events_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = AuditEvent { header: EntityHeader::new(EntityId::new_serial("auditevent7"), "AuditEvent 7"), action: AuditAction::Created, actor_id: None, subject_id: EntityId::new_serial("base7"), subject_kind: String::new(), timestamp: String::new(), details: TextField::default(), before_state: None, after_state: None, ip_address: None, client: None, session_id: None, change_record_id: None, trace_link: None, success: false, error_message: None, correlation_id: None, compliance_tags: Vec::new(), retention_until: None, };
             let operation = ProgramOperation::AuditEvents(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.audit_events.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.audit_events.is_empty());
         }
 
         #[test]
         fn dispatches_benchmarks_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = BenchmarkRecord { header: EntityHeader::new(EntityId::new_serial("benchmarkrecord8"), "BenchmarkRecord 8"), benchmark_name: String::new(), sector: String::new(), metric: String::new(), value: 0.0, unit: String::new(), sample_size: None, source: None, collection_year: None, geography: None, building_type: None, confidence: None, methodology: None, applicable_element_kinds: Vec::new(), related_requirement_ids: Vec::new(), comparison_notes: Vec::new(), limitations: Vec::new(), license: None, knowledge_id: None, last_verified: None, };
             let operation = ProgramOperation::Benchmarks(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.benchmarks.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.benchmarks.is_empty());
         }
 
         #[test]
         fn dispatches_changes_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = ChangeRecord { header: EntityHeader::new(EntityId::new_serial("changerecord9"), "ChangeRecord 9"), change_type: String::new(), summary: TextField::default(), reason: TextField::default(), requested_by: None, approved_by: None, change_date: None, effective_date: None, impacted_entity_ids: Vec::new(), before_snapshot: None, after_snapshot: None, cost_impact: None, schedule_impact: None, risk_impact: Vec::new(), approval_status: ValidationStatus::Pending, rollback_plan: Vec::new(), communication_plan: Vec::new(), version_from: None, version_to: None, audit_event_ids: Vec::new(), };
             let operation = ProgramOperation::Changes(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.changes.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.changes.is_empty());
         }
 
         #[test]
         fn dispatches_collaboration_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = CollaborationRecord { header: EntityHeader::new(EntityId::new_serial("collaborationrecord10"), "CollaborationRecord 10"), session_type: String::new(), title: String::new(), participants: Vec::new(), facilitator_id: None, start_time: None, end_time: None, location: None, agenda: Vec::new(), outcomes: Vec::new(), action_items: Vec::new(), decision_ids: Vec::new(), issue_ids: Vec::new(), document_ids: Vec::new(), recording_ref: None, feedback: Vec::new(), follow_up_date: None, workshop_id: None, survey_id: None, };
             let operation = ProgramOperation::Collaboration(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.collaboration.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.collaboration.is_empty());
         }
 
         #[test]
         fn dispatches_communication_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = CommunicationRequirement { header: EntityHeader::new(EntityId::new_serial("communicationrequirement11"), "CommunicationRequirement 11"), channel: String::new(), audience_ids: Vec::new(), message_types: Vec::new(), frequency: None, medium: Vec::new(), language: Vec::new(), accessibility: Vec::new(), emergency_use: false, two_way: false, recording_policy: None, signage_locations: Vec::new(), technology: Vec::new(), escalation_path: Vec::new(), feedback_loop: false, privacy_controls: Vec::new(), element_ids: Vec::new(), standards: Vec::new(), owner_id: None, templates: Vec::new(), };
             let operation = ProgramOperation::Communication(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.communication.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.communication.is_empty());
         }
 
         #[test]
         fn dispatches_compliance_records_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = ComplianceRecord { header: EntityHeader::new(EntityId::new_serial("compliancerecord12"), "ComplianceRecord 12"), standard_ref: String::new(), obligation: TextField::default(), compliance_status: ValidationStatus::Pending, evidence_refs: Vec::new(), auditor_id: None, audit_date: None, next_review: None, affected_entity_ids: Vec::new(), gap_analysis: Vec::new(), remediation_plan: Vec::new(), owner_id: None, severity: RiskLevel::Negligible, regulatory_body: None, certification_target: None, waiver_status: None, related_requirement_ids: Vec::new(), monitoring_method: None, reporting_frequency: None, penalties: Vec::new(), corrective_actions: Vec::new(), document_refs: Vec::new(), };
             let operation = ProgramOperation::ComplianceRecords(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.compliance_records.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.compliance_records.is_empty());
         }
 
         #[test]
         fn dispatches_conflicts_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = Conflict { header: EntityHeader::new(EntityId::new_serial("conflict13"), "Conflict 13"), kind: ConflictKind::Adjacency, summary: TextField::default(), entity_a_id: EntityId::new_serial("base13"), entity_b_id: EntityId::new_serial("base13"), severity: IssueSeverity::Cosmetic, detected_by: None, detection_date: None, trade_off_options: Vec::new(), recommended_resolution: None, decision_id: None, stakeholder_ids: Vec::new(), requirement_ids: Vec::new(), cost_impact: None, schedule_impact: None, quality_impact: Vec::new(), resolution_status: ValidationStatus::Pending, owner_id: None, escalation_level: None, related_risk_ids: Vec::new(), };
             let operation = ProgramOperation::Conflicts(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.conflicts.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.conflicts.is_empty());
         }
 
         #[test]
         fn dispatches_constraints_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = ConstraintRecord { header: EntityHeader::new(EntityId::new_serial("constraintrecord14"), "ConstraintRecord 14"), constraint_type: String::new(), summary: TextField::default(), severity: RiskLevel::Negligible, affected_entity_ids: Vec::new(), source: None, regulatory_basis: Vec::new(), mitigation_options: Vec::new(), owner_id: None, effective_date: None, expiry_date: None, waiver_status: None, waiver_approver: None, impact_assessment: None, resolution_plan: Vec::new(), related_requirement_ids: Vec::new(), related_decision_ids: Vec::new(), monitoring_frequency: None, compliance_status: ValidationStatus::Pending, exceptions: Vec::new(), trace_links: Vec::new(), escalation_contact_id: None, };
             let operation = ProgramOperation::Constraints(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.constraints.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.constraints.is_empty());
         }
 
         #[test]
         fn dispatches_costs_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = CostRequirement { header: EntityHeader::new(EntityId::new_serial("costrequirement15"), "CostRequirement 15"), cost_item: String::new(), basis: CostBasis::Capital, amount: None, currency: String::new(), quantity_basis: None, unit_cost: None, contingency_percent: None, escalation_rate: None, funding_source: None, element_ids: Vec::new(), requirement_ids: Vec::new(), phase: None, cash_flow_profile: Vec::new(), value_engineering_notes: Vec::new(), benchmark_ref: None, approval_status: ValidationStatus::Pending, owner_id: None, assumptions: Vec::new(), sensitivity_factors: Vec::new(), };
             let operation = ProgramOperation::Costs(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.costs.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.costs.is_empty());
         }
 
         #[test]
         fn dispatches_decisions_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = Decision { header: EntityHeader::new(EntityId::new_serial("decision16"), "Decision 16"), decision_statement: TextField::default(), context: TextField::default(), options_considered: Vec::new(), selected_option_id: None, rationale: TextField::default(), decision_maker_ids: Vec::new(), consulted_ids: Vec::new(), informed_ids: Vec::new(), decision_date: None, effective_date: None, reversal_conditions: Vec::new(), impacted_requirement_ids: Vec::new(), impacted_element_ids: Vec::new(), cost_impact: None, schedule_impact: None, risk_impact: Vec::new(), approval_status: ValidationStatus::Pending, meeting_ref: None, document_refs: Vec::new(), };
             let operation = ProgramOperation::Decisions(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.decisions.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.decisions.is_empty());
         }
 
         #[test]
         fn dispatches_delivery_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = DeliveryConstraint { header: EntityHeader::new(EntityId::new_serial("deliveryconstraint17"), "DeliveryConstraint 17"), constraint_type: String::new(), constraint_details: TextField::default(), phase: DeliveryPhase::Concept, hard_deadline: None, soft_deadline: None, impacted_element_ids: Vec::new(), impacted_requirement_ids: Vec::new(), work_hours: None, noise_restrictions: Vec::new(), access_restrictions: Vec::new(), site_logistics: Vec::new(), procurement_lead_time: None, approval_gates: Vec::new(), occupancy_constraints: Vec::new(), weather_windows: Vec::new(), penalty_clauses: Vec::new(), mitigation_options: Vec::new(), owner_id: None, risk_ids: Vec::new(), constraint_status: LifecycleStatus::Draft, };
             let operation = ProgramOperation::Delivery(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.delivery.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.delivery.is_empty());
         }
 
         #[test]
         fn dispatches_documents_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = DocumentRecord { header: EntityHeader::new(EntityId::new_serial("documentrecord18"), "DocumentRecord 18"), document_type: String::new(), title: String::new(), version: String::new(), file_ref: None, format: None, author_ids: Vec::new(), reviewer_ids: Vec::new(), approver_ids: Vec::new(), issue_date: None, revision_date: None, distribution_list: Vec::new(), related_entity_ids: Vec::new(), classification: None, retention_period: None, access_controls: Vec::new(), supersedes: None, document_status: LifecycleStatus::Draft, checksum: None, source_system: None, };
             let operation = ProgramOperation::Documents(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.documents.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.documents.is_empty());
         }
 
         #[test]
         fn dispatches_elements_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = ProgramElement { header: EntityHeader::new(EntityId::new_serial("programelement19"), "ProgramElement 19"), code: String::new(), kind: ProgramElementKind::Building, parent_id: None, level: None, area: QuantitySpec::default(), volume: QuantitySpec::default(), height: QuantitySpec::default(), occupancy: QuantitySpec::default(), function_ids: Vec::new(), activity_ids: Vec::new(), user_profile_ids: Vec::new(), adjacency_ids: Vec::new(), quantity_ids: Vec::new(), requirement_ids: Vec::new(), location_hint: None, orientation: None, daylight_requirement: None, acoustic_class: None, security_zone: None, flexibility_notes: Vec::new(), growth_allocation: None, circulation_role: None, visibility_level: None, adjacency_preferences: Vec::new(), environmental_zone: None, };
             let operation = ProgramOperation::Elements(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.elements.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.elements.is_empty());
         }
 
         #[test]
         fn dispatches_environmental_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = EnvironmentalRequirement { header: EntityHeader::new(EntityId::new_serial("environmentalrequirement20"), "EnvironmentalRequirement 20"), parameter_kind: EnvironmentalParameter::Temperature, parameter: String::new(), target_value: None, unit: None, min_value: None, max_value: None, comfort_band: None, measurement_method: None, monitoring_frequency: None, element_ids: Vec::new(), occupancy_basis: None, seasonal_variation: Vec::new(), energy_implications: Vec::new(), standards: Vec::new(), certification_targets: Vec::new(), outdoor_conditions: Vec::new(), ventilation_strategy: None, daylight_target: None, acoustic_target: None, iaq_target: None, verification_plan: None, };
             let operation = ProgramOperation::Environmental(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.environmental.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.environmental.is_empty());
         }
 
         #[test]
         fn dispatches_equipment_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = Equipment { header: EntityHeader::new(EntityId::new_serial("equipment21"), "Equipment 21"), code: String::new(), category: String::new(), manufacturer: None, model: None, quantity: QuantitySpec::default(), dimensions: None, weight_kg: None, power_kw: None, utility_connections: Vec::new(), ventilation: None, noise_level_db: None, clearance: None, mounting: None, element_ids: Vec::new(), activity_ids: Vec::new(), maintenance_access: Vec::new(), lifecycle_years: None, replacement_cost: None, standards: Vec::new(), supplier: None, activity_link_ids: Vec::new(), installation_requirements: Vec::new(), commissioning_notes: Vec::new(), spare_parts: Vec::new(), };
             let operation = ProgramOperation::Equipment(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.equipment.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.equipment.is_empty());
         }
 
         #[test]
         fn dispatches_flexibility_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = FlexibilityRequirement { header: EntityHeader::new(EntityId::new_serial("flexibilityrequirement22"), "FlexibilityRequirement 22"), flexibility_type: String::new(), element_ids: Vec::new(), adaptation_scenarios: Vec::new(), modularity_level: None, reconfiguration_time: None, cost_of_change: None, technology_readiness: None, future_function_ids: Vec::new(), demountable_partitions: false, raised_floor: false, overhead_services: false, expansion_direction: Vec::new(), contraction_scenario: Vec::new(), multi_use_potential: Vec::new(), furniture_strategy: Vec::new(), infrastructure_spare_capacity: Vec::new(), lease_implications: Vec::new(), owner_id: None, };
             let operation = ProgramOperation::Flexibility(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.flexibility.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.flexibility.is_empty());
         }
 
         #[test]
         fn dispatches_flows_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = FlowRequirement { header: EntityHeader::new(EntityId::new_serial("flowrequirement23"), "FlowRequirement 23"), from_element_id: EntityId::new_serial("base23"), to_element_id: EntityId::new_serial("base23"), kind: FlowKind::People, flow_type: String::new(), direction: FlowDirection::OneWay, volume: QuantitySpec::default(), peak_rate: None, clear_width_m: None, clear_height_m: None, separation_requirements: Vec::new(), access_level: AccessLevel::Public, time_windows: Vec::new(), equipment_clearance: None, signage_required: false, escort_required: false, emergency_route: false, barrier_free: false, monitoring_required: false, process_id: None, conflict_ids: Vec::new(), verification_method: None, };
             let operation = ProgramOperation::Flows(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.flows.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.flows.is_empty());
         }
 
         #[test]
         fn dispatches_functions_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = Function { header: EntityHeader::new(EntityId::new_serial("function24"), "Function 24"), code: String::new(), kind: FunctionKind::Primary, purpose: TextField::default(), criticality: Priority::Mandatory, performance_targets: Vec::new(), service_level: None, operating_hours: None, staffing: QuantitySpec::default(), equipment_ids: Vec::new(), resource_ids: Vec::new(), activity_ids: Vec::new(), element_ids: Vec::new(), dependencies: Vec::new(), interfaces: Vec::new(), constraints: Vec::new(), quality_criteria: Vec::new(), regulatory_refs: Vec::new(), future_changes: Vec::new(), owner_stakeholder_id: None, success_metrics: Vec::new(), hierarchy_parent_id: None, conflict_ids: Vec::new(), };
             let operation = ProgramOperation::Functions(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.functions.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.functions.is_empty());
         }
 
         #[test]
         fn dispatches_growth_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = GrowthPlan { header: EntityHeader::new(EntityId::new_serial("growthplan25"), "GrowthPlan 25"), horizon_years: 0, growth_rate: None, headcount_growth: QuantitySpec::default(), area_growth: QuantitySpec::default(), phases: Vec::new(), trigger_events: Vec::new(), expansion_element_ids: Vec::new(), reserve_areas: Vec::new(), infrastructure_headroom: Vec::new(), budget_envelope: None, funding_sources: Vec::new(), risk_factors: Vec::new(), decision_points: Vec::new(), scenario_ids: Vec::new(), decommission_plan: Vec::new(), relocation_strategy: Vec::new(), stakeholder_impact: Vec::new(), regulatory_considerations: Vec::new(), owner_id: None, };
             let operation = ProgramOperation::Growth(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.growth.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.growth.is_empty());
         }
 
         #[test]
         fn dispatches_human_factors_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = HumanFactorRequirement { header: EntityHeader::new(EntityId::new_serial("humanfactorrequirement26"), "HumanFactorRequirement 26"), aspect: HumanFactorAspect::Ergonomics, factor: String::new(), user_profile_ids: Vec::new(), activity_ids: Vec::new(), ergonomic_criteria: Vec::new(), cognitive_load: None, visual_demands: Vec::new(), auditory_demands: Vec::new(), posture_requirements: Vec::new(), reach_envelope: None, lighting_for_tasks: Vec::new(), thermal_comfort: Vec::new(), privacy_needs: Vec::new(), social_interaction: Vec::new(), stress_factors: Vec::new(), mitigation_measures: Vec::new(), training_needs: Vec::new(), standards: Vec::new(), research_basis: Vec::new(), element_ids: Vec::new(), verification_method: None, };
             let operation = ProgramOperation::HumanFactors(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.human_factors.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.human_factors.is_empty());
         }
 
         #[test]
         fn dispatches_information_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = InformationRequirement { header: EntityHeader::new(EntityId::new_serial("informationrequirement27"), "InformationRequirement 27"), information_type: String::new(), format: None, source_system: None, destination_systems: Vec::new(), update_frequency: None, retention_period: None, access_controls: Vec::new(), classification: None, quality_criteria: Vec::new(), metadata_requirements: Vec::new(), integration_points: Vec::new(), backup_requirements: Vec::new(), disaster_recovery: Vec::new(), privacy_controls: Vec::new(), audit_trail: false, element_ids: Vec::new(), stakeholder_ids: Vec::new(), standards: Vec::new(), owner_id: None, };
             let operation = ProgramOperation::Information(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.information.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.information.is_empty());
         }
 
         #[test]
         fn dispatches_infrastructure_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = InfrastructureRequirement { header: EntityHeader::new(EntityId::new_serial("infrastructurerequirement28"), "InfrastructureRequirement 28"), system: String::new(), category: String::new(), capacity: QuantitySpec::default(), redundancy: None, distribution: Vec::new(), entry_points: Vec::new(), utility_source: None, standby_power: false, monitoring: Vec::new(), maintenance_access: Vec::new(), standards: Vec::new(), element_ids: Vec::new(), peak_demand: None, diversity_factor: None, future_expansion: Vec::new(), interface_requirements: Vec::new(), commissioning: Vec::new(), lifecycle_cost: None, owner_id: None, };
             let operation = ProgramOperation::Infrastructure(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.infrastructure.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.infrastructure.is_empty());
         }
 
         #[test]
         fn dispatches_issues_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = Issue { header: EntityHeader::new(EntityId::new_serial("issue29"), "Issue 29"), issue_type: String::new(), summary: TextField::default(), issue_description: TextField::default(), severity: IssueSeverity::Cosmetic, issue_priority: Priority::Mandatory, reporter_id: None, assignee_id: None, affected_entity_ids: Vec::new(), root_cause: None, resolution: None, workaround: None, due_date: None, resolved_date: None, related_conflict_ids: Vec::new(), related_risk_ids: Vec::new(), decision_id: None, comments: Vec::new(), attachments: Vec::new(), escalation_level: None, };
             let operation = ProgramOperation::Issues(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.issues.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.issues.is_empty());
         }
 
         #[test]
         fn dispatches_knowledge_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = KnowledgeRecord { header: EntityHeader::new(EntityId::new_serial("knowledgerecord30"), "KnowledgeRecord 30"), topic: String::new(), category: String::new(), summary: TextField::default(), content: TextField::default(), sources: Vec::new(), references: Vec::new(), lessons_learned: Vec::new(), best_practices: Vec::new(), applicable_sectors: Vec::new(), related_entity_kinds: Vec::new(), author_ids: Vec::new(), expertise_level: None, validation_status: ValidationStatus::Pending, last_reviewed: None, keywords: Vec::new(), attachments: Vec::new(), citations: Vec::new(), usage_count: 0, };
             let operation = ProgramOperation::Knowledge(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.knowledge.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.knowledge.is_empty());
         }
 
         #[test]
         fn dispatches_meetings_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = MeetingRecord { header: EntityHeader::new(EntityId::new_serial("meetingrecord31"), "MeetingRecord 31"), meeting_type: String::new(), scheduled_date: None, duration: None, location: None, chair_id: None, attendee_ids: Vec::new(), agenda_items: Vec::new(), minutes: None, action_items: Vec::new(), decisions_made: Vec::new(), document_refs: Vec::new(), follow_up_date: None, recording_ref: None, quorum_met: false, meeting_status: LifecycleStatus::Draft, workshop_id: None, stakeholder_ids: Vec::new(), requirement_ids: Vec::new(), issue_ids: Vec::new(), approval_ids: Vec::new(), };
             let operation = ProgramOperation::Meetings(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.meetings.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.meetings.is_empty());
         }
 
         #[test]
         fn dispatches_operations_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = OperationalRequirement { header: EntityHeader::new(EntityId::new_serial("operationalrequirement32"), "OperationalRequirement 32"), operation: String::new(), service_level: None, operating_hours: None, staffing: QuantitySpec::default(), maintenance_interval: None, cleaning_regime: None, turnaround_time: None, redundancy: None, uptime_target: None, response_time: None, equipment_ids: Vec::new(), element_ids: Vec::new(), process_ids: Vec::new(), utilities: Vec::new(), waste_streams: Vec::new(), contingency_plan: Vec::new(), training_requirements: Vec::new(), sop_references: Vec::new(), kpi_targets: Vec::new(), owner_id: None, service_category: None, shift_pattern: None, sla_target: None, escalation_contact_id: None, };
             let operation = ProgramOperation::Operations(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.operations.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.operations.is_empty());
         }
 
         #[test]
         fn dispatches_options_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = OptionEvaluation { header: EntityHeader::new(EntityId::new_serial("optionevaluation33"), "OptionEvaluation 33"), option_name: String::new(), option_description: TextField::default(), scenario_id: None, criteria_ids: Vec::new(), scores: Vec::new(), weighted_score: None, cost_estimate: None, schedule_estimate: None, risk_summary: Vec::new(), benefits: Vec::new(), drawbacks: Vec::new(), assumptions: Vec::new(), dependencies: Vec::new(), stakeholder_feedback: Vec::new(), recommendation: None, decision_id: None, evaluation_status: ValidationStatus::Pending, evaluator_ids: Vec::new(), evaluation_date: None, };
             let operation = ProgramOperation::Options(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.options.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.options.is_empty());
         }
 
         #[test]
         fn dispatches_organizational_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = OrganizationalRequirement { header: EntityHeader::new(EntityId::new_serial("organizationalrequirement34"), "OrganizationalRequirement 34"), department: String::new(), reporting_line: None, headcount: QuantitySpec::default(), growth_plan_id: None, work_patterns: Vec::new(), collaboration_model: None, hierarchy_levels: Vec::new(), decision_making: Vec::new(), culture_notes: Vec::new(), change_readiness: None, union_considerations: Vec::new(), training_needs: Vec::new(), element_ids: Vec::new(), stakeholder_ids: Vec::new(), service_requirement_ids: Vec::new(), branding_requirements: Vec::new(), wellness_workflows: Vec::new(), diversity_goals: Vec::new(), owner_id: None, };
             let operation = ProgramOperation::Organizational(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.organizational.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.organizational.is_empty());
         }
 
         #[test]
         fn dispatches_performance_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = PerformanceCriterion { header: EntityHeader::new(EntityId::new_serial("performancecriterion35"), "PerformanceCriterion 35"), criterion: String::new(), metric: String::new(), target: None, unit: None, minimum: None, maximum: None, measurement_method: None, frequency: None, requirement_ids: Vec::new(), element_ids: Vec::new(), baseline: None, benchmark_ref: None, weight: None, data_source: None, reporting_cadence: None, owner_id: None, verification_plan: None, penalty_threshold: None, incentive_threshold: None, };
             let operation = ProgramOperation::Performance(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.performance.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.performance.is_empty());
         }
 
         #[test]
         fn dispatches_priorities_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = PriorityRecord { header: EntityHeader::new(EntityId::new_serial("priorityrecord36"), "PriorityRecord 36"), subject_id: EntityId::new_serial("base36"), subject_kind: String::new(), ranked_priority: Priority::Mandatory, rank: None, weight: None, rationale: None, decision_id: None, stakeholder_ids: Vec::new(), effective_from: None, effective_until: None, review_cycle: None, dependencies: Vec::new(), conflicts: Vec::new(), scoring_method: None, score: None, criteria: Vec::new(), approved_by: None, approval_date: None, ranking_notes: Vec::new(), };
             let operation = ProgramOperation::Priorities(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.priorities.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.priorities.is_empty());
         }
 
         #[test]
         fn dispatches_privacy_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = PrivacyRequirement { header: EntityHeader::new(EntityId::new_serial("privacyrequirement37"), "PrivacyRequirement 37"), privacy_kind: PrivacyKind::Public, privacy_type: String::new(), level: None, subject_ids: Vec::new(), element_ids: Vec::new(), visual_privacy: Vec::new(), acoustic_privacy: Vec::new(), data_privacy: Vec::new(), screening_required: false, enclosure_required: false, access_restrictions: Vec::new(), observation_risk: None, regulatory_basis: Vec::new(), cultural_considerations: Vec::new(), technology_controls: Vec::new(), signage: Vec::new(), monitoring_restrictions: Vec::new(), retention_policy: None, breach_response: Vec::new(), owner_id: None, };
             let operation = ProgramOperation::Privacy(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.privacy.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.privacy.is_empty());
         }
 
         #[test]
         fn dispatches_processes_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = Process { header: EntityHeader::new(EntityId::new_serial("process38"), "Process 38"), code: String::new(), category: String::new(), trigger: None, inputs: Vec::new(), outputs: Vec::new(), steps: Vec::new(), actors: Vec::new(), equipment_ids: Vec::new(), element_ids: Vec::new(), duration: None, frequency: None, critical_path: false, bottlenecks: Vec::new(), dependencies: Vec::new(), kpis: Vec::new(), automation_level: None, failure_modes: Vec::new(), improvement_opportunities: Vec::new(), regulatory_refs: Vec::new(), owner_id: None, workflow_type: None, handoff_points: Vec::new(), quality_gates: Vec::new(), };
             let operation = ProgramOperation::Processes(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.processes.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.processes.is_empty());
         }
 
         #[test]
         fn dispatches_quality_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = QualityRecord { header: EntityHeader::new(EntityId::new_serial("qualityrecord39"), "QualityRecord 39"), quality_topic: String::new(), standard: None, target_level: None, inspection_points: Vec::new(), acceptance_criteria: Vec::new(), testing_requirements: Vec::new(), sample_rate: None, defect_categories: Vec::new(), corrective_action_process: Vec::new(), element_ids: Vec::new(), requirement_ids: Vec::new(), supplier_requirements: Vec::new(), documentation_requirements: Vec::new(), training_requirements: Vec::new(), audit_schedule: None, kpis: Vec::new(), owner_id: None, certification_targets: Vec::new(), continuous_improvement: Vec::new(), };
             let operation = ProgramOperation::Quality(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.quality.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.quality.is_empty());
         }
 
         #[test]
         fn dispatches_quantities_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = QuantityRequirement { header: EntityHeader::new(EntityId::new_serial("quantityrequirement40"), "QuantityRequirement 40"), target_element_id: EntityId::new_serial("base40"), metric: String::new(), quantity: QuantitySpec::default(), basis: None, calculation_method: None, source: None, benchmark_ref: None, tolerance_percent: None, peak_factor: None, growth_factor: None, unit_cost: None, currency: None, verification_method: None, related_requirement_ids: Vec::new(), assumptions: Vec::new(), constraints: Vec::new(), schedule_phase: None, responsible_party: None, last_verified: None, variance_notes: Vec::new(), };
             let operation = ProgramOperation::Quantities(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.quantities.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.quantities.is_empty());
         }
 
         #[test]
         fn dispatches_regulatory_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = RegulatoryRequirement { header: EntityHeader::new(EntityId::new_serial("regulatoryrequirement41"), "RegulatoryRequirement 41"), jurisdiction: String::new(), code: String::new(), clause: None, title: String::new(), requirement_text: TextField::default(), applicability: Vec::new(), element_ids: Vec::new(), compliance_method: None, evidence_required: Vec::new(), authority: None, effective_date: None, expiry_date: None, penalties: Vec::new(), exemptions: Vec::new(), related_requirement_ids: Vec::new(), interpretation_notes: Vec::new(), verification_status: ValidationStatus::Pending, consultant_refs: Vec::new(), update_source: None, };
             let operation = ProgramOperation::Regulatory(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.regulatory.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.regulatory.is_empty());
         }
 
         #[test]
         fn dispatches_relationships_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = Relationship { header: EntityHeader::new(EntityId::new_serial("relationship42"), "Relationship 42"), source_id: EntityId::new_serial("base42"), target_id: EntityId::new_serial("base42"), kind: RelationshipKind::Contains, strength: None, directional: false, rationale: None, constraints: Vec::new(), conditions: Vec::new(), relationship_priority: Priority::Mandatory, valid_from: None, valid_until: None, evidence: Vec::new(), conflict_ids: Vec::new(), trace_links: Vec::new(), bidirectional: false, distance_constraint_m: None, capacity_constraint: None, regulatory_basis: Vec::new(), review_cycle: None, owner_id: None, proximity_requirement: None, compatibility_requirement: None, incompatibility_requirement: None, separation_requirements: Vec::new(), };
             let operation = ProgramOperation::Relationships(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.relationships.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.relationships.is_empty());
         }
 
         #[test]
         fn dispatches_reports_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = ReportRecord { header: EntityHeader::new(EntityId::new_serial("reportrecord43"), "ReportRecord 43"), kind: ReportKind::ExecutiveSummary, title: String::new(), audience: Vec::new(), sections: Vec::new(), generated_at: None, generated_by: None, analysis_ids: Vec::new(), format: None, file_ref: None, distribution_list: Vec::new(), approval_status: ValidationStatus::Pending, approver_id: None, version: String::new(), template_id: None, parameters: Vec::new(), confidentiality: None, expiry_date: None, related_decision_ids: Vec::new(), };
             let operation = ProgramOperation::Reports(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.reports.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.reports.is_empty());
         }
 
         #[test]
         fn dispatches_requirements_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = Requirement { header: EntityHeader::new(EntityId::new_serial("requirement44"), "Requirement 44"), code: String::new(), kind: RequirementKind::Functional, statement: TextField::default(), rationale: None, source: None, stakeholder_ids: Vec::new(), element_ids: Vec::new(), function_ids: Vec::new(), parent_requirement_id: None, child_requirement_ids: Vec::new(), acceptance_criteria: Vec::new(), verification_method: None, validation_status: ValidationStatus::Pending, conflict_ids: Vec::new(), risk_ids: Vec::new(), cost_estimate: None, schedule_constraint: None, regulatory_refs: Vec::new(), trace_links: Vec::new(), superseded_by: None, };
             let operation = ProgramOperation::Requirements(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.requirements.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.requirements.is_empty());
         }
 
         #[test]
         fn dispatches_resilience_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = ResilienceRequirement { header: EntityHeader::new(EntityId::new_serial("resiliencerequirement45"), "ResilienceRequirement 45"), hazard: String::new(), risk_level: RiskLevel::Negligible, scenario: None, recovery_time: None, recovery_point: None, redundancy: Vec::new(), hardening_measures: Vec::new(), backup_systems: Vec::new(), alternate_sites: Vec::new(), supply_chain: Vec::new(), communication_plan: Vec::new(), drill_requirements: Vec::new(), element_ids: Vec::new(), infrastructure_ids: Vec::new(), standards: Vec::new(), insurance_implications: Vec::new(), climate_adaptation: Vec::new(), owner_id: None, verification_plan: None, };
             let operation = ProgramOperation::Resilience(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.resilience.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.resilience.is_empty());
         }
 
         #[test]
         fn dispatches_resources_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = Resource { header: EntityHeader::new(EntityId::new_serial("resource46"), "Resource 46"), code: String::new(), category: String::new(), resource_type: String::new(), quantity: QuantitySpec::default(), mobility: None, sharing_model: None, allocation: None, element_ids: Vec::new(), activity_ids: Vec::new(), user_profile_ids: Vec::new(), storage_requirement_id: None, durability: None, cleaning_requirements: Vec::new(), replacement_cycle: None, cost_per_unit: None, supplier: None, standards: Vec::new(), ergonomic_notes: Vec::new(), customization: Vec::new(), disposal_notes: Vec::new(), furniture_class: None, ergonomics_rating: None, sharing_ratio: None, };
             let operation = ProgramOperation::Resources(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.resources.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.resources.is_empty());
         }
 
         #[test]
         fn dispatches_risks_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = Risk { header: EntityHeader::new(EntityId::new_serial("risk47"), "Risk 47"), risk_statement: TextField::default(), category: String::new(), probability: RiskLevel::Negligible, impact: RiskLevel::Negligible, risk_score: None, causes: Vec::new(), effects: Vec::new(), affected_element_ids: Vec::new(), affected_requirement_ids: Vec::new(), mitigation: Vec::new(), contingency: Vec::new(), owner_id: None, review_date: None, trigger_indicators: Vec::new(), residual_probability: None, residual_impact: None, related_conflict_ids: Vec::new(), escalation_path: Vec::new(), monitoring_plan: None, };
             let operation = ProgramOperation::Risks(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.risks.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.risks.is_empty());
         }
 
         #[test]
         fn dispatches_safety_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = SafetyRequirement { header: EntityHeader::new(EntityId::new_serial("safetyrequirement48"), "SafetyRequirement 48"), safety_domain: SafetyDomain::LifeSafety, hazard: String::new(), risk_level: RiskLevel::Negligible, affected_element_ids: Vec::new(), affected_user_ids: Vec::new(), mitigation_measures: Vec::new(), ppe_requirements: Vec::new(), emergency_procedures: Vec::new(), evacuation_requirements: Vec::new(), fire_protection: Vec::new(), structural_safety: Vec::new(), slip_trip_fall: Vec::new(), chemical_safety: Vec::new(), electrical_safety: Vec::new(), machinery_safety: Vec::new(), standards: Vec::new(), inspection_frequency: None, training_requirements: Vec::new(), incident_reporting: Vec::new(), residual_risk: None, };
             let operation = ProgramOperation::Safety(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.safety.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.safety.is_empty());
         }
 
         #[test]
         fn dispatches_scenarios_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = Scenario { header: EntityHeader::new(EntityId::new_serial("scenario49"), "Scenario 49"), code: String::new(), hypothesis: TextField::default(), assumptions: Vec::new(), variables: Vec::new(), element_ids: Vec::new(), requirement_ids: Vec::new(), growth_plan_id: None, probability: None, impact_summary: None, cost_delta: None, area_delta: None, headcount_delta: None, schedule_delta: None, risk_ids: Vec::new(), option_ids: Vec::new(), baseline: false, preferred: false, analysis_ids: Vec::new(), owner_id: None, };
             let operation = ProgramOperation::Scenarios(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.scenarios.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.scenarios.is_empty());
         }
 
         #[test]
         fn dispatches_schedules_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = ScheduleRequirement { header: EntityHeader::new(EntityId::new_serial("schedulerequirement50"), "ScheduleRequirement 50"), milestone: String::new(), phase: DeliveryPhase::Concept, start_date: None, end_date: None, duration: None, dependencies: Vec::new(), predecessors: Vec::new(), successors: Vec::new(), critical: false, float_days: None, resource_requirements: Vec::new(), occupancy_impact: Vec::new(), phasing_strategy: None, decant_requirements: Vec::new(), commissioning_window: None, stakeholder_ids: Vec::new(), risk_ids: Vec::new(), contingency_days: None, reporting_cadence: None, owner_id: None, };
             let operation = ProgramOperation::Schedules(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.schedules.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.schedules.is_empty());
         }
 
         #[test]
         fn dispatches_search_filters_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = SearchFilter { header: EntityHeader::new(EntityId::new_serial("searchfilter51"), "SearchFilter 51"), filter_name: String::new(), filter_description: None, keywords: Vec::new(), categories: Vec::new(), owner_ids: Vec::new(), statuses: Vec::new(), priorities: Vec::new(), sources: Vec::new(), date_from: None, date_to: None, entity_kinds: Vec::new(), tag_filters: Vec::new(), sort_field: None, sort_direction: None, is_public: false, created_by: None, last_used: None, use_count: 0, pinned: false, };
             let operation = ProgramOperation::SearchFilters(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.search_filters.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.search_filters.is_empty());
         }
 
         #[test]
         fn dispatches_security_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = SecurityRequirement { header: EntityHeader::new(EntityId::new_serial("securityrequirement52"), "SecurityRequirement 52"), control_kind: SecurityControlKind::AccessControl, threat: String::new(), risk_level: RiskLevel::Negligible, asset_ids: Vec::new(), zone_ids: Vec::new(), access_level: AccessLevel::Public, perimeter_controls: Vec::new(), surveillance: Vec::new(), intrusion_detection: Vec::new(), cybersecurity: Vec::new(), screening: Vec::new(), visitor_management: Vec::new(), key_management: Vec::new(), standards: Vec::new(), response_procedures: Vec::new(), drill_frequency: None, liaison_contacts: Vec::new(), classified_level: None, redundancy: Vec::new(), audit_requirements: Vec::new(), };
             let operation = ProgramOperation::Security(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.security.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.security.is_empty());
         }
 
         #[test]
         fn dispatches_services_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = ServiceRequirement { header: EntityHeader::new(EntityId::new_serial("servicerequirement53"), "ServiceRequirement 53"), service_name: String::new(), service_type: String::new(), provider: None, service_level: None, operating_hours: None, capacity: QuantitySpec::default(), response_time: None, queue_management: Vec::new(), customer_profiles: Vec::new(), element_ids: Vec::new(), equipment_ids: Vec::new(), staffing: QuantitySpec::default(), quality_metrics: Vec::new(), cost_model: None, contract_refs: Vec::new(), dependencies: Vec::new(), failure_impact: None, backup_service: Vec::new(), feedback_channels: Vec::new(), };
             let operation = ProgramOperation::Services(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.services.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.services.is_empty());
         }
 
         #[test]
         fn dispatches_site_context_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = SiteContext { header: EntityHeader::new(EntityId::new_serial("sitecontext54"), "SiteContext 54"), site_name: String::new(), address: None, latitude: None, longitude: None, elevation_m: None, climate_zone: None, seismic_zone: None, flood_risk: None, soil_conditions: Vec::new(), utilities_available: Vec::new(), access_roads: Vec::new(), public_transit: Vec::new(), neighbors: Vec::new(), views: Vec::new(), noise_sources: Vec::new(), environmental_constraints: Vec::new(), heritage_constraints: Vec::new(), zoning: None, max_height_m: None, max_coverage: None, };
             let operation = ProgramOperation::SiteContext(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.site_context.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.site_context.is_empty());
         }
 
         #[test]
         fn dispatches_stakeholders_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = Stakeholder { header: EntityHeader::new(EntityId::new_serial("stakeholder55"), "Stakeholder 55"), role: String::new(), organization: String::new(), department: None, contact_email: None, contact_phone: None, influence: InfluenceLevel::Low, interest: InfluenceLevel::Low, engagement: EngagementLevel::Unaware, expectations: Vec::new(), concerns: Vec::new(), requirement_ids: Vec::new(), decision_authority: false, communication_preferences: Vec::new(), reporting_frequency: None, involvement_phases: Vec::new(), availability: None, representative_of: None, delegated_to: None, relationship_to_client: None, power_interest_notes: Vec::new(), stakeholder_type: String::new(), influence_strategy: None, communication_channels: Vec::new(), success_metrics: Vec::new(), };
             let operation = ProgramOperation::Stakeholders(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.stakeholders.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.stakeholders.is_empty());
         }
 
         #[test]
         fn dispatches_status_records_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = StatusRecord { header: EntityHeader::new(EntityId::new_serial("statusrecord56"), "StatusRecord 56"), subject_id: EntityId::new_serial("base56"), subject_kind: String::new(), record_status: LifecycleStatus::Draft, previous_status: None, changed_by: None, changed_at: None, reason: None, blockers: Vec::new(), next_actions: Vec::new(), due_date: None, progress_percent: None, health: None, escalation_level: None, related_issue_ids: Vec::new(), related_risk_ids: Vec::new(), milestone_id: None, reporting_period: None, status_notes: Vec::new(), };
             let operation = ProgramOperation::StatusRecords(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.status_records.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.status_records.is_empty());
         }
 
         #[test]
         fn dispatches_storage_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = StorageRequirement { header: EntityHeader::new(EntityId::new_serial("storagerequirement57"), "StorageRequirement 57"), stored_item: String::new(), storage_class: StorageClass::General, quantity: QuantitySpec::default(), volume_m3: None, weight_kg: None, temperature_range: None, humidity_range: None, security_level: AccessLevel::Public, hazard_class: None, retention_period: None, access_frequency: None, element_ids: Vec::new(), equipment_ids: Vec::new(), handling_equipment: Vec::new(), fire_protection: Vec::new(), ventilation: None, organization_system: None, growth_allowance: None, regulatory_refs: Vec::new(), owner_id: None, };
             let operation = ProgramOperation::Storage(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.storage.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.storage.is_empty());
         }
 
         #[test]
         fn dispatches_surveys_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = Survey { header: EntityHeader::new(EntityId::new_serial("survey58"), "Survey 58"), survey_type: String::new(), title: String::new(), objectives: Vec::new(), questions: Vec::new(), target_audience: Vec::new(), distribution_channels: Vec::new(), launch_date: None, close_date: None, response_count: 0, response_rate: None, findings: Vec::new(), themes: Vec::new(), recommendations: Vec::new(), confidentiality: None, consent_process: Vec::new(), analysis_id: None, workshop_id: None, owner_id: None, survey_status: LifecycleStatus::Draft, };
             let operation = ProgramOperation::Surveys(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.surveys.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.surveys.is_empty());
         }
 
         #[test]
         fn dispatches_sustainability_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = SustainabilityRequirement { header: EntityHeader::new(EntityId::new_serial("sustainabilityrequirement59"), "SustainabilityRequirement 59"), topic: String::new(), target: None, metric: None, baseline: None, target_value: None, unit: None, certification: Vec::new(), standards: Vec::new(), element_ids: Vec::new(), strategies: Vec::new(), materials_preferences: Vec::new(), energy_strategy: Vec::new(), water_strategy: Vec::new(), waste_strategy: Vec::new(), biodiversity: Vec::new(), embodied_carbon: None, operational_carbon: None, reporting_requirements: Vec::new(), verification_plan: None, owner_id: None, };
             let operation = ProgramOperation::Sustainability(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.sustainability.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.sustainability.is_empty());
         }
 
         #[test]
         fn dispatches_templates_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = TemplateRecord { header: EntityHeader::new(EntityId::new_serial("templaterecord60"), "TemplateRecord 60"), template_type: String::new(), sector: None, project_type: None, version: String::new(), content_ref: None, entity_kinds: Vec::new(), default_fields: Vec::new(), checklists: Vec::new(), standards: Vec::new(), applicability: Vec::new(), author_id: None, approval_status: ValidationStatus::Pending, usage_count: 0, last_applied: None, customization_notes: Vec::new(), related_knowledge_ids: Vec::new(), benchmark_ids: Vec::new(), license: None, source_organization: None, };
             let operation = ProgramOperation::Templates(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.templates.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.templates.is_empty());
         }
 
         #[test]
         fn dispatches_users_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = UserProfile { header: EntityHeader::new(EntityId::new_serial("userprofile61"), "UserProfile 61"), category: UserCategory::Primary, demographic: None, age_range: None, abilities: Vec::new(), disabilities: Vec::new(), occupation: None, role_title: None, department: None, mobility_profile: Vec::new(), sensory_profile: Vec::new(), cognitive_profile: Vec::new(), behavioral_patterns: Vec::new(), usage_frequency: None, usage_duration: None, peak_usage_times: Vec::new(), technology_proficiency: None, preferences: Vec::new(), pain_points: Vec::new(), goals: Vec::new(), activity_ids: Vec::new(), research_method: None, persona_archetype: None, validated: false, stakeholder_ids: Vec::new(), };
             let operation = ProgramOperation::Users(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.users.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.users.is_empty());
         }
 
         #[test]
         fn dispatches_validations_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = ValidationRecord { header: EntityHeader::new(EntityId::new_serial("validationrecord62"), "ValidationRecord 62"), subject_id: EntityId::new_serial("base62"), subject_kind: String::new(), validation_type: String::new(), method: None, criteria: Vec::new(), result: ValidationStatus::Pending, evidence: Vec::new(), validator_ids: Vec::new(), validation_date: None, next_review_date: None, findings: Vec::new(), non_conformities: Vec::new(), corrective_actions: Vec::new(), waivers: Vec::new(), standards: Vec::new(), trace_links: Vec::new(), report_id: None, confidence_level: None, validation_notes: Vec::new(), };
             let operation = ProgramOperation::Validations(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.validations.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.validations.is_empty());
         }
 
         #[test]
         fn dispatches_wayfinding_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = WayfindingRequirement { header: EntityHeader::new(EntityId::new_serial("wayfindingrequirement63"), "WayfindingRequirement 63"), user_profile_ids: Vec::new(), element_ids: Vec::new(), destination_types: Vec::new(), signage_types: Vec::new(), languages: Vec::new(), tactile_required: false, audio_required: false, digital_wayfinding: false, landmark_strategy: Vec::new(), color_coding: Vec::new(), symbol_standards: Vec::new(), decision_points: Vec::new(), maximum_signage_distance_m: None, lighting_requirements: Vec::new(), maintenance_plan: None, emergency_egress: Vec::new(), visitor_journey: Vec::new(), staff_journey: Vec::new(), brand_integration: Vec::new(), };
             let operation = ProgramOperation::Wayfinding(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.wayfinding.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.wayfinding.is_empty());
         }
 
         #[test]
         fn dispatches_workshops_add_and_invert() {
-            let mut program = empty_program();
+            let mut program = empty_plugin();
             let item = Workshop { header: EntityHeader::new(EntityId::new_serial("workshop64"), "Workshop 64"), workshop_type: String::new(), objectives: Vec::new(), agenda: Vec::new(), facilitator_id: None, participants: Vec::new(), scheduled_start: None, scheduled_end: None, location: None, materials: Vec::new(), methods: Vec::new(), outputs: Vec::new(), decisions: Vec::new(), issues: Vec::new(), follow_up_actions: Vec::new(), feedback: Vec::new(), recording_ref: None, budget: None, workshop_status: LifecycleStatus::Draft, survey_ids: Vec::new(), };
             let operation = ProgramOperation::Workshops(CollectionOperation::Add { id: item.header.id.clone(), item, at: 0 });
-            apply_program_operation(&mut program, &operation);
+            apply_plugin_operation(&mut program, &operation);
             assert_eq!(program.workshops.len(), 1);
-            let undo = invert_program_operation(&program, &operation);
-            apply_program_operation(&mut program, &undo);
+            let undo = invert_plugin_operation(&program, &operation);
+            apply_plugin_operation(&mut program, &undo);
             assert!(program.workshops.is_empty());
         }
 
@@ -2843,15 +2843,15 @@ mod operations {
 
         #[test]
         fn set_adjacency_and_clear_adjacency_op_text_round_trip() {
-            let program = sample_program();
+            let program = sample_plugin();
             let adjacency = program.adjacencies[0].clone();
             store::test_support::assert_op_line_round_trip(&ProgramOperation::SetAdjacency { adjacency });
             store::test_support::assert_op_line_round_trip(&ProgramOperation::ClearAdjacency { id: EntityId::new_serial("adjacency") });
         }
 
         #[test]
-        fn set_program_op_text_round_trips() {
-            store::test_support::assert_op_line_round_trip(&ProgramOperation::SetProgram { program: Box::new(sample_program()) });
+        fn set_plugin_op_text_round_trips() {
+            store::test_support::assert_op_line_round_trip(&ProgramOperation::SetProgram { program: Box::new(sample_plugin()) });
         }
 
         #[test]
@@ -2914,7 +2914,7 @@ mod outputs {
     // #endregion
 
     // #region 🔖Builders
-    /// @emoji 🏗️ Builds the requested abstract output from a program snapshot.
+    /// @emoji 🏗️ Builds the requested abstract output from a plugin snapshot.
     pub fn build_output(program: &Program, kind: OutputKind) -> ProgramOutput {
         match kind {
             OutputKind::RequirementLists => requirement_lists(program),
@@ -3063,17 +3063,17 @@ mod outputs {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::program::sample_program;
+        use crate::program::sample_plugin;
 
         #[test]
         fn requirement_lists_output_nonempty_for_sample() {
-            let output = build_output(&sample_program(), OutputKind::RequirementLists);
+            let output = build_output(&sample_plugin(), OutputKind::RequirementLists);
             assert_eq!(output.kind, OutputKind::RequirementLists);
         }
 
         #[test]
         fn adjacency_matrices_output_uses_matrix_cells() {
-            let output = build_output(&sample_program(), OutputKind::AdjacencyMatrices);
+            let output = build_output(&sample_plugin(), OutputKind::AdjacencyMatrices);
             assert!(!output.lines.is_empty());
         }
     }
@@ -3238,7 +3238,7 @@ mod program {
 
     // #region 🔖Factories
     /// @emoji 📭 Empty program with schema, meta, project, and governance initialized.
-    pub fn empty_program() -> Program {
+    pub fn empty_plugin() -> Program {
         let project_id = EntityId::new_serial("project");
         let governance_id = EntityId::new_serial("governance");
         Program {
@@ -3388,8 +3388,8 @@ mod program {
     }
 
     /// @emoji 🧪 Sample program for tests with elements, stakeholders, and one adjacency.
-    pub fn sample_program() -> Program {
-        let mut program = empty_program();
+    pub fn sample_plugin() -> Program {
+        let mut program = empty_plugin();
         program.meta.title = "Sample Clinic".into();
         program.meta.industry_sector = "healthcare".into();
         program.project.code = "CLN-001".into();
@@ -3517,15 +3517,15 @@ mod program {
         use super::*;
 
         #[test]
-        fn empty_program_has_schema() {
-            let program = empty_program();
+        fn empty_plugin_has_schema() {
+            let program = empty_plugin();
             assert_eq!(program.schema, ARCHITECT_PROGRAM_SCHEMA);
             assert_eq!(program.meta.schema, ARCHITECT_PROGRAM_SCHEMA);
         }
 
         #[test]
-        fn sample_program_round_trips_json() {
-            let program = sample_program();
+        fn sample_plugin_round_trips_json() {
+            let program = sample_plugin();
             let json = serde_json::to_string(&program).expect("serialize");
             let decoded: Program = serde_json::from_str(&json).expect("deserialize");
             assert_eq!(decoded.elements.len(), 2);
@@ -3534,26 +3534,26 @@ mod program {
 
         // #region 🔖DslDocument
         #[test]
-        fn empty_program_dsl_round_trips() {
-            store::test_support::assert_dsl_round_trip(&empty_program());
-            store::test_support::assert_dsl_pack_equivalence(&empty_program());
+        fn empty_plugin_dsl_round_trips() {
+            store::test_support::assert_dsl_round_trip(&empty_plugin());
+            store::test_support::assert_dsl_pack_equivalence(&empty_plugin());
         }
 
         #[test]
-        fn sample_program_dsl_round_trips() {
-            store::test_support::assert_dsl_round_trip(&sample_program());
+        fn sample_plugin_dsl_round_trips() {
+            store::test_support::assert_dsl_round_trip(&sample_plugin());
         }
 
         #[test]
         // 🪲 Blocked on a confirmed upstream `pack` crate bug, NOT an architect defect: table
         // rows (`#[dsl(table)] Vec<Stakeholder>` etc.) decode via `pack::value`'s self-describing
-        fn sample_program_dsl_pack_equivalence() {
-            store::test_support::assert_dsl_pack_equivalence(&sample_program());
+        fn sample_plugin_dsl_pack_equivalence() {
+            store::test_support::assert_dsl_pack_equivalence(&sample_plugin());
         }
 
         #[test]
-        fn sample_program_dsl_text_is_parseable_and_reflects_registers() {
-            let printed = sample_program().print_dsl();
+        fn sample_plugin_dsl_text_is_parseable_and_reflects_registers() {
+            let printed = sample_plugin().print_dsl();
             assert!(printed.contains("Sample Clinic"), "printed dsl text must contain program title: {printed}");
             assert!(printed.contains("REC"), "printed dsl text must contain the reception element code: {printed}");
         }
@@ -3562,7 +3562,7 @@ mod program {
 }
 
 mod registers {
-    //! 🏛️ Architectural programming register entities — typed domain model for all 65 feature areas.
+    //! 🏛️ Architectural __KEEP_pluginming__ register entities — typed domain model for all 65 feature areas.
 
     use crate::kernel::*;
     use serde::{Deserialize, Serialize};
@@ -6655,7 +6655,7 @@ mod registers {
         pub stakeholder_ids: Vec<EntityId>,
         pub service_requirement_ids: Vec<EntityId>,
         pub branding_requirements: Vec<String>,
-        pub wellness_programs: Vec<String>,
+        pub wellness_plugins: Vec<String>,
         pub diversity_goals: Vec<String>,
         pub owner_id: Option<EntityId>,
     }
@@ -6687,7 +6687,7 @@ mod registers {
         pub stakeholder_ids: Option<Vec<EntityId>>,
         pub service_requirement_ids: Option<Vec<EntityId>>,
         pub branding_requirements: Option<Vec<String>>,
-        pub wellness_programs: Option<Vec<String>>,
+        pub wellness_plugins: Option<Vec<String>>,
         pub diversity_goals: Option<Vec<String>>,
         pub owner_id: Option<EntityId>,
     }
@@ -6722,7 +6722,7 @@ mod registers {
             [stakeholder_ids] => stakeholder_ids,
             [service_requirement_ids] => service_requirement_ids,
             [branding_requirements] => branding_requirements,
-            [wellness_programs] => wellness_programs,
+            [wellness_plugins] => wellness_plugins,
             [diversity_goals] => diversity_goals,
             [owner_id] => owner_id,
         }
@@ -12407,7 +12407,7 @@ mod registers {
                 stakeholder_ids: Some(vec![EntityId::new_serial("new23")]),
                 service_requirement_ids: Some(vec![EntityId::new_serial("new23")]),
                 branding_requirements: Some(vec!["patched-23".to_string()]),
-                wellness_programs: Some(vec!["patched-23".to_string()]),
+                wellness_plugins: Some(vec!["patched-23".to_string()]),
                 diversity_goals: Some(vec!["patched-23".to_string()]),
                 owner_id: Some(EntityId::new_serial("new23")),
                 ..Default::default()
@@ -15018,7 +15018,7 @@ mod report {
     use crate::program::Program;
     use crate::registers::{AnalysisKind, ReportKind, ReportRecord, ValidationStatus};
     use crate::status_summary::status_summary;
-    use crate::validate::validate_program;
+    use crate::validate::validate_plugin;
     use serde::{Deserialize, Serialize};
 
     // #region 🔖ProgramReport
@@ -15033,7 +15033,7 @@ mod report {
         pub entity_ids: Vec<EntityId>,
     }
 
-    /// @emoji 📎 One titled section within a program report.
+    /// @emoji 📎 One titled section within a plugin report.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct ReportSection {
@@ -15227,7 +15227,7 @@ mod report {
     }
 
     fn validation_summary(program: &Program) -> ProgramReport {
-        let diagnostics = validate_program(program);
+        let diagnostics = validate_plugin(program);
         ProgramReport {
             kind: ReportKind::ValidationSummary,
             title: "Validation Summary".into(),
@@ -15381,25 +15381,25 @@ mod report {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::program::sample_program;
+        use crate::program::sample_plugin;
 
         #[test]
         fn executive_summary_includes_counts() {
-            let report = build_report(&sample_program(), ReportKind::ExecutiveSummary);
+            let report = build_report(&sample_plugin(), ReportKind::ExecutiveSummary);
             assert_eq!(report.kind, ReportKind::ExecutiveSummary);
             assert!(!report.sections.is_empty());
         }
 
         #[test]
         fn requirements_matrix_has_grid_rows() {
-            let report = build_report(&sample_program(), ReportKind::RequirementsMatrix);
+            let report = build_report(&sample_plugin(), ReportKind::RequirementsMatrix);
             assert!(!report.sections[0].bullets.is_empty());
             assert!(report.sections[0].bullets[0].contains('\t'));
         }
 
         #[test]
         fn build_report_and_record_persists() {
-            let mut program = sample_program();
+            let mut program = sample_plugin();
             let before = program.reports.len();
             build_report_and_record(&mut program, ReportKind::AdjacencyMatrix);
             assert_eq!(program.reports.len(), before + 1);
@@ -15455,7 +15455,7 @@ mod search {
 
     // #region 🔖SearchProgram
     /// @emoji 🔎 Searches all registers; uses `filter` when provided; records query in `search_history`.
-    pub fn search_program(program: &Program, query: &SearchQuery, filter: Option<&SearchFilter>, search_history: Option<&mut Vec<SearchQuery>>) -> Vec<SearchHit> {
+    pub fn search_plugin(program: &Program, query: &SearchQuery, filter: Option<&SearchFilter>, search_history: Option<&mut Vec<SearchQuery>>) -> Vec<SearchHit> {
         let effective = merge_query(query, filter);
         if let Some(history) = search_history {
             history.push(effective.clone());
@@ -15603,25 +15603,25 @@ mod search {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::program::sample_program;
+        use crate::program::sample_plugin;
 
         #[test]
         fn search_finds_reception_element() {
-            let hits = search_program(&sample_program(), &SearchQuery { keywords: vec!["Reception".into()], ..Default::default() }, None, None);
+            let hits = search_plugin(&sample_plugin(), &SearchQuery { keywords: vec!["Reception".into()], ..Default::default() }, None, None);
             assert!(hits.iter().any(|h| h.name == "Reception"));
         }
 
         #[test]
         fn search_history_records_query() {
             let mut history = Vec::new();
-            search_program(&sample_program(), &SearchQuery { keywords: vec!["Waiting".into()], ..Default::default() }, None, Some(&mut history));
+            search_plugin(&sample_plugin(), &SearchQuery { keywords: vec!["Waiting".into()], ..Default::default() }, None, Some(&mut history));
             assert_eq!(history.len(), 1);
             assert_eq!(history[0].keywords, vec!["Waiting".to_string()]);
         }
 
         #[test]
         fn entity_kind_filter_limits_registers() {
-            let hits = search_program(&sample_program(), &SearchQuery { entity_kinds: vec!["elements".into()], ..Default::default() }, None, None);
+            let hits = search_plugin(&sample_plugin(), &SearchQuery { entity_kinds: vec!["elements".into()], ..Default::default() }, None, None);
             assert!(hits.iter().all(|h| h.register == "elements"));
         }
     }
@@ -15793,11 +15793,11 @@ mod status_summary {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::program::sample_program;
+        use crate::program::sample_plugin;
 
         #[test]
-        fn sample_program_status_summary_counts_elements() {
-            let summary = status_summary(&sample_program());
+        fn sample_plugin_status_summary_counts_elements() {
+            let summary = status_summary(&sample_plugin());
             assert!(summary.total_entities >= 2);
             let elements = summary.by_register.iter().find(|r| r.register == "elements").expect("elements");
             assert_eq!(elements.count, 2);
@@ -15805,7 +15805,7 @@ mod status_summary {
 
         #[test]
         fn status_summary_includes_all_major_registers() {
-            let summary = status_summary(&sample_program());
+            let summary = status_summary(&sample_plugin());
             for register in ["elements", "stakeholders", "adjacencies", "status_records"] {
                 assert!(summary.by_register.iter().any(|r| r.register == register));
             }
@@ -15814,7 +15814,7 @@ mod status_summary {
 }
 
 mod template {
-    //! 📋 Template application — sector and project templates into program registers.
+    //! 📋 Template application — sector and project templates into __KEEP_plugin_registers__.
 
     use crate::adjacency::{normalize_pair, set_adjacency};
     use crate::kernel::{EntityHeader, EntityId, TextField};
@@ -16155,13 +16155,13 @@ mod template {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::operations::apply_program_operation;
-        use crate::program::empty_program;
+        use crate::operations::apply_plugin_operation;
+        use crate::program::empty_plugin;
         use crate::registers::TemplateRecord;
 
         #[test]
-        fn apply_template_returns_program_operations() {
-            let mut program = empty_program();
+        fn apply_template_returns_plugin_operations() {
+            let mut program = empty_plugin();
             let template = TemplateRecord {
                 header: EntityHeader::new(EntityId::new_serial("template"), "Clinic Starter"),
                 template_type: "sector".into(),
@@ -16192,8 +16192,8 @@ mod template {
         }
 
         #[test]
-        fn template_ops_replay_on_empty_program() {
-            let mut source = empty_program();
+        fn template_ops_replay_on_empty_plugin() {
+            let mut source = empty_plugin();
             let template = TemplateRecord {
                 header: EntityHeader::new(EntityId::new_serial("template"), "Replay"),
                 template_type: "sector".into(),
@@ -16217,9 +16217,9 @@ mod template {
                 source_organization: None,
             };
             let operations = apply_template(&mut source, &template);
-            let mut target = empty_program();
+            let mut target = empty_plugin();
             for operation in &operations {
-                apply_program_operation(&mut target, operation);
+                apply_plugin_operation(&mut target, operation);
             }
             assert_eq!(target.functions.len(), 1);
         }
@@ -16324,7 +16324,7 @@ mod trace {
         AuditTrail { subject_id: subject_id.cloned(), events }
     }
 
-    /// @emoji ➕ Appends a trace link to the program trace register.
+    /// @emoji ➕ Appends a trace link to the plugin trace register.
     pub fn add_trace_link(program: &mut Program, from_id: EntityId, to_id: EntityId, kind: TraceKind) {
         program.traces.push(TraceLink::new(from_id, to_id, kind));
     }
@@ -16345,7 +16345,7 @@ mod trace {
         current
     }
 
-    /// @emoji 🧷 Copies requirement-embedded trace links into the program trace register.
+    /// @emoji 🧷 Copies requirement-embedded trace links into the plugin trace register.
     fn embed_requirement_traces(program: &mut Program) {
         for requirement in &program.requirements {
             for link in &requirement.trace_links {
@@ -16374,11 +16374,11 @@ mod trace {
     mod tests {
         use super::*;
         use crate::kernel::TraceKind;
-        use crate::program::sample_program;
+        use crate::program::sample_plugin;
 
         #[test]
         fn trace_chain_follows_links() {
-            let mut program = sample_program();
+            let mut program = sample_plugin();
             let a = program.elements[0].header.id.clone();
             let b = program.elements[1].header.id.clone();
             add_trace_link(&mut program, a.clone(), b.clone(), TraceKind::FunctionToProgramElement);
@@ -16389,7 +16389,7 @@ mod trace {
 
         #[test]
         fn audit_trail_sorted_newest_first() {
-            let mut program = sample_program();
+            let mut program = sample_plugin();
             program.audit_events.push(AuditEvent {
                 header: crate::kernel::EntityHeader::new(EntityId::new_serial("audit"), "older"),
                 action: crate::registers::AuditAction::Created,
@@ -16438,7 +16438,7 @@ mod trace {
 
         #[test]
         fn trace_impact_collects_upstream() {
-            let mut program = sample_program();
+            let mut program = sample_plugin();
             let req_id = EntityId::new_serial("requirement");
             let elem_id = program.elements[0].header.id.clone();
             add_trace_link(&mut program, req_id.clone(), elem_id.clone(), TraceKind::ObjectiveToRequirement);
@@ -16669,8 +16669,8 @@ mod validate {
     // #endregion
 
     // #region 🔖Validate
-    /// @emoji 🩺 Validates a program document and returns all diagnostics (non-fatal).
-    pub fn validate_program(program: &Program) -> Vec<ProgramDiagnostic> {
+    /// @emoji 🩺 Validates a plugin document and returns all diagnostics (non-fatal).
+    pub fn validate_plugin(program: &Program) -> Vec<ProgramDiagnostic> {
         let mut diagnostics = Vec::new();
         if program.schema != ARCHITECT_PROGRAM_SCHEMA {
             diagnostics.push(ProgramDiagnostic {
@@ -16881,24 +16881,24 @@ mod validate {
     mod tests {
         use super::*;
         use crate::kernel::EntityHeader;
-        use crate::program::{empty_program, sample_program};
+        use crate::program::{empty_plugin, sample_plugin};
         use crate::registers::Requirement;
 
         #[test]
-        fn sample_program_passes_validation() {
-            let diagnostics = validate_program(&sample_program());
+        fn sample_plugin_passes_validation() {
+            let diagnostics = validate_plugin(&sample_plugin());
             assert!(diagnostics.iter().all(|d| d.severity != DiagnosticSeverity::Error));
         }
 
         #[test]
-        fn empty_program_warns_on_title() {
-            let diagnostics = validate_program(&empty_program());
+        fn empty_plugin_warns_on_title() {
+            let diagnostics = validate_plugin(&empty_plugin());
             assert!(diagnostics.iter().any(|d| d.code == "meta.empty_title"));
         }
 
         #[test]
         fn detects_orphan_requirement() {
-            let mut program = sample_program();
+            let mut program = sample_plugin();
             program.requirements.push(Requirement {
                 header: EntityHeader::new(EntityId::new_serial("requirement"), "Orphan"),
                 code: "OR-1".into(),
@@ -16922,13 +16922,13 @@ mod validate {
                 trace_links: Vec::new(),
                 superseded_by: None,
             });
-            let diagnostics = validate_program(&program);
+            let diagnostics = validate_plugin(&program);
             assert!(diagnostics.iter().any(|d| d.code == "requirement.orphan"));
         }
 
         #[test]
         fn detects_broken_relationship_target() {
-            let mut program = sample_program();
+            let mut program = sample_plugin();
             program.relationships.push(crate::registers::Relationship {
                 header: EntityHeader::new(EntityId::new_serial("relationship"), "broken"),
                 source_id: program.elements[0].header.id.clone(),
@@ -16956,7 +16956,7 @@ mod validate {
                 incompatibility_requirement: None,
                 separation_requirements: Vec::new(),
             });
-            let diagnostics = validate_program(&program);
+            let diagnostics = validate_plugin(&program);
             assert!(diagnostics.iter().any(|d| d.code == "relationship.missing_target"));
         }
     }

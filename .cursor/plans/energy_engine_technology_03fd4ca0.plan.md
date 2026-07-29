@@ -41,7 +41,7 @@ isProject: false
 
 - **Goal:** Approving this plan authorizes opening goal `energy` (title “Energy”, due `2026-12-31`). Ticket binds to `energy`.
 - **Path / crate:** [`energy/engine/rs`](energy/engine/rs) → Cargo package `energy_engine`; nx `@semio-tech/energy-engine`.
-- **Surface:** Headless Rust library only. Callers build a typed `Model`, call `Engine::run`, receive typed `Results`. No CLI, GUI, WASM program, language bindings, or C API in this ticket.
+- **Surface:** Headless Rust library only. Callers build a typed `Model`, call `Engine::run`, receive typed `Results`. No CLI, GUI, WASM plugin, language bindings, or C API in this ticket.
 - **Weather:** Native EPW ingest into typed weather structs (data ingest, not a model schema). Callers may also supply in-memory weather / design-day profiles.
 - **No mixing:** Do not depend on `norm_*`, CAD energy modules, or `mit-bestand`. Norm compliance and CAD geometry stay separate consumers later.
 - **Economics:** Utility tariffs / LCCA live in `pub mod economics` and are explicitly outside the physics kernel (optional post-pass over meters).

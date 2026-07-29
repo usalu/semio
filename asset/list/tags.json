@@ -32,7 +32,7 @@
   "generative-design": {
     "name": "Generative Design",
     "abbreviation": "GD",
-    "description": "Generative design is an iterative design process that uses software to generate outputs that fulfill a set of constraints iteratively adjusted by a designer. Whether a human, test program, or artificial intelligence, the designer algorithmically or manually refines the feasible region of the program's inputs and outputs with each interaction to fulfill evolving design requirements.",
+    "description": "Generative design is an iterative design process that uses software to generate outputs that fulfill a set of constraints iteratively adjusted by a designer. Whether a human, test program, or artificial intelligence, the designer algorithmically or manually refines the feasible region of the plugin's inputs and outputs with each interaction to fulfill evolving design requirements.",
     "reference": "https://en.wikipedia.org/wiki/Generative_design"
   },
   "kit-of-parts": {

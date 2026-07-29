@@ -919,7 +919,7 @@ impl Operation<Puzzle2dProjection> for Puzzle2dOperation {
 // #endregion 🔖Operations
 
 // #region 🔖ValueBridge
-// 🌉 `puzzle-program`'s scene-mutation helpers predate this typed projection and stay on a bare
+// 🌉 `puzzle-plugin`'s scene-mutation helpers predate this typed projection and stay on a bare
 // `serde_json::Value` scratch fixture (out of scope for this ticket — see
 // `.repo/🎫/…/convertpuzzle2d3d5dtotypeddslderiveengine`). Bridging `Puzzle2dOperation`/`Puzzle2dDiff`
 // onto that `Value` boundary too keeps `puzzle2d_document_delta_operations(&Value, &Value)` and the
@@ -1084,7 +1084,7 @@ where
 }
 
 /// 🧮 Computes the granular typed operation sequence turning `before` into `after` (both the bare
-/// fixture JSON `puzzle-program` mutates). Node/edge arrays diff per element id; camera/meta become
+/// fixture JSON `puzzle-plugin` mutates). Node/edge arrays diff per element id; camera/meta become
 /// `SetCamera`/`SetMeta`. Falls back to a single `SetDocument` whenever the granular replay would not
 /// reproduce `after` exactly (reorders, id-less entries, malformed entries, unrecognized top-level
 /// keys, schema changes) — so the emitted operations are always exact while staying granular for the
@@ -1159,9 +1159,9 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<
 }
 
 // #region 🔖PlayProjection
-/// 🌱 `puzzle-program`'s `Puzzle2dPlayApp` predates the typed `Puzzle2dProjection` above and stays on
+/// 🌱 `puzzle-plugin`'s `Puzzle2dPlayApp` predates the typed `Puzzle2dProjection` above and stays on
 /// this ad-hoc `serde_json::Value` fixture shape for its hundreds of Value-manipulating scene-mutation
-/// helpers (see `puzzle-program`'s own module docs) — out of scope to retrofit onto the typed struct.
+/// helpers (see `puzzle-plugin`'s own module docs) — out of scope to retrofit onto the typed struct.
 /// This newtype exists only to satisfy `DocumentApp::Projection: store::DocumentDsl + store::DocumentPack`
 /// post the repo-wide `store::DocumentDsl for serde_json::Value` bridge's removal (final DSL-syntax
 /// convergence gate); `parse_dsl`/`print_dsl`/`encode_pack_with`/`decode_pack_with` all round-trip
@@ -5113,7 +5113,7 @@ mod force_graph_tests {
         let operations = puzzle2d_document_delta_operations(&before, &after);
         assert!(operations.iter().any(|operation| matches!(operation, Puzzle2dOperation::SetNode { .. })));
         assert!(!operations.iter().any(|operation| matches!(operation, Puzzle2dOperation::SetDocument { .. })), "granular delta must not fall back to whole-document replace here");
-        // Forward replay (over the bare Value fixture, mirroring how `puzzle-program` applies these) reproduces
+        // Forward replay (over the bare Value fixture, mirroring how `puzzle-plugin` applies these) reproduces
         // `after`, and each operation's backwards restores `before`.
         let mut forward = before.clone();
         let mut inverses = Vec::new();

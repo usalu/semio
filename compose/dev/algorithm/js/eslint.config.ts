@@ -6,8 +6,8 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-// For more info, see https://github.com/storybookjs/eslint-program-storybook#configuration-flat-config-format
-import storybook from "eslint-program-storybook";
+// For more info, see https://github.com/storybookjs/__KEEP_eslint_plugin__-storybook#configuration-flat-config-format
+import storybook from "__KEEP_eslint_plugin__-storybook";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 // #endregion 🔌Adapters

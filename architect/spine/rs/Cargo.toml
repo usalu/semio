@@ -3,7 +3,7 @@ name = "architect_spine"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "Headless architectural programming domain — program registers, adjacency, analysis, and exchange"
+description = "Headless architectural __KEEP_pluginming__ domain — __KEEP_plugin_registers__, adjacency, analysis, and exchange"
 
 
 [lints]

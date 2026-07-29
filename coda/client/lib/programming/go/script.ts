@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 Coda programming go router: `bun ./script.ts test`. */
+/** 🧭 Coda __KEEP_pluginming__ go router: `bun ./script.ts test`. */
 import { BundleScript, ScriptRouter, goLevelTestArgs, goCoverageArgs, resolveTestLevel, runBundleScriptMain, runTestBudgeted } from "../../../../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {

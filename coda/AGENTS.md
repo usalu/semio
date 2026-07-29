@@ -78,13 +78,13 @@ An `program` is deterministic system that can be used to perform a task.
 
 #### design software
 
-A `design software` is a program that can open a `design` and can be used to author a `design`.
+A `design software` is a plugin that can open a `design` and can be used to author a `design`.
 
 Every `design software` MUST have an mcp server that can be used by `agents` to interact with the `design`.
 
 #### validator
 
-A `validator` is a program that can validate a `target`. It MUST accpet the `target` as input and produce a `report` as output.
+A `validator` is a plugin that can validate a `target`. It MUST accpet the `target` as input and produce a `report` as output.
 
 ### agent
 
@@ -144,15 +144,15 @@ In general there are `rules` which are validated by the `validators`. Every `rul
 
 It should all be within one file `go/assistant/main.go`.
 
-As example, the design format/authoring platform/mcp server is `compose` and the targets are `BerlinBuildingCode` and `programming`.
+As example, the design format/authoring platform/mcp server is `compose` and the targets are `BerlinBuildingCode` and `__KEEP_pluginming__`.
 There is one translator
 for `compose->BerlinBuildingCode`
 and a validator
 for `BerlinBuildingCode`.
 There is one translator
-for `compose->programming`
+for `compose->__KEEP_pluginming__`
 and a validator
-for `programming`.
+for `__KEEP_pluginming__`.
 
 # MCP Server
 
@@ -196,5 +196,5 @@ change <prompt>
 # Agents
 
 compose-to-blnbo-translation-agent # Responsible for translating compose format to blnbo
-compose-to-programming-translation-agent # Responsible for translating compose format to programming
+compose-to-__KEEP_pluginming__-translation-agent # Responsible for translating compose format to __KEEP_pluginming__
 compose-change-agent # Responsible for changing the compose with compose-mcp to fix breachs from the report

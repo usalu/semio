@@ -439,7 +439,7 @@ pub fn decode_envelopes(bytes: &[u8]) -> Result<Vec<OperationEnvelope>, protocol
 
 /// @emoji 🎯 `count varint | (len varint | bytes) each` — a binary vec-of-op-payloads framing,
 /// replacing the `serde_json::json!({"backwards": [...]})` convention for `InverseOperation`
-/// payloads that carry more than one composed op (e.g. framework/program's `result_from_last_edit`).
+/// payloads that carry more than one composed op (e.g. framework/plugin's `result_from_last_edit`).
 pub fn encode_ops_vec(ops: &[Vec<u8>]) -> Vec<u8> {
     let mut out = Vec::new();
     protocol_core::write_varint_u64(&mut out, ops.len() as u64);

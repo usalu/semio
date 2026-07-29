@@ -2,7 +2,7 @@
 // 💻 .storybook/stories/cad/Renderer.stories.tsx
 // Specs: Host `InteractionCanvas`/`InteractionSpatialView` from `@semio-tech/cad-js-renderer` against the real
 // `primitive.box` interaction shipped at `cad/asset/modelDefinition/spatial.shape/interaction/box.json` — no
-// `cad/program/rs` wasm exists yet (verified: only `Cargo.toml`/`lib.rs`, no `pkg/`), so this drives the pure-TS
+// `cad/plugin/rs` wasm exists yet (verified: only `Cargo.toml`/`lib.rs`, no `pkg/`), so this drives the pure-TS
 // interaction state machine (`pureTsStateEngineProvider`) with a story-local `StoryBoxKernel` that copies every
 // preview-math method off `r3fPreviewKernel` (`R3FPreviewKernel extends PreciseSpatialKernelMath`, see
 // `cad/renderer/js/index.tsx`'s `⚡R3FPreviewKernel` region) via `Object.assign` and only overrides the four

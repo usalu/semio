@@ -1,5 +1,5 @@
 # Summary
 
-Grasshopper program for constructing, deconstructing, and modifying compose representations.
+Grasshopper plugin for constructing, deconstructing, and modifying compose representations.
 
 # 💯Requirements

@@ -913,7 +913,7 @@ use store::{DocumentDsl, DocumentPack, PackDecodeOptions, PackEncodeOptions, Pac
 
 //#region 🔖DslMirrors
 /// 🔒 Local twin of `PortDirection` (foreign, re-exported from `mathematical_graph_manifest` and
-/// consumed by `trinity_jack`/`trinity_program`/`framework::*` — this crate does not own the freedom
+/// consumed by `trinity_jack`/`trinity_plugin`/`framework::*` — this crate does not own the freedom
 /// to reshape it) purely so the DSL engine's derive macros have something local to bind: the orphan
 /// rule blocks `impl dsl::DslField for PortDirection` directly in this crate. Converted at the
 /// `Port`/`PortDsl` boundary via `From`.

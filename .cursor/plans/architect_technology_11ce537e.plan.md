@@ -1,12 +1,12 @@
 ---
 name: Architect Technology
-overview: "Create the `architect` technology: headless `architect_spine` covering all 65 architectural-programming feature areas end-to-end, plus a full s/OS `DocumentApp` at `architect/program` with triangular undirected adjacency-matrix editing as the signature surface."
+overview: "Create the `architect` technology: headless `architect_spine` covering all 65 architectural-__KEEP_pluginming__ feature areas end-to-end, plus a full s/OS `DocumentApp` at `architect/plugin` with triangular undirected adjacency-matrix editing as the signature surface."
 todos:
   - id: goal-ticket
     content: Open goal architect; ticket_open with plan_id; feature checklist in ticket folder
     status: completed
   - id: scaffold
-    content: Scaffold architect/program + architect/program, Cargo/nx/launch/registry/AGENTS.md
+    content: Scaffold architect/plugin + architect/plugin, Cargo/nx/launch/registry/AGENTS.md
     status: completed
   - id: kernel-document
     content: Implement kernel types + Program root with all 65-area registers and serde
@@ -14,14 +14,14 @@ todos:
   - id: adjacency-operations
     content: Undirected adjacency model, conflicts, ProgramOperation VCS, validate/analyze/report/search/trace/exchange
     status: completed
-  - id: tests-program
+  - id: tests-plugin
     content: "Co-located tests: round-trip, operations/undo, adjacency, analysis, exchange"
     status: completed
   - id: plugin-app
     content: "DocumentApp: adjacency triangle list, graph, registers, reports, panels, full actions"
     status: completed
   - id: verify-close
-    content: Run architect_spine tests + program registry/build; ticket_close
+    content: Run architect_spine tests + plugin registry/build; ticket_close
     status: completed
 isProject: false
 ---
@@ -30,10 +30,10 @@ isProject: false
 
 ## Decisions (locked)
 
-- **Paths:** [`architect/program`](architect/program) (headless) + [`architect/program`](architect/program) (standard program path; not `architect/constrain`).
+- **Paths:** [`architect/plugin`](architect/plugin) (headless) + [`architect/plugin`](architect/plugin) (standard program path; not `architect/constrain`).
 - **Depth:** Option 2A — full domain for all 65 feature areas + complete program (CRUD, analysis, exchange, reports, adjacency UI). No stubs, no empty registers.
 - **Goal:** Approving this plan authorizes opening goal `architect` (title “Architect”, due `2026-12-31`). Ticket binds to `🎯architect`.
-- **No mixing:** Do not depend on `coda`, `compose`, `puzzle`, or `mit-bestand`. Adjacency concepts may be reimplemented cleanly; prior art in [`coda/client/lib/programming`](coda/client/lib/programming/go/main.go) is reference only.
+- **No mixing:** Do not depend on `coda`, `compose`, `puzzle`, or `mit-bestand`. Adjacency concepts may be reimplemented cleanly; prior art in [`coda/client/lib/__KEEP_pluginming__`](coda/client/lib/__KEEP_pluginming__/go/main.go) is reference only.
 - **Undirected adjacency:** Store only canonical pairs `(a, b)` with `a < b`; UI edits the lower triangle; graph view is undirected. Depend on [`mathematical_graph`](mathematical/graph/rs) for topology helpers (`normalize_undirected`, `Adjacency`).
 
 ## Architecture
@@ -44,7 +44,7 @@ flowchart TB
   program["architect_spine\nProgram + Operations + Analysis"]
   vcs["vcs"]
   graph["mathematical_graph"]
-  sdk["semio-framework-program"]
+  sdk["semio-framework-plugin"]
 
   program --> program
   program --> sdk
@@ -64,14 +64,14 @@ All other feature areas hang off this spine as typed registers, cross-links, and
 ```
 architect/
   AGENTS.md                          # created once with technology (agents must not edit later)
-  program/
+  plugin/
     rs/Cargo.toml                    # architect_spine
     rs/lib.rs                        # module router
     rs/src/*.rs                      # domain modules (regions)
     script.ts + project.json         # @semio-tech/architect-spine → test
-  program/
+  plugin/
     rs/Cargo.toml                    # architect-spine, semio:architect, playground ports
-    rs/lib.rs                        # DocumentApp + semio_program!
+    rs/lib.rs                        # DocumentApp + semio_plugin!
 ```
 
 **Cargo names:** `architect_spine`, `architect-spine`  
@@ -90,7 +90,7 @@ architect/
 - `TraceLink` (from/to entity + link kind for full traceability)
 - `QuantitySpec` (min/max/target/current/forecast/peak/average + unit)
 - `TextField`, `TaggedNote`, `TimestampMeta` (created/updated/author)
-- `ProgramError` / `ProgramDiagnostic`
+- `PluginError` / `ProgramDiagnostic`
 
 ### Root document
 
@@ -186,7 +186,7 @@ API: `normalize_pair`, `set_adjacency`, `adjacency_matrix` (dense lower-triangle
 
 | Module | Covers | Public API |
 |--------|--------|------------|
-| `validate` | §45 + cross-register integrity | `validate_program(&Program) -> Vec<Diagnostic>` |
+| `validate` | §45 + cross-register integrity | `validate_plugin(&Program) -> Vec<Diagnostic>` |
 | `analyze` | §51 | gap, conflict, dependency, capacity, demand, utilization, workflow, risk, cost, scenario, sensitivity, impact, trend |
 | `report` | §52 + §65 | `ReportKind` → structured `ProgramReport` (executive summary through recommendation) |
 | `search` | §53 | keyword/category/owner/status/priority/source/date filters + saved filters |
@@ -200,13 +200,13 @@ API: `normalize_pair`, `set_adjacency`, `adjacency_matrix` (dense lower-triangle
 - Round-trip serde for `Program` with every register populated
 - Adjacency normalize + conflict detection
 - Operation apply/undo for representative operations per register
-- `validate_program` catches broken refs and adjacency conflicts
+- `validate_plugin` catches broken refs and adjacency conflicts
 - Analysis and report smoke on a fixture program
 - Exchange import/export preserve ids and undirected edges
 
-## Plugin — `architect/program`
+## Plugin — `architect/plugin`
 
-Follow [`forms/plugin`](forms/program/rs) + [`flow/plugin`](flow/program/rs) patterns: `DocumentApp<Program, ProgramOperation>` + `semio_program!`.
+Follow [`forms/plugin`](forms/plugin/rs) + [`flow/plugin`](flow/plugin/rs) patterns: `DocumentApp<Program, ProgramOperation>` + `semio_plugin!`.
 
 ### Manifest
 
@@ -248,9 +248,9 @@ Selection, active register, search query, saved filters, last report JSON, adjac
 ## Workspace / nx / launch wiring
 
 1. Add `architect/spine/rs` and `architect/spine/rs` to [`Cargo.toml`](Cargo.toml) members.
-2. [`architect/program/script.ts`](architect/program/script.ts) + [`project.json`](architect/program/project.json) — `runCargoTestBudgeted(["architect_spine"], …)`.
+2. [`architect/plugin/script.ts`](architect/plugin/script.ts) + [`project.json`](architect/plugin/project.json) — `runCargoTestBudgeted(["architect_spine"], …)`.
 3. Plugin `Cargo.toml`: `[package.metadata.component] package = "semio:architect"`, playground `6090`/`6190`.
-4. Regenerate program registry: `bun nx run @semio-tech/program-registry:generate`.
+4. Regenerate plugin registry: `bun nx run @semio-tech/plugin-registry:generate`.
 5. Register launch configs in [`.vscode/launch.json`](.vscode/launch.json) (existing order/grouping):
    - `🧪test🏛️architect-spine`
    - `🛠️dev🏛️architect⚛️react`
@@ -262,7 +262,7 @@ Selection, active register, search query, saved filters, last report JSON, adjac
 
 1. Open goal `architect` (authorized by plan approval).
 2. `ticket_open` with goal `architect`, plan_id from this plan, emoji `🏛️`, title “Architect Program And Plugin”.
-3. Implement program crate → program → registry → launch → tests.
+3. Implement plugin crate → program → registry → launch → tests.
 4. Confirm: `cargo test -p architect_spine`, program builds via OS dev / component target, adjacency UI path exercised with `[DEBUG]` logs if needed.
 5. `ticket_close` with summary + all touched files.
 

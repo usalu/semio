@@ -52,7 +52,7 @@ Extend `World3dScene` (`framework/core/rs/lib.rs:2062`) with new optional JSON f
 - `chunking_json: Option<String>` → `WorldChunkingRecord { chunk_size, max_distance }` — absent = unbounded (today's behavior, matching r3f's opt-in `ViewRadiusLayer`).
 - `WorldMeshRecord` (`infinite/world/rs/lib.rs:68–72`) gains `lods: Option<Vec<WorldMeshLodEntry { lod: f64, url: String }>>` mirroring `LodMeshEntry`/`pickClosestMeshUrl`.
 
-Wire `puzzle/3d/program/rs/lib.rs` and `cad/program/rs/lib.rs` to set `chunking_json` with the same constants CAD uses today (`chunkSize=256`, `maxDistance=8000`, per `cad/renderer/js/index.tsx:2974-2975`), demonstrating real chunk streaming parity for the two consumers that use it upstream.
+Wire `puzzle/3d/plugin/rs/lib.rs` and `cad/plugin/rs/lib.rs` to set `chunking_json` with the same constants CAD uses today (`chunkSize=256`, `maxDistance=8000`, per `cad/renderer/js/index.tsx:2974-2975`), demonstrating real chunk streaming parity for the two consumers that use it upstream.
 
 ## Phase 1 — Pure math: LOD + progressive grid (`kernel/3d/scene/rs/lib.rs`)
 
@@ -88,7 +88,7 @@ Add unit tests alongside existing `kernel_3d_scene` tests mirroring the r3f test
 ## Phase 5 — Wiring, tests, verification
 
 - `framework/core/rs/lib.rs`: add `WorldLodRecord`, `WorldChunkingRecord`, `WorldMeshLodEntry` structs + defaults next to `World3dScene` (`2062–2099`).
-- `puzzle/3d/program/rs/lib.rs`, `cad/program/rs/lib.rs`: set `chunking_json` (chunk_size 256, max_distance 8000) when constructing `World3dScene`.
+- `puzzle/3d/plugin/rs/lib.rs`, `cad/plugin/rs/lib.rs`: set `chunking_json` (chunk_size 256, max_distance 8000) when constructing `World3dScene`.
 - Extend existing test module in `infinite/world/rs/lib.rs` (`2987+`) — do not create new test files: chunk key bucketing/hysteresis, pool refcount eviction, LOD mesh URL resolution, grid layer generation/exclusion-from-pick.
 - Extend `kernel_3d_scene` tests for the ported pure functions.
 - Run `cargo test -p kernel_3d_scene -p infinite_world -p semio-framework-core --lib`, then `bun ./framework/renderer/wgpu/script.ts wasm` and smoke puzzle3d/cad wgpu plays (grid visible, LOD bands change with zoom, chunks unload at distance, meshes re-appear on re-approach) — confirm via console logs per repo rules before closing the ticket.

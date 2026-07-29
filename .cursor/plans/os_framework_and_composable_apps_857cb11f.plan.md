@@ -3,7 +3,7 @@ name: os framework and composable apps
 overview: Introduce a generic `os` product framework (peer of platform/playground/presentation) that generalizes S's existing composition model, make `s` a concrete instance of `os`, unify hover/selection into one contract every app implements, and collapse the 24+ per-domain `*/play` packages into one generic runner driven by an app definition exported from each domain's `index.ts`.
 todos:
  - id: os-core-skeleton
-   content: Create framework/product/os/core + renderer/react generalizing StudioStore/SMediaGraph/SAppInstance/program registry/resolveAppHost out of s/core and s/play
+   content: Create framework/product/os/core + renderer/react generalizing StudioStore/SMediaGraph/SAppInstance/plugin registry/resolveAppHost out of s/core and s/play
    status: completed
  - id: interaction-contract
    content: Formalize AppPointerFocusStore as the mandatory hover+selection contract on base Controller; migrate JackHoverBridge to adapt to it
@@ -36,7 +36,7 @@ isProject: false
 
 ## Current state (confirmed by exploration)
 
-- `s` (`s/core/index.ts`, `s/play/index.ts`) already implements almost everything an "os" needs: `StudioStore` (CQRS), `SMediaGraph`, `SAppInstance`, a program registry (`mergeSWorkflowDefinition`/`registerSWorkflowDefinition`/`listSPrograms`), dynamic extension loading (`loadAllSProgramExtensions` in `s/play/program-extensions.ts`), and `SAppHostRouter` — a hand-written switch statement in `framework/product/playground/renderer/react/index.tsx` that embeds each technology inside S. This was just generalized in the closed `S-TECHNOLOGY-EXTENSION-LOADING` ticket, but it is still S-branded and not a reusable framework.
+- `s` (`s/core/index.ts`, `s/play/index.ts`) already implements almost everything an "os" needs: `StudioStore` (CQRS), `SMediaGraph`, `SAppInstance`, a plugin registry (`mergeSWorkflowDefinition`/`registerSWorkflowDefinition`/`listSPrograms`), dynamic extension loading (`loadAllSProgramExtensions` in `s/play/program-extensions.ts`), and `SAppHostRouter` — a hand-written switch statement in `framework/product/playground/renderer/react/index.tsx` that embeds each technology inside S. This was just generalized in the closed `S-TECHNOLOGY-EXTENSION-LOADING` ticket, but it is still S-branded and not a reusable framework.
 - `framework/product/AGENTS.md` already defines the "product" taxonomy: `platform` (full extendable product framework) and `playground` (lightweight interactive dev harness) are peers. There is no `os` product yet.
 - Every domain (draw, flow, lowpoly, puzzle 2d/3d/5d, dag, trinity, gis, procedural 2d/3d, raster, writer, forms, sequence, layout, imperative, vcs, presentation, reasoning/mindmap, shooting, cad — 25 in total) ships its own `*/play` package: `package.json`, `project.json`, `script.ts`, `vite.config.ts`, `index.html`, and a large `index.ts`. Per the exploration, these are ~80-95% identical boilerplate (nx scripts, `createPlaygroundPlayViteConfig` wrapper, boot-gate tail keyed by a build-time `PUZZLE_PLAY_ENTRY` string). The only generic boot primitives today are `Playground`/`bootstrapPlaygroundWorkbench` (`framework/product/playground/core/index.ts`) and per-domain `boot<X>Play(playground)` functions in the renderer — there is no `bootFromDefinition()` that skips a bespoke `play/index.ts` per domain.
 - Hover/selection is fragmented: `CanvasHoverFocus`/`AppPointerFocusStore<TKey>` (`framework/core/index.ts`) are already generic single-hover/single-selection primitives, but most domains bypass them with bespoke shapes: `LowpolyTarget`+`hoverRevision` (lowpoly), `DrawHoverPayload` (draw), `Puzzle3dHoverPayload` (puzzle 3d), `HoverFocusSnapshot` (puzzle 5d), `selectedNodeIds` (flow/dag), `selectedMediaNodeIds`/`selectedAppInstanceIds` (s/play), each wired ad hoc to `JackHoverBridge` where relevant.
@@ -52,7 +52,7 @@ flowchart TD
     subgraph osCore ["framework/product/os/core"]
         osStore["OsStore (CQRS, generalized StudioStore)"]
         mediaGraph["OsMediaGraph / OsAppInstance"]
-        registry["OsProgramRegistry: mergeOsWorkflowDefinition/loadOsProgramExtensions"]
+        registry["OsPluginRegistry: mergeOsWorkflowDefinition/loadOsProgramExtensions"]
         hostRouter["resolveAppHost(appDefinition, instance) — generic, no switch"]
     end
     subgraph playgroundDev ["framework/product/playground/dev (ONE generic runner)"]
@@ -78,7 +78,7 @@ New `framework/product/os/core/index.ts` (+ `framework/product/os/renderer/react
 - `OsDocument`/`OsProjection`/`OsVcs` ← generalized from `SStudioDocument`/`SStudioProjection`/`SStudioVcs`.
 - `OsAppInstance`, `OsMediaGraph` (nodes/edges/ports) ← generalized from `SAppInstance`/`SMediaGraph`.
 - `OsStore` (CQRS: spawn/connect/apply commands) ← generalized from `StudioStore`.
-- `OsProgramRegistry`: `mergeOsWorkflowDefinition`/`registerOsWorkflowDefinition`/`listOsPrograms`, built directly on `AppDefinition`/`PlatformDefinition` (`framework/product/platform/core/index.ts`) — no more per-technology dynamic `import()` guesswork; each domain's `AppDefinition` is imported directly since it is now a first-class exported value.
+- `OsPluginRegistry`: `mergeOsWorkflowDefinition`/`registerOsWorkflowDefinition`/`listOsPrograms`, built directly on `AppDefinition`/`PlatformDefinition` (`framework/product/platform/core/index.ts`) — no more per-technology dynamic `import()` guesswork; each domain's `AppDefinition` is imported directly since it is now a first-class exported value.
 - `resolveAppHost(appDefinition, instance)`: replaces the hand-written `SAppHostRouter` switch in `framework/product/playground/renderer/react/index.tsx` with generic resolution based on what each `AppDefinition` itself registers (bodies/surface hosts), so adding an app never requires touching a central switch statement again.
 - `OsBackbone` ← generalized from `DevJsonBackbone`/`LocalJsonBackbone` (already fairly generic; just de-S-branded).
 

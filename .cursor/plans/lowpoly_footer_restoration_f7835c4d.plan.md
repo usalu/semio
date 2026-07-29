@@ -7,7 +7,7 @@ isProject: false
 
 ## Root cause
 
-The footer toolbar is built in [lowpoly/program/rs/lib.rs](lowpoly/program/rs/lib.rs) `edit_tools()`/`paint_tools()` (lines 849-964) and rendered by [framework/renderer/react/tool-tree.tsx](framework/renderer/react/tool-tree.tsx). `toolIcon()` in that file falls back to a generic `circle` icon whenever `iconId in ICONS` is false:
+The footer toolbar is built in [lowpoly/plugin/rs/lib.rs](lowpoly/plugin/rs/lib.rs) `edit_tools()`/`paint_tools()` (lines 849-964) and rendered by [framework/renderer/react/tool-tree.tsx](framework/renderer/react/tool-tree.tsx). `toolIcon()` in that file falls back to a generic `circle` icon whenever `iconId in ICONS` is false:
 
 ```33:35:framework/renderer/react/tool-tree.tsx
 function toolIcon(iconId: string): IconName {
@@ -19,7 +19,7 @@ function toolIcon(iconId: string): IconName {
 
 Additionally, `tool_button`/`tool_toggle`/`tool_collection` in [framework/core/rs/tools.rs](framework/core/rs/tools.rs) are called without labels, so every tool loses its tooltip (`title`/`label` default to `None`); and the 11 edit operations were flattened into loose top-level buttons instead of the old `edit` collection, and paint's UV/history operations were similarly flattened — both structural regressions versus `git show 32693795d:lowpoly/core/js/index.ts` (`buildLowpolyPlayToolbarTools`/`buildLowpolyPlayPaintToolbarTools`, lines 131-213).
 
-Separately, the old editor's `windowEngagement()` (same file, lines 706-736) supplied a Snap/Smooth options rail, a command-line input (`engagementInput`/`engagementSubmit`), quick "possible engagements" (Extrude, Triangulate), and a status line — all rebuilt alongside the toolbar in `rebuildShellMode`/`rebuildPaintMode`. This is completely absent from the Rust port even though the framework already supports it end-to-end (`draw/program/rs/lib.rs` uses `App::window_kind_with_engagement` at line 1239, rendered via `windowEngagementToSpec` in [framework/renderer/react/os-shell.tsx](framework/renderer/react/os-shell.tsx)).
+Separately, the old editor's `windowEngagement()` (same file, lines 706-736) supplied a Snap/Smooth options rail, a command-line input (`engagementInput`/`engagementSubmit`), quick "possible engagements" (Extrude, Triangulate), and a status line — all rebuilt alongside the toolbar in `rebuildShellMode`/`rebuildPaintMode`. This is completely absent from the Rust port even though the framework already supports it end-to-end (`draw/plugin/rs/lib.rs` uses `App::window_kind_with_engagement` at line 1239, rendered via `windowEngagementToSpec` in [framework/renderer/react/os-shell.tsx](framework/renderer/react/os-shell.tsx)).
 
 ## Phase 1 — Vendor the missing icons
 
@@ -29,7 +29,7 @@ Regenerate via `bun nx run @semio-tech/ui-asset:build` (runs `bun ./script.ts ge
 
 ## Phase 2 — Restore footer tool labels, icons, and grouping
 
-In [lowpoly/program/rs/lib.rs](lowpoly/program/rs/lib.rs):
+In [lowpoly/plugin/rs/lib.rs](lowpoly/plugin/rs/lib.rs):
 
 - Extend `tool_button`/`tool_toggle`/`tool_collection` call sites with a label (these helpers in `framework/core/rs/tools.rs` are only used by lowpoly today, so it is safe to add a `label: impl Into<String>` parameter to each, setting both `label` and `title` on the resulting `ToolNode`).
 - `edit_tools()`: add labels to the 4 selection toggles (Mesh/Vertex/Edge/Face) and 3 transform toggles (Move/Rotate/Scale, restoring icon `maximize-2` for Scale to match old); regroup the 11 edit operations back into a `tool_collection("lowpoly-tools-edit", "pen-tool", [...])` (matching old `edit` collection) with labels and restored icons:
@@ -39,18 +39,18 @@ In [lowpoly/program/rs/lib.rs](lowpoly/program/rs/lib.rs):
 
 ## Phase 3 — Restore the window engagement rail
 
-In [lowpoly/program/rs/lib.rs](lowpoly/program/rs/lib.rs) `create_lowpoly_app()`:
+In [lowpoly/plugin/rs/lib.rs](lowpoly/plugin/rs/lib.rs) `create_lowpoly_app()`:
 
 - Build a `WindowEngagement` mirroring old `windowEngagement()`: `options` = Move/Rotate/Scale toggles (`setTransformTool`, duplicating the footer transform toggles as in old code) + Snap (`magnet`, command `snap`) + Smooth (`sun`, command `toggleSmooth`); `input` = placeholder `"extrude, inset, mirror, decimate"` with `onSubmit: lowpoly_cmd("engagementSubmit", None)` (no `onChange` handler, matching old); `possible_engagements` = Extrude/Triangulate quick actions; `status` = a representative selection/tool summary string.
 - Replace `.window_kind(LOWPOLY_PLAY_WINDOW_MAIN, ...)` and `.window_kind(LOWPOLY_PLAY_WINDOW_UV, ...)` with `.window_kind_with_engagement(...)` passing this engagement (both window kinds, matching old behavior of attaching the same engagement to Model and UV windows).
 - Add an `"engagementSubmit"` handler in `handle_command` that trims/lowercases the submitted value and re-dispatches it as a command via `self.handle_command(&value, None, document_json, view_state)` (mirrors old `run(value)` in `f8376e848`); `engagementInput` needs no handler since it falls through to the existing no-operation default (matches old, which had no listener either).
-- Note: unlike the old reactive TS engine, the Rust `ProgramApp` trait has no per-render engagement hook (only `tools()` is dynamic), so `status`/`options` pressed-state will be a static snapshot rather than live-updating — this matches the existing limitation already present in `draw`'s engagement (`draw/program/rs/lib.rs:1228-1231` uses a fixed placeholder string), so it is consistent with current framework capabilities rather than a new gap.
+- Note: unlike the old reactive TS engine, the Rust `PluginApp` trait has no per-render engagement hook (only `tools()` is dynamic), so `status`/`options` pressed-state will be a static snapshot rather than live-updating — this matches the existing limitation already present in `draw`'s engagement (`draw/plugin/rs/lib.rs:1228-1231` uses a fixed placeholder string), so it is consistent with current framework capabilities rather than a new gap.
 
 ## Phase 4 — Verification
 
-- `cargo test -p lowpoly-program --lib` (extend/adjust the `edit_tools_include_extrude`/`paint_tools_include_brush` tests to also assert on the new collection ids `lowpoly-tools-edit`/`lowpoly-paint-uv`/`lowpoly-paint-history` and that labels are present).
+- `cargo test -p lowpoly-plugin --lib` (extend/adjust the `edit_tools_include_extrude`/`paint_tools_include_brush` tests to also assert on the new collection ids `lowpoly-tools-edit`/`lowpoly-paint-uv`/`lowpoly-paint-history` and that labels are present).
 - `bun nx run @semio-tech/ui-asset:build` and diff `ui/asset/icon/generated/icons.ts` to confirm the 16 new icons were vendored cleanly.
-- Rebuild the lowpoly wasm program and run the React E2E sweep: `.repo/🎫/26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS/verify-react-playgrounds-e2e.ts --program lowpoly`.
+- Rebuild the lowpoly wasm program and run the React E2E sweep: `.repo/🎫/26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS/verify-react-playgrounds-e2e.ts --plugin lowpoly`.
 - Manual live-browser screenshot of the footer in both Edit and Paint modes to confirm real icons render (no stray circles), tooltips show labels on hover, edit operations collapse into a single grouped button, and the window engagement rail (Snap/Smooth/command bar) appears at the top of the Model/UV windows.
 - Update the ticket `.repo/🎫/26/07/05/SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS/important.md` with a summary of the icon-vendoring root cause and files touched.
   </plan>

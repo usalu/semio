@@ -146,7 +146,7 @@ module.exports = {
     {
       name: "ui-no-framework-packages",
       severity: "error",
-      comment: "ui must stay presentational and business-logic free — no OS/program/framework coupling",
+      comment: "ui must stay presentational and business-logic free — no OS/plugin/framework coupling",
       from: { path: "^ui/" },
       to: {
         path: ["^framework/", "^@semio-tech/framework-"],
@@ -164,9 +164,9 @@ module.exports = {
     {
       name: "no-generated-edits-upstream",
       severity: "error",
-      comment: "only framework/program/registry may import its generated plugin catalog directly — other consumers must go through generated/programs.ts",
-      from: { pathNot: "^framework/program/registry/" },
-      to: { path: "^framework/program/registry/generated/plugins\\.json$" },
+      comment: "only framework/plugin/registry may import its generated plugin catalog directly — other consumers must go through generated/plugins.ts",
+      from: { pathNot: "^framework/plugin/registry/" },
+      to: { path: "^framework/plugin/registry/generated/plugins\\.json$" },
     },
     ...crossTechnologyRules(),
   ],

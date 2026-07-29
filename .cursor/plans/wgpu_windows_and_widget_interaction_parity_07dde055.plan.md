@@ -90,7 +90,7 @@ Structs, mapping, and rendering are already largely correct (`ui/wgpu/rs/widgets
 - Verify label click dispatches `item.event` and `selection_change` (existing logic at [shell.rs:1374-1380](framework/renderer/wgpu/rs/shell.rs)).
 - Verify drag-and-drop initiation for `draggable` items (existing logic at [shell.rs:855-908, 1519-1580](framework/renderer/wgpu/rs/shell.rs)).
 - Screenshot-diff indentation guide lines and chevron icons against React's `IndentationLines`/`TreeDocumentGutter` ([ui/js/react/index.tsx:9648-9707](ui/js/react/index.tsx)) for a document-heavy program (e.g. `s`, `lowpoly`) — fix any remaining depth/spacing mismatch found only now that the tree is actually interactive.
-- Verify Table (`selectRow`) and VFS (`selectRows`/`openInstance`/drag-drop) click/hover now work end-to-end for a program using each (e.g. `vcs`/`forms` for Table, `s` for VFS).
+- Verify Table (`selectRow`) and VFS (`selectRows`/`openInstance`/drag-drop) click/hover now work end-to-end for a plugin using each (e.g. `vcs`/`forms` for Table, `s` for VFS).
 
 ## 3. Dock/window chrome parity
 
@@ -116,7 +116,7 @@ React's dock shell (`Mode`, [ui/js/react/index.tsx:19543-21324](ui/js/react/inde
 
 - Close only mutates the local `DockState` stack ([dock.rs:107-129](framework/renderer/wgpu/rs/dock.rs), dispatched at [shell.rs:1212-1216](framework/renderer/wgpu/rs/shell.rs)) with no command dispatch, unlike React's `onWindowClose` which updates the persisted layout tree ([framework/renderer/react/os-shell.tsx:1611-1624](framework/renderer/react/os-shell.tsx)).
 - Stack `activeId` is dropped on load — wgpu always defaults to the first child window ([dock.rs:240-248](framework/renderer/wgpu/rs/dock.rs)) instead of round-tripping from the wire layout.
-- No equivalent of React's `onLayoutChange` — `DockState` mutations (splits, closes, and the new drag-to-dock moves from 3.1) are ephemeral in wgpu today. Add a layout-change hook that persists the current `DockNode` tree back through the same channel the program/session uses (mirror whatever `shellLayout` persistence React uses in `os-shell.tsx`).
+- No equivalent of React's `onLayoutChange` — `DockState` mutations (splits, closes, and the new drag-to-dock moves from 3.1) are ephemeral in wgpu today. Add a layout-change hook that persists the current `DockNode` tree back through the same channel the plugin/session uses (mirror whatever `shellLayout` persistence React uses in `os-shell.tsx`).
 - Apply `named_layouts` when selected instead of only listing them as text ([shell.rs:532-558](framework/renderer/wgpu/rs/shell.rs)).
 
 ## 4. Verification

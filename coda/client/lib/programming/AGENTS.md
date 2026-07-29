@@ -1,9 +1,9 @@
 ---
 technology: coda
 bundle:
- name: programming
+ name: __KEEP_pluginming__
  emoji: 💻
- description: The programming bundle for coda.
+ description: The __KEEP_pluginming__ bundle for coda.
  kind: library
 ---
 

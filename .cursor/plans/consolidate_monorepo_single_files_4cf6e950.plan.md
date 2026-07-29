@@ -49,7 +49,7 @@ Only **2** real `src/` folders exist in the whole repo (`repo/lib/js/src/`, `ui/
 
 - `repo/lib/js/src/{index.ts,index.test.ts}` → `repo/lib/js/{index.ts,index.test.ts}`.
   - Update [`repo/lib/js/package.json`](repo/lib/js/package.json) (`exports["."]`: `./index.ts` → `./index.ts`; `"test"` script: `bun test ./index.test.ts` → `./index.test.ts`).
-  - Update [`repo/lib/js/project.json`](repo/lib/js/project.json) `sourceRoot`, and `tsconfig.json`/`nx-program.mjs` if they reference `src/`.
+  - Update [`repo/lib/js/project.json`](repo/lib/js/project.json) `sourceRoot`, and `tsconfig.json`/`nx-plugin.mjs` if they reference `src/`.
   - Rewrite every import of `repo/lib/js/index.ts` (relative variants like `../../repo/lib/js/index.ts`) across the ~150 files that reference it, using a one-off rewrite script under the ticket folder (same approach as the existing `rewrite-lib-js-imports.ts`).
 - `ui/styling/rs/src/generated.rs` → `ui/styling/rs/generated.rs`.
   - Update `lib.rs`'s `#[path = "src/generated.rs"]` → `#[path = "generated.rs"]`.
@@ -93,7 +93,7 @@ Continuing the ticket's established pattern (fold sibling files into the bundle'
 Using the generic helpers already in `repo/lib/js` (`runCargo`, `runCmd`, `runViteBuild`, `runVitest`, `runBunx`, `runPlaywright`), add missing command classes to each bundle's `script.ts` (creating one where absent) so `project.json` targets call only `bun ./script.ts <command>`:
 
 - Cargo direct calls: `reasoning/mindmap`, `procedural/{2d,3d}/rs`, `puzzle/{3d,5d}/rs`, `gis/2d/rs`, `writer/rs`, `trinity/jack/lsp`, `mathematical/graph/manifest`, `compose/server/hub`, `compose/client/lib/{query,rs}`
-- Go direct calls: `repo/client/cli`, `repo/lib/go`, `repo/server/coordinator`, `coda/client/lib/{programming,blnbo}/go`, `compose/client/lib/go`
+- Go direct calls: `repo/client/cli`, `repo/lib/go`, `repo/server/coordinator`, `coda/client/lib/{__KEEP_pluginming__,blnbo}/go`, `compose/client/lib/go`
 - .NET direct calls: `compose/client/lib/net/Compose{,.Tests,.Benchmark}`, `compose/client/ui/3dm/Compose.Rhino{,.Tests}`, `compose/client/ui/gh/Compose.Grasshopper.Tests`
 - Python/uv direct calls: `compose/client/bin/engine`, `compose/client/lib/py`
 - Vite direct calls: `compose/client/ui/vscode`, `compose/client/ui/3dm/ui`, `compose/client/lib/sketchpad/{doc,js,play}`, `repo/client/vscode`

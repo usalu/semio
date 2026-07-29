@@ -1,5 +1,5 @@
-/** @generated semio program jco component bridge */
-import { program } from "./sourcing_program_component.js";
+/** @generated semio plugin jco component bridge */
+import { plugin } from "./sourcing_plugin_component.js";
 
 const apps = new Set();
 let tail = Promise.resolve();
@@ -14,10 +14,10 @@ function runSerialized(fn) {
         const message = error instanceof Error ? error.message : String(error);
         const payload = error && typeof error === "object" && "payload" in error ? error.payload : undefined;
         const detail = payload !== undefined ? `${message} payload=${(() => { try { return JSON.stringify(payload); } catch { return String(payload); } })()}` : message;
-        const busy = detail.includes("program instance busy") || detail.includes("plugin busy");
+        const busy = detail.includes("plugin instance busy") || detail.includes("plugin busy");
         const trapped = detail.includes("unreachable") || /trap|panicked/i.test(detail);
         if (busy || trapped) {
-          try { program.clearInstanceGuard?.(); } catch { /* guard heal is best-effort */ }
+          try { plugin.clearInstanceGuard?.(); } catch { /* guard heal is best-effort */ }
         }
         if (!busy) throw error;
         await new Promise((resolve) => setTimeout(resolve, attempt + 1));
@@ -35,10 +35,10 @@ function runSerialized(fn) {
 async function createPluginApiInner() {
   const core = {
     async manifest() {
-      return (await program.manifest()).json;
+      return (await plugin.manifest()).json;
     },
     async createApp(appId) {
-      const instanceId = await program.instantiateApp(appId, appId);
+      const instanceId = await plugin.instantiateApp(appId, appId);
       apps.add(instanceId);
       return instanceId;
     },
@@ -51,7 +51,7 @@ async function createPluginApiInner() {
         contextJson && contextJson.trim().startsWith("{")
           ? contextJson
           : JSON.stringify({ viewState: JSON.parse(contextJson), actor: "local" });
-      const response = await program.handleAction(instanceId, { json: actionJson }, { json: context });
+      const response = await plugin.handleAction(instanceId, { json: actionJson }, { json: context });
       return response.json;
     },
     async handleCommand(instanceId, commandJson, contextJson) {
@@ -60,38 +60,38 @@ async function createPluginApiInner() {
         contextJson && contextJson.trim().startsWith("{")
           ? contextJson
           : JSON.stringify({ viewState: JSON.parse(contextJson), actor: "local" });
-      const response = await program.handleCommand(instanceId, { json: commandJson }, { json: context });
+      const response = await plugin.handleCommand(instanceId, { json: commandJson }, { json: context });
       return response.json;
     },
     async render(instanceId, bodyKey, viewStateJson) {
       if (!apps.has(instanceId)) throw new Error(`unknown instance: ${instanceId}`);
-      const response = await program.updateWindow(instanceId, {
+      const response = await plugin.updateWindow(instanceId, {
         json: JSON.stringify({ bodyKey, viewState: JSON.parse(viewStateJson) }),
       });
       return response.json;
     },
     async renderWithDocument(instanceId, bodyKey, viewStateJson, documentJson) {
       if (!apps.has(instanceId)) throw new Error(`unknown instance: ${instanceId}`);
-      const response = await program.updateWindow(instanceId, {
+      const response = await plugin.updateWindow(instanceId, {
         json: JSON.stringify({ bodyKey, viewState: JSON.parse(viewStateJson), documentJson }),
       });
       return response.json;
     },
     async refreshUi(instanceId, requestJson) {
       if (!apps.has(instanceId)) throw new Error(`unknown instance: ${instanceId}`);
-      const response = await program.refreshUi(instanceId, { json: requestJson });
+      const response = await plugin.refreshUi(instanceId, { json: requestJson });
       return response.json;
     },
     async consumeMedia(instanceId, portId, descriptorJson, data) {
       if (!apps.has(instanceId)) throw new Error(`unknown instance: ${instanceId}`);
-      await program.consumeMedia(instanceId, portId, {
+      await plugin.consumeMedia(instanceId, portId, {
         descriptorJson,
         data: data instanceof Uint8Array ? data : new Uint8Array(data ?? []),
       });
     },
     async produceMedia(instanceId, portId, requestJson) {
       if (!apps.has(instanceId)) throw new Error(`unknown instance: ${instanceId}`);
-      const artifact = await program.produceMedia(instanceId, portId, requestJson ?? "");
+      const artifact = await plugin.produceMedia(instanceId, portId, requestJson ?? "");
       return { descriptorJson: artifact.descriptorJson, data: artifact.data };
     },
   };

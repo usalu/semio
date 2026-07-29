@@ -23,7 +23,7 @@ pub struct SDocumentRef {
 #[serde(rename_all = "camelCase")]
 pub struct SAppInstance {
     pub id: String,
-    pub program_id: String,
+    pub plugin_id: String,
     pub app_id: String,
     pub label: String,
     pub yields: String,
@@ -76,7 +76,7 @@ pub struct SWorkflow {
 pub struct SStudioProjection {
     pub programs: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub active_program_id: Option<String>,
+    pub active_plugin_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub active_alternative_id: Option<String>,
     pub app_instances: Vec<SAppInstance>,
@@ -96,7 +96,7 @@ pub struct WorkflowPosition {
 pub enum StudioOperation {
     SetActiveProgram {
         #[serde(skip_serializing_if = "Option::is_none")]
-        program_id: Option<String>,
+        plugin_id: Option<String>,
     },
     SetActiveAlternative {
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -153,7 +153,7 @@ pub fn empty_workflow() -> SWorkflow {
 }
 
 pub fn default_studio_projection() -> SStudioProjection {
-    SStudioProjection { programs: Vec::new(), active_program_id: None, active_alternative_id: None, app_instances: Vec::new(), workflow: empty_workflow() }
+    SStudioProjection { programs: Vec::new(), active_plugin_id: None, active_alternative_id: None, app_instances: Vec::new(), workflow: empty_workflow() }
 }
 
 pub fn create_empty_studio_document(id: &str, name: &str) -> SStudioDocument {
@@ -163,15 +163,15 @@ pub fn create_empty_studio_document(id: &str, name: &str) -> SStudioDocument {
 pub fn apply_studio_operation(projection: &SStudioProjection, operation: &StudioOperation) -> SStudioProjection {
     let mut next = projection.clone();
     match operation {
-        StudioOperation::SetActiveProgram { program_id } => {
-            next.active_program_id = program_id.clone();
+        StudioOperation::SetActiveProgram { plugin_id } => {
+            next.active_plugin_id = plugin_id.clone();
         }
         StudioOperation::SetActiveAlternative { alternative_id } => {
             next.active_alternative_id = alternative_id.clone();
         }
         StudioOperation::SpawnAppInstance { instance, position } => {
-            if !next.programs.contains(&instance.program_id) {
-                next.programs.push(instance.program_id.clone());
+            if !next.programs.contains(&instance.plugin_id) {
+                next.programs.push(instance.plugin_id.clone());
             }
             let node = SWorkflowNode { id: create_s_id("node"), instance_id: instance.id.clone(), label: instance.label.clone(), x: position.x, y: position.y, inputs: Vec::new(), outputs: Vec::new() };
             next.workflow.nodes.push(node);
@@ -210,7 +210,7 @@ pub enum StudioDiff {
     Empty,
     SetActiveProgram {
         #[serde(skip_serializing_if = "Option::is_none")]
-        program_id: Option<String>,
+        plugin_id: Option<String>,
     },
     SetActiveAlternative {
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -240,7 +240,7 @@ impl OperationDiff<SStudioProjection> for StudioDiff {
     fn apply(&self, projection: &SStudioProjection) -> SStudioProjection {
         let operation = match self {
             StudioDiff::Empty => return projection.clone(),
-            StudioDiff::SetActiveProgram { program_id } => StudioOperation::SetActiveProgram { program_id: program_id.clone() },
+            StudioDiff::SetActiveProgram { plugin_id } => StudioOperation::SetActiveProgram { plugin_id: plugin_id.clone() },
             StudioDiff::SetActiveAlternative { alternative_id } => StudioOperation::SetActiveAlternative { alternative_id: alternative_id.clone() },
             StudioDiff::SpawnAppInstance { instance, position } => StudioOperation::SpawnAppInstance { instance: instance.clone(), position: position.clone() },
             StudioDiff::RemoveAppInstance { instance_id } => StudioOperation::RemoveAppInstance { instance_id: instance_id.clone() },
@@ -263,7 +263,7 @@ impl Operation<SStudioProjection> for StudioOperation {
 
     fn diff(&self, _projection: &SStudioProjection) -> StudioDiff {
         match self {
-            StudioOperation::SetActiveProgram { program_id } => StudioDiff::SetActiveProgram { program_id: program_id.clone() },
+            StudioOperation::SetActiveProgram { plugin_id } => StudioDiff::SetActiveProgram { plugin_id: plugin_id.clone() },
             StudioOperation::SetActiveAlternative { alternative_id } => StudioDiff::SetActiveAlternative { alternative_id: alternative_id.clone() },
             StudioOperation::SpawnAppInstance { instance, position } => StudioDiff::SpawnAppInstance { instance: instance.clone(), position: position.clone() },
             StudioOperation::RemoveAppInstance { instance_id } => StudioDiff::RemoveAppInstance { instance_id: instance_id.clone() },
@@ -275,7 +275,7 @@ impl Operation<SStudioProjection> for StudioOperation {
 
     fn backwards(&self, projection: &SStudioProjection) -> Vec<Self> {
         match self {
-            StudioOperation::SetActiveProgram { .. } => vec![StudioOperation::SetActiveProgram { program_id: projection.active_program_id.clone() }],
+            StudioOperation::SetActiveProgram { .. } => vec![StudioOperation::SetActiveProgram { plugin_id: projection.active_plugin_id.clone() }],
             StudioOperation::SetActiveAlternative { .. } => vec![StudioOperation::SetActiveAlternative { alternative_id: projection.active_alternative_id.clone() }],
             StudioOperation::SpawnAppInstance { instance, .. } => vec![StudioOperation::RemoveAppInstance { instance_id: instance.id.clone() }],
             StudioOperation::RemoveAppInstance { instance_id } => projection
@@ -362,7 +362,7 @@ impl StudioStore {
         self.inner.attach_backbone_uri(uri)
     }
 
-    /// @emoji 🚧 Native attach is a documented no-operation: `s` only runs as a WASM program in the browser
+    /// @emoji 🚧 Native attach is a documented no-operation: `s` only runs as a WASM plugin in the browser
     /// today (no native caller exists), and wiring its native path onto `framework/sync`'s
     /// `DocumentHost` is `s`'s own `DocumentApp` migration (WS-F's last wave), not this compile fix.
     #[cfg(not(target_arch = "wasm32"))]
@@ -432,7 +432,7 @@ mod tests {
     #[test]
     fn spawns_app_instance_through_cqrs_dispatch() {
         let mut store = StudioStore::new(create_empty_studio_document("studio", "Space"));
-        let instance = SAppInstance { id: "app-1".into(), program_id: "draw".into(), app_id: "draw".into(), label: "Draw".into(), yields: "graph.dag".into(), document: SDocumentRef { document_id: "doc-1".into(), schema: "draw.document".into() } };
+        let instance = SAppInstance { id: "app-1".into(), plugin_id: "draw".into(), app_id: "draw".into(), label: "Draw".into(), yields: "graph.dag".into(), document: SDocumentRef { document_id: "doc-1".into(), schema: "draw.document".into() } };
         store.dispatch_apply(vec![StudioOperation::SpawnAppInstance { instance: instance.clone(), position: WorkflowPosition { x: 0.0, y: 0.0 } }]).expect("spawn");
         let projection = store.projection().expect("projection");
         assert_eq!(projection.app_instances.len(), 1);
@@ -442,7 +442,7 @@ mod tests {
     #[test]
     fn undo_after_spawn() {
         let mut store = StudioStore::new(create_empty_studio_document("studio", "Space"));
-        let instance = SAppInstance { id: "app-1".into(), program_id: "draw".into(), app_id: "draw".into(), label: "Draw".into(), yields: "graph.dag".into(), document: SDocumentRef { document_id: "doc-1".into(), schema: "draw.document".into() } };
+        let instance = SAppInstance { id: "app-1".into(), plugin_id: "draw".into(), app_id: "draw".into(), label: "Draw".into(), yields: "graph.dag".into(), document: SDocumentRef { document_id: "doc-1".into(), schema: "draw.document".into() } };
         store.dispatch_apply(vec![StudioOperation::SpawnAppInstance { instance, position: WorkflowPosition { x: 0.0, y: 0.0 } }]).expect("spawn");
         store.dispatch_text("undo").expect("undo");
         assert_eq!(store.projection().expect("projection").app_instances.len(), 0);
@@ -452,11 +452,11 @@ mod tests {
     fn sample_studio_projection() -> SStudioProjection {
         SStudioProjection {
             programs: vec!["draw".into(), "writer".into()],
-            active_program_id: Some("draw".into()),
+            active_plugin_id: Some("draw".into()),
             active_alternative_id: None,
             app_instances: vec![SAppInstance {
                 id: "app-1".into(),
-                program_id: "draw".into(),
+                plugin_id: "draw".into(),
                 app_id: "draw".into(),
                 label: "Semio \"Emblem\"".into(),
                 yields: "2d.drawing".into(),
@@ -494,13 +494,13 @@ mod tests {
 
     #[test]
     fn space_op_text_round_trips_every_variant() {
-        store::test_support::assert_op_line_round_trip(&StudioOperation::SetActiveProgram { program_id: Some("draw".into()) });
-        store::test_support::assert_op_line_round_trip(&StudioOperation::SetActiveProgram { program_id: None });
+        store::test_support::assert_op_line_round_trip(&StudioOperation::SetActiveProgram { plugin_id: Some("draw".into()) });
+        store::test_support::assert_op_line_round_trip(&StudioOperation::SetActiveProgram { plugin_id: None });
         store::test_support::assert_op_line_round_trip(&StudioOperation::SetActiveAlternative { alternative_id: Some("alt-1".into()) });
         store::test_support::assert_op_line_round_trip(&StudioOperation::SetActiveAlternative { alternative_id: None });
         let instance = SAppInstance {
             id: "app-2".into(),
-            program_id: "writer".into(),
+            plugin_id: "writer".into(),
             app_id: "writer".into(),
             label: "Jack \"Notes\"".into(),
             yields: "text.document".into(),

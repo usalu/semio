@@ -163,26 +163,26 @@ export function jackVarForBoardNodeId(fixtureJson: string, query: string, nodeId
   return null;
 }
 
-export function runJackOnWorkflow(graph: { readonly nodes: readonly { readonly id: string; readonly instanceId: string }[] }, instances: readonly { readonly id: string; readonly programId: string }[], query: string): JackRunResult {
+export function runJackOnWorkflow(graph: { readonly nodes: readonly { readonly id: string; readonly instanceId: string }[] }, instances: readonly { readonly id: string; readonly pluginId: string }[], query: string): JackRunResult {
   const instanceById = new Map(instances.map((row) => [row.id, row]));
   const fixtureJson = JSON.stringify({
     nodes: graph.nodes.map((node) => {
       const instance = instanceById.get(node.instanceId);
-      const kind = instance?.programId ?? "app";
-      return { id: node.id, kind, nodeKind: kind, text: instance?.programId ?? node.id };
+      const kind = instance?.pluginId ?? "app";
+      return { id: node.id, kind, nodeKind: kind, text: instance?.pluginId ?? node.id };
     }),
     edges: [],
   });
   return runJackOnBoardFixture(fixtureJson, query);
 }
 
-export function workflowFixtureJson(graph: { readonly nodes: readonly { readonly id: string; readonly instanceId: string }[] }, instances: readonly { readonly id: string; readonly programId: string }[]): string {
+export function workflowFixtureJson(graph: { readonly nodes: readonly { readonly id: string; readonly instanceId: string }[] }, instances: readonly { readonly id: string; readonly pluginId: string }[]): string {
   const instanceById = new Map(instances.map((row) => [row.id, row]));
   return JSON.stringify({
     nodes: graph.nodes.map((node) => {
       const instance = instanceById.get(node.instanceId);
-      const kind = instance?.programId ?? "app";
-      return { id: node.id, kind, nodeKind: kind, text: instance?.programId ?? node.id };
+      const kind = instance?.pluginId ?? "app";
+      return { id: node.id, kind, nodeKind: kind, text: instance?.pluginId ?? node.id };
     }),
     edges: [],
   });
@@ -272,7 +272,7 @@ function splitWireEndpoint(endpoint: string): { readonly node: string; readonly 
 }
 
 function dagNodeKind(row: Record<string, unknown>): string {
-  return readString(row.operatorKind) ?? readString(row.operator_kind) ?? readString(row.programId) ?? readString(row.nodeKind) ?? readString(row.kind) ?? "node";
+  return readString(row.operatorKind) ?? readString(row.operator_kind) ?? readString(row.pluginId) ?? readString(row.nodeKind) ?? readString(row.kind) ?? "node";
 }
 
 /** @emoji 🔌 Render a DAG fixture JSON document as wire-literal compiled text. */

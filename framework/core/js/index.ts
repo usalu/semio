@@ -3,8 +3,8 @@
 /** @emoji 🧭 `@semio-tech/framework-core` — shared canvas pick helpers, layout factories, and inspector utilities for UI renderers. */
 // #endregion 🧲Header
 
-import { PLAYGROUND_BUILD_TARGETS, type PlaygroundBuildTarget } from "../../program/registry/generated/playgrounds.ts";
-import { PROGRAM_BUILD_TARGETS, PLUGIN_HOST_CONFIGS, programModuleUrl } from "../../program/registry/generated/programs.ts";
+import { PLAYGROUND_BUILD_TARGETS, type PlaygroundBuildTarget } from "../../plugin/registry/generated/playgrounds.ts";
+import { PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS, pluginModuleUrl } from "../../plugin/registry/generated/plugins.ts";
 import type { IconName } from "@semio-tech/ui-asset";
 export type { IconName };
 
@@ -722,7 +722,7 @@ export type InkCanvasScene = {
   readonly interactive: boolean;
 };
 
-/** 🖊️ Renderer-to-program action names for ink-canvas surfaces (modeled after {@link nodeGraphActions}/{@link textEditorActions}). */
+/** 🖊️ Renderer-to-plugin action names for ink-canvas surfaces (modeled after {@link nodeGraphActions}/{@link textEditorActions}). */
 export const inkCanvasActions = {
   applyEvents: "inkApplyEvents",
   setSelection: "setSelection",
@@ -778,7 +778,7 @@ export type EventFeedScene = {
 /** 🔌 A plugin-contributed external body rendered inline — mirrors the wasm `externalSlot` node. */
 export type UiExternalSlotNode = {
   readonly type: "externalSlot";
-  readonly programId: string;
+  readonly pluginId: string;
   readonly appId: string;
   readonly bodyKey: string;
   readonly paramsJson: string;
@@ -1675,8 +1675,8 @@ export type PluginViewState = {
 
 export type PluginUiNode = Record<string, unknown> & { readonly type: string };
 
-/** 🗣️ Locale/terminology-aware label patch for an app's window-kind/panel-tab/mode labels, resolved fresh per {@link PluginViewState} — merge over the static {@link ProgramManifest} app labels by id. */
-export type ProgramAppLabelsOverlay = {
+/** 🗣️ Locale/terminology-aware label patch for an app's window-kind/panel-tab/mode labels, resolved fresh per {@link PluginViewState} — merge over the static {@link PluginManifest} app labels by id. */
+export type PluginAppLabelsOverlay = {
   readonly windowKindLabels: Readonly<Record<string, string>>;
   readonly panelTabLabels: Readonly<Record<string, string>>;
   readonly modeLabels: Readonly<Record<string, string>>;
@@ -1689,7 +1689,7 @@ export type ProgramAppLabelsOverlay = {
   readonly groupLabels: Readonly<Record<string, string>>;
 };
 
-export const EMPTY_APP_LABELS_OVERLAY: ProgramAppLabelsOverlay = {
+export const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = {
   windowKindLabels: {},
   panelTabLabels: {},
   modeLabels: {},
@@ -1703,7 +1703,7 @@ export const EMPTY_APP_LABELS_OVERLAY: ProgramAppLabelsOverlay = {
 };
 
 /** 🗣️ Rust's `skip_serializing_if` omits empty maps entirely, so a parsed overlay may be missing keys — fill them back in. */
-export function normalizeAppLabelsOverlay(raw: Partial<ProgramAppLabelsOverlay> | null | undefined): ProgramAppLabelsOverlay {
+export function normalizeAppLabelsOverlay(raw: Partial<PluginAppLabelsOverlay> | null | undefined): PluginAppLabelsOverlay {
   return {
     windowKindLabels: raw?.windowKindLabels ?? {},
     panelTabLabels: raw?.panelTabLabels ?? {},
@@ -1740,17 +1740,17 @@ export type PluginContribution =
     };
 
 export type ProgramContributionEntry = {
-  readonly programId: string;
+  readonly pluginId: string;
   readonly contribution: PluginContribution;
 };
 
-export type ProgramManifest = {
-  readonly programId: string;
+export type PluginManifest = {
+  readonly pluginId: string;
   readonly label: string;
   readonly version: string;
   readonly apps: readonly Record<string, unknown>[];
   readonly programs: readonly {
-    readonly programId: string;
+    readonly pluginId: string;
     readonly appId: string;
     readonly label: string;
     readonly yields: string;
@@ -1828,7 +1828,7 @@ export type AppActionRef = GeneratedActionRef;
 export type AppPanelGroup = GeneratedPanelGroup;
 
 export type ProgramHotSwapEvent = {
-  readonly programId: string;
+  readonly pluginId: string;
   readonly version: string;
   readonly addedApps: readonly string[];
   readonly removedApps: readonly string[];
@@ -1839,7 +1839,7 @@ export type ProgramHotSwapEvent = {
 /** @emoji 🐢 One requested window/panel section — `bodyKey` only applies to windows/panels; `hash` is the host's known fnv1a-64 hex of that section's last payload, or absent on first fetch. */
 export type PluginUiRefreshSectionRequest = { readonly key: string; readonly bodyKey?: string; readonly hash?: string };
 
-/** @emoji 🐢 One batched, hash-conditional refresh request — one round trip for the window/panel/engagements/measures/labels sections. Utility bars are no longer a program section: the renderer derives them from the utility registry via {@link deriveUtilityNodes}. */
+/** @emoji 🐢 One batched, hash-conditional refresh request — one round trip for the window/panel/engagements/measures/labels sections. Utility bars are no longer a plugin section: the renderer derives them from the utility registry via {@link deriveUtilityNodes}. */
 export type PluginUiRefreshRequest = {
   readonly viewState: PluginViewState;
   readonly windows?: readonly PluginUiRefreshSectionRequest[];
@@ -1869,8 +1869,8 @@ export type PluginUiRefreshResponse = {
 //#endregion UiRefresh
 
 export type PluginWasmHandle = {
-  readonly programId: string;
-  readonly manifest: ProgramManifest;
+  readonly pluginId: string;
+  readonly manifest: PluginManifest;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
   readonly handleAction: (instanceId: number, actionJson: string, viewState: PluginViewState) => Promise<InvocationResponse>;
@@ -1886,11 +1886,11 @@ export type PluginWasmHandle = {
   readonly dispose: () => void;
 };
 
-export function buildContributionsJson(loaded: ReadonlyArray<{ readonly programId: string; readonly manifest: ProgramManifest }>): string {
+export function buildContributionsJson(loaded: ReadonlyArray<{ readonly pluginId: string; readonly manifest: PluginManifest }>): string {
   const entries: ProgramContributionEntry[] = [];
   for (const entry of loaded) {
     for (const contribution of entry.manifest.contributions ?? []) {
-      entries.push({ programId: entry.programId, contribution });
+      entries.push({ pluginId: entry.pluginId, contribution });
     }
   }
   return JSON.stringify(entries);
@@ -2068,16 +2068,16 @@ export function resolveModeTools(
 //#endregion 🧰ActionArgsAndUtilities
 
 /**
- * 🧩 Expands a program registry for a primary plugin: `primaryPluginId` is matched directly
- * against entry `programId` (no registry-id indirection), then every other entry whose
+ * 🧩 Expands a plugin registry for a primary plugin: `primaryPluginId` is matched directly
+ * against entry `pluginId` (no registry-id indirection), then every other entry whose
  * `contributes` intersects the primary entry's `consumes` is appended. Studio mode, or the
  * absence of a primary id, passes the full registry through unchanged.
  */
-export function expandProgramRegistry(plugins: readonly ProgramRegistryEntry[], primaryPluginId?: string, studioMode = false): readonly ProgramRegistryEntry[] {
+export function expandPluginRegistry(plugins: readonly PluginRegistryEntry[], primaryPluginId?: string, studioMode = false): readonly PluginRegistryEntry[] {
   if (studioMode || !primaryPluginId) return plugins;
-  const primaryEntries = plugins.filter((entry) => entry.programId === primaryPluginId);
+  const primaryEntries = plugins.filter((entry) => entry.pluginId === primaryPluginId);
   const consumes = new Set(primaryEntries.flatMap((entry) => entry.consumes ?? []));
-  const contributorEntries = plugins.filter((entry) => entry.programId !== primaryPluginId && (entry.contributes ?? []).some((tag) => consumes.has(tag)));
+  const contributorEntries = plugins.filter((entry) => entry.pluginId !== primaryPluginId && (entry.contributes ?? []).some((tag) => consumes.has(tag)));
   return [...primaryEntries, ...contributorEntries];
 }
 
@@ -2087,29 +2087,29 @@ export type ExternalSlotResolverContext = {
   readonly viewState: PluginViewState;
 };
 
-export async function ensureContributorInstance(programId: string, appId: string, context: ExternalSlotResolverContext): Promise<number | null> {
-  const existing = context.contributorInstances.get(programId);
+export async function ensureContributorInstance(pluginId: string, appId: string, context: ExternalSlotResolverContext): Promise<number | null> {
+  const existing = context.contributorInstances.get(pluginId);
   if (existing != null) return existing;
-  const handle = context.plugins.get(programId);
+  const handle = context.plugins.get(pluginId);
   if (!handle) return null;
   const instanceId = await handle.createApp(appId);
-  context.contributorInstances.set(programId, instanceId);
+  context.contributorInstances.set(pluginId, instanceId);
   return instanceId;
 }
 
 export async function resolveExternalSlots(node: PluginUiNode, context: ExternalSlotResolverContext): Promise<PluginUiNode> {
   if (node.type === "externalSlot") {
-    const programId = String(node.programId ?? "");
-    const appId = String(node.appId ?? programId);
+    const pluginId = String(node.pluginId ?? "");
+    const appId = String(node.appId ?? pluginId);
     const bodyKey = String(node.bodyKey ?? "");
     const paramsJson = String(node.paramsJson ?? "{}");
-    const handle = context.plugins.get(programId);
+    const handle = context.plugins.get(pluginId);
     if (!handle) {
-      return { type: "text", value: `Extension unavailable: ${programId}` };
+      return { type: "text", value: `Extension unavailable: ${pluginId}` };
     }
-    const instanceId = await ensureContributorInstance(programId, appId, context);
+    const instanceId = await ensureContributorInstance(pluginId, appId, context);
     if (instanceId == null) {
-      return { type: "text", value: `Extension unavailable: ${programId}` };
+      return { type: "text", value: `Extension unavailable: ${pluginId}` };
     }
     const rendered = handle.renderWithDocument ? await handle.renderWithDocument(instanceId, bodyKey, context.viewState, paramsJson) : await handle.render(instanceId, bodyKey, context.viewState);
     return resolveExternalSlots(rendered, context);
@@ -2125,8 +2125,8 @@ export async function resolveExternalSlots(node: PluginUiNode, context: External
   return node;
 }
 
-export type ProgramRegistryEntry = {
-  readonly programId: string;
+export type PluginRegistryEntry = {
+  readonly pluginId: string;
   readonly moduleUrl: string;
   readonly contributes?: readonly string[];
   readonly consumes?: readonly string[];
@@ -2217,14 +2217,14 @@ export type HostEffect =
         readonly args?: unknown;
       };
     }
-  | { readonly spawnPluginInstance: { readonly programId: string; readonly appId: string; readonly osInstanceId?: string; readonly label?: string; readonly documentJson?: string } }
-  | { readonly openPluginInstance: { readonly programId: string; readonly appId: string; readonly osInstanceId?: string } }
+  | { readonly spawnPluginInstance: { readonly pluginId: string; readonly appId: string; readonly osInstanceId?: string; readonly label?: string; readonly documentJson?: string } }
+  | { readonly openPluginInstance: { readonly pluginId: string; readonly appId: string; readonly osInstanceId?: string } }
   | { readonly setActiveUtility: { readonly windowId: string; readonly utilityId: string } }
   /** 🛠️ Programmatically switches the host-owned active tool of the active mode — the effect form of
    * `setActiveTool`. Empty `toolId` deactivates the current tool. */
   | { readonly setActiveTool: { readonly toolId: string } }
   | { readonly openDialog: { readonly dialogId: string; readonly args?: Record<string, unknown> } }
-  /** @emoji 🔁 Re-dispatches `action` onto the same program instance after `delayMs` — lets a program
+  /** @emoji 🔁 Re-dispatches `action` onto the same plugin instance after `delayMs` — lets a program
    * advance staged/progressive work over several ticks without blocking the host; the response's own
    * `requestedEffects` are fed back through `applyHostEffects` recursively. */
   | { readonly dispatchAction: { readonly action: string; readonly args?: unknown; readonly delayMs: number } };
@@ -2255,7 +2255,7 @@ export function resolveUiDirtyScope(scope: UiDirtyScope | undefined): UiDirtySco
 }
 
 /**
- * @emoji 📤 Typed result of a program `handle-action`/`handle-command` call — mirrors the Rust
+ * @emoji 📤 Typed result of a plugin `handle-action`/`handle-command` call — mirrors the Rust
  * `InvocationResult`. Replaces the legacy `string[]` JSON-patch shape: operations are now typed
  * `KernelOperation`s with true inverses, and the shell applies `requestedEffects` through
  * `applyHostEffects` (WS-E).
@@ -2320,10 +2320,10 @@ export function pluginErrorText(error: unknown): string {
   return String(error);
 }
 
-/** @emoji 🔒 True when a program call hit the single-flight instance lock (or a poisoned guard after a trap). */
+/** @emoji 🔒 True when a plugin call hit the single-flight instance lock (or a poisoned guard after a trap). */
 export function isPluginInstanceBusyError(error: unknown): boolean {
   const message = pluginErrorText(error);
-  return message.includes("program instance busy") || message.includes("plugin busy");
+  return message.includes("plugin instance busy") || message.includes("plugin busy");
 }
 
 /** @emoji 🔒 Serializes wasm program entry points — the host keeps instances in one RefCell. */
@@ -2348,7 +2348,7 @@ export function withSerializedPluginWasmHandle(handle: PluginWasmHandle): Plugin
     return job;
   };
   return {
-    programId: handle.programId,
+    pluginId: handle.pluginId,
     manifest: handle.manifest,
     createApp: (appId) => runSerialized(() => handle.createApp(appId)),
     destroyApp: (instanceId) => runSerialized(() => handle.destroyApp(instanceId)),
@@ -2371,7 +2371,7 @@ export function withSerializedPluginWasmHandle(handle: PluginWasmHandle): Plugin
 /** @emoji 🧵 Message types the generated `plugin-worker.js` dispatches (framework/product/os/dev/script.ts `pluginWorkerSource`). */
 type PluginWorkerMessageType = "init" | "manifest" | "createApp" | "handleAction" | "handleCommand" | "render" | "destroy" | "refreshUi" | "error";
 
-/** @emoji ⏱️ Logs only, never kills the worker — a program action owns in-flight, possibly undo-relevant
+/** @emoji ⏱️ Logs only, never kills the worker — a plugin action owns in-flight, possibly undo-relevant
  * state, so abandoning it mid-call (the wgpu renderer's timeout+restart policy) would corrupt it. */
 const PLUGIN_WORKER_UNRESPONSIVE_MS = 10000;
 
@@ -2390,7 +2390,7 @@ class PluginWorkerClient {
   onBackboneOutbound?: (uri: string, messageJson: string) => void;
 
   constructor(
-    private readonly programId: string,
+    private readonly pluginId: string,
     private readonly moduleUrl: string,
   ) {}
 
@@ -2421,15 +2421,15 @@ class PluginWorkerClient {
       window.clearTimeout(entry.watchdog);
       this.pending.delete(requestId);
       if (message.type === "error") {
-        entry.reject(new Error(message.message ?? `program worker ${this.programId} error`));
+        entry.reject(new Error(message.message ?? `program worker ${this.pluginId} error`));
         return;
       }
       entry.resolve(message);
     };
     worker.onerror = (error) => {
-      console.error(`[DEBUG] program worker ${this.programId} crashed`, error);
+      console.error(`[DEBUG] program worker ${this.pluginId} crashed`, error);
       this.worker = null;
-      this.clearPending(new Error(`program worker ${this.programId} crashed`));
+      this.clearPending(new Error(`program worker ${this.pluginId} crashed`));
     };
   }
 
@@ -2443,12 +2443,12 @@ class PluginWorkerClient {
   private request(type: PluginWorkerMessageType, payload: Record<string, unknown>): Promise<Record<string, unknown>> {
     return new Promise((resolve, reject) => {
       if (!this.worker) {
-        reject(new Error(`program worker ${this.programId} is not running`));
+        reject(new Error(`program worker ${this.pluginId} is not running`));
         return;
       }
       const requestId = crypto.randomUUID();
       const watchdog = window.setTimeout(() => {
-        console.warn(`[DEBUG] program worker ${this.programId} unresponsive for ${PLUGIN_WORKER_UNRESPONSIVE_MS}ms: ${type}`);
+        console.warn(`[DEBUG] program worker ${this.pluginId} unresponsive for ${PLUGIN_WORKER_UNRESPONSIVE_MS}ms: ${type}`);
       }, PLUGIN_WORKER_UNRESPONSIVE_MS);
       this.pending.set(requestId, { resolve, reject, watchdog });
       this.worker.postMessage({ type, requestId, ...payload });
@@ -2484,7 +2484,7 @@ class PluginWorkerClient {
   }
 
   dispose(): void {
-    this.clearPending(new Error(`program worker ${this.programId} disposed`));
+    this.clearPending(new Error(`program worker ${this.pluginId} disposed`));
     this.worker?.terminate();
     this.worker = null;
   }
@@ -2501,14 +2501,14 @@ class PluginWorkerClient {
  */
 const pluginWorkerClients = new Map<string, PluginWorkerClient>();
 
-async function loadPluginModuleViaWorker(programId: string, moduleUrl: string): Promise<PluginWasmHandle> {
-  const client = new PluginWorkerClient(programId, moduleUrl);
-  pluginWorkerClients.set(programId, client);
+async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
+  const client = new PluginWorkerClient(pluginId, moduleUrl);
+  pluginWorkerClients.set(pluginId, client);
   client.onBackboneOutbound = (uri, messageJson) => relayPluginBackboneOutbound(uri, messageJson);
   await client.start();
-  const manifest = JSON.parse(await client.manifest()) as ProgramManifest;
+  const manifest = JSON.parse(await client.manifest()) as PluginManifest;
   return withSerializedPluginWasmHandle({
-    programId,
+    pluginId,
     manifest,
     createApp: (appId) => client.createApp(appId),
     destroyApp: (instanceId) => client.destroyApp(instanceId),
@@ -2518,7 +2518,7 @@ async function loadPluginModuleViaWorker(programId: string, moduleUrl: string): 
     renderWithDocument: async (instanceId, bodyKey, viewState, documentJson) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState), documentJson)) as PluginUiNode,
     refreshUi: async (instanceId, request) => JSON.parse(await client.refreshUi(instanceId, JSON.stringify(request))) as PluginUiRefreshResponse,
     dispose: () => {
-      pluginWorkerClients.delete(programId);
+      pluginWorkerClients.delete(pluginId);
       client.dispose();
     },
   });
@@ -2535,7 +2535,7 @@ export function relayPluginBackboneOutbound(uri: string, messageJson: string): v
 (globalThis as unknown as { __semioMainThreadPluginBackboneOutbound?: (uri: string, messageJson: string) => void }).__semioMainThreadPluginBackboneOutbound = relayPluginBackboneOutbound;
 
 /** @emoji 🌉 Inbound counterpart: pushes straight into the same global queue a direct-import plugin's
- * `host-shim.js` `backbonePoll` drains, keyed by `uri` (globally unique per document, so no programId
+ * `host-shim.js` `backbonePoll` drains, keyed by `uri` (globally unique per document, so no pluginId
  * scoping is needed even though several plugins may share this realm). */
 function pushMainThreadPluginBackboneInbound(uri: string, messages: readonly string[]): void {
   const bridge = globalThis as unknown as { __semioBackboneInbound?: Map<string, string[]> };
@@ -2544,8 +2544,8 @@ function pushMainThreadPluginBackboneInbound(uri: string, messages: readonly str
   bridge.__semioBackboneInbound = queue;
 }
 
-export function postPluginBackboneInbound(programId: string, uri: string, messages: readonly string[]): void {
-  const client = pluginWorkerClients.get(programId);
+export function postPluginBackboneInbound(pluginId: string, uri: string, messages: readonly string[]): void {
+  const client = pluginWorkerClients.get(pluginId);
   if (client) {
     client.postBackboneInbound(uri, messages);
     return;
@@ -2561,10 +2561,10 @@ export function setPluginBackboneOutboundRelay(relay: ((uri: string, messageJson
 
 const pluginModuleHandleCache = new Map<string, Promise<PluginWasmHandle>>();
 
-export async function loadPluginModule(programId: string, moduleUrl: string): Promise<PluginWasmHandle> {
+export async function loadPluginModule(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
   const cached = pluginModuleHandleCache.get(moduleUrl);
   if (cached) return cached;
-  const pending = loadPluginModuleUncached(programId, moduleUrl);
+  const pending = loadPluginModuleUncached(pluginId, moduleUrl);
   pluginModuleHandleCache.set(moduleUrl, pending);
   try {
     return await pending;
@@ -2574,16 +2574,16 @@ export async function loadPluginModule(programId: string, moduleUrl: string): Pr
   }
 }
 
-async function loadPluginModuleUncached(programId: string, moduleUrl: string): Promise<PluginWasmHandle> {
+async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
   // 🧵 Worker-backed by default so a plugin's `handleAction` (e.g. puzzle-3d's collision precompute) can
   // never block the UI thread. Falls back to the direct main-thread import below when unavailable: no
   // `Worker` global (vitest/node), no `plugin-worker.js` alongside this module, or a wasm-bindgen-only
   // program (the worker template only supports the `createPluginApi` component-model ABI).
   if (typeof Worker !== "undefined") {
     try {
-      return await loadPluginModuleViaWorker(programId, moduleUrl);
+      return await loadPluginModuleViaWorker(pluginId, moduleUrl);
     } catch (error) {
-      console.warn(`[DEBUG] program ${programId} worker-backed load failed, falling back to main thread: ${error instanceof Error ? error.message : String(error)}`);
+      console.warn(`[DEBUG] program ${pluginId} worker-backed load failed, falling back to main thread: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   const module = (await import(/* @vite-ignore */ moduleUrl)) as {
@@ -2603,25 +2603,25 @@ async function loadPluginModuleUncached(programId: string, moduleUrl: string): P
       attachBackbone?: (instanceId: number, uri: string) => Promise<void>;
       detachBackbone?: (instanceId: number) => Promise<void>;
     }>;
-    semio_program_manifest?: () => string;
-    semio_program_create_app?: (appId: string) => number;
-    semio_program_destroy_app?: (instanceId: number) => void;
-    semio_program_handle_action?: (instanceId: number, actionJson: string, viewStateJson: string) => string;
-    semio_program_handle_command?: (instanceId: number, commandJson: string, viewStateJson: string) => string;
-    semio_program_render?: (instanceId: number, bodyKey: string, viewStateJson: string) => string;
-    semio_program_refresh_ui?: (instanceId: number, requestJson: string) => string;
-    semio_program_apply_operations?: (instanceId: number, operationsJson: string) => void;
-    semio_program_read_app_document?: (instanceId: number) => string;
-    semio_program_load_app_document?: (instanceId: number, documentJson: string) => void;
-    semio_program_attach_backbone?: (instanceId: number, uri: string) => void;
-    semio_program_detach_backbone?: (instanceId: number) => void;
+    semio_plugin_manifest?: () => string;
+    semio_plugin_create_app?: (appId: string) => number;
+    semio_plugin_destroy_app?: (instanceId: number) => void;
+    semio_plugin_handle_action?: (instanceId: number, actionJson: string, viewStateJson: string) => string;
+    semio_plugin_handle_command?: (instanceId: number, commandJson: string, viewStateJson: string) => string;
+    semio_plugin_render?: (instanceId: number, bodyKey: string, viewStateJson: string) => string;
+    semio_plugin_refresh_ui?: (instanceId: number, requestJson: string) => string;
+    semio_plugin_apply_operations?: (instanceId: number, operationsJson: string) => void;
+    semio_plugin_read_app_document?: (instanceId: number) => string;
+    semio_plugin_load_app_document?: (instanceId: number, documentJson: string) => void;
+    semio_plugin_attach_backbone?: (instanceId: number, uri: string) => void;
+    semio_plugin_detach_backbone?: (instanceId: number) => void;
   };
   if (module.default) await module.default();
   if (module.createPluginApi) {
     const api = await module.createPluginApi();
-    const manifest = JSON.parse(await api.manifest()) as ProgramManifest;
+    const manifest = JSON.parse(await api.manifest()) as PluginManifest;
     return withSerializedPluginWasmHandle({
-      programId,
+      pluginId,
       manifest,
       createApp: (appId) => api.createApp(appId),
       destroyApp: async (instanceId) => {
@@ -2648,70 +2648,70 @@ async function loadPluginModuleUncached(programId: string, moduleUrl: string): P
       dispose() {},
     });
   }
-  if (!module.semio_program_manifest) {
-    throw new Error(`[DEBUG] program ${programId} missing semio_program_manifest export`);
+  if (!module.semio_plugin_manifest) {
+    throw new Error(`[DEBUG] program ${pluginId} missing semio_plugin_manifest export`);
   }
-  const manifest = JSON.parse(module.semio_program_manifest()) as ProgramManifest;
+  const manifest = JSON.parse(module.semio_plugin_manifest()) as PluginManifest;
   return withSerializedPluginWasmHandle({
-    programId,
+    pluginId,
     manifest,
     async createApp(appId: string) {
-      const create = module.semio_program_create_app;
-      if (!create) throw new Error(`plugin ${programId} missing create_app`);
+      const create = module.semio_plugin_create_app;
+      if (!create) throw new Error(`plugin ${pluginId} missing create_app`);
       return create(appId);
     },
     async destroyApp(instanceId: number) {
-      module.semio_program_destroy_app?.(instanceId);
+      module.semio_plugin_destroy_app?.(instanceId);
     },
     async handleAction(instanceId: number, actionJson: string, viewState: PluginViewState) {
-      const handle = module.semio_program_handle_action;
+      const handle = module.semio_plugin_handle_action;
       if (!handle) return EMPTY_INVOCATION_RESPONSE;
       const raw = handle(instanceId, actionJson, JSON.stringify(viewState));
       return parseInvocationResponse(raw);
     },
     async handleCommand(instanceId: number, commandJson: string, viewState: PluginViewState) {
-      const handle = module.semio_program_handle_command;
+      const handle = module.semio_plugin_handle_command;
       if (!handle) return EMPTY_INVOCATION_RESPONSE;
       const raw = handle(instanceId, commandJson, JSON.stringify(viewState));
       return parseInvocationResponse(raw);
     },
     async render(instanceId: number, bodyKey: string, viewState: PluginViewState) {
-      const render = module.semio_program_render;
-      if (!render) throw new Error(`plugin ${programId} missing render`);
+      const render = module.semio_plugin_render;
+      if (!render) throw new Error(`plugin ${pluginId} missing render`);
       return JSON.parse(render(instanceId, bodyKey, JSON.stringify(viewState))) as PluginUiNode;
     },
     async refreshUi(instanceId: number, request: PluginUiRefreshRequest) {
-      const refreshUi = module.semio_program_refresh_ui;
+      const refreshUi = module.semio_plugin_refresh_ui;
       if (!refreshUi) return {};
       return JSON.parse(refreshUi(instanceId, JSON.stringify(request))) as PluginUiRefreshResponse;
     },
-    applyOperations: module.semio_program_apply_operations
+    applyOperations: module.semio_plugin_apply_operations
       ? async (instanceId, operationsJson) => {
-          module.semio_program_apply_operations!(instanceId, operationsJson);
+          module.semio_plugin_apply_operations!(instanceId, operationsJson);
         }
       : undefined,
-    readAppDocument: module.semio_program_read_app_document ? async (instanceId) => module.semio_program_read_app_document!(instanceId) : undefined,
-    loadAppDocument: module.semio_program_load_app_document
+    readAppDocument: module.semio_plugin_read_app_document ? async (instanceId) => module.semio_plugin_read_app_document!(instanceId) : undefined,
+    loadAppDocument: module.semio_plugin_load_app_document
       ? async (instanceId, documentJson) => {
-          module.semio_program_load_app_document!(instanceId, documentJson);
+          module.semio_plugin_load_app_document!(instanceId, documentJson);
         }
       : undefined,
-    attachBackbone: module.semio_program_attach_backbone
+    attachBackbone: module.semio_plugin_attach_backbone
       ? async (instanceId, uri) => {
-          module.semio_program_attach_backbone!(instanceId, uri);
+          module.semio_plugin_attach_backbone!(instanceId, uri);
         }
       : undefined,
-    detachBackbone: module.semio_program_detach_backbone
+    detachBackbone: module.semio_plugin_detach_backbone
       ? async (instanceId) => {
-          module.semio_program_detach_backbone!(instanceId);
+          module.semio_plugin_detach_backbone!(instanceId);
         }
       : undefined,
     dispose() {},
   });
 }
 
-export async function loadPluginWasm(programId: string, moduleUrl: string): Promise<PluginWasmHandle> {
-  return loadPluginModule(programId, moduleUrl);
+export async function loadPluginWasm(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
+  return loadPluginModule(pluginId, moduleUrl);
 }
 
 export function pluginHandleForBridge(handle: PluginWasmHandle) {
@@ -2737,8 +2737,8 @@ function findPlaygroundVariant(playgroundPluginId: string): PlaygroundBuildTarge
 }
 
 /** @emoji 🎯 Resolves a playground filter/alias (e.g. "3d", "sourcing") to its underlying wasm component registry id. */
-export function resolveProgramRegistryId(playgroundPluginId: string): string {
-  return findPlaygroundVariant(playgroundPluginId)?.programId ?? playgroundPluginId;
+export function resolvePluginRegistryId(playgroundPluginId: string): string {
+  return findPlaygroundVariant(playgroundPluginId)?.pluginId ?? playgroundPluginId;
 }
 
 /** @emoji 🎯 Resolves a playground filter/alias to the app id that should be instantiated by default within its plugin's manifest. */
@@ -2749,16 +2749,16 @@ export function resolvePlaygroundDefaultAppId(playgroundPluginId: string): strin
 export type PlaygroundBootSession = {
   readonly variant: string;
   readonly defaultAppId?: string;
-  readonly plugins: readonly ProgramRegistryEntry[];
+  readonly plugins: readonly PluginRegistryEntry[];
 };
 
 export type PlaygroundBoot = {
   readonly variant: string;
   readonly defaultAppId?: string;
-  readonly plugins: readonly ProgramRegistryEntry[];
+  readonly plugins: readonly PluginRegistryEntry[];
 };
 
-/** @emoji 🎮 Resolves the wasm program list and default app for one playground variant; when the on-disk
+/** @emoji 🎮 Resolves the wasm plugin list and default app for one playground variant; when the on-disk
  * `generated/session.ts` was overwritten by another concurrent dev variant, rebuilds from the generated
  * program catalog instead of trusting the stale program rows. */
 export function resolvePlaygroundBoot(variant: string, session?: PlaygroundBootSession): PlaygroundBoot {
@@ -2766,42 +2766,42 @@ export function resolvePlaygroundBoot(variant: string, session?: PlaygroundBootS
   if (session?.variant === variant) {
     return { variant, defaultAppId: session.defaultAppId ?? defaultAppId, plugins: session.plugins };
   }
-  const registryPluginId = resolveProgramRegistryId(variant);
-  const studioMode = resolveProgramHostConfig(variant) !== undefined;
-  const catalogPlugins: ProgramRegistryEntry[] = PROGRAM_BUILD_TARGETS.map((target) => ({
-    programId: target.programId,
-    moduleUrl: programModuleUrl(target.programId, target.wasmOut),
+  const registryPluginId = resolvePluginRegistryId(variant);
+  const studioMode = resolvePluginHostConfig(variant) !== undefined;
+  const catalogPlugins: PluginRegistryEntry[] = PLUGIN_BUILD_TARGETS.map((target) => ({
+    pluginId: target.pluginId,
+    moduleUrl: pluginModuleUrl(target.pluginId, target.wasmOut),
     contributes: target.contributes,
     consumes: target.consumes,
   }));
   return {
     variant,
     defaultAppId,
-    plugins: expandProgramRegistry(catalogPlugins, studioMode ? undefined : registryPluginId, studioMode),
+    plugins: expandPluginRegistry(catalogPlugins, studioMode ? undefined : registryPluginId, studioMode),
   };
 }
 
-//#region 🏠🧳ProgramHostConfig
-/** 🏠🧳 Declares, for a program whose manifest offers a host-style multi-app experience (one app is the
+//#region 🏠🧳PluginHostConfig
+/** 🏠🧳 Declares, for a plugin whose manifest offers a host-style multi-app experience (one app is the
  * landing/default view, another hosts other apps as spawned sub-instances — e.g. "s"'s home/studio
  * pair), which app ids play which role. Callers resolve controller ids and default panel tabs from
  * the *loaded manifest*'s own `controllerId`/`panelTabs` on those apps rather than hardcoding separate
  * literals — this table only ever needs to carry app-id role assignments. A pluginFilter absent here
  * simply boots through the ordinary single-app path (`resolvePlaygroundDefaultAppId`). Mirrored by
- * `PLUGIN_HOST_CONFIGS`/`resolve_program_host_config` in `framework/renderer/wgpu/rs/lib.rs`'s
+ * `PLUGIN_HOST_CONFIGS`/`resolve_plugin_host_config` in `framework/renderer/wgpu/rs/lib.rs`'s
  * `program_bridge` module for the WGPU renderer. */
-export type ProgramHostConfig = {
-  readonly programId: string;
+export type PluginHostConfig = {
+  readonly pluginId: string;
   readonly landingAppId: string;
   readonly hostAppId: string;
 };
 
 /** 🎯 Resolves a playground filter/alias to its plugin's host config, or `undefined` when that program doesn't offer a host-style multi-app experience. */
-export function resolveProgramHostConfig(playgroundPluginId: string): ProgramHostConfig | undefined {
-  const registryId = resolveProgramRegistryId(playgroundPluginId);
-  return PLUGIN_HOST_CONFIGS.find((entry) => entry.programId === registryId);
+export function resolvePluginHostConfig(playgroundPluginId: string): PluginHostConfig | undefined {
+  const registryId = resolvePluginRegistryId(playgroundPluginId);
+  return PLUGIN_HOST_CONFIGS.find((entry) => entry.pluginId === registryId);
 }
-//#endregion 🏠🧳ProgramHostConfig
+//#endregion 🏠🧳PluginHostConfig
 // #endregion 🎮PlaygroundResolution
 
 //#region 🧪Tests
@@ -3031,24 +3031,24 @@ if (import.meta.vitest) {
 
   describe("PlaygroundResolution", () => {
     it("resolves host config from generated program metadata", () => {
-      expect(resolveProgramHostConfig("s")).toEqual({ programId: "s", landingAppId: "home", hostAppId: "studio" });
-      expect(resolveProgramHostConfig("puzzle3d")).toBeUndefined();
+      expect(resolvePluginHostConfig("s")).toEqual({ pluginId: "s", landingAppId: "home", hostAppId: "studio" });
+      expect(resolvePluginHostConfig("puzzle3d")).toBeUndefined();
     });
 
-    it("resolves playground aliases to registry program ids", () => {
-      expect(resolveProgramRegistryId("aggregator")).toBe("puzzle");
-      expect(resolveProgramRegistryId("3d")).toBe("puzzle");
+    it("resolves playground aliases to registry plugin ids", () => {
+      expect(resolvePluginRegistryId("aggregator")).toBe("puzzle");
+      expect(resolvePluginRegistryId("3d")).toBe("puzzle");
     });
 
     it("rebuilds program rows when the generated session variant is stale", () => {
       const boot = resolvePlaygroundBoot("aggregator", {
         variant: "sourcing",
         defaultAppId: "sourcing-curate",
-        plugins: [{ programId: "sourcing", moduleUrl: "/program-modules/sourcing/sourcing_program.js" }],
+        plugins: [{ pluginId: "sourcing", moduleUrl: "/plugin-modules/sourcing/sourcing_plugin.js" }],
       });
       expect(boot.variant).toBe("aggregator");
       expect(boot.defaultAppId).toBe("puzzle3d-play");
-      expect(boot.plugins).toEqual([{ programId: "puzzle", moduleUrl: "/program-modules/puzzle/puzzle_program.js", contributes: [], consumes: [] }]);
+      expect(boot.plugins).toEqual([{ pluginId: "puzzle", moduleUrl: "/plugin-modules/puzzle/puzzle_plugin.js", contributes: [], consumes: [] }]);
     });
   });
 }

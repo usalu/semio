@@ -14,7 +14,7 @@ todos:
  - id: runner_bin
    content: Implement script.ts defineLint helper and bin/lint.ts runner that writes .repo/cache/breach/<id>.json
    status: completed
- - id: nx_program
+ - id: nx_plugin
    content: Implement and register nx inferred program that discovers *.lint.script.ts and creates cacheable per-entity targets
    status: completed
  - id: remove_legacy
@@ -65,7 +65,7 @@ In the runner:
 
 ## 3. nx inferred program
 
-`repo/lib/js/src/nx-program.ts` exporting `createNodes`:
+`repo/lib/js/src/nx-plugin.ts` exporting `createNodes`:
 
 - Glob: `**/*.lint.script.ts` and `**/lint.script.ts`, excluding `node_modules`, `.repo`, `dist`.
 - For each match, create a project (or inject targets onto the enclosing bundle project) with target `lint:<entity-id-flat>`:
@@ -83,7 +83,7 @@ In the runner:
 }
 ```
 
-Register the program in [nx.json](nx.json) `plugins` as `"@semio-tech/repo-lib/nx-program"`. nx caching handles the "automatic" part — if neither the script nor the target entity files changed, the cached breach JSON is restored.
+Register the plugin in [nx.json](nx.json) `plugins` as `"@semio-tech/repo-lib/nx-plugin"`. nx caching handles the "automatic" part — if neither the script nor the target entity files changed, the cached breach JSON is restored.
 
 ## 4. Remove legacy Go breach machinery
 

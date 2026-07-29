@@ -27,7 +27,7 @@ isProject: false
 
 ## Why this is two very different sized efforts
 
-**Part 1 (small, safe):** Extending test coverage so every semios-hosted technology is verified to actually materialize (not just spawn). The scaffolding already exists (`materializeAppInstanceProjection`, the `"spawns every technology program id"` test in [semios/core/index.ts](semios/core/index.ts)) and only `draw`/`flow` currently assert real projection content.
+**Part 1 (small, safe):** Extending test coverage so every semios-hosted technology is verified to actually materialize (not just spawn). The scaffolding already exists (`materializeAppInstanceProjection`, the `"spawns every technology plugin id"` test in [semios/core/index.ts](semios/core/index.ts)) and only `draw`/`flow` currently assert real projection content.
 
 **Part 2 (very large, high risk):** `compose/client/lib/rs/lib.rs` is a ~21,000-line Rust crate that is the authoritative domain engine for the entire `compose` product — not just the sketchpad-in-semios integration. It implements the Kit/Design/Piece/Port/Connection entity graph, diff/apply semantics, port-compatibility computation, blueprint/transitive-reference resolution, VFS derivation, checkpoint/alternative persistence, and the GraphQL schema that serves all of it. Four other things depend on it purely because it exists: `compose-store` (HTTP GraphQL sidecar), `compose-hub`'s Cargo manifest (vestigial — hub's runtime code doesn't call into it), `compose_query`'s native transport, and the `compose/graphql` schema-export pipeline. Deleting it means porting all of that domain logic into TypeScript and rewiring every consumer, not just adding a semios `AppVcsHandler`.
 
@@ -74,9 +74,9 @@ flowchart TB
 
 ## Part 1 — Verify every technology inside semios (do first, low risk)
 
-- Extend `"spawns every technology program id"` in [semios/core/index.ts](semios/core/index.ts) (currently only asserts `appInstances.length`) to call `materializeAppInstanceProjection` for every spawned instance and assert it returns a sane, non-throwing projection for every format — following the pattern already used for `flow` (`materializeAppInstanceProjection(updated).flow.id === "patched"`) and `draw` (fixture-level assertion in [semios/play/index.ts](semios/play/index.ts)).
+- Extend `"spawns every technology plugin id"` in [semios/core/index.ts](semios/core/index.ts) (currently only asserts `appInstances.length`) to call `materializeAppInstanceProjection` for every spawned instance and assert it returns a sane, non-throwing projection for every format — following the pattern already used for `flow` (`materializeAppInstanceProjection(updated).flow.id === "patched"`) and `draw` (fixture-level assertion in [semios/play/index.ts](semios/play/index.ts)).
 - Add at least one fixture/round-trip assertion per handler style: typed-operation handlers (`draw`, `writer`, `raster`, `forms`) and JSON-replace handlers (`flow`, `dag`, `procedural.2d/3d`, `shooting`, `trinity`, `gis.map`, `presentation`, `puzzle.2d/3d/5d`, `cad`, `compose.sketchpad`/home).
-- Fix the `forms.dictionary/v1` vs `forms.form/v1` mismatch found during the audit: the `forms` program's registry entry declares `sourceFormat: "forms.dictionary"` ([semios/core/index.ts:275](semios/core/index.ts)) but the typed handler `createFormsAppVcsHandler` is registered for `forms.form/v1` ([forms/core/index.ts:1092](forms/core/index.ts)) — align these so `forms` actually exercises its typed handler end-to-end instead of silently falling back to a JSON-replace stub.
+- Fix the `forms.dictionary/v1` vs `forms.form/v1` mismatch found during the audit: the `forms` plugin's registry entry declares `sourceFormat: "forms.dictionary"` ([semios/core/index.ts:275](semios/core/index.ts)) but the typed handler `createFormsAppVcsHandler` is registered for `forms.form/v1` ([forms/core/index.ts:1092](forms/core/index.ts)) — align these so `forms` actually exercises its typed handler end-to-end instead of silently falling back to a JSON-replace stub.
 
 ## Part 2 — Port the Rust kit domain engine to TypeScript
 

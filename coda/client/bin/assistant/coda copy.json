@@ -193,7 +193,7 @@
   ],
   "targets": [
     {
-      "id": "programming",
+      "id": "__KEEP_pluginming__",
       "properties": [
         {
           "id": "program",
@@ -204,7 +204,7 @@
       ],
       "rules": [
         {
-          "id": "not-enough-program-area",
+          "id": "not-enough-plugin-area",
           "description": "Not enough area for the program.",
           "data": {
             "program": "string",
@@ -214,7 +214,7 @@
           "measures": ["increase-gross-floor-area"]
         },
         {
-          "id": "too-much-program-area",
+          "id": "too-much-plugin-area",
           "description": "Too much area for the program.",
           "measures": ["decrease-gross-floor-area"]
         }

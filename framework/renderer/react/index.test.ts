@@ -739,7 +739,7 @@ describe("ui identity preservation (puzzle 2d perf)", () => {
 // 🐢 Puzzle 2D performance round 3: the batched, hash-conditional `refresh-ui` protocol that replaces
 // ~12 sequential per-section WASM calls with one round trip. `buildUiRefreshRequest` restricts what's
 // asked for by scope and attaches known hashes; `applyUiRefreshResponseToCache` writes back only the
-// sections the program actually says changed.
+// sections the plugin actually says changed.
 describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
   const windowKinds = [
     { id: "overview", bodyKey: "puzzle2d.play.overview" },
@@ -776,7 +776,7 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
     expect(request?.viewState.activeUtilityId).toBeUndefined();
   });
 
-  it("buildUiRefreshRequest for a full scope requests every window/panel/engagements/measures/labels section (utility bars are now registry-derived, not a program section)", () => {
+  it("buildUiRefreshRequest for a full scope requests every window/panel/engagements/measures/labels section (utility bars are now registry-derived, not a plugin section)", () => {
     const request = buildUiRefreshRequest({ kind: "full" }, windowKinds, panelTabLeaves, {}, new Map());
     expect(request?.windows?.map((w) => w.key)).toEqual(["overview", "detail"]);
     expect(request?.panels?.map((p) => p.key)).toEqual(["framework.panel.document"]);
@@ -860,22 +860,22 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
   });
 });
 
-describe("framework program runtime", () => {
+describe("framework plugin runtime", () => {
   it("preserves batched UI refreshes through the React program adapter", async () => {
-    const moduleUrl = `data:application/javascript,${encodeURIComponent("export function semio_program_manifest(){return JSON.stringify({programId:'mock-refresh',label:'Mock Refresh',version:'0',apps:[],programs:[],examples:[]})};export function semio_program_refresh_ui(instanceId,requestJson){return JSON.stringify({windows:[{key:'overview',hash:'fresh',value:{instanceId,request:JSON.parse(requestJson)}}]})}")}`;
+    const moduleUrl = `data:application/javascript,${encodeURIComponent("export function semio_plugin_manifest(){return JSON.stringify({pluginId:'mock-refresh',label:'Mock Refresh',version:'0',apps:[],programs:[],examples:[]})};export function semio_plugin_refresh_ui(instanceId,requestJson){return JSON.stringify({windows:[{key:'overview',hash:'fresh',value:{instanceId,request:JSON.parse(requestJson)}}]})}")}`;
     const handle = await loadPluginModule("mock-refresh", moduleUrl);
     await expect(handle.refreshUi(7, { viewState: {} })).resolves.toEqual({
       windows: [{ key: "overview", hash: "fresh", value: { instanceId: 7, request: { viewState: {} } } }],
     });
   });
 
-  it("loads program modules through framework-core", async () => {
+  it("loads plugin modules through framework-core", async () => {
     const { loadPluginModule } = await import("@semio-tech/framework-core");
-    const handle = await loadPluginModule("mock", "data:application/javascript,export function semio_program_manifest(){return JSON.stringify({programId:'mock',label:'Mock',version:'0',apps:[],programs:[],examples:[]})}");
-    expect(handle.manifest.programId).toBe("mock");
+    const handle = await loadPluginModule("mock", "data:application/javascript,export function semio_plugin_manifest(){return JSON.stringify({pluginId:'mock',label:'Mock',version:'0',apps:[],programs:[],examples:[]})}");
+    expect(handle.manifest.pluginId).toBe("mock");
   });
 
-  it("parses a typed InvocationResponse, including requestedEffects, from a program handle-action response", async () => {
+  it("parses a typed InvocationResponse, including requestedEffects, from a plugin handle-action response", async () => {
     const { parseInvocationResponse } = await import("@semio-tech/framework-core");
     const response = parseInvocationResponse(
       JSON.stringify({
@@ -900,8 +900,8 @@ describe("framework program runtime", () => {
     let inFlight = 0;
     let maxInFlight = 0;
     const handle = withSerializedPluginWasmHandle({
-      programId: "mock",
-      manifest: { programId: "mock", label: "Mock", version: "0", apps: [], programs: [], examples: [] },
+      pluginId: "mock",
+      manifest: { pluginId: "mock", label: "Mock", version: "0", apps: [], programs: [], examples: [] },
       createApp: async () => 1,
       destroyApp: async () => {},
       handleAction: async () => {
@@ -919,13 +919,13 @@ describe("framework program runtime", () => {
     expect(maxInFlight).toBe(1);
   });
 
-  it("detects jco payload-shaped program instance busy errors", async () => {
+  it("detects jco payload-shaped plugin instance busy errors", async () => {
     const { isPluginInstanceBusyError, pluginErrorText } = await import("@semio-tech/framework-core");
     const jcoBusy = Object.assign(new Error("[object Object] (see error.payload)"), {
-      payload: { tag: "message", val: "program instance busy" },
+      payload: { tag: "message", val: "plugin instance busy" },
     });
     expect(isPluginInstanceBusyError(jcoBusy)).toBe(true);
-    expect(pluginErrorText(jcoBusy)).toContain("program instance busy");
+    expect(pluginErrorText(jcoBusy)).toContain("plugin instance busy");
     expect(isPluginInstanceBusyError(new Error("boom"))).toBe(false);
   });
 });
@@ -1005,8 +1005,8 @@ describe("framework external slots", () => {
   it("resolves external slots through contributor plugins", async () => {
     const { resolveExternalSlots } = await import("@semio-tech/framework-core");
     const handle = {
-      programId: "forms-module-procedural",
-      manifest: { programId: "forms-module-procedural", label: "Module", version: "0", apps: [], programs: [], examples: [] },
+      pluginId: "forms-module-procedural",
+      manifest: { pluginId: "forms-module-procedural", label: "Module", version: "0", apps: [], programs: [], examples: [] },
       createApp: async () => 7,
       destroyApp: async () => {},
       handleAction: async () => [],
@@ -1021,7 +1021,7 @@ describe("framework external slots", () => {
     const resolved = await resolveExternalSlots(
       {
         type: "externalSlot",
-        programId: "forms-module-procedural",
+        pluginId: "forms-module-procedural",
         appId: "forms-module-procedural",
         bodyKey: "preview",
         paramsJson: "{}",
@@ -1040,7 +1040,7 @@ describe("framework external slots", () => {
       interpretUiNode(
         {
           type: "externalSlot",
-          programId: "missing-module",
+          pluginId: "missing-module",
           appId: "missing-module",
           bodyKey: "preview",
           paramsJson: "{}",
@@ -3429,22 +3429,22 @@ describe("s workflow flow routing", () => {
   });
 
   it("parses a catalogue app drag payload, ignoring extra keys", () => {
-    expect(parseCatalogueAppDragPayload(JSON.stringify({ programId: "s.system", appId: "draw", label: "Draw", extra: "x" }))).toEqual({
-      programId: "s.system",
+    expect(parseCatalogueAppDragPayload(JSON.stringify({ pluginId: "s.system", appId: "draw", label: "Draw", extra: "x" }))).toEqual({
+      pluginId: "s.system",
       appId: "draw",
       label: "Draw",
     });
   });
 
-  it("rejects catalogue app drag payloads missing programId/appId, and garbage", () => {
+  it("rejects catalogue app drag payloads missing pluginId/appId, and garbage", () => {
     expect(parseCatalogueAppDragPayload(JSON.stringify({ appId: "draw" }))).toBeNull();
     expect(parseCatalogueAppDragPayload(JSON.stringify({ kind: "neuron" }))).toBeNull();
     expect(parseCatalogueAppDragPayload("not json")).toBeNull();
   });
 
   it("builds a ghost neuron descriptor, preferring label over appId", () => {
-    expect(JSON.parse(catalogueGhostDescriptorJson({ programId: "s.system", appId: "draw", label: "Draw" }))).toEqual({ kind: "neuron", neuronKind: "Draw" });
-    expect(JSON.parse(catalogueGhostDescriptorJson({ programId: "s.system", appId: "draw" }))).toEqual({ kind: "neuron", neuronKind: "draw" });
+    expect(JSON.parse(catalogueGhostDescriptorJson({ pluginId: "s.system", appId: "draw", label: "Draw" }))).toEqual({ kind: "neuron", neuronKind: "Draw" });
+    expect(JSON.parse(catalogueGhostDescriptorJson({ pluginId: "s.system", appId: "draw" }))).toEqual({ kind: "neuron", neuronKind: "draw" });
   });
 
   it("builds addWidget descriptors from catalogue items", () => {
@@ -3513,7 +3513,7 @@ describe("s workflow flow routing", () => {
           {
             id: "catalogue",
             label: "Catalogue",
-            items: [{ id: "s-play-catalogue.document.draw", label: "Draw", draggable: true, dragData: { "application/x-semio-catalogue-item": '{"programId":"s.system","appId":"draw"}' } }],
+            items: [{ id: "s-play-catalogue.document.draw", label: "Draw", draggable: true, dragData: { "application/x-semio-catalogue-item": '{"pluginId":"s.system","appId":"draw"}' } }],
           },
         ],
       },
@@ -3552,10 +3552,10 @@ describe("s workflow flow routing", () => {
   it("folds spawned focus into viewState so a subsequent host-effect session write keeps activeSpawnedId", () => {
     const panel = {
       activePanelTab: "s-play-catalogue",
-      programs: [{ programId: "draw", programId: "draw", appId: "draw", label: "Draw", document: ["draw"], yields: "2d.drawing" }],
+      programs: [{ pluginId: "draw", workflowStepId: "draw", appId: "draw", label: "Draw", document: ["draw"], yields: "2d.drawing" }],
       spawnedApps: [] as const,
     };
-    const spawned = { id: "app-draw-1", programId: "draw", instanceId: 1, appId: "draw", label: "Semio Emblem", document: ["draw"] };
+    const spawned = { id: "app-draw-1", pluginId: "draw", instanceId: 1, appId: "draw", label: "Semio Emblem", document: ["draw"] };
     const focused = studioPanelFocusingSpawned(panel, spawned);
     expect(focused.activeSpawnedId).toBe("app-draw-1");
     expect(focused.spawnedApps).toEqual([spawned]);

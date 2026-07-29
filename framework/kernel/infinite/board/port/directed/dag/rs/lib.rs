@@ -670,8 +670,8 @@ pub enum DagNodeKind {
     AppInstance {
         #[serde(rename = "instanceId")]
         instance_id: String,
-        #[serde(rename = "programId")]
-        program_id: String,
+        #[serde(rename = "pluginId")]
+        plugin_id: String,
         #[serde(rename = "appId")]
         app_id: String,
         #[serde(default)]
@@ -4559,12 +4559,12 @@ impl DagHost {
                         }
                     }
                 }
-                DagNodeKind::AppInstance { program_id, app_id, .. } => {
+                DagNodeKind::AppInstance { plugin_id, app_id, .. } => {
                     if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
                         Self::paint_node_name_horizontal(scene, center_screen, label, paint_px, label_fill, label_halo);
                     }
                     if lod.shows_detail_text() {
-                        let subtitle = format!("{program_id}/{app_id}");
+                        let subtitle = format!("{plugin_id}/{app_id}");
                         let subtitle_pos = world_to_screen(cam, viewport, Point::new(node.x, node.y + hh * 0.22));
                         append_label(scene, &subtitle, subtitle_pos, paint_px * 0.85, label_fill, label_halo);
                     }
@@ -4923,7 +4923,7 @@ mod tests {
             height: 92.0,
             kind: DagNodeKind::AppInstance {
                 instance_id: "app-1".into(),
-                program_id: "draw".into(),
+                plugin_id: "draw".into(),
                 app_id: "draw".into(),
                 icon: "emoji:draw".into(),
                 inputs: vec![IoPortSpec::simple("in-a", "In")],
@@ -6896,7 +6896,7 @@ fn dag_document_schema() -> String {
 }
 
 /// 🧾 The persistent DAG projection — nodes and edges only. Camera/viewport and selection are
-/// ephemeral view state kept in the program runtime, never recorded in the document's undo history.
+/// ephemeral view state kept in the plugin runtime, never recorded in the document's undo history.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DagDocument {
@@ -7057,7 +7057,7 @@ fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: &mut 
 #[serde(tag = "operation", rename_all = "camelCase")]
 #[allow(
     clippy::large_enum_variant,
-    reason = "boxing `Nodes`'s CollectionOperation would require rewrapping every construction/match site across this crate and infinite/board/port/directed/dag/program/rs (10+ call sites, out of this crate's scope); DagOperation values are short-lived per-dispatch operations, not stored in bulk"
+    reason = "boxing `Nodes`'s CollectionOperation would require rewrapping every construction/match site across this crate and infinite/board/port/directed/dag/plugin/rs (10+ call sites, out of this crate's scope); DagOperation values are short-lived per-dispatch operations, not stored in bulk"
 )]
 pub enum DagOperation {
     Nodes(CollectionOperation<String, DagNodeSpec, DagNodePatch>),
@@ -7157,7 +7157,7 @@ pub type DagStore = DocumentStore<DagDocument, DagOperation>;
 // `Preview` variant carries a nested tagged enum (`DagPreviewContent`). The dsl:: derive engine
 // represents "exactly one nested tagged value" via `#[dsl(statements)] Box<T>` (`RequiredStatements`),
 // which needs a `Box` wrapper the REAL `DagNodeKind`/`DagNodeSpec` fields deliberately don't carry
-// (dozens of call sites here and in `dag-program`/`framework/surface/node-graph`/`flow/core` destructure
+// (dozens of call sites here and in `dag-plugin`/`framework/surface/node-graph`/`flow/core` destructure
 // `node.kind`/`DagNodeKind::Preview { content, .. }` directly — boxing those fields would ripple far
 // outside this crate's ownership). So, exactly like `imperative/core/rs`'s `ImperativeOperationDsl`
 // mirror, `DagNodeKindDsl`/`DagNodeSpecDsl`/`DagNodePatchDsl`/`DagDocumentDsl`/`DagOperationDsl` are
@@ -7194,7 +7194,7 @@ enum DagNodeKindDsl {
     },
     AppInstance {
         instance_id: String,
-        program_id: String,
+        plugin_id: String,
         app_id: String,
         icon: String,
         #[dsl(table)]
@@ -7218,8 +7218,8 @@ fn dag_node_kind_to_dsl(kind: &DagNodeKind) -> DagNodeKindDsl {
         DagNodeKind::Action { label, input } => DagNodeKindDsl::Action { label: label.clone(), input: input.clone() },
         DagNodeKind::Export { label, format, input } => DagNodeKindDsl::Export { label: label.clone(), format: format.clone(), input: input.clone() },
         DagNodeKind::Cluster { inputs, outputs } => DagNodeKindDsl::Cluster { inputs: inputs.clone(), outputs: outputs.clone() },
-        DagNodeKind::AppInstance { instance_id, program_id, app_id, icon, inputs, outputs } => {
-            DagNodeKindDsl::AppInstance { instance_id: instance_id.clone(), program_id: program_id.clone(), app_id: app_id.clone(), icon: icon.clone(), inputs: inputs.clone(), outputs: outputs.clone() }
+        DagNodeKind::AppInstance { instance_id, plugin_id, app_id, icon, inputs, outputs } => {
+            DagNodeKindDsl::AppInstance { instance_id: instance_id.clone(), plugin_id: plugin_id.clone(), app_id: app_id.clone(), icon: icon.clone(), inputs: inputs.clone(), outputs: outputs.clone() }
         }
     }
 }
@@ -7236,7 +7236,7 @@ fn dag_node_kind_from_dsl(kind: DagNodeKindDsl) -> DagNodeKind {
         DagNodeKindDsl::Action { label, input } => DagNodeKind::Action { label, input },
         DagNodeKindDsl::Export { label, format, input } => DagNodeKind::Export { label, format, input },
         DagNodeKindDsl::Cluster { inputs, outputs } => DagNodeKind::Cluster { inputs, outputs },
-        DagNodeKindDsl::AppInstance { instance_id, program_id, app_id, icon, inputs, outputs } => DagNodeKind::AppInstance { instance_id, program_id, app_id, icon, inputs, outputs },
+        DagNodeKindDsl::AppInstance { instance_id, plugin_id, app_id, icon, inputs, outputs } => DagNodeKind::AppInstance { instance_id, plugin_id, app_id, icon, inputs, outputs },
     }
 }
 
@@ -7569,7 +7569,7 @@ mod dag_vcs_tests {
             DagNodeSpec { id: "action".into(), name: "Action".into(), x: 0.0, y: 380.0, kind: DagNodeKind::Action { label: "Run".into(), input: port("in", "trigger") }, ..Default::default() },
             DagNodeSpec { id: "export".into(), name: "Export".into(), x: 0.0, y: 440.0, kind: DagNodeKind::Export { label: "Save".into(), format: "png".into(), input: port("in", "value") }, ..Default::default() },
             DagNodeSpec { id: "cluster".into(), name: "Cluster".into(), x: 0.0, y: 500.0, kind: DagNodeKind::Cluster { inputs: vec![port("in", "In")], outputs: vec![port("out", "Out")] }, ..Default::default() },
-            DagNodeSpec { id: "app".into(), name: "App".into(), x: 0.0, y: 560.0, kind: DagNodeKind::AppInstance { instance_id: "inst-1".into(), program_id: "prog-1".into(), app_id: "note".into(), icon: "emoji:📦".into(), inputs: vec![], outputs: vec![port("out", "Out")] }, ..Default::default() },
+            DagNodeSpec { id: "app".into(), name: "App".into(), x: 0.0, y: 560.0, kind: DagNodeKind::AppInstance { instance_id: "inst-1".into(), plugin_id: "prog-1".into(), app_id: "note".into(), icon: "emoji:📦".into(), inputs: vec![], outputs: vec![port("out", "Out")] }, ..Default::default() },
         ];
         let edges = vec![
             DagFixtureEdge { id: "e1".into(), source: "slider@out".into(), target: "comp@in".into(), ..Default::default() },

@@ -18,4 +18,4 @@ export type * as WasiIoPoll029 from './interfaces/wasi-io-poll.js'; // import wa
 export type * as WasiIoStreams029 from './interfaces/wasi-io-streams.js'; // import wasi:io/streams@0.2.9
 export type * as WasiRandomInsecureSeed029 from './interfaces/wasi-random-insecure-seed.js'; // import wasi:random/insecure-seed@0.2.9
 export type * as WasiRandomRandom029 from './interfaces/wasi-random-random.js'; // import wasi:random/random@0.2.9
-export * as program from './interfaces/semio-framework-program.js'; // export semio:framework/program
+export * as program from './interfaces/semio-framework-plugin.js'; // export semio:framework/plugin

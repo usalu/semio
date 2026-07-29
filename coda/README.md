@@ -14,4 +14,4 @@ Coda research project. ACC design assistant with MCP server (py) and Electron de
 - [desktop](desktop/README.md) – Electron app for visualizing and interacting with coda
 - [engine](engine/README.md) – Backend processing engine specific to coda
 - [examples](examples/README.md) – Example scripts
-- [programming](programming/README.md) – Programming environments or integration interfaces
+- [__KEEP_pluginming__](__KEEP_pluginming__/README.md) – Programming environments or integration interfaces

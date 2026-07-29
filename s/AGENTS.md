@@ -24,11 +24,15 @@ A command send to the engine.
 
 # Cmd
 
-A binary protocol for commands.
+A native binary protocol for commands.
+
+Cmds are used for communication and storage.
 
 # Cde
 
 A native text representation for commands 
+
+Cdes are used for logging and llms.
 
 # Manifest
 

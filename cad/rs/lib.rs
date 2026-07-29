@@ -194,8 +194,8 @@ pub struct CadCamera {
     pub zoom: f64,
     #[serde(default = "default_fov")]
     pub fov: f64,
-    /// 📐 Serialized `semio_framework_program::WorldProjectionConfig` — kept as raw json here (cad/rs has no
-    /// dependency on the program layer); `cad/program/rs` parses/writes it around the shared projection helpers.
+    /// 📐 Serialized `semio_framework_plugin::WorldProjectionConfig` — kept as raw json here (cad/rs has no
+    /// dependency on the plugin layer); `cad/plugin/rs` parses/writes it around the shared projection helpers.
     #[serde(default)]
     pub projection: Value,
 }
@@ -896,7 +896,7 @@ pub struct ExprBinding {
 /// `spatial://schema/json/expression` — a small declarative expression AST. Only the kinds
 /// actually used by the interaction machine specs' guards/effects/display are interpreted here
 /// (`kernel.call`/`distance`/`fold` appear only in `spatial.action` step specs, which are not
-/// executed generically — see the commit-action runner in `cad/program/rs/interaction.rs`).
+/// executed generically — see the commit-action runner in `cad/plugin/rs/interaction.rs`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum Expr {

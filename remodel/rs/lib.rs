@@ -5,7 +5,7 @@
 //! `remodel_engine` crates, none of which this crate depends on: heavier runtime types (`Se3`,
 //! `Intrinsics`, `Distortion`, `WatertightReport`, decoded pyramids, match graphs, depth maps, TSDF
 //! volumes) are not designed for durable CRDT persistence, so every reference to their shape below is
-//! a plain-JSON (or `Packed*`) snapshot the program runtime fills in, never the library type itself.
+//! a plain-JSON (or `Packed*`) snapshot the plugin runtime fills in, never the library type itself.
 
 use base64::Engine as _;
 use semio_framework_core::MeshData;
@@ -192,7 +192,7 @@ pub struct MediaStream {
 /// Distortion}` rather than a direct reuse of those types: `Distortion` is a Rust enum tuned for the
 /// solver's math (`BrownConrady{k1,k2,k3,p1,p2}` / `FisheyeEquidistant{k1,k2,k3,k4}`), which doesn't
 /// serialize into a stable arg-form-editable shape — the document instead always carries a flat
-/// 5-slot `distortion` array plus a `model` label the program uses to decide which slots are live,
+/// 5-slot `distortion` array plus a `model` label the plugin uses to decide which slots are live,
 /// matching the "pinhole|brownConrady|fisheye" UI select.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
@@ -921,7 +921,7 @@ pub struct ReconstructionResults {
 /// 🗂️ Top-level remodel project document — only persistent, undoable reconstruction state. Ephemeral
 /// viewport state (camera/selection/cursors), algorithm scratch (descriptors, match graphs, depth
 /// maps, TSDF volumes), and the active utility (host-owned `view_state.active_utility_id`) all live in
-/// the program runtime, never in this document.
+/// the plugin runtime, never in this document.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[dsl(extension = "remodel")]
 #[serde(rename_all = "camelCase")]

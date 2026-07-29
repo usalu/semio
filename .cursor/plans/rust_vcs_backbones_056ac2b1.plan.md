@@ -15,7 +15,7 @@ todos:
     content: "Harden framework/sync + os-hub for file/folder/hub: reconnect, CAS, multi-client, wire or delete unused storage backends"
     status: completed
   - id: browser-rust-actor
-    content: Replace backbone-worker.ts with Rust wasm DocumentHost; finish program host relay (WS-E)
+    content: Replace backbone-worker.ts with Rust wasm DocumentHost; finish plugin host relay (WS-E)
     status: completed
   - id: verify-close
     content: Run vcs/sync/hub tests; runtime backbone attach round-trips with [DEBUG]; close ticket
@@ -37,7 +37,7 @@ isProject: false
 
 ```mermaid
 flowchart TB
-  plugin["WASM program DocumentVcsStore"]
+  plugin["WASM plugin DocumentVcsStore"]
   port["PortBackbone / ChannelBackbone"]
   actor["framework/sync DocumentHost\nRust native thread OR Rust wasm worker"]
   folder["folder:// FolderSqliteStorage"]
@@ -80,7 +80,7 @@ In [`vcs/rs/lib.rs`](vcs/rs/lib.rs):
 **Browser (replace TS twin):**
 
 - Compile/use `semio-framework-sync` wasm actor as the worker body; delete or shrink `backbone-worker.ts` to a loader that posts messages to the wasm actor.
-- Finish WS-E relay: program WIT `backbone-send`/`backbone-poll` → program host → sync actor (React shell + wgpu wasm).
+- Finish WS-E relay: program WIT `backbone-send`/`backbone-poll` → plugin host → sync actor (React shell + wgpu wasm).
 - Confirm Sync attach cards (temp/file/folder/remote) open documents through this path only.
 
 ### 4. Verification
@@ -94,4 +94,4 @@ In [`vcs/rs/lib.rs`](vcs/rs/lib.rs):
 
 - Migrating all remaining plugins off `setDocument` (WS-F waves 2–4).
 - Unifying Compose hub (`compose/server/hub`) with OS hub.
-- Building a separate `vcs/react` HistoryTable package (history UI stays in program/framework surfaces).
+- Building a separate `vcs/react` HistoryTable package (history UI stays in plugin/framework surfaces).

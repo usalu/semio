@@ -1,8 +1,8 @@
 // #region 🧲Header
 //
-// Summary: Go validator for programming target. Validates space programs (area constraints) and adjacency matrices.
+// Summary: Go validator for __KEEP_pluginming__ target. Validates space programs (area constraints) and adjacency matrices.
 //
-// Specs: Reads translation JSON from stdin, program requirements from .progam/config.json or .coda/programming-requirements.json, outputs report JSON to stdout.
+// Specs: Reads translation JSON from stdin, program requirements from .progam/config.json or .coda/__KEEP_pluginming__-requirements.json, outputs report JSON to stdout.
 //
 // #endregion
 
@@ -16,7 +16,7 @@ import (
 )
 
 // #region 🗄️Translation
-// Translation input from compose-to-programming translator.
+// Translation input from compose-to-__KEEP_pluginming__ translator.
 
 type Translation struct {
 	TargetID string  `json:"target_id"`
@@ -92,7 +92,7 @@ type Clause struct {
 
 func main() {
 	if err := run(); err != nil {
-		fmt.Fprintf(os.Stderr, "[DEBUG] programming validator error: %v\n", err)
+		fmt.Fprintf(os.Stderr, "[DEBUG] __KEEP_pluginming__ validator error: %v\n", err)
 		os.Exit(1)
 	}
 }
@@ -122,7 +122,7 @@ func loadRequirements() (*Requirements, error) {
 	}
 	for _, p := range []string{
 		filepath.Join(cwd, ".progam", "config.json"),
-		filepath.Join(cwd, ".coda", "programming-requirements.json"),
+		filepath.Join(cwd, ".coda", "__KEEP_pluginming__-requirements.json"),
 	} {
 		data, err := os.ReadFile(p)
 		if err == nil {
@@ -175,7 +175,7 @@ func validate(trans Translation, req *Requirements) Report {
 
 	if len(rules) == 0 {
 		rules = append(rules, Rule{
-			ID:     "programming",
+			ID:     "__KEEP_pluginming__",
 			Status: "compliant",
 			Clauses: []Clause{{ID: "all", Status: "compliant"}},
 		})

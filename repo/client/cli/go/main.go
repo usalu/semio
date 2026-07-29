@@ -9239,7 +9239,7 @@ func locCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd.Flags().Bool("by-contributors", false, "Break down cumulative line deltas by first author (FindAndUpdateContributor alias)")
 	cmd.Flags().String("by-contributor", "", "Restrict git deltas and history rows to this contributor alias (case-insensitive)")
 	cmd.Flags().String("branch", locDefaultBranch, "With --history: git ref to log (default dev branch). Ignored when --history is false")
-	cmd.Flags().StringSlice("languages", []string{"TypeScript", "Go", "C#", "Python", "Rust"}, "Limits which programming-language buckets are counted; markup/data always included when matched")
+	cmd.Flags().StringSlice("languages", []string{"TypeScript", "Go", "C#", "Python", "Rust"}, "Limits which __KEEP_pluginming__-language buckets are counted; markup/data always included when matched")
 	return cmd
 }
 
@@ -9549,7 +9549,7 @@ func mermaidCommand(factory EngineFactory, config *Config) *cobra.Command {
 	})
 	root.AddCommand(&cobra.Command{
 		Use:   "loc-by-language",
-		Short: "LOC treemap grouped by programming language",
+		Short: "LOC treemap grouped by __KEEP_pluginming__ language",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Fprint(cmd.OutOrStdout(), MermaidLocByLanguage())

@@ -15514,8 +15514,8 @@ func TestBuildBinaryArtifactsGitIgnored(t *testing.T) {
 		"kiro.exe",
 		"mcp",
 		"mcp.exe",
-		"coda/example/compose-blnbo-roomprogram/.coda/validators/programming",
-		"coda/example/compose-blnbo-roomprogram/.coda/validators/programming.exe",
+		"coda/example/compose-blnbo-roomprogram/.coda/validators/__KEEP_pluginming__",
+		"coda/example/compose-blnbo-roomprogram/.coda/validators/__KEEP_pluginming__.exe",
 	}
 	ignored := GetGitIgnoredSet(artifacts)
 	for _, path := range artifacts {

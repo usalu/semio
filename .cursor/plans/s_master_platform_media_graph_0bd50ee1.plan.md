@@ -32,7 +32,7 @@ isProject: false
 
 - `s/core/index.ts` already has typed `SMediaPort{id, resourceKind, direction}` and port-to-port `SMediaGraphEdge`, but `mediaGraphNodeForInstance` (`s/core/index.ts:734`) always synthesizes exactly **one** input + **one** output, mirrored from a single `SAppRegistration.yields: SArtifactKindId` field (`s/core/index.ts:150`). There is no `accepts`/inputs declaration anywhere.
 - `SMediaGraphCanvas` (`s/react/index.tsx:65`) is a hand-rolled SVG (`<rect>`/`<line>`/`<circle>`), not a real graph engine.
-- Spawning an app is a text box (`"programId appId"`) or a static button list (`SProgramLauncherPanel`, `s/react/index.tsx:195`). No catalogue tab, no drag-and-drop exists for S.
+- Spawning an app is a text box (`"pluginId appId"`) or a static button list (`SProgramLauncherPanel`, `s/react/index.tsx:195`). No catalogue tab, no drag-and-drop exists for S.
 - There is no "open"/drill-in concept — a single docked "App Host" window always shows whichever instance is `activeInstanceId` (`s/play/index.ts:162`).
 - The DAG Rust/WASM engine (`mathematical/graph/port/directed/dag/lib.rs`) is a closed, document-in/document-out GPU renderer: no `add_node`/`remove_node`/hit-test/click hooks, and its node-kind enum (`DagNodeKind`, `lib.rs:539`) is closed + manifest-validated. Multi-port even-spacing layout (`proportional_port_center_y`, `lib.rs:200`) already exists for free once a node returns >1 port.
 - Puzzle 5d's `Model` already unifies 2D+3D (`project2d`/`project3d` derive views from one document, `puzzle/5d/react/index.tsx:707,772`), and its `KindCatalogBundle` (`puzzle/5d/react/index.tsx:3465`) is currently always inline/fixture-sourced.
@@ -44,9 +44,9 @@ isProject: false
 ```mermaid
 flowchart TB
     subgraph workbench [Workbench Catalogue Tab]
-        catTree[UiTreeNode per program/app]
+        catTree[UiTreeNode per plugin/app]
     end
-    catTree -- "pointer drag, dragData: programId+appId" --> canvas
+    catTree -- "pointer drag, dragData: pluginId+appId" --> canvas
     subgraph canvas [S Media Graph - DagCanvas fork]
         dagSession["DagSession (Rust/WASM)\nAppInstance node kind"]
     end
@@ -85,9 +85,9 @@ flowchart TB
 
 Scoped against `mathematical/graph/port/directed/dag/lib.rs`:
 
-- Add `AppInstance { instance_id, program_id, app_id, icon, inputs: Vec<IoPortSpec>, outputs: Vec<IoPortSpec> }` to `DagNodeKind` (`lib.rs:539`). Add a `artifact_kind: Option<String>` field to `IoPortSpec` (`lib.rs:232`) for port coloring.
+- Add `AppInstance { instance_id, plugin_id, app_id, icon, inputs: Vec<IoPortSpec>, outputs: Vec<IoPortSpec> }` to `DagNodeKind` (`lib.rs:539`). Add a `artifact_kind: Option<String>` field to `IoPortSpec` (`lib.rs:232`) for port coloring.
 - Add compiler-forced match arms at the 7 exhaustive sites found: `dag_node_kind_tag` (`:597`), `DagNodeSpec::inputs`/`outputs` (`:699`,`:708`), `computation_io_side_row_counts` (`:857`), `computation_channel_row_count` (`:915`), `fit_node_size` (`:923`), `paint_node_visual` (`:3909`). `AppInstance` is _not_ added to `uses_computation_layout` so it gets the existing `proportional_port_center_y` (`:200`) even-spacing for free.
-- Paint: reuse the already-shared box/stroke drawing (before the kind match, `:3876`), `paint_node_lod_icon` (`:3720`) for the icon, a title + "programId/appId" subtitle line, and thread `artifact_kind` into `paint_snap_handle`/`paint_node_handles_for_spec` (`:4118`, `:3149`) for port coloring (deterministic hash-based palette).
+- Paint: reuse the already-shared box/stroke drawing (before the kind match, `:3876`), `paint_node_lod_icon` (`:3720`) for the icon, a title + "pluginId/appId" subtitle line, and thread `artifact_kind` into `paint_snap_handle`/`paint_node_handles_for_spec` (`:4118`, `:3149`) for port coloring (deterministic hash-based palette).
 - Register the new kind in [flow/manifest/dag.manifest.json](flow/manifest/dag.manifest.json) and regenerate `mathematical/graph/manifest/generated/flow_dag.rs`.
 - Build double-click detection from scratch (confirmed absent everywhere): add last-pointerdown timestamp + position fields to `DagHost`, threshold check in `pointer_down_screen` (`:2966`); on double-click over an `AppInstance` body (not a port), set `pending_open_instance_id` instead of starting a drag. Add a new `DagSession.takePendingOpenInstanceId() -> Option<String>` wasm export, polled by React after each `pointerUp`.
 - Add a `DagSession.screenToWorld(x, y) -> {x, y}` wasm export (does not exist today) so the TS layer can place a dropped catalogue item at the correct world position.
@@ -106,9 +106,9 @@ Scoped against `mathematical/graph/port/directed/dag/lib.rs`:
 ## Phase 6 — Workbench catalogue tab + drag-and-drop spawning
 
 - Register a new "Catalogue" workbench tab for S play following the exact existing pattern (`FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID/LABEL`, `UiTreeNode`/`UiTreeSectionNode`/`UiTreeItemNode`, `panel: "workbench"` — same convention as `puzzle/3d/play/index.ts:3473`).
-- Build `buildSPlayCatalogueTree()`: one section per program, one draggable row per app, `dragData` via `CATALOGUE_DRAG_MIME`/`catalogueTreeDragController` (already generic in `ui/react/index.tsx:10134`).
+- Build `buildSPlayCatalogueTree()`: one section per plugin, one draggable row per app, `dragData` via `CATALOGUE_DRAG_MIME`/`catalogueTreeDragController` (already generic in `ui/react/index.tsx:10134`).
 - Implement a pointer-based drag controller mirroring `puzzle2dFixturePaletteTreeDragController` (`puzzle/2d/react/index.tsx:2820`) for Electron/scroll-panel compatibility.
-- Wire the media-graph canvas to accept the drop: decode `{programId, appId}`, convert screen→world via the new `DagSession.screenToWorld`, dispatch `spawnApp({programId, appId, position})`.
+- Wire the media-graph canvas to accept the drop: decode `{pluginId, appId}`, convert screen→world via the new `DagSession.screenToWorld`, dispatch `spawnApp({pluginId, appId, position})`.
 - Remove the now-redundant text-input spawn UI (`mediaGraphEngagement`/`launcherEngagement` free-text fields) per the no-legacy-support rule, keeping Launcher as a thin fallback list or retiring it in favor of the catalogue tab.
 
 ## Phase 7 — Tests

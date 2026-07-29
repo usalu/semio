@@ -59,7 +59,7 @@ Order: **number → polynomial → cas → entropy → wfc → brep** (leaves fi
 ## Explicit exclusions (not consolidatable / already single-file)
 
 - `build.rs`, `benches/*.rs`, Cargo `[[bin]]` files (e.g. wgpu `bin.rs`)
-- Generated artifacts (`ui/styling/rs/generated.rs`, `OUT_DIR` includes, `mathematical/graph/manifest/generated`, wgpu `#[path]` to `program/registry/generated/hosts.rs`)
+- Generated artifacts (`ui/styling/rs/generated.rs`, `OUT_DIR` includes, `mathematical/graph/manifest/generated`, wgpu `#[path]` to `plugin/registry/generated/hosts.rs`)
 - Electron/Vite/Forge/Tailwind/PostCSS/Vitest config files
 - Worker entry points that bundlers require as separate files (e.g. `kit-store.worker.ts`)
 - Doc/MDX trees (`sketchpad/js/page/**`)

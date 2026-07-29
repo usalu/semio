@@ -1691,7 +1691,7 @@ pub fn apply_brush_placement_to_fixture(fixture: &Fixture, payload: &BrushPlaceP
     let vortices: Vec<VortexProps> = kind.vortices.iter().enumerate().map(|(index, entry)| VortexProps { id: format!("{object_id}:v{index}"), vortex_kind: entry.vortex_kind.clone(), position: entry.position, direction: entry.direction }).collect();
     // 🌲 The new object attaches as `attracted`: the pre-existing target vortex it's docking onto stays the
     // resolution root. Params start at zero (a bare port-to-port docking); `puzzle3d_rederive_all_attractions`
-    // (puzzle/program/rs/d3/mod.rs) rederives them from this placement's actual pose right after merge, so the
+    // (puzzle/plugin/rs/d3/mod.rs) rederives them from this placement's actual pose right after merge, so the
     // object never visibly jumps when the directed-attraction resolver runs.
     let attracted = puzzle3d_vortex_full_id(&object_id, &vortices[payload.source_vortex_index].id);
     let attraction_id = format!("attraction-{}-{attracted}", payload.target_vortex_full_id);
@@ -2057,7 +2057,7 @@ mod tests {
     }
 
     /// 🪪 Regression: `set_scene` used to unconditionally `rebuild_queue()`, wiping `brush_cache`/`fill`
-    /// progress on every resync — `sync_precompute_session` (puzzle/program/rs/lib.rs) calls `set_scene`
+    /// progress on every resync — `sync_precompute_session` (puzzle/plugin/rs/lib.rs) calls `set_scene`
     /// on *every* action, so this made suggestion/fill precompute restart from zero on every single tick,
     /// freezing the UI. A resync with byte-identical scene JSON must be a no-operation.
     #[test]
@@ -3032,7 +3032,7 @@ impl Puzzle3dPrecomputeSession {
 // objects/attractions/targetVolumes/references) with granular per-collection operations and a
 // whole-document fallback, so disjoint edits converge instead of clobbering. Mirrors `puzzle_2d`'s
 // `Puzzle2dOperation` shape; ground truth for field shapes is `puzzle/3d/example/*.3d.json` plus
-// `puzzle-program`'s own (until now duplicated) `Puzzle3dFixture`/`Puzzle3dObject`/… local mirror.
+// `puzzle-plugin`'s own (until now duplicated) `Puzzle3dFixture`/`Puzzle3dObject`/… local mirror.
 #[cfg(any(test, all(target_arch = "wasm32", not(target_env = "p2"))))]
 use store::{create_document_envelope, DocumentCommand};
 #[cfg(test)]
@@ -3044,7 +3044,7 @@ pub const PUZZLE_3D_SCHEMA: &str = "puzzle.3d";
 
 // #region 🔖Document
 /// 📐 The world-3d viewport camera: orbit position/target/zoom, optional up vector, and an optional
-/// (freeform — see `framework_program::WorldProjectionConfig`, an app-layer preset this headless
+/// (freeform — see `framework_plugin::WorldProjectionConfig`, an app-layer preset this headless
 /// document crate does not depend on) projection preset.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
@@ -3549,7 +3549,7 @@ impl Operation<Puzzle3dProjection> for Puzzle3dOperation {
 // #endregion 🔖Operations
 
 // #region 🔖ValueBridge
-// 🌉 `puzzle-program`'s scene-mutation helpers predate this typed projection and stay on a bare
+// 🌉 `puzzle-plugin`'s scene-mutation helpers predate this typed projection and stay on a bare
 // `serde_json::Value` scratch fixture (out of scope for this ticket). Bridging `Puzzle3dOperation`/
 // `Puzzle3dDiff` onto that `Value` boundary too keeps `puzzle3d_document_delta_operations` and the
 // plugin's `DocumentApp::Projection = Value` compiling unchanged — mirrors `puzzle_2d`'s bridge.
@@ -3743,7 +3743,7 @@ where
 }
 
 /// 🧮 Computes the granular typed operation sequence turning `before` into `after` (both the bare
-/// fixture JSON `puzzle-program` mutates). Falls back to a single `SetDocument` whenever the granular
+/// fixture JSON `puzzle-plugin` mutates). Falls back to a single `SetDocument` whenever the granular
 /// replay would not reproduce `after` exactly.
 pub fn puzzle3d_document_delta_operations(before: &serde_json::Value, after: &serde_json::Value) -> Vec<Puzzle3dOperation> {
     if before == after {
@@ -3812,7 +3812,7 @@ pub fn puzzle3d_document_delta_operations(before: &serde_json::Value, after: &se
 }
 
 // #region 🔖PlayProjection
-/// 🌱 `puzzle-program`'s `Puzzle3dPlayApp` predates the typed `Puzzle3dProjection` above and stays on
+/// 🌱 `puzzle-plugin`'s `Puzzle3dPlayApp` predates the typed `Puzzle3dProjection` above and stays on
 /// this ad-hoc `serde_json::Value` fixture shape for its scene-mutation helpers (out of scope to
 /// retrofit onto the typed struct). This newtype exists only to satisfy
 /// `DocumentApp::Projection: store::DocumentDsl + store::DocumentPack` post the repo-wide

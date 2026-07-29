@@ -110,7 +110,7 @@ a work.
 
 A "Standard Interface" means an interface that either is an official
 standard defined by a recognized standards body, or, in the case of
-interfaces specified for a particular programming language, one that
+interfaces specified for a particular __KEEP_pluginming__ language, one that
 is widely used among developers working in that language.
 
 The "System Libraries" of an executable work include anything, other
@@ -627,7 +627,7 @@ attach them to the start of each source file to most effectively state
 the exclusion of warranty; and each file should have at least the
 "copyright" line and a pointer to where the full notice is found.
 
-        <one line to give the program's name and a brief idea of what it does.>
+        <one line to give the plugin's name and a brief idea of what it does.>
         Copyright (C) <year>  <name of author>
 
         This program is free software: you can redistribute it and/or modify

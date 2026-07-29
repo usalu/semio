@@ -1,6 +1,6 @@
 ---
 name: Local-First Command Kernel
-overview: "Rebuild the program architecture into a local-first, schema-validating, capability-secured command kernel: the host owns state, windows, GPU, sync, validation, scheduling, permissions, undo, and program supervision, while plugins become sandboxed WASI Preview 2 components that only describe apps, schemas, commands, operations, diffs, inverses, and window behavior."
+overview: "Rebuild the plugin architecture into a local-first, schema-validating, capability-secured command kernel: the host owns state, windows, GPU, sync, validation, scheduling, permissions, undo, and program supervision, while plugins become sandboxed WASI Preview 2 components that only describe apps, schemas, commands, operations, diffs, inverses, and window behavior."
 todos: []
 isProject: false
 ---
@@ -9,13 +9,13 @@ isProject: false
 
 ## Starting point (confirmed by exploration)
 
-- Plugin ABI today is a hand-rolled `extern "C"` + JSON transport over `wasm32-unknown-unknown` (`native_program_exports!` in [framework/program/rs/lib.rs](framework/program/rs/lib.rs)), loaded natively via classic `wasmtime::{Module,Instance,Linker}` in [framework/program/host/rs/lib.rs](framework/program/host/rs/lib.rs) and in-browser via a `wasm-bindgen` JS wrapper. No WASI, no component model, no fuel/epoch/timeouts, no supervisor.
+- Plugin ABI today is a hand-rolled `extern "C"` + JSON transport over `wasm32-unknown-unknown` (`native_plugin_exports!` in [framework/plugin/rs/lib.rs](framework/plugin/rs/lib.rs)), loaded natively via classic `wasmtime::{Module,Instance,Linker}` in [framework/plugin/host/rs/lib.rs](framework/plugin/host/rs/lib.rs) and in-browser via a `wasm-bindgen` JS wrapper. No WASI, no component model, no fuel/epoch/timeouts, no supervisor.
 - An **orphan WIT file already sketches the right shape**: [framework/wit/world.wit](framework/wit/world.wit) declares `plugin-api`/`host`/`ui`/`types` interfaces mirroring the current (old) ABI. It is unused by any build today — it becomes the seed for the new contract.
 - `vcs/rs` ([vcs/rs/lib.rs](vcs/rs/lib.rs)) is already a real command→operation→diff→edit→checkpoint engine (`Operation`, `OperationDiff`, `DocumentVcsStore`, `Checkpoint`, `Alternative`) with linear undo/redo and `dev://`/`local://`/`sqlite://` backbones. It has **no** causal deps, HLC, undo policies, payload hashing, or CRDT merge — these are additive, not a replacement.
 - `UiNode`/`ComponentScene` ([framework/core/rs/lib.rs:2465-2485](framework/core/rs/lib.rs)) is already a declarative, host-walked render tree — programs never touch `wgpu`. The gap versus a "validated render plan" is **validation** (bounds/size/resource caps), not the tree shape itself.
-- `Capability` ([framework/core/rs/lib.rs:2930-2934](framework/core/rs/lib.rs)) has exactly one variant (`LocalBackboneStorage`) gating two host imports. `ProgramHost::hot_swap_program` ([framework/product/os/core/rs/lib.rs:74-115](framework/product/os/core/rs/lib.rs)) is non-transactional (register + bump generation, no validate/migrate/rebind/rollback).
+- `Capability` ([framework/core/rs/lib.rs:2930-2934](framework/core/rs/lib.rs)) has exactly one variant (`LocalBackboneStorage`) gating two host imports. `PluginHost::hot_swap_plugin` ([framework/product/os/core/rs/lib.rs:74-115](framework/product/os/core/rs/lib.rs)) is non-transactional (register + bump generation, no validate/migrate/rebind/rollback).
 - `wasm32-wasip2` is available in the pinned nightly toolchain (`rustc --print target-list`); it is not yet in [rust-toolchain.toml](rust-toolchain.toml).
-- 21 program crates use `program_exports!()` today (`cad`, `dag`, `draw`, `flow`, `forms`, `gis`, `imperative`, `layout`, `lowpoly`, `note`, `presentation`, `procedural`, `puzzle`, `raster`, `reasoning-mindmap`, `s`, `sequence`, `shooting`, `trinity`, `vcs`, `writer`) — all must migrate to the new contract.
+- 21 plugin crates use `plugin_exports!()` today (`cad`, `dag`, `draw`, `flow`, `forms`, `gis`, `imperative`, `layout`, `lowpoly`, `note`, `presentation`, `procedural`, `puzzle`, `raster`, `reasoning-mindmap`, `s`, `sequence`, `shooting`, `trinity`, `vcs`, `writer`) — all must migrate to the new contract.
 
 ## Decisions locked in for this pass
 
@@ -30,11 +30,11 @@ isProject: false
 ```mermaid
 flowchart TD
     UI["UI / Windows"]
-    Kernel["ProgramHost Kernel<br/>(framework/product/os/core)"]
+    Kernel["PluginHost Kernel<br/>(framework/product/os/core)"]
     Core["Core Contracts<br/>(framework/core: Command/Operation/Diff/Capability)"]
     Store["vcs::DocumentVcsStore<br/>(causal operations, undo policies, HLC)"]
     Sync["Sync (new crate)<br/>operation DAG, per-kind merge"]
-    RuntimeNative["semio-framework-program-host<br/>wasmtime::component + WASI P2"]
+    RuntimeNative["semio-framework-plugin-host<br/>wasmtime::component + WASI P2"]
     RuntimeWeb["Browser runtime<br/>jco-transpiled component in Worker"]
     Render["Render Validator + wgpu<br/>(framework/renderer/wgpu)"]
     Plugin["Plugin Component (WASI P2)"]
@@ -56,7 +56,7 @@ flowchart TD
 
 Add, alongside existing types (new `#region`s), without breaking `UiNode`/`AppDefinition`:
 
-- `Capability` enum expanded to object-capability shape: `Capability { subject: ProgramInstanceId, resource: ArtifactId, rights: Rights, scope: Scope }`, plus opaque handle newtypes `ModelHandle(u128)`, `WindowHandle(u128)`, `AssetHandle(u128)`, `CapabilityToken(u128)`.
+- `Capability` enum expanded to object-capability shape: `Capability { subject: PluginInstanceId, resource: ArtifactId, rights: Rights, scope: Scope }`, plus opaque handle newtypes `ModelHandle(u128)`, `WindowHandle(u128)`, `AssetHandle(u128)`, `CapabilityToken(u128)`.
 - `CommandDef`, `CommandInvocation`, `CommandResult`, `UndoGroup` per the spec; `Operation`, `InverseOperation { target_operation, inverse_diff, base_version, dependencies, undo_policy }`, `UndoPolicy` enum (`ExactBaseOnly`/`TransformAgainstConcurrent`/`SemanticUndo`/`CompensatingCommand`).
 - `WindowKindDef` gains `input_event_schema`/`output_schema`/`capabilities: Vec<RequiredCapability>` fields (extends existing `WindowKindDefinition`); `WindowInput`/`WindowOutput` structs.
 - `OperationEnvelope { id, actor, model, schema_version, deps, payload_hash, diff, inverse }`.
@@ -80,23 +80,23 @@ Add, alongside existing types (new `#region`s), without breaking `UiNode`/`AppDe
 
 ### Phase 5 — WIT contract rewrite
 
-- Rewrite [framework/wit/world.wit](framework/wit/world.wit): new `program` interface (`manifest`, `instantiate-app`, `handle-command`, `instantiate-window`, `update-window`, `migrate-model`), `resource` types for `model-handle`/`window-handle`/`asset-handle`/`capability-token`, `command-invocation`/`command-context`/`command-response`/`program-error` records, retire the old `plugin-api`/`create-app`/`render`-only shape.
+- Rewrite [framework/wit/world.wit](framework/wit/world.wit): new `program` interface (`manifest`, `instantiate-app`, `handle-command`, `instantiate-window`, `update-window`, `migrate-model`), `resource` types for `model-handle`/`window-handle`/`asset-handle`/`capability-token`, `command-invocation`/`command-context`/`command-response`/`plugin-error` records, retire the old `plugin-api`/`create-app`/`render`-only shape.
 
 ### Phase 6 — WASI P2 component runtime
 
 - Add `wasm32-wasip2` to [rust-toolchain.toml](rust-toolchain.toml).
-- Replace `native_program_exports!` in [framework/program/rs/lib.rs](framework/program/rs/lib.rs) with `wit-bindgen::generate!` guest bindings implementing the new `program` world.
-- Rewrite [framework/program/host/rs/lib.rs](framework/program/host/rs/lib.rs) (`semio-framework-program-host`) on `wasmtime::component::{Linker, bindgen!}`, `ResourceTable` for opaque handles, capability-gated host imports (`read-model`/`write-model`/`open-window`/`invoke-command`/`read-asset`/`network` per declared `Rights`), `StoreLimits` memory caps, fuel consumption + epoch-interruption call timeouts, trap catching that never panics across the boundary.
+- Replace `native_plugin_exports!` in [framework/plugin/rs/lib.rs](framework/plugin/rs/lib.rs) with `wit-bindgen::generate!` guest bindings implementing the new `program` world.
+- Rewrite [framework/plugin/host/rs/lib.rs](framework/plugin/host/rs/lib.rs) (`semio-framework-plugin-host`) on `wasmtime::component::{Linker, bindgen!}`, `ResourceTable` for opaque handles, capability-gated host imports (`read-model`/`write-model`/`open-window`/`invoke-command`/`read-asset`/`network` per declared `Rights`), `StoreLimits` memory caps, fuel consumption + epoch-interruption call timeouts, trap catching that never panics across the boundary.
 - Update [framework/product/os/dev/script.ts](framework/product/os/dev/script.ts) and [framework/renderer/wgpu/script.ts](framework/renderer/wgpu/script.ts) to build `--target wasm32-wasip2` and drop the `wasm-bindgen` glue step.
 
 ### Phase 7 — Browser runtime (Web Worker isolation)
 
 - Introduce `jco` (via `bunx jco`) to transpile each program `.wasm` component to browser ES modules; replace the current C-ABI JS wrapper in [framework/product/os/dev/script.ts](framework/product/os/dev/script.ts).
-- Load each program instance inside a dedicated Web Worker; main thread ([framework/renderer/wgpu/js/boot.ts](framework/renderer/wgpu/js/boot.ts)) owns the canvas/window and exchanges bounded structured messages (transferable buffers for render plans/large payloads); add worker kill/restart on hang.
+- Load each plugin instance inside a dedicated Web Worker; main thread ([framework/renderer/wgpu/js/boot.ts](framework/renderer/wgpu/js/boot.ts)) owns the canvas/window and exchanges bounded structured messages (transferable buffers for render plans/large payloads); add worker kill/restart on hang.
 
 ### Phase 8 — Host kernel command router
 
-- Rework `ProgramHost` in [framework/product/os/core/rs/lib.rs](framework/product/os/core/rs/lib.rs) into the real router: validate `CommandInvocation` schema + capability, build a model projection, call the plugin's `handle-command` component export, validate the returned `CommandResult` (operations/diffs/inverses/output) against schemas and permitted `HostEffect`s, commit atomically via the extended `vcs` store, publish via `sync`, return updated window projections.
+- Rework `PluginHost` in [framework/product/os/core/rs/lib.rs](framework/product/os/core/rs/lib.rs) into the real router: validate `CommandInvocation` schema + capability, build a model projection, call the plugin's `handle-command` component export, validate the returned `CommandResult` (operations/diffs/inverses/output) against schemas and permitted `HostEffect`s, commit atomically via the extended `vcs` store, publish via `sync`, return updated window projections.
 - Retire the ad hoc `apply_operations`/`apply_document_operation` JSON-patch path once the router replaces it.
 
 ### Phase 9 — Window/render validation
@@ -106,33 +106,33 @@ Add, alongside existing types (new `#region`s), without breaking `UiNode`/`AppDe
 
 ### Phase 10 — Supervisor and crash containment
 
-- Add the `Loaded -> Running -> Crashed/TimedOut -> Restarting -> Running/Quarantined -> Unloaded` state machine to `ProgramHost`; wasmtime traps/timeouts (from Phase 6's fuel/epoch) route here instead of propagating.
+- Add the `Loaded -> Running -> Crashed/TimedOut -> Restarting -> Running/Quarantined -> Unloaded` state machine to `PluginHost`; wasmtime traps/timeouts (from Phase 6's fuel/epoch) route here instead of propagating.
 - On quarantine, render a host-owned recovery `UiNode` ("This app stopped responding. Restart app | Disable program | Show diagnostics") instead of the plugin's window body.
 
 ### Phase 11 — Transactional hot-swap
 
-- Rewrite `ProgramHost::hot_swap_program` ([framework/product/os/core/rs/lib.rs:74-115](framework/product/os/core/rs/lib.rs)) as the 9-step flow: load new component in a fresh runtime -> validate ABI/manifest/schemas -> instantiate new app instances -> `migrate-model` for changed schema versions -> replay recent operation context -> rebind window controllers -> validate first window outputs -> commit swap -> retire old runtime; any failed step keeps the old program running (add the matching test alongside the existing hot-swap test).
+- Rewrite `PluginHost::hot_swap_plugin` ([framework/product/os/core/rs/lib.rs:74-115](framework/product/os/core/rs/lib.rs)) as the 9-step flow: load new component in a fresh runtime -> validate ABI/manifest/schemas -> instantiate new app instances -> `migrate-model` for changed schema versions -> replay recent operation context -> rebind window controllers -> validate first window outputs -> commit swap -> retire old runtime; any failed step keeps the old program running (add the matching test alongside the existing hot-swap test).
 
 ### Phase 12 — Migrate all 21 plugins
 
-- For each program crate: implement the new `program` world exports (`instantiate-app`/`handle-command` returning `operations`+`diffs`+`inverses`/`instantiate-window`/`update-window`/`migrate-model`), derive schemas from existing operation/document types via `schemars`, declare real `Capability` requirements (replacing the single `LocalBackboneStorage` blanket case), declare `UndoPolicy` per operation kind.
-- Update [framework/program/registry/script.ts](framework/program/registry/script.ts) generated registry consumers if the artifact shape changes (component vs. module).
+- For each plugin crate: implement the new `program` world exports (`instantiate-app`/`handle-command` returning `operations`+`diffs`+`inverses`/`instantiate-window`/`update-window`/`migrate-model`), derive schemas from existing operation/document types via `schemars`, declare real `Capability` requirements (replacing the single `LocalBackboneStorage` blanket case), declare `UndoPolicy` per operation kind.
+- Update [framework/plugin/registry/script.ts](framework/plugin/registry/script.ts) generated registry consumers if the artifact shape changes (component vs. module).
 
 ### Phase 13 — Verify and close
 
-- `cargo test` workspace-wide, `bun run` vitest suite, capability lint, boot every program in studio mode and `bun run dev:lowpoly`, exercise undo/redo across all 4 `UndoPolicy` kinds, force a program panic to confirm supervisor quarantine + recovery surface, force a hot-swap failure to confirm rollback, confirm browser Worker isolation restarts a hung program.
+- `cargo test` workspace-wide, `bun run` vitest suite, capability lint, boot every program in studio mode and `bun run dev:lowpoly`, exercise undo/redo across all 4 `UndoPolicy` kinds, force a plugin panic to confirm supervisor quarantine + recovery surface, force a hot-swap failure to confirm rollback, confirm browser Worker isolation restarts a hung program.
 - Close the ticket with a summary of every file touched.
 
 ## Suggested crate/module mapping (existing paths, not the generic `crates/` layout from the spec)
 
 - core -> `framework/core/rs` (extend)
-- host/kernel -> `framework/product/os/core/rs` (extend `ProgramHost`)
+- host/kernel -> `framework/product/os/core/rs` (extend `PluginHost`)
 - store -> `vcs/rs` (extend)
 - sync -> new crate, wired into `framework/product/os/hub/rs`
-- runtime (native) -> `framework/program/host/rs` (rewrite on component model)
+- runtime (native) -> `framework/plugin/host/rs` (rewrite on component model)
 - runtime (web) -> `framework/renderer/wgpu/js` + `jco` output, Worker-hosted
 - window/render -> `framework/renderer/wgpu/rs` (add validator)
 - schema -> new `framework/schema` module (`schemars` + `jsonschema` behind interface)
 - plugin-api (WIT) -> `framework/wit/world.wit` (rewrite)
   </plan>
-  <todos>[{"id": "ticket", "content": "Read repo://goals, open a ticket for the command-kernel refactor"}, {"id": "phase1-core-contracts", "content": "Add Command/Operation/Diff/InverseOperation/UndoPolicy/UndoGroup/Capability-token/opaque-handle types to framework/core/rs"}, {"id": "phase2-utilities", "content": "Add HLC crate, extract shared content-hash utility, add framework/schema (schemars+jsonschema) module"}, {"id": "phase3-vcs-causal", "content": "Extend vcs/rs Operation/OperationDiff with causal deps/HLC/undo-policy resolution and per-model MergeStrategy built on vcs's own Edit/Checkpoint/Alternative machinery (no external CRDT library)"}, {"id": "phase4-sync-crate", "content": "Build new sync crate (operation DAG + envelope exchange), wire into framework/product/os/hub"}, {"id": "phase5-wit-contract", "content": "Rewrite framework/wit/world.wit with the new program/host/capability/window WIT interfaces"}, {"id": "phase6-wasi-component-runtime", "content": "Migrate program ABI to wasm32-wasip2 + wit-bindgen; rewrite semio-framework-program-host on wasmtime::component with ResourceTable capability tokens, fuel/epoch, StoreLimits"}, {"id": "phase7-browser-runtime", "content": "Adopt jco for browser component hosting; isolate program instances in Web Workers with structured message protocol"}, {"id": "phase8-kernel-router", "content": "Rework ProgramHost into the validate->dispatch->validate->commit->sync->render command router, retire ad hoc JSON-patch apply_operations"}, {"id": "phase9-window-render-validation", "content": "Formalize instantiate-window/update-window typed I/O; add render-plan validator (bounds/resource caps) in wgpu renderer"}, {"id": "phase10-supervisor", "content": "Add program supervisor state machine (crash/timeout/quarantine) and host-rendered recovery surface"}, {"id": "phase11-transactional-hotswap", "content": "Rewrite ProgramHost::hot_swap_program as the 9-step validate/migrate/rebind/commit/rollback transaction"}, {"id": "phase12-migrate-programs", "content": "Migrate all 21 program crates to the new WIT contract, schemars-derived schemas, real capability declarations"}, {"id": "phase13-verify", "content": "Full cargo/vitest run, boot all plugins + dev:lowpoly, verify undo policies/supervisor/hot-swap/worker isolation, close ticket"}]</todos>
+  <todos>[{"id": "ticket", "content": "Read repo://goals, open a ticket for the command-kernel refactor"}, {"id": "phase1-core-contracts", "content": "Add Command/Operation/Diff/InverseOperation/UndoPolicy/UndoGroup/Capability-token/opaque-handle types to framework/core/rs"}, {"id": "phase2-utilities", "content": "Add HLC crate, extract shared content-hash utility, add framework/schema (schemars+jsonschema) module"}, {"id": "phase3-vcs-causal", "content": "Extend vcs/rs Operation/OperationDiff with causal deps/HLC/undo-policy resolution and per-model MergeStrategy built on vcs's own Edit/Checkpoint/Alternative machinery (no external CRDT library)"}, {"id": "phase4-sync-crate", "content": "Build new sync crate (operation DAG + envelope exchange), wire into framework/product/os/hub"}, {"id": "phase5-wit-contract", "content": "Rewrite framework/wit/world.wit with the new plugin/host/capability/window WIT interfaces"}, {"id": "phase6-wasi-component-runtime", "content": "Migrate plugin ABI to wasm32-wasip2 + wit-bindgen; rewrite semio-framework-plugin-host on wasmtime::component with ResourceTable capability tokens, fuel/epoch, StoreLimits"}, {"id": "phase7-browser-runtime", "content": "Adopt jco for browser component hosting; isolate plugin instances in Web Workers with structured message protocol"}, {"id": "phase8-kernel-router", "content": "Rework PluginHost into the validate->dispatch->validate->commit->sync->render command router, retire ad hoc JSON-patch apply_operations"}, {"id": "phase9-window-render-validation", "content": "Formalize instantiate-window/update-window typed I/O; add render-plan validator (bounds/resource caps) in wgpu renderer"}, {"id": "phase10-supervisor", "content": "Add program supervisor state machine (crash/timeout/quarantine) and host-rendered recovery surface"}, {"id": "phase11-transactional-hotswap", "content": "Rewrite PluginHost::hot_swap_plugin as the 9-step validate/migrate/rebind/commit/rollback transaction"}, {"id": "phase12-migrate-plugins", "content": "Migrate all 21 plugin crates to the new WIT contract, schemars-derived schemas, real capability declarations"}, {"id": "phase13-verify", "content": "Full cargo/vitest run, boot all plugins + dev:lowpoly, verify undo policies/supervisor/hot-swap/worker isolation, close ticket"}]</todos>

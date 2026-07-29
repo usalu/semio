@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/stories/framework/hosts/IconRenderHost.stories.tsx
 // Specs: Host the framework renderer's `IconRenderHost` with zero WASM engine and zero dev-server asset route —
-// the `framework/hosts` scope registers no static-dir for GLBs (unlike `framework/os`'s `/program-modules`), so
+// the `framework/hosts` scope registers no static-dir for GLBs (unlike `framework/os`'s `/plugin-modules`), so
 // `assetUrl` is a hand-built `data:model/gltf+json` fixture (`.storybook/framework/hosts/iconRenderFixture.ts`).
 // Summary: The default `iconRenderPort` (`ui/js/react/index.tsx`) still does the real three.js offscreen render —
 // GLTFLoader + WebGLRenderer/SVGRenderer — against that fixture, so this exercises the real render pipeline, not

@@ -99,7 +99,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b46cbb362ab8752921c97e041f5e366ee6297bd428a31275b9fcf1e380f7299"
 
 [[package]]
-name = "animate-program"
+name = "animate-plugin"
 version = "0.1.0"
 dependencies = [
  "animate_present",
@@ -108,7 +108,7 @@ dependencies = [
  "semio-framework-kernel-protocol",
  "semio-framework-kernel-vcs",
  "semio-framework-os",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-store",
  "serde",
  "serde_json",
@@ -1077,7 +1077,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "cad-program"
+name = "cad-plugin"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
@@ -1086,7 +1086,7 @@ dependencies = [
  "semio-framework-kernel-protocol",
  "semio-framework-kernel-vcs",
  "semio-framework-os",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-geometry-3d-brep",
  "semio-s-kernel-geometry-3d-brep-engine",
  "semio-s-kernel-store",
@@ -1891,13 +1891,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f27ae1dd37df86211c42e150270f82743308803d90a6f6e6651cd730d5e1732f"
 
 [[package]]
-name = "dag-program"
+name = "dag-plugin"
 version = "0.1.0"
 dependencies = [
  "semio-framework-kernel-infinite-board-port-directed-dag",
  "semio-framework-kernel-protocol",
  "semio-framework-kernel-vcs",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-store",
  "serde",
  "serde_json",
@@ -2243,14 +2243,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "draw-program"
+name = "draw-plugin"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "draw",
  "fsm",
  "semio-framework-os",
- "semio-framework-program",
+ "semio-framework-plugin",
  "serde",
  "serde_json",
 ]
@@ -2529,14 +2529,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "fem-program"
+name = "fem-plugin"
 version = "0.1.0"
 dependencies = [
  "fem_2d",
  "fem_3d",
  "fem_core",
  "semio-framework-kernel-vcs",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-store",
  "serde",
  "serde_json",
@@ -2623,11 +2623,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8bf7cc16383c4b8d58b9905a8509f02926ce3058053c056376248d958c9df1e8"
 
 [[package]]
-name = "flow-program"
+name = "flow-plugin"
 version = "0.1.0"
 dependencies = [
  "semio-framework-kernel-vcs",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-flow-core",
  "semio-s-kernel-playbook",
  "semio-s-kernel-store",
@@ -2818,13 +2818,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "forms-program"
+name = "forms-plugin"
 version = "0.1.0"
 dependencies = [
  "forms",
  "semio-framework-core",
  "semio-framework-kernel-vcs",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-playbook",
  "semio-s-kernel-store",
  "serde",
@@ -3234,7 +3234,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "gis-program"
+name = "gis-plugin"
 version = "0.1.0"
 dependencies = [
  "framework_surface_terrain",
@@ -3243,7 +3243,7 @@ dependencies = [
  "semio-framework-kernel-protocol",
  "semio-framework-kernel-vcs",
  "semio-framework-os",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-store",
  "serde",
  "serde_json",
@@ -4285,14 +4285,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09e54e57b4c48b40f7aec75635392b12b3421fa26fe8b4332e63138ed278459c"
 
 [[package]]
-name = "imperative-program"
+name = "imperative-plugin"
 version = "0.1.0"
 dependencies = [
  "imperative_core",
  "imperative_engine",
  "semio-framework-kernel-protocol",
  "semio-framework-kernel-vcs",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-store",
  "serde",
  "serde_json",
@@ -4703,7 +4703,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "layout-program"
+name = "layout-plugin"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
@@ -4712,7 +4712,7 @@ dependencies = [
  "semio-framework-kernel-protocol",
  "semio-framework-kernel-vcs",
  "semio-framework-os",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-store",
  "serde",
  "serde_json",
@@ -4878,7 +4878,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
 
 [[package]]
-name = "lowpoly-program"
+name = "lowpoly-plugin"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
@@ -4886,7 +4886,7 @@ dependencies = [
  "png 0.17.16",
  "semio-framework-kernel-vcs",
  "semio-framework-os",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-geometry-3d-mesh",
  "semio-s-kernel-store",
  "serde",
@@ -4898,13 +4898,13 @@ name = "lowpoly_core"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
- "cad-program",
+ "cad-plugin",
  "cad_document",
  "semio-framework-core",
  "semio-framework-kernel-dsl",
  "semio-framework-kernel-protocol",
  "semio-framework-kernel-vcs",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-geometry-3d-brep",
  "semio-s-kernel-geometry-3d-brep-engine",
  "semio-s-kernel-geometry-3d-mesh",
@@ -4960,7 +4960,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "47e1ffaa40ddd1f3ed91f717a33c8c0ee23fff369e3aa8772b9605cc1d22f4c3"
 
 [[package]]
-name = "mathematical-program"
+name = "mathematical-plugin"
 version = "0.1.0"
 dependencies = [
  "semio-framework-kernel-dsl",
@@ -4970,7 +4970,7 @@ dependencies = [
  "semio-framework-kernel-mathematical-graph-drawing",
  "semio-framework-kernel-protocol",
  "semio-framework-kernel-vcs",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-store",
  "serde",
  "serde_json",
@@ -5297,7 +5297,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "norm-program"
+name = "norm-plugin"
 version = "0.1.0"
 dependencies = [
  "norm_core",
@@ -5317,7 +5317,7 @@ dependencies = [
  "norm_iso_16757",
  "norm_vdi_3805",
  "semio-framework-kernel-vcs",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-store",
  "serde",
  "serde_json",
@@ -5542,20 +5542,6 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.18",
-]
-
-[[package]]
-name = "note-program"
-version = "0.1.0"
-dependencies = [
- "semio-framework-kernel-dsl",
- "semio-framework-kernel-protocol",
- "semio-framework-kernel-vcs",
- "semio-framework-os",
- "semio-framework-program",
- "semio-s-kernel-store",
- "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -6536,7 +6522,7 @@ dependencies = [
  "semio-framework-kernel-dsl",
  "semio-framework-kernel-protocol",
  "semio-framework-kernel-vcs",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-flow-core",
  "semio-s-kernel-flow-module-brep",
  "semio-s-kernel-geometry-3d-brep-engine",
@@ -6547,11 +6533,11 @@ dependencies = [
 ]
 
 [[package]]
-name = "playbook-program"
+name = "playbook-plugin"
 version = "0.1.0"
 dependencies = [
  "semio-framework-kernel-vcs",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-playbook",
  "semio-s-kernel-store",
  "serde",
@@ -6728,7 +6714,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "procedural-program"
+name = "procedural-plugin"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
@@ -6737,7 +6723,7 @@ dependencies = [
  "semio-framework-core",
  "semio-framework-kernel-vcs",
  "semio-framework-os",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-flow-core",
  "semio-s-kernel-flow-module-brep",
  "semio-s-kernel-flow-module-draw",
@@ -6782,7 +6768,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "process-program"
+name = "process-plugin"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
@@ -6791,7 +6777,7 @@ dependencies = [
  "semio-framework-kernel-protocol",
  "semio-framework-kernel-vcs",
  "semio-framework-os",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-geometry-3d-brep",
  "semio-s-kernel-geometry-3d-brep-engine",
  "semio-s-kernel-store",
@@ -6852,7 +6838,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "puzzle-program"
+name = "puzzle-plugin"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
@@ -6863,7 +6849,7 @@ dependencies = [
  "semio-framework-kernel-protocol",
  "semio-framework-kernel-vcs",
  "semio-framework-os",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-store",
  "serde",
  "serde_json",
@@ -7149,14 +7135,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca45419789ae5a7899559e9512e58ca889e41f04f1f2445e9f4b290ceccd1d08"
 
 [[package]]
-name = "raster-program"
+name = "raster-plugin"
 version = "0.1.0"
 dependencies = [
  "semio-framework-kernel-dsl",
  "semio-framework-kernel-protocol",
  "semio-framework-kernel-vcs",
  "semio-framework-os",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-store",
  "serde",
  "serde_json",
@@ -7226,14 +7212,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "reasoning-mindmap-program"
+name = "reasoning-mindmap-plugin"
 version = "0.1.0"
 dependencies = [
  "reasoning_mindmap",
  "reasoning_mindmap_wires",
  "semio-framework-kernel-infinite-board-port-directed",
  "semio-framework-kernel-vcs",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-store",
  "serde",
  "serde_json",
@@ -7392,7 +7378,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
 
 [[package]]
-name = "remodel-program"
+name = "remodel-plugin"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
@@ -7408,7 +7394,7 @@ dependencies = [
  "semio-framework-core",
  "semio-framework-kernel-vcs",
  "semio-framework-os",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-store",
  "serde",
  "serde_json",
@@ -7913,7 +7899,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9774ba4a74de5f7b1c1451ed6cd5285a32eddb5cccb8cc655a4e50009e06477f"
 
 [[package]]
-name = "s-program"
+name = "s-plugin"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
@@ -7923,7 +7909,7 @@ dependencies = [
  "semio-framework-kernel-protocol",
  "semio-framework-kernel-vcs",
  "semio-framework-os",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-store",
  "serde",
  "serde_json",
@@ -9320,7 +9306,7 @@ dependencies = [
  "semio-framework-kernel-dsl",
  "semio-framework-kernel-protocol",
  "semio-framework-kernel-vcs",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-geometry-3d-brep",
  "semio-s-kernel-geometry-3d-brep-engine",
  "semio-s-kernel-store",
@@ -9343,7 +9329,7 @@ dependencies = [
  "semio-framework-core",
  "semio-framework-hash",
  "semio-framework-os",
- "semio-framework-program-host",
+ "semio-framework-plugin-host",
  "semio-s-kernel-store",
  "serde",
  "serde_json",
@@ -9351,7 +9337,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-program"
+name = "semio-framework-plugin"
 version = "0.1.0"
 dependencies = [
  "semio-framework-core",
@@ -9367,7 +9353,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-program-host"
+name = "semio-framework-plugin-host"
 version = "0.1.0"
 dependencies = [
  "semio-framework-core",
@@ -9400,8 +9386,8 @@ dependencies = [
  "semio-framework-kernel-infinite-world",
  "semio-framework-kernel-protocol",
  "semio-framework-kernel-vcs",
- "semio-framework-program",
- "semio-framework-program-host",
+ "semio-framework-plugin",
+ "semio-framework-plugin-host",
  "semio-s-kernel-flow-core",
  "semio-s-kernel-geometry-3d-scene",
  "semio-s-kernel-store",
@@ -9843,18 +9829,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-plugin-note"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-dsl",
+ "semio-framework-kernel-protocol",
+ "semio-framework-kernel-vcs",
+ "semio-framework-os",
+ "semio-framework-plugin",
+ "semio-s-kernel-store",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "semver"
 version = "1.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a7852d02fc848982e0c167ef163aaff9cd91dc640ba85e263cb1ce46fae51cd"
 
 [[package]]
-name = "sequence-program"
+name = "sequence-plugin"
 version = "0.1.0"
 dependencies = [
  "semio-framework-kernel-infinite-board-port-directed-dag",
  "semio-framework-kernel-vcs",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-store",
  "sequence_core",
  "serde",
@@ -10098,14 +10098,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "shooting-program"
+name = "shooting-plugin"
 version = "0.1.0"
 dependencies = [
  "semio-framework-core",
  "semio-framework-kernel-protocol",
  "semio-framework-kernel-vcs",
  "semio-framework-os",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-store",
  "serde",
  "serde_json",
@@ -10256,7 +10256,7 @@ name = "sourcing-module-beams"
 version = "0.1.0"
 dependencies = [
  "semio-framework-core",
- "semio-framework-program",
+ "semio-framework-plugin",
  "serde_json",
  "sourcing_curate",
  "wasm-bindgen",
@@ -10267,7 +10267,7 @@ name = "sourcing-module-slabs"
 version = "0.1.0"
 dependencies = [
  "semio-framework-core",
- "semio-framework-program",
+ "semio-framework-plugin",
  "serde_json",
  "sourcing_curate",
  "wasm-bindgen",
@@ -10278,19 +10278,19 @@ name = "sourcing-module-windows"
 version = "0.1.0"
 dependencies = [
  "semio-framework-core",
- "semio-framework-program",
+ "semio-framework-plugin",
  "serde_json",
  "sourcing_curate",
  "wasm-bindgen",
 ]
 
 [[package]]
-name = "sourcing-program"
+name = "sourcing-plugin"
 version = "0.1.0"
 dependencies = [
  "semio-framework-core",
  "semio-framework-kernel-vcs",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-store",
  "serde",
  "serde_json",
@@ -11267,13 +11267,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "trinity-program"
+name = "trinity-plugin"
 version = "0.1.0"
 dependencies = [
  "semio-framework-kernel-mathematical-geometry",
  "semio-framework-kernel-mathematical-graph-drawing",
  "semio-framework-kernel-vcs",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-store",
  "serde",
  "serde_json",
@@ -12060,13 +12060,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 
 [[package]]
-name = "vcs-program"
+name = "vcs-plugin"
 version = "0.1.0"
 dependencies = [
  "semio-framework-kernel-dsl",
  "semio-framework-kernel-protocol",
  "semio-framework-kernel-vcs",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-store",
  "serde",
  "serde_json",
@@ -13755,12 +13755,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "writer-program"
+name = "writer-plugin"
 version = "0.1.0"
 dependencies = [
  "regex",
  "semio-framework-kernel-vcs",
- "semio-framework-program",
+ "semio-framework-plugin",
  "semio-s-kernel-store",
  "serde",
  "serde_json",

@@ -1,15 +1,15 @@
 //! 🧩 Sourcing beams module — contributes the beams typology and demo catalogue kinds to the sourcing app.
 
-use semio_framework_program::{Contribution, ProgramBundle};
+use semio_framework_plugin::{Contribution, PluginBundle};
 use sourcing_curate::{beams::BeamsModule, SourcingModule};
 
 //#region 🔖Bundle
 const MODULE_PLUGIN_ID: &str = "sourcing-module-beams";
 const HOST_APP_ID: &str = "sourcing-curate";
 
-fn bundle() -> ProgramBundle {
+fn bundle() -> PluginBundle {
     let module = BeamsModule;
-    ProgramBundle::new(MODULE_PLUGIN_ID, "Sourcing Module Beams", "0.1.0").contributes(Contribution::SourcingModule {
+    PluginBundle::new(MODULE_PLUGIN_ID, "Sourcing Module Beams", "0.1.0").contributes(Contribution::SourcingModule {
         app_id: HOST_APP_ID.into(),
         module_id: module.module_id().into(),
         label: module.label().into(),
@@ -19,7 +19,7 @@ fn bundle() -> ProgramBundle {
     })
 }
 
-semio_framework_program::program_exports!(bundle);
+semio_framework_plugin::plugin_exports!(bundle);
 //#endregion 🔖Bundle
 
 //#region 🔖Tests

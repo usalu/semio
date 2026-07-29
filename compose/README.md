@@ -215,7 +215,7 @@ Stats provide computed or measured performance data for entire designs using the
 - [docs](docs/README.md) – Monorepo documentation site
 - [engine](engine/README.md) – Core engine for design resolution
 - [examples](examples/README.md) – Example scripts and projects
-- [gh](gh/README.md) – Grasshopper program integration
+- [gh](gh/README.md) – Grasshopper plugin integration
 - [go](go/README.md) – Go implementation libraries
 - [graphql](graphql/README.md) – GraphQL schema extensions
 - [js](js/README.md) – TypeScript/Javascript implementations

@@ -110,7 +110,7 @@ New crate: `neural/dag` (depends on `neural_engine` + `mathematical_graph_manife
 
 - **sequence**: [sequence/core/lib.rs](sequence/core/lib.rs) `build_dag_fixture()` gains `operator_kind` (`step.kind`) + `properties` (step params) for its flat top-level DAG. Add a `sequence-compiled-dag` writer window in [sequence/play/index.ts](sequence/play/index.ts) alongside the existing `sequence-script` and `sequence-jack` windows. Explicit constraint documented in code comments: nested control bodies are not represented (flat DAG only, matching today's canvas projection) — the imperative `Compiled Script` window remains the source of truth for control flow.
 - **puzzle/2d** ([puzzle/2d/play/index.ts](puzzle/2d/play/index.ts), inherited by [reasoning/mindmap/wires/play/index.ts](reasoning/mindmap/wires/play/index.ts)): add a `2d-compiled-dag` writer window showing the wire-literal text of the current puzzle fixture.
-- **s** ([s/play/index.ts](s/play/index.ts)): add an `s-compiled-dag` writer window showing the wire-literal text of the media graph (nodes = app instances with `operator_kind = programId`, edges = media graph edges).
+- **s** ([s/play/index.ts](s/play/index.ts)): add an `s-compiled-dag` writer window showing the wire-literal text of the media graph (nodes = app instances with `operator_kind = pluginId`, edges = media graph edges).
 - All wired via the same `buildWriterWindowBody`/`WindowKindRuntime`/`createJackPlayWindowEngagement`-style helpers established for the Jack windows in the prior ticket — introduce an equivalent `createCompiledDagPlayWindowEngagement` if a command-line engagement is required (these windows are read-only, so likely no engagement input is needed, similar to `sequence-script`).
 
 ## Phase 7 — Regression and verification

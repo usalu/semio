@@ -9212,7 +9212,7 @@ let postReturn2Async;
 let pluginManifest;
 
 function manifest() {
-  _debugLog('[iface="semio:framework/program", function="manifest"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="manifest"][Instruction::CallWasm] enter', {
     funcName: 'manifest',
     paramCount: 0,
     async: false,
@@ -9263,7 +9263,7 @@ function manifest() {
   var ptr0 = dataView(memory0).getUint32(ret + 0, true);
   var len0 = dataView(memory0).getUint32(ret + 4, true);
   var result0 = TEXT_DECODER_UTF8.decode(new Uint8Array(memory0.buffer, ptr0, len0));
-  _debugLog('[iface="semio:framework/program", function="manifest"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="manifest"][Instruction::Return]', {
     funcName: 'manifest',
     paramCount: 1,
     async: false,
@@ -9297,7 +9297,7 @@ function instantiateApp(arg0, arg1) {
   var ptr1= encodeRes.ptr;
   var len1 = encodeRes.len;
   
-  _debugLog('[iface="semio:framework/program", function="instantiate-app"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="instantiate-app"][Instruction::CallWasm] enter', {
     funcName: 'instantiate-app',
     paramCount: 4,
     async: false,
@@ -9368,7 +9368,7 @@ function instantiateApp(arg0, arg1) {
           break;
         }
         default: {
-          throw new TypeError('invalid variant discriminant for ProgramError');
+          throw new TypeError('invalid variant discriminant for PluginError');
         }
       }
       variant4= {
@@ -9381,7 +9381,7 @@ function instantiateApp(arg0, arg1) {
       throw new TypeError('invalid variant discriminant for expected');
     }
   }
-  _debugLog('[iface="semio:framework/program", function="instantiate-app"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="instantiate-app"][Instruction::Return]', {
     funcName: 'instantiate-app',
     paramCount: 1,
     async: false,
@@ -9419,7 +9419,7 @@ function handleAction(arg0, arg1, arg2) {
   var ptr3= encodeRes.ptr;
   var len3 = encodeRes.len;
   
-  _debugLog('[iface="semio:framework/program", function="handle-action"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="handle-action"][Instruction::CallWasm] enter', {
     funcName: 'handle-action',
     paramCount: 5,
     async: false,
@@ -9495,7 +9495,7 @@ function handleAction(arg0, arg1, arg2) {
           break;
         }
         default: {
-          throw new TypeError('invalid variant discriminant for ProgramError');
+          throw new TypeError('invalid variant discriminant for PluginError');
         }
       }
       variant7= {
@@ -9508,7 +9508,7 @@ function handleAction(arg0, arg1, arg2) {
       throw new TypeError('invalid variant discriminant for expected');
     }
   }
-  _debugLog('[iface="semio:framework/program", function="handle-action"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="handle-action"][Instruction::Return]', {
     funcName: 'handle-action',
     paramCount: 1,
     async: false,
@@ -9540,7 +9540,7 @@ function updateWindow(arg0, arg1) {
   var ptr1= encodeRes.ptr;
   var len1 = encodeRes.len;
   
-  _debugLog('[iface="semio:framework/program", function="update-window"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="update-window"][Instruction::CallWasm] enter', {
     funcName: 'update-window',
     paramCount: 3,
     async: false,
@@ -9616,7 +9616,7 @@ function updateWindow(arg0, arg1) {
           break;
         }
         default: {
-          throw new TypeError('invalid variant discriminant for ProgramError');
+          throw new TypeError('invalid variant discriminant for PluginError');
         }
       }
       variant5= {
@@ -9629,7 +9629,7 @@ function updateWindow(arg0, arg1) {
       throw new TypeError('invalid variant discriminant for expected');
     }
   }
-  _debugLog('[iface="semio:framework/program", function="update-window"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="update-window"][Instruction::Return]', {
     funcName: 'update-window',
     paramCount: 1,
     async: false,
@@ -9661,7 +9661,7 @@ function listTools(arg0, arg1) {
   var ptr1= encodeRes.ptr;
   var len1 = encodeRes.len;
   
-  _debugLog('[iface="semio:framework/program", function="list-tools"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="list-tools"][Instruction::CallWasm] enter', {
     funcName: 'list-tools',
     paramCount: 3,
     async: false,
@@ -9737,7 +9737,7 @@ function listTools(arg0, arg1) {
           break;
         }
         default: {
-          throw new TypeError('invalid variant discriminant for ProgramError');
+          throw new TypeError('invalid variant discriminant for PluginError');
         }
       }
       variant5= {
@@ -9750,7 +9750,7 @@ function listTools(arg0, arg1) {
       throw new TypeError('invalid variant discriminant for expected');
     }
   }
-  _debugLog('[iface="semio:framework/program", function="list-tools"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="list-tools"][Instruction::Return]', {
     funcName: 'list-tools',
     paramCount: 1,
     async: false,
@@ -9782,7 +9782,7 @@ function windowEngagements(arg0, arg1) {
   var ptr1= encodeRes.ptr;
   var len1 = encodeRes.len;
   
-  _debugLog('[iface="semio:framework/program", function="window-engagements"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="window-engagements"][Instruction::CallWasm] enter', {
     funcName: 'window-engagements',
     paramCount: 3,
     async: false,
@@ -9858,7 +9858,7 @@ function windowEngagements(arg0, arg1) {
           break;
         }
         default: {
-          throw new TypeError('invalid variant discriminant for ProgramError');
+          throw new TypeError('invalid variant discriminant for PluginError');
         }
       }
       variant5= {
@@ -9871,7 +9871,7 @@ function windowEngagements(arg0, arg1) {
       throw new TypeError('invalid variant discriminant for expected');
     }
   }
-  _debugLog('[iface="semio:framework/program", function="window-engagements"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="window-engagements"][Instruction::Return]', {
     funcName: 'window-engagements',
     paramCount: 1,
     async: false,
@@ -9903,7 +9903,7 @@ function windowMeasures(arg0, arg1) {
   var ptr1= encodeRes.ptr;
   var len1 = encodeRes.len;
   
-  _debugLog('[iface="semio:framework/program", function="window-measures"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="window-measures"][Instruction::CallWasm] enter', {
     funcName: 'window-measures',
     paramCount: 3,
     async: false,
@@ -9979,7 +9979,7 @@ function windowMeasures(arg0, arg1) {
           break;
         }
         default: {
-          throw new TypeError('invalid variant discriminant for ProgramError');
+          throw new TypeError('invalid variant discriminant for PluginError');
         }
       }
       variant5= {
@@ -9992,7 +9992,7 @@ function windowMeasures(arg0, arg1) {
       throw new TypeError('invalid variant discriminant for expected');
     }
   }
-  _debugLog('[iface="semio:framework/program", function="window-measures"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="window-measures"][Instruction::Return]', {
     funcName: 'window-measures',
     paramCount: 1,
     async: false,
@@ -10024,7 +10024,7 @@ function appLabels(arg0, arg1) {
   var ptr1= encodeRes.ptr;
   var len1 = encodeRes.len;
   
-  _debugLog('[iface="semio:framework/program", function="app-labels"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="app-labels"][Instruction::CallWasm] enter', {
     funcName: 'app-labels',
     paramCount: 3,
     async: false,
@@ -10100,7 +10100,7 @@ function appLabels(arg0, arg1) {
           break;
         }
         default: {
-          throw new TypeError('invalid variant discriminant for ProgramError');
+          throw new TypeError('invalid variant discriminant for PluginError');
         }
       }
       variant5= {
@@ -10113,7 +10113,7 @@ function appLabels(arg0, arg1) {
       throw new TypeError('invalid variant discriminant for expected');
     }
   }
-  _debugLog('[iface="semio:framework/program", function="app-labels"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="app-labels"][Instruction::Return]', {
     funcName: 'app-labels',
     paramCount: 1,
     async: false,
@@ -10172,7 +10172,7 @@ function migrateDocument(arg0) {
     out3.set(valData3);
   }
   
-  _debugLog('[iface="semio:framework/program", function="migrate-document"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="migrate-document"][Instruction::CallWasm] enter', {
     funcName: 'migrate-document',
     paramCount: 6,
     async: false,
@@ -10248,7 +10248,7 @@ function migrateDocument(arg0) {
           break;
         }
         default: {
-          throw new TypeError('invalid variant discriminant for ProgramError');
+          throw new TypeError('invalid variant discriminant for PluginError');
         }
       }
       variant7= {
@@ -10261,7 +10261,7 @@ function migrateDocument(arg0) {
       throw new TypeError('invalid variant discriminant for expected');
     }
   }
-  _debugLog('[iface="semio:framework/program", function="migrate-document"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="migrate-document"][Instruction::Return]', {
     funcName: 'migrate-document',
     paramCount: 1,
     async: false,
@@ -13214,39 +13214,39 @@ const $init = (() => {
         '9': trampoline25,
       },
     }));
-    postReturn0 = exports1['cabi_post_semio:framework/program#manifest'];
+    postReturn0 = exports1['cabi_post_semio:framework/plugin#manifest'];
     
     try {
-      postReturn0Async = WebAssembly.promising(exports1['cabi_post_semio:framework/program#manifest']);
+      postReturn0Async = WebAssembly.promising(exports1['cabi_post_semio:framework/plugin#manifest']);
     } catch(err) {
-      postReturn0Async = exports1['cabi_post_semio:framework/program#manifest'];
+      postReturn0Async = exports1['cabi_post_semio:framework/plugin#manifest'];
     }
     
-    postReturn1 = exports1['cabi_post_semio:framework/program#instantiate-app'];
+    postReturn1 = exports1['cabi_post_semio:framework/plugin#instantiate-app'];
     
     try {
-      postReturn1Async = WebAssembly.promising(exports1['cabi_post_semio:framework/program#instantiate-app']);
+      postReturn1Async = WebAssembly.promising(exports1['cabi_post_semio:framework/plugin#instantiate-app']);
     } catch(err) {
-      postReturn1Async = exports1['cabi_post_semio:framework/program#instantiate-app'];
+      postReturn1Async = exports1['cabi_post_semio:framework/plugin#instantiate-app'];
     }
     
-    postReturn2 = exports1['cabi_post_semio:framework/program#app-labels'];
+    postReturn2 = exports1['cabi_post_semio:framework/plugin#app-labels'];
     
     try {
-      postReturn2Async = WebAssembly.promising(exports1['cabi_post_semio:framework/program#app-labels']);
+      postReturn2Async = WebAssembly.promising(exports1['cabi_post_semio:framework/plugin#app-labels']);
     } catch(err) {
-      postReturn2Async = exports1['cabi_post_semio:framework/program#app-labels'];
+      postReturn2Async = exports1['cabi_post_semio:framework/plugin#app-labels'];
     }
     
-    pluginManifest = exports1['semio:framework/program#manifest'];
-    pluginInstantiateApp = exports1['semio:framework/program#instantiate-app'];
-    pluginHandleAction = exports1['semio:framework/program#handle-action'];
-    pluginUpdateWindow = exports1['semio:framework/program#update-window'];
-    pluginListTools = exports1['semio:framework/program#list-tools'];
-    pluginWindowEngagements = exports1['semio:framework/program#window-engagements'];
-    pluginWindowMeasures = exports1['semio:framework/program#window-measures'];
-    pluginAppLabels = exports1['semio:framework/program#app-labels'];
-    pluginMigrateDocument = exports1['semio:framework/program#migrate-document'];
+    pluginManifest = exports1['semio:framework/plugin#manifest'];
+    pluginInstantiateApp = exports1['semio:framework/plugin#instantiate-app'];
+    pluginHandleAction = exports1['semio:framework/plugin#handle-action'];
+    pluginUpdateWindow = exports1['semio:framework/plugin#update-window'];
+    pluginListTools = exports1['semio:framework/plugin#list-tools'];
+    pluginWindowEngagements = exports1['semio:framework/plugin#window-engagements'];
+    pluginWindowMeasures = exports1['semio:framework/plugin#window-measures'];
+    pluginAppLabels = exports1['semio:framework/plugin#app-labels'];
+    pluginMigrateDocument = exports1['semio:framework/plugin#migrate-document'];
   })();
   let promise, resolve, reject;
   function runNext (value) {
@@ -13285,4 +13285,4 @@ const program = {
   
 };
 
-export { program, program as 'semio:framework/program',  }
+export { program, program as 'semio:framework/plugin',  }

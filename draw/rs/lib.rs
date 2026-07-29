@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use store::create_document_envelope;
 use protocol::{Operation, OperationDiff};
 use store::{DocumentEnvelope, DocumentStore};
-/// 🔁 Reexported so downstream crates (e.g. `draw-program`) can call `DrawDocument::parse_dsl`/
+/// 🔁 Reexported so downstream crates (e.g. `draw-plugin`) can call `DrawDocument::parse_dsl`/
 /// `.print_dsl()` without taking a direct `vcs` dependency just for the trait.
 pub use store::DocumentDsl;
 

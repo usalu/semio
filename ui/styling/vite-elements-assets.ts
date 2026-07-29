@@ -33,7 +33,7 @@ import {
   type PlaygroundHostKind,
   type PlaygroundSiteKind,
 } from "../../repo/lib/js/index.ts";
-import type { PlaygroundAssetSpec } from "../../framework/program/registry/generated/playgrounds.ts";
+import type { PlaygroundAssetSpec } from "../../framework/plugin/registry/generated/playgrounds.ts";
 // #endregion 🔌Adapters
 
 export type { PlaygroundAssetSpec };
@@ -1448,7 +1448,7 @@ export function staticDirVitePlugin(repoRoot: string, spec: Extract<PlaygroundAs
 
 /** @emoji 🌐 Reference-plane fixture trees every `*-play` static bundle serves unconditionally
  * (not app-specific — `cad/fixture` and `infinite/fixture` back shared world reference planes used
- * across playgrounds), kept as a literal baseline rather than per-program metadata. */
+ * across playgrounds), kept as a literal baseline rather than per-plugin metadata. */
 export const PLAYGROUND_PLAY_STATIC_ASSETS: readonly Extract<PlaygroundAssetSpec, { kind: "static-dir" }>[] = [
   { kind: "static-dir", route: "/cad-fixture", root: "cad/fixture" },
   { kind: "static-dir", route: "/infinite-fixture", root: "infinite/fixture" },
@@ -1617,9 +1617,9 @@ if (import.meta.vitest) {
 
   describe("contentTypeForStaticDirAsset", () => {
     it("assigns module script mime types for wasm plugin artifacts", () => {
-      expect(contentTypeForStaticDirAsset("/plugin-modules/sourcing/sourcing_program.js")).toBe("text/javascript");
+      expect(contentTypeForStaticDirAsset("/plugin-modules/sourcing/sourcing_plugin.js")).toBe("text/javascript");
       expect(contentTypeForStaticDirAsset("/plugin-modules/_vendor/@bytecodealliance/preview2-shim/cli.js")).toBe("text/javascript");
-      expect(contentTypeForStaticDirAsset("/plugin-modules/puzzle/puzzle_program.wasm")).toBe("application/wasm");
+      expect(contentTypeForStaticDirAsset("/plugin-modules/puzzle/puzzle_plugin.wasm")).toBe("application/wasm");
     });
   });
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🧭 `@semio-tech/framework-os-dev` task router — Rust program OS dev host. */
+/** @emoji 🧭 `@semio-tech/framework-os-dev` task router — Rust plugin OS dev host. */
 import { createWriteStream, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, watch, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -29,41 +29,41 @@ import {
   resolveTestLevel,
 } from "../../../../repo/lib/js/index.ts";
 import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, backboneKindFromUri } from "@semio-tech/framework-os-core";
-import { generateProgramRegistry, isStudioPluginFilter, writePlaygroundSession, type ProgramRegistryEntry } from "../../../program/registry/script.ts";
+import { generatePluginRegistry, isStudioPluginFilter, writePlaygroundSession, type PluginRegistryEntry } from "../../../plugin/registry/script.ts";
 import { PNG } from "pngjs";
 import pixelmatch from "pixelmatch";
 
 const repoRoot = getWorkspaceRoot();
-const pluginOutRoot = join(repoRoot, "framework/product/os/dev/program-modules");
+const pluginOutRoot = join(repoRoot, "framework/product/os/dev/plugin-modules");
 const playgroundSessionPath = join(repoRoot, "framework/product/os/dev/generated/session.ts");
 
 const PLUGIN_WASM_TARGET = "wasm32-wasip2";
 
 //#region 🔖PlaygroundVariantResolution
-/** @emoji 📚 Generated playground catalog (variant -> crate programId + optional app id), loaded once for this process via `@semio-tech/repo-lib`'s `loadFrameworkOsPlaygroundCatalog` (backed by `framework/program/registry/generated/playgrounds.ts`). */
+/** @emoji 📚 Generated playground catalog (variant -> crate pluginId + optional app id), loaded once for this process via `@semio-tech/repo-lib`'s `loadFrameworkOsPlaygroundCatalog` (backed by `framework/plugin/registry/generated/playgrounds.ts`). */
 const playgroundCatalog = loadFrameworkOsPlaygroundCatalog();
 
-/** @emoji 🧭 A resolved playground filter: the crate programId to build/load, plus the app id and shell brand id to inject when the filter matched a catalog variant row. */
+/** @emoji 🧭 A resolved playground filter: the crate pluginId to build/load, plus the app id and shell brand id to inject when the filter matched a catalog variant row. */
 type ResolvedPlaygroundFilter = {
-  readonly programId: string;
+  readonly pluginId: string;
   readonly appId?: string;
   readonly brand?: string;
 };
 
 /**
  * 🧭 Resolves `filterPlugin` (a playground variant id like "puzzle5d", or already a bare crate
- * programId like "note") against the generated playground catalog: a matching variant row yields
- * its crate programId, app id, and brand id, otherwise `filterPlugin` is treated as already being a
- * bare programId (existing behavior for single-app crates where variant === programId).
+ * pluginId like "note") against the generated playground catalog: a matching variant row yields
+ * its crate pluginId, app id, and brand id, otherwise `filterPlugin` is treated as already being a
+ * bare pluginId (existing behavior for single-app crates where variant === pluginId).
  */
 function resolvePlaygroundFilter(filterPlugin: string): ResolvedPlaygroundFilter {
   const row = playgroundCatalog.find((entry) => entry.variant === filterPlugin);
-  return row ? { programId: row.programId, appId: row.app, brand: row.brand } : { programId: filterPlugin };
+  return row ? { pluginId: row.pluginId, appId: row.app, brand: row.brand } : { pluginId: filterPlugin };
 }
 
-/** @emoji 🎯 Resolves a raw filter to the crate programId `generateProgramRegistry`'s `filterPlaygroundPlugin` option expects, or `undefined` for the unfiltered/studio case. */
+/** @emoji 🎯 Resolves a raw filter to the crate pluginId `generatePluginRegistry`'s `filterPlaygroundPlugin` option expects, or `undefined` for the unfiltered/studio case. */
 function resolveCatalogFilterPluginId(filterPlugin?: string): string | undefined {
-  return filterPlugin && !isStudioPluginFilter(filterPlugin) ? resolvePlaygroundFilter(filterPlugin).programId : undefined;
+  return filterPlugin && !isStudioPluginFilter(filterPlugin) ? resolvePlaygroundFilter(filterPlugin).pluginId : undefined;
 }
 //#endregion 🔖PlaygroundVariantResolution
 
@@ -543,7 +543,7 @@ export function semioBlobVitePlugin() {
 //#endregion BlobVitePlugin
 
 function pluginWorkerSource(): string {
-  return `/** @generated semio program web worker */
+  return `/** @generated semio plugin web worker */
 let pluginApi = null;
 
 async function loadPlugin(moduleUrl) {
@@ -642,8 +642,8 @@ self.addEventListener("message", async (event) => {
 }
 
 function pluginComponentBridgeSource(componentBase: string, wasmFileName: string): string {
-  return `/** @generated semio program jco component bridge */
-import { program } from "./${componentBase}.js";
+  return `/** @generated semio plugin jco component bridge */
+import { plugin } from "./${componentBase}.js";
 
 const apps = new Set();
 let tail = Promise.resolve();
@@ -658,10 +658,10 @@ function runSerialized(fn) {
         const message = error instanceof Error ? error.message : String(error);
         const payload = error && typeof error === "object" && "payload" in error ? error.payload : undefined;
         const detail = payload !== undefined ? \`\${message} payload=\${(() => { try { return JSON.stringify(payload); } catch { return String(payload); } })()}\` : message;
-        const busy = detail.includes("program instance busy") || detail.includes("plugin busy");
+        const busy = detail.includes("plugin instance busy") || detail.includes("plugin busy");
         const trapped = detail.includes("unreachable") || /trap|panicked/i.test(detail);
         if (busy || trapped) {
-          try { program.clearInstanceGuard?.(); } catch { /* guard heal is best-effort */ }
+          try { plugin.clearInstanceGuard?.(); } catch { /* guard heal is best-effort */ }
         }
         if (!busy) throw error;
         await new Promise((resolve) => setTimeout(resolve, attempt + 1));
@@ -679,10 +679,10 @@ function runSerialized(fn) {
 async function createPluginApiInner() {
   const core = {
     async manifest() {
-      return (await program.manifest()).json;
+      return (await plugin.manifest()).json;
     },
     async createApp(appId) {
-      const instanceId = await program.instantiateApp(appId, appId);
+      const instanceId = await plugin.instantiateApp(appId, appId);
       apps.add(instanceId);
       return instanceId;
     },
@@ -695,7 +695,7 @@ async function createPluginApiInner() {
         contextJson && contextJson.trim().startsWith("{")
           ? contextJson
           : JSON.stringify({ viewState: JSON.parse(contextJson), actor: "local" });
-      const response = await program.handleAction(instanceId, { json: actionJson }, { json: context });
+      const response = await plugin.handleAction(instanceId, { json: actionJson }, { json: context });
       return response.json;
     },
     async handleCommand(instanceId, commandJson, contextJson) {
@@ -704,57 +704,57 @@ async function createPluginApiInner() {
         contextJson && contextJson.trim().startsWith("{")
           ? contextJson
           : JSON.stringify({ viewState: JSON.parse(contextJson), actor: "local" });
-      const response = await program.handleCommand(instanceId, { json: commandJson }, { json: context });
+      const response = await plugin.handleCommand(instanceId, { json: commandJson }, { json: context });
       return response.json;
     },
     async render(instanceId, bodyKey, viewStateJson) {
       if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      const response = await program.updateWindow(instanceId, {
+      const response = await plugin.updateWindow(instanceId, {
         json: JSON.stringify({ bodyKey, viewState: JSON.parse(viewStateJson) }),
       });
       return response.json;
     },
     async renderWithDocument(instanceId, bodyKey, viewStateJson, documentJson) {
       if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      const response = await program.updateWindow(instanceId, {
+      const response = await plugin.updateWindow(instanceId, {
         json: JSON.stringify({ bodyKey, viewState: JSON.parse(viewStateJson), documentJson }),
       });
       return response.json;
     },
     async refreshUi(instanceId, requestJson) {
       if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      const response = await program.refreshUi(instanceId, { json: requestJson });
+      const response = await plugin.refreshUi(instanceId, { json: requestJson });
       return response.json;
     },
     async consumeMedia(instanceId, portId, descriptorJson, data) {
       if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      await program.consumeMedia(instanceId, portId, {
+      await plugin.consumeMedia(instanceId, portId, {
         descriptorJson,
         data: data instanceof Uint8Array ? data : new Uint8Array(data ?? []),
       });
     },
     async produceMedia(instanceId, portId, requestJson) {
       if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      const artifact = await program.produceMedia(instanceId, portId, requestJson ?? "");
+      const artifact = await plugin.produceMedia(instanceId, portId, requestJson ?? "");
       return { descriptorJson: artifact.descriptorJson, data: artifact.data };
     },
     async readAppDocumentText(instanceId) {
       if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      const files = await program.readAppDocumentText(instanceId);
+      const files = await plugin.readAppDocumentText(instanceId);
       return { dsl: files.dsl, ops: files.ops };
     },
     async loadAppDocumentText(instanceId, dsl, ops) {
       if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      await program.loadAppDocumentText(instanceId, { dsl, ops });
+      await plugin.loadAppDocumentText(instanceId, { dsl, ops });
     },
     async readAppDocumentPack(instanceId) {
       if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      const files = await program.readAppDocumentPack(instanceId);
+      const files = await plugin.readAppDocumentPack(instanceId);
       return { pack: files.pack, spr: files.spr, ops: files.ops };
     },
     async loadAppDocumentPack(instanceId, pack, spr, ops) {
       if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
-      await program.loadAppDocumentPack(instanceId, {
+      await plugin.loadAppDocumentPack(instanceId, {
         pack: pack instanceof Uint8Array ? pack : new Uint8Array(pack ?? []),
         spr: spr instanceof Uint8Array ? spr : new Uint8Array(spr ?? []),
         ops,
@@ -844,13 +844,13 @@ function transpilePluginComponent(artifact: string, outDir: string, componentBas
 }
 
 /** @emoji 🗄️ JS implementation of the `semio:framework/host` component import. The backbone imports are
- * a pure in-memory queue exchange: `backbone-send` posts an outbound message up to the program worker's
+ * a pure in-memory queue exchange: `backbone-send` posts an outbound message up to the plugin worker's
  * parent (the main thread) which relays it into `backbone-worker.ts` (the real sync actor), and
  * `backbone-poll` drains an inbound queue the worker fills from `backboneInbound` postMessages. A
  * WASI-P2 program worker never owns a socket/fetch itself (WS-B design), so there is no localStorage or
  * synchronous XHR here anymore. */
 function hostShimSource(): string {
-  return `/** @generated semio program host shim */
+  return `/** @generated semio plugin host shim */
 
 export function log(level, message) {
   if (level === "error") console.error(\`[plugin] \${message}\`);
@@ -946,7 +946,7 @@ export function backbonePoll(uri) {
 }
 
 /** @emoji 📶 Reports whether this shim has seen traffic for a uri (the real transport health lives in
- * \`backbone-worker.ts\`; the sandboxed program only needs attached/detached). */
+ * \`backbone-worker.ts\`; the sandboxed plugin only needs attached/detached). */
 export function backboneStatus(uri) {
   return backboneAttached.has(uri) ? "attached" : "detached";
 }
@@ -960,13 +960,13 @@ async function readPackageName(cratePath: string): Promise<string> {
   return match[1]!;
 }
 
-async function buildPlugin(target: ProgramRegistryEntry): Promise<void> {
+async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
   const packageName = await readPackageName(target.cratePath);
   if (runCmdStatus("cargo", ["build", "-p", packageName, "--target", PLUGIN_WASM_TARGET, "--release"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
-    throw new Error(`plugin build failed: ${target.programId}`);
+    throw new Error(`plugin build failed: ${target.pluginId}`);
   }
   const artifact = join(repoRoot, "target", PLUGIN_WASM_TARGET, "release", `${packageName.replace(/-/g, "_")}.wasm`);
-  const outDir = join(pluginOutRoot, target.programId);
+  const outDir = join(pluginOutRoot, target.pluginId);
   mkdirSync(outDir, { recursive: true });
   const jsBase = target.wasmOut.replace(/\.wasm$/, "");
   const wasmOut = join(outDir, target.wasmOut);
@@ -978,18 +978,18 @@ async function buildPlugin(target: ProgramRegistryEntry): Promise<void> {
   writeFileSync(jsOut, pluginComponentBridgeSource(componentBase, target.wasmOut));
   writeFileSync(join(outDir, "plugin-worker.js"), pluginWorkerSource());
   const hotSwapMarker = join(pluginOutRoot, ".hot-swap");
-  writeFileSync(hotSwapMarker, `${JSON.stringify({ programId: target.programId, rebuiltAt: Date.now() })}\n`);
-  console.log(`[DEBUG] built program ${target.programId} (${PLUGIN_WASM_TARGET}) -> ${outDir}`);
+  writeFileSync(hotSwapMarker, `${JSON.stringify({ pluginId: target.pluginId, rebuiltAt: Date.now() })}\n`);
+  console.log(`[DEBUG] built program ${target.pluginId} (${PLUGIN_WASM_TARGET}) -> ${outDir}`);
 }
 
-async function ensureProgramRegistry(filterPlugin?: string): Promise<void> {
-  const registryScript = join(repoRoot, "framework/program/registry/script.ts");
-  if (runCmdStatus("bun", [registryScript, "generate"], { cwd: repoRoot }) !== 0) throw new Error("program registry generation failed");
+async function ensurePluginRegistry(filterPlugin?: string): Promise<void> {
+  const registryScript = join(repoRoot, "framework/plugin/registry/script.ts");
+  if (runCmdStatus("bun", [registryScript, "generate"], { cwd: repoRoot }) !== 0) throw new Error("plugin registry generation failed");
   const variant = filterPlugin ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
   writePlaygroundSession(variant, playgroundSessionPath, repoRoot);
 }
 
-function resolveProgramBuildTargets(entries: readonly ProgramRegistryEntry[], filterPlugin?: string): readonly ProgramRegistryEntry[] {
+function resolvePluginBuildTargets(entries: readonly PluginRegistryEntry[], filterPlugin?: string): readonly PluginRegistryEntry[] {
   if (!filterPlugin || isStudioPluginFilter(filterPlugin)) return entries;
   if (entries.length === 0) {
     throw new Error(`no program build targets for filter ${JSON.stringify(filterPlugin)}`);
@@ -999,21 +999,21 @@ function resolveProgramBuildTargets(entries: readonly ProgramRegistryEntry[], fi
 
 async function buildPlugins(filterPlugin?: string): Promise<void> {
   ensureWasmTarget();
-  await ensureProgramRegistry(filterPlugin);
+  await ensurePluginRegistry(filterPlugin);
   const filterPluginId = resolveCatalogFilterPluginId(filterPlugin);
-  const catalogEntries = generateProgramRegistry(repoRoot, filterPluginId ? { filterPlaygroundPlugin: filterPluginId } : {});
+  const catalogEntries = generatePluginRegistry(repoRoot, filterPluginId ? { filterPlaygroundPlugin: filterPluginId } : {});
   mkdirSync(pluginOutRoot, { recursive: true });
   ensurePreview2ShimVendor();
   rewriteExistingPluginShimImports();
-  const stalePublicPlugins = join(repoRoot, "framework/product/os/dev/public/program-modules");
+  const stalePublicPlugins = join(repoRoot, "framework/product/os/dev/public/plugin-modules");
   if (existsSync(stalePublicPlugins)) {
     rmSync(stalePublicPlugins, { recursive: true, force: true });
   }
-  const targets = resolveProgramBuildTargets(catalogEntries, filterPlugin);
+  const targets = resolvePluginBuildTargets(catalogEntries, filterPlugin);
   if (filterPlugin && !isStudioPluginFilter(filterPlugin)) {
-    console.log(`[DEBUG] program build scope: ${targets.map((target) => target.programId).join(", ")}`);
+    console.log(`[DEBUG] program build scope: ${targets.map((target) => target.pluginId).join(", ")}`);
   } else {
-    console.log(`[DEBUG] program build scope: all (${targets.length} program crates)`);
+    console.log(`[DEBUG] program build scope: all (${targets.length} plugin crates)`);
   }
   for (const target of targets) {
     await buildPlugin(target);
@@ -1027,16 +1027,16 @@ class PluginBuildScript extends BundleScript {
   }
 }
 
-/** @emoji 👀 A program crate's edits alone don't cover every source that feeds its build: multi-crate
- * app families (e.g. `fem/program/rs` depending on `fem/2d/rs`/`fem/3d/rs`/`fem/core/rs`, or an
+/** @emoji 👀 A plugin crate's edits alone don't cover every source that feeds its build: multi-crate
+ * app families (e.g. `fem/plugin/rs` depending on `fem/2d/rs`/`fem/3d/rs`/`fem/core/rs`, or an
  * example fixture under `fem/2d/example`) live as SIBLING directories under the same top-level app
- * folder, not inside the program crate itself. Watching just `target.cratePath` misses them, so a
- * schema or fixture edit never triggers a hot-swap rebuild. Framework-hosted program crates
+ * folder, not inside the plugin crate itself. Watching just `target.cratePath` misses them, so a
+ * schema or fixture edit never triggers a hot-swap rebuild. Framework-hosted plugin crates
  * (`framework/...`) keep the narrow crate-only watch instead — widening to all of `framework/` would
  * watch the entire monorepo's shared core. Cargo's own `target/` output lives at the repo root and
- * built wasm lands in `framework/product/os/dev/program-modules`, so widening the watch root here
+ * built wasm lands in `framework/product/os/dev/plugin-modules`, so widening the watch root here
  * cannot cause a rebuild to re-trigger itself. */
-function pluginWatchRoot(target: ProgramRegistryEntry): string {
+function pluginWatchRoot(target: PluginRegistryEntry): string {
   const segments = target.cratePath.split("/");
   const topLevel = segments[0];
   if (topLevel === "framework") return join(repoRoot, target.cratePath);
@@ -1051,8 +1051,8 @@ class PluginWatchScript extends BundleScript {
     const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND;
     await buildPlugins(filterPlugin || undefined);
     const filterPluginId = resolveCatalogFilterPluginId(filterPlugin || undefined);
-    const catalogEntries = generateProgramRegistry(repoRoot, filterPluginId ? { filterPlaygroundPlugin: filterPluginId } : {});
-    const targets = resolveProgramBuildTargets(catalogEntries, filterPlugin || undefined);
+    const catalogEntries = generatePluginRegistry(repoRoot, filterPluginId ? { filterPlaygroundPlugin: filterPluginId } : {});
+    const targets = resolvePluginBuildTargets(catalogEntries, filterPlugin || undefined);
     for (const target of targets) {
       watch(pluginWatchRoot(target), { recursive: true }, () => {
         void buildPlugin(target).catch((error) => {
@@ -1060,7 +1060,7 @@ class PluginWatchScript extends BundleScript {
         });
       });
     }
-    console.log("[DEBUG] watching program crates for hot-swap rebuilds");
+    console.log("[DEBUG] watching plugin crates for hot-swap rebuilds");
   }
 }
 
@@ -1079,7 +1079,7 @@ function engineWasmScriptPath(cratePath: string): string {
 /** @emoji 🔌 Builds every wasm engine a react-renderer dev session needs: the framework node-graph +
  * editor host engines unconditionally (shared studio chrome, not any one app), then whatever the
  * active playground variant declares via `engines = […]` on its `[[…playground]]` Cargo.toml row —
- * replaces the previous hardcoded `if (programId === "flow" | "gis2d" | "gis3d" | "raster" | "puzzle2d")` branches. */
+ * replaces the previous hardcoded `if (pluginId === "flow" | "gis2d" | "gis3d" | "raster" | "puzzle2d")` branches. */
 async function buildEngineWasm(variant: string, renderer: string): Promise<void> {
   if (renderer !== "react" || process.env.SKIP_ENGINE_BUILD === "1") return;
   // Each recurses into a crate's own `wasm` script (wasm-pack/cargo build under the hood) — budgeted at
@@ -1102,7 +1102,7 @@ class DevScript extends BundleScript {
     if (process.env.SKIP_PLUGIN_BUILD !== "1") {
       await buildPlugins(filterPlugin);
     } else {
-      await ensureProgramRegistry(filterPlugin);
+      await ensurePluginRegistry(filterPlugin);
     }
     const renderer = process.env.SEMIO_RENDERER ?? "react";
     const program = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
@@ -1159,7 +1159,7 @@ class DevScript extends BundleScript {
         SEMIO_PLUGIN: program,
         SEMIO_RENDERER: renderer,
         VITE_SEMIO_RENDERER: renderer,
-        VITE_SEMIO_PLUGIN: resolvedFilter.programId,
+        VITE_SEMIO_PLUGIN: resolvedFilter.pluginId,
         ...(resolvedFilter.appId ? { VITE_SEMIO_APP_ID: resolvedFilter.appId } : {}),
         ...(resolvedFilter.brand && !process.env.SEMIO_BRAND ? { SEMIO_BRAND: resolvedFilter.brand } : {}),
         ...frameworkOsLockedPrefsEnv(),
@@ -1189,7 +1189,7 @@ class BuildScript extends BundleScript {
         SEMIO_PLUGIN: program,
         SEMIO_RENDERER: renderer,
         VITE_SEMIO_RENDERER: renderer,
-        VITE_SEMIO_PLUGIN: resolvedFilter.programId,
+        VITE_SEMIO_PLUGIN: resolvedFilter.pluginId,
         ...(resolvedFilter.appId ? { VITE_SEMIO_APP_ID: resolvedFilter.appId } : {}),
         ...(resolvedFilter.brand && !process.env.SEMIO_BRAND ? { SEMIO_BRAND: resolvedFilter.brand } : {}),
         ...frameworkOsLockedPrefsEnv(),
@@ -1225,8 +1225,8 @@ class PluginCapabilityLintScript extends BundleScript {
         dependencies: Array<{ name: string }>;
       }>;
     };
-    const registryEntries = generateProgramRegistry(repoRoot);
-    const pluginPackageNames = new Map(registryEntries.map((entry) => [entry.packageName, entry.programId]));
+    const registryEntries = generatePluginRegistry(repoRoot);
+    const pluginPackageNames = new Map(registryEntries.map((entry) => [entry.packageName, entry.pluginId]));
     const depRules: Record<string, string> = {
       rusqlite: "localBackboneStorage",
       libloading: "forbidden",
@@ -1241,8 +1241,8 @@ class PluginCapabilityLintScript extends BundleScript {
     };
     const failures: string[] = [];
     for (const pkg of metadata.packages) {
-      if (!pkg.manifest_path.includes("/program/rs/Cargo.toml")) continue;
-      if (pkg.manifest_path.includes("/framework/program/rs/")) continue;
+      if (!pkg.manifest_path.includes("/plugin/rs/Cargo.toml")) continue;
+      if (pkg.manifest_path.includes("/framework/plugin/rs/")) continue;
       const manifestText = await Bun.file(pkg.manifest_path).text();
       const declared = new Set<string>();
       const metaMatch = manifestText.match(/\[package\.metadata\.semio\][\s\S]*?capabilities\s*=\s*\[([^\]]*)\]/);
@@ -1258,7 +1258,7 @@ class PluginCapabilityLintScript extends BundleScript {
       for (const dep of pkg.dependencies) {
         const otherPluginId = pluginPackageNames.get(dep.name);
         if (otherPluginId && dep.name !== pkg.name) {
-          failures.push(`${pkg.name}: cross-program dependency on ${dep.name} (${otherPluginId})`);
+          failures.push(`${pkg.name}: cross-plugin dependency on ${dep.name} (${otherPluginId})`);
         }
       }
       for (const [dep, rule] of Object.entries(depRules)) {
@@ -1484,7 +1484,7 @@ class VerifyScript extends BundleScript {
       console.log(`[DEBUG] s studio e2e verify passed (${studioUrl})`);
       return;
     }
-    for (const target of generateProgramRegistry(repoRoot)) {
+    for (const target of generatePluginRegistry(repoRoot)) {
       const packageName = await readPackageName(target.cratePath);
       if (runCmdStatus("cargo", ["test", "-p", packageName], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error(`${packageName} tests failed`);
     }
@@ -2031,7 +2031,7 @@ function parityDevUrl(renderer: ParityRenderer, variant: string, port: number): 
 
 type ParityServerHandle = { readonly daemon: SpawnDaemonHandle; readonly port: number };
 
-/** ⏱️A cold `bun ./script.ts dev` boot can mean compiling the ENTIRE program crate catalog (33 crates)
+/** ⏱️A cold `bun ./script.ts dev` boot can mean compiling the ENTIRE plugin crate catalog (33 crates)
  * plus, for wgpu, a from-scratch trunk/cargo build — many minutes with an empty `target/`, not the
  * ~40-60s a warm-cache boot takes. Default generously; `PARITY_BOOT_BUDGET_MS` overrides for CI/tuning. */
 const PARITY_DEV_SERVER_BOOT_BUDGET_MS = Number(process.env.PARITY_BOOT_BUDGET_MS ?? 900_000);
@@ -2287,7 +2287,7 @@ const router = new ScriptRouter(import.meta.dir)
         if (sub === "watch") return new PluginWatchScript(this.root).run(segments.slice(1));
         if (sub === "lint") return new PluginCapabilityLintScript(this.root).run(segments.slice(1));
         if (sub === "registry") {
-          await ensureProgramRegistry(segments[1] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND);
+          await ensurePluginRegistry(segments[1] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND);
           return;
         }
         // 🐛`sub` here is the variant filter itself (e.g. `plugin cad`), not a subcommand to strip —

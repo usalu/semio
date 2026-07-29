@@ -8,13 +8,13 @@ fn main() {
     use std::path::PathBuf;
 
     let plugin_filter = env::args()
-        .position(|arg| arg == "--program")
+        .position(|arg| arg == "--plugin")
         .and_then(|index| env::args().nth(index + 1))
         .unwrap_or_else(|| "studio".to_string());
     let modules_root = env::var("SEMIO_PLUGIN_MODULES")
         .map(PathBuf::from)
         .unwrap_or_else(|_| {
-            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../product/os/dev/program-modules")
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../product/os/dev/plugin-modules")
         });
     run_native(&plugin_filter, modules_root);
 }

@@ -2466,7 +2466,7 @@ fn merge_string_ids(existing: &[String], incoming: &[String], merge: &str) -> Ve
     }
 }
 
-/// Applies hover/selection action payloads to renderer-local world state before the program round-trip.
+/// Applies hover/selection action payloads to renderer-local world state before the plugin round-trip.
 pub fn apply_world_action_preview(state: &mut World3dState, action: &ActionDescriptor) {
     let Some(args) = action.args.as_ref() else {
         if action.action == "setHover" {

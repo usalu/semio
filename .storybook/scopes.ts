@@ -3,14 +3,14 @@
 // Specs: Single source of truth for the root Storybook's composable scope system.
 // Summary: Replaces the three hardcoded `ui`/`puzzle`/`compose` stacks in `main.ts` with a data-driven
 // registry every consumer derives from: story globs, workspace aliases, watch-ignores, static-dir
-// assets (e.g. `/program-modules` for OS-shell program boot stories), and lazy scope-gated Vite plugins.
+// assets (e.g. `/plugin-modules` for OS-shell program boot stories), and lazy scope-gated Vite plugins.
 // Pure data + pure functions only — no Vite/Storybook imports — so `script.ts` (bun, CLI validation)
 // and `playwright.config.ts` can import it without dragging in the Vite/MDX module graph.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
 import type { Plugin } from "vite";
-import type { PlaygroundAssetSpec } from "../framework/program/registry/generated/playgrounds.ts";
+import type { PlaygroundAssetSpec } from "../framework/plugin/registry/generated/playgrounds.ts";
 
 export type { PlaygroundAssetSpec };
 
@@ -22,7 +22,7 @@ export type StoryScope = {
   readonly titlePrefix: string;
   /** Repo-root-relative source dirs this scope's stories import from. Watch-ignores are DERIVED: union(all scopes' roots) − union(active scopes' roots). */
   readonly sourceRoots: readonly string[];
-  /** Only irregular aliases (css subpaths, single-file entries, wasm pkg entries, `/program-modules`-style routes). Regular `@semio-tech/*` aliases are auto-derived from the workspace scan. */
+  /** Only irregular aliases (css subpaths, single-file entries, wasm pkg entries, `/plugin-modules`-style routes). Regular `@semio-tech/*` aliases are auto-derived from the workspace scan. */
   readonly aliases?: Readonly<Record<string, string>>;
   /** Extra `optimizeDeps.exclude` entries beyond the workspace-package scan. */
   readonly optimizeDepsExclude?: readonly string[];
@@ -106,7 +106,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
   {
     id: "framework/hosts",
     titlePrefix: "🛠️framework🔌hosts",
-    sourceRoots: [repoRelative("framework/renderer/react"), repoRelative("framework/core/js"), repoRelative("framework/surface"), repoRelative("framework/editor"), repoRelative("flow/core/rs")],
+    sourceRoots: [repoRelative("framework/renderer/react"), repoRelative("framework/core/js"), repoRelative("framework/surface"), repoRelative("framework/editor"), repoRelative("s/kernel/flow/core/rs")],
     aliases: {
       "@semio-tech/framework-renderer-react": "framework/renderer/react/index.tsx",
       "@semio-tech/framework-core": "framework/core/js/index.ts",
@@ -115,16 +115,16 @@ export const STORY_SCOPES: readonly StoryScope[] = [
   {
     id: "framework/os",
     titlePrefix: "🛠️framework🖥️os",
-    sourceRoots: [repoRelative("framework/renderer/react"), repoRelative("framework/renderer/wgpu"), repoRelative("framework/core/js"), repoRelative("framework/program/registry"), repoRelative("framework/product/os")],
+    sourceRoots: [repoRelative("framework/renderer/react"), repoRelative("framework/renderer/wgpu"), repoRelative("framework/core/js"), repoRelative("framework/plugin/registry"), repoRelative("framework/product/os")],
     aliases: {
       "@semio-tech/framework-renderer-react": "framework/renderer/react/index.tsx",
       "@semio-tech/framework-renderer-wgpu": "framework/renderer/wgpu/index.ts",
       "@semio-tech/framework-core": "framework/core/js/index.ts",
-      "/program-modules": "framework/product/os/dev/program-modules",
+      "/plugin-modules": "framework/product/os/dev/plugin-modules",
       "/renderer-modules": "framework/product/os/dev/renderer-modules",
     },
     assets: [
-      { kind: "static-dir", route: "/program-modules", root: "framework/product/os/dev/program-modules" },
+      { kind: "static-dir", route: "/plugin-modules", root: "framework/product/os/dev/plugin-modules" },
       { kind: "static-dir", route: "/renderer-modules", root: "framework/product/os/dev/renderer-modules" },
     ],
     vitePlugins: async () => {

@@ -312,14 +312,14 @@ import {
   loadPluginModule as loadCorePluginModule,
   loadPluginWasm as loadCorePluginWasm,
   buildContributionsJson,
-  expandProgramRegistry,
+  expandPluginRegistry,
   nodeGraphActions,
   panelTabKindId,
   resolveExternalSlots,
   resolveLayoutForMode,
   resolvePlaygroundDefaultAppId,
-  resolveProgramHostConfig,
-  resolveProgramRegistryId,
+  resolvePluginHostConfig,
+  resolvePluginRegistryId,
   resolveUiDirtyScope,
   textEditorActions,
   normalizeAppLabelsOverlay,
@@ -354,10 +354,10 @@ import {
   type NamedLayout,
   type NodeGraphScene,
   type InkCanvasScene,
-  type ProgramAppLabelsOverlay,
+  type PluginAppLabelsOverlay,
   type ProgramHotSwapEvent,
   type PanelTabKind,
-  type ProgramRegistryEntry,
+  type PluginRegistryEntry,
   type PluginUiRefreshRequest,
   type PluginUiRefreshResponse,
   type PluginUiRefreshSectionResponse,
@@ -1137,7 +1137,7 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext, pat
     case "externalSlot":
       return (
         <p className="text-muted-foreground text-xs" data-ui-path={path}>
-          Extension unavailable: {node.programId}
+          Extension unavailable: {node.pluginId}
         </p>
       );
   }
@@ -1168,13 +1168,13 @@ export const UI_INSPECTOR_MIXED_PLACEHOLDER = shellLabel("ui.common.mixedValues"
 /** 🎭 Renderer-side view state passed to program wasm calls — structurally mirrors `@semio-tech/framework-core`'s {@link PluginViewState}, kept as a distinct local alias since `ViewState` is the established name used throughout this file. */
 export type ViewState = PluginViewState;
 
-/** ⚠️ Not folded into `@semio-tech/framework-core`'s `ProgramManifest`: this shell-local shape types `apps`/`programs` richly (`AppDefinition[]`, `document` on programs) where core intentionally keeps the wasm-boundary shape loose (`Record<string, unknown>[]`) for other consumers (e.g. compose, coda). Left for a human to decide whether to widen core's `ProgramManifest` itself. */
-export type ProgramManifest = {
-  readonly programId: string;
+/** ⚠️ Not folded into `@semio-tech/framework-core`'s `PluginManifest`: this shell-local shape types `apps`/`programs` richly (`AppDefinition[]`, `document` on programs) where core intentionally keeps the wasm-boundary shape loose (`Record<string, unknown>[]`) for other consumers (e.g. compose, coda). Left for a human to decide whether to widen core's `PluginManifest` itself. */
+export type PluginManifest = {
+  readonly pluginId: string;
   readonly label: string;
   readonly version: string;
   readonly apps: readonly AppDefinition[];
-  readonly programs: readonly { readonly programId: string; readonly appId: string; readonly label: string; readonly document: readonly string[]; readonly yields: string }[];
+  readonly programs: readonly { readonly pluginId: string; readonly appId: string; readonly label: string; readonly document: readonly string[]; readonly yields: string }[];
   readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string; readonly appId: string }[];
   readonly contributions?: readonly {
     readonly kind: "playbookBlockKind";
@@ -1192,19 +1192,19 @@ export type ProgramManifest = {
 
 type LoadedProgramState = {
   readonly handle: PluginWasmHandle;
-  readonly manifest: ProgramManifest;
+  readonly manifest: PluginManifest;
 };
 
 type ActiveSession = {
-  readonly programId: string;
+  readonly pluginId: string;
   readonly instanceId: number;
   readonly app: AppDefinition;
   readonly viewState: ViewState;
 };
 
 type SpaceProgramEntry = {
-  readonly programId: string;
-  readonly programId: string;
+  readonly pluginId: string;
+  readonly workflowStepId: string;
   readonly appId: string;
   readonly label: string;
   readonly document: readonly string[];
@@ -1213,7 +1213,7 @@ type SpaceProgramEntry = {
 
 export type SpawnedAppEntry = {
   readonly id: string;
-  readonly programId: string;
+  readonly pluginId: string;
   readonly instanceId: number;
   readonly appId: string;
   readonly label: string;
@@ -1230,7 +1230,7 @@ export type SpacePanelState = {
 export type FrameworkOsBootOptions = {
   readonly rootId?: string;
   readonly plugin?: string;
-  readonly plugins?: readonly { readonly programId: string; readonly moduleUrl: string }[];
+  readonly plugins?: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
   readonly appId?: string;
   readonly locks?: FrameworkOsLocks;
   readonly defaults?: FrameworkOsDefaults;
@@ -1395,7 +1395,7 @@ type WindowUiState = {
   /** 🛠️ Mode-level tool measures, keyed by TOOL id (never a window id) — see `DocumentApp::tool_measures`. */
   readonly toolMeasuresByToolId: Readonly<Record<string, readonly WindowMeasure[]>>;
   readonly panelUiByKey: Readonly<Record<string, UiNode>>;
-  readonly appLabelsOverlay: ProgramAppLabelsOverlay;
+  readonly appLabelsOverlay: PluginAppLabelsOverlay;
 };
 
 type SpawnedWindowState = {
@@ -1550,7 +1550,7 @@ export type ShellAction =
   | { readonly type: "SET_WINDOW_ENGAGEMENTS_BY_WINDOW_ID"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
   | { readonly type: "SET_WINDOW_MEASURES_BY_WINDOW_ID"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
   | { readonly type: "SET_PANEL_UI_BY_KEY"; readonly value: Updatable<Readonly<Record<string, UiNode>>> }
-  | { readonly type: "SET_APP_LABELS_OVERLAY"; readonly value: Updatable<ProgramAppLabelsOverlay> }
+  | { readonly type: "SET_APP_LABELS_OVERLAY"; readonly value: Updatable<PluginAppLabelsOverlay> }
   | { readonly type: "SET_SPAWNED_WINDOW_UI"; readonly value: Updatable<UiNode | null> }
   | { readonly type: "SET_SPAWNED_WINDOW_ENGAGEMENTS"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
   | { readonly type: "SET_SPAWNED_WINDOW_MEASURES"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
@@ -1910,7 +1910,7 @@ export const selectUiDevice = (state: ShellState, mobile: boolean): ElementsSurf
 /** 🌱 Builds the starting `ShellState` for `FrameworkOsShell`, mirroring exactly what each migrated `useState` used to initialize to (including reads from local storage for UI prefs). */
 export function initialShellState(_props: {
   readonly pluginFilter?: string;
-  readonly plugins: readonly { readonly programId: string; readonly moduleUrl: string }[];
+  readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
   readonly locks?: ResolvedShellLocks;
   readonly defaults?: FrameworkOsDefaults;
   readonly ephemeral?: boolean;
@@ -1961,9 +1961,9 @@ export function initialShellState(_props: {
 function syncDocumentId(session: ActiveSession, panel: SpacePanelState | null, studioMode: boolean): string {
   if (studioMode && panel?.activeSpawnedId) {
     const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
-    if (spawned) return `${spawned.programId}-${spawned.instanceId}`;
+    if (spawned) return `${spawned.pluginId}-${spawned.instanceId}`;
   }
-  return `${session.programId}-${session.instanceId}`;
+  return `${session.pluginId}-${session.instanceId}`;
 }
 
 /** @emoji 🧭 Starting width for each panel anchor — `top-left`/`top-right` mirror the old left/right side-panel defaults; `bottom-left`/`bottom-right` host the sync card and a compact utility tree, so a narrower default suits them; the top/bottom-middle anchors start empty but default wider since they grow both ways and tend to host transient centered content (e.g. search); the side-middle anchors default to the corner widths of their column. */
@@ -2149,7 +2149,7 @@ function requestFileOpen(accept: string, readAs?: string, multiple?: boolean): P
  * instance and feeds its own `requestedEffects` back through `applyHostEffects` recursively. */
 type EffectDispatchOne = (action: string, args?: Record<string, unknown>) => Promise<void>;
 
-/** 🔁 Builds an {@link EffectDispatchOne} bound to one program instance + `applyHostEffects` closure —
+/** 🔁 Builds an {@link EffectDispatchOne} bound to one plugin instance + `applyHostEffects` closure —
  * extracted so the D3/D2/D5 fan-out loops below are plain functions testable without React/plugin
  * wiring, while production callers get the exact same `handleAction` + recursive-effects behavior. */
 function makeEffectDispatchOne(
@@ -2643,7 +2643,7 @@ export async function runRequestMediaFrames(
 //#endregion RequestMediaFrames
 
 function isStudioMode(pluginFilter?: string): boolean {
-  return pluginFilter !== undefined && resolveProgramHostConfig(pluginFilter) !== undefined;
+  return pluginFilter !== undefined && resolvePluginHostConfig(pluginFilter) !== undefined;
 }
 
 export interface SpaceShellPath {
@@ -2660,13 +2660,13 @@ export function parseSpaceShellPath(path: string): SpaceShellPath | null {
 
 function buildSpacePrograms(loaded: readonly LoadedProgramState[]): readonly SpaceProgramEntry[] {
   return loaded.flatMap((entry) =>
-    entry.manifest.programs.map((program) => ({
-      programId: entry.handle.programId,
-      programId: program.programId,
-      appId: program.appId,
-      label: program.label,
-      document: program.document,
-      yields: program.yields,
+    entry.manifest.workflows.map((workflow) => ({
+      pluginId: entry.handle.pluginId,
+      workflowStepId: workflow.workflowStepId,
+      appId: workflow.appId,
+      label: workflow.label,
+      document: workflow.document,
+      yields: workflow.yields,
     })),
   );
 }
@@ -2783,7 +2783,7 @@ function collectFrameworkLayoutWindowSeeds(node: WindowLayoutAxisNode | WindowLa
   });
 }
 
-function convertFrameworkLayoutNodeToModeLayout(node: WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode, appLabelsOverlay: ProgramAppLabelsOverlay): WindowLayoutNode {
+function convertFrameworkLayoutNodeToModeLayout(node: WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode, appLabelsOverlay: PluginAppLabelsOverlay): WindowLayoutNode {
   if (node.kind === "window") {
     const id = node.instanceId ?? node.windowKindId;
     return { kind: "window", id, title: resolveAppLabel(appLabelsOverlay, "windowKind", id, node.title ?? node.windowKindId) };
@@ -2810,7 +2810,7 @@ function convertFrameworkLayoutNodeToModeLayout(node: WindowLayoutAxisNode | Win
 }
 
 /** @emoji 🗣️ Re-resolves every window's title from the current app-labels overlay in place, preserving the tree's structure/sizes/arrangement — used to react to a locale/terminology switch without discarding the user's live layout. */
-function retitleWindowLayoutNode(node: WindowLayoutNode, appLabelsOverlay: ProgramAppLabelsOverlay): WindowLayoutNode {
+function retitleWindowLayoutNode(node: WindowLayoutNode, appLabelsOverlay: PluginAppLabelsOverlay): WindowLayoutNode {
   if (node.kind === "window") {
     return { ...node, title: resolveAppLabel(appLabelsOverlay, "windowKind", node.id, node.title ?? node.id) };
   }
@@ -2821,7 +2821,7 @@ function retitleWindowLayoutNode(node: WindowLayoutNode, appLabelsOverlay: Progr
 export function resolveFrameworkLayoutSeed(
   layout: WindowLayout | undefined,
   windowKinds: readonly { readonly id: string; readonly label: string }[],
-  appLabelsOverlay: ProgramAppLabelsOverlay,
+  appLabelsOverlay: PluginAppLabelsOverlay,
 ): {
   readonly modeLayout: WindowLayoutNode;
   readonly extraInstances: readonly ExtraWindowInstance[];
@@ -2862,7 +2862,7 @@ export function resolveFrameworkLayoutSeed(
 function applyFrameworkLayoutSeed(
   layout: WindowLayout | undefined,
   windowKinds: readonly { readonly id: string; readonly label: string }[],
-  appLabelsOverlay: ProgramAppLabelsOverlay,
+  appLabelsOverlay: PluginAppLabelsOverlay,
 ): {
   readonly modeLayout: WindowLayoutNode;
   readonly extraInstances: readonly ExtraWindowInstance[];
@@ -2963,16 +2963,16 @@ function windowEngagementControlToSpec(control: WindowEngagementControl | undefi
 
 const PLUGIN_LOAD_TIMEOUT_MS = 30_000;
 
-async function loadPluginModuleResilient(programId: string, moduleUrl: string): Promise<PluginWasmHandle | null> {
+async function loadPluginModuleResilient(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle | null> {
   try {
     return await Promise.race([
-      loadPluginModule(programId, moduleUrl),
+      loadPluginModule(pluginId, moduleUrl),
       new Promise<never>((_, reject) => {
-        window.setTimeout(() => reject(new Error(`timeout loading ${programId}`)), PLUGIN_LOAD_TIMEOUT_MS);
+        window.setTimeout(() => reject(new Error(`timeout loading ${pluginId}`)), PLUGIN_LOAD_TIMEOUT_MS);
       }),
     ]);
   } catch (error) {
-    console.error("[DEBUG] program load failed", programId, error);
+    console.error("[DEBUG] program load failed", pluginId, error);
     return null;
   }
 }
@@ -3040,7 +3040,7 @@ function windowEngagementToSearchSpec(engagement: WindowEngagement | undefined, 
 
 function panelTabIcon(tabId: string, group: string): React.FC<{ size?: number }> {
   // 🌱 `group === "workbench"` already covers every host-app catalogue tab (each such app declares its
-  // catalogue tab under `PanelGroup::Workbench` — see `s/program/rs`'s `App::builder(...).panel_tab(...)`)
+  // catalogue tab under `PanelGroup::Workbench` — see `s/plugin/rs`'s `App::builder(...).panel_tab(...)`)
   // so no separate app-specific tab-id literal is needed here.
   if (group === "workbench") return shellTabIcon(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID);
   if (tabId.includes("parameters")) return shellTabIcon(FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID);
@@ -3062,7 +3062,7 @@ export function flattenPanelTabLeaves<T extends { readonly children?: readonly T
 }
 
 /** @emoji 🌳 Converts one plugin-declared {@link AppPanelTabDefinition} (recursively) into a {@link PanelTabNode}. */
-function panelTabDefinitionToNode(tab: AppPanelTabDefinition, group: string, panelUiByKey: Readonly<Record<string, UiNode>>, onAction: (action: ActionDescriptor) => void, order: number, appLabelsOverlay: ProgramAppLabelsOverlay): PanelTabNode {
+function panelTabDefinitionToNode(tab: AppPanelTabDefinition, group: string, panelUiByKey: Readonly<Record<string, UiNode>>, onAction: (action: ActionDescriptor) => void, order: number, appLabelsOverlay: PluginAppLabelsOverlay): PanelTabNode {
   const tabId = panelTabKindId(tab.kind);
   const label = resolvePanelTabLabel(appLabelsOverlay, tabId, tab.label);
   if (tab.children && tab.children.length > 0) {
@@ -3116,13 +3116,13 @@ export function resolveUtilities(app: Pick<AppDefinition, "utilities">, windowKi
 const CHROME_KNOWN_RIBBON_PARENT_CATEGORIES = new Set(["history", "hand", "selection", "lasso", "filter", "open", "save", "transfer", "transform", "create", "view", "actions", "settings", "methods", "mode", "targets", "export", "utilities", "sync"]);
 
 /** 🧰 Resolves a `UtilityDefinition.group` id's display label: the app's own `groupLabels` overlay first, then the shared `ui.ribbon.parent.*` chrome vocabulary for known category ids, else the raw id. */
-function resolveUtilityGroupLabel(group: string, appLabelsOverlay: ProgramAppLabelsOverlay): string {
+function resolveUtilityGroupLabel(group: string, appLabelsOverlay: PluginAppLabelsOverlay): string {
   const fallback = CHROME_KNOWN_RIBBON_PARENT_CATEGORIES.has(group) ? shellLabel(`ui.ribbon.parent.${group as UiRibbonParentCategory}`) : group;
   return resolveAppLabel(appLabelsOverlay, "group", group, fallback);
 }
 
 /** 🧰 One `UtilityDefinition` → the lean `DerivedUtilitySpec` consumed by {@link deriveUtilityNodes}, resolving the label (and, for grouped utilities, the group label) through the app's locale/terminology overlay. */
-function utilityDefinitionToSpec(utility: UtilityDefinition, appLabelsOverlay: ProgramAppLabelsOverlay): DerivedUtilitySpec {
+function utilityDefinitionToSpec(utility: UtilityDefinition, appLabelsOverlay: PluginAppLabelsOverlay): DerivedUtilitySpec {
   return {
     id: utility.id,
     label: resolveAppLabel(appLabelsOverlay, "utility", utility.id, utility.label),
@@ -3154,7 +3154,7 @@ export function resolveUtilityNodes(
   windowKind: Pick<AppWindowKindDefinition, "utilities">,
   activeUtilityId: string | null | undefined,
   windowId: string,
-  appLabelsOverlay: ProgramAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY,
+  appLabelsOverlay: PluginAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY,
 ): UtilityNode[] {
   const utilities = resolveUtilities(app, windowKind);
   if (utilities.length === 0) return [];
@@ -3237,7 +3237,7 @@ function shellLabel(key: UiTranslationKey, options?: Record<string, unknown>): s
   return resolveTranslationLabel(uiI18n.t(key, options)) ?? key;
 }
 
-/** @emoji 🧭 The four panel tabs the framework itself owns (never app-supplied) — routed through the typed chrome schema instead of the program overlay so a locale-locked shell can never show their English manifest label. */
+/** @emoji 🧭 The four panel tabs the framework itself owns (never app-supplied) — routed through the typed chrome schema instead of the plugin overlay so a locale-locked shell can never show their English manifest label. */
 const FRAMEWORK_PANEL_TAB_LABEL_KEYS: Readonly<Record<string, UiTranslationKey>> = {
   [FRAMEWORK_PANEL_TAB_DOCUMENT_ID]: "ui.panel.document",
   [FRAMEWORK_PANEL_TAB_CATALOGUE_ID]: "ui.panel.catalogue",
@@ -3245,14 +3245,14 @@ const FRAMEWORK_PANEL_TAB_LABEL_KEYS: Readonly<Record<string, UiTranslationKey>>
   [FRAMEWORK_PANEL_TAB_PARAMETERS_ID]: "ui.panel.parameters",
 };
 
-/** @emoji 🧭 Framework-owned panel tabs resolve through the chrome schema (`shellLabel`); every other app-declared tab still resolves through the program overlay (`resolveAppLabel`). */
-function resolvePanelTabLabel(overlay: ProgramAppLabelsOverlay, tabId: string, fallback: string): string {
+/** @emoji 🧭 Framework-owned panel tabs resolve through the chrome schema (`shellLabel`); every other app-declared tab still resolves through the plugin overlay (`resolveAppLabel`). */
+function resolvePanelTabLabel(overlay: PluginAppLabelsOverlay, tabId: string, fallback: string): string {
   const chromeKey = FRAMEWORK_PANEL_TAB_LABEL_KEYS[tabId];
   return chromeKey ? shellLabel(chromeKey) : resolveAppLabel(overlay, "panelTab", tabId, fallback);
 }
 
 /** @emoji 🗣️ Stable empty overlay reference so components depending on it don't re-render before the first `appLabels` fetch resolves. */
-const EMPTY_APP_LABELS_OVERLAY: ProgramAppLabelsOverlay = {
+const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = {
   windowKindLabels: {},
   panelTabLabels: {},
   modeLabels: {},
@@ -3266,7 +3266,7 @@ const EMPTY_APP_LABELS_OVERLAY: ProgramAppLabelsOverlay = {
 };
 
 /** @emoji 🗣️ Resolves a window-kind/panel-tab/mode/action/utility/example/actionArg/dialog/introduction/group id's locale-aware label from the active app's overlay, falling back to the static manifest label. */
-function resolveAppLabel(overlay: ProgramAppLabelsOverlay, kind: "windowKind" | "panelTab" | "mode" | "action" | "utility" | "example" | "actionArg" | "dialog" | "introduction" | "group", id: string, fallback: string): string {
+function resolveAppLabel(overlay: PluginAppLabelsOverlay, kind: "windowKind" | "panelTab" | "mode" | "action" | "utility" | "example" | "actionArg" | "dialog" | "introduction" | "group", id: string, fallback: string): string {
   const map =
     kind === "windowKind"
       ? overlay.windowKindLabels
@@ -3291,7 +3291,7 @@ function resolveAppLabel(overlay: ProgramAppLabelsOverlay, kind: "windowKind" | 
 }
 
 /** @emoji 🗣️ Resolves one action-arg's label + (for `select` controls) its options' labels from the overlay's `actionArgLabels` map, keyed `"{scopeId}.{argId}"` / `"{scopeId}.{argId}.option.{value}"`. `scopeId` is an action id for staged/palette forms or a dialog id for dialog args. */
-function resolveActionArgDef(def: ActionArgDef, scopeId: string, overlay: ProgramAppLabelsOverlay): ActionArgDef {
+function resolveActionArgDef(def: ActionArgDef, scopeId: string, overlay: PluginAppLabelsOverlay): ActionArgDef {
   const label = resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}`, def.label);
   if (def.control.kind !== "select") return label === def.label ? def : { ...def, label };
   const options = def.control.options.map((option) => ({ ...option, label: resolveAppLabel(overlay, "actionArg", `${scopeId}.${def.id}.option.${option.value}`, option.label) }));
@@ -3299,7 +3299,7 @@ function resolveActionArgDef(def: ActionArgDef, scopeId: string, overlay: Progra
 }
 
 /** @emoji 🗣️ Resolves a `DialogDefinition`'s title/body/submitLabel/args from the overlay's `dialogLabels`/`actionArgLabels` maps, keyed by the dialog's own id. */
-function resolveDialogDefinition(dialog: DialogDefinition, overlay: ProgramAppLabelsOverlay): DialogDefinition {
+function resolveDialogDefinition(dialog: DialogDefinition, overlay: PluginAppLabelsOverlay): DialogDefinition {
   return {
     ...dialog,
     title: resolveAppLabel(overlay, "dialog", `${dialog.id}.title`, dialog.title),
@@ -3311,7 +3311,7 @@ function resolveDialogDefinition(dialog: DialogDefinition, overlay: ProgramAppLa
 
 /** @emoji 🗣️ Resolves an `IntroductionDefinition`'s title and every step's title/body/interaction labels
  * from the overlay's `introductionLabels` map. */
-function resolveIntroductionDefinition(introduction: IntroductionDefinition, overlay: ProgramAppLabelsOverlay): IntroductionDefinition {
+function resolveIntroductionDefinition(introduction: IntroductionDefinition, overlay: PluginAppLabelsOverlay): IntroductionDefinition {
   return {
     title: resolveAppLabel(overlay, "introduction", "intro.title", introduction.title),
     steps: introduction.steps.map(
@@ -3360,7 +3360,7 @@ function captureTutorialUiSnapshot(state: ShellState, session: ActiveSession | n
 /** @emoji 🎥 Context every `applyTutorialUiSnapshotToShell`/`applyTutorialUiChangeToShell` call needs beyond `dispatch` itself — resolved once per render by the caller (the director/seek/deviation-converge paths all share it). */
 type TutorialUiBridgeContext = {
   readonly session: ActiveSession | null;
-  readonly appLabelsOverlay: ProgramAppLabelsOverlay;
+  readonly appLabelsOverlay: PluginAppLabelsOverlay;
 };
 
 /** @emoji 🎥 Applies a full `TutorialUiSnapshot` (a `TutorialUiSample::Snapshot`, or the composed target of a seek/deviation-converge) onto the live `ShellState` — snaps every field instantly (camera is the only interpolated track, applied separately by the director). Dispatches the atomic `APPLY_TUTORIAL_UI_SNAPSHOT` for everything resolvable purely from `ShellState`, plus one `SET_SESSION` for the fields that live on `ActiveSession.viewState` (`activeModeId`/`panelJson`/`selectionJson`). */
@@ -3635,7 +3635,7 @@ function WindowMeasureSlider({ measure, onAction }: { readonly measure: Extract<
   const formatDisplayValue = windowMeasureUsesProbabilityReadout(measure) ? windowMeasureProbabilityReadout : undefined;
   const disabled = measure.disabled === true;
   // 🪣 A reveal-group measure (e.g. puzzle3d's fill-count slider) must not round-trip through WASM on
-  // every drag value — the program already rendered every planned piece tagged with its reveal index, so
+  // every drag value — the plugin already rendered every planned piece tagged with its reveal index, so
   // dragging only needs to move a main-thread visibility cutoff. Only the final value round-trips, once,
   // on gesture release.
   const revealGroupId = measure.reveal;
@@ -3881,7 +3881,7 @@ function windowMeasuresChrome(
 ): { readonly measures: ReactNode | undefined; readonly utilityOptions: ReactNode | undefined } {
   const { general, utilityOptions } = partitionWindowMeasures(measures ?? [], activeUtilityId);
   // 🪟 Stamps this chrome's owning `windowId` onto every measure action, mirroring `tagSetActiveUtilityWindow`
-  // for the utility bar — the generic `onAction` dispatch path reads it back out to target the program call's
+  // for the utility bar — the generic `onAction` dispatch path reads it back out to target the plugin call's
   // `view_state.windowId`, so a grid/LOD/selection toggle only ever mutates ITS OWN window's options.
   const taggedOnAction = (action: ActionDescriptor) => onAction({ ...action, args: { ...(action.args as object | undefined), windowId } });
   return {
@@ -4133,13 +4133,13 @@ export function actionCategoryId(action: Pick<ActionDefinition, "category" | "ki
 }
 
 /** 🗂️ Resolves an action category's display label: the app's own group-label overlay first, then the shared `ui.ribbon.parent.*` chrome vocabulary for known category ids, else the raw id (mirrors {@link resolveUtilityGroupLabel}). */
-function actionCategoryLabel(category: string, appLabelsOverlay: ProgramAppLabelsOverlay): string {
+function actionCategoryLabel(category: string, appLabelsOverlay: PluginAppLabelsOverlay): string {
   const fallback = CHROME_KNOWN_RIBBON_PARENT_CATEGORIES.has(category) ? shellLabel(`ui.ribbon.parent.${category as UiRibbonParentCategory}`) : category;
   return resolveAppLabel(appLabelsOverlay, "group", category, fallback);
 }
 
 /** 🗂️ Ordered, deduped categories from resolved actions (sibling of {@link commandCategories}). */
-export function actionCategories(actions: readonly ActionDefinition[], appLabelsOverlay: ProgramAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY): { readonly id: string; readonly label: string }[] {
+export function actionCategories(actions: readonly ActionDefinition[], appLabelsOverlay: PluginAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY): { readonly id: string; readonly label: string }[] {
   const seen = new Set<string>();
   const categories: { readonly id: string; readonly label: string }[] = [];
   for (const action of actions) {
@@ -4169,7 +4169,7 @@ export function buildActionCategoryTree(
   onStageArg: (actionId: string, argId: string, value: unknown) => void,
   onResetArgs: (actionId: string) => void,
   onExecute: (descriptor: ActionDescriptor) => void,
-  appLabelsOverlay: ProgramAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY,
+  appLabelsOverlay: PluginAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY,
 ): TreeDataSection[] {
   const categories = actionCategories(actions, appLabelsOverlay);
   const expandedAction = expandedActionId ? actions.find((action) => action.id === expandedActionId) : undefined;
@@ -4245,7 +4245,7 @@ export type WindowActionPaneProps = {
   readonly onStageArg: (actionId: string, argId: string, value: unknown) => void;
   readonly onResetArgs: (actionId: string) => void;
   readonly onExecute: (descriptor: ActionDescriptor) => void;
-  readonly appLabelsOverlay?: ProgramAppLabelsOverlay;
+  readonly appLabelsOverlay?: PluginAppLabelsOverlay;
 };
 
 /**
@@ -4282,7 +4282,7 @@ function windowActionPaneNode(
   actionPane: ActionPaneSlice,
   onAction: (action: ActionDescriptor) => void,
   dispatch: (action: ShellAction) => void,
-  appLabelsOverlay: ProgramAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY,
+  appLabelsOverlay: PluginAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY,
 ): ReactNode {
   const resolvedActions = resolveWindowActions(app, windowKind);
   if (resolvedActions.length === 0) return undefined;
@@ -4327,12 +4327,12 @@ export type ResolvedCommand = {
  */
 export function resolveCommands(
   osCommands: readonly CommandDefinition[],
-  activeProgramManifest: Pick<ProgramManifest, "commands"> | null | undefined,
+  activePluginManifest: Pick<PluginManifest, "commands"> | null | undefined,
   app: Pick<AppDefinition, "commands" | "modes"> | null | undefined,
   activeModeId: string,
 ): ResolvedCommand[] {
   const resolved: ResolvedCommand[] = osCommands.map((definition) => ({ definition, source: { kind: "os" as const } }));
-  for (const definition of activeProgramManifest?.commands ?? []) {
+  for (const definition of activePluginManifest?.commands ?? []) {
     resolved.push({ definition, source: { kind: "plugin" as const } });
   }
   if (!app) return resolved;
@@ -4534,7 +4534,7 @@ export function dispatchOsCommand(
   }
 }
 
-/** @emoji 🎛 Fallback icon for every command-category leaf — categories are open-set strings any program/app/mode author can invent, so there's no per-category icon metadata to key off (unlike the framework's own Workbench/Details/Display/Settings categories). */
+/** @emoji 🎛 Fallback icon for every command-category leaf — categories are open-set strings any plugin/app/mode author can invent, so there's no per-category icon metadata to key off (unlike the framework's own Workbench/Details/Display/Settings categories). */
 const COMMAND_CATEGORY_ICON = shellTabIcon("wrench");
 
 /**
@@ -4795,7 +4795,7 @@ export function mergeRecordPreservingIdentity<V>(prev: Readonly<Record<string, V
 }
 
 //#region UiRefresh
-/** @emoji 🐢 One cached section value keyed by `${section}:${key}` (e.g. `window:2d-overview`, `engagements`) — the hash is what gets sent back to the program next time so it can skip re-serializing unchanged content. */
+/** @emoji 🐢 One cached section value keyed by `${section}:${key}` (e.g. `window:2d-overview`, `engagements`) — the hash is what gets sent back to the plugin next time so it can skip re-serializing unchanged content. */
 export type UiRefreshCache = Map<string, { readonly hash: string; readonly value: unknown }>;
 
 function uiRefreshWantsWindow(scope: UiDirtyScope, bodyKey: string): boolean {
@@ -4810,7 +4810,7 @@ function uiRefreshWantsFlag(scope: UiDirtyScope, flag: "engagements" | "measures
 
 /**
  * 🪟 Every live window instance for a session — one per base `AppDefinition.windowKinds` entry (id ==
- * kind id) plus one per split/spawned extra — so `refreshUi` fetches and the program returns state for
+ * kind id) plus one per split/spawned extra — so `refreshUi` fetches and the plugin returns state for
  * every actual window, never collapsing two same-kind instances (e.g. split top/perspective panes) onto
  * one shared entry.
  */
@@ -4851,7 +4851,7 @@ export function buildActiveUtilityByWindowId(activeUtilityByWindowId: Readonly<R
 /**
  * @emoji 🐢 Builds one batched `refresh-ui` request restricted to `scope` — `null` when the scope
  * resolves to nothing worth fetching (`none`, or a `partial` whose fields all miss this app's actual
- * bodies/instances). Every requested entry carries the host's cached hash so the program can omit payloads
+ * bodies/instances). Every requested entry carries the host's cached hash so the plugin can omit payloads
  * for sections that didn't change. `windowInstances` is keyed by window INSTANCE id (base windows plus any
  * split/spawned extras) — never by window kind — so two instances of the same kind get independent
  * cache entries and independent rendered bodies.
@@ -5122,16 +5122,16 @@ export function FrameworkOsShell({
   brand,
 }: {
   readonly pluginFilter?: string;
-  readonly plugins: readonly { readonly programId: string; readonly moduleUrl: string }[];
+  readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
   readonly appId?: string;
   readonly locks?: ResolvedShellLocks;
   readonly defaults?: FrameworkOsDefaults;
   readonly brand?: ShellBrand;
 }) {
-  // 🏠🧳 `hostConfig` is the sole piece of per-program identity knowledge the shell needs (which app id is
+  // 🏠🧳 `hostConfig` is the sole piece of per-plugin identity knowledge the shell needs (which app id is
   // "landing", which is "host") — every controller id / default panel tab derives from the *loaded*
   // manifest's own `controllerId`/`panelTabs` on those apps below, never from a separate literal.
-  const hostConfig = pluginFilter ? resolveProgramHostConfig(pluginFilter) : undefined;
+  const hostConfig = pluginFilter ? resolvePluginHostConfig(pluginFilter) : undefined;
   const studioMode = hostConfig !== undefined;
   const mobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
   const locks = locksProp ?? EMPTY_SHELL_LOCKS;
@@ -5139,7 +5139,7 @@ export function FrameworkOsShell({
   const ephemeral = isEphemeralShellBrand(brand);
   const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins, locks, defaults, ephemeral }));
   const { loadedPlugins, session, error } = shellState.pluginRuntime;
-  const hostPlugin = useMemo(() => (hostConfig ? loadedPlugins.find((entry) => entry.handle.programId === hostConfig.programId) : undefined), [loadedPlugins, hostConfig]);
+  const hostPlugin = useMemo(() => (hostConfig ? loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId) : undefined), [loadedPlugins, hostConfig]);
   const hostApp = useMemo(() => hostPlugin?.manifest.apps.find((app) => app.id === hostConfig?.hostAppId), [hostPlugin, hostConfig]);
   const landingApp = useMemo(() => hostPlugin?.manifest.apps.find((app) => app.id === hostConfig?.landingAppId) ?? hostPlugin?.manifest.apps[0], [hostPlugin, hostConfig]);
   const landingAppId = hostConfig?.landingAppId;
@@ -5176,7 +5176,7 @@ export function FrameworkOsShell({
     dispatch({ type: "SET_WINDOW_ICON", windowId, iconId });
   }, []);
   // 🐢 Per-instance content-hash cache for the batched `refresh-ui` call, keyed by the same
-  // `programId:appId:instanceId` triple as `layoutSeedKeyRef` — cleared on session switch below.
+  // `pluginId:appId:instanceId` triple as `layoutSeedKeyRef` — cleared on session switch below.
   const uiRefreshCacheRef = useRef<UiRefreshCache>(new Map());
   // 🐢 Same idea for the studio-mode spawned-instance view, keyed by spawned instanceId — cleared when
   // the spawned instance itself changes (tracked via `spawnedLayoutSeedRef`).
@@ -5219,11 +5219,11 @@ export function FrameworkOsShell({
       } else if (event.kind === "remoteOperations" && entry.plugin.applyOperations) {
         void entry.plugin.applyOperations(entry.session.instanceId, JSON.stringify(event.envelopes));
         const actorUri = `actor://${message.documentId}`;
-        postPluginBackboneInbound(entry.session.programId, actorUri, [JSON.stringify({ kind: "operations", envelopes: event.envelopes })]);
+        postPluginBackboneInbound(entry.session.pluginId, actorUri, [JSON.stringify({ kind: "operations", envelopes: event.envelopes })]);
       } else if (event.kind === "snapshotReplaced" && entry.plugin.loadAppDocument) {
         void entry.plugin.loadAppDocument(entry.session.instanceId, event.envelopeJson);
         const actorUri = `actor://${message.documentId}`;
-        postPluginBackboneInbound(entry.session.programId, actorUri, [JSON.stringify({ kind: "snapshot", envelopeJson: event.envelopeJson })]);
+        postPluginBackboneInbound(entry.session.pluginId, actorUri, [JSON.stringify({ kind: "snapshot", envelopeJson: event.envelopeJson })]);
       } else if (event.kind === "conflict") {
         console.warn("[os-shell] sync conflict", message.documentId, event.message);
       }
@@ -5240,7 +5240,7 @@ export function FrameworkOsShell({
   const dockUiStateStore = useMemo(() => new DockUiStateStore(shellStorage, session?.app.id), [session?.app.id, shellStorage]);
 
   const registry = useMemo(() => {
-    const expanded = expandProgramRegistry(plugins, pluginFilter ? resolveProgramRegistryId(pluginFilter) : undefined, studioMode);
+    const expanded = expandPluginRegistry(plugins, pluginFilter ? resolvePluginRegistryId(pluginFilter) : undefined, studioMode);
     if (studioMode) return expanded;
     return pluginFilter ? expanded : plugins;
   }, [pluginFilter, plugins, studioMode]);
@@ -5481,11 +5481,11 @@ export function FrameworkOsShell({
     let cancelled = false;
     void (async () => {
       try {
-        const settled = await Promise.allSettled(registry.map((entry) => loadPluginModuleResilient(entry.programId, entry.moduleUrl)));
+        const settled = await Promise.allSettled(registry.map((entry) => loadPluginModuleResilient(entry.pluginId, entry.moduleUrl)));
         const loaded = settled.flatMap((result, index) => {
           if (result.status === "fulfilled" && result.value) return [result.value];
           if (result.status === "rejected") {
-            console.error(`[DEBUG] program rejected: ${registry[index]?.programId}`, result.reason);
+            console.error(`[DEBUG] program rejected: ${registry[index]?.pluginId}`, result.reason);
           }
           return [];
         });
@@ -5495,7 +5495,7 @@ export function FrameworkOsShell({
         dispatch({ type: "SET_LOADED_PLUGINS", value: loadedState });
 
         if (hostConfig) {
-          const sPlugin = loadedState.find((entry) => entry.handle.programId === hostConfig.programId);
+          const sPlugin = loadedState.find((entry) => entry.handle.pluginId === hostConfig.pluginId);
           const sApp = sPlugin?.manifest.apps.find((app) => app.id === hostConfig.landingAppId) ?? sPlugin?.manifest.apps[0];
           if (!sPlugin || !sApp) throw new Error("host program missing landing app");
           const programs = buildSpacePrograms(loadedState);
@@ -5510,15 +5510,15 @@ export function FrameworkOsShell({
           const seeded = applyFrameworkLayoutSeed(sApp.defaultLayout, sApp.windowKinds, EMPTY_APP_LABELS_OVERLAY);
           extraWindowInstancesRef.current = seeded.extraInstances;
           extraWindowCounterRef.current = seeded.extraInstances.length;
-          dispatch({ type: "SET_SESSION", value: { programId: sPlugin.handle.programId, instanceId, app: sApp, viewState } });
+          dispatch({ type: "SET_SESSION", value: { pluginId: sPlugin.handle.pluginId, instanceId, app: sApp, viewState } });
           dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
           dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
           dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: null });
           return;
         }
 
-        const registryPluginId = pluginFilter ? resolveProgramRegistryId(pluginFilter) : undefined;
-        const primary = (registryPluginId ? loaded.find((entry) => entry.programId === registryPluginId) : undefined) ?? loaded[0];
+        const registryPluginId = pluginFilter ? resolvePluginRegistryId(pluginFilter) : undefined;
+        const primary = (registryPluginId ? loaded.find((entry) => entry.pluginId === registryPluginId) : undefined) ?? loaded[0];
         const primaryApp = appId
           ? (() => {
               const found = primary?.manifest.apps.find((app) => app.id === appId);
@@ -5537,7 +5537,7 @@ export function FrameworkOsShell({
           dispatch({
             type: "SET_SESSION",
             value: {
-              programId: primary.programId,
+              pluginId: primary.pluginId,
               instanceId,
               app: primaryApp,
               viewState: {
@@ -5565,9 +5565,9 @@ export function FrameworkOsShell({
     (action: ActionDescriptor) => {
       const byController = loadedPlugins.find((entry) => entry.manifest.apps.some((app) => app.controllerId === action.controllerId));
       if (byController) return byController;
-      return loadedPlugins.find((entry) => entry.handle.programId === session?.programId);
+      return loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId);
     },
-    [loadedPlugins, session?.programId],
+    [loadedPlugins, session?.pluginId],
   );
 
   const refreshUi = useCallback(
@@ -5577,9 +5577,9 @@ export function FrameworkOsShell({
     async (nextSession: ActiveSession, scopeArg: UiDirtyScope = { kind: "full" }, extraInstancesOverride?: readonly ExtraWindowInstance[]) => {
       if (scopeArg.kind === "none") return;
       const generation = ++refreshGenerationRef.current;
-      const program = loadedPlugins.find((entry) => entry.handle.programId === nextSession.programId)?.handle;
+      const program = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId)?.handle;
       if (!plugin) return;
-      const layoutSeedKey = `${nextSession.programId}:${nextSession.app.id}:${nextSession.instanceId}`;
+      const layoutSeedKey = `${nextSession.pluginId}:${nextSession.app.id}:${nextSession.instanceId}`;
       const isSessionSwitch = layoutSeedKeyRef.current !== layoutSeedKey;
       // 🐢 A session switch invalidates every cached hash from the previous instance — force a full
       // fetch regardless of what scope this particular call was given.
@@ -5597,7 +5597,7 @@ export function FrameworkOsShell({
       // render-closure snapshot) so a concurrent refresh cannot drop default-layout panes.
       const extraInstancesForFetch = extraInstancesOverride ?? layoutSeed?.extraInstances ?? extraWindowInstancesRef.current;
       const windowInstances = sessionWindowInstances(nextSession.app, extraInstancesForFetch);
-      const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ programId: entry.handle.programId, manifest: entry.manifest })));
+      const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
       const viewState: ViewState = injectActiveTool({
         ...nextSession.viewState,
         contributionsJson,
@@ -5609,14 +5609,14 @@ export function FrameworkOsShell({
       });
       const panelTabLeaves = flattenPanelTabLeaves(nextSession.app.panelTabs);
       // 🐢 One batched, hash-conditional round trip replaces the old ~12 sequential
-      // render/utilities/windowEngagements/windowMeasures/appLabels calls — the program omits payloads for
+      // render/utilities/windowEngagements/windowMeasures/appLabels calls — the plugin omits payloads for
       // any section whose hash still matches what `cache` already holds.
       const request = buildUiRefreshRequest(scope, windowInstances, panelTabLeaves, viewState, cache);
       if (request) {
-        const response = await program.refreshUi(nextSession.instanceId, request);
+        const response = await plugin.refreshUi(nextSession.instanceId, request);
         if (generation !== refreshGenerationRef.current) return;
         const slotContext = {
-          plugins: new Map(loadedPlugins.map((entry) => [entry.handle.programId, entry.handle])),
+          plugins: new Map(loadedPlugins.map((entry) => [entry.handle.pluginId, entry.handle])),
           contributorInstances: contributorInstancesRef.current,
           viewState,
         };
@@ -5656,7 +5656,7 @@ export function FrameworkOsShell({
         type: "SET_TOOL_MEASURES_BY_TOOL_ID",
         value: (current) => mergeRecordPreservingIdentity(current, Object.entries(dynamicToolMeasures)),
       });
-      const freshAppLabelsOverlay = normalizeAppLabelsOverlay(cache.get("labels")?.value as Partial<ProgramAppLabelsOverlay> | undefined);
+      const freshAppLabelsOverlay = normalizeAppLabelsOverlay(cache.get("labels")?.value as Partial<PluginAppLabelsOverlay> | undefined);
       dispatch({ type: "SET_APP_LABELS_OVERLAY", value: (current) => preserveJsonIdentity(current, freshAppLabelsOverlay) });
       dispatch({
         type: "SET_PANEL_UI_BY_KEY",
@@ -5702,23 +5702,23 @@ export function FrameworkOsShell({
     async (spawned: SpawnedAppEntry, viewState: ViewState, scopeArg: UiDirtyScope = { kind: "full" }) => {
       if (scopeArg.kind === "none") return;
       const generation = ++spawnedRefreshGenerationRef.current;
-      const pluginEntry = loadedPlugins.find((entry) => entry.handle.programId === spawned.programId);
+      const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId);
       const program = pluginEntry?.handle;
       const app = pluginEntry?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
       if (!plugin || !app) {
-        console.warn("[os-shell] refreshSpawnedUi: program/app unavailable", { programId: spawned.programId, appId: spawned.appId });
-        dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: { type: "text", value: `Plugin unavailable: ${spawned.programId}/${spawned.appId}` } as UiNode });
+        console.warn("[os-shell] refreshSpawnedUi: plugin/app unavailable", { pluginId: spawned.pluginId, appId: spawned.appId });
+        dispatch({ type: "SET_SPAWNED_WINDOW_UI", value: { type: "text", value: `Plugin unavailable: ${spawned.pluginId}/${spawned.appId}` } as UiNode });
         dispatch({ type: "SET_SPAWNED_WINDOW_ENGAGEMENTS", value: {} });
         dispatch({ type: "SET_SPAWNED_WINDOW_MEASURES", value: {} });
         return;
       }
-      const spawnedSeed = `${spawned.programId}:${spawned.appId}:${spawned.instanceId}`;
+      const spawnedSeed = `${spawned.pluginId}:${spawned.appId}:${spawned.instanceId}`;
       if (spawnedLayoutSeedRef.current !== spawnedSeed) {
         spawnedLayoutSeedRef.current = spawnedSeed;
         spawnedUiRefreshCacheRef.current = new Map();
       }
       const cache = spawnedUiRefreshCacheRef.current;
-      const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ programId: entry.handle.programId, manifest: entry.manifest })));
+      const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
       const bodyKey = resolveCanvasBodyKey(app);
       const fullViewState: ViewState = injectActiveUtility(
         { ...viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology, windowId: bodyKey, windowInstances: [{ id: bodyKey, windowKindId: bodyKey }] },
@@ -5730,7 +5730,7 @@ export function FrameworkOsShell({
       const singleWindowKind = [{ id: bodyKey, bodyKey }];
       const request = buildUiRefreshRequest({ kind: "full" }, singleWindowKind, [], fullViewState, cache);
       if (request) {
-        const response = await program.refreshUi(spawned.instanceId, request);
+        const response = await plugin.refreshUi(spawned.instanceId, request);
         if (generation !== spawnedRefreshGenerationRef.current) return;
         applyUiRefreshResponseToCache(cache, response);
       }
@@ -5744,11 +5744,11 @@ export function FrameworkOsShell({
     [injectActiveUtility, loadedPlugins, uiLocale, uiTerminology],
   );
 
-  // 🐢 Keyed on the programId/app/instance triple (not `session` object identity) so this only fires on
+  // 🐢 Keyed on the pluginId/app/instance triple (not `session` object identity) so this only fires on
   // a genuine session switch (app open/spawn/instance change) — every other action already calls
   // `refreshUi` explicitly via `applyHostEffects`, and re-running it here too on every `session` object
   // churn was a second, redundant full-shell refresh cascade per interaction.
-  const sessionIdentityKey = session ? `${session.programId}:${session.app.id}:${session.instanceId}` : null;
+  const sessionIdentityKey = session ? `${session.pluginId}:${session.app.id}:${session.instanceId}` : null;
   useEffect(() => {
     const current = sessionRef.current;
     if (!current) return;
@@ -5792,10 +5792,10 @@ export function FrameworkOsShell({
   // or host app by id (both resolved via `hostConfig`, never a specific app's identity).
   const switchToManagedApp = useCallback(
     async (appId: string, viewState?: ViewState): Promise<ActiveSession | null> => {
-      const sPlugin = hostConfig ? loadedPlugins.find((entry) => entry.handle.programId === hostConfig.programId) : undefined;
+      const sPlugin = hostConfig ? loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId) : undefined;
       const app = sPlugin?.manifest.apps.find((candidate) => candidate.id === appId);
       if (!sPlugin || !app) return null;
-      if (session?.programId === sPlugin.handle.programId && session.app.id === appId) {
+      if (session?.pluginId === sPlugin.handle.pluginId && session.app.id === appId) {
         if (!viewState) return session;
         const nextSession: ActiveSession = { ...session, viewState };
         dispatch({ type: "SET_SESSION", value: nextSession });
@@ -5808,7 +5808,7 @@ export function FrameworkOsShell({
         activeModeId: app.defaultModeId ?? app.modes[0]?.id,
         panelJson: panelJsonFromState(buildSpacePanelState(programs, [])),
       };
-      const nextSession: ActiveSession = { programId: sPlugin.handle.programId, instanceId, app, viewState: nextViewState };
+      const nextSession: ActiveSession = { pluginId: sPlugin.handle.pluginId, instanceId, app, viewState: nextViewState };
       dispatch({ type: "SET_SESSION", value: nextSession });
       const seeded = applyFrameworkLayoutSeed(app.defaultLayout, app.windowKinds, appLabelsOverlay);
       extraWindowInstancesRef.current = seeded.extraInstances;
@@ -5829,7 +5829,7 @@ export function FrameworkOsShell({
   const syncSpawnedPluginDocument = useCallback(async (plugin: PluginWasmHandle, app: AppDefinition, pluginInstanceId: number, documentJson: string, viewState: ViewState) => {
     try {
       const document = JSON.parse(documentJson) as Record<string, unknown>;
-      await program.handleAction(pluginInstanceId, JSON.stringify({ controllerId: app.controllerId, action: "setDocument", args: { document } }), viewState);
+      await plugin.handleAction(pluginInstanceId, JSON.stringify({ controllerId: app.controllerId, action: "setDocument", args: { document } }), viewState);
     } catch (syncError) {
       console.error("[DEBUG] spawned program document sync failed", syncError);
     }
@@ -5837,11 +5837,11 @@ export function FrameworkOsShell({
 
   const ensureSpawnedPlugin = useCallback(
     async (program: SpaceProgramEntry, label?: string, osInstanceId?: string, documentJson?: string, sourceViewState?: ViewState): Promise<SpacePanelState | null> => {
-      const pluginEntry = loadedPlugins.find((entry) => entry.handle.programId === program.programId);
+      const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === program.pluginId);
       if (!pluginEntry || !session) return null;
       const app = pluginEntry.manifest.apps.find((candidate) => candidate.id === program.appId);
       const currentPanel = parsePanelState(sourceViewState ?? session.viewState) ?? buildSpacePanelState(buildSpacePrograms(loadedPlugins), []);
-      const existing = osInstanceId ? currentPanel.spawnedApps.find((entry) => entry.id === osInstanceId) : currentPanel.spawnedApps.find((entry) => entry.appId === program.appId && entry.programId === program.programId);
+      const existing = osInstanceId ? currentPanel.spawnedApps.find((entry) => entry.id === osInstanceId) : currentPanel.spawnedApps.find((entry) => entry.appId === program.appId && entry.pluginId === program.pluginId);
       if (existing) {
         if (documentJson && app) {
           await syncSpawnedPluginDocument(pluginEntry.handle, app, existing.instanceId, documentJson, sourceViewState ?? session.viewState);
@@ -5852,10 +5852,10 @@ export function FrameworkOsShell({
       if (documentJson && app) {
         await syncSpawnedPluginDocument(pluginEntry.handle, app, instanceId, documentJson, sourceViewState ?? session.viewState);
       }
-      const spawnedId = osInstanceId ?? `${program.programId}-${instanceId}`;
+      const spawnedId = osInstanceId ?? `${program.pluginId}-${instanceId}`;
       return studioPanelFocusingSpawned(currentPanel, {
         id: spawnedId,
-        programId: program.programId,
+        pluginId: program.pluginId,
         instanceId,
         appId: program.appId,
         label: label ?? program.label,
@@ -5866,7 +5866,7 @@ export function FrameworkOsShell({
   );
 
   /**
-   * 🐚 Consumes a program action's typed `requestedEffects: HostEffect[]` (WS-D's `InvocationResponse`) —
+   * 🐚 Consumes a plugin action's typed `requestedEffects: HostEffect[]` (WS-D's `InvocationResponse`) —
    * replaces the deleted `processPluginOperations` string-matching. The legacy `setDocument`-mirror
    * backbone-write block is gone entirely: document content sync now flows through
    * `openDocument`/`closeDocument`'s worker-backed `DocumentHost` lifecycle, not a per-operation JS mirror.
@@ -5921,12 +5921,12 @@ export function FrameworkOsShell({
           continue;
         }
         if ("loadDocument" in effect) {
-          const pluginEntry = loadedPlugins.find((entry) => entry.handle.programId === baseSession.programId);
+          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
           if (pluginEntry?.handle.loadAppDocument) {
             console.log("[DEBUG] loadDocument for instance", baseSession.instanceId, "bytes", effect.loadDocument.documentJson.length);
             await pluginEntry.handle.loadAppDocument(baseSession.instanceId, effect.loadDocument.documentJson);
           } else {
-            console.error("[os-shell] loadDocument: program has no loadAppDocument", baseSession.programId);
+            console.error("[os-shell] loadDocument: program has no loadAppDocument", baseSession.pluginId);
           }
           continue;
         }
@@ -5954,24 +5954,24 @@ export function FrameworkOsShell({
           const { accept, readAs, importAction, multiple } = effect.requestFileOpen;
           const opened = await requestFileOpen(accept || ".json,.spatial.json", readAs, multiple);
           if (opened.length > 0) {
-            const pluginEntry = loadedPlugins.find((entry) => entry.handle.programId === baseSession.programId);
+            const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
             if (pluginEntry) {
               // 📤 Single-file (multiple absent/false): identical to the pre-multi-select shape, one
               // `handleAction` call with `{payload, name}`. Multi-file: one sequential call per selected
-              // file, each extending args with `{index, total}` so the program can stage/merge imports.
+              // file, each extending args with `{index, total}` so the plugin can stage/merge imports.
               await dispatchOpenedFiles(opened, importAction, Boolean(multiple), makeEffectDispatchOne(pluginEntry, baseSession, applyHostEffects));
             }
           }
           continue;
         }
         if ("dispatchAction" in effect) {
-          // 🔁 Self re-dispatch (D2): re-invokes the same program instance with `action` after `delayMs`,
+          // 🔁 Self re-dispatch (D2): re-invokes the same plugin instance with `action` after `delayMs`,
           // without blocking the current `applyHostEffects` pass — `setTimeout` (0 is "next tick") fires
           // the follow-up call and feeds its own `requestedEffects` back through `applyHostEffects`
-          // recursively, so a program can chain several ticks of staged/progressive work (e.g. a
+          // recursively, so a plugin can chain several ticks of staged/progressive work (e.g. a
           // multi-pass reconstruction) purely by re-emitting `dispatchAction` from its own handler.
           const { action: dispatchActionId, args: dispatchArgs, delayMs } = effect.dispatchAction;
-          const pluginEntry = loadedPlugins.find((entry) => entry.handle.programId === baseSession.programId);
+          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
           if (pluginEntry) {
             scheduleDispatchAction(dispatchActionId, dispatchArgs as Record<string, unknown> | undefined, delayMs, makeEffectDispatchOne(pluginEntry, baseSession, applyHostEffects));
           }
@@ -5983,7 +5983,7 @@ export function FrameworkOsShell({
           // every other effect branch — see `runRequestMediaFrames` for the Tier 1 (WebCodecs)/Tier 2
           // (`<video>` seek-and-capture)/fallback decision tree.
           const { accept, payload, frameAction, doneAction, fallbackAction, sampleStride, maxFrames, maxLongEdgePx, fpsHint, args } = effect.requestMediaFrames;
-          const pluginEntry = loadedPlugins.find((entry) => entry.handle.programId === baseSession.programId);
+          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
           if (pluginEntry) {
             await runRequestMediaFrames(
               {
@@ -6004,10 +6004,10 @@ export function FrameworkOsShell({
           continue;
         }
         if ("spawnPluginInstance" in effect) {
-          const { programId, appId, osInstanceId, label, documentJson } = effect.spawnPluginInstance;
+          const { pluginId, appId, osInstanceId, label, documentJson } = effect.spawnPluginInstance;
           const currentPanel = parsePanelState(nextViewState) ?? buildSpacePanelState(buildSpacePrograms(loadedPlugins), []);
           const catalog = currentPanel.programs.length > 0 ? currentPanel.workflows : buildSpacePrograms(loadedPlugins);
-          const program = catalog.find((entry) => entry.programId === programId && entry.appId === appId) ?? catalog.find((entry) => entry.programId === programId);
+          const program = catalog.find((entry) => entry.pluginId === pluginId && entry.appId === appId) ?? catalog.find((entry) => entry.pluginId === pluginId);
           if (program) {
             // 🪟 Fold spawn into `nextViewState` — a separate SET_SESSION would be clobbered by the
             // final write below and leave the shell stuck on the studio surface.
@@ -6017,10 +6017,10 @@ export function FrameworkOsShell({
           continue;
         }
         if ("openPluginInstance" in effect) {
-          const { programId, appId, osInstanceId } = effect.openPluginInstance;
+          const { pluginId, appId, osInstanceId } = effect.openPluginInstance;
           const currentPanel = parsePanelState(nextViewState) ?? buildSpacePanelState(buildSpacePrograms(loadedPlugins), []);
           const catalog = currentPanel.programs.length > 0 ? currentPanel.workflows : buildSpacePrograms(loadedPlugins);
-          const program = catalog.find((entry) => entry.programId === programId && entry.appId === appId) ?? catalog.find((entry) => entry.programId === programId);
+          const program = catalog.find((entry) => entry.pluginId === pluginId && entry.appId === appId) ?? catalog.find((entry) => entry.pluginId === pluginId);
           if (program) {
             // 🪟 Fold focus into `nextViewState` so the final SET_SESSION keeps `activeSpawnedId`
             // (opening a workflow node depends on this — otherwise nothing appears to happen).
@@ -6028,7 +6028,7 @@ export function FrameworkOsShell({
             if (nextPanel) {
               nextViewState = viewStateWithSpacePanel(nextViewState, nextPanel);
               console.log("[DEBUG] openPluginInstance focused spawned app", {
-                programId,
+                pluginId,
                 appId,
                 osInstanceId,
                 activeSpawnedId: nextPanel.activeSpawnedId,
@@ -6042,16 +6042,16 @@ export function FrameworkOsShell({
           } else {
             console.warn(
               "[os-shell] openPluginInstance: no program matches",
-              { programId, appId },
+              { pluginId, appId },
               "available:",
-              catalog.map((entry) => `${entry.programId}/${entry.appId}`),
+              catalog.map((entry) => `${entry.pluginId}/${entry.appId}`),
             );
           }
           continue;
         }
       }
       const nextSession = { ...baseSession, viewState: nextViewState };
-      const isSpawnedPluginSession = studioMode && session && baseSession.programId !== session.programId;
+      const isSpawnedPluginSession = studioMode && session && baseSession.pluginId !== session.pluginId;
       dispatch({
         type: "SET_SESSION",
         value: (current) => {
@@ -6066,7 +6066,7 @@ export function FrameworkOsShell({
         },
       });
       if (isSpawnedPluginSession) {
-        const spawned = parsePanelState(nextViewState)?.spawnedApps.find((entry) => entry.programId === baseSession.programId && entry.instanceId === baseSession.instanceId);
+        const spawned = parsePanelState(nextViewState)?.spawnedApps.find((entry) => entry.pluginId === baseSession.pluginId && entry.instanceId === baseSession.instanceId);
         if (spawned) await refreshSpawnedUi(spawned, nextViewState, uiScope);
       } else if (session?.instanceId === nextSession.instanceId || baseSession.instanceId === nextSession.instanceId) {
         await refreshUi(nextSession, uiScope);
@@ -6081,7 +6081,7 @@ export function FrameworkOsShell({
       if (!hostConfig || !currentSession || loadedPlugins.length === 0) return;
       const path = uri.split("?")[0] ?? "/";
       const studioPath = parseSpaceShellPath(path);
-      const sPlugin = loadedPlugins.find((entry) => entry.handle.programId === hostConfig.programId)?.handle;
+      const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId)?.handle;
       if (!sPlugin) return;
       if (!studioPath) {
         openSpaceIdRef.current = null;
@@ -6130,8 +6130,8 @@ export function FrameworkOsShell({
     if (studioMode && panel?.activeSpawnedId) {
       const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
       if (spawned) {
-        const app = loadedPlugins.find((entry) => entry.handle.programId === spawned.programId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
-        if (app) return { programId: spawned.programId, instanceId: spawned.instanceId, app, viewState: session.viewState };
+        const app = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
+        if (app) return { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: session.viewState };
       }
     }
     return session;
@@ -6140,7 +6140,7 @@ export function FrameworkOsShell({
   /**
    * 🧵 `openDocument(ref, bindings)` — replaces `attachSyncBackbone`'s URI-string mirror. Spins up (or
    * reuses) `backbone-worker.ts`, tells it to open the document, subscribes to its postMessage events,
-   * and calls the program instance's `attachBackbone`/`loadAppDocument` WIT-exported methods (WS-D) so
+   * and calls the plugin instance's `attachBackbone`/`loadAppDocument` WIT-exported methods (WS-D) so
    * the plugin-side store starts pumping through the same logical channel. The `actor://<documentId>`
    * uri mirrors `framework/sync`'s `ChannelBackbone::pair` convention on the Rust side.
    *
@@ -6154,7 +6154,7 @@ export function FrameworkOsShell({
     async (ref: { readonly documentId: string; readonly schema: string }, bindings: readonly PersistenceBinding[]) => {
       const targetSession = resolveSyncTargetSession();
       if (!targetSession) return;
-      const program = loadedPlugins.find((entry) => entry.handle.programId === targetSession.programId)?.handle;
+      const program = loadedPlugins.find((entry) => entry.handle.pluginId === targetSession.pluginId)?.handle;
       if (!plugin) return;
       const worker = ensureBackboneWorker();
       openDocumentSessionsRef.current.set(ref.documentId, { session: targetSession, program });
@@ -6168,7 +6168,7 @@ export function FrameworkOsShell({
       };
       worker.postMessage(request);
       const uri = `actor://${ref.documentId}`;
-      if (plugin.attachBackbone) await program.attachBackbone(targetSession.instanceId, uri);
+      if (plugin.attachBackbone) await plugin.attachBackbone(targetSession.instanceId, uri);
       dispatch({ type: "SET_SYNC_BACKBONE_URI", value: uri });
       dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
     },
@@ -6217,15 +6217,15 @@ export function FrameworkOsShell({
 
   const spawnProgram = useCallback(
     async (program: SpaceProgramEntry) => {
-      const pluginEntry = loadedPlugins.find((entry) => entry.handle.programId === program.programId);
+      const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === program.pluginId);
       if (!pluginEntry || !session) return;
       const instanceId = await pluginEntry.handle.createApp(program.appId);
       const currentPanel = parsePanelState(session.viewState) ?? buildSpacePanelState(buildSpacePrograms(loadedPlugins), []);
-      const spawnedId = `${program.programId}-${instanceId}`;
+      const spawnedId = `${program.pluginId}-${instanceId}`;
       updateSpacePanel(
         studioPanelFocusingSpawned(currentPanel, {
           id: spawnedId,
-          programId: program.programId,
+          pluginId: program.pluginId,
           instanceId,
           appId: program.appId,
           label: program.label,
@@ -6302,7 +6302,7 @@ export function FrameworkOsShell({
       // 🧰 Utility activation (P5): host-owned session state, never a document operation. Re-clicking the active
       // utility (or an empty utilityId) deactivates. We resolve the target window from the descriptor's tagged
       // `windowId` (see `tagSetActiveUtilityWindow`), falling back to the active window, update the store,
-      // then forward the resolved utility to the program so it can clear/prepare scratch.
+      // then forward the resolved utility to the plugin so it can clear/prepare scratch.
       if (action.action === SET_ACTIVE_UTILITY_ACTION_ID) {
         const args = typeof action.args === "object" && action.args != null ? (action.args as { utilityId?: unknown; windowId?: unknown }) : {};
         const windowId = typeof args.windowId === "string" && args.windowId ? args.windowId : (activeWindowIdRef.current ?? "");
@@ -6404,10 +6404,10 @@ export function FrameworkOsShell({
       }
 
       if (studioMode && action.action === "spawnApp" && action.controllerId !== hostControllerId) {
-        const programId = typeof action.args === "object" && action.args != null && "programId" in action.args ? String((action.args as { programId?: string }).programId ?? "") : "";
-        const programId = typeof action.args === "object" && action.args != null && "programId" in action.args ? String((action.args as { programId?: string }).programId ?? "") : "";
+        const pluginId = typeof action.args === "object" && action.args != null && "pluginId" in action.args ? String((action.args as { pluginId?: string }).pluginId ?? "") : "";
+        const pluginId = typeof action.args === "object" && action.args != null && "pluginId" in action.args ? String((action.args as { pluginId?: string }).pluginId ?? "") : "";
         const currentPanel = parsePanelState(session.viewState);
-        const program = currentPanel?.programs.find((entry) => entry.programId === programId && entry.programId === programId);
+        const program = currentPanel?.programs.find((entry) => entry.pluginId === pluginId && entry.pluginId === pluginId);
         if (program) void spawnProgram(program);
         return;
       }
@@ -6427,13 +6427,13 @@ export function FrameworkOsShell({
         studioMode && action.controllerId !== session.app.controllerId
           ? (() => {
               const spawned = panel?.spawnedApps.find((entry) => {
-                const app = loadedPlugins.find((p) => p.handle.programId === entry.programId)?.manifest.apps.find((a) => a.id === entry.appId);
+                const app = loadedPlugins.find((p) => p.handle.pluginId === entry.pluginId)?.manifest.apps.find((a) => a.id === entry.appId);
                 return app?.controllerId === action.controllerId;
               });
               if (!spawned) return session;
-              const app = loadedPlugins.find((p) => p.handle.programId === spawned.programId)?.manifest.apps.find((a) => a.id === spawned.appId);
+              const app = loadedPlugins.find((p) => p.handle.pluginId === spawned.pluginId)?.manifest.apps.find((a) => a.id === spawned.appId);
               if (!app) return session;
-              return { programId: spawned.programId, instanceId: spawned.instanceId, app, viewState: session.viewState };
+              return { pluginId: spawned.pluginId, instanceId: spawned.instanceId, app, viewState: session.viewState };
             })()
           : session;
 
@@ -6443,7 +6443,7 @@ export function FrameworkOsShell({
       // sync now goes through its own `openDocument`-opened `DocumentHost` channel, same as any other
       // document; there is no host-side JS mirroring step anymore.
       // 🪟 `windowId` is read back off the tagged `action.args` (see `windowMeasuresChrome`/`tagSetActiveUtilityWindow`),
-      // falling back to the active window — stamped into the dispatched view state so the program can key any
+      // falling back to the active window — stamped into the dispatched view state so the plugin can key any
       // per-window option mutation off `view_state.windowId` instead of ever guessing at the active window.
       const actionWindowId = typeof action.args === "object" && action.args != null && typeof (action.args as { windowId?: unknown }).windowId === "string" ? (action.args as { windowId: string }).windowId : undefined;
       const dispatchWindowId = actionWindowId ?? activeWindowIdRef.current ?? undefined;
@@ -6534,7 +6534,7 @@ export function FrameworkOsShell({
     const previousId = prevActiveTutorialIdRef.current;
     prevActiveTutorialIdRef.current = activeTutorialId;
     if (previousId === activeTutorialId || !session) return;
-    const program = loadedPlugins.find((entry) => entry.handle.programId === session.programId)?.handle;
+    const program = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
     if (!plugin) return;
     if (activeTutorialId) {
       const def = activeTutorials.find((tutorial) => tutorial.id === activeTutorialId);
@@ -6542,12 +6542,12 @@ export function FrameworkOsShell({
       tutorialDrivenRef.current = true;
       void (async () => {
         try {
-          if (plugin.readAppDocument) tutorialDocumentSnapshotRef.current = await program.readAppDocument(session.instanceId);
+          if (plugin.readAppDocument) tutorialDocumentSnapshotRef.current = await plugin.readAppDocument(session.instanceId);
         } catch (snapshotError) {
           console.error("[DEBUG] tutorial sandbox snapshot failed", snapshotError);
         }
         try {
-          if (def.base.documentJson && program.loadAppDocument) await program.loadAppDocument(session.instanceId, def.base.documentJson);
+          if (def.base.documentJson && program.loadAppDocument) await plugin.loadAppDocument(session.instanceId, def.base.documentJson);
           else if (def.base.exampleId) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: def.base.exampleId });
         } catch (loadError) {
           console.error("[DEBUG] tutorial base document load failed", loadError);
@@ -6564,7 +6564,7 @@ export function FrameworkOsShell({
       void (async () => {
         try {
           const snapshotJson = tutorialDocumentSnapshotRef.current;
-          if (snapshotJson && program.loadAppDocument) await program.loadAppDocument(session.instanceId, snapshotJson);
+          if (snapshotJson && program.loadAppDocument) await plugin.loadAppDocument(session.instanceId, snapshotJson);
         } catch (restoreError) {
           console.error("[DEBUG] tutorial sandbox restore failed", restoreError);
         }
@@ -6576,7 +6576,7 @@ export function FrameworkOsShell({
   }, [activeTutorialId, activeTutorials, session, loadedPlugins, tutorialClock, refreshUi]);
 
   /** 🎬 Applies every entry of one `TutorialSlice` (a director tick or a seek span) onto the live
-   * session — UI changes first, then document-track entries through the program bridge: `Edit` via
+   * session — UI changes first, then document-track entries through the plugin bridge: `Edit` via
    * `applyOperations` (forward/backward per `slice.forward`), `Load` via `loadAppDocument`,
    * `Undo`/`Redo`/`Checkpoint`/`CheckoutCheckpoint`/`SwitchAlternative` via the SAME History-action
    * `onAction` funnel the app's own undo/redo buttons dispatch through (never a bespoke channel) — then
@@ -6584,18 +6584,18 @@ export function FrameworkOsShell({
   const applyTutorialSliceToShell = useCallback(
     async (slice: TutorialSlice, activeSession: ActiveSession) => {
       for (const change of slice.uiChanges) applyTutorialUiChangeToShell(dispatch, change, uiBridgeCtxRef.current);
-      const program = loadedPlugins.find((entry) => entry.handle.programId === activeSession.programId)?.handle;
+      const program = loadedPlugins.find((entry) => entry.handle.pluginId === activeSession.pluginId)?.handle;
       let documentTouched = false;
       for (const documentEvent of slice.document) {
         const kind: TutorialDocumentEventKind = documentEvent.kind;
         if (kind.kind === "edit") {
           documentTouched = true;
           const operations = slice.forward ? kind.forwards : kind.backwards;
-          if (plugin?.applyOperations) await program.applyOperations(activeSession.instanceId, JSON.stringify(operations));
+          if (plugin?.applyOperations) await plugin.applyOperations(activeSession.instanceId, JSON.stringify(operations));
         } else if (kind.kind === "load") {
           documentTouched = true;
           const documentJson = slice.forward ? kind.documentJson : kind.previousJson;
-          if (plugin?.loadAppDocument) await program.loadAppDocument(activeSession.instanceId, documentJson);
+          if (plugin?.loadAppDocument) await plugin.loadAppDocument(activeSession.instanceId, documentJson);
         } else if (kind.kind === "undo") {
           onActionRef.current({ controllerId: activeSession.app.controllerId, action: slice.forward ? "undo" : "redo" });
         } else if (kind.kind === "redo") {
@@ -6660,7 +6660,7 @@ export function FrameworkOsShell({
       tutorialDrivenRef.current = true;
       void (async () => {
         applyTutorialUiSnapshotToShell(dispatch, composeTutorialUi(def, clamped), uiBridgeCtxRef.current);
-        const program = loadedPlugins.find((entry) => entry.handle.programId === session.programId)?.handle;
+        const program = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
         const slice = tutorialSlice(def, from, clamped);
         let documentTouched = false;
         for (const documentEvent of slice.document) {
@@ -6668,11 +6668,11 @@ export function FrameworkOsShell({
           if (kind.kind === "edit") {
             documentTouched = true;
             const operations = slice.forward ? kind.forwards : kind.backwards;
-            if (plugin?.applyOperations) await program.applyOperations(session.instanceId, JSON.stringify(operations));
+            if (plugin?.applyOperations) await plugin.applyOperations(session.instanceId, JSON.stringify(operations));
           } else if (kind.kind === "load") {
             documentTouched = true;
             const documentJson = slice.forward ? kind.documentJson : kind.previousJson;
-            if (plugin?.loadAppDocument) await program.loadAppDocument(session.instanceId, documentJson);
+            if (plugin?.loadAppDocument) await plugin.loadAppDocument(session.instanceId, documentJson);
           }
           // 🚧 Undo/Redo/Checkpoint/CheckoutCheckpoint/SwitchAlternative crossings mid-seek are an honest
           // scope cut here (replaying a crossed history op out of its natural live-dispatch order is
@@ -6772,10 +6772,10 @@ export function FrameworkOsShell({
       return;
     }
     void (async () => {
-      const program = loadedPlugins.find((entry) => entry.handle.programId === session.programId)?.handle;
+      const program = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
       let documentJson: string | null = null;
       try {
-        if (plugin?.readAppDocument) documentJson = await program.readAppDocument(session.instanceId);
+        if (plugin?.readAppDocument) documentJson = await plugin.readAppDocument(session.instanceId);
       } catch (captureError) {
         console.error("[DEBUG] tutorial recorder base capture failed", captureError);
       }
@@ -7180,7 +7180,7 @@ export function FrameworkOsShell({
       appId: session?.app.id,
       appLabel: session ? appDocumentLabel(resolveAppDocument(session.app, uiTerminology)) : undefined,
       controllerId: session?.app.controllerId,
-      programId: session?.programId,
+      pluginId: session?.pluginId,
       driverId: uiDriverId,
       driver: uiDriverBase,
       driverDirty: uiDriverDirty,
@@ -7383,7 +7383,7 @@ export function FrameworkOsShell({
   const settingsRightTabs = useMemo((): PanelTabNode[] => frameworkSettingsTabs, [frameworkSettingsTabs]);
 
   //#region 🧰FooterUtilityLeaves — bottom-right's History tab, now sourced from the framework-owned History
-  // actions in the app registry (the program `list-tools` surface is gone; the per-window Actions rail
+  // actions in the app registry (the plugin `list-tools` surface is gone; the per-window Actions rail
   // replaces the old footer Actions tab entirely per P6).
   const frameworkUtilitiesHistoryTab = useMemo((): PanelTabNode | null => {
     if (!session) return null;
@@ -7443,7 +7443,7 @@ export function FrameworkOsShell({
   }, [attachSyncBackbone, detachSyncBackbone, onAction, syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId, uiLocale]);
   //#endregion 🔄SyncLeaf
 
-  const activeProgramManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.programId === session?.programId)?.manifest, [loadedPlugins, session?.programId]);
+  const activePluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest, [loadedPlugins, session?.pluginId]);
   const activeModeId = session?.viewState.activeModeId ?? session?.app.modes[0]?.id ?? session?.app.id ?? "";
 
   // 📱 Moved ahead of `mobilePanelTabs` (below) so its synthetic mobile "App" tab can share the exact
@@ -7452,7 +7452,7 @@ export function FrameworkOsShell({
     const appId = session?.app.id ?? "";
     if (!appId) return [];
     const seen = new Set<string>();
-    return (activeProgramManifest?.examples ?? [])
+    return (activePluginManifest?.examples ?? [])
       .filter((example) => example.appId === appId)
       .filter((example) => {
         if (seen.has(example.id)) return false;
@@ -7460,7 +7460,7 @@ export function FrameworkOsShell({
         return true;
       })
       .map((example) => ({ id: example.id, label: resolveAppLabel(appLabelsOverlay, "example", example.id, example.label) }));
-  }, [activeProgramManifest, session?.app.id, appLabelsOverlay]);
+  }, [activePluginManifest, session?.app.id, appLabelsOverlay]);
 
   /** @emoji 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
   const exampleSelectElement = useMemo(() => {
@@ -7502,13 +7502,13 @@ export function FrameworkOsShell({
     );
   }, [session, activeModeId, applyModeChange, appLabelsOverlay]);
 
-  const resolvedCommands = useMemo(() => resolveCommands(osCommands, activeProgramManifest, session?.app, activeModeId), [osCommands, activeProgramManifest, session?.app, activeModeId]);
+  const resolvedCommands = useMemo(() => resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId), [osCommands, activePluginManifest, session?.app, activeModeId]);
 
   const commandCategoryList = useMemo(() => commandCategories(resolvedCommands), [resolvedCommands, uiLocale]);
 
   /**
    * 🎛 Dispatches a resolved command: os-scope commands are handled locally (no program round trip);
-   * program/app/mode-scope commands route through the active session's program `handleCommand`, mirroring
+   * plugin/app/mode-scope commands route through the active session's program `handleCommand`, mirroring
    * `onAction`'s tail. Plugin commands are only resolvable/dispatchable for the active session's program
    * instance (no headless-instance routing for non-focused plugins yet).
    */
@@ -7516,7 +7516,7 @@ export function FrameworkOsShell({
     (source: ResolvedCommand["source"], commandId: string, args?: Record<string, unknown>) => {
       // 🎥 Same sandbox-start/recorder-arm side effects `START_TUTORIAL_ACTION_ID`/`RECORD_TUTORIAL_ACTION_ID`
       // need — routed through the `startTutorialRef`/`toggleTutorialRecordingRef` bridge since they need
-      // more context (program bridge, sandbox snapshot) than a bare `dispatch` gives `dispatchOsCommand`.
+      // more context (plugin bridge, sandbox snapshot) than a bare `dispatch` gives `dispatchOsCommand`.
       if (source.kind === "os" && commandId === "os.playTutorial") {
         const tutorialId = typeof args?.tutorialId === "string" ? args.tutorialId : "";
         if (tutorialId) startTutorialRef.current(tutorialId);
@@ -7531,11 +7531,11 @@ export function FrameworkOsShell({
         return;
       }
       if (!session) return;
-      // ⏺️ Recorder tap for program/app/mode-scope commands — mirrors `onAction`'s tap above.
+      // ⏺️ Recorder tap for plugin/app/mode-scope commands — mirrors `onAction`'s tap above.
       if (tutorialRecordingRef.current && !tutorialDrivenRef.current) {
         tutorialRecorderRef.current?.recordEvent({ kind: "command", command: commandId, args });
       }
-      const program = loadedPlugins.find((entry) => entry.handle.programId === session.programId)?.handle;
+      const program = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
       if (!plugin?.handleCommand) return;
       const dispatchViewState = injectActiveUtility(session.viewState);
       void program
@@ -7965,10 +7965,10 @@ export function FrameworkOsShell({
   useEffect(() => {
     if (exampleOptions.length === 0) return;
     dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: (current) => (!current || exampleOptions.some((option) => option.id === current) ? current : "") });
-  }, [exampleOptions, session?.app.id, session?.programId]);
+  }, [exampleOptions, session?.app.id, session?.pluginId]);
 
   // 🎛️ Announces the boot example to the fresh session exactly once per instance. When nothing is
-  // locked/defaulted, seed the first registered example so the dropdown matches the program default
+  // locked/defaulted, seed the first registered example so the dropdown matches the plugin default
   // document (e.g. procedural3d hexagonal column) — same rule as wgpu `sync_session_chrome`.
   // Studio-mode routes load documents via `applyShellUri`/`openSpace`; never boot-override those.
   useEffect(() => {
@@ -8142,7 +8142,7 @@ export function FrameworkOsShell({
         onSelect: () => onAction(binding.action),
       });
     }
-    // 🎛️ Commands (os/program/app/mode) — the footer twin of the window-rail P3 redirect above: an
+    // 🎛️ Commands (os/plugin/app/mode) — the footer twin of the window-rail P3 redirect above: an
     // arg-carrying command never fires from the palette, it opens the bottom-middle command panel at its
     // category and expands its form instead.
     for (const { definition, source } of resolvedCommands) {
@@ -8176,10 +8176,10 @@ export function FrameworkOsShell({
     if (studioMode && panel) {
       for (const program of panel.programs) {
         items.push({
-          id: `spawn.${program.programId}`,
+          id: `spawn.${program.pluginId}`,
           label: `${shellLabel("ui.palette.spawnPrefix")} ${appDocumentLabel(resolveDocumentByAppId(loadedPlugins, program.appId, program.document, uiTerminology))}`,
           category: shellLabel("ui.search.category.catalogue"),
-          onSelect: () => onAction({ controllerId: hostControllerId ?? "", action: "spawnApp", args: { programId: program.programId } }),
+          onSelect: () => onAction({ controllerId: hostControllerId ?? "", action: "spawnApp", args: { pluginId: program.pluginId } }),
         });
       }
       items.push(
@@ -8230,7 +8230,7 @@ export function FrameworkOsShell({
     if (studioMode && spawnedWindowUi && panel?.activeSpawnedId) {
       const spawned = panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId);
       if (spawned) {
-        const spawnedApp = loadedPlugins.find((entry) => entry.handle.programId === spawned.programId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
+        const spawnedApp = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
         const windowKind = spawnedApp?.windowKinds[0];
         const chrome = windowKind ? spawnedWindowChromeForKind(windowKind, spawned.id, spawnedWindowEngagements, spawnedWindowMeasures, activeUtilityByWindowId[spawned.id], onActionStable) : undefined;
         const spawnedUtilities = spawnedApp && windowKind ? resolveUtilityNodes(spawnedApp, windowKind, activeUtilityByWindowId[spawned.id], spawned.id, appLabelsOverlay) : [];
@@ -8621,12 +8621,12 @@ export function FrameworkOsShell({
 //#region 🔖plugin-runtime
 
 export type PluginWasmHandle = {
-  readonly programId: string;
-  readonly manifest: ProgramManifest;
+  readonly pluginId: string;
+  readonly manifest: PluginManifest;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
   readonly handleAction: (instanceId: number, actionJson: string, viewState: ViewState) => Promise<InvocationResponse>;
-  /** 🎛️ Dispatches a scoped command (os/program/app/mode) — optional since not every program declares commands. */
+  /** 🎛️ Dispatches a scoped command (os/plugin/app/mode) — optional since not every program declares commands. */
   readonly handleCommand?: (instanceId: number, commandJson: string, viewState: ViewState) => Promise<InvocationResponse>;
   readonly render: (instanceId: number, bodyKey: string, viewState: ViewState) => Promise<UiNode>;
   readonly renderWithDocument?: (instanceId: number, bodyKey: string, viewState: ViewState, documentJson: string) => Promise<UiNode>;
@@ -8640,20 +8640,20 @@ export type PluginWasmHandle = {
   readonly dispose: () => void;
 };
 
-export type { ProgramRegistryEntry };
+export type { PluginRegistryEntry };
 
-export async function loadPluginModule(programId: string, moduleUrl: string): Promise<PluginWasmHandle> {
-  return adaptPluginHandle(await loadCorePluginModule(programId, moduleUrl));
+export async function loadPluginModule(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
+  return adaptPluginHandle(await loadCorePluginModule(pluginId, moduleUrl));
 }
 
-export async function loadPluginWasm(programId: string, moduleUrl: string): Promise<PluginWasmHandle> {
-  return adaptPluginHandle(await loadCorePluginWasm(programId, moduleUrl));
+export async function loadPluginWasm(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
+  return adaptPluginHandle(await loadCorePluginWasm(pluginId, moduleUrl));
 }
 
 function adaptPluginHandle(handle: CorePluginWasmHandle): PluginWasmHandle {
   return {
-    programId: handle.programId,
-    manifest: handle.manifest as unknown as ProgramManifest,
+    pluginId: handle.pluginId,
+    manifest: handle.manifest as unknown as PluginManifest,
     createApp: (appId) => handle.createApp(appId),
     destroyApp: (instanceId) => handle.destroyApp(instanceId),
     handleAction: (instanceId, actionJson, viewState) => handle.handleAction(instanceId, actionJson, viewState),
@@ -8754,7 +8754,7 @@ export type FlowWasmSession = GraphWasmSession & {
   setGhostWidget(descriptorJson: string, worldX: number, worldY: number): void;
   clearGhostWidget(): void;
   worldFromScreen(sx: number, sy: number): string;
-  /** 🧵 Applies channel-structured eval JSON computed off-main-thread (a program worker's
+  /** 🧵 Applies channel-structured eval JSON computed off-main-thread (a plugin worker's
    * `flowEvalTick` chain) — the canvas session itself never evaluates. */
   applyEvalOutputsJson(json: string): void;
   noteInsertText(chunk: string): void;
@@ -9352,7 +9352,7 @@ function utilityNodeCategory(node: UtilityNode): UtilityCategory {
 
 /**
  * 🕰️ Framework-owned History utility nodes derived from an app's registry (the six injected History
- * actions). Sources the bottom-right History footer tab now that the program `list-tools` surface is gone.
+ * actions). Sources the bottom-right History footer tab now that the plugin `list-tools` surface is gone.
  */
 export function frameworkHistoryUtilityNodes(app: Pick<AppDefinition, "actions" | "controllerId">): UtilityNode[] {
   return (app.actions ?? [])
@@ -9388,7 +9388,7 @@ export function groupUtilityNodesByCategory(nodes: readonly UtilityNode[], categ
     });
 }
 
-/** @emoji 🦶 Deduplicates utility nodes by id across every window's utility set (mode-wide utilities are attached identically to each window kind when a program doesn't differentiate per window), for a single shared footer entry per utility. */
+/** @emoji 🦶 Deduplicates utility nodes by id across every window's utility set (mode-wide utilities are attached identically to each window kind when a plugin doesn't differentiate per window), for a single shared footer entry per utility. */
 export function dedupeUtilityNodesById(nodeLists: readonly (readonly UtilityNode[])[]): UtilityNode[] {
   const seen = new Map<string, UtilityNode>();
   for (const nodes of nodeLists) {
@@ -9914,7 +9914,7 @@ export type SettingsHostApi = {
   readonly appId?: string;
   readonly appLabel?: string;
   readonly controllerId?: string;
-  readonly programId?: string;
+  readonly pluginId?: string;
   readonly driverId: string;
   readonly driver: UiDriver;
   readonly driverDirty: boolean;
@@ -9963,7 +9963,7 @@ export type SettingsHostApi = {
 function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
   return {
     sections: [
-      ...(host.appId || host.appLabel || host.controllerId || host.programId
+      ...(host.appId || host.appLabel || host.controllerId || host.pluginId
         ? [
             {
               id: "framework.settings.app",
@@ -9973,7 +9973,7 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
                 ...(host.appLabel ? [{ id: "framework.settings.app.label", label: `${shellLabel("ui.settings.app.name")}: ${host.appLabel}` }] : []),
                 ...(host.appId ? [{ id: "framework.settings.app.id", label: `${shellLabel("ui.settings.app.id")}: ${host.appId}` }] : []),
                 ...(host.controllerId ? [{ id: "framework.settings.app.controller", label: `${shellLabel("ui.settings.app.controller")}: ${host.controllerId}` }] : []),
-                ...(host.programId ? [{ id: "framework.settings.app.plugin", label: `${shellLabel("ui.settings.app.plugin")}: ${host.programId}` }] : []),
+                ...(host.pluginId ? [{ id: "framework.settings.app.plugin", label: `${shellLabel("ui.settings.app.plugin")}: ${host.pluginId}` }] : []),
               ],
             },
           ]
@@ -12386,7 +12386,7 @@ export function mapContextMenuSpecs(
   });
 }
 
-/** @emoji 🕸️ Rewrites node-graph context-menu rows for the effective right-click selection so preview/zoom/clear/delete enable immediately without waiting for a program round-trip. */
+/** @emoji 🕸️ Rewrites node-graph context-menu rows for the effective right-click selection so preview/zoom/clear/delete enable immediately without waiting for a plugin round-trip. */
 export function enrichNodeGraphContextMenuItems(
   specs: readonly ContextMenuItemSpec[],
   options: { readonly selectedIds: readonly string[]; readonly previewOffIds?: readonly string[] },
@@ -14839,7 +14839,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const frame = useMemo(() => parseFrame(scene?.frameJson), [scene?.frameJson]);
   const fit = useMemo(() => parseFit(scene?.fitJson), [scene?.fitJson]);
   // 🧵 Off-main-thread compute status (see `World3dScene.statusJson`) — the meshes above stay the
-  // last-known-good (stale) cache while a program worker's `flowEvalTick` chain is still resolving.
+  // last-known-good (stale) cache while a plugin worker's `flowEvalTick` chain is still resolving.
   const computing = useMemo(() => {
     try {
       return (JSON.parse(scene?.statusJson ?? "{}") as { readonly computing?: boolean; readonly label?: string }).computing === true;
@@ -15167,7 +15167,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     };
   }, [handleSuggestionClose, suggestionMenuOpen, suggestionMenuOwnsThisWindow]);
 
-  // 🐢 Background suggestion/fill planning ticks must not pile into the serialized program WASM queue —
+  // 🐢 Background suggestion/fill planning ticks must not pile into the serialized plugin WASM queue —
   // a blind `setInterval` every 120ms while each tick+refresh still runs turns ~15s of idle fill into an
   // unbounded backlog that starves every other utility action (the fill utility appears to "die").
   useEffect(() => {
@@ -16068,7 +16068,7 @@ export function resolveFixtureWidgetInstanceId(fixtureJson: string | undefined, 
 }
 
 export interface CatalogueAppDragPayload {
-  readonly programId: string;
+  readonly pluginId: string;
   readonly appId: string;
   readonly label?: string;
 }
@@ -16076,9 +16076,9 @@ export interface CatalogueAppDragPayload {
 /** @emoji 🎯 Parses a catalogue drag payload; returns null for non-catalogue-app payloads (garbage/legacy descriptors). */
 export function parseCatalogueAppDragPayload(raw: string): CatalogueAppDragPayload | null {
   try {
-    const parsed = JSON.parse(raw) as { readonly programId?: string; readonly appId?: string; readonly label?: string };
-    if (!parsed.programId || !parsed.appId) return null;
-    return { programId: parsed.programId, appId: parsed.appId, label: parsed.label };
+    const parsed = JSON.parse(raw) as { readonly pluginId?: string; readonly appId?: string; readonly label?: string };
+    if (!parsed.pluginId || !parsed.appId) return null;
+    return { pluginId: parsed.pluginId, appId: parsed.appId, label: parsed.label };
   } catch {
     return null;
   }
@@ -16796,18 +16796,18 @@ function DiagramGraphFallback({
         event.preventDefault();
         const raw = event.dataTransfer.getData(CATALOGUE_DRAG_MIME);
         if (!raw) return;
-        let payload: { readonly programId?: string; readonly appId?: string };
+        let payload: { readonly pluginId?: string; readonly appId?: string };
         try {
-          payload = JSON.parse(raw) as { readonly programId?: string; readonly appId?: string };
+          payload = JSON.parse(raw) as { readonly pluginId?: string; readonly appId?: string };
         } catch {
           return;
         }
-        if (!payload.programId || !payload.appId) return;
+        if (!payload.pluginId || !payload.appId) return;
         const rect = containerRef.current?.getBoundingClientRect();
         if (!rect) return;
         const x = (event.clientX - rect.left - viewport.x) / viewport.zoom;
         const y = (event.clientY - rect.top - viewport.y) / viewport.zoom;
-        dispatch("spawnApp", { programId: payload.programId, appId: payload.appId, position: { x, y } });
+        dispatch("spawnApp", { pluginId: payload.pluginId, appId: payload.appId, position: { x, y } });
       }}
       onContextMenu={(event) => {
         if (!editable || contextMenuItems.length === 0) return;
@@ -17487,7 +17487,7 @@ export function SelectionAlignChrome({ bounds, onAlign }: { readonly bounds: Dag
 
 //#region Sync
 // @emoji 🎥 `applyCamera` must stay false for every resync after the first: live pan/zoom lives in the
-// FlowWasmSession (and program runtime via `nodeGraphViewport`), while `scene.viewportJson` often lags.
+// FlowWasmSession (and plugin runtime via `nodeGraphViewport`), while `scene.viewportJson` often lags.
 // Applying it on hover/eval/edit-triggered resync would snap the camera; `loadFixtureJson` also
 // preserves the live camera so fixture content reloads never reset the view.
 function applyNodeGraphHoverFromScene(session: FlowWasmSession, hoverJson: string | undefined): void {
@@ -17623,8 +17623,8 @@ export function FlowGraphCanvasHost({
   );
   const mapFlowContextMenu = useMapContextMenuSpecs(handleFlowMenuDispatch);
 
-  // 🧵 Dispatches the mutated fixture to the program and returns immediately — evaluation happens
-  // off the main thread in the program worker's `flowEvalTick` chain, never here. The next scene
+  // 🧵 Dispatches the mutated fixture to the plugin and returns immediately — evaluation happens
+  // off the main thread in the plugin worker's `flowEvalTick` chain, never here. The next scene
   // resync applies its `evalJson`/`computingJson` back onto this session (`syncFlowSessionFromScene`).
   const commitFixture = useCallback(() => {
     const session = sessionRef.current;
@@ -17638,7 +17638,7 @@ export function FlowGraphCanvasHost({
   }, [dispatch]);
 
   // A continuous gesture (e.g. dragging a slider) fires many onValueChange ticks per second, each
-  // committing the whole document through an async program round-trip; concurrent in-flight commits
+  // committing the whole document through an async plugin round-trip; concurrent in-flight commits
   // can resolve out of order, and the scene-resync effect below would apply whichever one lands
   // last — visibly reverting the drag mid-gesture. isGestureActiveRef suppresses that resync while
   // a gesture is active, and commitFixtureThrottled caps how many concurrent commits are in flight.
@@ -18029,7 +18029,7 @@ export function FlowGraphCanvasHost({
       }
       const catalogueApp = parseCatalogueAppDragPayload(raw);
       if (catalogueApp) {
-        dispatch("spawnApp", { programId: catalogueApp.programId, appId: catalogueApp.appId, position: { x: world.x, y: world.y } });
+        dispatch("spawnApp", { pluginId: catalogueApp.pluginId, appId: catalogueApp.appId, position: { x: world.x, y: world.y } });
         return;
       }
       try {
@@ -19136,7 +19136,7 @@ export function TableHost({ node, onAction }: ComponentSceneHostProps) {
         className="h-full w-full"
         columns={tableColumns}
         data={rows}
-        getRowId={(row, index) => String(row.id ?? row.programId ?? index)}
+        getRowId={(row, index) => String(row.id ?? row.pluginId ?? index)}
         selectedRows={selectedRows}
         sortColumn={sort?.columnId}
         sortDirection={sort?.direction}
@@ -21053,10 +21053,10 @@ function applyFixtureToSession(session: Board2dWasmSession, scene: Board2dScene)
 //#endregion Sync
 
 //#region PeerSync
-/** @emoji 🐢 One triptych pane, registered so siblings can mirror its live gesture state without a program round trip. */
+/** @emoji 🐢 One triptych pane, registered so siblings can mirror its live gesture state without a plugin round trip. */
 type Board2dPeer = {
   readonly session: Board2dWasmSession;
-  /** @emoji 🫧 `flushed` is true when the gesture that just ended pushed a commit to the program — in that case a fresh scene is already in flight and any stashed pending echo should be dropped rather than applied, or it would flash the stale in-between state for one frame before the fresh one supersedes it. */
+  /** @emoji 🫧 `flushed` is true when the gesture that just ended pushed a commit to the plugin — in that case a fresh scene is already in flight and any stashed pending echo should be dropped rather than applied, or it would flash the stale in-between state for one frame before the fresh one supersedes it. */
   readonly onPeerGestureEnded: (flushed: boolean) => void;
 };
 

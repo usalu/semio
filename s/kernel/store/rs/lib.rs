@@ -288,7 +288,7 @@ pub fn decode_document_pack_bytes(bytes: &[u8]) -> Result<(Vec<u8>, Vec<u8>), Vc
     Ok((bytes[pos..pack_end].to_vec(), bytes[pack_end..].to_vec()))
 }
 
-/// @emoji 🌱 Pack counterpart of the schema-less `serde_json::Value` escape hatch (puzzle-program/
+/// @emoji 🌱 Pack counterpart of the schema-less `serde_json::Value` escape hatch (puzzle-plugin/
 /// compose-kit apps stay on `serde_json::Value` end to end): delegates to `pack_rt`'s JSON bridge.
 impl DocumentPack for serde_json::Value {
     fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
@@ -322,7 +322,7 @@ pub use dsl::op_rt;
 /// @emoji 🗂️ Type-erased document codec — the bridge a schema-string-keyed caller (chiefly
 /// `framework/sync`'s `FolderEndpoint`) uses to print/parse pack+ops without naming the concrete
 /// `P`/`Operation` types at that layer. Built once per document kind via `DocumentCodec::of`
-/// (wrapped one line per app by `register_document_codec_for_app` in `framework/program/rs/lib.rs`,
+/// (wrapped one line per app by `register_document_codec_for_app` in `framework/plugin/rs/lib.rs`,
 /// wave 2) and looked up by `schema` string through `register_document_codec`/`document_codec`.
 #[derive(Clone)]
 pub struct DocumentCodec {
@@ -1847,7 +1847,7 @@ where
     edit_sequence: i32,
     generation: u64,
     /// @emoji 🧭 The checkpoint new commits parent onto; advances on commit/checkout/switch. Not
-    /// part of the wire envelope — callers that reconstruct the store per call (e.g. a WASM program)
+    /// part of the wire envelope — callers that reconstruct the store per call (e.g. a WASM plugin)
     /// must save/restore it themselves via {@link current_checkpoint_id}/{@link set_current_checkpoint_id}.
     current_checkpoint_id: Option<String>,
     /// @emoji 🖋️ Identity of the local actor driving this store. Set from each local `Apply`/
@@ -3037,7 +3037,7 @@ pub trait BackboneChannelPort: Send + Sync {
 
 static HOST_BACKBONE_CHANNEL: Mutex<Option<Arc<dyn BackboneChannelPort>>> = Mutex::new(None);
 
-/// @emoji 🔌 Injects the program host's duplex backbone channel for wasm-sandboxed document stores.
+/// @emoji 🔌 Injects the plugin host's duplex backbone channel for wasm-sandboxed document stores.
 pub fn set_host_backbone_channel(channel: Arc<dyn BackboneChannelPort>) {
     if let Ok(mut guard) = HOST_BACKBONE_CHANNEL.lock() {
         *guard = Some(channel);

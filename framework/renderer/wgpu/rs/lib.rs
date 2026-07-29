@@ -2910,7 +2910,7 @@ fn sync_flow_host(host: &mut FlowHost, graph: &ui_wgpu::NodeGraphScene, cache: &
             }
         }
     }
-    // 🧵 Never evaluates: `eval_json` comes from the program worker's off-main-thread `flowEvalTick`
+    // 🧵 Never evaluates: `eval_json` comes from the plugin worker's off-main-thread `flowEvalTick`
     // chain (see `FlowEvalDriver`) — this host is a pure view, mirroring the React canvas session.
     if let Some(json) = &graph.eval_json {
         if sync_field(&mut cache.eval_json, json) {
@@ -3290,9 +3290,9 @@ const CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
 /// 👻 Ghost descriptor JSON for a catalogue app drag (mirrors React `catalogueGhostDescriptorJson`).
 pub fn catalogue_ghost_descriptor_json(raw: &str) -> Option<String> {
     let payload: Value = serde_json::from_str(raw).ok()?;
-    let program_id = payload.get("programId").and_then(|value| value.as_str())?;
+    let plugin_id = payload.get("pluginId").and_then(|value| value.as_str())?;
     let app_id = payload.get("appId").and_then(|value| value.as_str())?;
-    if program_id.is_empty() || app_id.is_empty() {
+    if plugin_id.is_empty() || app_id.is_empty() {
         return None;
     }
     let neuron_kind = payload
@@ -3409,9 +3409,9 @@ pub fn node_graph_catalogue_drop_action(
 ) -> Option<ActionDescriptor> {
     let raw = drag_data.get(CATALOGUE_DRAG_MIME)?;
     let payload: Value = serde_json::from_str(raw).ok()?;
-    let program_id = payload.get("programId").and_then(|value| value.as_str())?;
+    let plugin_id = payload.get("pluginId").and_then(|value| value.as_str())?;
     let app_id = payload.get("appId").and_then(|value| value.as_str())?;
-    if program_id.is_empty() || app_id.is_empty() {
+    if plugin_id.is_empty() || app_id.is_empty() {
         return None;
     }
     for (surface_id, bounds, controller_id) in surfaces {
@@ -3422,14 +3422,14 @@ pub fn node_graph_catalogue_drop_action(
             ((x - bounds.x) as f64, (y - bounds.y) as f64)
         });
         eprintln!(
-            "[DEBUG] catalogue workflow drop surface={surface_id} controller={controller_id} program={program_id} app={app_id} world=({:.1},{:.1})",
+            "[DEBUG] catalogue workflow drop surface={surface_id} controller={controller_id} program={plugin_id} app={app_id} world=({:.1},{:.1})",
             world.0, world.1
         );
         return Some(ActionDescriptor {
             controller_id: (*controller_id).to_string(),
             action: "spawnApp".into(),
             args: Some(json!({
-                "programId": program_id,
+                "pluginId": plugin_id,
                 "appId": app_id,
                 "position": { "x": world.0, "y": world.1 },
             })),
@@ -3445,7 +3445,7 @@ mod catalogue_workflow_drop_tests {
     #[test]
     fn catalogue_ghost_prefers_label_then_app_id() {
         let with_label = catalogue_ghost_descriptor_json(
-            r#"{"programId":"draw","appId":"draw","label":"Draw"}"#,
+            r#"{"pluginId":"draw","appId":"draw","label":"Draw"}"#,
         )
         .unwrap();
         assert_eq!(
@@ -3453,7 +3453,7 @@ mod catalogue_workflow_drop_tests {
             json!({ "kind": "neuron", "neuronKind": "Draw" })
         );
         let without_label =
-            catalogue_ghost_descriptor_json(r#"{"programId":"draw","appId":"draw"}"#).unwrap();
+            catalogue_ghost_descriptor_json(r#"{"pluginId":"draw","appId":"draw"}"#).unwrap();
         assert_eq!(
             serde_json::from_str::<Value>(&without_label).unwrap(),
             json!({ "kind": "neuron", "neuronKind": "draw" })
@@ -3481,7 +3481,7 @@ mod catalogue_workflow_drop_tests {
         let mut catalogue = HashMap::new();
         catalogue.insert(
             CATALOGUE_DRAG_MIME.into(),
-            r#"{"programId":"draw","appId":"draw","label":"Draw"}"#.into(),
+            r#"{"pluginId":"draw","appId":"draw","label":"Draw"}"#.into(),
         );
         let ghost = node_graph_drag_ghost_descriptor(&catalogue).unwrap();
         assert_eq!(
@@ -3496,7 +3496,7 @@ mod catalogue_workflow_drop_tests {
         let mut drag_data = HashMap::new();
         drag_data.insert(
             CATALOGUE_DRAG_MIME.into(),
-            r#"{"programId":"draw","appId":"draw","label":"Draw"}"#.into(),
+            r#"{"pluginId":"draw","appId":"draw","label":"Draw"}"#.into(),
         );
         let bounds = Rect {
             x: 100.0,
@@ -3514,7 +3514,7 @@ mod catalogue_workflow_drop_tests {
         assert_eq!(action.controller_id, "s-play");
         assert_eq!(action.action, "spawnApp");
         let args = action.args.unwrap();
-        assert_eq!(args["programId"], "draw");
+        assert_eq!(args["pluginId"], "draw");
         assert_eq!(args["appId"], "draw");
         assert_eq!(args["position"]["x"], 40.0);
         assert_eq!(args["position"]["y"], 40.0);
@@ -3531,7 +3531,7 @@ mod catalogue_workflow_drop_tests {
         let mut catalogue = HashMap::new();
         catalogue.insert(
             CATALOGUE_DRAG_MIME.into(),
-            r#"{"programId":"draw","appId":"draw"}"#.into(),
+            r#"{"pluginId":"draw","appId":"draw"}"#.into(),
         );
         assert!(node_graph_catalogue_drop_action(
             10.0,
@@ -7473,7 +7473,7 @@ pub mod program_bridge {
 // #region program_bridge
 //! 🔌 Plugin bridge for wasm C-ABI modules (browser JS loader + wasmtime host).
 
-use semio_framework_core::{ProgramManifest, ViewState};
+use semio_framework_core::{PluginManifest, ViewState};
 use ui_wgpu::{UtilityNode, UiNode, WindowEngagement, WindowMeasure};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -7490,13 +7490,13 @@ use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::JsFuture;
 
 #[cfg(not(target_arch = "wasm32"))]
-use semio_framework_program_host::WasmProgramRuntime;
+use semio_framework_plugin_host::WasmPluginRuntime;
 
 enum ProgramBridgeBackend {
     #[cfg(target_arch = "wasm32")]
     Js(Rc<JsValue>),
     #[cfg(not(target_arch = "wasm32"))]
-    Wasm(Arc<WasmProgramRuntime>),
+    Wasm(Arc<WasmPluginRuntime>),
 }
 
 impl Clone for ProgramBridgeBackend {
@@ -7512,14 +7512,14 @@ impl Clone for ProgramBridgeBackend {
 
 #[derive(Clone)]
 pub struct ProgramBridgeEntry {
-    pub program_id: String,
-    pub manifest: ProgramManifest,
+    pub plugin_id: String,
+    pub manifest: PluginManifest,
     backend: ProgramBridgeBackend,
 }
 
 impl ProgramBridgeEntry {
     #[cfg(target_arch = "wasm32")]
-    pub fn from_js(program_id: String, handle: JsValue) -> Result<Self, String> {
+    pub fn from_js(plugin_id: String, handle: JsValue) -> Result<Self, String> {
         let manifest_fn = Reflect::get(&handle, &JsValue::from_str("manifest"))
             .map_err(|_| "missing manifest")?;
         let manifest_fn: Function = manifest_fn.dyn_into().map_err(|_| "manifest not fn")?;
@@ -7528,28 +7528,28 @@ impl ProgramBridgeEntry {
             .map_err(|_| "manifest call failed")?
             .as_string()
             .ok_or("manifest not string")?;
-        let manifest: ProgramManifest =
+        let manifest: PluginManifest =
             serde_json::from_str(&manifest_json).map_err(|err| format!("manifest parse: {err}"))?;
         let _create_app = get_fn(&handle, "createApp")?;
         let _render = get_fn(&handle, "render")?;
         Ok(Self {
-            program_id,
+            plugin_id,
             manifest,
             backend: ProgramBridgeBackend::Js(Rc::new(handle)),
         })
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn from_wasm(program_id: String, runtime: Arc<WasmProgramRuntime>) -> Result<Self, String> {
+    pub fn from_wasm(plugin_id: String, runtime: Arc<WasmPluginRuntime>) -> Result<Self, String> {
         Ok(Self {
-            program_id,
+            plugin_id,
             manifest: runtime.manifest.clone(),
             backend: ProgramBridgeBackend::Wasm(runtime),
         })
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn wasm_runtime(&self) -> Option<Arc<WasmProgramRuntime>> {
+    pub fn wasm_runtime(&self) -> Option<Arc<WasmPluginRuntime>> {
         match &self.backend {
             ProgramBridgeBackend::Wasm(runtime) => Some(runtime.clone()),
             #[cfg(target_arch = "wasm32")]
@@ -7613,7 +7613,7 @@ impl ProgramBridgeEntry {
             }
             #[cfg(not(target_arch = "wasm32"))]
             ProgramBridgeBackend::Wasm(runtime) => {
-                let files = semio_framework_program_host::semio::framework::types::DocumentPackFiles {
+                let files = semio_framework_plugin_host::semio::framework::types::DocumentPackFiles {
                     pack: pack.to_vec(),
                     spr: spr.to_vec(),
                     ops: String::new(),
@@ -7881,41 +7881,41 @@ fn get_fn(obj: &JsValue, key: &str) -> Result<Function, String> {
 }
 
 #[cfg(target_arch = "wasm32")]
-pub fn parse_program_entries(plugins: JsValue) -> Result<Vec<ProgramBridgeEntry>, String> {
+pub fn parse_plugin_entries(plugins: JsValue) -> Result<Vec<ProgramBridgeEntry>, String> {
     let array = plugins.dyn_into::<Array>().map_err(|_| "plugins not array")?;
     let mut entries = Vec::new();
     for index in 0..array.length() {
         let item = array.get(index);
-        let program_id = Reflect::get(&item, &JsValue::from_str("programId"))
+        let plugin_id = Reflect::get(&item, &JsValue::from_str("pluginId"))
             .ok()
             .and_then(|v| v.as_string())
-            .ok_or("programId missing")?;
+            .ok_or("pluginId missing")?;
         let handle = Reflect::get(&item, &JsValue::from_str("handle")).map_err(|_| "handle missing")?;
-        entries.push(ProgramBridgeEntry::from_js(program_id.clone(), handle).map_err(|err| {
-            format!("plugin {program_id}: {err}")
+        entries.push(ProgramBridgeEntry::from_js(plugin_id.clone(), handle).map_err(|err| {
+            format!("plugin {plugin_id}: {err}")
         })?);
     }
     Ok(entries)
 }
 
-//#region 🏠🧳ProgramHostConfig
-// 🐛 `generated_program_hosts` is declared at the crate root (below, outside this inline `program_bridge`
+//#region 🏠🧳PluginHostConfig
+// 🐛 `generated_plugin_hosts` is declared at the crate root (below, outside this inline `program_bridge`
 // module) and re-exported here — a `#[path]` file-module declared *inside* an inline `mod` block resolves
 // relative to a virtual `<enclosing-file-dir>/program_bridge/` directory that has no real counterpart on
 // disk, and POSIX path resolution requires every component a `..` traverses through (even one that's
 // lexically cancelled out) to actually exist; no number of `..`s fixes that. Declaring it at the crate
 // root instead (where `program_bridge/`'s directory is real) and re-exporting preserves the
-// `crate::program_bridge::{ProgramHostConfig, ...}` path every call site already depends on.
-pub use crate::generated_program_hosts::{is_space_mode, resolve_playground_app_id, resolve_program_host_config, resolve_registry_program_id, ProgramHostConfig};
-//#endregion 🏠🧳ProgramHostConfig
+// `crate::program_bridge::{PluginHostConfig, ...}` path every call site already depends on.
+pub use crate::generated_plugin_hosts::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, resolve_registry_plugin_id, PluginHostConfig};
+//#endregion 🏠🧳PluginHostConfig
 
-pub fn filter_programs(entries: Vec<ProgramBridgeEntry>, _program_filter: &str) -> Vec<ProgramBridgeEntry> {
+pub fn filter_plugins(entries: Vec<ProgramBridgeEntry>, _plugin_filter: &str) -> Vec<ProgramBridgeEntry> {
     entries
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub fn load_wasm_programs(plugin_filter: &str, modules_root: &std::path::Path) -> Result<Vec<ProgramBridgeEntry>, String> {
-    let program_ids: Vec<String> = if is_space_mode(plugin_filter) {
+pub fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) -> Result<Vec<ProgramBridgeEntry>, String> {
+    let plugin_ids: Vec<String> = if is_space_mode(plugin_filter) {
         std::fs::read_dir(modules_root)
             .map_err(|error| error.to_string())?
             .filter_map(|entry| entry.ok())
@@ -7923,11 +7923,11 @@ pub fn load_wasm_programs(plugin_filter: &str, modules_root: &std::path::Path) -
             .filter_map(|entry| entry.file_name().to_str().map(str::to_string))
             .collect()
     } else {
-        vec![resolve_registry_program_id(plugin_filter).to_string()]
+        vec![resolve_registry_plugin_id(plugin_filter).to_string()]
     };
     let mut entries = Vec::new();
-    for program_id in program_ids {
-        let plugin_dir = modules_root.join(&program_id);
+    for plugin_id in plugin_ids {
+        let plugin_dir = modules_root.join(&plugin_id);
         if !plugin_dir.is_dir() {
             continue;
         }
@@ -7939,8 +7939,8 @@ pub fn load_wasm_programs(plugin_filter: &str, modules_root: &std::path::Path) -
         let Some(path) = wasm_path else {
             continue;
         };
-        let runtime = Arc::new(WasmProgramRuntime::load(&path).map_err(|error| error.to_string())?);
-        entries.push(ProgramBridgeEntry::from_wasm(program_id, runtime)?);
+        let runtime = Arc::new(WasmPluginRuntime::load(&path).map_err(|error| error.to_string())?);
+        entries.push(ProgramBridgeEntry::from_wasm(plugin_id, runtime)?);
     }
     if entries.is_empty() {
         return Err(format!("[DEBUG] no wasm programs found under {}", modules_root.display()));
@@ -7950,13 +7950,13 @@ pub fn load_wasm_programs(plugin_filter: &str, modules_root: &std::path::Path) -
 // #endregion program_bridge
 }
 
-//#region 🏠🧳ProgramHostConfig
-// 🐛 Lives at the crate root, not inside `program_bridge` above (see that module's own `ProgramHostConfig`
+//#region 🏠🧳PluginHostConfig
+// 🐛 Lives at the crate root, not inside `program_bridge` above (see that module's own `PluginHostConfig`
 // region for why) — this is the file's real directory, so the 3-`..` climb to
-// `framework/program/registry/generated/hosts.rs` actually resolves.
-#[path = "../../../program/registry/generated/hosts.rs"]
-mod generated_program_hosts;
-//#endregion 🏠🧳ProgramHostConfig
+// `framework/plugin/registry/generated/hosts.rs` actually resolves.
+#[path = "../../../plugin/registry/generated/hosts.rs"]
+mod generated_plugin_hosts;
+//#endregion 🏠🧳PluginHostConfig
 
 pub mod scenes {
 //#region scenes
@@ -9474,7 +9474,7 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
         }
         let row_id = row
             .get("id")
-            .or_else(|| row.get("programId"))
+            .or_else(|| row.get("pluginId"))
             .and_then(|v| v.as_str())
             .unwrap_or("")
             .to_string();
@@ -9712,7 +9712,7 @@ struct BlockListPaletteEntryJson {
 /// steps stacked vertically (each with its ordered blocks) plus a palette rail for inserting new
 /// blocks, mirroring `block-list-host.tsx`'s layout and action verbs (`addStep`/`removeStep`/
 /// `moveStep`/`addBlock`/`removeBlock`/`moveBlock`, see `playbook::builder_kit` and
-/// `playbook-program`'s `handle_action`). Reordering dispatches `moveStep`/`moveBlock` from
+/// `playbook-plugin`'s `handle_action`). Reordering dispatches `moveStep`/`moveBlock` from
 /// move-up/move-down hit targets rather than free-form pointer drag (unlike the React host's
 /// dnd-kit drag-and-drop): this renderer's click-dispatch model (see `render_table`'s row/header
 /// hits) has no established cross-frame drag-position-tracking primitive for list reordering, and
@@ -14266,7 +14266,7 @@ fn render_icon_render(
         frame_h,
     );
 
-    let mesh_id = semio_framework_program::world3d_mesh_id_from_url(&request.asset_url);
+    let mesh_id = semio_framework_plugin::world3d_mesh_id_from_url(&request.asset_url);
     let instances_json = json!([{
         "id": "icon-render-subject",
         "meshId": mesh_id,
@@ -14275,12 +14275,12 @@ fn render_icon_render(
         "scale": [1.0, 1.0, 1.0],
     }])
     .to_string();
-    let mut synthetic_world = semio_framework_program::world3d_scene(
+    let mut synthetic_world = semio_framework_plugin::world3d_scene(
         icon_render_camera_json(&request.camera),
-        semio_framework_program::world3d_meshes_json_from_urls(std::slice::from_ref(&request.asset_url)),
+        semio_framework_plugin::world3d_meshes_json_from_urls(std::slice::from_ref(&request.asset_url)),
         instances_json,
         ui_wgpu::world3d_default_selection_json(),
-        &semio_framework_program::WorldSunConfig::default(),
+        &semio_framework_plugin::WorldSunConfig::default(),
     );
     synthetic_world.environment_json = Some(icon_render_environment_json(&request));
 
@@ -16103,7 +16103,7 @@ use infinite_world::{
     handle_world3d_pointer_button,
     handle_world3d_pointer_drag, handle_world3d_pointer_move, handle_world3d_wheel, World3dState,
 };
-use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_program_host_config, ProgramBridgeEntry, ProgramHostConfig};
+use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, ProgramBridgeEntry, PluginHostConfig};
 #[cfg(not(target_arch = "wasm32"))]
 use store_sync::{
     DocumentActorMsg, DocumentEvent, DocumentHost, DocumentSyncStatus, PersistenceBinding, RemoteState,
@@ -16165,7 +16165,7 @@ pub struct SearchPaletteItem {
     pub group: String,
     pub dispatch_action: Option<ActionDescriptor>,
     pub action: Option<String>,
-    /// 🗂️ Coarse command-source tag (os/program/app/mode) — `None` for the pre-existing panel/window/
+    /// 🗂️ Coarse command-source tag (os/plugin/app/mode) — `None` for the pre-existing panel/window/
     /// keybinding/action/studio entries, `Some(..)` for entries derived from `shell::ActionPanelAndUtilities`'s
     /// `ResolvedCommand` aggregation (see `command_search_items`).
     pub category: Option<semio_framework_core::CommandScope>,
@@ -16206,7 +16206,7 @@ pub fn take_context_menu_items() -> Vec<ContextMenuItem> {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SpaceProgramEntry {
-    pub program_id: String,
+    pub plugin_id: String,
     pub workflow_step_id: String,
     pub app_id: String,
     pub label: String,
@@ -16218,7 +16218,7 @@ pub struct SpaceProgramEntry {
 #[serde(rename_all = "camelCase")]
 pub struct SpawnedAppEntry {
     pub id: String,
-    pub program_id: String,
+    pub plugin_id: String,
     pub instance_id: u32,
     pub app_id: String,
     pub label: String,
@@ -16269,7 +16269,7 @@ pub struct RightClickState {
 
 #[derive(Clone)]
 pub struct ActiveSession {
-    pub program_id: String,
+    pub plugin_id: String,
     pub instance_id: u32,
     pub app: AppDefinition,
     pub view_state: ViewState,
@@ -16278,14 +16278,14 @@ pub struct ActiveSession {
 //#region 🔖NativeSyncChannel
 /// @emoji 🧵 One open document's live `framework/sync` actor channel held by the native wgpu shell.
 /// Mirrors `os-shell.tsx`'s `openDocumentSessionsRef` entry: the shell owns the `cmd_tx`/event
-/// receiver while the sandboxed program instance's store pumps through the registered
+/// receiver while the sandboxed plugin instance's store pumps through the registered
 /// `ChannelBackbone` (see `framework/product/os/core/rs`'s `host_runtime` canonical sequence).
 #[cfg(not(target_arch = "wasm32"))]
 pub struct ShellSyncChannel {
     pub document_id: String,
     pub actor_uri: String,
     pub instance_id: u32,
-    pub program_id: String,
+    pub plugin_id: String,
     pub cmd_tx: tokio::sync::mpsc::UnboundedSender<DocumentActorMsg>,
     pub events: tokio::sync::broadcast::Receiver<DocumentEvent>,
 }
@@ -16409,7 +16409,7 @@ pub struct ShellState {
     pub tutorial: Option<TutorialRuntime>,
     /// 🎬 Document-track operations queued by a tutorial tick/seek this frame, drained and applied
     /// asynchronously right after `render_chrome` returns (mirrors how `AppRuntime::frame` already defers
-    /// `scene_events`/wheel actions through `spawn_app_task` for the same reason: the program bridge's
+    /// `scene_events`/wheel actions through `spawn_app_task` for the same reason: the plugin bridge's
     /// `apply_operations`/`handle_action` calls are async, but chrome rendering isn't).
     pub tutorial_pending_document_ops: Vec<TutorialPendingDocOp>,
 }
@@ -16425,14 +16425,14 @@ async fn resolve_external_slots_in_tree(
         UiNode::ExternalSlot(slot) => {
             let program = plugins
                 .iter()
-                .find(|entry| entry.program_id == slot.program_id)
+                .find(|entry| entry.plugin_id == slot.plugin_id)
                 .cloned()
-                .ok_or_else(|| format!("contributor program missing: {}", slot.program_id))?;
-            let instance_id = if let Some(id) = contributor_instances.get(&slot.program_id) {
+                .ok_or_else(|| format!("contributor program missing: {}", slot.plugin_id))?;
+            let instance_id = if let Some(id) = contributor_instances.get(&slot.plugin_id) {
                 *id
             } else {
                 let id = program.create_app(&slot.app_id).await?;
-                contributor_instances.insert(slot.program_id.clone(), id);
+                contributor_instances.insert(slot.plugin_id.clone(), id);
                 id
             };
             let rendered = program
@@ -16712,11 +16712,11 @@ impl ShellState {
         state
     }
 
-    //#region 🏠🧳ProgramHostConfig
+    //#region 🏠🧳PluginHostConfig
     /// 🏠🧳 This filter's host config (landing/host app-id roles), or `None` when it doesn't offer a
-    /// host-style multi-app experience — see `program_bridge::ProgramHostConfig`.
-    fn host_config(&self) -> Option<&'static ProgramHostConfig> {
-        resolve_program_host_config(&self.plugin_filter)
+    /// host-style multi-app experience — see `program_bridge::PluginHostConfig`.
+    fn host_config(&self) -> Option<&'static PluginHostConfig> {
+        resolve_plugin_host_config(&self.plugin_filter)
     }
 
     /// 🏠🧳 The host plugin's own host-role app, self-declaring its `controller_id`/`panel_tabs` — the
@@ -16724,7 +16724,7 @@ impl ShellState {
     /// `S_PLAY_CATALOGUE_TAB_ID` literals.
     fn host_app(&self) -> Option<&AppDefinition> {
         let cfg = self.host_config()?;
-        let program = self.plugins.iter().find(|p| p.program_id == cfg.program_id)?;
+        let program = self.plugins.iter().find(|p| p.plugin_id == cfg.plugin_id)?;
         program.manifest.apps.iter().find(|app| app.id == cfg.host_app_id)
     }
 
@@ -16735,14 +16735,14 @@ impl ShellState {
     fn host_catalogue_tab_id(&self) -> Option<String> {
         self.host_app().and_then(|app| app.panel_tabs.first().map(|tab| tab.id().to_string()))
     }
-    //#endregion 🏠🧳ProgramHostConfig
+    //#endregion 🏠🧳PluginHostConfig
 
     pub fn build_space_workflows(&self) -> Vec<SpaceProgramEntry> {
         self.plugins
             .iter()
             .flat_map(|program| {
                 program.manifest.workflows.iter().map(|workflow| SpaceProgramEntry {
-                    program_id: program.program_id.clone(),
+                    plugin_id: program.plugin_id.clone(),
                     workflow_step_id: workflow.workflow_step_id.clone(),
                     app_id: workflow.app_id.clone(),
                     label: workflow.label.clone(),
@@ -16766,31 +16766,31 @@ impl ShellState {
 
     pub fn prepare_hot_reload(&mut self, plugins: Vec<ProgramBridgeEntry>) {
         if let Some(session) = self.session.take() {
-            if let Some(program) = self.plugins.iter().find(|entry| entry.program_id == session.program_id) {
+            if let Some(program) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) {
                 program.destroy_app(session.instance_id);
             }
         }
         self.plugins = plugins;
     }
 
-    pub async fn hot_reload_programs(&mut self, plugins: Vec<ProgramBridgeEntry>) -> Result<(), String> {
+    pub async fn hot_reload_plugins(&mut self, plugins: Vec<ProgramBridgeEntry>) -> Result<(), String> {
         self.prepare_hot_reload(plugins);
         self.boot().await
     }
 
     pub async fn boot(&mut self) -> Result<(), String> {
         if let Some(cfg) = self.host_config() {
-            let s_program = self
+            let s_plugin = self
                 .plugins
                 .iter()
-                .find(|p| p.program_id == cfg.program_id)
+                .find(|p| p.plugin_id == cfg.plugin_id)
                 .ok_or("host program missing")?;
-            let s_app = s_program
+            let s_app = s_plugin
                 .manifest
                 .apps
                 .iter()
                 .find(|app| app.id == cfg.landing_app_id)
-                .or_else(|| s_program.manifest.apps.first())
+                .or_else(|| s_plugin.manifest.apps.first())
                 .ok_or("host program missing landing app")?
                 .clone();
             let workflows = self.build_space_workflows();
@@ -16800,7 +16800,7 @@ impl ShellState {
                 spawned_apps: vec![],
                 active_spawned_id: None,
             };
-            let instance_id = s_program.create_app(&s_app.id).await?;
+            let instance_id = s_plugin.create_app(&s_app.id).await?;
             let view_state = ViewState {
                 active_mode_id: Some(s_app.default_mode_id.clone()),
                 active_window_kind_id: Some(s_app.window_kinds.first().id.clone()),
@@ -16817,7 +16817,7 @@ impl ShellState {
             };
             self.active_window_id = Some(s_app.window_kinds.first().id.clone());
             self.session = Some(ActiveSession {
-                program_id: s_program.program_id.clone(),
+                plugin_id: s_plugin.plugin_id.clone(),
                 instance_id,
                 app: s_app,
                 view_state,
@@ -16834,7 +16834,7 @@ impl ShellState {
             let instance_id = program.create_app(&app.id).await?;
             self.active_window_id = Some(app.window_kinds.first().id.clone());
             self.session = Some(ActiveSession {
-                program_id: program.program_id.clone(),
+                plugin_id: program.plugin_id.clone(),
                 instance_id,
                 app: app.clone(),
                 view_state: ViewState {
@@ -16865,7 +16865,7 @@ impl ShellState {
         let examples = self
             .plugins
             .iter()
-            .find(|p| p.program_id == session.program_id)
+            .find(|p| p.plugin_id == session.plugin_id)
             .map(|p| p.manifest.examples.as_slice())
             .unwrap_or(&[]);
         if examples.is_empty() {
@@ -16881,13 +16881,13 @@ impl ShellState {
         }
     }
 
-    fn active_program_examples(&self) -> Vec<ExampleDefinition> {
+    fn active_plugin_examples(&self) -> Vec<ExampleDefinition> {
         let Some(session) = &self.session else {
             return Vec::new();
         };
         self.plugins
             .iter()
-            .find(|p| p.program_id == session.program_id)
+            .find(|p| p.plugin_id == session.plugin_id)
             .map(|p| {
                 p.manifest
                     .examples
@@ -16983,11 +16983,11 @@ impl ShellState {
             .collect()
     }
 
-    fn contributions_json_from_programs(plugins: &[ProgramBridgeEntry]) -> String {
+    fn contributions_json_from_plugins(plugins: &[ProgramBridgeEntry]) -> String {
         #[derive(serde::Serialize)]
         #[serde(rename_all = "camelCase")]
         struct ProgramContributionEntry<'a> {
-            program_id: &'a str,
+            plugin_id: &'a str,
             contribution: &'a semio_framework_core::Contribution,
         }
         let entries: Vec<ProgramContributionEntry<'_>> = plugins
@@ -16998,7 +16998,7 @@ impl ShellState {
                     .contributions
                     .iter()
                     .map(|contribution| ProgramContributionEntry {
-                        program_id: program.program_id.as_str(),
+                        plugin_id: program.plugin_id.as_str(),
                         contribution,
                     })
             })
@@ -17022,16 +17022,16 @@ impl ShellState {
         self.sync_dock();
         self.window_ui.clear();
         let mut view_state = session.view_state.clone();
-        view_state.contributions_json = Some(Self::contributions_json_from_programs(&self.plugins));
+        view_state.contributions_json = Some(Self::contributions_json_from_plugins(&self.plugins));
         {
             let program = self
                 .plugins
                 .iter()
-                .find(|p| p.program_id == session.program_id)
+                .find(|p| p.plugin_id == session.plugin_id)
                 .cloned()
                 .ok_or("session program missing")?;
             for kind in &session.app.window_kinds {
-                // 🧰 Inject the host-owned active utility for this window kind so the program renders its
+                // 🧰 Inject the host-owned active utility for this window kind so the plugin renders its
                 // live-preview overlay for the right utility (Architecture Decision 4).
                 view_state.active_utility_id = self.active_utility_by_window.get(&kind.id).cloned();
                 let node = program
@@ -17056,7 +17056,7 @@ impl ShellState {
         let program = self
             .plugins
             .iter()
-            .find(|p| p.program_id == session.program_id)
+            .find(|p| p.plugin_id == session.plugin_id)
             .cloned()
             .ok_or("session program missing")?;
         for tab in Self::flatten_panel_tab_leaves(&session.app.panel_tabs) {
@@ -17087,8 +17087,8 @@ impl ShellState {
                     .as_ref()
                     .and_then(|id| panel.spawned_apps.iter().find(|app| &app.id == id))
                 {
-                    if let Some(spawn_program) = self.plugins.iter().find(|p| p.program_id == spawned.program_id) {
-                        let spawned_app = spawn_program
+                    if let Some(spawn_plugin) = self.plugins.iter().find(|p| p.plugin_id == spawned.plugin_id) {
+                        let spawned_app = spawn_plugin
                             .manifest
                             .apps
                             .iter()
@@ -17110,7 +17110,7 @@ impl ShellState {
                                 active_utility_by_window_id: std::collections::HashMap::new(),
                             };
                             self.spawned_ui = Some(
-                                spawn_program
+                                spawn_plugin
                                     .render(spawned.instance_id, &body_key, &view_state)
                                     .await?,
                             );
@@ -17731,7 +17731,7 @@ fn patch_ops_from_action_result(result: &semio_framework_core::kernel::Invocatio
 impl ShellState {
     fn sync_document_id(&self) -> Option<String> {
         let session = self.session.as_ref()?;
-        Some(format!("{}-{}", session.program_id, session.instance_id))
+        Some(format!("{}-{}", session.plugin_id, session.instance_id))
     }
 
     //#region 🔖NativeBackboneSync
@@ -17774,7 +17774,7 @@ impl ShellState {
             if let Some(runtime) = self
                 .plugins
                 .iter()
-                .find(|entry| entry.program_id == channel.program_id)
+                .find(|entry| entry.plugin_id == channel.plugin_id)
                 .and_then(|entry| entry.wasm_runtime())
             {
                 let _ = runtime.detach_backbone(channel.instance_id);
@@ -17785,7 +17785,7 @@ impl ShellState {
         self.sync_status = None;
     }
 
-    /// @emoji 📬 Drains the active document actor's event stream into the program store and the sync
+    /// @emoji 📬 Drains the active document actor's event stream into the plugin store and the sync
     /// badge. Called once per native frame — the render loop already redraws continuously (winit
     /// `ControlFlow::Poll`), so a `try_recv` poll suffices and no `EventLoopProxy` wake is needed.
     /// `RemoteOperations` are force-applied via `apply_operations` (idempotent by operation id), which also covers
@@ -17794,7 +17794,7 @@ impl ShellState {
     #[cfg(not(target_arch = "wasm32"))]
     pub async fn pump_sync_events(&mut self) -> bool {
         use tokio::sync::broadcast::error::TryRecvError;
-        let (instance_id, program_id, events) = {
+        let (instance_id, plugin_id, events) = {
             let Some(channel) = self.sync_channel.as_mut() else {
                 return false;
             };
@@ -17809,12 +17809,12 @@ impl ShellState {
             if events.is_empty() {
                 return false;
             }
-            (channel.instance_id, channel.program_id.clone(), events)
+            (channel.instance_id, channel.plugin_id.clone(), events)
         };
         let runtime = self
             .plugins
             .iter()
-            .find(|entry| entry.program_id == program_id)
+            .find(|entry| entry.plugin_id == plugin_id)
             .and_then(|entry| entry.wasm_runtime());
         let mut changed = false;
         for event in events {
@@ -17830,7 +17830,7 @@ impl ShellState {
                 }
                 DocumentEvent::SnapshotReplaced { pack, spr } => {
                     if let Some(runtime) = runtime.as_ref() {
-                        let files = semio_framework_program_host::semio::framework::types::DocumentPackFiles { pack, spr, ops: String::new() };
+                        let files = semio_framework_plugin_host::semio::framework::types::DocumentPackFiles { pack, spr, ops: String::new() };
                         match runtime.load_app_document_pack(instance_id, files) {
                             Ok(()) => changed = true,
                             Err(error) => eprintln!("[DEBUG] wgpu shell load_app_document_pack failed: {error}"),
@@ -17890,7 +17890,7 @@ impl ShellState {
     //#endregion 🔖NativeBackboneSync
 
     /// @emoji 🔗 Opens the shell's active app document on a `framework/sync` `DocumentHost` actor and
-    /// wires the sandboxed program store to it, following `framework/product/os/core/rs`'s
+    /// wires the sandboxed plugin store to it, following `framework/product/os/core/rs`'s
     /// `host_runtime` canonical sequence (open → subscribe → register host channel → program
     /// `attach-backbone`). The React shell's `openDocument` is the TS twin of this exact sequence.
     async fn attach_sync_backbone(&mut self, uri: String) -> Result<(), String> {
@@ -17900,10 +17900,10 @@ impl ShellState {
             let runtime = self
                 .plugins
                 .iter()
-                .find(|entry| entry.program_id == session.program_id)
+                .find(|entry| entry.plugin_id == session.plugin_id)
                 .ok_or("plugin missing")?
                 .wasm_runtime()
-                .ok_or("native program runtime missing")?;
+                .ok_or("native plugin runtime missing")?;
             let document_id = self.sync_document_id().unwrap_or_else(|| "document".into());
             let schema = session.app.document.join(".");
             let bindings = Self::parse_persistence_binding(&uri)?;
@@ -17929,7 +17929,7 @@ impl ShellState {
                 document_id,
                 actor_uri,
                 instance_id: session.instance_id,
-                program_id: session.program_id.clone(),
+                plugin_id: session.plugin_id.clone(),
                 cmd_tx,
                 events,
             });
@@ -18023,7 +18023,7 @@ impl ShellState {
     pub async fn dispatch_action(&mut self, action: ActionDescriptor) -> Result<(), String> {
         // 🎬 Tutorial interception — fully short-circuits (mirrors `SET_ACTIVE_UTILITY_ACTION_ID`'s own
         // interception further down): both `startTutorial`/`recordTutorial` are framework-injected View
-        // actions with no plugin-side handler at all (see `framework/program/rs`'s auto-injection).
+        // actions with no plugin-side handler at all (see `framework/plugin/rs`'s auto-injection).
         if action.action == semio_framework_core::START_TUTORIAL_ACTION_ID {
             if let Some(tutorial_id) = action.args.as_ref().and_then(|args| args.get("tutorialId")).and_then(|v| v.as_str()) {
                 self.tutorial_start(tutorial_id);
@@ -18125,7 +18125,7 @@ impl ShellState {
             return self.handle_sync_action(action).await;
         }
         // 🧰 Intercept the framework `setActiveUtility` View action to update the host-owned active-utility
-        // map before forwarding to the program (which reacts by clearing its live-preview scratch). The
+        // map before forwarding to the plugin (which reacts by clearing its live-preview scratch). The
         // authoritative state is the shell map + the `ViewState.active_utility_id` it injects on render.
         if action.action == semio_framework_core::SET_ACTIVE_UTILITY_ACTION_ID {
             if let Some(session) = self.session.clone() {
@@ -18160,13 +18160,13 @@ impl ShellState {
                     .iter()
                     .any(|app| app.controller_id == action.controller_id)
             })
-            .or_else(|| self.plugins.iter().find(|p| p.program_id == session.program_id))
+            .or_else(|| self.plugins.iter().find(|p| p.plugin_id == session.plugin_id))
             .ok_or("action program missing")?;
         let action_json = serde_json::to_string(&action).map_err(|err| err.to_string())?;
         let result = program
             .handle_action(session.instance_id, &action_json, &session.view_state)
             .await?;
-        // 🎓 Advance-by-doing: this action was actually performed (the program call above succeeded), so
+        // 🎓 Advance-by-doing: this action was actually performed (the plugin call above succeeded), so
         // a tour step whose `advance` targets it moves on now — see `chrome_tour_note_action_performed`.
         self.chrome_tour_note_action_performed(&action.action);
         // 🧰 A program may programmatically switch the active utility via `HostEffect::SetActiveUtility`
@@ -18186,7 +18186,7 @@ impl ShellState {
                 }
                 semio_framework_core::kernel::HostEffect::LoadDocument { pack, spr } => {
                     if let Some(session) = self.session.clone() {
-                        if let Some(plugin) = self.plugins.iter().find(|entry| entry.program_id == session.program_id) {
+                        if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) {
                             if let Err(error) = plugin.load_app_document_pack(session.instance_id, pack, spr) {
                                 eprintln!("[DEBUG] wgpu shell loadDocument effect failed: {error}");
                             }
@@ -18198,7 +18198,7 @@ impl ShellState {
                 // event-loop tick — so, natively, any `delay_ms` collapses to "next tick" (no timer wheel
                 // exists in this shell yet; the real wall-clock delay is honored by the React shell's own
                 // `setTimeout` handling of the same effect). The dispatched action reuses the originating
-                // `action.controller_id`, i.e. re-invokes the same program instance that emitted the effect.
+                // `action.controller_id`, i.e. re-invokes the same plugin instance that emitted the effect.
                 semio_framework_core::kernel::HostEffect::DispatchAction { action: dispatch_action_id, args, .. } => {
                     self.deferred_actions.push(ActionDescriptor {
                         controller_id: action.controller_id.clone(),
@@ -18321,7 +18321,7 @@ impl ShellState {
                                 action: import_action.to_string(),
                                 args: Some(args),
                             };
-                            if let Some(program) = self.plugins.iter().find(|p| p.program_id == session.program_id) {
+                            if let Some(program) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
                                 if let Ok(action_json) = serde_json::to_string(&action) {
                                     if let Ok(import_result) = program
                                         .handle_action(session.instance_id, &action_json, &session.view_state)
@@ -18353,7 +18353,7 @@ impl ShellState {
                                     "filePath": path.display().to_string(),
                                 })),
                             };
-                            if let Some(program) = self.plugins.iter().find(|p| p.program_id == session.program_id) {
+                            if let Some(program) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
                                 if let Ok(action_json) = serde_json::to_string(&action) {
                                     if let Ok(bind_result) = program
                                         .handle_action(session.instance_id, &action_json, &session.view_state)
@@ -18381,7 +18381,7 @@ impl ShellState {
                                 action: import_action.to_string(),
                                 args: Some(args),
                             };
-                            if let Some(program) = self.plugins.iter().find(|p| p.program_id == session.program_id) {
+                            if let Some(program) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
                                 if let Ok(action_json) = serde_json::to_string(&action) {
                                     if let Ok(folder_result) = program
                                         .handle_action(session.instance_id, &action_json, &session.view_state)
@@ -18396,8 +18396,8 @@ impl ShellState {
                 }
             }
             if operation.get("operation").and_then(|v| v.as_str()) == Some("spawnProgram") {
-                if let (Some(program_id), Some(session)) = (operation.get("programId").and_then(|v| v.as_str()), &self.session) {
-                    self.spawn_program(program_id, session.view_state.clone()).await?;
+                if let (Some(plugin_id), Some(session)) = (operation.get("pluginId").and_then(|v| v.as_str()), &self.session) {
+                    self.spawn_plugin(plugin_id, session.view_state.clone()).await?;
                 }
             }
             if operation.get("operation").and_then(|v| v.as_str()) == Some("navigate") {
@@ -18441,12 +18441,12 @@ impl ShellState {
         view_state: Option<ViewState>,
     ) -> Result<(), String> {
         let cfg = self.host_config().ok_or("host config missing")?;
-        let s_program = self
+        let s_plugin = self
             .plugins
             .iter()
-            .find(|program| program.program_id == cfg.program_id)
+            .find(|program| program.plugin_id == cfg.plugin_id)
             .ok_or("host program missing")?;
-        let app = s_program
+        let app = s_plugin
             .manifest
             .apps
             .iter()
@@ -18454,7 +18454,7 @@ impl ShellState {
             .ok_or("host app missing")?
             .clone();
         if let Some(session) = &self.session {
-            if session.program_id == s_program.program_id && session.app.id == app_id {
+            if session.plugin_id == s_plugin.plugin_id && session.app.id == app_id {
                 if let Some(next_view_state) = view_state {
                     if let Some(mut current) = self.session.take() {
                         current.view_state = next_view_state;
@@ -18465,7 +18465,7 @@ impl ShellState {
                 return Ok(());
             }
         }
-        let instance_id = s_program.create_app(&app.id).await?;
+        let instance_id = s_plugin.create_app(&app.id).await?;
         let workflows = self.build_space_workflows();
         let panel_state = SpacePanelState {
             active_panel_tab: self.host_catalogue_tab_id().unwrap_or_default(),
@@ -18492,7 +18492,7 @@ impl ShellState {
             self.open_space_id = None;
         }
         self.session = Some(ActiveSession {
-            program_id: s_program.program_id.clone(),
+            plugin_id: s_plugin.plugin_id.clone(),
             instance_id,
             app,
             view_state: next_view_state,
@@ -18529,7 +18529,7 @@ impl ShellState {
         let program = self
             .plugins
             .iter()
-            .find(|entry| entry.program_id == session.program_id)
+            .find(|entry| entry.plugin_id == session.plugin_id)
             .ok_or("space program missing")?;
         let action = ActionDescriptor {
             controller_id: session.app.controller_id.clone(),
@@ -18554,15 +18554,15 @@ impl ShellState {
         self.apply_shell_uri(&uri).await
     }
 
-    async fn spawn_program(&mut self, program_id: &str, mut view_state: ViewState) -> Result<(), String> {
+    async fn spawn_plugin(&mut self, plugin_id: &str, mut view_state: ViewState) -> Result<(), String> {
         let workflows = self.build_space_workflows();
-        let Some(workflow) = workflows.iter().find(|entry| entry.program_id == program_id).cloned() else {
+        let Some(workflow) = workflows.iter().find(|entry| entry.plugin_id == plugin_id).cloned() else {
             return Ok(());
         };
         let bridge = self
             .plugins
             .iter()
-            .find(|entry| entry.program_id == workflow.program_id)
+            .find(|entry| entry.plugin_id == workflow.plugin_id)
             .ok_or("spawn program missing")?;
         let instance_id = bridge.create_app(&workflow.app_id).await?;
         let default_catalogue_tab_id = self.host_catalogue_tab_id().unwrap_or_default();
@@ -18572,10 +18572,10 @@ impl ShellState {
             spawned_apps: vec![],
             active_spawned_id: None,
         });
-        let spawned_id = format!("{}-{}", bridge.program_id, instance_id);
+        let spawned_id = format!("{}-{}", bridge.plugin_id, instance_id);
         panel.spawned_apps.push(SpawnedAppEntry {
             id: spawned_id.clone(),
-            program_id: bridge.program_id.clone(),
+            plugin_id: bridge.plugin_id.clone(),
             instance_id,
             app_id: workflow.app_id.clone(),
             label: workflow.label.clone(),
@@ -20087,7 +20087,7 @@ impl ShellState {
                 });
             }
         }
-        // 🎛️ Os-level + program/app/mode-scope commands (`ResolvedCommand` aggregation — see
+        // 🎛️ Os-level + plugin/app/mode-scope commands (`ResolvedCommand` aggregation — see
         // `command_search_items` in `shell::ActionPanelAndUtilities`), tagged with their source category.
         items.extend(self.command_search_items());
         items
@@ -21315,7 +21315,7 @@ fn render_footer_utility_nodes(
 
 fn panel_tab_icon_id(tab: &PanelTabDefinition) -> &'static str {
     // 🌱 `tab.group == PanelGroup::Workbench` already covers every host-app catalogue tab (each such app
-    // declares its catalogue tab under that group — see `s/program/rs`'s `App::builder(...).panel_tab(...)`)
+    // declares its catalogue tab under that group — see `s/plugin/rs`'s `App::builder(...).panel_tab(...)`)
     // so no separate app-specific tab-id literal is needed here.
     if tab.group == PanelGroup::Workbench {
         return "library";
@@ -21831,12 +21831,12 @@ impl ShellState {
     // #region command-registry
     /// 🔌 The current session's program manifest (for its `commands: Vec<CommandDefinition>` — Plugin-scope
     /// commands apply whenever any of that plugin's apps is focused, mirroring `os-shell.tsx`'s
-    /// `activeProgramManifest`).
-    fn active_program_manifest(&self) -> Option<&semio_framework_core::ProgramManifest> {
+    /// `activePluginManifest`).
+    fn active_plugin_manifest(&self) -> Option<&semio_framework_core::PluginManifest> {
         let session = self.session.as_ref()?;
         self.plugins
             .iter()
-            .find(|entry| entry.program_id == session.program_id)
+            .find(|entry| entry.plugin_id == session.plugin_id)
             .map(|entry| &entry.manifest)
     }
 
@@ -21845,7 +21845,7 @@ impl ShellState {
     /// `terminology_id` (all wired through the existing `"framework"` controller `dispatch_action` switch
     /// — see `apply_os_command`), and the dock's `layout_override`
     /// (`os.resetDock`, applied locally like `RESET_DOCK` resets `dockLayoutStore`/`dockUiStateStore` in
-    /// React — no program round-trip). Deliberately omits `os.introduceApp`/`os.setThemeId`/`os.setLayout`:
+    /// React — no plugin round-trip). Deliberately omits `os.introduceApp`/`os.setThemeId`/`os.setLayout`:
     /// none of the three has any persisted shell state yet (no introduction-playback step, no named
     /// `UiTheme` list, no desktop/tablet layout flag) — inventing that storage is out of this region's
     /// scope (`shell::ShellTypes` owns `ShellState`'s fields and is off-limits this wave).
@@ -21916,7 +21916,7 @@ impl ShellState {
 
     /// 🎛️ Every command visible for the current session — os built-ins, the active plugin's Plugin-scope
     /// commands, and the app's App-/active-Mode-scope commands. The wgpu mirror of `os-shell.tsx`'s
-    /// `resolveCommands(buildOsCommands(...), activeProgramManifest, session?.app, activeModeId)` call site.
+    /// `resolveCommands(buildOsCommands(...), activePluginManifest, session?.app, activeModeId)` call site.
     pub(crate) fn resolved_commands(&self) -> Vec<ResolvedCommand> {
         let os_commands = self.build_os_commands();
         let Some(session) = self.session.as_ref() else {
@@ -21930,7 +21930,7 @@ impl ShellState {
             .active_mode_id
             .as_deref()
             .unwrap_or(session.app.default_mode_id.as_str());
-        resolve_commands(os_commands, self.active_program_manifest(), &session.app, active_mode_id)
+        resolve_commands(os_commands, self.active_plugin_manifest(), &session.app, active_mode_id)
     }
 
     /// 🔍 Flattens `resolved_commands()` into quick-search-palette entries. Zero-arg commands (any source)
@@ -21939,7 +21939,7 @@ impl ShellState {
     /// Appearance: Light") rather than redirecting to a staged form, since (unlike window-scoped actions)
     /// os commands have no hosting window whose Actions rail could show that form. Arg-carrying Plugin/
     /// App/Mode-scope commands are skipped here — there is no `DocumentApp::handle_command` RPC wired on
-    /// the program bridge yet (only `handle_action` exists; see `ProgramBridgeEntry`), so the same staged
+    /// the plugin bridge yet (only `handle_action` exists; see `ProgramBridgeEntry`), so the same staged
     /// redirect would open a form with no way to actually execute; they still appear in
     /// `resolved_commands()`/`build_command_panel_ui()` for completeness.
     pub(crate) fn command_search_items(&self) -> Vec<SearchPaletteItem> {
@@ -21951,7 +21951,7 @@ impl ShellState {
             let ResolvedCommand { definition, source } = entry;
             let category = match &source {
                 CommandSource::Os => semio_framework_core::CommandScope::Os,
-                CommandSource::Plugin => semio_framework_core::CommandScope::Program,
+                CommandSource::Plugin => semio_framework_core::CommandScope::Plugin,
                 CommandSource::App => semio_framework_core::CommandScope::App,
                 CommandSource::Mode(_) => semio_framework_core::CommandScope::Mode,
             };
@@ -22159,7 +22159,7 @@ pub(crate) struct ResolvedCommand {
 /// `active_mode_id`'s `ModeDefinition.commands` references it, exactly like the React source.
 pub(crate) fn resolve_commands(
     os_commands: Vec<semio_framework_core::CommandDefinition>,
-    program_manifest: Option<&semio_framework_core::ProgramManifest>,
+    plugin_manifest: Option<&semio_framework_core::PluginManifest>,
     app: &semio_framework_core::AppDefinition,
     active_mode_id: &str,
 ) -> Vec<ResolvedCommand> {
@@ -22167,7 +22167,7 @@ pub(crate) fn resolve_commands(
         .into_iter()
         .map(|definition| ResolvedCommand { definition, source: CommandSource::Os })
         .collect();
-    if let Some(manifest) = program_manifest {
+    if let Some(manifest) = plugin_manifest {
         resolved.extend(
             manifest
                 .commands
@@ -22275,7 +22275,7 @@ mod command_registry_tests {
     use super::*;
     use semio_framework_core::{
         ActionArgControl, AppDefinition, CommandDefinition, CommandScope, ModeDefinition, Modes, PanelGroup,
-        PanelTabDefinition, PanelTabKind, ProgramManifest, WindowKindDefinition, WindowKinds,
+        PanelTabDefinition, PanelTabKind, PluginManifest, WindowKindDefinition, WindowKinds,
     };
 
     fn test_app(commands: Vec<CommandDefinition>, mode_commands: Vec<semio_framework_core::CommandRef>) -> AppDefinition {
@@ -22359,7 +22359,7 @@ mod command_registry_tests {
     fn build_os_commands_terminology_options_include_app_terminologies() {
         let mut shell = test_shell_state();
         shell.session = Some(ActiveSession {
-            program_id: "test".into(),
+            plugin_id: "test".into(),
             instance_id: 0,
             app: test_app(vec![], vec![]),
             view_state: semio_framework_core::ViewState::default(),
@@ -22387,8 +22387,8 @@ mod command_registry_tests {
             vec![app_command.clone(), mode_command.clone(), unreferenced_mode_command],
             vec![semio_framework_core::CommandRef::new("mode.focus")],
         );
-        let program_manifest = ProgramManifest {
-            program_id: "plugin".into(),
+        let plugin_manifest = PluginManifest {
+            plugin_id: "plugin".into(),
             label: "Plugin".into(),
             version: "0.0.0".into(),
             apps: vec![],
@@ -22396,9 +22396,9 @@ mod command_registry_tests {
             examples: vec![],
             capabilities: vec![],
             contributions: vec![],
-            commands: vec![CommandDefinition::new("plugin.doThing", "Do Thing", CommandScope::Program, "plugin")],
+            commands: vec![CommandDefinition::new("plugin.doThing", "Do Thing", CommandScope::Plugin, "plugin")],
         };
-        let resolved = resolve_commands(os_commands, Some(&program_manifest), &app, "default");
+        let resolved = resolve_commands(os_commands, Some(&plugin_manifest), &app, "default");
         let sources: Vec<(&str, CommandSource)> = resolved
             .iter()
             .map(|entry| (entry.definition.id.as_str(), entry.source.clone()))
@@ -22446,7 +22446,7 @@ mod command_registry_tests {
     fn command_search_items_expands_select_options_and_tags_os_category() {
         let mut shell = test_shell_state();
         shell.session = Some(ActiveSession {
-            program_id: "test".into(),
+            plugin_id: "test".into(),
             instance_id: 0,
             app: test_app(vec![], vec![]),
             view_state: semio_framework_core::ViewState::default(),
@@ -22474,7 +22474,7 @@ mod command_registry_tests {
     fn apply_os_command_reset_dock_clears_layout_override_locally() {
         let mut shell = test_shell_state();
         shell.session = Some(ActiveSession {
-            program_id: "test".into(),
+            plugin_id: "test".into(),
             instance_id: 0,
             app: test_app(vec![], vec![]),
             view_state: semio_framework_core::ViewState::default(),
@@ -22488,7 +22488,7 @@ mod command_registry_tests {
     fn apply_os_command_set_locale_dispatches_through_framework_controller() {
         let mut shell = test_shell_state();
         shell.session = Some(ActiveSession {
-            program_id: "test".into(),
+            plugin_id: "test".into(),
             instance_id: 0,
             app: test_app(vec![], vec![]),
             view_state: semio_framework_core::ViewState::default(),
@@ -22524,7 +22524,7 @@ mod command_registry_tests {
     fn build_command_panel_ui_groups_rows_under_category_headers() {
         let mut shell = test_shell_state();
         shell.session = Some(ActiveSession {
-            program_id: "test".into(),
+            plugin_id: "test".into(),
             instance_id: 0,
             app: test_app(vec![], vec![]),
             view_state: semio_framework_core::ViewState::default(),
@@ -22610,7 +22610,7 @@ struct ChromeDialogRequest {
 }
 
 /// 🎓 Live playback state for `AppDefinition.introduction` — which step is showing. Steps themselves are
-/// re-read fresh from `session.app.introduction` every frame, never cached, so a program hot-reload
+/// re-read fresh from `session.app.introduction` every frame, never cached, so a plugin hot-reload
 /// mid-session can't desync from a stale copy.
 #[derive(Clone, Debug)]
 struct ChromeTourState {
@@ -23067,14 +23067,14 @@ pub struct TutorialRuntime {
 
 /// 🎬 One document-track application queued by a tick/seek this frame — see
 /// `ShellState::tutorial_pending_document_ops`'s own doc comment for why this has to be deferred rather
-/// than applied inline (the program bridge's document calls are async, chrome rendering isn't).
+/// than applied inline (the plugin bridge's document calls are async, chrome rendering isn't).
 #[derive(Clone, Debug)]
 pub enum TutorialPendingDocOp {
     LoadDocumentJson(String),
     ApplyOperations(Vec<String>),
     /// 🖋️ `Undo`/`Redo`/`Checkpoint`/`CheckoutCheckpoint`/`SwitchAlternative` all replay as a bare
     /// generic action dispatch (`"undo"`/`"redo"`/… against the session's `controller_id`) — the same
-    /// convention `framework/program/rs`'s own `handle_action("undo", …)` test helpers already use, and
+    /// convention `framework/plugin/rs`'s own `handle_action("undo", …)` test helpers already use, and
     /// the only "history action" mechanism reachable from here without inventing a second one.
     HistoryAction { action_id: String, args: Option<serde_json::Value> },
 }
@@ -24296,7 +24296,7 @@ impl ShellState {
             .cloned()
             .unwrap_or_else(|| {
                 self.session.as_ref().map(|s| {
-                    format!("os://{}/{}", s.program_id, s.app.id)
+                    format!("os://{}/{}", s.plugin_id, s.app.id)
                 }).unwrap_or_else(|| "os://home".into())
             })
     }
@@ -24521,7 +24521,7 @@ impl ShellState {
             theme.text,
         );
         x += atlas.measure_text(&title, theme.font_size_body).0 + theme.gap_standard * 2.0;
-        let examples = self.active_program_examples();
+        let examples = self.active_plugin_examples();
         if !examples.is_empty() && !self.space_mode {
             let active_label = examples
                 .iter()
@@ -25402,7 +25402,7 @@ impl ShellState {
                 );
             }
             OverlayState::Dropdown(id) if id == "example" => {
-                let examples = self.active_program_examples();
+                let examples = self.active_plugin_examples();
                 let mapped: Vec<(String, String, usize)> = examples
                     .iter()
                     .enumerate()
@@ -29746,11 +29746,11 @@ pub fn build_icon_atlas() -> IconAtlas {
 }
 
 
-use program_bridge::filter_programs;
+use program_bridge::filter_plugins;
 #[cfg(target_arch = "wasm32")]
-use program_bridge::parse_program_entries;
+use program_bridge::parse_plugin_entries;
 #[cfg(not(target_arch = "wasm32"))]
-use program_bridge::load_wasm_programs;
+use program_bridge::load_wasm_plugins;
 use interpreter::{apply_ui_image_bytes, collect_pending_ui_image_fetches};
 use infinite_world::{
     apply_glb_bytes, apply_world_action_preview, collect_pending_glb_fetches, fetch_url_bytes,
@@ -29869,7 +29869,7 @@ struct AppRuntime {
     #[cfg(not(target_arch = "wasm32"))]
     plugin_modules_root: std::path::PathBuf,
     #[cfg(not(target_arch = "wasm32"))]
-    native_program_mtimes: std::collections::HashMap<std::path::PathBuf, std::time::SystemTime>,
+    native_plugin_mtimes: std::collections::HashMap<std::path::PathBuf, std::time::SystemTime>,
     #[cfg(not(target_arch = "wasm32"))]
     native_reload_pending: bool,
 }
@@ -29911,7 +29911,7 @@ fn fetch_map_tile_bytes_blocking(_url: &str) -> Option<Vec<u8>> {
 
 impl AppRuntime {
     #[cfg(not(target_arch = "wasm32"))]
-    fn poll_native_program_hot_swap(&mut self) {
+    fn poll_native_plugin_hot_swap(&mut self) {
         let mut changed = false;
         for program in &self.shell.plugins {
             let Some(path) = program.wasm_artifact_path() else {
@@ -29923,11 +29923,11 @@ impl AppRuntime {
             let Ok(mtime) = metadata.modified() else {
                 continue;
             };
-            let previous = self.native_program_mtimes.get(path);
+            let previous = self.native_plugin_mtimes.get(path);
             if previous.is_some_and(|previous| *previous != mtime) {
                 changed = true;
             }
-            self.native_program_mtimes.insert(path.to_path_buf(), mtime);
+            self.native_plugin_mtimes.insert(path.to_path_buf(), mtime);
         }
         if changed {
             self.native_reload_pending = true;
@@ -29935,15 +29935,15 @@ impl AppRuntime {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    fn maybe_reload_native_programs(&mut self) {
+    fn maybe_reload_native_plugins(&mut self) {
         if !self.native_reload_pending {
             return;
         }
         self.native_reload_pending = false;
         let plugin_filter = self.shell.plugin_filter.clone();
         let modules_root = self.plugin_modules_root.clone();
-        let entries = match load_wasm_programs(&plugin_filter, &modules_root) {
-            Ok(entries) => filter_programs(entries, &plugin_filter),
+        let entries = match load_wasm_plugins(&plugin_filter, &modules_root) {
+            Ok(entries) => filter_plugins(entries, &plugin_filter),
             Err(error) => {
                 log_debug(&format!("[DEBUG] wasm program reload failed: {error}"));
                 return;
@@ -29960,8 +29960,8 @@ impl AppRuntime {
     fn frame(&mut self) {
         #[cfg(not(target_arch = "wasm32"))]
         {
-            self.poll_native_program_hot_swap();
-            self.maybe_reload_native_programs();
+            self.poll_native_plugin_hot_swap();
+            self.maybe_reload_native_plugins();
             pollster::block_on(self.shell.pump_sync_events());
         }
         self.theme = shell::resolve_theme_for_ids(&shell::active_theme_id(), &self.shell.appearance_id);
@@ -29990,7 +29990,7 @@ impl AppRuntime {
         });
         // 🎬 Tutorial tick — advances the playhead/recorder and applies UI/camera synchronously; any
         // resulting document-track operations are queued onto `shell.tutorial_pending_document_ops` and
-        // flushed asynchronously below (the program bridge's document calls are async, chrome rendering
+        // flushed asynchronously below (the plugin bridge's document calls are async, chrome rendering
         // isn't — same reason `scene_events` gets deferred through `spawn_app_task` just after).
         self.shell.tutorial_tick(app_now_ms());
         self.shell.render_chrome(
@@ -30859,11 +30859,11 @@ async fn boot_runtime(
     #[cfg(target_arch = "wasm32")]
     let entries = {
         let plugins = plugins.ok_or("missing wasm programs")?;
-        filter_programs(parse_program_entries(plugins).map_err(|err| format!("[DEBUG] program parse failed: {err}"))?, &plugin_filter)
+        filter_plugins(parse_plugin_entries(plugins).map_err(|err| format!("[DEBUG] program parse failed: {err}"))?, &plugin_filter)
     };
     #[cfg(not(target_arch = "wasm32"))]
-    let entries = filter_programs(
-        load_wasm_programs(&plugin_filter, &plugin_modules_root)?,
+    let entries = filter_plugins(
+        load_wasm_plugins(&plugin_filter, &plugin_modules_root)?,
         &plugin_filter,
     );
 
@@ -30899,7 +30899,7 @@ async fn boot_runtime(
         #[cfg(not(target_arch = "wasm32"))]
         plugin_modules_root: plugin_modules_root.clone(),
         #[cfg(not(target_arch = "wasm32"))]
-        native_program_mtimes: std::collections::HashMap::new(),
+        native_plugin_mtimes: std::collections::HashMap::new(),
         #[cfg(not(target_arch = "wasm32"))]
         native_reload_pending: false,
     }));

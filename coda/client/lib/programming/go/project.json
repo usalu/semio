@@ -1,33 +1,33 @@
 {
-  "name": "coda-programming-go",
+  "name": "coda-__KEEP_pluginming__-go",
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "targets": {
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "coda/client/lib/programming/go",
+        "cwd": "coda/client/lib/__KEEP_pluginming__/go",
         "command": "bun ./script.ts test"
       }
     },
     "test-quick": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "coda/client/lib/programming/go",
+        "cwd": "coda/client/lib/__KEEP_pluginming__/go",
         "command": "bun ./script.ts test quick"
       }
     },
     "test-long": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "coda/client/lib/programming/go",
+        "cwd": "coda/client/lib/__KEEP_pluginming__/go",
         "command": "bun ./script.ts test long"
       }
     },
     "test-exhaustive": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "coda/client/lib/programming/go",
+        "cwd": "coda/client/lib/__KEEP_pluginming__/go",
         "command": "bun ./script.ts test exhaustive"
       }
     }

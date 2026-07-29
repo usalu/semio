@@ -104,5 +104,5 @@ Gate for close: every checklist part row checked; every family has numeric worke
 ## Out of scope
 
 - Research-only standards without crates (EN 15804, ISO 14040, …)
-- Plugin UI polish ([`norm/plugin`](norm/program/rs/) already exists; only update Documents if session fields grow)
+- Plugin UI polish ([`norm/plugin`](norm/plugin/rs/) already exists; only update Documents if session fields grow)
 - Pasting proprietary PDF text — hand-implement formulas/tables only

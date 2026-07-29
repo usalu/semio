@@ -1,0 +1,22 @@
+Rename verification — 2026-07-29
+
+## Compile
+- `cargo check --workspace` — PASS
+
+## Registry
+- `bun ./framework/plugin/registry/script.ts check` — PASS (33 plugin crates, 50 playgrounds)
+
+## Renames applied
+- Reversed plugins→programs rename from prior session: all `program/` dirs → `plugin/`
+- `framework/program/` merged into `framework/plugin/` (rs, host, registry)
+- Crate names `*-program` → `*-plugin`, `semio-framework-program` → `semio-framework-plugin`
+- WIT `program-world` / `interface program` → `plugin-world` / `interface plugin`
+- Registry codegen: `programs.json/ts` → `plugins.json/ts`, `ProgramRegistry*` → `PluginRegistry*`
+- SDK: `program_exports!` → `plugin_exports!`, `Program` trait → `Plugin`, `ProgramManifest` → `PluginManifest`
+- Core: `Scope::Program` / `CommandScope::Program` → `Plugin`
+- OS workflow leftovers: `list_os_programs` → `list_os_workflows`, etc.
+- Storybook: `programs.stories.tsx` → `plugins.stories.tsx`, `os-programs.spec.ts` → `os-plugins.spec.ts`
+
+## Reports
+- rename-report.json (pass 1, 1339 files)
+- rename-pass2-report.json (pass 2, 9 files)

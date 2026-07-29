@@ -6,7 +6,7 @@ todos:
    content: "framework/core: add PanelKind type + groupings, add SideTabSpec.panel, replace leftTabs/rightTabs with panelTabs on runtimes/ResolvedState/mergeMode"
    status: completed
  - id: platform-core
-   content: "framework platform core: mirror panelTabs rename across AppRuntime/ModeRuntime/mergeMode/AppDefinition/ModeDefinition/program host"
+   content: "framework platform core: mirror panelTabs rename across AppRuntime/ModeRuntime/mergeMode/AppDefinition/ModeDefinition/plugin host"
    status: completed
  - id: renderer-panels
    content: "Platform React renderer: group panelTabs by kind, dynamic navbar toggles (only when tabs exist), add left-panel-kind switching, rename options->settings"

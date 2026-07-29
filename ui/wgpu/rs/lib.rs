@@ -3146,7 +3146,7 @@ pub struct BlockListScene {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiExternalSlotNode {
-    pub program_id: String,
+    pub plugin_id: String,
     pub app_id: String,
     pub body_key: String,
     pub params_json: String,
@@ -3349,7 +3349,7 @@ impl TextEditorScene {
 }
 
 //#region 🔖SceneActions
-/** @emoji 🎮 Renderer-to-program action names for node-graph surfaces. */
+/** @emoji 🎮 Renderer-to-plugin action names for node-graph surfaces. */
 pub mod node_graph_actions {
     pub const SELECT: &str = "nodeGraphSelect";
     pub const HOVER: &str = "nodeGraphHover";
@@ -3358,7 +3358,7 @@ pub mod node_graph_actions {
     pub const SPOTLIGHT_COMMIT: &str = "spotlightCommit";
 }
 
-/** @emoji ✍️ Renderer-to-program action names for text-editor surfaces. */
+/** @emoji ✍️ Renderer-to-plugin action names for text-editor surfaces. */
 pub mod text_editor_actions {
     pub const EDIT: &str = "textEdit";
     pub const SELECT: &str = "textSelect";
@@ -3368,17 +3368,17 @@ pub mod text_editor_actions {
     pub const FORMAT_DOCUMENT: &str = "formatDocument";
 }
 
-/** @emoji 🧩 Renderer-to-program action names for 2D board surfaces. */
+/** @emoji 🧩 Renderer-to-plugin action names for 2D board surfaces. */
 pub mod board2d_actions {
     pub const APPLY_BOARD_EVENTS: &str = "applyBoardEvents";
 }
 
-/** @emoji 🖊️ Renderer-to-program action names for ink canvas surfaces. */
+/** @emoji 🖊️ Renderer-to-plugin action names for ink canvas surfaces. */
 pub mod ink_canvas_actions {
     pub const APPLY_EVENTS: &str = "inkApplyEvents";
 }
 
-/** @emoji 🗺️ Renderer-to-program action names for tiled map surfaces. */
+/** @emoji 🗺️ Renderer-to-plugin action names for tiled map surfaces. */
 pub mod tiled_map_actions {
     pub const SET_CAMERA: &str = "setCamera";
     pub const SET_FEATURE_SELECTION: &str = "setFeatureSelection";
@@ -3467,13 +3467,13 @@ pub fn ui_text(value: impl Into<String>) -> UiNode {
 
 /** @emoji 🔌 Renders a contributing program body inline at this tree position. */
 pub fn ui_external_slot(
-    program_id: impl Into<String>,
+    plugin_id: impl Into<String>,
     app_id: impl Into<String>,
     body_key: impl Into<String>,
     params_json: impl Into<String>,
 ) -> UiNode {
     UiNode::ExternalSlot(UiExternalSlotNode {
-        program_id: program_id.into(),
+        plugin_id: plugin_id.into(),
         app_id: app_id.into(),
         body_key: body_key.into(),
         params_json: params_json.into(),
@@ -3982,7 +3982,7 @@ pub fn ui_error_state(id: &str, message: &str, retry: Option<ActionDescriptor>) 
 /** @emoji 🩺 Builds a plugin-recovery panel: bilingual (en/de) crash copy plus three fixed actions —
  * restart the app (`recovery.restartApp`), disable the offending program (`recovery.disablePlugin`), or
  * open diagnostics (`recovery.showDiagnostics`). `quarantined` swaps in the host-auto-disabled copy. */
-pub fn ui_recovery_panel(program_id: &str, quarantined: bool, is_de: bool) -> UiNode {
+pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiNode {
     let title = if is_de { "Plugin-Wiederherstellung" } else { "Plugin Recovery" };
     let message = match (quarantined, is_de) {
         (true, true) => "Dieses Plugin wurde nach wiederholten Abstürzen unter Quarantäne gestellt.",
@@ -3993,7 +3993,7 @@ pub fn ui_recovery_panel(program_id: &str, quarantined: bool, is_de: bool) -> Ui
     let restart_label = if is_de { "App neu starten" } else { "Restart App" };
     let disable_label = if is_de { "Plugin deaktivieren" } else { "Disable Plugin" };
     let diagnostics_label = if is_de { "Diagnose anzeigen" } else { "Show Diagnostics" };
-    let args = Some(serde_json::json!({ "programId": program_id }));
+    let args = Some(serde_json::json!({ "pluginId": plugin_id }));
     UiNode::Stack(UiStackNode {
         direction: "vertical".into(),
         gap: Some("standard".into()),
@@ -4269,7 +4269,7 @@ mod ui_node_wire_format_tests {
                     event_feed: None,
                 }),
                 UiNode::ExternalSlot(UiExternalSlotNode {
-                    program_id: "plugin1".into(),
+                    plugin_id: "plugin1".into(),
                     app_id: "app1".into(),
                     body_key: "body1".into(),
                     params_json: "{}".into(),
@@ -4279,7 +4279,7 @@ mod ui_node_wire_format_tests {
         })
     }
 
-    const GOLDEN_UI_NODE_TREE_JSON: &str = "{\"type\":\"stack\",\"direction\":\"vertical\",\"gap\":\"md\",\"id\":\"root\",\"children\":[{\"type\":\"text\",\"value\":\"Hello\",\"emphasize\":true},{\"type\":\"button\",\"id\":\"btn1\",\"iconId\":\"save\",\"label\":\"Save\",\"action\":{\"controllerId\":\"ctrl\",\"action\":\"save\"}},{\"type\":\"separator\"},{\"type\":\"input\",\"id\":\"inp1\",\"inputKind\":\"text\",\"value\":\"abc\",\"placeholder\":\"type...\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"setValue\"}},{\"type\":\"select\",\"id\":\"sel1\",\"value\":\"a\",\"items\":[{\"value\":\"a\",\"label\":\"A\"},{\"value\":\"b\",\"label\":\"B\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"selectChange\"}},{\"type\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"align-left\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggle\"},\"presence\":{\"selected\":true}},{\"type\":\"group\",\"id\":\"grp1\",\"label\":\"Group\",\"defaultOpen\":true,\"children\":[{\"type\":\"text\",\"value\":\"child\"}]},{\"type\":\"keyValue\",\"entries\":[{\"label\":\"K\",\"value\":\"V\"}]},{\"type\":\"slider\",\"id\":\"sl1\",\"value\":0.5,\"min\":0.0,\"max\":1.0,\"step\":0.1,\"unit\":\"%\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"sliderChange\"}},{\"type\":\"numberStepper\",\"id\":\"num1\",\"value\":2.0,\"step\":1.0,\"uniform\":true,\"onAbsolute\":{\"controllerId\":\"ctrl\",\"action\":\"setAbs\"},\"onDelta\":{\"controllerId\":\"ctrl\",\"action\":\"setDelta\"}},{\"type\":\"ring\",\"id\":\"ring1\",\"orbId\":\"orb1\",\"t\":0.25,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"ringChange\"}},{\"type\":\"iconSelect\",\"id\":\"icn1\",\"value\":\"star\",\"uniform\":true,\"classifierKind\":\"icon\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"iconChange\"}},{\"type\":\"field\",\"id\":\"field1\",\"label\":\"Field\",\"description\":\"desc\",\"required\":true,\"child\":{\"type\":\"text\",\"value\":\"child\"}},{\"type\":\"section\",\"id\":\"sec1\",\"label\":\"Section\",\"defaultOpen\":true,\"children\":[]},{\"type\":\"tree\",\"sections\":[{\"id\":\"treesec1\",\"label\":\"Items\",\"defaultOpen\":true,\"items\":[{\"id\":\"item1\",\"label\":\"Item 1\",\"presence\":{\"selected\":true}}]}]},{\"type\":\"image\",\"id\":\"img1\",\"src\":\"icon.png\",\"alt\":\"alt text\"},{\"type\":\"componentScene\",\"surfaceId\":\"surf1\",\"controllerId\":\"ctrl\",\"componentKind\":\"world-3d\",\"world3d\":{\"cameraJson\":\"{}\",\"meshesJson\":\"[]\",\"instancesJson\":\"[]\",\"selectionJson\":\"{}\"}},{\"type\":\"externalSlot\",\"programId\":\"plugin1\",\"appId\":\"app1\",\"bodyKey\":\"body1\",\"paramsJson\":\"{}\"}]}";
+    const GOLDEN_UI_NODE_TREE_JSON: &str = "{\"type\":\"stack\",\"direction\":\"vertical\",\"gap\":\"md\",\"id\":\"root\",\"children\":[{\"type\":\"text\",\"value\":\"Hello\",\"emphasize\":true},{\"type\":\"button\",\"id\":\"btn1\",\"iconId\":\"save\",\"label\":\"Save\",\"action\":{\"controllerId\":\"ctrl\",\"action\":\"save\"}},{\"type\":\"separator\"},{\"type\":\"input\",\"id\":\"inp1\",\"inputKind\":\"text\",\"value\":\"abc\",\"placeholder\":\"type...\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"setValue\"}},{\"type\":\"select\",\"id\":\"sel1\",\"value\":\"a\",\"items\":[{\"value\":\"a\",\"label\":\"A\"},{\"value\":\"b\",\"label\":\"B\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"selectChange\"}},{\"type\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"align-left\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggle\"},\"presence\":{\"selected\":true}},{\"type\":\"group\",\"id\":\"grp1\",\"label\":\"Group\",\"defaultOpen\":true,\"children\":[{\"type\":\"text\",\"value\":\"child\"}]},{\"type\":\"keyValue\",\"entries\":[{\"label\":\"K\",\"value\":\"V\"}]},{\"type\":\"slider\",\"id\":\"sl1\",\"value\":0.5,\"min\":0.0,\"max\":1.0,\"step\":0.1,\"unit\":\"%\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"sliderChange\"}},{\"type\":\"numberStepper\",\"id\":\"num1\",\"value\":2.0,\"step\":1.0,\"uniform\":true,\"onAbsolute\":{\"controllerId\":\"ctrl\",\"action\":\"setAbs\"},\"onDelta\":{\"controllerId\":\"ctrl\",\"action\":\"setDelta\"}},{\"type\":\"ring\",\"id\":\"ring1\",\"orbId\":\"orb1\",\"t\":0.25,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"ringChange\"}},{\"type\":\"iconSelect\",\"id\":\"icn1\",\"value\":\"star\",\"uniform\":true,\"classifierKind\":\"icon\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"iconChange\"}},{\"type\":\"field\",\"id\":\"field1\",\"label\":\"Field\",\"description\":\"desc\",\"required\":true,\"child\":{\"type\":\"text\",\"value\":\"child\"}},{\"type\":\"section\",\"id\":\"sec1\",\"label\":\"Section\",\"defaultOpen\":true,\"children\":[]},{\"type\":\"tree\",\"sections\":[{\"id\":\"treesec1\",\"label\":\"Items\",\"defaultOpen\":true,\"items\":[{\"id\":\"item1\",\"label\":\"Item 1\",\"presence\":{\"selected\":true}}]}]},{\"type\":\"image\",\"id\":\"img1\",\"src\":\"icon.png\",\"alt\":\"alt text\"},{\"type\":\"componentScene\",\"surfaceId\":\"surf1\",\"controllerId\":\"ctrl\",\"componentKind\":\"world-3d\",\"world3d\":{\"cameraJson\":\"{}\",\"meshesJson\":\"[]\",\"instancesJson\":\"[]\",\"selectionJson\":\"{}\"}},{\"type\":\"externalSlot\",\"pluginId\":\"plugin1\",\"appId\":\"app1\",\"bodyKey\":\"body1\",\"paramsJson\":\"{}\"}]}";
 
     #[test]
     fn ui_node_tree_serializes_to_golden_json() {
@@ -4373,7 +4373,7 @@ mod ui_node_wire_format_tests {
         assert_presence_serializes(UiNode::Tree(UiTreeNode { sections: vec![], presence: UiPresence::default(), selection_change: None, drop_action: None }), "Tree");
         assert_presence_serializes(UiNode::Image(UiImageNode { id: "i".into(), src: "s".into(), alt: None, presence: UiPresence::default() }), "Image");
         assert_presence_serializes(
-            UiNode::ExternalSlot(UiExternalSlotNode { program_id: "p".into(), app_id: "a".into(), body_key: "b".into(), params_json: "{}".into(), presence: UiPresence::default() }),
+            UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: "p".into(), app_id: "a".into(), body_key: "b".into(), params_json: "{}".into(), presence: UiPresence::default() }),
             "ExternalSlot",
         );
         assert_presence_serializes(
@@ -13417,7 +13417,7 @@ fn paint_component_scene(node: &UiComponentSceneNode, bounds: Rect, theme: &Them
     push_control_border(draw, bounds, theme, theme.border_normal, theme.panel);
 }
 
-/// 🧩 Same placeholder-chrome treatment as `paint_component_scene`: the program body itself is a host
+/// 🧩 Same placeholder-chrome treatment as `paint_component_scene`: the plugin body itself is a host
 /// concern (`program_bridge`), out of scope here; label the slot with its `body_key` for now.
 fn paint_external_slot(node: &UiExternalSlotNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     push_control_border(draw, bounds, theme, theme.border_normal, theme.panel);
@@ -17697,7 +17697,7 @@ mod tests {
 
     #[test]
     fn golden_external_slot_known_gap() {
-        let node = UiNode::ExternalSlot(UiExternalSlotNode { program_id: "plug".into(), app_id: "app".into(), body_key: "body".into(), params_json: "{}".into(), presence: UiPresence::default() });
+        let node = UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: "plug".into(), app_id: "app".into(), body_key: "body".into(), params_json: "{}".into(), presence: UiPresence::default() });
         let (instances, _, _) = retained_stats(&node);
         assert!(instances > 0, "ExternalSlot should paint its placeholder chrome plus its body_key label");
     }

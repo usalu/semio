@@ -1,5 +1,5 @@
 {
-  "name": "compose-blnbo-programming",
+  "name": "compose-blnbo-__KEEP_pluginming__",
   "mcp": {
     "command": "../repo/cli/cli",
     "args": ["mcp"]
@@ -17,7 +17,7 @@
       "llm": ["claude-opus-4-5", "sonnet-4-5", "gemini-3-pro", "gemini-3-flash"]
     },
     {
-      "id": "programming"
+      "id": "__KEEP_pluginming__"
     }
   ]
 }

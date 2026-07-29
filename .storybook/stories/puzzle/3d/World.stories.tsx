@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/story/puzzle/3d/World.stories.tsx
 // Specs: Host the framework renderer's `World3dHost` for Storybook + Playwright selection/camera checks, driven by the *real* puzzle-3d example fixtures.
-// Summary: Mounts the host directly against a `UiComponentSceneNode`; a story-local reducer emulates the subset of `puzzle3d-play`'s (`puzzle/program/rs/lib.rs`'s `d3` module, `handle_action`) object/vortex pick + camera + delete/duplicate actions the story exercises, so the controlled scene ⇄ session loop round-trips without a running dev server — mirrors `../puzzle/2d/Board.stories.tsx`'s pattern. Fixture data comes from the real `puzzle/3d/example/*.puzzle3d` DSL-text fixtures (`Puzzle3dProjection`'s `dsl::DslDocument` grammar) — raw-imported as text and parsed via `@semio-tech/puzzle-3d-rs`'s `puzzle3dParseDslJson` wasm export (the same `parse_dsl` Rust uses, reused as the single source of truth instead of duplicating the DSL grammar in TypeScript).
+// Summary: Mounts the host directly against a `UiComponentSceneNode`; a story-local reducer emulates the subset of `puzzle3d-play`'s (`puzzle/plugin/rs/lib.rs`'s `d3` module, `handle_action`) object/vortex pick + camera + delete/duplicate actions the story exercises, so the controlled scene ⇄ session loop round-trips without a running dev server — mirrors `../puzzle/2d/Board.stories.tsx`'s pattern. Fixture data comes from the real `puzzle/3d/example/*.puzzle3d` DSL-text fixtures (`Puzzle3dProjection`'s `dsl::DslDocument` grammar) — raw-imported as text and parsed via `@semio-tech/puzzle-3d-rs`'s `puzzle3dParseDslJson` wasm export (the same `parse_dsl` Rust uses, reused as the single source of truth instead of duplicating the DSL grammar in TypeScript).
 // Real GLB mesh assets referenced by `meshUrl` in these fixtures aren't part of this Storybook scope's asset pipeline (no `mesh-collection` route is registered for `puzzle/3d`, and the GLBs themselves don't exist in this checkout) — object instances are therefore built *without* a mesh `url`, so `World3dHost` renders its built-in neutral placeholder box per object instead of attempting (and failing) a GLTF fetch. Reference-plane images do exist on disk, so those load for real via a Vite asset import.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
@@ -120,7 +120,7 @@ function applyStoryWorldMerge(current: readonly string[], id: string, merge: str
   return [...set];
 }
 
-/** @emoji 🧩 Story-local mirror of a subset of `d3::Puzzle3dPlayApp::handle_action` (`puzzle/program/rs/lib.rs`) — enough for the story to click/hover/orbit/delete/duplicate against the real fixtures. */
+/** @emoji 🧩 Story-local mirror of a subset of `d3::Puzzle3dPlayApp::handle_action` (`puzzle/plugin/rs/lib.rs`) — enough for the story to click/hover/orbit/delete/duplicate against the real fixtures. */
 function reduceStoryWorld3dAction(state: StoryWorld3dState, action: string, args: Record<string, unknown> | undefined): StoryWorld3dState {
   const { fixture, runtime } = state;
   switch (action) {

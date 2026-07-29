@@ -98,8 +98,8 @@ pub mod catalog {
 
     //#region 🔖Entries
     #[derive(Debug, Clone, PartialEq, Eq, Default)]
-    pub struct ProgramRegistryEntry {
-        pub program_id: String,
+    pub struct PluginRegistryEntry {
+        pub plugin_id: String,
         pub crate_path: String,
         pub package_name: String,
         pub wasm_out: String,
@@ -116,7 +116,7 @@ pub mod catalog {
     #[derive(Debug, Clone, PartialEq, Eq, Default)]
     pub struct PlaygroundEntry {
         pub variant: String,
-        pub program_id: String,
+        pub plugin_id: String,
         pub crate_path: String,
         pub app: Option<String>,
         pub aliases: Vec<String>,
@@ -131,7 +131,7 @@ pub mod catalog {
     }
 
     /// 🗂️ One `[[package.metadata.semio.assets]]` row: a dev-time asset-serving need declared by a
-    /// program crate (tile proxy, static directory, or mesh collection). `app` optionally scopes the
+    /// plugin crate (tile proxy, static directory, or mesh collection). `app` optionally scopes the
     /// row to one playground variant of a multi-app crate (unset ⇒ every variant of the crate).
     #[derive(Debug, Clone, PartialEq, Eq, Default)]
     pub struct AssetSpec {
@@ -223,14 +223,14 @@ pub mod catalog {
     //#endregion 🔖TomlScan
 
     //#region 🔖Discovery
-    /// 🚫 Directory names skipped while walking for program crates (build/vendor noise and any
+    /// 🚫 Directory names skipped while walking for plugin crates (build/vendor noise and any
     /// dot-directory, e.g. `.claude/worktrees/…`, which used to leak duplicate registry rows).
     fn skip_dir(name: &str) -> bool {
         name.starts_with('.') || matches!(name, "node_modules" | "generated" | "target")
     }
 
-    /// 🔍 Finds every program/module crate `Cargo.toml` under `root` (excluding the program SDK itself).
-    pub fn find_program_cargo_files(root: &Path) -> Vec<PathBuf> {
+    /// 🔍 Finds every plugin/module crate `Cargo.toml` under `root` (excluding the plugin SDK itself).
+    pub fn find_plugin_cargo_files(root: &Path) -> Vec<PathBuf> {
         fn walk(dir: &Path, out: &mut Vec<PathBuf>) {
             let Ok(entries) = fs::read_dir(dir) else { return };
             for entry in entries.flatten() {
@@ -245,10 +245,10 @@ pub mod catalog {
                     walk(&path, out);
                 } else if name == "Cargo.toml" {
                     let path_str = path.to_string_lossy().replace('\\', "/");
-                    if path_str.contains("/framework/program/rs/") {
+                    if path_str.contains("/framework/plugin/rs/") {
                         continue;
                     }
-                    let is_program = path_str.ends_with("/program/rs/Cargo.toml");
+                    let is_plugin = path_str.ends_with("/plugin/rs/Cargo.toml");
                     let is_module = {
                         let segs: Vec<&str> = path_str.split('/').collect();
                         segs.len() >= 4
@@ -257,7 +257,7 @@ pub mod catalog {
                             && segs[segs.len() - 4] == "module"
                     };
                     // 🏛️ Post-restructure plugin bundle crate: `s/plugin/<p>/rs/Cargo.toml` absorbs the
-                    // former `<tech>/program/rs`. Kept alongside the legacy patterns during the migration.
+                    // former `<tech>/plugin/rs`. Kept alongside the legacy patterns during the migration.
                     let is_plugin_bundle = {
                         let segs: Vec<&str> = path_str.split('/').collect();
                         segs.len() >= 5
@@ -266,7 +266,7 @@ pub mod catalog {
                             && segs[segs.len() - 4] == "plugin"
                             && segs[segs.len() - 5] == "s"
                     };
-                    if is_program || is_module || is_plugin_bundle {
+                    if is_plugin || is_module || is_plugin_bundle {
                         out.push(path);
                     }
                 }
@@ -278,23 +278,23 @@ pub mod catalog {
         out
     }
 
-    /// 🧾 Parses one program/module crate manifest's registry-relevant fields.
-    pub fn parse_program_cargo_text(text: &str, crate_path: &str) -> Option<ProgramRegistryEntry> {
+    /// 🧾 Parses one plugin/module crate manifest's registry-relevant fields.
+    pub fn parse_plugin_cargo_text(text: &str, crate_path: &str) -> Option<PluginRegistryEntry> {
         let package_name = string_field(text, "name")?;
         let component_block = blocks_after_header(text, |l| l == "[package.metadata.component]");
-        let program_id = component_block.first().and_then(|b| string_field(b, "package")).and_then(|p| p.strip_prefix("semio:").map(str::to_string))?;
+        let plugin_id = component_block.first().and_then(|b| string_field(b, "package")).and_then(|p| p.strip_prefix("semio:").map(str::to_string))?;
         let wasm_out = format!("{}.wasm", package_name.replace('-', "_"));
         let semio_block = blocks_after_header(text, |l| l == "[package.metadata.semio]");
         let (contributes, consumes) = match semio_block.first() {
             Some(b) => (string_array_field(b, "contributes"), string_array_field(b, "consumes")),
             None => (Vec::new(), Vec::new()),
         };
-        Some(ProgramRegistryEntry { program_id, crate_path: crate_path.to_string(), package_name, wasm_out, contributes, consumes })
+        Some(PluginRegistryEntry { plugin_id, crate_path: crate_path.to_string(), package_name, wasm_out, contributes, consumes })
     }
 
     /// 🎮 Parses every `[[package.metadata.semio.playground]]` row for one crate (examples unset;
     /// see `discover_examples_for_playground`, which needs the variant to disambiguate multi-app crates).
-    pub fn parse_playgrounds_text(text: &str, program_id: &str, crate_path: &str) -> Vec<PlaygroundEntry> {
+    pub fn parse_playgrounds_text(text: &str, plugin_id: &str, crate_path: &str) -> Vec<PlaygroundEntry> {
         blocks_after_header(text, |l| l == "[[package.metadata.semio.playground]]")
             .iter()
             .filter_map(|block| {
@@ -303,7 +303,7 @@ pub mod catalog {
                 let aliases = string_array_field(block, "aliases");
                 let ports = ports_field(block)?;
                 let engines = string_array_field(block, "engines");
-                Some(PlaygroundEntry { variant, program_id: program_id.to_string(), crate_path: crate_path.to_string(), app, aliases, ports, examples: Vec::new(), engines, assets: Vec::new() })
+                Some(PlaygroundEntry { variant, plugin_id: plugin_id.to_string(), crate_path: crate_path.to_string(), app, aliases, ports, examples: Vec::new(), engines, assets: Vec::new() })
             })
             .collect()
     }
@@ -349,10 +349,10 @@ pub mod catalog {
 
     /// 🖼️ Example ids for one playground row: tries the crate's own `example/` dir (stripping a
     /// trailing `/rs` and `/plugin`), then — for multi-app crates where the playground `variant`
-    /// diverges from the shared crate path (e.g. `puzzle/program/rs` hosting `puzzle2d`/`puzzle3d`) —
-    /// the sibling module directory named after the variant's `programId`-stripped suffix
+    /// diverges from the shared crate path (e.g. `puzzle/plugin/rs` hosting `puzzle2d`/`puzzle3d`) —
+    /// the sibling module directory named after the variant's `pluginId`-stripped suffix
     /// (`puzzle2d` - `puzzle` = `2d` → `puzzle/2d/example`).
-    pub fn discover_examples_for_playground(root: &Path, crate_path: &str, program_id: &str, variant: &str) -> Vec<String> {
+    pub fn discover_examples_for_playground(root: &Path, crate_path: &str, plugin_id: &str, variant: &str) -> Vec<String> {
         let trimmed = crate_path.strip_suffix("/rs").unwrap_or(crate_path);
         let own_candidates = [trimmed.to_string(), trimmed.strip_suffix("/plugin").unwrap_or(trimmed).to_string()];
         for base in &own_candidates {
@@ -361,7 +361,7 @@ pub mod catalog {
                 return example_ids_in(&dir);
             }
         }
-        if let Some(suffix) = variant.strip_prefix(program_id).filter(|s| !s.is_empty()) {
+        if let Some(suffix) = variant.strip_prefix(plugin_id).filter(|s| !s.is_empty()) {
             let segs: Vec<&str> = trimmed.split('/').collect();
             // 🏛️ Under `s/plugin/<p>/...` the tech root is the plugin folder (3 segments), not `s` itself.
             let tech_root = if segs.first() == Some(&"s") && segs.get(1) == Some(&"plugin") && segs.len() >= 3 {
@@ -379,36 +379,36 @@ pub mod catalog {
         Vec::new()
     }
 
-    /// 📚 Scans the whole workspace for program/module crates, sorted by `programId`.
-    pub fn generate_program_registry(root: &Path) -> Vec<ProgramRegistryEntry> {
-        let mut entries: Vec<ProgramRegistryEntry> = find_program_cargo_files(root)
+    /// 📚 Scans the whole workspace for plugin/module crates, sorted by `pluginId`.
+    pub fn generate_plugin_registry(root: &Path) -> Vec<PluginRegistryEntry> {
+        let mut entries: Vec<PluginRegistryEntry> = find_plugin_cargo_files(root)
             .iter()
             .filter_map(|path| {
                 let text = fs::read_to_string(path).ok()?;
                 let crate_path = path.parent()?.strip_prefix(root).ok()?.to_string_lossy().replace('\\', "/");
-                match parse_program_cargo_text(&text, &crate_path) {
+                match parse_plugin_cargo_text(&text, &crate_path) {
                     Some(e) => Some(e),
                     None => {
-                        eprintln!("[DEBUG] program registry catalog: skipping {}", path.display());
+                        eprintln!("[DEBUG] plugin registry catalog: skipping {}", path.display());
                         None
                     }
                 }
             })
             .collect();
-        entries.sort_by(|a, b| a.program_id.cmp(&b.program_id));
+        entries.sort_by(|a, b| a.plugin_id.cmp(&b.plugin_id));
         entries
     }
 
     /// 🕹️ Flattens every crate's playground rows into one repo-wide catalog, sorted by variant.
     pub fn generate_playground_registry(root: &Path) -> Vec<PlaygroundEntry> {
-        let entries = generate_program_registry(root);
+        let entries = generate_plugin_registry(root);
         let mut playgrounds = Vec::new();
         for entry in &entries {
             let manifest = root.join(&entry.crate_path).join("Cargo.toml");
             let Ok(text) = fs::read_to_string(&manifest) else { continue };
             let crate_assets = parse_assets_text(&text);
-            for mut playground in parse_playgrounds_text(&text, &entry.program_id, &entry.crate_path) {
-                playground.examples = discover_examples_for_playground(root, &entry.crate_path, &entry.program_id, &playground.variant);
+            for mut playground in parse_playgrounds_text(&text, &entry.plugin_id, &entry.crate_path) {
+                playground.examples = discover_examples_for_playground(root, &entry.crate_path, &entry.plugin_id, &playground.variant);
                 playground.assets = crate_assets
                     .iter()
                     .filter(|asset| asset.app.as_deref().map(|app| Some(app) == playground.app.as_deref()).unwrap_or(true))
@@ -474,12 +474,12 @@ pub mod catalog {
         serde_json::to_string(s).unwrap_or_default()
     }
 
-    pub fn emit_programs_json(entries: &[ProgramRegistryEntry]) -> String {
+    pub fn emit_plugins_json(entries: &[PluginRegistryEntry]) -> String {
         let value: Vec<serde_json::Value> = entries
             .iter()
             .map(|e| {
                 serde_json::json!({
-                    "programId": e.program_id,
+                    "pluginId": e.plugin_id,
                     "cratePath": e.crate_path,
                     "packageName": e.package_name,
                     "wasmOut": e.wasm_out,
@@ -491,13 +491,13 @@ pub mod catalog {
         format!("{}\n", serde_json::to_string_pretty(&value).unwrap_or_default())
     }
 
-    pub fn emit_programs_ts(entries: &[ProgramRegistryEntry]) -> String {
+    pub fn emit_plugins_ts(entries: &[PluginRegistryEntry]) -> String {
         let rows: Vec<String> = entries
             .iter()
             .map(|e| {
                 format!(
-                    "\t{{ programId: {}, cratePath: {}, wasmOut: {}, contributes: {}, consumes: {} }},",
-                    json_string(&e.program_id),
+                    "\t{{ pluginId: {}, cratePath: {}, wasmOut: {}, contributes: {}, consumes: {} }},",
+                    json_string(&e.plugin_id),
                     json_string(&e.crate_path),
                     json_string(&e.wasm_out),
                     serde_json::to_string(&e.contributes).unwrap_or_default(),
@@ -506,7 +506,7 @@ pub mod catalog {
             })
             .collect();
         format!(
-            "/** @generated by repo/cli/rs (semio program registry generate) — do not edit. */\nexport type ProgramBuildTarget = {{\n\treadonly programId: string;\n\treadonly cratePath: string;\n\treadonly wasmOut: string;\n\treadonly contributes: readonly string[];\n\treadonly consumes: readonly string[];\n}};\n\nexport const PROGRAM_BUILD_TARGETS: readonly ProgramBuildTarget[] = [\n{}\n];\n\nexport const PROGRAM_TARGETS = PROGRAM_BUILD_TARGETS.map((target) => ({{\n\tprogramId: target.programId,\n\tmoduleUrl: `/program-modules/${{target.programId}}/${{target.wasmOut.replace(/\\.wasm$/, \".js\")}}`,\n}}));\n\nexport const programModuleUrl = (programId: string, fileName: string) =>\n\t`/program-modules/${{programId}}/${{fileName.replace(/\\.wasm$/, \".js\")}}`;\n",
+            "/** @generated by repo/cli/rs (semio plugin registry generate) — do not edit. */\nexport type PluginBuildTarget = {{\n\treadonly pluginId: string;\n\treadonly cratePath: string;\n\treadonly wasmOut: string;\n\treadonly contributes: readonly string[];\n\treadonly consumes: readonly string[];\n}};\n\nexport const PLUGIN_BUILD_TARGETS: readonly PluginBuildTarget[] = [\n{}\n];\n\nexport const PROGRAM_TARGETS = PLUGIN_BUILD_TARGETS.map((target) => ({{\n\tpluginId: target.pluginId,\n\tmoduleUrl: `/plugin-modules/${{target.pluginId}}/${{target.wasmOut.replace(/\\.wasm$/, \".js\")}}`,\n}}));\n\nexport const pluginModuleUrl = (pluginId: string, fileName: string) =>\n\t`/plugin-modules/${{pluginId}}/${{fileName.replace(/\\.wasm$/, \".js\")}}`;\n",
             rows.join("\n")
         )
     }
@@ -563,7 +563,7 @@ pub mod catalog {
             .map(|p| {
                 let mut obj = serde_json::json!({
                     "variant": p.variant,
-                    "programId": p.program_id,
+                    "pluginId": p.plugin_id,
                     "cratePath": p.crate_path,
                     "aliases": p.aliases,
                     "ports": { "react": p.ports.react, "wgpu": p.ports.wgpu },
@@ -587,9 +587,9 @@ pub mod catalog {
                 let app = p.app.as_ref().map(|a| format!(", app: {}", json_string(a))).unwrap_or_default();
                 let assets: Vec<String> = p.assets.iter().map(asset_spec_ts).collect();
                 format!(
-                    "\t{{ variant: {}, programId: {}, cratePath: {}{}, aliases: {}, ports: {{ react: {}, wgpu: {} }}, examples: {}, engines: {}, assets: [{}] }},",
+                    "\t{{ variant: {}, pluginId: {}, cratePath: {}{}, aliases: {}, ports: {{ react: {}, wgpu: {} }}, examples: {}, engines: {}, assets: [{}] }},",
                     json_string(&p.variant),
-                    json_string(&p.program_id),
+                    json_string(&p.plugin_id),
                     json_string(&p.crate_path),
                     app,
                     serde_json::to_string(&p.aliases).unwrap_or_default(),
@@ -602,7 +602,7 @@ pub mod catalog {
             })
             .collect();
         format!(
-            "/** @generated by repo/cli/rs (semio program registry generate) — do not edit. */\nexport type PlaygroundAssetSpec =\n\t| {{ readonly kind: \"tile-proxy\"; readonly route: string; readonly upstream: string; readonly cache: string }}\n\t| {{ readonly kind: \"static-dir\"; readonly route: string; readonly root: string }}\n\t| {{ readonly kind: \"mesh-collection\"; readonly route: string; readonly roots: readonly string[]; readonly placeholder: string; readonly filterFromExamples?: boolean }};\n\nexport type PlaygroundBuildTarget = {{\n\treadonly variant: string;\n\treadonly programId: string;\n\treadonly cratePath: string;\n\treadonly app?: string;\n\treadonly aliases: readonly string[];\n\treadonly ports: {{ readonly react: number; readonly wgpu: number }};\n\treadonly examples: readonly string[];\n\treadonly engines: readonly string[];\n\treadonly assets: readonly PlaygroundAssetSpec[];\n}};\n\nexport const PLAYGROUND_BUILD_TARGETS: readonly PlaygroundBuildTarget[] = [\n{}\n];\n",
+            "/** @generated by repo/cli/rs (semio plugin registry generate) — do not edit. */\nexport type PlaygroundAssetSpec =\n\t| {{ readonly kind: \"tile-proxy\"; readonly route: string; readonly upstream: string; readonly cache: string }}\n\t| {{ readonly kind: \"static-dir\"; readonly route: string; readonly root: string }}\n\t| {{ readonly kind: \"mesh-collection\"; readonly route: string; readonly roots: readonly string[]; readonly placeholder: string; readonly filterFromExamples?: boolean }};\n\nexport type PlaygroundBuildTarget = {{\n\treadonly variant: string;\n\treadonly pluginId: string;\n\treadonly cratePath: string;\n\treadonly app?: string;\n\treadonly aliases: readonly string[];\n\treadonly ports: {{ readonly react: number; readonly wgpu: number }};\n\treadonly examples: readonly string[];\n\treadonly engines: readonly string[];\n\treadonly assets: readonly PlaygroundAssetSpec[];\n}};\n\nexport const PLAYGROUND_BUILD_TARGETS: readonly PlaygroundBuildTarget[] = [\n{}\n];\n",
             rows.join("\n")
         )
     }
@@ -610,17 +610,17 @@ pub mod catalog {
 
     //#region 🔖GenerateCheck
     fn generated_dir(root: &Path) -> PathBuf {
-        root.join("framework/program/registry/generated")
+        root.join("framework/plugin/registry/generated")
     }
 
-    /// ✍️ Regenerates `framework/program/registry/generated/*` from the current workspace state.
+    /// ✍️ Regenerates `framework/plugin/registry/generated/*` from the current workspace state.
     pub fn write_registry(root: &Path) -> std::io::Result<(usize, usize)> {
-        let entries = generate_program_registry(root);
+        let entries = generate_plugin_registry(root);
         let playgrounds = generate_playground_registry(root);
         let out_dir = generated_dir(root);
         fs::create_dir_all(&out_dir)?;
-        fs::write(out_dir.join("programs.json"), emit_programs_json(&entries))?;
-        fs::write(out_dir.join("programs.ts"), emit_programs_ts(&entries))?;
+        fs::write(out_dir.join("plugins.json"), emit_plugins_json(&entries))?;
+        fs::write(out_dir.join("plugins.ts"), emit_plugins_ts(&entries))?;
         fs::write(out_dir.join("playgrounds.json"), emit_playgrounds_json(&playgrounds))?;
         fs::write(out_dir.join("playgrounds.ts"), emit_playgrounds_ts(&playgrounds))?;
         Ok((entries.len(), playgrounds.len()))
@@ -628,19 +628,19 @@ pub mod catalog {
 
     /// 🔎 Renders the catalog in memory and byte-compares it against `generated/*`; never writes.
     pub fn check_registry(root: &Path) -> Vec<String> {
-        let entries = generate_program_registry(root);
+        let entries = generate_plugin_registry(root);
         let playgrounds = generate_playground_registry(root);
         let out_dir = generated_dir(root);
         let expected = [
-            ("programs.json", emit_programs_json(&entries)),
-            ("programs.ts", emit_programs_ts(&entries)),
+            ("plugins.json", emit_plugins_json(&entries)),
+            ("plugins.ts", emit_plugins_ts(&entries)),
             ("playgrounds.json", emit_playgrounds_json(&playgrounds)),
             ("playgrounds.ts", emit_playgrounds_ts(&playgrounds)),
         ];
         let mut problems: Vec<String> = expected
             .iter()
             .filter(|(name, content)| fs::read_to_string(out_dir.join(name)).map(|actual| &actual != content).unwrap_or(true))
-            .map(|(name, _)| format!("program registry catalog is stale: generated/{name} (run `semio program registry generate`)"))
+            .map(|(name, _)| format!("plugin registry catalog is stale: generated/{name} (run `semio plugin registry generate`)"))
             .collect();
         problems.extend(validate_playground_registry(&playgrounds));
         problems
@@ -655,7 +655,7 @@ pub mod catalog {
             .filter_map(|v| {
                 Some(PlaygroundEntry {
                     variant: v.get("variant")?.as_str()?.to_string(),
-                    program_id: v.get("programId")?.as_str()?.to_string(),
+                    plugin_id: v.get("pluginId")?.as_str()?.to_string(),
                     crate_path: v.get("cratePath")?.as_str()?.to_string(),
                     app: v.get("app").and_then(|a| a.as_str()).map(str::to_string),
                     aliases: v.get("aliases")?.as_array()?.iter().filter_map(|a| a.as_str().map(str::to_string)).collect(),
@@ -722,7 +722,7 @@ pub mod env_contract {
         pub terminology: Lock,
         pub theme: Lock,
         pub appearance: Lock,
-        pub skip_program_build: bool,
+        pub skip_plugin_build: bool,
         pub skip_engine_build: bool,
         pub skip_wgpu_build: bool,
     }
@@ -754,7 +754,7 @@ pub mod env_contract {
         env.push(("SEMIO_PLUGIN".to_string(), variant.to_string()));
         env.push(("SEMIO_RENDERER".to_string(), renderer.to_string()));
         env.push(("S_OS_PORT".to_string(), port.to_string()));
-        env.push(("VITE_SEMIO_PLUGIN".to_string(), playground.map(|p| p.program_id.clone()).unwrap_or_else(|| variant.to_string())));
+        env.push(("VITE_SEMIO_PLUGIN".to_string(), playground.map(|p| p.plugin_id.clone()).unwrap_or_else(|| variant.to_string())));
         env.push(("VITE_SEMIO_RENDERER".to_string(), renderer.to_string()));
         if let Some(app) = playground.and_then(|p| p.app.as_ref()) {
             env.push(("VITE_SEMIO_APP_ID".to_string(), app.clone()));
@@ -775,7 +775,7 @@ pub mod env_contract {
         if let Lock::Individual(v) = &opts.appearance {
             env.push(("SEMIO_LOCKED_APPEARANCE".to_string(), v.clone()));
         }
-        if opts.skip_program_build {
+        if opts.skip_plugin_build {
             env.push(("SKIP_PLUGIN_BUILD".to_string(), "1".to_string()));
         }
         if opts.skip_engine_build {
@@ -832,7 +832,7 @@ pub mod dev {
             terminology: args.flag("terminology").map(parse_lock).unwrap_or(crate::options::Lock::All),
             theme: args.flag("theme").map(parse_lock).unwrap_or(crate::options::Lock::All),
             appearance: args.flag("appearance").map(parse_lock).unwrap_or(crate::options::Lock::All),
-            skip_program_build: args.has_flag("skip-program-build"),
+            skip_plugin_build: args.has_flag("skip-plugin-build"),
             skip_engine_build: args.has_flag("skip-engine-build"),
             skip_wgpu_build: args.has_flag("skip-wgpu-build"),
         }
@@ -843,7 +843,7 @@ pub mod dev {
         let catalog = load_playground_catalog(root);
         let (segments, _) = consume_legacy_example_prefix(&args.segments);
         let Some((playground, _rest)) = resolve_playground(&catalog, &segments) else {
-            eprintln!("[semio dev] unknown program/variant {:?} — run `semio catalog` to list playgrounds", segments.join(" "));
+            eprintln!("[semio dev] unknown plugin/variant {:?} — run `semio catalog` to list playgrounds", segments.join(" "));
             return 1;
         };
         let opts = dev_options_from_args(args);
@@ -854,7 +854,7 @@ pub mod dev {
 }
 // #endregion 🔖Dev
 
-// #region 🔖ProgramRegistryCommand
+// #region 🔖PluginRegistryCommand
 pub mod plugin_registry_command {
     use crate::catalog::{check_registry, write_registry};
     use std::path::Path;
@@ -864,7 +864,7 @@ pub mod plugin_registry_command {
             "check" => {
                 let problems = check_registry(root);
                 if problems.is_empty() {
-                    println!("program registry catalog is fresh.");
+                    println!("plugin registry catalog is fresh.");
                     0
                 } else {
                     for p in &problems {
@@ -875,18 +875,18 @@ pub mod plugin_registry_command {
             }
             _ => match write_registry(root) {
                 Ok((plugins, playgrounds)) => {
-                    println!("program registry catalog refreshed ({plugins} program crates, {playgrounds} playgrounds).");
+                    println!("plugin registry catalog refreshed ({plugins} plugin crates, {playgrounds} playgrounds).");
                     0
                 }
                 Err(e) => {
-                    eprintln!("[semio program registry generate] {e}");
+                    eprintln!("[semio plugin registry generate] {e}");
                     1
                 }
             },
         }
     }
 }
-// #endregion 🔖ProgramRegistryCommand
+// #endregion 🔖PluginRegistryCommand
 
 // #region 🔖Tui
 pub mod tui_dashboard {
@@ -909,20 +909,20 @@ pub mod tui_dashboard {
     use ui_styling::appearance::AppearanceName;
 
     //#region 🔖CatalogTable
-    /// 🌳 Groups the catalog by `programId` into a two-level table: one parent row per program, one
+    /// 🌳 Groups the catalog by `pluginId` into a two-level table: one parent row per plugin, one
     /// child row per playground variant. Returns the rows alongside a flat-row-index → catalog-index
     /// map (`None` for parent rows) so an `Activated` signal can resolve back to a `PlaygroundEntry`.
     pub fn group_catalog_into_table(catalog: &[PlaygroundEntry]) -> (Vec<TableRow>, Vec<Option<usize>>) {
-        let mut program_ids: Vec<&str> = catalog.iter().map(|e| e.program_id.as_str()).collect();
-        program_ids.sort();
-        program_ids.dedup();
+        let mut plugin_ids: Vec<&str> = catalog.iter().map(|e| e.plugin_id.as_str()).collect();
+        plugin_ids.sort();
+        plugin_ids.dedup();
         let mut rows = Vec::new();
         let mut mapping = Vec::new();
-        for program_id in program_ids {
-            rows.push(TableRow::parent(program_id.to_string(), vec![program_id.to_string(), String::new(), String::new(), String::new()]));
+        for plugin_id in plugin_ids {
+            rows.push(TableRow::parent(plugin_id.to_string(), vec![plugin_id.to_string(), String::new(), String::new(), String::new()]));
             mapping.push(None);
             for (i, entry) in catalog.iter().enumerate() {
-                if entry.program_id != program_id {
+                if entry.plugin_id != plugin_id {
                     continue;
                 }
                 rows.push(TableRow::child(
@@ -1011,7 +1011,7 @@ pub mod tui_dashboard {
     pub fn run(root: &Path) -> i32 {
         let catalog = load_playground_catalog(root);
         if catalog.is_empty() {
-            eprintln!("[semio] program registry catalog is empty — run `semio program registry generate` first.");
+            eprintln!("[semio] plugin registry catalog is empty — run `semio plugin registry generate` first.");
             return 1;
         }
         let Ok(mut term) = NativeTerminal::new() else {
@@ -1172,7 +1172,7 @@ pub fn run(argv: Vec<String>) -> i32 {
                 println!("{}", catalog::emit_playgrounds_json(&catalog));
             } else {
                 for row in &catalog {
-                    println!("{}\t{}\treact:{}\twgpu:{}", row.variant, row.program_id, row.ports.react, row.ports.wgpu);
+                    println!("{}\t{}\treact:{}\twgpu:{}", row.variant, row.plugin_id, row.ports.react, row.ports.wgpu);
                 }
             }
             0
@@ -1190,7 +1190,7 @@ pub fn run(argv: Vec<String>) -> i32 {
 }
 
 fn print_usage() {
-    eprintln!("semio — semio monorepo orchestrator\n\nUsage:\n  semio                 interactive TUI dashboard (requires a TTY)\n  semio dev <variant…>  start a program dev session\n  semio catalog         list playgrounds\n  semio program registry generate|check\n  semio <verb> …        forwarded to `bun ./script.ts <verb> …`");
+    eprintln!("semio — semio monorepo orchestrator\n\nUsage:\n  semio                 interactive TUI dashboard (requires a TTY)\n  semio dev <variant…>  start a plugin dev session\n  semio catalog         list playgrounds\n  semio plugin registry generate|check\n  semio <verb> …        forwarded to `bun ./script.ts <verb> …`");
 }
 // #endregion 🔖Dispatch
 
@@ -1198,7 +1198,7 @@ fn print_usage() {
 #[cfg(test)]
 mod tests {
     use crate::args::parse;
-    use crate::catalog::{parse_assets_text, parse_playgrounds_text, parse_program_cargo_text, validate_playground_registry, PlaygroundEntry, Ports};
+    use crate::catalog::{parse_assets_text, parse_playgrounds_text, parse_plugin_cargo_text, validate_playground_registry, PlaygroundEntry, Ports};
     use crate::dev::{consume_legacy_example_prefix, resolve_playground};
     use crate::env_contract::{build_dev_env, resolve_port, DevOptions};
     use crate::options::{parse_lock, Lock};
@@ -1206,13 +1206,13 @@ mod tests {
 
     #[test]
     fn args_split_verb_segments_and_flags() {
-        let argv: Vec<String> = ["dev", "puzzle", "2d", "--renderer", "wgpu-wasm", "--skip-program-build"].iter().map(|s| s.to_string()).collect();
+        let argv: Vec<String> = ["dev", "puzzle", "2d", "--renderer", "wgpu-wasm", "--skip-plugin-build"].iter().map(|s| s.to_string()).collect();
         let parsed = parse(&argv);
         assert_eq!(parsed.verb, "dev");
         assert_eq!(parsed.segments, vec!["puzzle", "2d"]);
         assert_eq!(parsed.flag("renderer"), Some("wgpu-wasm"));
-        assert!(parsed.has_flag("skip-program-build"));
-        assert_eq!(parsed.flag("skip-program-build"), None);
+        assert!(parsed.has_flag("skip-plugin-build"));
+        assert_eq!(parsed.flag("skip-plugin-build"), None);
     }
 
     #[test]
@@ -1228,8 +1228,8 @@ package = "semio:puzzle2d"
 contributes = ["puzzle.geometry"]
 consumes = ["puzzle.solver"]
 "#;
-        let entry = parse_program_cargo_text(text, "puzzle/2d/rs").expect("parses");
-        assert_eq!(entry.program_id, "puzzle2d");
+        let entry = parse_plugin_cargo_text(text, "puzzle/2d/rs").expect("parses");
+        assert_eq!(entry.plugin_id, "puzzle2d");
         assert_eq!(entry.package_name, "puzzle-2d");
         assert_eq!(entry.wasm_out, "puzzle_2d.wasm");
         assert_eq!(entry.contributes, vec!["puzzle.geometry"]);
@@ -1238,8 +1238,8 @@ consumes = ["puzzle.solver"]
 
     #[test]
     fn plugin_cargo_text_without_component_package_is_none() {
-        let text = "[package]\nname = \"not-a-program\"\n";
-        assert!(parse_program_cargo_text(text, "x/rs").is_none());
+        let text = "[package]\nname = \"not-a-plugin\"\n";
+        assert!(parse_plugin_cargo_text(text, "x/rs").is_none());
     }
 
     #[test]
@@ -1257,7 +1257,7 @@ app = "puzzle3d"
 aliases = []
 ports = { react = 6013, wgpu = 6113 }
 "#;
-        let entries = parse_playgrounds_text(text, "puzzle", "puzzle/program/rs");
+        let entries = parse_playgrounds_text(text, "puzzle", "puzzle/plugin/rs");
         assert_eq!(entries.len(), 2);
         assert_eq!(entries[0].variant, "puzzle2d");
         assert_eq!(entries[0].aliases, vec!["2d"]);
@@ -1275,7 +1275,7 @@ aliases = ["gis 2d"]
 ports = { react = 6040, wgpu = 6140 }
 engines = ["framework/surface/tiled-map/rs"]
 "#;
-        let entries = parse_playgrounds_text(text, "gis", "gis/program/rs");
+        let entries = parse_playgrounds_text(text, "gis", "gis/plugin/rs");
         assert_eq!(entries[0].engines, vec!["framework/surface/tiled-map/rs"]);
     }
 
@@ -1317,7 +1317,7 @@ app = "puzzle3d"
 
     #[test]
     fn validate_flags_duplicate_variant_and_missing_app() {
-        let a = PlaygroundEntry { variant: "x".into(), program_id: "p".into(), crate_path: "c1".into(), ports: Ports { react: 1, wgpu: 2 }, ..Default::default() };
+        let a = PlaygroundEntry { variant: "x".into(), plugin_id: "p".into(), crate_path: "c1".into(), ports: Ports { react: 1, wgpu: 2 }, ..Default::default() };
         let mut b = a.clone();
         b.crate_path = "c2".into();
         let errors = validate_playground_registry(&[a, b]);
@@ -1346,7 +1346,7 @@ app = "puzzle3d"
 
     #[test]
     fn env_contract_sets_locks_only_for_individual() {
-        let row = PlaygroundEntry { variant: "puzzle2d".into(), program_id: "puzzle2d".into(), ports: Ports { react: 6012, wgpu: 6112 }, ..Default::default() };
+        let row = PlaygroundEntry { variant: "puzzle2d".into(), plugin_id: "puzzle2d".into(), ports: Ports { react: 6012, wgpu: 6112 }, ..Default::default() };
         let opts = DevOptions {
             renderer: "react".into(),
             example: Lock::Individual("concrete-forest".into()),
@@ -1381,11 +1381,11 @@ app = "puzzle3d"
     }
 
     #[test]
-    fn group_catalog_into_table_nests_apps_under_their_program_with_a_catalog_index_map() {
+    fn group_catalog_into_table_nests_apps_under_their_plugin_with_a_catalog_index_map() {
         let catalog = vec![
-            PlaygroundEntry { variant: "puzzle3d".into(), program_id: "puzzle".into(), ports: Ports { react: 6013, wgpu: 6113 }, examples: vec!["a".into()], ..Default::default() },
-            PlaygroundEntry { variant: "puzzle2d".into(), program_id: "puzzle".into(), ports: Ports { react: 6012, wgpu: 6112 }, ..Default::default() },
-            PlaygroundEntry { variant: "draw".into(), program_id: "draw".into(), ports: Ports { react: 6064, wgpu: 6164 }, ..Default::default() },
+            PlaygroundEntry { variant: "puzzle3d".into(), plugin_id: "puzzle".into(), ports: Ports { react: 6013, wgpu: 6113 }, examples: vec!["a".into()], ..Default::default() },
+            PlaygroundEntry { variant: "puzzle2d".into(), plugin_id: "puzzle".into(), ports: Ports { react: 6012, wgpu: 6112 }, ..Default::default() },
+            PlaygroundEntry { variant: "draw".into(), plugin_id: "draw".into(), ports: Ports { react: 6064, wgpu: 6164 }, ..Default::default() },
         ];
         let (rows, map) = group_catalog_into_table(&catalog);
 

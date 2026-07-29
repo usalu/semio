@@ -1860,9 +1860,9 @@ fn james_stein_nats(counts: &Counts) -> f64 {
 // #region 🔖Jackknife
 fn jackknife_nats(counts: &Counts) -> f64 {
     let n = counts.total();
-    let h_program = plugin_entropy_nats(counts);
+    let h_plugin = plugin_entropy_nats(counts);
     if n <= 1.0 {
-        return h_program;
+        return h_plugin;
     }
     let raw = counts.raw();
     let n_minus_1 = n - 1.0;
@@ -1878,7 +1878,7 @@ fn jackknife_nats(counts: &Counts) -> f64 {
         }
         weighted_sum += ci * h_reduced;
     }
-    n * h_program - (n_minus_1 / n) * weighted_sum
+    n * h_plugin - (n_minus_1 / n) * weighted_sum
 }
 // #endregion 🔖Jackknife
 
@@ -1977,12 +1977,12 @@ mod tests {
         // 🔐 3 bins, all occupied, N=6: correction = (3-1)/(2*6) = 1/6.
         let counts = [3u64, 2, 1];
         let est = entropy_discrete(&counts, DiscreteMethod::MillerMadow, LogBase::Nats).unwrap();
-        let program = entropy_discrete(&counts, DiscreteMethod::Plugin, LogBase::Nats).unwrap();
+        let plugin = entropy_discrete(&counts, DiscreteMethod::Plugin, LogBase::Nats).unwrap();
         assert!((est.value - (plugin.value + 1.0 / 6.0)).abs() < 1e-9);
     }
 
     #[test]
-    fn bias_corrected_methods_closer_to_truth_than_program_on_undersampled_uniform() {
+    fn bias_corrected_methods_closer_to_truth_than_plugin_on_undersampled_uniform() {
         // 🔐 K=64 uniform, N=100: plug-in should underestimate ln(64) more than Miller-Madow.
         let mut rng = crate::numeric::Xorshift64::new(7);
         let k = 64;
@@ -2031,7 +2031,7 @@ mod tests {
     }
 
     #[test]
-    fn schurmann_grassberger_close_to_program_for_large_n_uniform() {
+    fn schurmann_grassberger_close_to_plugin_for_large_n_uniform() {
         let counts = vec![10_000u64; 4];
         let est = entropy_discrete(&counts, DiscreteMethod::SchurmannGrassberger, LogBase::Nats).unwrap();
         let expected = 4.0_f64.ln();
@@ -3503,7 +3503,7 @@ pub fn conditional_mutual_information(x: &[u32], y: &[u32], z: &[u32], base: Log
     Ok(Estimate {
         value: base.from_nats(nats),
         base,
-        method: "discrete_cmi_program",
+        method: "discrete_cmi_plugin",
         n: x.len(),
         n_effective: x.len() as f64,
         std_error: None,

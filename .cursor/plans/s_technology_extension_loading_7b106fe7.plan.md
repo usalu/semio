@@ -61,7 +61,7 @@ flowchart TD
     end
     subgraph sCore [s/core]
         resourceMap["TECHNOLOGY_APP_RESOURCE registry (ports, sourceFormat, componentKind)"]
-        mergeFn["mergeSWorkflowDefinition(programId, definition, resourceMap)"]
+        mergeFn["mergeSWorkflowDefinition(pluginId, definition, resourceMap)"]
         registry["sProgramExtensionRegistry: Map"]
         listPrograms["listSPrograms()"]
     end
@@ -81,14 +81,14 @@ Every technology (baseline and rich) goes through the same `mergeSWorkflowDefini
 
 ---
 
-## Phase 1 — Generalize the S program registry (`s/core`)
+## Phase 1 — Generalize the S plugin registry (`s/core`)
 
 In `[s/core/index.ts](s/core/index.ts)`:
 
 - Replace `TECHNOLOGY_PLAY_PROGRAMS` (static array) and `composeSketchpadProgramOverride` (single-slot override) with one `Map<string, SWorkflowDefinition>` extension registry.
-- Add `mergeSWorkflowDefinition(programId: string, definition: PlatformDefinition, resourceByAppId: Record<string, Omit<SAppRegistration, "id" | "label">>): void` — a generalized version of today's `mergeComposeSketchpadWorkflowDefinition`, which becomes a thin wrapper calling this with `SKETCHPAD_APP_RESOURCE`.
+- Add `mergeSWorkflowDefinition(pluginId: string, definition: PlatformDefinition, resourceByAppId: Record<string, Omit<SAppRegistration, "id" | "label">>): void` — a generalized version of today's `mergeComposeSketchpadWorkflowDefinition`, which becomes a thin wrapper calling this with `SKETCHPAD_APP_RESOURCE`.
 - Add `registerSWorkflowDefinition(program: SWorkflowDefinition): void` for cases that already produce a full definition.
-- Introduce `TECHNOLOGY_APP_RESOURCE_BY_PROGRAM`: a table keyed by programId → per-app resource spec (ports/sourceFormat/componentKind), replacing the inline `sBaselineApp(...)` calls currently baked into the static array. This is the only place S-specific port topology continues to live (mirrors `SKETCHPAD_APP_RESOURCE` today).
+- Introduce `TECHNOLOGY_APP_RESOURCE_BY_PROGRAM`: a table keyed by pluginId → per-app resource spec (ports/sourceFormat/componentKind), replacing the inline `sBaselineApp(...)` calls currently baked into the static array. This is the only place S-specific port topology continues to live (mirrors `SKETCHPAD_APP_RESOURCE` today).
 - `listSPrograms()` becomes `[S_SYSTEM_PROGRAM, ...sProgramExtensionRegistry.values()]` (stable insertion order).
 - Export `sExtensionRegistrySize()` / similar so tests and `SPlayController` can assert the catalog is fully loaded.
 

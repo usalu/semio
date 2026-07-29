@@ -10,7 +10,7 @@ Core library containing all representation definitions, validation, serializatio
 
 ## Compose.Grasshopper.cs
 
-Grasshopper program providing components for constructing, deconstructing, and modifying compose representations.
+Grasshopper plugin providing components for constructing, deconstructing, and modifying compose representations.
 
 ### Architecture
 

@@ -79,7 +79,7 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         return Ok(());
     }
 
-    // 🩹 Resolved from the dev shell's compiled `program-modules/<app>/*.wasm` in a follow-up ticket —
+    // 🩹 Resolved from the dev shell's compiled `plugin-modules/<app>/*.wasm` in a follow-up ticket —
     // empty today, so any node that actually needs a real program instantiated fails loudly with a
     // named-app error instead of silently producing nothing.
     let plugin_paths: HashMap<String, PathBuf> = HashMap::new();

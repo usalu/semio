@@ -4,9 +4,9 @@ use flow_core::{flow_neuron_kind_infos_json, forms_bridge::flow_fixture_to_form_
 use flow_module_brep::{export_solid_json, import_solid_json, tessellate_geometry_json};
 use playbook::{visible_blocks, PlaybookBlock};
 use semio_framework_core::mesh_from_indexed;
-use semio_framework_program::{
+use semio_framework_plugin::{
     build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, App, Contribution, DocumentApp,
-    DocumentView, ProgramBundle, SurfaceKind, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSliderNode, UiToggleNode, ViewState, WorldSunConfig,
+    DocumentView, PluginBundle, SurfaceKind, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSliderNode, UiToggleNode, ViewState, WorldSunConfig,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
@@ -240,7 +240,7 @@ fn geometry_handle_for_widget(eval: &Value, widget_id: &str) -> Option<String> {
     handles.into_iter().next()
 }
 
-fn mesh_from_tessellation_json(mesh_json: &str) -> Option<semio_framework_program::MeshData> {
+fn mesh_from_tessellation_json(mesh_json: &str) -> Option<semio_framework_plugin::MeshData> {
     let parsed: Value = serde_json::from_str(mesh_json).ok()?;
     if parsed.get("error").is_some() {
         return None;
@@ -617,12 +617,12 @@ fn solid_format_arg() -> ActionArgDef {
 /// this module's render payload without depending on this crate's concrete `Projection`/`Operation`
 /// types.
 fn register_module_exports() {
-    semio_framework_program::program_runtime::register_document_codec_for_app::<ModuleApp>(MODULE_DOCUMENT_SCHEMA);
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<ModuleApp>(MODULE_DOCUMENT_SCHEMA);
 }
 
-fn module_bundle() -> ProgramBundle {
+fn module_bundle() -> PluginBundle {
     register_module_exports();
-    ProgramBundle::new(MODULE_PLUGIN_ID, "Playbook Module Procedural", "0.1.0")
+    PluginBundle::new(MODULE_PLUGIN_ID, "Playbook Module Procedural", "0.1.0")
         .contributes(Contribution::PlaybookBlockKind {
             app_id: MODULE_APP_ID.into(),
             block_kind: "buildingComponent".into(),
@@ -635,14 +635,14 @@ fn module_bundle() -> ProgramBundle {
         .register_document_app(create_module_app(), ModuleApp::default)
 }
 
-semio_framework_program::program_exports!(module_bundle);
+semio_framework_plugin::plugin_exports!(module_bundle);
 //#endregion 🔖App
 
 //#region 🧪Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_program::{ActionMeta, Plugin, ProgramApp, VcsDocumentApp};
+    use semio_framework_plugin::{ActionMeta, Plugin, PluginApp, VcsDocumentApp};
 
     fn meta() -> ActionMeta {
         ActionMeta { actor: "local".into(), instance_id: 1 }
@@ -736,7 +736,7 @@ mod tests {
 
     #[test]
     fn export_solid_declares_only_format_arg_and_materializes_default() {
-        use semio_framework_program::app::AppActionRegistry;
+        use semio_framework_plugin::app::AppActionRegistry;
         let definition = create_module_app().definition;
         let import = definition.actions.iter().find(|action| action.id == ACTION_IMPORT_SOLID).expect("import declared");
         assert!(import.args.iter().all(|arg| arg.id == "format"), "only `format` is a user-facing arg; `data` is file-callback populated");

@@ -43,7 +43,7 @@ Touches the shared tool schema in [framework/core/rs/lib.rs](framework/core/rs/l
 - Add `ToolCategory { Selection, Tools, Commands, History }` (serde camelCase, `Copy`).
 - Add an optional `category: Option<ToolCategory>` field to `ToolNode::Button`, `Toggle`, `Collection` (not `Separator`).
 - Add `ToolNode::category(&self) -> ToolCategory`: returns the explicit value if set, else defaults `Toggle | Collection -> Tools`, `Button -> Commands`. `Selection` and `History` are always explicit opt-in.
-- Add `ToolNode::with_category(self, category: ToolCategory) -> Self` builder, mirroring the existing `with_order`/`with_disabled` pattern (currently duplicated locally in `cad/program/rs/lib.rs` as `ToolNodeExt` — leave that trait as-is, just add the new capability in core).
+- Add `ToolNode::with_category(self, category: ToolCategory) -> Self` builder, mirroring the existing `with_order`/`with_disabled` pattern (currently duplicated locally in `cad/plugin/rs/lib.rs` as `ToolNodeExt` — leave that trait as-is, just add the new capability in core).
 
 This is additive-only (`Option`, defaulted), so every currently-untouched program keeps compiling and rendering exactly as today, just bucketed by the new default rule.
 
@@ -73,7 +73,7 @@ This is additive-only (`Option`, defaulted), so every currently-untouched progra
 
 ## 3. Plugin re-categorization
 
-### `lowpoly/program/rs/lib.rs` (`edit_tools`, `paint_tools`)
+### `lowpoly/plugin/rs/lib.rs` (`edit_tools`, `paint_tools`)
 
 - `lowpoly-tools-selection` (Mesh/Face/Edge/Vertex) -> `Selection`
 - `lowpoly-tools-transform` (Move/Rotate/Scale) -> `Tools`
@@ -83,23 +83,23 @@ This is additive-only (`Option`, defaulted), so every currently-untouched progra
 - `lowpoly-paint-uv` (Unwrap/Mark Seam/Clear Seam) -> `Commands`
 - `lowpoly-paint-history` -> `History`
 
-### `cad/program/rs/lib.rs` (`build_cad_play_toolbar`)
+### `cad/plugin/rs/lib.rs` (`build_cad_play_toolbar`)
 
 - `view` (pane focus toggles) -> `Tools` (+ allow-list entry above)
 - `save` -> `Commands`
 - `transfer` -> `Commands`
 
-### `sequence/program/rs/lib.rs` (`edit_tools`)
+### `sequence/plugin/rs/lib.rs` (`edit_tools`)
 
 - `sequence-tools-execution` (Run/Stop) -> `Commands`
 - Split `sequence-tools-layout` into a standalone `Reorganize` button (`Commands`) and a new `sequence-tools-orientation` collection holding the left-right/top-bottom toggles (`Tools`), since today it incorrectly mixes a one-shot command with a mutually-exclusive tool pair under one label.
 
-### `s/program/rs/lib.rs`
+### `s/plugin/rs/lib.rs`
 
 - `home_create_tools()`: `s-home.create` collection and `s-home.import` button -> `Commands`
 - studio `mode_tools("main", [tool_collection("s-play.history", ...)])` -> `History`
 
 ## Verification
 
-- `cargo check -p semio-framework-renderer-wgpu -p semio-framework-core -p lowpoly-program -p cad-program -p sequence-program -p s-program` (or the nx-wrapped equivalents per `script.ts`) to confirm the schema change and all four program edits compile.
+- `cargo check -p semio-framework-renderer-wgpu -p semio-framework-core -p lowpoly-plugin -p cad-plugin -p sequence-plugin -p s-plugin` (or the nx-wrapped equivalents per `script.ts`) to confirm the schema change and all four program edits compile.
 - Manually exercise the wgpu playground for lowpoly (edit + paint modes), cad, sequence, and s/studio to confirm: no app button, four ordered sections, only one active tool highlighted at a time, Commands gray out while a Tool is active except cad's pane-focus toggle, and space undo/redo/checkpoint still work via the single `s-play.history` path.

@@ -2,7 +2,7 @@
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "@semio-tech/framework-os-core",
   "version": "0.1.0",
-  "description": "framework · os — composable operating system shell (CQRS, workflow, program registry)",
+  "description": "framework · os — composable operating system shell (CQRS, workflow, plugin registry)",
   "type": "module",
   "private": true,
   "exports": {

@@ -70,14 +70,19 @@ for (const dir of allDirs) {
     const targetAbsDir = resolve(repoRoot, dir, relPath);
     const targetRelDir = relative(repoRoot, targetAbsDir);
     const move = oldToNew.get(targetRelDir);
-    if (!move) continue;
+    // 🐛 Even when the TARGET isn't moving, if THIS crate is moving, its base dir changed and the
+    // relative path must be recomputed — regardless of whether the target itself is also relocating.
+    if (!move && !selfMove) continue;
+    const newTargetDir = move ? move.newDir : targetRelDir;
 
-    const newRelPath = relative(join(repoRoot, ownNewDir), join(repoRoot, move.newDir)) || ".";
+    const newRelPath = relative(join(repoRoot, ownNewDir), join(repoRoot, newTargetDir)) || ".";
     let newInner = inner.trim().replace(PATH_FIELD_RE, `path = "${newRelPath}"`);
-    if (PACKAGE_FIELD_RE.test(newInner)) {
-      newInner = newInner.replace(PACKAGE_FIELD_RE, `package = "${move.newPkg}"`);
-    } else {
-      newInner = `${newInner}, package = "${move.newPkg}"`;
+    if (move) {
+      if (PACKAGE_FIELD_RE.test(newInner)) {
+        newInner = newInner.replace(PACKAGE_FIELD_RE, `package = "${move.newPkg}"`);
+      } else {
+        newInner = `${newInner}, package = "${move.newPkg}"`;
+      }
     }
     if (preview) console.log(`[${dir}]\n  - ${line.trim()}\n  + ${indent}${depKey} = { ${newInner} }`.trimEnd());
     lines[i] = `${indent}${depKey} = { ${newInner} }`;
@@ -98,21 +103,24 @@ for (const dir of allDirs) {
       const targetAbsDir = resolve(repoRoot, dir, pathMatch[1]);
       const targetRelDir = relative(repoRoot, targetAbsDir);
       const move = oldToNew.get(targetRelDir);
-      if (!move) continue;
-      const newRelPath = relative(join(repoRoot, ownNewDir), join(repoRoot, move.newDir)) || ".";
+      if (!move && !selfMove) continue;
+      const newTargetDir = move ? move.newDir : targetRelDir;
+      const newRelPath = relative(join(repoRoot, ownNewDir), join(repoRoot, newTargetDir)) || ".";
       const oldLine = lines[j];
       lines[j] = `path = "${newRelPath}"`;
-      let packageLineIdx = -1;
-      for (let k = i + 1; k < blockEnd; k++) {
-        if (/^package\s*=\s*"/.test(lines[k])) packageLineIdx = k;
+      if (move) {
+        let packageLineIdx = -1;
+        for (let k = i + 1; k < blockEnd; k++) {
+          if (/^package\s*=\s*"/.test(lines[k])) packageLineIdx = k;
+        }
+        if (packageLineIdx >= 0) {
+          lines[packageLineIdx] = `package = "${move.newPkg}"`;
+        } else {
+          lines.splice(j + 1, 0, `package = "${move.newPkg}"`);
+          blockEnd++;
+        }
       }
-      if (packageLineIdx >= 0) {
-        lines[packageLineIdx] = `package = "${move.newPkg}"`;
-      } else {
-        lines.splice(j + 1, 0, `package = "${move.newPkg}"`);
-        blockEnd++;
-      }
-      if (preview) console.log(`[${dir}]\n  - ${oldLine.trim()}\n  + ${lines[j].trim()} (+ package = "${move.newPkg}")`);
+      if (preview) console.log(`[${dir}]\n  - ${oldLine.trim()}\n  + ${lines[j].trim()}${move ? ` (+ package = "${move.newPkg}")` : ""}`);
       changed = true;
       editedDepLines++;
     }

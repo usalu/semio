@@ -33,7 +33,7 @@ struct GraphNodeRecord {
     #[serde(default)]
     instance_id: Option<String>,
     #[serde(default)]
-    program_id: Option<String>,
+    plugin_id: Option<String>,
     #[serde(default)]
     app_id: Option<String>,
     #[serde(default)]
@@ -133,7 +133,7 @@ fn node_record_to_spec(record: &GraphNodeRecord) -> DagNodeSpec {
             y,
             width,
             height,
-            kind: DagNodeKind::AppInstance { instance_id: instance_id.clone(), program_id: record.program_id.clone().unwrap_or_else(|| "app".into()), app_id: record.app_id.clone().unwrap_or_else(|| record.id.clone()), icon, inputs, outputs },
+            kind: DagNodeKind::AppInstance { instance_id: instance_id.clone(), plugin_id: record.plugin_id.clone().unwrap_or_else(|| "app".into()), app_id: record.app_id.clone().unwrap_or_else(|| record.id.clone()), icon, inputs, outputs },
             ..Default::default()
         };
         fit_node_size(&mut node);
@@ -738,12 +738,12 @@ mod tests {
     //#region 🔖NodeRecordConversion
     #[test]
     fn node_record_to_spec_builds_app_instance_kind() {
-        let record = GraphNodeRecord { id: "n1".into(), label: Some("Widget".into()), instance_id: Some("inst-1".into()), program_id: None, app_id: None, ..Default::default() };
+        let record = GraphNodeRecord { id: "n1".into(), label: Some("Widget".into()), instance_id: Some("inst-1".into()), plugin_id: None, app_id: None, ..Default::default() };
         let spec = node_record_to_spec(&record);
         match spec.kind {
-            DagNodeKind::AppInstance { instance_id, program_id, app_id, .. } => {
+            DagNodeKind::AppInstance { instance_id, plugin_id, app_id, .. } => {
                 assert_eq!(instance_id, "inst-1");
-                assert_eq!(program_id, "app");
+                assert_eq!(plugin_id, "app");
                 assert_eq!(app_id, "n1");
             }
             other => panic!("expected AppInstance kind, got {other:?}"),

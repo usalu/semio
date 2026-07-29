@@ -127,7 +127,7 @@ impl Default for PackLimits {
 
 //#region 🔖Varint
 /// @emoji ➡️ Zigzag-encodes an `i64` into the `u64` domain: small magnitudes stay small
-/// regardless of sign. See <https://protobuf.dev/programming-guides/encoding/#signed-ints>.
+/// regardless of sign. See <https://protobuf.dev/__KEEP_pluginming__-guides/encoding/#signed-ints>.
 fn zigzag_encode(value: i64) -> u64 {
     ((value << 1) ^ (value >> 63)) as u64
 }

@@ -33,11 +33,11 @@ isProject: false
 
 ## Current State
 
-Apps are already Rust WASM programs (`*/program/rs/lib.rs`) emitting declarative `UiNode` trees, but three things violate "apps are 100% Rust / framework provides everything":
+Apps are already Rust WASM plugins (`*/plugin/rs/lib.rs`) emitting declarative `UiNode` trees, but three things violate "apps are 100% Rust / framework provides everything":
 
 1. **App-specific component kind**: `flow-canvas` exists only for the `s` program and is backed by the app package `flow/react` (which pulls in `dag/react`) via [framework/renderer/react/components/flow-canvas-host.tsx](framework/renderer/react/components/flow-canvas-host.tsx).
 2. **App packages on the renderer runtime path**: [framework/renderer/react/components/text-editor-host.tsx](framework/renderer/react/components/text-editor-host.tsx) imports `@semio-tech/writer-react` and `@semio-tech/writer-core`; aliases live in [framework/product/os/dev/js/vite.config.ts](framework/product/os/dev/js/vite.config.ts) (lines 24-26, 33) and deps in [framework/renderer/react/package.json](framework/renderer/react/package.json).
-3. **~25 orphaned app JS packages**: legacy `*/core/js` playground shells (draw, flow, writer, s, dag, note, forms, vcs, layout, imperative, sequence, raster, shooting, lowpoly, gis/2d, procedural/2d+3d, puzzle/2d+3d+5d, trinity/rewrite, reasoning/mindmap/wires, cad/renderer) plus app React packages (`flow/react`, `writer/react`, `dag/react`, `trinity/rewrite/react`, `reasoning/mindmap/react`). None are on the OS dev boot path (fixtures are `include_str!` in Rust; boot loads only program WASM via `loadPluginModule`).
+3. **~25 orphaned app JS packages**: legacy `*/core/js` playground shells (draw, flow, writer, s, dag, note, forms, vcs, layout, imperative, sequence, raster, shooting, lowpoly, gis/2d, procedural/2d+3d, puzzle/2d+3d+5d, trinity/rewrite, reasoning/mindmap/wires, cad/renderer) plus app React packages (`flow/react`, `writer/react`, `dag/react`, `trinity/rewrite/react`, `reasoning/mindmap/react`). None are on the OS dev boot path (fixtures are `include_str!` in Rust; boot loads only plugin WASM via `loadPluginModule`).
 
 Decisions confirmed: keep both renderers; generalize flow/writer functionality into the generic hosts; delete all app-level JS.
 
@@ -46,7 +46,7 @@ Decisions confirmed: keep both renderers; generalize flow/writer functionality i
 ```mermaid
 flowchart LR
   subgraph apps [Apps 100 percent Rust]
-    Plugin["*/program/rs → UiNode tree + generic scene payloads"]
+    Plugin["*/plugin/rs → UiNode tree + generic scene payloads"]
   end
   subgraph fw [Framework]
     Core["framework/core/rs ui.rs scene contract"]
@@ -76,8 +76,8 @@ Generic shared render libs stay (not app code): `@semio-tech/ui-react` ([ui/js/r
 
 ## Phase 4: Update Plugins (Rust)
 
-- [s/program/rs/lib.rs](s/program/rs/lib.rs) (line ~1155): emit the extended `node-graph` scene instead of `flow-canvas`, moving operator/contribution data into the payload.
-- [writer/program/rs/lib.rs](writer/program/rs/lib.rs): compute tokens/diagnostics in Rust and emit them in `TextEditorScene`. Other text-editor emitters (flow, sequence, dag, vcs, imperative, trinity) keep working with the optional new fields.
+- [s/plugin/rs/lib.rs](s/plugin/rs/lib.rs) (line ~1155): emit the extended `node-graph` scene instead of `flow-canvas`, moving operator/contribution data into the payload.
+- [writer/plugin/rs/lib.rs](writer/plugin/rs/lib.rs): compute tokens/diagnostics in Rust and emit them in `TextEditorScene`. Other text-editor emitters (flow, sequence, dag, vcs, imperative, trinity) keep working with the optional new fields.
 
 ## Phase 5: Delete All App-Level JS
 
@@ -87,7 +87,7 @@ Generic shared render libs stay (not app code): `@semio-tech/ui-react` ([ui/js/r
 
 ## Phase 6: Verification
 
-- Build all program WASM + both renderers via `framework/product/os/dev/script.ts`.
+- Build all plugin WASM + both renderers via `framework/product/os/dev/script.ts`.
 - Run the existing e2e suites for all 25 playgrounds on both renderers (`.repo/🎫/26/07/04/WGPU-PLAYGROUND-E2E/verify-wgpu-playgrounds-e2e.ts` and the React twin in the `SUPPORT-REACT-AND-WGPU-RENDERERS-IN-PLAYGROUNDS` ticket), asserting real paint for the merged node-graph (s program) and enriched text-editor (writer).
 - Run Rust tests and the surviving JS test suites; extend existing test files for the new scene payload fields.
 

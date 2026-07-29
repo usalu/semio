@@ -1,34 +1,34 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export function semio_program_create_app(app_id: string): number;
+export function semio_plugin_create_app(app_id: string): number;
 
-export function semio_program_destroy_app(instance_id: number): void;
+export function semio_plugin_destroy_app(instance_id: number): void;
 
-export function semio_program_handle_command(instance_id: number, command_json: string, view_state_json: string): string;
+export function semio_plugin_handle_command(instance_id: number, command_json: string, view_state_json: string): string;
 
-export function semio_program_manifest(): string;
+export function semio_plugin_manifest(): string;
 
-export function semio_program_render(instance_id: number, body_key: string, view_state_json: string): string;
+export function semio_plugin_render(instance_id: number, body_key: string, view_state_json: string): string;
 
-export function semio_program_start(): void;
+export function semio_plugin_start(): void;
 
-export function semio_program_tools(instance_id: number, view_state_json: string): string;
+export function semio_plugin_tools(instance_id: number, view_state_json: string): string;
 
-export function semio_program_window_engagements(instance_id: number, view_state_json: string): string;
+export function semio_plugin_window_engagements(instance_id: number, view_state_json: string): string;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
-    readonly semio_program_create_app: (a: number, b: number) => [number, number, number];
-    readonly semio_program_destroy_app: (a: number) => [number, number];
-    readonly semio_program_handle_command: (a: number, b: number, c: number, d: number, e: number) => [number, number, number, number];
-    readonly semio_program_manifest: () => [number, number];
-    readonly semio_program_render: (a: number, b: number, c: number, d: number, e: number) => [number, number, number, number];
-    readonly semio_program_start: () => void;
-    readonly semio_program_tools: (a: number, b: number, c: number) => [number, number, number, number];
-    readonly semio_program_window_engagements: (a: number, b: number, c: number) => [number, number, number, number];
+    readonly semio_plugin_create_app: (a: number, b: number) => [number, number, number];
+    readonly semio_plugin_destroy_app: (a: number) => [number, number];
+    readonly semio_plugin_handle_command: (a: number, b: number, c: number, d: number, e: number) => [number, number, number, number];
+    readonly semio_plugin_manifest: () => [number, number];
+    readonly semio_plugin_render: (a: number, b: number, c: number, d: number, e: number) => [number, number, number, number];
+    readonly semio_plugin_start: () => void;
+    readonly semio_plugin_tools: (a: number, b: number, c: number) => [number, number, number, number];
+    readonly semio_plugin_window_engagements: (a: number, b: number, c: number) => [number, number, number, number];
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;

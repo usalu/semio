@@ -39,8 +39,8 @@ repo/client/client
 repo/client/client.exe
 repo/server/coordinator/server
 repo/server/coordinator/server.exe
-**/.coda/validators/programming
-**/.coda/validators/programming.exe
+**/.coda/validators/__KEEP_pluginming__
+**/.coda/validators/__KEEP_pluginming__.exe
 #--------------------------------------MACOS--------------------------------------
 .DS_Store
 #--------------------------------------NX--------------------------------------
@@ -78,12 +78,12 @@ test-results
 /playwright/.auth/
 #--------------------------------------VITE--------------------------------------
 .vite
-/framework/product/os/dev/program-modules/
-/framework/product/os/dev/program-modules-native/
-/framework/product/os/dev/public/program-modules/
+/framework/product/os/dev/plugin-modules/
+/framework/product/os/dev/plugin-modules-native/
+/framework/product/os/dev/public/plugin-modules/
 /framework/product/os/dev/renderer-modules/
 /framework/product/os/dev/public/plugins/
-/public/program-modules/
+/public/plugin-modules/
 #--------------------------------------NEXTJS--------------------------------------
 .next
 #--------------------------------------TURBO--------------------------------------

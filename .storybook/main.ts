@@ -136,7 +136,7 @@ const config: StorybookConfig = {
       config.plugins.push(...uiAssetsVitePlugin(uiAssetsRootPath));
     }
     // #region 🔖ScopeAssetsAndPlugins
-    /** @emoji 🌐 Static-dir / tile-proxy / mesh-collection assets declared by active scopes (e.g. `framework/os`'s `/program-modules`, `/renderer-modules`). */
+    /** @emoji 🌐 Static-dir / tile-proxy / mesh-collection assets declared by active scopes (e.g. `framework/os`'s `/plugin-modules`, `/renderer-modules`). */
     const scopeAssets = activeScopes.flatMap((s) => s.assets ?? []);
     if (scopeAssets.length > 0) {
       config.plugins.push(...playgroundAssetVitePlugins(repoRootPath, scopeAssets));
@@ -155,10 +155,10 @@ const config: StorybookConfig = {
         indicesToRemove.push(i);
         continue;
       }
-      if (program instanceof Promise) {
+      if (plugin instanceof Promise) {
         try {
           const resolved: any = await plugin;
-          if (resolved && typeof resolved === "object" && resolved.name === "storybook:mdx-program") {
+          if (resolved && typeof resolved === "object" && resolved.name === "storybook:mdx-plugin") {
             indicesToRemove.push(i);
           }
         } catch {}

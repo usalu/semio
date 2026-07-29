@@ -16,7 +16,7 @@ pub use builder_kit::{
     PlaybookBuilderLabels, PLAYBOOK_BUILDER_LABELS_EN,
 };
 /// 🧬 Flattens `generation_forms`/`builder_kit` onto the crate root so callers keep the flat
-/// `playbook::*` import surface (mirrors how `semio-framework-program` flattened these before the move).
+/// `playbook::*` import surface (mirrors how `semio-framework-plugin` flattened these before the move).
 pub use generation_forms::{
     add_generation, apply_generation_operation, generation_operations, handle_generation_action, initial_generation_values, invert_generation_operation, remove_generation, rename_generation, render_generation_form_body, render_generation_preview_text,
     render_generations_tree, select_generation, selected_generation, selected_generation_mut, update_generation_values, FormGeneration, GenerationOperation, GenerationPlayState,
@@ -522,7 +522,7 @@ pub fn apply_playbook_edit_operation(spec: &PlaybookSpec, operation: &PlaybookOp
 //#region 🔖GenerationForms
 pub mod generation_forms {
     //! 🧬 Shared Generate-mode state, CRUD, and declarative UI helpers for answering a `PlaybookSpec` as
-    //! a set of named "generations" (parameter presets) — moved here (from `semio-framework-program`) since
+    //! a set of named "generations" (parameter presets) — moved here (from `semio-framework-plugin`) since
     //! it is typed end-to-end on `PlaybookSpec`/`PlaybookBlock`, i.e. playbook-domain code, not SDK code.
 
     use super::{default_value_for_block, flatten_playbook_blocks, is_block_visible, PlaybookBlock, PlaybookSpec};
@@ -1027,9 +1027,9 @@ pub mod generation_forms {
 //#region 🔖BuilderKit
 pub mod builder_kit {
     //! 🧩 Shared strict-list, Blockly-like builder engine: generic step/block CRUD operation-builders and
-    //! [`BlockListScene`] rendering, reused by `playbook-program` (standalone) and `forms-program`
+    //! [`BlockListScene`] rendering, reused by `playbook-plugin` (standalone) and `forms-plugin`
     //! (embedded Blueprint mode). Block-kind-specific property editing stays with the host app. Moved
-    //! here (from `semio-framework-program`) since it is entirely playbook-domain code.
+    //! here (from `semio-framework-plugin`) since it is entirely playbook-domain code.
 
     use super::{PlaybookBlock, PlaybookOperation, PlaybookSpec, PlaybookStep};
     use serde_json::Value;

@@ -1,5 +1,5 @@
-/** @module Interface semio:framework/program **/
-export function manifest(): ProgramManifestJson;
+/** @module Interface semio:framework/plugin **/
+export function manifest(): PluginManifestJson;
 export function instantiateApp(appId: string, instanceId: string): number;
 export function handleAction(instanceId: number, action: ActionInvocationJson, context: ActionContextJson): ActionResponseJson;
 export function updateWindow(instanceId: number, input: WindowInputJson): WindowOutputJson;
@@ -8,7 +8,7 @@ export function windowEngagements(instanceId: number, context: ActionContextJson
 export function windowMeasures(instanceId: number, context: ActionContextJson): PluginWindowMeasuresJson;
 export function appLabels(instanceId: number, context: ActionContextJson): AppLabelsJson;
 export function migrateDocument(input: MigrateDocumentInput): MigrateDocumentOutput;
-export type ProgramManifestJson = import('./semio-framework-types.js').ProgramManifestJson;
+export type PluginManifestJson = import('./semio-framework-types.js').PluginManifestJson;
 export type ActionInvocationJson = import('./semio-framework-types.js').ActionInvocationJson;
 export type ActionContextJson = import('./semio-framework-types.js').ActionContextJson;
 export type ActionResponseJson = import('./semio-framework-types.js').ActionResponseJson;
@@ -20,4 +20,4 @@ export type PluginWindowMeasuresJson = import('./semio-framework-types.js').Plug
 export type AppLabelsJson = import('./semio-framework-types.js').AppLabelsJson;
 export type MigrateDocumentInput = import('./semio-framework-types.js').MigrateDocumentInput;
 export type MigrateDocumentOutput = import('./semio-framework-types.js').MigrateDocumentOutput;
-export type ProgramError = import('./semio-framework-types.js').ProgramError;
+export type PluginError = import('./semio-framework-types.js').PluginError;

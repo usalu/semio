@@ -30,7 +30,7 @@ isProject: false
 Split the current monolithic [framework/renderer/wgpu/rs](framework/renderer/wgpu/rs/lib.rs) into two layers:
 
 - `**ui/wasm/rs**` (new crate `ui_wasm`) — a general, pure, business-logic-free wgpu UI toolkit, the Rust/wasm sibling of `ui/react`. It knows nothing about `semio-framework-core`, `UiNode`, plugins, or the OS shell.
-- `**framework/renderer/wgpu/rs**` (existing crate `semio-framework-renderer-wgpu`) — a thin renderer that depends on `ui_wasm` and only contains framework concerns: `UiNode` interpretation, componentScene hosts, OS shell chrome, program bridge, boot.
+- `**framework/renderer/wgpu/rs**` (existing crate `semio-framework-renderer-wgpu`) — a thin renderer that depends on `ui_wasm` and only contains framework concerns: `UiNode` interpretation, componentScene hosts, OS shell chrome, plugin bridge, boot.
 
 Path note: the request said "ui/rs/wasm"; repo convention for the ui technology is `ui/<bundle>/rs` (e.g. [ui/styling/rs](ui/styling/rs/Cargo.toml) with crate `ui_styling`), so the bundle lands at `ui/wasm/rs` with crate name `ui_wasm`.
 

@@ -1,13 +1,13 @@
-/* @ts-self-types="./lowpoly_program.d.ts" */
+/* @ts-self-types="./lowpoly_plugin.d.ts" */
 
 /**
  * @param {string} app_id
  * @returns {number}
  */
-export function semio_program_create_app(app_id) {
+export function semio_plugin_create_app(app_id) {
     const ptr0 = passStringToWasm0(app_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.semio_program_create_app(ptr0, len0);
+    const ret = wasm.semio_plugin_create_app(ptr0, len0);
     if (ret[2]) {
         throw takeFromExternrefTable0(ret[1]);
     }
@@ -17,8 +17,8 @@ export function semio_program_create_app(app_id) {
 /**
  * @param {number} instance_id
  */
-export function semio_program_destroy_app(instance_id) {
-    const ret = wasm.semio_program_destroy_app(instance_id);
+export function semio_plugin_destroy_app(instance_id) {
+    const ret = wasm.semio_plugin_destroy_app(instance_id);
     if (ret[1]) {
         throw takeFromExternrefTable0(ret[0]);
     }
@@ -30,7 +30,7 @@ export function semio_program_destroy_app(instance_id) {
  * @param {string} view_state_json
  * @returns {string}
  */
-export function semio_program_handle_command(instance_id, command_json, view_state_json) {
+export function semio_plugin_handle_command(instance_id, command_json, view_state_json) {
     let deferred4_0;
     let deferred4_1;
     try {
@@ -38,7 +38,7 @@ export function semio_program_handle_command(instance_id, command_json, view_sta
         const len0 = WASM_VECTOR_LEN;
         const ptr1 = passStringToWasm0(view_state_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len1 = WASM_VECTOR_LEN;
-        const ret = wasm.semio_program_handle_command(instance_id, ptr0, len0, ptr1, len1);
+        const ret = wasm.semio_plugin_handle_command(instance_id, ptr0, len0, ptr1, len1);
         var ptr3 = ret[0];
         var len3 = ret[1];
         if (ret[3]) {
@@ -56,11 +56,11 @@ export function semio_program_handle_command(instance_id, command_json, view_sta
 /**
  * @returns {string}
  */
-export function semio_program_manifest() {
+export function semio_plugin_manifest() {
     let deferred1_0;
     let deferred1_1;
     try {
-        const ret = wasm.semio_program_manifest();
+        const ret = wasm.semio_plugin_manifest();
         deferred1_0 = ret[0];
         deferred1_1 = ret[1];
         return getStringFromWasm0(ret[0], ret[1]);
@@ -75,7 +75,7 @@ export function semio_program_manifest() {
  * @param {string} view_state_json
  * @returns {string}
  */
-export function semio_program_render(instance_id, body_key, view_state_json) {
+export function semio_plugin_render(instance_id, body_key, view_state_json) {
     let deferred4_0;
     let deferred4_1;
     try {
@@ -83,7 +83,7 @@ export function semio_program_render(instance_id, body_key, view_state_json) {
         const len0 = WASM_VECTOR_LEN;
         const ptr1 = passStringToWasm0(view_state_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len1 = WASM_VECTOR_LEN;
-        const ret = wasm.semio_program_render(instance_id, ptr0, len0, ptr1, len1);
+        const ret = wasm.semio_plugin_render(instance_id, ptr0, len0, ptr1, len1);
         var ptr3 = ret[0];
         var len3 = ret[1];
         if (ret[3]) {
@@ -98,8 +98,8 @@ export function semio_program_render(instance_id, body_key, view_state_json) {
     }
 }
 
-export function semio_program_start() {
-    wasm.semio_program_start();
+export function semio_plugin_start() {
+    wasm.semio_plugin_start();
 }
 
 /**
@@ -107,13 +107,13 @@ export function semio_program_start() {
  * @param {string} view_state_json
  * @returns {string}
  */
-export function semio_program_tools(instance_id, view_state_json) {
+export function semio_plugin_tools(instance_id, view_state_json) {
     let deferred3_0;
     let deferred3_1;
     try {
         const ptr0 = passStringToWasm0(view_state_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        const ret = wasm.semio_program_tools(instance_id, ptr0, len0);
+        const ret = wasm.semio_plugin_tools(instance_id, ptr0, len0);
         var ptr2 = ret[0];
         var len2 = ret[1];
         if (ret[3]) {
@@ -133,13 +133,13 @@ export function semio_program_tools(instance_id, view_state_json) {
  * @param {string} view_state_json
  * @returns {string}
  */
-export function semio_program_window_engagements(instance_id, view_state_json) {
+export function semio_plugin_window_engagements(instance_id, view_state_json) {
     let deferred3_0;
     let deferred3_1;
     try {
         const ptr0 = passStringToWasm0(view_state_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
         const len0 = WASM_VECTOR_LEN;
-        const ret = wasm.semio_program_window_engagements(instance_id, ptr0, len0);
+        const ret = wasm.semio_plugin_window_engagements(instance_id, ptr0, len0);
         var ptr2 = ret[0];
         var len2 = ret[1];
         if (ret[3]) {
@@ -176,7 +176,7 @@ function __wbg_get_imports() {
     };
     return {
         __proto__: null,
-        "./lowpoly_program_bg.js": import0,
+        "./lowpoly_plugin_bg.js": import0,
     };
 }
 
@@ -342,7 +342,7 @@ async function __wbg_init(module_or_path) {
     }
 
     if (module_or_path === undefined) {
-        module_or_path = new URL('lowpoly_program_bg.wasm', import.meta.url);
+        module_or_path = new URL('lowpoly_plugin_bg.wasm', import.meta.url);
     }
     const imports = __wbg_get_imports();
 

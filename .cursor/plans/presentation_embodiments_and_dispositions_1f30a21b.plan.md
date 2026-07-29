@@ -68,7 +68,7 @@ Wire the real assets in [public/](mit-bestand/präsentation/33.projektetage/publ
 - Video: `bauen-mit-bestand.mp4`
 - Pdf: `bachelor-thesis-ueli-saluz.pdf`
 
-Update its inline test for the new arrangement count. No vite.config change expected (worker uses `import.meta.url`); add `vite-program-static-copy` only if the dev server 404s the worker.
+Update its inline test for the new arrangement count. No vite.config change expected (worker uses `import.meta.url`); add `__KEEP_vite_plugin__-static-copy` only if the dev server 404s the worker.
 
 ## 5. Validate (repo rules)
 

@@ -903,10 +903,10 @@ const COLOR_SCAN_LEGACY_ALLOWLIST = [
   ".storybook/stories/ui/ValidationTree.stories.tsx",
   "cad/renderer/js/index.tsx",
   "framework/product/os/core/rs/lib.rs",
-  "infinite/world/r3f/index.tsx",
-  "infinite/world/rs/lib.rs",
+  "framework/kernel/infinite/world/r3f/index.tsx",
+  "framework/kernel/infinite/world/rs/lib.rs",
   "puzzle/2d/rs/lib.rs",
-  "puzzle/program/rs/lib.rs",
+  "puzzle/plugin/rs/lib.rs",
 ];
 
 const COLOR_SCAN_SKIP = [
@@ -915,7 +915,7 @@ const COLOR_SCAN_SKIP = [
   "/.vite/",
   "/.stage/",
   "/renderer-modules/",
-  "/program-modules/",
+  "/plugin-modules/",
   "generated/",
   "generated.rs",
   "generated.py",

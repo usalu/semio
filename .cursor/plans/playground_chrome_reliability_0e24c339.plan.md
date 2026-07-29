@@ -9,13 +9,13 @@ todos:
    content: Root-cause and fix the missing navbar/window border/chip/sizing regression in framework/renderer/wgpu/rs/lib.rs, coordinating with overlapping open tickets
    status: completed
  - id: harden-builder
-   content: Add validation assertions to AppBuilder::build_definition() in framework/program/rs/lib.rs (non-empty window_kinds, unique ids, layout window_kind_id cross-references)
+   content: Add validation assertions to AppBuilder::build_definition() in framework/plugin/rs/lib.rs (non-empty window_kinds, unique ids, layout window_kind_id cross-references)
    status: completed
  - id: panel-group-enum
    content: Replace PanelTabDefinition.group free-form String with a closed PanelGroup enum shared across framework/core and both renderers
    status: completed
- - id: verify-all-programs
-   content: Run cargo test + wasm32 build across all 24 program crates to confirm every AppDefinition satisfies the new invariants; fix any failures
+ - id: verify-all-plugins
+   content: Run cargo test + wasm32 build across all 24 plugin crates to confirm every AppDefinition satisfies the new invariants; fix any failures
    status: completed
  - id: ticket
    content: Open/reopen the appropriate ticket via repo MCP, keep artifacts in its folder, close with full file summary
@@ -25,20 +25,20 @@ isProject: false
 
 ## Context
 
-The screenshot shows the `procedural3d` playground (`semio · procedural · 3d`) rendering its Flow graph and Inspection panel without any chrome: no top navbar, no window borders/tabs/options chips, and windows appear oversized. Per your clarification, this is a **window-chrome** bug, not a 3D-content bug, and the fix you want is architectural: a single **centralized** mechanism through which every program registers its window kinds/tabs/layout, strict enough that a broken layout like this becomes structurally impossible — not new end-to-end browser tests.
+The screenshot shows the `procedural3d` playground (`semio · procedural · 3d`) rendering its Flow graph and Inspection panel without any chrome: no top navbar, no window borders/tabs/options chips, and windows appear oversized. Per your clarification, this is a **window-chrome** bug, not a 3D-content bug, and the fix you want is architectural: a single **centralized** mechanism through which every __KEEP_plugin_registers__ its window kinds/tabs/layout, strict enough that a broken layout like this becomes structurally impossible — not new end-to-end browser tests.
 
 Investigation of the renderer shows the chrome IS already drawn by one shared function per surface:
 
-- [framework/renderer/wgpu/rs/lib.rs](framework/renderer/wgpu/rs/lib.rs) `render_navbar` (top bar) and `render_stack` (per-window tab/border/options-chip chrome) are called uniformly for every program/window — there is no plugin-specific bypass.
+- [framework/renderer/wgpu/rs/lib.rs](framework/renderer/wgpu/rs/lib.rs) `render_navbar` (top bar) and `render_stack` (per-window tab/border/options-chip chrome) are called uniformly for every plugin/window — there is no plugin-specific bypass.
 - Two other chrome-layering bugs are already open today against this exact same code path: `FIX-WGPU-WINDOW-OPTIONS-CHIP-Z-ORDER` (chips compositing behind/above the wrong glass tier) and `MARQUEE-CROSSING-WINDOW-SELECTION` (scene disappearing due to draw-list layer conflicts). The procedural3d symptom is very likely the same class of regression (draw-list z-order / layout sizing), currently touched by in-flight work.
 
-The real architectural gap is upstream of rendering, in **registration**: every one of the 24 plugins builds its `AppDefinition` through exactly one function, [framework/program/rs/lib.rs](framework/program/rs/lib.rs) `AppBuilder::build_definition()` (called via `App::builder(...)`). Today it has a single assertion (non-empty `document`). It does **not** verify:
+The real architectural gap is upstream of rendering, in **registration**: every one of the 24 plugins builds its `AppDefinition` through exactly one function, [framework/plugin/rs/lib.rs](framework/plugin/rs/lib.rs) `AppBuilder::build_definition()` (called via `App::builder(...)`). Today it has a single assertion (non-empty `document`). It does **not** verify:
 
 - `window_kinds` is non-empty, ids are unique, `body_key`s are non-empty.
 - Every `window_kind_id` referenced by `default_layout` / `named_layout`s (recursively through `WindowLayoutRoot` → `WindowLayoutAxisNode`/`WindowLayoutStackNode` → `WindowLayoutWindowNode`, see [framework/core/rs/lib.rs](framework/core/rs/lib.rs) lines 133-197) actually exists among the declared `window_kinds`.
 - `panel_tabs[].group` is a free-form `String` matched against magic strings scattered across the wgpu renderer (`"workbench"`, `"left"`, `"details"`, `"right"`, `"display"`, `"document"` — see `panel_side_for_group`, `panel_toggle_icon_id` in `framework/renderer/wgpu/rs/lib.rs`) — a typo silently misroutes or drops a panel instead of failing to build.
 
-This is exactly the kind of "wrong layout must not be possible" gap: a program can currently declare an inconsistent manifest (dangling window id, bad group string, empty measures) and it will boot with visibly broken chrome instead of refusing to build.
+This is exactly the kind of "wrong layout must not be possible" gap: a plugin can currently declare an inconsistent manifest (dangling window id, bad group string, empty measures) and it will boot with visibly broken chrome instead of refusing to build.
 
 ## Plan
 
@@ -50,7 +50,7 @@ This is exactly the kind of "wrong layout must not be possible" gap: a program c
 
 ### 2. Harden the one shared registration path (the actual "clean mechanism")
 
-In `AppBuilder::build_definition()` ([framework/program/rs/lib.rs](framework/program/rs/lib.rs)), add assertions that make an inconsistent app manifest impossible to build (panic with a precise message identifying the offending program/window/tab), rather than silently rendering broken chrome:
+In `AppBuilder::build_definition()` ([framework/plugin/rs/lib.rs](framework/plugin/rs/lib.rs)), add assertions that make an inconsistent app manifest impossible to build (panic with a precise message identifying the offending plugin/window/tab), rather than silently rendering broken chrome:
 
 - At least one `window_kind`; all `window_kind.id` unique and non-empty `body_key`.
 - Recursively collect every `window_kind_id` referenced from `default_layout` and all `named_layouts`, and assert each one is declared in `window_kinds`.
@@ -64,7 +64,7 @@ In `AppBuilder::build_definition()` ([framework/program/rs/lib.rs](framework/pro
 
 ### 4. Verify across all 24 plugins
 
-- Run `cargo test` (and the wasm32 build) across every program crate — each already constructs its `AppDefinition` in its own module/tests, so the new `build_definition()` assertions execute automatically for all 24 plugins with no new test files needed (per your "no end-to-end tests" direction).
+- Run `cargo test` (and the wasm32 build) across every plugin crate — each already constructs its `AppDefinition` in its own module/tests, so the new `build_definition()` assertions execute automatically for all 24 plugins with no new test files needed (per your "no end-to-end tests" direction).
 - Fix any program whose manifest fails the new invariants (this is how latent issues beyond procedural3d, if any, get caught structurally).
 
 ### 5. Ticket workflow
@@ -74,8 +74,8 @@ In `AppBuilder::build_definition()` ([framework/program/rs/lib.rs](framework/pro
 
 ## Files most likely touched
 
-- [framework/program/rs/lib.rs](framework/program/rs/lib.rs) — `AppBuilder::build_definition()` validation.
+- [framework/plugin/rs/lib.rs](framework/plugin/rs/lib.rs) — `AppBuilder::build_definition()` validation.
 - [framework/core/rs/lib.rs](framework/core/rs/lib.rs) — new `PanelGroup` enum, `WindowLayout*` cross-reference helpers.
 - [framework/renderer/wgpu/rs/lib.rs](framework/renderer/wgpu/rs/lib.rs) — root-cause chrome fix (`render_navbar`, `render_stack`, sizing) + enum-based group matching.
 - [framework/renderer/react/os-shell.tsx](framework/renderer/react/os-shell.tsx) — mirror enum-based group matching for parity.
-- Any program crate whose manifest fails the new assertions (found in step 4).
+- Any plugin crate whose manifest fails the new assertions (found in step 4).

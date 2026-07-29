@@ -3,7 +3,7 @@ name: Fully Derived Playground Infra
 overview: Make every piece of playground infrastructure (ports, site hosts, Vite plugins, body/surface registration, program routing) derive solely from each app's own semio.app manifest + core exports, deleting all remaining central tables, playEntryKind dispatches, and the compose.sketchpad special-cases.
 todos:
  - id: manifest-schema
-   content: Extend PlaygroundAppManifest with site/assets/programIds/lockedExampleFixtures/optimizeDepsExclude; add semio.app manifests for s, compose-sketchpad, projektetage; derive port seeds, PLAYGROUND_SITE_HOSTS, embed ports from manifests; generalize devServerPlayEntry
+   content: Extend PlaygroundAppManifest with site/assets/pluginIds/lockedExampleFixtures/optimizeDepsExclude; add semio.app manifests for s, compose-sketchpad, projektetage; derive port seeds, PLAYGROUND_SITE_HOSTS, embed ports from manifests; generalize devServerPlayEntry
    status: completed
  - id: declarative-bodies
    content: Add windowBodies/sidePanelBodies to AppRendererContribution, register them in applyAppRendererContribution, drop registerBodies/registerSurfaceHosts from createPlaygroundApp, migrate all ~24 apps
@@ -12,10 +12,10 @@ todos:
    content: Give compose.sketchpad a full semio.app manifest + instanceHost; delete s/react play-host branches, bootstrapSPlayExtensions hardcoded import, TECHNOLOGY_APP_RESOURCE_BY_PROGRAM entry, dead compose-sketchpad-stub.ts
    status: completed
  - id: vite-assets
-   content: Replace playEntryKind program dispatch with manifest assets union; delete PlaygroundRendererPuzzleKind union; move PUZZLE_3D_LOCKED_FIXTURE_JSON_REL into puzzle manifests; rename PUZZLE_PLAY_ENTRY to PLAYGROUND_APP_KIND
+   content: Replace playEntryKind plugin dispatch with manifest assets union; delete PlaygroundRendererPuzzleKind union; move PUZZLE_3D_LOCKED_FIXTURE_JSON_REL into puzzle manifests; rename PUZZLE_PLAY_ENTRY to PLAYGROUND_APP_KIND
    status: completed
  - id: program-id-routing
-   content: Emit programIdToPlaygroundKind fully from manifests (programId + programIds aliases); add reasoning.mindmap manifest and presentation.deck alias; delete PROGRAM_ID_RESIDUAL and virtual-module inline residuals
+   content: Emit pluginIdToPlaygroundKind fully from manifests (pluginId + pluginIds aliases); add reasoning.mindmap manifest and presentation.deck alias; delete PROGRAM_ID_RESIDUAL and virtual-module inline residuals
    status: completed
  - id: example-host-tightening
    content: Make controllerBackedExampleContribution/resolvePlaygroundExampleCatalog fail loudly when controller lacks PlaygroundExampleHost instead of silent duck-detection
@@ -40,9 +40,9 @@ The framework derives everything else — ports, dev CLI aliases, site hosts, Vi
 
 ```mermaid
 flowchart LR
-  Manifest["package.json semio.app\nkind, port, site, assets,\nprogramIds, lockedExamples"]
+  Manifest["package.json semio.app\nkind, port, site, assets,\npluginIds, lockedExamples"]
   Scan["scanPlaygroundAppManifests\n(repo/lib)"]
-  Virtual["virtual:semio-playground-apps\nappImports + programImports\n+ programIdToPlaygroundKind"]
+  Virtual["virtual:semio-playground-apps\nappImports + programImports\n+ pluginIdToPlaygroundKind"]
   ViteCfg["createPlaygroundPlayViteConfig\nplugins from union of\nmanifest.assets"]
   Ports["PLAYGROUND_PORTS /\nSITE_HOSTS / EMBED_PORTS"]
   Contribution["AppRendererContribution\nsurfaceHosts, windowBodies,\nsidePanelBodies, examples,\ntreeDragController, ..."]
@@ -59,7 +59,7 @@ Extend `PlaygroundAppManifest` (lines 1175-1187) with optional fields so apps ca
 
 - `site?: { readonly embedKind: string; readonly host: string }` — replaces `PLAYGROUND_SITE_HOSTS` (1153-1159), `PlaygroundEmbedSiteKind` (1107), and `resolvePlaygroundEmbedSiteDevPorts`'s hardcoded kind→hostKind map (1113-1118). Add to compose-sketchpad, cad, puzzle 2d/3d/5d manifests (`embedKind: "compose" | "cad" | "2d" | "3d" | "5d"`, hosts `play.*.semio-tech.com`).
 - `assets?: readonly ("puzzle3d-meshes" | "gis-tiles" | "sketchpad-mdx")[]` — names of framework-provided Vite program factories the app needs (Part 4).
-- `programIds?: readonly string[]` — extra program-id aliases routing to this app (replaces `PROGRAM_ID_RESIDUAL`, Part 5).
+- `pluginIds?: readonly string[]` — extra program-id aliases routing to this app (replaces `PROGRAM_ID_RESIDUAL`, Part 5).
 - `lockedExampleFixtures?: Readonly<Record<string, readonly string[]>>` — replaces `PUZZLE_3D_LOCKED_FIXTURE_JSON_REL` in [ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts) (422-431); declared on puzzle 3d/5d manifests.
 - `optimizeDepsExclude?: readonly string[]` — replaces `FLOW_WASM_MODULE_OPTIMIZE_DEPS_EXCLUDE` (1177-1186); declared on flow manifest.
 
@@ -80,10 +80,10 @@ readonly sidePanelBodies?: Readonly<Record<string, SidePanelBodyFactory>>;
 
 ## Part 3 — compose.sketchpad becomes a real manifest app
 
-- Add a full `semio.app` manifest to the sketchpad package (`kind: "sketchpad"`, `port: { dev: 4000 }`, `programId: "compose.sketchpad"`, `programExport: "sketchpadProgramContribution"`, `definitionExport`, `instanceHost` in its renderer contribution wrapping the current `SSketchpadHost` mount).
+- Add a full `semio.app` manifest to the sketchpad package (`kind: "sketchpad"`, `port: { dev: 4000 }`, `pluginId: "compose.sketchpad"`, `programExport: "sketchpadProgramContribution"`, `definitionExport`, `instanceHost` in its renderer contribution wrapping the current `SSketchpadHost` mount).
 - Delete the 2 special-case branches in [s/react/play-host.tsx](s/react/play-host.tsx) (100-105, 128-135) — sketchpad resolves through `ensureOsAppContribution` like every other app.
 - Delete the hardcoded `sketchpadProgramContribution` import in `bootstrapSPlayExtensions` ([s/core/js/index.ts](s/core/js/index.ts) 115-124) and its twin in [s/core/js/internal.ts](s/core/js/internal.ts) (396-405) — it now loads via `loadAllOsProgramContributions()`.
-- Remove the `compose.sketchpad` entry from `TECHNOLOGY_APP_RESOURCE_BY_PROGRAM` ([s/core/js/internal.ts](s/core/js/internal.ts) 255-257) in favor of the program contribution's own resources.
+- Remove the `compose.sketchpad` entry from `TECHNOLOGY_APP_RESOURCE_BY_PROGRAM` ([s/core/js/internal.ts](s/core/js/internal.ts) 255-257) in favor of the plugin contribution's own resources.
 - Delete the dead [framework/product/playground/core/js/compose-sketchpad-stub.ts](framework/product/playground/core/js/compose-sketchpad-stub.ts) (verified unreferenced). Keep `playgroundComposeSketchpadStubPlugin` only if non-s bundles still need to exclude MDX weight — gate it by "sketchpad not in this build's asset set" instead of `playEntryKind === "s"`.
 
 ## Part 4 — Vite config derived from manifest `assets` ([ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts))
@@ -96,8 +96,8 @@ readonly sidePanelBodies?: Readonly<Record<string, SidePanelBodyFactory>>;
 
 ## Part 5 — Program-id routing fully manifest-derived
 
-- The virtual module ([ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts) 1210-1239) emits `programIdToPlaygroundKind` from `programId` plus new `programIds` aliases; delete its 2 inline residual entries.
-- Delete `PROGRAM_ID_RESIDUAL` in [framework/product/os/renderer/react/app-contribution-registry.ts](framework/product/os/renderer/react/app-contribution-registry.ts) (9-19): give the reasoning.mindmap wires core its own `semio.app` manifest (`programId: "reasoning.mindmap"`, routing to the puzzle-2d host via `hostKind`), and add `programIds: ["presentation.deck"]` to the presentation manifest.
+- The virtual module ([ui/styling/vite-elements-assets.ts](ui/styling/vite-elements-assets.ts) 1210-1239) emits `pluginIdToPlaygroundKind` from `pluginId` plus new `pluginIds` aliases; delete its 2 inline residual entries.
+- Delete `PROGRAM_ID_RESIDUAL` in [framework/product/os/renderer/react/app-contribution-registry.ts](framework/product/os/renderer/react/app-contribution-registry.ts) (9-19): give the reasoning.mindmap wires core its own `semio.app` manifest (`pluginId: "reasoning.mindmap"`, routing to the puzzle-2d host via `hostKind`), and add `pluginIds: ["presentation.deck"]` to the presentation manifest.
 
 ## Part 6 — Example-host contract tightening
 

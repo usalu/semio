@@ -1,4 +1,4 @@
-/** @generated semio program web worker */
+/** @generated semio plugin web worker */
 let pluginApi = null;
 
 async function loadPlugin(moduleUrl) {

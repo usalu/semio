@@ -27,7 +27,7 @@ framework_surface_tiled_map = { path = "../../../surface/tiled-map/rs" }
 puzzle_2d = { path = "../../../../puzzle/2d/rs" }
 flow_core = { path = "../../../../s/kernel/flow/core/rs", package = "semio-s-kernel-flow-core" }
 ui_wgpu = { path = "../../../../ui/wgpu/rs", features = ["engine"] }
-semio-framework-program = { path = "../../../program/rs" }
+semio-framework-plugin = { path = "../../../plugin/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 base64 = "0.22.1"
@@ -48,7 +48,7 @@ path = "bin.rs"
 required-features = ["native-bin"]
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-semio-framework-program-host = { path = "../../../program/host/rs" }
+semio-framework-plugin-host = { path = "../../../plugin/host/rs" }
 store_sync = { path = "../../../../s/kernel/store/sync/rs", package = "semio-s-kernel-store-sync" }
 vcs = { path = "../../../kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
 store = { path = "../../../../s/kernel/store/rs", package = "semio-s-kernel-store" }

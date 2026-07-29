@@ -197,7 +197,7 @@ impl Default for FemAnalysisSettings {
     }
 }
 
-/// 🎥 The canvas camera (pan/zoom) for the program viewport.
+/// 🎥 The canvas camera (pan/zoom) for the plugin viewport.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct FemCamera {
@@ -751,7 +751,7 @@ pub fn build_model(doc: &Fem2dDocument, case_id: &str) -> Result<Model, Fem2dErr
 }
 
 /// 🌉 Frozen public entry point: solves a `Fem2dDocument`'s named load case for linear-static
-/// equilibrium. Signature is a contract consumed directly by `fem-program` — do not rename or
+/// equilibrium. Signature is a contract consumed directly by `fem-plugin` — do not rename or
 /// change it.
 pub fn fem2d_solve(doc: &Fem2dDocument, case_id: &str) -> Result<fem_core::StaticResult, String> {
     let model = build_model(doc, case_id).map_err(|e| e.to_string())?;
@@ -829,7 +829,7 @@ pub fn fem2d_modal(doc: &Fem2dDocument) -> Result<fem_core::analyses::ModalResul
 
 /// 🌉 Richer modal entry point: solves the same modal analysis as `fem2d_modal` but also unpacks mode
 /// `mode_index`'s shape `VecD` into a friendly per-node `[f64;6]` displacement map (see `mode_dof_order`),
-/// ready to feed the same deformed-shape rendering `fem-program` already uses for static results. Returns
+/// ready to feed the same deformed-shape rendering `fem-plugin` already uses for static results. Returns
 /// `(frequency_hz, node_id -> displacement values)`.
 pub fn fem2d_modal_mode_values(doc: &Fem2dDocument, mode_index: usize) -> Result<(f64, HashMap<String, [f64; 6]>), Fem2dError> {
     let (nodes, elements, _regions) = build_nodes_and_elements(doc)?;
@@ -901,7 +901,7 @@ pub fn fem2d_buckling_mode_values(doc: &Fem2dDocument, case_id: &str, mode_index
 
 // #region 🔖MeshPreview
 /// 🗺️ One meshed region's cheap preview geometry — mesh points plus triangle vertex indices, WITHOUT
-/// building any `fem_core::Element`. Used purely by `fem-program` for a mesh-edge preview overlay in the
+/// building any `fem_core::Element`. Used purely by `fem-plugin` for a mesh-edge preview overlay in the
 /// model window and to correlate `fem2d_solve_all`'s `Tri3Cst` results (ids `"{region_id}_t{tri_index}"`,
 /// see `build_nodes_and_elements`) back to screen-space triangles for contour rendering.
 pub struct RegionMesh {
@@ -910,7 +910,7 @@ pub struct RegionMesh {
     pub tris: Vec<[u32; 3]>,
     /// 🪪 Per-point node id, SAME coincident-node resolution `build_nodes_and_elements` uses (existing
     /// doc node within `1e-9` reused, else synthesized `"{region_id}_m{point_index}"`) — lets a caller
-    /// (`fem-program`'s nodal-averaged contour rendering) map `fem2d_nodal_von_mises`'s node-keyed map
+    /// (`fem-plugin`'s nodal-averaged contour rendering) map `fem2d_nodal_von_mises`'s node-keyed map
     /// straight onto this mesh's triangles.
     pub node_ids: Vec<String>,
 }
@@ -940,7 +940,7 @@ pub fn fem2d_mesh_preview(doc: &Fem2dDocument) -> Result<Vec<RegionMesh>, Fem2dE
 
 /// 🎨 Nodal-averaged von Mises stress for `case_id`'s solved result (via `fem2d_solve_all`, so `case_id`
 /// may name either a `FemLoadCase` or a `FemCombination`), keyed by node id — the document-layer bridge
-/// to `fem_core::analyses::nodal_averaged_scalar`, feeding `fem-program`'s banded contour rendering.
+/// to `fem_core::analyses::nodal_averaged_scalar`, feeding `fem-plugin`'s banded contour rendering.
 pub fn fem2d_nodal_von_mises(doc: &Fem2dDocument, case_id: &str) -> Result<HashMap<String, f64>, Fem2dError> {
     let (nodes, elements, _regions) = build_nodes_and_elements(doc)?;
     let supports: Vec<Support> = doc.supports.iter().map(|s| Support { node_id: s.node_id.clone(), fixed: s.fixed.iter().map(|d| (*d).into()).collect() }).collect();

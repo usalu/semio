@@ -6130,7 +6130,7 @@ let postReturn13Async;
 let pluginManifest;
 
 function manifest() {
-  _debugLog('[iface="semio:framework/program", function="manifest"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="manifest"][Instruction::CallWasm] enter', {
     funcName: 'manifest',
     paramCount: 0,
     async: false,
@@ -6181,7 +6181,7 @@ function manifest() {
   var ptr0 = dataView(memory0).getUint32(ret + 0, true);
   var len0 = dataView(memory0).getUint32(ret + 4, true);
   var result0 = TEXT_DECODER_UTF8.decode(new Uint8Array(memory0.buffer, ptr0, len0));
-  _debugLog('[iface="semio:framework/program", function="manifest"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="manifest"][Instruction::Return]', {
     funcName: 'manifest',
     paramCount: 1,
     async: false,
@@ -6215,7 +6215,7 @@ function instantiateApp(arg0, arg1) {
   var ptr1= encodeRes.ptr;
   var len1 = encodeRes.len;
   
-  _debugLog('[iface="semio:framework/program", function="instantiate-app"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="instantiate-app"][Instruction::CallWasm] enter', {
     funcName: 'instantiate-app',
     paramCount: 4,
     async: false,
@@ -6286,7 +6286,7 @@ function instantiateApp(arg0, arg1) {
           break;
         }
         default: {
-          throw new TypeError('invalid variant discriminant for ProgramError');
+          throw new TypeError('invalid variant discriminant for PluginError');
         }
       }
       variant4= {
@@ -6299,7 +6299,7 @@ function instantiateApp(arg0, arg1) {
       throw new TypeError('invalid variant discriminant for expected');
     }
   }
-  _debugLog('[iface="semio:framework/program", function="instantiate-app"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="instantiate-app"][Instruction::Return]', {
     funcName: 'instantiate-app',
     paramCount: 1,
     async: false,
@@ -6337,7 +6337,7 @@ function handleAction(arg0, arg1, arg2) {
   var ptr3= encodeRes.ptr;
   var len3 = encodeRes.len;
   
-  _debugLog('[iface="semio:framework/program", function="handle-action"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="handle-action"][Instruction::CallWasm] enter', {
     funcName: 'handle-action',
     paramCount: 5,
     async: false,
@@ -6413,7 +6413,7 @@ function handleAction(arg0, arg1, arg2) {
           break;
         }
         default: {
-          throw new TypeError('invalid variant discriminant for ProgramError');
+          throw new TypeError('invalid variant discriminant for PluginError');
         }
       }
       variant7= {
@@ -6426,7 +6426,7 @@ function handleAction(arg0, arg1, arg2) {
       throw new TypeError('invalid variant discriminant for expected');
     }
   }
-  _debugLog('[iface="semio:framework/program", function="handle-action"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="handle-action"][Instruction::Return]', {
     funcName: 'handle-action',
     paramCount: 1,
     async: false,
@@ -6464,7 +6464,7 @@ function handleCommand(arg0, arg1, arg2) {
   var ptr3= encodeRes.ptr;
   var len3 = encodeRes.len;
   
-  _debugLog('[iface="semio:framework/program", function="handle-command"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="handle-command"][Instruction::CallWasm] enter', {
     funcName: 'handle-command',
     paramCount: 5,
     async: false,
@@ -6540,7 +6540,7 @@ function handleCommand(arg0, arg1, arg2) {
           break;
         }
         default: {
-          throw new TypeError('invalid variant discriminant for ProgramError');
+          throw new TypeError('invalid variant discriminant for PluginError');
         }
       }
       variant7= {
@@ -6553,7 +6553,7 @@ function handleCommand(arg0, arg1, arg2) {
       throw new TypeError('invalid variant discriminant for expected');
     }
   }
-  _debugLog('[iface="semio:framework/program", function="handle-command"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="handle-command"][Instruction::Return]', {
     funcName: 'handle-command',
     paramCount: 1,
     async: false,
@@ -6585,7 +6585,7 @@ function updateWindow(arg0, arg1) {
   var ptr1= encodeRes.ptr;
   var len1 = encodeRes.len;
   
-  _debugLog('[iface="semio:framework/program", function="update-window"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="update-window"][Instruction::CallWasm] enter', {
     funcName: 'update-window',
     paramCount: 3,
     async: false,
@@ -6661,7 +6661,7 @@ function updateWindow(arg0, arg1) {
           break;
         }
         default: {
-          throw new TypeError('invalid variant discriminant for ProgramError');
+          throw new TypeError('invalid variant discriminant for PluginError');
         }
       }
       variant5= {
@@ -6674,7 +6674,7 @@ function updateWindow(arg0, arg1) {
       throw new TypeError('invalid variant discriminant for expected');
     }
   }
-  _debugLog('[iface="semio:framework/program", function="update-window"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="update-window"][Instruction::Return]', {
     funcName: 'update-window',
     paramCount: 1,
     async: false,
@@ -6706,7 +6706,7 @@ function refreshUi(arg0, arg1) {
   var ptr1= encodeRes.ptr;
   var len1 = encodeRes.len;
   
-  _debugLog('[iface="semio:framework/program", function="refresh-ui"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="refresh-ui"][Instruction::CallWasm] enter', {
     funcName: 'refresh-ui',
     paramCount: 3,
     async: false,
@@ -6782,7 +6782,7 @@ function refreshUi(arg0, arg1) {
           break;
         }
         default: {
-          throw new TypeError('invalid variant discriminant for ProgramError');
+          throw new TypeError('invalid variant discriminant for PluginError');
         }
       }
       variant5= {
@@ -6795,7 +6795,7 @@ function refreshUi(arg0, arg1) {
       throw new TypeError('invalid variant discriminant for expected');
     }
   }
-  _debugLog('[iface="semio:framework/program", function="refresh-ui"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="refresh-ui"][Instruction::Return]', {
     funcName: 'refresh-ui',
     paramCount: 1,
     async: false,
@@ -6854,7 +6854,7 @@ function migrateDocument(arg0) {
     out3.set(valData3);
   }
   
-  _debugLog('[iface="semio:framework/program", function="migrate-document"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="migrate-document"][Instruction::CallWasm] enter', {
     funcName: 'migrate-document',
     paramCount: 6,
     async: false,
@@ -6930,7 +6930,7 @@ function migrateDocument(arg0) {
           break;
         }
         default: {
-          throw new TypeError('invalid variant discriminant for ProgramError');
+          throw new TypeError('invalid variant discriminant for PluginError');
         }
       }
       variant7= {
@@ -6943,7 +6943,7 @@ function migrateDocument(arg0) {
       throw new TypeError('invalid variant discriminant for expected');
     }
   }
-  _debugLog('[iface="semio:framework/program", function="migrate-document"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="migrate-document"][Instruction::Return]', {
     funcName: 'migrate-document',
     paramCount: 1,
     async: false,
@@ -6974,7 +6974,7 @@ function applyOperations(arg0, arg1) {
   var ptr0= encodeRes.ptr;
   var len0 = encodeRes.len;
   
-  _debugLog('[iface="semio:framework/program", function="apply-operations"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="apply-operations"][Instruction::CallWasm] enter', {
     funcName: 'apply-operations',
     paramCount: 3,
     async: false,
@@ -7045,7 +7045,7 @@ function applyOperations(arg0, arg1) {
           break;
         }
         default: {
-          throw new TypeError('invalid variant discriminant for ProgramError');
+          throw new TypeError('invalid variant discriminant for PluginError');
         }
       }
       variant3= {
@@ -7058,7 +7058,7 @@ function applyOperations(arg0, arg1) {
       throw new TypeError('invalid variant discriminant for expected');
     }
   }
-  _debugLog('[iface="semio:framework/program", function="apply-operations"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="apply-operations"][Instruction::Return]', {
     funcName: 'apply-operations',
     paramCount: 1,
     async: false,
@@ -7084,7 +7084,7 @@ function applyOperations(arg0, arg1) {
 let pluginReadAppDocument;
 
 function readAppDocument(arg0) {
-  _debugLog('[iface="semio:framework/program", function="read-app-document"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="read-app-document"][Instruction::CallWasm] enter', {
     funcName: 'read-app-document',
     paramCount: 1,
     async: false,
@@ -7158,7 +7158,7 @@ function readAppDocument(arg0) {
           break;
         }
         default: {
-          throw new TypeError('invalid variant discriminant for ProgramError');
+          throw new TypeError('invalid variant discriminant for PluginError');
         }
       }
       variant3= {
@@ -7171,7 +7171,7 @@ function readAppDocument(arg0) {
       throw new TypeError('invalid variant discriminant for expected');
     }
   }
-  _debugLog('[iface="semio:framework/program", function="read-app-document"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="read-app-document"][Instruction::Return]', {
     funcName: 'read-app-document',
     paramCount: 1,
     async: false,
@@ -7202,7 +7202,7 @@ function loadAppDocument(arg0, arg1) {
   var ptr0= encodeRes.ptr;
   var len0 = encodeRes.len;
   
-  _debugLog('[iface="semio:framework/program", function="load-app-document"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="load-app-document"][Instruction::CallWasm] enter', {
     funcName: 'load-app-document',
     paramCount: 3,
     async: false,
@@ -7273,7 +7273,7 @@ function loadAppDocument(arg0, arg1) {
           break;
         }
         default: {
-          throw new TypeError('invalid variant discriminant for ProgramError');
+          throw new TypeError('invalid variant discriminant for PluginError');
         }
       }
       variant3= {
@@ -7286,7 +7286,7 @@ function loadAppDocument(arg0, arg1) {
       throw new TypeError('invalid variant discriminant for expected');
     }
   }
-  _debugLog('[iface="semio:framework/program", function="load-app-document"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="load-app-document"][Instruction::Return]', {
     funcName: 'load-app-document',
     paramCount: 1,
     async: false,
@@ -7317,7 +7317,7 @@ function attachBackbone(arg0, arg1) {
   var ptr0= encodeRes.ptr;
   var len0 = encodeRes.len;
   
-  _debugLog('[iface="semio:framework/program", function="attach-backbone"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="attach-backbone"][Instruction::CallWasm] enter', {
     funcName: 'attach-backbone',
     paramCount: 3,
     async: false,
@@ -7388,7 +7388,7 @@ function attachBackbone(arg0, arg1) {
           break;
         }
         default: {
-          throw new TypeError('invalid variant discriminant for ProgramError');
+          throw new TypeError('invalid variant discriminant for PluginError');
         }
       }
       variant3= {
@@ -7401,7 +7401,7 @@ function attachBackbone(arg0, arg1) {
       throw new TypeError('invalid variant discriminant for expected');
     }
   }
-  _debugLog('[iface="semio:framework/program", function="attach-backbone"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="attach-backbone"][Instruction::Return]', {
     funcName: 'attach-backbone',
     paramCount: 1,
     async: false,
@@ -7427,7 +7427,7 @@ function attachBackbone(arg0, arg1) {
 let pluginDetachBackbone;
 
 function detachBackbone(arg0) {
-  _debugLog('[iface="semio:framework/program", function="detach-backbone"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="detach-backbone"][Instruction::CallWasm] enter', {
     funcName: 'detach-backbone',
     paramCount: 1,
     async: false,
@@ -7498,7 +7498,7 @@ function detachBackbone(arg0) {
           break;
         }
         default: {
-          throw new TypeError('invalid variant discriminant for ProgramError');
+          throw new TypeError('invalid variant discriminant for PluginError');
         }
       }
       variant2= {
@@ -7511,7 +7511,7 @@ function detachBackbone(arg0) {
       throw new TypeError('invalid variant discriminant for expected');
     }
   }
-  _debugLog('[iface="semio:framework/program", function="detach-backbone"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="detach-backbone"][Instruction::Return]', {
     funcName: 'detach-backbone',
     paramCount: 1,
     async: false,
@@ -7570,7 +7570,7 @@ function consumeMedia(arg0, arg1, arg2) {
     out3.set(valData3);
   }
   
-  _debugLog('[iface="semio:framework/program", function="consume-media"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="consume-media"][Instruction::CallWasm] enter', {
     funcName: 'consume-media',
     paramCount: 7,
     async: false,
@@ -7641,7 +7641,7 @@ function consumeMedia(arg0, arg1, arg2) {
           break;
         }
         default: {
-          throw new TypeError('invalid variant discriminant for ProgramError');
+          throw new TypeError('invalid variant discriminant for PluginError');
         }
       }
       variant6= {
@@ -7654,7 +7654,7 @@ function consumeMedia(arg0, arg1, arg2) {
       throw new TypeError('invalid variant discriminant for expected');
     }
   }
-  _debugLog('[iface="semio:framework/program", function="consume-media"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="consume-media"][Instruction::Return]', {
     funcName: 'consume-media',
     paramCount: 1,
     async: false,
@@ -7690,7 +7690,7 @@ function produceMedia(arg0, arg1, arg2) {
   var ptr1= encodeRes.ptr;
   var len1 = encodeRes.len;
   
-  _debugLog('[iface="semio:framework/program", function="produce-media"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="produce-media"][Instruction::CallWasm] enter', {
     funcName: 'produce-media',
     paramCount: 5,
     async: false,
@@ -7770,7 +7770,7 @@ function produceMedia(arg0, arg1, arg2) {
           break;
         }
         default: {
-          throw new TypeError('invalid variant discriminant for ProgramError');
+          throw new TypeError('invalid variant discriminant for PluginError');
         }
       }
       variant6= {
@@ -7783,7 +7783,7 @@ function produceMedia(arg0, arg1, arg2) {
       throw new TypeError('invalid variant discriminant for expected');
     }
   }
-  _debugLog('[iface="semio:framework/program", function="produce-media"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="produce-media"][Instruction::Return]', {
     funcName: 'produce-media',
     paramCount: 1,
     async: false,
@@ -7809,7 +7809,7 @@ function produceMedia(arg0, arg1, arg2) {
 let pluginClearInstanceGuard;
 
 function clearInstanceGuard() {
-  _debugLog('[iface="semio:framework/program", function="clear-instance-guard"][Instruction::CallWasm] enter', {
+  _debugLog('[iface="semio:framework/plugin", function="clear-instance-guard"][Instruction::CallWasm] enter', {
     funcName: 'clear-instance-guard',
     paramCount: 0,
     async: false,
@@ -7857,7 +7857,7 @@ function clearInstanceGuard() {
     
   }
   
-  _debugLog('[iface="semio:framework/program", function="clear-instance-guard"][Instruction::Return]', {
+  _debugLog('[iface="semio:framework/plugin", function="clear-instance-guard"][Instruction::Return]', {
     funcName: 'clear-instance-guard',
     paramCount: 0,
     async: false,
@@ -9391,7 +9391,7 @@ null,
 
 const $init = (() => {
   let gen = (function* _initGenerator () {
-    const module0 = fetchCompile(new URL('./mathematical_program_component.core.wasm', import.meta.url));
+    const module0 = fetchCompile(new URL('./mathematical_plugin_component.core.wasm', import.meta.url));
     const module1 = base64Compile('AGFzbQEAAAABHwVgA39/fwBgBX9/f39/AGABfwBgAn9/AGAEf39/fwADDQwAAQIAAwQDAgICAgIEBQFwAQwMBz4NATAAAAExAAEBMgACATMAAwE0AAQBNQAFATYABgE3AAcBOAAIATkACQIxMAAKAjExAAsIJGltcG9ydHMBAAqTAQwNACAAIAEgAkEAEQAACxEAIAAgASACIAMgBEEBEQEACwkAIABBAhECAAsNACAAIAEgAkEDEQAACwsAIAAgAUEEEQMACw8AIAAgASACIANBBREEAAsLACAAIAFBBhEDAAsJACAAQQcRAgALCQAgAEEIEQIACwkAIABBCRECAAsJACAAQQoRAgALCQAgAEELEQIACwAvCXByb2R1Y2VycwEMcHJvY2Vzc2VkLWJ5AQ13aXQtY29tcG9uZW50BzAuMjUyLjA');
     const module2 = base64Compile('AGFzbQEAAAABHwVgA39/fwBgBX9/f39/AGABfwBgAn9/AGAEf39/fwACTg0AATAAAAABMQABAAEyAAIAATMAAAABNAADAAE1AAQAATYAAwABNwACAAE4AAIAATkAAgACMTAAAgACMTEAAgAIJGltcG9ydHMBcAEMDAkSAQBBAAsMAAECAwQFBgcICQoLAC8JcHJvZHVjZXJzAQxwcm9jZXNzZWQtYnkBDXdpdC1jb21wb25lbnQHMC4yNTIuMA');
     ({ exports: exports0 } = yield instantiateCore(yield module1));
@@ -9483,133 +9483,133 @@ const $init = (() => {
         '9': trampoline23,
       },
     }));
-    postReturn0 = exports1['cabi_post_semio:framework/program#manifest'];
+    postReturn0 = exports1['cabi_post_semio:framework/plugin#manifest'];
     
     try {
-      postReturn0Async = WebAssembly.promising(exports1['cabi_post_semio:framework/program#manifest']);
+      postReturn0Async = WebAssembly.promising(exports1['cabi_post_semio:framework/plugin#manifest']);
     } catch(err) {
-      postReturn0Async = exports1['cabi_post_semio:framework/program#manifest'];
+      postReturn0Async = exports1['cabi_post_semio:framework/plugin#manifest'];
     }
     
-    postReturn1 = exports1['cabi_post_semio:framework/program#instantiate-app'];
+    postReturn1 = exports1['cabi_post_semio:framework/plugin#instantiate-app'];
     
     try {
-      postReturn1Async = WebAssembly.promising(exports1['cabi_post_semio:framework/program#instantiate-app']);
+      postReturn1Async = WebAssembly.promising(exports1['cabi_post_semio:framework/plugin#instantiate-app']);
     } catch(err) {
-      postReturn1Async = exports1['cabi_post_semio:framework/program#instantiate-app'];
+      postReturn1Async = exports1['cabi_post_semio:framework/plugin#instantiate-app'];
     }
     
-    postReturn2 = exports1['cabi_post_semio:framework/program#handle-action'];
+    postReturn2 = exports1['cabi_post_semio:framework/plugin#handle-action'];
     
     try {
-      postReturn2Async = WebAssembly.promising(exports1['cabi_post_semio:framework/program#handle-action']);
+      postReturn2Async = WebAssembly.promising(exports1['cabi_post_semio:framework/plugin#handle-action']);
     } catch(err) {
-      postReturn2Async = exports1['cabi_post_semio:framework/program#handle-action'];
+      postReturn2Async = exports1['cabi_post_semio:framework/plugin#handle-action'];
     }
     
-    postReturn3 = exports1['cabi_post_semio:framework/program#handle-command'];
+    postReturn3 = exports1['cabi_post_semio:framework/plugin#handle-command'];
     
     try {
-      postReturn3Async = WebAssembly.promising(exports1['cabi_post_semio:framework/program#handle-command']);
+      postReturn3Async = WebAssembly.promising(exports1['cabi_post_semio:framework/plugin#handle-command']);
     } catch(err) {
-      postReturn3Async = exports1['cabi_post_semio:framework/program#handle-command'];
+      postReturn3Async = exports1['cabi_post_semio:framework/plugin#handle-command'];
     }
     
-    postReturn4 = exports1['cabi_post_semio:framework/program#update-window'];
+    postReturn4 = exports1['cabi_post_semio:framework/plugin#update-window'];
     
     try {
-      postReturn4Async = WebAssembly.promising(exports1['cabi_post_semio:framework/program#update-window']);
+      postReturn4Async = WebAssembly.promising(exports1['cabi_post_semio:framework/plugin#update-window']);
     } catch(err) {
-      postReturn4Async = exports1['cabi_post_semio:framework/program#update-window'];
+      postReturn4Async = exports1['cabi_post_semio:framework/plugin#update-window'];
     }
     
-    postReturn5 = exports1['cabi_post_semio:framework/program#refresh-ui'];
+    postReturn5 = exports1['cabi_post_semio:framework/plugin#refresh-ui'];
     
     try {
-      postReturn5Async = WebAssembly.promising(exports1['cabi_post_semio:framework/program#refresh-ui']);
+      postReturn5Async = WebAssembly.promising(exports1['cabi_post_semio:framework/plugin#refresh-ui']);
     } catch(err) {
-      postReturn5Async = exports1['cabi_post_semio:framework/program#refresh-ui'];
+      postReturn5Async = exports1['cabi_post_semio:framework/plugin#refresh-ui'];
     }
     
-    postReturn6 = exports1['cabi_post_semio:framework/program#migrate-document'];
+    postReturn6 = exports1['cabi_post_semio:framework/plugin#migrate-document'];
     
     try {
-      postReturn6Async = WebAssembly.promising(exports1['cabi_post_semio:framework/program#migrate-document']);
+      postReturn6Async = WebAssembly.promising(exports1['cabi_post_semio:framework/plugin#migrate-document']);
     } catch(err) {
-      postReturn6Async = exports1['cabi_post_semio:framework/program#migrate-document'];
+      postReturn6Async = exports1['cabi_post_semio:framework/plugin#migrate-document'];
     }
     
-    postReturn7 = exports1['cabi_post_semio:framework/program#apply-operations'];
+    postReturn7 = exports1['cabi_post_semio:framework/plugin#apply-operations'];
     
     try {
-      postReturn7Async = WebAssembly.promising(exports1['cabi_post_semio:framework/program#apply-operations']);
+      postReturn7Async = WebAssembly.promising(exports1['cabi_post_semio:framework/plugin#apply-operations']);
     } catch(err) {
-      postReturn7Async = exports1['cabi_post_semio:framework/program#apply-operations'];
+      postReturn7Async = exports1['cabi_post_semio:framework/plugin#apply-operations'];
     }
     
-    postReturn8 = exports1['cabi_post_semio:framework/program#read-app-document'];
+    postReturn8 = exports1['cabi_post_semio:framework/plugin#read-app-document'];
     
     try {
-      postReturn8Async = WebAssembly.promising(exports1['cabi_post_semio:framework/program#read-app-document']);
+      postReturn8Async = WebAssembly.promising(exports1['cabi_post_semio:framework/plugin#read-app-document']);
     } catch(err) {
-      postReturn8Async = exports1['cabi_post_semio:framework/program#read-app-document'];
+      postReturn8Async = exports1['cabi_post_semio:framework/plugin#read-app-document'];
     }
     
-    postReturn9 = exports1['cabi_post_semio:framework/program#load-app-document'];
+    postReturn9 = exports1['cabi_post_semio:framework/plugin#load-app-document'];
     
     try {
-      postReturn9Async = WebAssembly.promising(exports1['cabi_post_semio:framework/program#load-app-document']);
+      postReturn9Async = WebAssembly.promising(exports1['cabi_post_semio:framework/plugin#load-app-document']);
     } catch(err) {
-      postReturn9Async = exports1['cabi_post_semio:framework/program#load-app-document'];
+      postReturn9Async = exports1['cabi_post_semio:framework/plugin#load-app-document'];
     }
     
-    postReturn10 = exports1['cabi_post_semio:framework/program#attach-backbone'];
+    postReturn10 = exports1['cabi_post_semio:framework/plugin#attach-backbone'];
     
     try {
-      postReturn10Async = WebAssembly.promising(exports1['cabi_post_semio:framework/program#attach-backbone']);
+      postReturn10Async = WebAssembly.promising(exports1['cabi_post_semio:framework/plugin#attach-backbone']);
     } catch(err) {
-      postReturn10Async = exports1['cabi_post_semio:framework/program#attach-backbone'];
+      postReturn10Async = exports1['cabi_post_semio:framework/plugin#attach-backbone'];
     }
     
-    postReturn11 = exports1['cabi_post_semio:framework/program#detach-backbone'];
+    postReturn11 = exports1['cabi_post_semio:framework/plugin#detach-backbone'];
     
     try {
-      postReturn11Async = WebAssembly.promising(exports1['cabi_post_semio:framework/program#detach-backbone']);
+      postReturn11Async = WebAssembly.promising(exports1['cabi_post_semio:framework/plugin#detach-backbone']);
     } catch(err) {
-      postReturn11Async = exports1['cabi_post_semio:framework/program#detach-backbone'];
+      postReturn11Async = exports1['cabi_post_semio:framework/plugin#detach-backbone'];
     }
     
-    postReturn12 = exports1['cabi_post_semio:framework/program#consume-media'];
+    postReturn12 = exports1['cabi_post_semio:framework/plugin#consume-media'];
     
     try {
-      postReturn12Async = WebAssembly.promising(exports1['cabi_post_semio:framework/program#consume-media']);
+      postReturn12Async = WebAssembly.promising(exports1['cabi_post_semio:framework/plugin#consume-media']);
     } catch(err) {
-      postReturn12Async = exports1['cabi_post_semio:framework/program#consume-media'];
+      postReturn12Async = exports1['cabi_post_semio:framework/plugin#consume-media'];
     }
     
-    postReturn13 = exports1['cabi_post_semio:framework/program#produce-media'];
+    postReturn13 = exports1['cabi_post_semio:framework/plugin#produce-media'];
     
     try {
-      postReturn13Async = WebAssembly.promising(exports1['cabi_post_semio:framework/program#produce-media']);
+      postReturn13Async = WebAssembly.promising(exports1['cabi_post_semio:framework/plugin#produce-media']);
     } catch(err) {
-      postReturn13Async = exports1['cabi_post_semio:framework/program#produce-media'];
+      postReturn13Async = exports1['cabi_post_semio:framework/plugin#produce-media'];
     }
     
-    pluginManifest = exports1['semio:framework/program#manifest'];
-    pluginInstantiateApp = exports1['semio:framework/program#instantiate-app'];
-    pluginHandleAction = exports1['semio:framework/program#handle-action'];
-    pluginHandleCommand = exports1['semio:framework/program#handle-command'];
-    pluginUpdateWindow = exports1['semio:framework/program#update-window'];
-    pluginRefreshUi = exports1['semio:framework/program#refresh-ui'];
-    pluginMigrateDocument = exports1['semio:framework/program#migrate-document'];
-    pluginApplyOperations = exports1['semio:framework/program#apply-operations'];
-    pluginReadAppDocument = exports1['semio:framework/program#read-app-document'];
-    pluginLoadAppDocument = exports1['semio:framework/program#load-app-document'];
-    pluginAttachBackbone = exports1['semio:framework/program#attach-backbone'];
-    pluginDetachBackbone = exports1['semio:framework/program#detach-backbone'];
-    pluginConsumeMedia = exports1['semio:framework/program#consume-media'];
-    pluginProduceMedia = exports1['semio:framework/program#produce-media'];
-    pluginClearInstanceGuard = exports1['semio:framework/program#clear-instance-guard'];
+    pluginManifest = exports1['semio:framework/plugin#manifest'];
+    pluginInstantiateApp = exports1['semio:framework/plugin#instantiate-app'];
+    pluginHandleAction = exports1['semio:framework/plugin#handle-action'];
+    pluginHandleCommand = exports1['semio:framework/plugin#handle-command'];
+    pluginUpdateWindow = exports1['semio:framework/plugin#update-window'];
+    pluginRefreshUi = exports1['semio:framework/plugin#refresh-ui'];
+    pluginMigrateDocument = exports1['semio:framework/plugin#migrate-document'];
+    pluginApplyOperations = exports1['semio:framework/plugin#apply-operations'];
+    pluginReadAppDocument = exports1['semio:framework/plugin#read-app-document'];
+    pluginLoadAppDocument = exports1['semio:framework/plugin#load-app-document'];
+    pluginAttachBackbone = exports1['semio:framework/plugin#attach-backbone'];
+    pluginDetachBackbone = exports1['semio:framework/plugin#detach-backbone'];
+    pluginConsumeMedia = exports1['semio:framework/plugin#consume-media'];
+    pluginProduceMedia = exports1['semio:framework/plugin#produce-media'];
+    pluginClearInstanceGuard = exports1['semio:framework/plugin#clear-instance-guard'];
   })();
   let promise, resolve, reject;
   function runNext (value) {
@@ -9654,4 +9654,4 @@ const program = {
   
 };
 
-export { program, program as 'semio:framework/program',  }
+export { program, program as 'semio:framework/plugin',  }
