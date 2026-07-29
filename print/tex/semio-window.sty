@@ -404,6 +404,15 @@
 }
 
 \cs_new_protected:Npn \semio_window_vskip_stroke_hairline: {
+  % 🔒 break=false: the tcolorbox opened right after this vskip is non-breakable,
+  % so if it does not fit the remaining page it floats whole to the next page —
+  % but the title tab was emitted just above and this vskip is a legal page-break
+  % point (glue), so the tab is left orphaned on the old page. \nobreak forbids
+  % the break here; the last legal breakpoint is then the \addvspace above the
+  % tab (\semio_block_sep_before:), so tab and box move to the next page together.
+  % Only for non-breakable windows — a breakable window keeps its byte-for-byte
+  % output (its box breaks internally and always fits, so this never triggered).
+  \bool_if:NF \l_semio_window_break_bool { \nobreak }
   \group_begin:
   \ExplSyntaxOff
   % LR-2.14 seam: overlap the content frame onto the tab so the frame's top edge
