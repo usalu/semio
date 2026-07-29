@@ -252,7 +252,16 @@
             \end{WindowRow}
           }
         }
-        \WindowItem[\tl_use:N \l_semio_cover_logo_weight_tl]{
+      \end{WindowColumn}
+    \end{WindowArrangement}
+    % LR-cover-logos: the funder logos move to their own page so the Arbeitsprobe
+    % image on page 1 can scale up to fill the column width (consistent
+    % \semio@window@bodypad gap on both sides and the bottom). The remaining page-1
+    % elements stay together on page 1; only this logo strip flows to page 2.
+    \newpage
+    \begin{WindowArrangement}[height=4cm]
+      \begin{WindowColumn}
+        \WindowItem[1]{
           \begin{WindowRow}
             \WindowItem{
               \begin{Window}[title=BMWSB, anchor=center]

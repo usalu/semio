@@ -452,10 +452,12 @@
     % local to this group, read immediately at \begin{longtable}. Same as
     % \semio@table@colspec@register@long but with the |…| replaced by 2× \vrule.
     \renewcommand{\semio@table@colspec@register@long}{!{\vrule width 2\arrayrulewidth}@{\semio@table@padendL}>{\semio@cell@pre}m{\dimexpr0.12\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@pre}m{\dimexpr0.78\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@preR}m{\dimexpr0.10\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padendR}!{\vrule width 2\arrayrulewidth}}%
+    \gdef\semio@toc@frametop{2\arrayrulewidth}% LR-invert-tab: thick TOP rule (arrayrulewidth is a LENGTH REGISTER, so 2× = correct; the string macro \semio@stroke@hairline would concatenate into "20.75pt"). Global — firsthead typesets during \clearpage.
     \semio@register@window@open{\SemioTocTitle}%
-    \SemioTableRegister{\semio@register@table@body}%
+    \SemioTableRegister{\semio@register@table@body\noalign{\hrule height\arrayrulewidth}}% LR-invert-tab: thick BOTTOM — one extra hairline stacked under the last row's rule (0.75pt+0.75pt = 2×)
     \semio@register@window@close
     \clearpage
+    \gdef\semio@toc@frametop{\semio@stroke@hairline}% LR-invert-tab: restore normal top rule for all other tables
     \global\semio@invert@tabfalse% LR-invert-tab end (global: the longtable firsthead typesets during \clearpage, after the group)
     \makeatother
     \group_end:
@@ -2853,8 +2855,39 @@
 % whole colspec is swapped for a literal thick-sided version by a LOCAL
 % \renewcommand at the Inhaltsverzeichnis render point (see the toc renderer
 % above); the preamble is read at \begin{longtable}, inside that same group.
-% LR-invert-tab: (top-border thickening temporarily removed while isolating a
-% grey-band artifact — only the thick SIDES via the local colspec swap remain.)
+% LR-invert-tab: TOP frame rule width, driven by a plain macro (NOT an \if inside
+% the \noalign{\hrule} — that produced a phantom grey band). Default = one
+% hairline; the toc renderer \gdef's it to 2× for the Inhaltsverzeichnis and back.
+\newcommand{\semio@toc@frametop}{\semio@stroke@hairline}
+\renewcommand{\semio@table@long@title@chrome@row}[1]{%
+  \multicolumn{#1}{@{}l@{}}{%
+    \hskip-\semio@stroke@hairline\relax
+    \hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
+      \usebox{\semio@window@tab@box}%
+      \hfil
+      \ifsemio@table@long@title@number\usebox{\semio@window@ctrl@box}\fi
+    }%
+  }%
+  \\%
+  \noalign{\vskip\dimexpr-\extrarowheight-\dp\@arstrutbox\relax}%
+  \noalign{{\color{semio-chrome-border-normal}\hrule height\semio@toc@frametop}}%
+}
+% LR-invert-tab: the HEADER row's first cell is a \multicolumn whose left rule is
+% a thin literal | — so the outer LEFT border is thin along the header while thick
+% along the body, breaking the rectangle. Override to pick between two LITERAL
+% \multicolumn preambles OUTSIDE the preamble (array forbids \if inside one), using
+% the 2× \vrule when the toggle is on. Register-based width, so no string bug.
+\renewcommand{\semio@table@long@header@left@cell}[2]{%
+  \ifsemio@table@headerfill
+    \ifsemio@invert@tab
+      \multicolumn{1}{!{\vrule width 2\arrayrulewidth}@{\semio@table@padendL}>{\semio@cell@pre}m{\dimexpr#1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}}{\semio@table@header@cell{#2}}%
+    \else
+      \multicolumn{1}{|@{\semio@table@padendL}>{\semio@cell@pre}m{\dimexpr#1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}}{\semio@table@header@cell{#2}}%
+    \fi
+  \else
+    \multicolumn{1}{|@{\hspace{\semio@chrome@padding}}@{}>{\semio@cell@pre}m{\dimexpr#1\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{}}{\semio@table@header@cell{#2}}%
+  \fi
+}
 \newcommand{\semio@window@header@muted}[2]{%
   \ifsemio@invert@tab
     \sbox{\semio@window@tab@box}{\semio@heading@chip{semio-chrome-foreground}{semio-chrome-canvas}{#2}}%

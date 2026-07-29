@@ -210,42 +210,6 @@
 \newcommand{\semio@table@padendL}{{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+2\semio@table@long@cellpad\relax}\hspace{-\semio@table@long@cellpad}}
 \newcommand{\semio@table@padendR}{\hspace{-\semio@table@long@cellpad}{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+2\semio@table@long@cellpad\relax}}
 
-% 🎨 Per-ROW canvas switch for the GENERIC \SemioTableLong colspec. Those tables
-% have a canvas header but a transparent body, and header+body share one colspec,
-% so the inter-column pads can't be statically canvas (that would stripe the
-% body) nor static \hspace (that would seam the header). The pad is a MACRO whose
-% meaning is \let-switched: canvas \vrule for header rows, plain \hspace for body
-% rows. A bare \if inside the colspec's @{} would break array's preamble scanner
-% (runaway argument), so we switch a macro instead — it always expands to plain
-% pad tokens, never a conditional. \semio@table@header@cell switches it ON (every
-% header cell runs, so it is on before the pad to its right is typeset); the
-% header→body boundary in the head macro's \noalign switches it OFF. Register/
-% glossary/project use their own always-canvas colspecs and never touch these.
-% \semio@table@genpadcp / genpadendR are \protected so array's preamble \edef
-% leaves them as a single token in the \halign template instead of baking their
-% build-time meaning — they then expand fresh on every row. Each defers to an
-% inner @current macro that is \let-switched between the canvas \vrule and a
-% plain \hspace by \semio@table@genpad@on / @off. (An earlier attempt used a
-% bare \if in the @{}, which made array's scanner run away; a non-protected
-% switchable macro was baked at build and never switched. Protected + inner
-% indirection is what actually flips per row.)
-\newcommand{\semio@table@genpad@cp@off}{\hspace{\semio@table@long@cellpad}}
-\newcommand{\semio@table@genpad@endR@off}{\hspace{\semio@chrome@padding}}
-\newcommand{\semio@table@genpad@cp@current}{}
-\newcommand{\semio@table@genpad@endR@current}{}
-\let\semio@table@genpad@cp@current\semio@table@genpad@cp@off
-\let\semio@table@genpad@endR@current\semio@table@genpad@endR@off
-\protected\def\semio@table@genpadcp{\semio@table@genpad@cp@current}
-\protected\def\semio@table@genpadendR{\semio@table@genpad@endR@current}
-\newcommand{\semio@table@genpad@on}{%
-  \global\let\semio@table@genpad@cp@current\semio@table@padcp
-  \global\let\semio@table@genpad@endR@current\semio@table@padendR
-}
-\newcommand{\semio@table@genpad@off}{%
-  \global\let\semio@table@genpad@cp@current\semio@table@genpad@cp@off
-  \global\let\semio@table@genpad@endR@current\semio@table@genpad@endR@off
-}
-
 \newcommand{\semio@table@colspec@register@long}{|@{\semio@table@padendL}>{\semio@cell@pre}m{\dimexpr0.12\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@pre}m{\dimexpr0.78\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@preR}m{\dimexpr0.10\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padendR}|}
 
 \newcommand{\semio@table@colspec@glossary@long}{|@{\semio@table@padendL}>{\semio@cell@pre}m{\dimexpr0.22\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@pre}m{\dimexpr0.56\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@preR}m{\dimexpr0.22\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padendR}|}
@@ -304,12 +268,6 @@
 }
 
 \newcommand{\semio@table@header@cell}[1]{%
-  % Switch the generic colspec's pads to canvas for this (header) row, so the
-  % fill runs seamlessly between header columns. Done here (not in the row
-  % template) so the switch is in effect before the pad to the right of this
-  % cell is typeset; harmless for tables whose colspec pads are unconditional.
-  % Switched back to \hspace on the header→body boundary.
-  \semio@table@genpad@on
   \cellcolor{semio-chrome-canvas}%
   \SemioSans\semio@table@fontsize@apply
   \semio@text@emphasized{\bfseries #1}%
@@ -569,18 +527,20 @@
 \newcommand{\semio@table@long@head@continuation@current}{}
 
 \cs_new_protected:Npn \semio_table_long_colspec_build:n #1 {
-  % Left edge stays plain \hspace (body col-1 has a transparent left inset; the
-  % header's col-1 is a \multicolumn that supplies its own canvas edge). Every
-  % inter-column pad and the right edge are conditional (\semio@table@genpadcp /
-  % genpadendR): canvas in a header row, transparent in a body row. Both branches
-  % are the same width, so column geometry is identical either way.
-  \tl_set:Nn \l_semio_table_long_colspec_tl { | @ { \hspace{\semio@chrome@padding} } @ { } }
+  % 🎨 Continuous canvas fill, like the register/glossary/project colspecs. array
+  % expands (bakes) the preamble @{} pads at build time, so per-row header-vs-body
+  % pad switching is impossible in one shared colspec — the robust way to make the
+  % header seamless is to fill the WHOLE table: every cell carries a canvas
+  % \cellcolor and every pad is a canvas \vrule of the same width the \hspace it
+  % replaces occupied (geometry unchanged). Both header and body then read as one
+  % unbroken canvas field, matching the other long tables.
+  \tl_set:Nn \l_semio_table_long_colspec_tl { | @ { {\color{semio-chrome-canvas}\vrule width \semio@chrome@padding} } @ { } }
   \clist_map_inline:nn {#1} {
     \tl_put_right:Nn \l_semio_table_long_colspec_tl {
-      @{\semio@table@genpadcp}>{\semio@cell@pre}m{\dimexpr##1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@genpadcp}
+      @{\semio@table@padcp}>{\cellcolor{semio-chrome-canvas}\semio@cell@pre}m{\dimexpr##1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}
     }
   }
-  \tl_put_right:Nn \l_semio_table_long_colspec_tl { @ { \semio@table@genpadendR } | }
+  \tl_put_right:Nn \l_semio_table_long_colspec_tl { @ { {\color{semio-chrome-canvas}\vrule width \semio@chrome@padding} } | }
 }
 
 \cs_new_protected:Npn \semio_table_long_header_build:nn #1#2 {
@@ -615,9 +575,9 @@
   % \cellcolor{semio-chrome-canvas} in its >{...} prefix. \noalign runs the
   % assignment on the row boundary without opening that row, so the column-header
   % rule sits flush on the first body row (no gap) with an unbroken fill.
-  \global\long\expandafter\def\expandafter\semio@table@long@head@current\expandafter{\l_semio_table_long_head_tl\noalign{\global\semio@table@row@startedfalse\semio@table@genpad@off}}
+  \global\long\expandafter\def\expandafter\semio@table@long@head@current\expandafter{\l_semio_table_long_head_tl\noalign{\global\semio@table@row@startedfalse}}
   \tl_put_right:Nn \l_semio_table_long_head_tl {
-    \noalign{\vskip\z@\global\semio@table@row@startedfalse\semio@table@genpad@off}% head->body transition (no negative pull) + row-started reset + switch generic pads back to \hspace, all on the row boundary so none opens a phantom band
+    \noalign{\vskip\z@\global\semio@table@row@startedfalse}% head->body transition (no negative pull) + row-started reset on the row boundary so it doesn't open a phantom band
   }
   % 🩹 Not \tl_gset_eq:NN: that \let-aliases \semio@table@long@head@current to
   % an expl3 tl variable, which l3 always defines as a non-\long macro. A
@@ -668,9 +628,9 @@
   \semio@table@keys@set{#1}%
   \semio@table@long@prepare{#3}{#4}%
   \semio@table@long@open{#2}%
-  % Canvas header band: fill col-1 (via the header-left-cell multicolumn) and,
-  % together with the row-canvas pads, the whole header row seamlessly. Body
-  % rows stay transparent (rowcanvas is lowered on the header→body boundary).
+  % headerfill makes the header's col-1 multicolumn fill canvas and align with
+  % the body cells; the generic colspec fills the rest continuously (canvas
+  % \cellcolor + \vrule pads), so the whole table reads as one seamless field.
   \global\semio@table@headerfilltrue
   \expandafter\semio@table@long@render\expandafter{\semio@table@long@colspec@current}{\semio@table@long@head@current}{\semio@table@long@head@continuation@current}{#5}{\semio@table@long@column@count}%
   \global\semio@table@headerfillfalse
@@ -931,6 +891,9 @@
     Typ & #4\tabularnewline
     Status & #5\tabularnewline
     Quelle & #6\tabularnewline
+    % Image credit / rights. Value comes from \SemioProject's optional argument
+    % (\semio@project@bildrechte), defaulting to — until a real credit is supplied.
+    Bildrechte & \semio@project@bildrechte\tabularnewline
   \end{tabular}%
   \endgroup
 }
@@ -1028,17 +991,21 @@
   \semio@project@render{#1}{\semio@project@firsthead}{#2}%
 }
 
-% \SemioProject{name}{label}{image}{ort & land & jahr & typ & status & quelle}{rows}
-\newcommand{\SemioProject}[5]{%
+% \SemioProject[bildrechte]{name}{label}{image}{ort & land & jahr & typ & status & quelle}{rows}
+% Optional #1 = image credit / rights, shown as the "Bildrechte" metadata row.
+% Defaults to — so every card carries the row as a placeholder until the credit
+% is known; fill it per card with \SemioProject[Foto: … / …]{…}{…}{…}{…}{…}.
+\newcommand{\SemioProject}[6][—]{%
   \SemioCardKeep
-  \SemioProjectHeadingSilent{#1}{#2}%
+  \SemioProjectHeadingSilent{#2}{#3}%
   \protected@edef\semio@project@key{\thesubsection}%
-  \gdef\semio@window@header@title{#1}%
+  \gdef\semio@window@header@title{#2}%
   \global\let\semio@window@header@number\semio@project@key
+  \def\semio@project@bildrechte{#1}%
   \semio@table@long@prepare{0.18,0.10,0.26,0.12,0.17,0.17}{Bauteil / Menge & Material & Spender & ReUse-Ort & Schicht & Prozess}%
-  \semio@project@splitmeta#4\relax
+  \semio@project@splitmeta#5\relax
   \long\def\semio@project@firsthead{%
-    \semio@project@overview@band{#3}%
+    \semio@project@overview@band{#4}%
       {\semio@project@ort}{\semio@project@land}{\semio@project@jahr}%
       {\semio@project@typ}{\semio@project@status}{\semio@project@quelle}%
     \semio@project@headrow
@@ -1050,7 +1017,7 @@
   % header's col-1 multicolumn fill canvas and align with the body, matching the
   % component rows below it.
   \global\semio@table@headerfilltrue
-  \expandafter\semio@project@long@render@call\expandafter{\semio@project@colspec}{#5}%
+  \expandafter\semio@project@long@render@call\expandafter{\semio@project@colspec}{#6}%
   \global\semio@table@headerfillfalse
 }
 %endregion ProjectCatalogue
