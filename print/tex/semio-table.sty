@@ -213,16 +213,38 @@
 % 🎨 Per-ROW canvas switch for the GENERIC \SemioTableLong colspec. Those tables
 % have a canvas header but a transparent body, and header+body share one colspec,
 % so the inter-column pads can't be statically canvas (that would stripe the
-% body) nor static \hspace (that would seam the header). Instead the pad is
-% conditional: canvas \vrule in a header row, plain \hspace in a body row. The
-% flag is raised by \semio@table@header@cell (which every header cell calls, so
-% it is true by the time the pads to its right are typeset) and lowered on the
-% header→body boundary inside the head macro's \noalign. Register/glossary/
-% project use their own always-canvas colspecs and ignore this flag.
-\newif\ifsemio@table@rowcanvas
-\semio@table@rowcanvasfalse
-\newcommand{\semio@table@genpadcp}{\ifsemio@table@rowcanvas\semio@table@padcp\else\hspace{\semio@table@long@cellpad}\fi}
-\newcommand{\semio@table@genpadendR}{\ifsemio@table@rowcanvas\semio@table@padendR\else\hspace{\semio@chrome@padding}\fi}
+% body) nor static \hspace (that would seam the header). The pad is a MACRO whose
+% meaning is \let-switched: canvas \vrule for header rows, plain \hspace for body
+% rows. A bare \if inside the colspec's @{} would break array's preamble scanner
+% (runaway argument), so we switch a macro instead — it always expands to plain
+% pad tokens, never a conditional. \semio@table@header@cell switches it ON (every
+% header cell runs, so it is on before the pad to its right is typeset); the
+% header→body boundary in the head macro's \noalign switches it OFF. Register/
+% glossary/project use their own always-canvas colspecs and never touch these.
+% \semio@table@genpadcp / genpadendR are \protected so array's preamble \edef
+% leaves them as a single token in the \halign template instead of baking their
+% build-time meaning — they then expand fresh on every row. Each defers to an
+% inner @current macro that is \let-switched between the canvas \vrule and a
+% plain \hspace by \semio@table@genpad@on / @off. (An earlier attempt used a
+% bare \if in the @{}, which made array's scanner run away; a non-protected
+% switchable macro was baked at build and never switched. Protected + inner
+% indirection is what actually flips per row.)
+\newcommand{\semio@table@genpad@cp@off}{\hspace{\semio@table@long@cellpad}}
+\newcommand{\semio@table@genpad@endR@off}{\hspace{\semio@chrome@padding}}
+\newcommand{\semio@table@genpad@cp@current}{}
+\newcommand{\semio@table@genpad@endR@current}{}
+\let\semio@table@genpad@cp@current\semio@table@genpad@cp@off
+\let\semio@table@genpad@endR@current\semio@table@genpad@endR@off
+\protected\def\semio@table@genpadcp{\semio@table@genpad@cp@current}
+\protected\def\semio@table@genpadendR{\semio@table@genpad@endR@current}
+\newcommand{\semio@table@genpad@on}{%
+  \global\let\semio@table@genpad@cp@current\semio@table@padcp
+  \global\let\semio@table@genpad@endR@current\semio@table@padendR
+}
+\newcommand{\semio@table@genpad@off}{%
+  \global\let\semio@table@genpad@cp@current\semio@table@genpad@cp@off
+  \global\let\semio@table@genpad@endR@current\semio@table@genpad@endR@off
+}
 
 \newcommand{\semio@table@colspec@register@long}{|@{\semio@table@padendL}>{\semio@cell@pre}m{\dimexpr0.12\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@pre}m{\dimexpr0.78\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@preR}m{\dimexpr0.10\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padendR}|}
 
@@ -282,12 +304,12 @@
 }
 
 \newcommand{\semio@table@header@cell}[1]{%
-  % Mark this as a canvas row so the generic colspec's conditional pads
-  % (\semio@table@genpadcp) fill with canvas between the header columns. Set
-  % here (not in the row template) so it is already true when the pad to the
-  % right of this cell is typeset; harmless for tables whose colspec pads are
-  % unconditional. Reset to false on the header→body boundary.
-  \global\semio@table@rowcanvastrue
+  % Switch the generic colspec's pads to canvas for this (header) row, so the
+  % fill runs seamlessly between header columns. Done here (not in the row
+  % template) so the switch is in effect before the pad to the right of this
+  % cell is typeset; harmless for tables whose colspec pads are unconditional.
+  % Switched back to \hspace on the header→body boundary.
+  \semio@table@genpad@on
   \cellcolor{semio-chrome-canvas}%
   \SemioSans\semio@table@fontsize@apply
   \semio@text@emphasized{\bfseries #1}%
@@ -593,9 +615,9 @@
   % \cellcolor{semio-chrome-canvas} in its >{...} prefix. \noalign runs the
   % assignment on the row boundary without opening that row, so the column-header
   % rule sits flush on the first body row (no gap) with an unbroken fill.
-  \global\long\expandafter\def\expandafter\semio@table@long@head@current\expandafter{\l_semio_table_long_head_tl\noalign{\global\semio@table@row@startedfalse\global\semio@table@rowcanvasfalse}}
+  \global\long\expandafter\def\expandafter\semio@table@long@head@current\expandafter{\l_semio_table_long_head_tl\noalign{\global\semio@table@row@startedfalse\semio@table@genpad@off}}
   \tl_put_right:Nn \l_semio_table_long_head_tl {
-    \noalign{\vskip\z@\global\semio@table@row@startedfalse\global\semio@table@rowcanvasfalse}% head->body transition (no negative pull) + row-started + rowcanvas resets, all on the row boundary so none opens a phantom band
+    \noalign{\vskip\z@\global\semio@table@row@startedfalse\semio@table@genpad@off}% head->body transition (no negative pull) + row-started reset + switch generic pads back to \hspace, all on the row boundary so none opens a phantom band
   }
   % 🩹 Not \tl_gset_eq:NN: that \let-aliases \semio@table@long@head@current to
   % an expl3 tl variable, which l3 always defines as a non-\long macro. A
@@ -646,7 +668,12 @@
   \semio@table@keys@set{#1}%
   \semio@table@long@prepare{#3}{#4}%
   \semio@table@long@open{#2}%
+  % Canvas header band: fill col-1 (via the header-left-cell multicolumn) and,
+  % together with the row-canvas pads, the whole header row seamlessly. Body
+  % rows stay transparent (rowcanvas is lowered on the header→body boundary).
+  \global\semio@table@headerfilltrue
   \expandafter\semio@table@long@render\expandafter{\semio@table@long@colspec@current}{\semio@table@long@head@current}{\semio@table@long@head@continuation@current}{#5}{\semio@table@long@column@count}%
+  \global\semio@table@headerfillfalse
   \semio@table@long@close
   \semio@table@keys@reset
 }
@@ -1019,7 +1046,11 @@
   \long\def\semio@project@head{\semio@project@headrow}%
   % Render with the project colspec (continuous canvas via \columncolor overhangs)
   % instead of the default one, so the fill runs through the whole table — header
-  % and every row — with no cream gaps between columns.
+  % and every row — with no cream gaps between columns. headerfill makes the
+  % header's col-1 multicolumn fill canvas and align with the body, matching the
+  % component rows below it.
+  \global\semio@table@headerfilltrue
   \expandafter\semio@project@long@render@call\expandafter{\semio@project@colspec}{#5}%
+  \global\semio@table@headerfillfalse
 }
 %endregion ProjectCatalogue

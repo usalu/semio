@@ -1,0 +1,11 @@
+import { readFileSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
+const { createCanvas } = createRequire(import.meta.url)("@napi-rs/canvas");
+const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+const [,, pdf, out, pg, x, y, w, h, sc] = process.argv;
+const S=Number(sc||8);
+const doc = await pdfjs.getDocument({ data: new Uint8Array(readFileSync(pdf)), useSystemFonts: true }).promise;
+const page = await doc.getPage(Number(pg)); const vp = page.getViewport({ scale:S });
+const c = createCanvas(Math.ceil(vp.width), Math.ceil(vp.height)); await page.render({ canvas:c, canvasContext:c.getContext("2d"), viewport:vp }).promise;
+const cc=createCanvas(Number(w),Number(h)); cc.getContext("2d").drawImage(c,Number(x),Number(y),Number(w),Number(h),0,0,Number(w),Number(h));
+writeFileSync(out, cc.toBuffer("image/png")); console.log("wrote",out);

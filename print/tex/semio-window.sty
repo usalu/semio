@@ -448,6 +448,10 @@
     \renewcommand{\semio@table@vtop}{\semio@table@vtop@toc}%
     \renewcommand{\semio@table@vbot}{\semio@table@vbot@toc}%
     \global\semio@invert@tabtrue% LR-invert-tab: Inhaltsverzeichnis only — DELETE this line + the false reset below to revert
+    % Thick outer SIDE rules — literal colspec (array forbids \if in a preamble),
+    % local to this group, read immediately at \begin{longtable}. Same as
+    % \semio@table@colspec@register@long but with the |…| replaced by 2× \vrule.
+    \renewcommand{\semio@table@colspec@register@long}{!{\vrule width 2\arrayrulewidth}@{\semio@table@padendL}>{\semio@cell@pre}m{\dimexpr0.12\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@pre}m{\dimexpr0.78\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@preR}m{\dimexpr0.10\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padendR}!{\vrule width 2\arrayrulewidth}}%
     \semio@register@window@open{\SemioTocTitle}%
     \SemioTableRegister{\semio@register@table@body}%
     \semio@register@window@close
@@ -2844,28 +2848,13 @@
     }%
   \fi
 }
-% LR-invert-tab: double the OUTER frame of the register/TOC longtable — the
-% left/right |…| border rules become 2×-width \vrule when the toggle is on
-% (inner column pads and per-row rules are untouched). Same body as
-% \semio@table@colspec@register@long in semio-table.sty; the \if resolves as the
-% preamble is built at \begin{longtable}. Toggle off ⇒ identical to the original.
-\renewcommand{\semio@table@colspec@register@long}{\ifsemio@invert@tab!{\vrule width 2\arrayrulewidth}\else|\fi@{\semio@table@padendL}>{\semio@cell@pre}m{\dimexpr0.12\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@pre}m{\dimexpr0.78\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@preR}m{\dimexpr0.10\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padendR}\ifsemio@invert@tab!{\vrule width 2\arrayrulewidth}\else|\fi}
-% LR-invert-tab: double the OUTER frame TOP rule. Same body as
-% \semio@table@long@title@chrome@row (semio-table.sty), only the closing \hrule
-% height branched on the toggle.
-\renewcommand{\semio@table@long@title@chrome@row}[1]{%
-  \multicolumn{#1}{@{}l@{}}{%
-    \hskip-\semio@stroke@hairline\relax
-    \hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
-      \usebox{\semio@window@tab@box}%
-      \hfil
-      \ifsemio@table@long@title@number\usebox{\semio@window@ctrl@box}\fi
-    }%
-  }%
-  \\%
-  \noalign{\vskip\dimexpr-\extrarowheight-\dp\@arstrutbox\relax}%
-  \noalign{{\color{semio-chrome-border-normal}\hrule height\ifsemio@invert@tab2\fi\semio@stroke@hairline}}%
-}
+% LR-invert-tab: the OUTER frame SIDES (thick |) can't be gated with \if here —
+% array forbids a conditional inside a preamble (Illegal pream-token). Instead the
+% whole colspec is swapped for a literal thick-sided version by a LOCAL
+% \renewcommand at the Inhaltsverzeichnis render point (see the toc renderer
+% above); the preamble is read at \begin{longtable}, inside that same group.
+% LR-invert-tab: (top-border thickening temporarily removed while isolating a
+% grey-band artifact — only the thick SIDES via the local colspec swap remain.)
 \newcommand{\semio@window@header@muted}[2]{%
   \ifsemio@invert@tab
     \sbox{\semio@window@tab@box}{\semio@heading@chip{semio-chrome-foreground}{semio-chrome-canvas}{#2}}%
