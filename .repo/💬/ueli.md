@@ -351,17 +351,29 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
-The final goal for s is to capture design knowledge.
-This involves two parts:
-- library 
-  - collection (static knowledge through a tree of folders, puzzles, meshes, breps, layouts, flows, files, workflows, etc)
-    - Exportable and importable as zip file
-  - workflows (dynamic knowledge through editable non-destructive media pipelines of connected apps)
-  - Input is a collection and flow parameters and output is a collection
-A studio is a shared library.
+The final goal for s is to create, share and store any kind of design knowledge.
+This involves generalizing/augmenting/changing/refactoring the current system which yet is fragmented but it must be 100% unified.
+The target is:
+- space (collections, users)
+  - collection (a tree of folders with artifacts - Exportable and importable as zip file)
+    - artifact (puzzles, meshes, breps, layouts, flows, files, workflows, etc - Exportable and importable as files)
+      - workflow (dynamic, editable non-destructive pipelines of connected apps - Input is a collection and flow parameters and output is a collection)
+        - run (a workflow for specific fixed inputs, readonly)
+        - automation (an event triggered run)
+  - user
+    - author (read and write)
+    - spectator (readonly)
+
+A draft is a volatile artifact.
+Am asset is a persisted artifact.
+A space for personal use is an atelier (private or public, single writer, multi reader)
+A space for a group of users is a studio (private or public, multi writer, multi reader)
+A space that is not changing anymore is an archive (private or public, no writer, multi reader)
 All apps are accessible over a node in the workflow.
 All apps are nondestructive.
 All apps have a core library that computes headlessly and a ui to visualize and edit configuration of the app node.
+Make sure to identify all gaps and plan all mechanisms and refactor to achieve this architecture.
+End to end for a workforce of agents
 
 ---
 

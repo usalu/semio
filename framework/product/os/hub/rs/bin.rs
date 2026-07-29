@@ -92,7 +92,7 @@ struct HubState {
     fanout: Arc<DashMap<String, broadcast::Sender<ServerFrame>>>,
     /// @emoji 👥 `(scope_key, actor)` -> that actor's last-published presence peer JSON — ephemeral,
     /// never durable (mirrors the preview lane's own law), rebuilt from nothing on hub restart.
-    presence: Arc<DashMap<(String, String), String>>,
+    presence: Arc<DashMap<(String, String), Vec<u8>>>,
     /// @emoji 🧬 W5.7: `scope_key` -> the first non-zero `store::DocumentCodec::pack_schema_hash`
     /// a client's `Hello` declared for that document — pinned in-memory, never durable (durable
     /// pinning belongs in the db catalog once it grows a column for it; this wave's scope is the
@@ -112,7 +112,7 @@ impl HubState {
         self.fanout.entry(key.to_string()).or_insert(tx).clone()
     }
 
-    fn presence_peers(&self, key: &str) -> Vec<String> {
+    fn presence_peers(&self, key: &str) -> Vec<Vec<u8>> {
         self.presence.iter().filter(|entry| entry.key().0 == key).map(|entry| entry.value().clone()).collect()
     }
 
@@ -433,9 +433,9 @@ async fn handle_client_frame(
             let _ = fanout.send(ServerFrame::Preview { actor: actor.clone(), key: preview_key, seq, payload });
             true
         }
-        ClientFrame::Presence { peer_json } => {
-            state.presence.insert((key.to_string(), actor.0.clone()), peer_json);
-            let _ = fanout.send(ServerFrame::Presence { peers_json: state.presence_peers(key) });
+        ClientFrame::Presence { peer } => {
+            state.presence.insert((key.to_string(), actor.0.clone()), peer);
+            let _ = fanout.send(ServerFrame::Presence { peers: state.presence_peers(key) });
             true
         }
         // 🪙 Command-lane credit-based flow control: no server-side congestion control implemented
@@ -553,7 +553,7 @@ async fn handle_ws(socket: WebSocket, studio_id: String, document_id: String, st
         let _ = state.directory.record_sync_session_close(&session.id).await;
     }
     state.presence.remove(&(key.clone(), actor.0.clone()));
-    let _ = fanout.send(ServerFrame::Presence { peers_json: state.presence_peers(&key) });
+    let _ = fanout.send(ServerFrame::Presence { peers: state.presence_peers(&key) });
 }
 //#endregion 🔖WebSocket
 

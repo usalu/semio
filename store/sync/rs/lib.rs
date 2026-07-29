@@ -70,8 +70,6 @@ pub enum DocumentActorMsg {
     /// @emoji ⬆️ Wakes the actor to drain the store's outbound operations promptly. `envelopes` is a
     /// direct-injection fallback used only when no store is attached to the channel (empty = pure wake).
     LocalOperations { envelopes: Vec<OperationEnvelope> },
-    /// @emoji 📸 Same as {@link LocalOperations} for a full-envelope snapshot (structural commands / seeding).
-    LocalSnapshot { envelope_json: String },
     /// @emoji 📡 Broadcasts this peer's presence/selection to the hub.
     PresenceHeartbeat { peer: PresencePeer },
     /// @emoji 👻 Publishes an ephemeral, best-effort UI-state blob on the hub's uncredited preview
@@ -116,8 +114,9 @@ pub enum DocumentEvent {
     /// @emoji 🕸️ Remote operations (hub fan-out or appended external edits) — also pushed into the store's
     /// inbound queue so `store.tick()` materializes them.
     RemoteOperations { envelopes: Vec<OperationEnvelope> },
-    /// @emoji 📸 The whole envelope was replaced (divergent external history / hub snapshot swap).
-    SnapshotReplaced { envelope_json: String },
+    /// @emoji 📸 The whole document was replaced (divergent external history / hub snapshot swap),
+    /// as real pack+spr bytes — no JSON envelope anywhere in this actor's own path.
+    SnapshotReplaced { pack: Vec<u8>, spr: Vec<u8> },
     /// @emoji 🚦 Sync status changed.
     Status(DocumentSyncStatus),
     /// @emoji 📡 The presence roster changed.
@@ -155,28 +154,101 @@ pub enum CommandAckOutcome {
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_core::DocumentId;
 
-/// @emoji 📇 Edit ids present in an envelope's `vcs.edits` array (schema-agnostic JSON read).
+/// @emoji 🆔 One `HistoryEdit`'s op ids, matching `protocol::operation_envelope_from_edit`'s own
+/// fallback convention (`meta[i].op_id` when present, else `"{edit.id}#{i}"`) so this is the SAME
+/// id a live-dispatched envelope for this edit already carries. This is the ONE id domain the
+/// actor's dedup set uses — computed here and ONLY here, so a locally-flushed edit's spr entry
+/// and the envelope built from re-reading that same spr always agree, fixing the actor's old
+/// self-re-ingest bug (mixing envelope op ids with raw JSON edit ids) by construction.
 #[cfg(not(target_arch = "wasm32"))]
-fn envelope_edit_ids(value: Option<&Value>) -> Vec<String> {
-    value.and_then(|v| v.get("vcs")).and_then(|v| v.get("edits")).and_then(|e| e.as_array()).map(|edits| edits.iter().filter_map(|edit| edit.get("id").and_then(|id| id.as_str()).map(String::from)).collect()).unwrap_or_default()
+fn op_ids_of(edit: &protocol::HistoryEdit) -> Vec<String> {
+    match &edit.meta {
+        Some(metas) if metas.len() == edit.ops.len() => metas.iter().enumerate().map(|(index, meta)| meta.op_id.clone().unwrap_or_else(|| format!("{}#{index}", edit.id))).collect(),
+        _ => (0..edit.ops.len()).map(|index| format!("{}#{index}", edit.id)).collect(),
+    }
 }
 
-/// @emoji 📜 The `vcs.edits` entries of an envelope, as raw JSON values.
+/// @emoji #️⃣ Content hash over the concatenated pack+spr bytes, for the actor's self-write
+/// suppression check (was a hash over the JSON envelope string; same purpose, real bytes now).
 #[cfg(not(target_arch = "wasm32"))]
-fn envelope_edits(value: &Value) -> Vec<Value> {
-    value.get("vcs").and_then(|v| v.get("edits")).and_then(|e| e.as_array()).cloned().unwrap_or_default()
+fn backbone_pack_hash(pack: &[u8], spr: &[u8]) -> String {
+    let mut combined = Vec::with_capacity(pack.len() + spr.len());
+    combined.extend_from_slice(pack);
+    combined.extend_from_slice(spr);
+    semio_framework_hash::hash_bytes(&combined)
+}
+
+/// @emoji 🆔 Every op id across every edit in an spr byte log — the actor's dedup/known-ids set,
+/// read directly off the binary history (NEVER via `parse_document_spr`, whose meta-absent branch
+/// mints fresh random ids on every read and would make dedup unstable across reads).
+#[cfg(not(target_arch = "wasm32"))]
+fn spr_op_ids(spr: &[u8]) -> Result<std::collections::HashSet<String>, String> {
+    let reader = protocol::HistoryReader::open(spr, &protocol::DecodeOptions::default()).map_err(|error| error.to_string())?;
+    let mut ids = std::collections::HashSet::new();
+    for edit in reader.edits() {
+        let edit = edit.map_err(|error| error.to_string())?;
+        ids.extend(op_ids_of(&edit));
+    }
+    Ok(ids)
 }
 
 /// @emoji 📦 Rebuilds real {@link OperationEnvelope}s (one per forward op, genuine `OpBinary`
-/// payloads) from a stored `Edit` JSON so an appended external edit can flow through the store's
-/// causal DAG (`ingest_remote` → `edit_from_operation_envelope`, which expects `diff.payload` to
-/// decode via `Operation::decode_op`, not raw JSON bytes). This actor stays schema-agnostic
-/// (`serde_json::Value` end to end), so the actual `Edit<Operation>` parse + `OpBinary` encode
-/// happens behind `store::document_codec(schema)`'s `envelopes_from_edit_json` bridge — a missing
-/// codec or malformed edit yields no envelopes rather than a payload that fails to decode downstream.
+/// payloads straight from the edit's own binary `OpPayload`s — no codec, no JSON) from one
+/// `HistoryEdit` decoded off the spr bytes, so an appended external edit can flow through the
+/// store's causal DAG (`ingest_remote` → `edit_from_operation_envelope`). A binary-less op payload
+/// is a hard error — `.spr` is binary-only since B1, so every real op has one.
 #[cfg(not(target_arch = "wasm32"))]
-fn operation_envelopes_from_stored_edit(schema: &str, document_id: &str, edit: &Value) -> Vec<OperationEnvelope> {
-    store::document_codec(schema).and_then(|codec| (codec.envelopes_from_edit_json)(edit, document_id, schema).ok()).unwrap_or_default()
+fn envelopes_from_history_edit(edit: &protocol::HistoryEdit, document_id: &str, schema: &str) -> Result<Vec<OperationEnvelope>, String> {
+    let op_ids = op_ids_of(edit);
+    let mut envelopes = Vec::with_capacity(edit.ops.len());
+    for (index, op) in edit.ops.iter().enumerate() {
+        let payload = op.binary.clone().ok_or_else(|| format!("edit {} op {index} has no binary payload", edit.id))?;
+        let meta = edit.meta.as_ref().and_then(|metas| metas.get(index));
+        let dependencies = meta.map(|m| m.dependencies.iter().cloned().map(OperationId).collect()).unwrap_or_default();
+        let actor = meta.and_then(|m| m.author_id.clone()).or_else(|| edit.actor.clone()).unwrap_or_else(|| "unknown".to_string());
+        let timestamp = meta
+            .and_then(|m| m.hlt)
+            .map(|(actor, physical_ms, logical)| protocol::HybridLogicalTimestamp { actor, physical_ms: physical_ms as u64, logical })
+            .unwrap_or_else(|| protocol::HybridLogicalTimestamp::new(0, 0));
+        let inverse_payload = edit.backwards.get(index).and_then(|p| p.binary.clone()).unwrap_or_default();
+        envelopes.push(OperationEnvelope {
+            operation_id: OperationId(op_ids[index].clone()),
+            document_id: DocumentId(document_id.to_string()),
+            actor: ActorId(actor),
+            dependencies,
+            diff: protocol::DocumentDiff { schema: protocol::SchemaId(schema.to_string()), payload },
+            inverse: protocol::InverseOperation { schema: protocol::SchemaId(schema.to_string()), payload: inverse_payload },
+            timestamp,
+        });
+    }
+    Ok(envelopes)
+}
+
+/// @emoji 📦 The inverse of {@link envelopes_from_history_edit}: one `OperationEnvelope` -> one
+/// `HistoryEdit` with a real binary `OpPayload` and populated meta (`op_id` == the envelope's own
+/// id, so a later `op_ids_of` re-read agrees) — the byte-level twin of
+/// `store::edit_from_operation_envelope`, for appending a locally-flushed envelope to the spr log.
+#[cfg(not(target_arch = "wasm32"))]
+fn history_edit_from_envelope(envelope: &OperationEnvelope) -> protocol::HistoryEdit {
+    protocol::HistoryEdit {
+        id: envelope.operation_id.0.clone(),
+        actor: Some(envelope.actor.0.clone()),
+        started_at: now_ms().to_string(),
+        finished_at: None,
+        coalesce_key: None,
+        description: None,
+        ops: vec![protocol::OpPayload { text: None, binary: Some(envelope.diff.payload.clone()) }],
+        backwards: if envelope.inverse.payload.is_empty() { Vec::new() } else { vec![protocol::OpPayload { text: None, binary: Some(envelope.inverse.payload.clone()) }] },
+        meta: Some(vec![protocol::HistoryOpMeta {
+            op_id: Some(envelope.operation_id.0.clone()),
+            dependencies: envelope.dependencies.iter().map(|dependency| dependency.0.clone()).collect(),
+            base_version: 0,
+            author_id: Some(envelope.actor.0.clone()),
+            hlt: Some((envelope.timestamp.actor, envelope.timestamp.physical_ms as i64, envelope.timestamp.logical)),
+            undo_policy: 0,
+            payload_hash: None,
+        }]),
+    }
 }
 
 /// @emoji 🔗 Derives a hub WebSocket URL: `remote://host:port` (or `http(s)://`, `ws(s)://`) →
@@ -484,69 +556,56 @@ mod native_actor {
     }
 
     /// @emoji 📁 A folder/file binding's storage driver, keyed for multi-document sqlite or single
-    /// pack-backed blob. `Pack` (was `Text`) stores the actor's whole-envelope JSON as a REAL pack
-    /// file + real `.ops` text + a DSL mirror via `FolderTextStorage::write_pack`/`read_pack` —
-    /// this actor stays `serde_json::Value`-typed end to end (it drains/relays generic backbone
-    /// messages, never a concrete `Projection`/`Operation`), so the `schema` string is how it reaches a
-    /// concrete codec: `store::document_codec(schema)` looks up the `store::DocumentCodec` a real app
-    /// registered (`register_document_codec_for_app`, wave 2) and does the pack↔envelope-JSON bridging
-    /// on this actor's behalf. Replaces the old bug where `.dsl` held a raw envelope-JSON dump and
-    /// `.ops` was always written empty (see `read`/`write` below — a missing codec is now a hard
-    /// error, never a silent JSON-in-`.dsl` fallback).
+    /// pack-backed blob. Both variants move real `pack`+`spr` bytes end to end — this actor never
+    /// touches JSON. `Sqlite` is fully codec-free (its row IS the pack+spr pair, no bridging
+    /// needed). `Pack` (file) needs a codec ONLY for the `.dsl`/`.ops` text mirrors — logging, not
+    /// truth — and for the hand-authored/imported fallback when no `.pack` exists yet
+    /// (`compile_dsl`); a missing codec there degrades to pack+spr-only persistence (mirrors
+    /// skipped, with a caller-visible warning), never a hard failure, since the mirrors are not
+    /// load-bearing.
     enum FolderEndpoint {
         Sqlite { storage: FolderSqliteStorage, document_id: String, schema: String },
         Pack { storage: FolderTextStorage, document_id: String, extension: String, schema: String },
     }
 
     impl FolderEndpoint {
-        /// @emoji 📖 `Ok(None)` = nothing persisted yet; `Ok(Some(json))` = the envelope, resolved
-        /// pack+spr-first (falling back to the DSL mirror for hand-authored/imported documents with
-        /// no `.pack` file yet — `Sqlite` has no such fallback, a row is always written pack+spr
-        /// together); `Err` = a real failure (missing codec registration for `schema`, or a
-        /// pack/spr/dsl decode error) — never silently degrades to a raw dump.
-        fn read(&self) -> Result<Option<String>, String> {
+        /// @emoji 📖 `Ok(None)` = nothing persisted yet; `Ok(Some(pack, spr))` = the authoritative
+        /// binary pair, resolved pack-first (falling back to compiling the DSL mirror for
+        /// hand-authored/imported documents with no `.pack` file yet — `Sqlite` has no such
+        /// fallback, a row is always written pack+spr together); `Err` = a real storage failure.
+        fn read(&self) -> Result<Option<(Vec<u8>, Vec<u8>)>, String> {
             match self {
-                FolderEndpoint::Sqlite { storage, document_id, schema } => {
-                    let Some(codec) = store::document_codec(schema) else {
-                        return Err(format!("no document codec registered for schema {schema:?}"));
-                    };
-                    match storage.read(document_id).map_err(|error| error.to_string())? {
-                        Some((pack, spr)) => (codec.parse)(&pack, &spr).map(Some).map_err(|error| error.to_string()),
-                        None => Ok(None),
-                    }
-                }
+                FolderEndpoint::Sqlite { storage, document_id, .. } => storage.read(document_id).map_err(|error| error.to_string()),
                 FolderEndpoint::Pack { storage, document_id, extension, schema } => {
-                    let Some(codec) = store::document_codec(schema) else {
-                        return Err(format!("no document codec registered for schema {schema:?}"));
-                    };
                     if let Some(pack_files) = storage.read_pack(document_id, extension).map_err(|error| error.to_string())? {
-                        return (codec.parse)(&pack_files.pack, &pack_files.spr).map(Some).map_err(|error| error.to_string());
+                        return Ok(Some((pack_files.pack, pack_files.spr)));
                     }
-                    match storage.read(document_id, extension).map_err(|error| error.to_string())? {
-                        Some(text_files) => (codec.parse_dsl)(&text_files.dsl, &text_files.ops).map(Some).map_err(|error| error.to_string()),
-                        None => Ok(None),
-                    }
+                    let Some(text_files) = storage.read(document_id, extension).map_err(|error| error.to_string())? else {
+                        return Ok(None);
+                    };
+                    let Some(codec) = store::document_codec(schema) else {
+                        return Err(format!("no document codec registered for schema {schema:?} — cannot compile the DSL-only fallback"));
+                    };
+                    let (pack_files, _dsl_mirror) = (codec.compile_dsl)(&text_files.dsl, &text_files.ops).map_err(|error| error.to_string())?;
+                    Ok(Some((pack_files.pack, pack_files.spr)))
                 }
             }
         }
 
-        /// @emoji ✍️ Persists `json` (the whole envelope), pack+spr for both variants. `Err` on a
-        /// missing codec, same hard-error rule as `read`.
-        fn write(&self, json: &str) -> Result<(), String> {
+        /// @emoji ✍️ Persists the authoritative `pack`+`spr` pair. `Sqlite` needs no codec at all;
+        /// `Pack` additionally writes the `.dsl`/`.ops` logging mirrors when a codec is registered
+        /// (silently skipped otherwise — the pack+spr write below already succeeded).
+        fn write(&self, pack: &[u8], spr: &[u8]) -> Result<(), String> {
             match self {
-                FolderEndpoint::Sqlite { storage, document_id, schema } => {
-                    let Some(codec) = store::document_codec(schema) else {
-                        return Err(format!("no document codec registered for schema {schema:?}"));
-                    };
-                    let (pack_files, _dsl_mirror) = (codec.print)(json).map_err(|error| error.to_string())?;
-                    storage.write(document_id, schema, &pack_files.pack, &pack_files.spr).map_err(|error| error.to_string())
-                }
+                FolderEndpoint::Sqlite { storage, document_id, schema } => storage.write(document_id, schema, pack, spr).map_err(|error| error.to_string()),
                 FolderEndpoint::Pack { storage, document_id, extension, schema } => {
                     let Some(codec) = store::document_codec(schema) else {
-                        return Err(format!("no document codec registered for schema {schema:?}"));
+                        let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: String::new() };
+                        return storage.write_pack(document_id, extension, &pack_files, "").map_err(|error| error.to_string());
                     };
-                    let (pack_files, dsl_mirror) = (codec.print)(json).map_err(|error| error.to_string())?;
-                    storage.write_pack(document_id, extension, &pack_files, &dsl_mirror).map_err(|error| error.to_string())
+                    let mirror = (codec.print_mirror)(pack, spr).map_err(|error| error.to_string())?;
+                    let pack_files = store::DocumentPackFiles { pack: pack.to_vec(), spr: spr.to_vec(), ops: mirror.ops };
+                    storage.write_pack(document_id, extension, &pack_files, &mirror.dsl).map_err(|error| error.to_string())
                 }
             }
         }
@@ -584,8 +643,9 @@ mod native_actor {
         /// counter, for {@link next_timestamp} on every outbound wire envelope.
         hlc_seed: u64,
         hlc_counter: u64,
-        current_envelope: Option<Value>,
-        known_edit_ids: HashSet<String>,
+        current_pack: Option<Vec<u8>>,
+        current_spr: Option<Vec<u8>>,
+        known_op_ids: HashSet<String>,
         last_written_hash: Option<String>,
         remote_state: RemoteState,
         last_status: Option<DocumentSyncStatus>,
@@ -641,8 +701,9 @@ mod native_actor {
                 next_batch_id: 0,
                 hlc_seed,
                 hlc_counter: 0,
-                current_envelope: None,
-                known_edit_ids: HashSet::new(),
+                current_pack: None,
+                current_spr: None,
+                known_op_ids: HashSet::new(),
                 last_written_hash: None,
                 remote_state: RemoteState::Detached,
                 last_status: None,
@@ -696,13 +757,14 @@ mod native_actor {
             }
         }
 
-        /// @emoji 🌱 Seeds persistence state from any already-stored envelope and installs the file watcher.
+        /// @emoji 🌱 Seeds persistence state from any already-stored pack+spr and installs the file watcher.
         fn setup(&mut self) {
-            if let Some(json) = self.folder.as_ref().and_then(|folder| folder.read().ok().flatten()) {
-                if let Ok(value) = serde_json::from_str::<Value>(&json) {
-                    self.known_edit_ids = envelope_edit_ids(Some(&value)).into_iter().collect();
-                    self.current_envelope = Some(value);
-                    self.last_written_hash = Some(semio_framework_hash::hash_bytes(json.as_bytes()));
+            if let Some((pack, spr)) = self.folder.as_ref().and_then(|folder| folder.read().ok().flatten()) {
+                if let Ok(op_ids) = spr_op_ids(&spr) {
+                    self.known_op_ids = op_ids;
+                    self.last_written_hash = Some(backbone_pack_hash(&pack, &spr));
+                    self.current_pack = Some(pack);
+                    self.current_spr = Some(spr);
                 }
             }
             if self.watch_external {
@@ -723,13 +785,6 @@ mod native_actor {
                     if !drained && !envelopes.is_empty() {
                         self.persist_operations(&envelopes);
                         self.relay_operations_to_hub(&envelopes).await;
-                    }
-                    false
-                }
-                DocumentActorMsg::LocalSnapshot { envelope_json } => {
-                    let drained = self.drain_and_relay().await;
-                    if !drained {
-                        self.persist_snapshot(&envelope_json);
                     }
                     false
                 }
@@ -764,13 +819,7 @@ mod native_actor {
                         self.relay_operations_to_hub(&envelopes).await;
                     }
                     BackboneMessage::Snapshot { pack, spr } => {
-                        // 🚧 B2/B3 seam: the wire/store-facing `BackboneMessage::Snapshot` is real
-                        // pack+spr bytes now; this actor's own internals stay JSON-typed until B3's
-                        // bytes-native actor rewrite, so bridge back to JSON here via the (still
-                        // JSON-in/out) codec — a temporary seam, not a new JSON wire hop.
-                        if let Some(envelope_json) = store::document_codec(&self.schema).and_then(|codec| (codec.parse)(&pack, &spr).ok()) {
-                            self.persist_snapshot(&envelope_json);
-                        }
+                        self.persist_snapshot(pack, spr);
                         // 📸 No client -> hub whole-envelope push exists in wire v2
                         // (`protocol_wire::ClientFrame` has no snapshot-put variant — only
                         // causally-ordered `Commands`; the hub -> client snapshot direction is
@@ -786,82 +835,88 @@ mod native_actor {
         }
 
         //#region 🔖Folder
-        /// @emoji ✍️ Persists the current envelope JSON to the folder binding and records the content
-        /// hash for self-write suppression. A write failure (e.g. no `store::DocumentCodec` registered
-        /// for this document's schema — see `FolderEndpoint::write`) is swallowed here the same way
-        /// every other best-effort path in this actor already is, but deliberately does NOT record
-        /// `last_written_hash` on failure — a false "persisted" mark would make `handle_external_change`
-        /// mistake the still-stale on-disk content for a self-write and ignore a real external change.
-        fn persist_write(&mut self, json: &str) {
+        /// @emoji ✍️ Persists the current pack+spr bytes to the folder binding and records the
+        /// content hash for self-write suppression. A write failure (e.g. no `store::DocumentCodec`
+        /// registered for this document's schema on the `Pack` endpoint — see `FolderEndpoint::write`)
+        /// is swallowed here the same way every other best-effort path in this actor already is, but
+        /// deliberately does NOT record `last_written_hash` on failure — a false "persisted" mark
+        /// would make `handle_external_change` mistake the still-stale on-disk content for a
+        /// self-write and ignore a real external change.
+        fn persist_write(&mut self, pack: &[u8], spr: &[u8]) {
             let Some(folder) = self.folder.as_ref() else { return };
-            if folder.write(json).is_ok() {
-                self.last_written_hash = Some(semio_framework_hash::hash_bytes(json.as_bytes()));
+            if folder.write(pack, spr).is_ok() {
+                self.last_written_hash = Some(backbone_pack_hash(pack, spr));
             }
         }
 
-        /// @emoji 📸 Records a full-envelope snapshot as the canonical persisted state.
-        fn persist_snapshot(&mut self, envelope_json: &str) {
+        /// @emoji 📸 Records a full pack+spr snapshot as the canonical persisted state.
+        fn persist_snapshot(&mut self, pack: Vec<u8>, spr: Vec<u8>) {
             if self.folder.is_none() {
                 return;
             }
-            if let Ok(value) = serde_json::from_str::<Value>(envelope_json) {
-                self.known_edit_ids = envelope_edit_ids(Some(&value)).into_iter().collect();
-                self.current_envelope = Some(value);
+            if let Ok(op_ids) = spr_op_ids(&spr) {
+                self.known_op_ids = op_ids;
             }
-            self.persist_write(envelope_json);
+            self.persist_write(&pack, &spr);
+            self.current_pack = Some(pack);
+            self.current_spr = Some(spr);
         }
 
-        /// @emoji ➕ Appends locally-applied operations to the persisted envelope's `vcs.edits` (append-only),
+        /// @emoji ➕ Appends locally-applied operations to the persisted spr log (append-only),
         /// keeping the on-disk copy coherent so self-writes are never mistaken for external edits.
         fn persist_operations(&mut self, envelopes: &[OperationEnvelope]) {
             if self.folder.is_none() {
                 return;
             }
-            let Some(mut value) = self.current_envelope.clone() else { return };
-            let codec = store::document_codec(&self.schema);
-            if let Some(edits) = value.get_mut("vcs").and_then(|vcs| vcs.get_mut("edits")).and_then(|edits| edits.as_array_mut()) {
-                for envelope in envelopes {
-                    if self.known_edit_ids.insert(envelope.operation_id.0.clone()) {
-                        if let Some(edit_value) = codec.as_ref().and_then(|codec| (codec.edit_json_from_envelope)(envelope).ok()) {
-                            edits.push(edit_value);
-                        }
-                    }
-                }
+            let (Some(pack), Some(spr)) = (self.current_pack.clone(), self.current_spr.clone()) else { return };
+            let new_edits: Vec<protocol::HistoryEdit> = envelopes.iter().filter(|envelope| self.known_op_ids.insert(envelope.operation_id.0.clone())).map(history_edit_from_envelope).collect();
+            if new_edits.is_empty() {
+                return;
             }
-            let json = serde_json::to_string(&value).unwrap_or_default();
-            self.current_envelope = Some(value);
-            self.persist_write(&json);
+            let Ok(new_spr) = store::append_history_edits_to_spr(&spr, &new_edits) else { return };
+            self.persist_write(&pack, &new_spr);
+            self.current_pack = Some(pack);
+            self.current_spr = Some(new_spr);
         }
 
         /// @emoji 👁️ Re-reads the folder binding and classifies the change: append-only → `RemoteOperations`,
         /// divergence → `SnapshotReplaced`, divergence with local pending operations → `Conflict`. Self-writes
         /// (content hash match) are ignored.
         fn handle_external_change(&mut self) {
-            let Some(json) = self.folder.as_ref().and_then(|folder| folder.read().ok().flatten()) else { return };
-            let hash = semio_framework_hash::hash_bytes(json.as_bytes());
+            let Some((pack, spr)) = self.folder.as_ref().and_then(|folder| folder.read().ok().flatten()) else { return };
+            let hash = backbone_pack_hash(&pack, &spr);
             if self.last_written_hash.as_deref() == Some(hash.as_str()) {
                 return;
             }
-            let Ok(value) = serde_json::from_str::<Value>(&json) else { return };
-            let file_ids: HashSet<String> = envelope_edit_ids(Some(&value)).into_iter().collect();
-            let lost: Vec<String> = self.known_edit_ids.difference(&file_ids).cloned().collect();
-            let new_ids: HashSet<String> = file_ids.difference(&self.known_edit_ids).cloned().collect();
+            let Ok(file_ids) = spr_op_ids(&spr) else { return };
+            let lost: Vec<String> = self.known_op_ids.difference(&file_ids).cloned().collect();
+            let new_ids: HashSet<String> = file_ids.difference(&self.known_op_ids).cloned().collect();
 
             if lost.is_empty() && !new_ids.is_empty() {
-                let appended: Vec<OperationEnvelope> =
-                    envelope_edits(&value).into_iter().filter(|edit| edit.get("id").and_then(|id| id.as_str()).map(|id| new_ids.contains(id)).unwrap_or(false)).flat_map(|edit| operation_envelopes_from_stored_edit(&self.schema, &self.document_id, &edit)).collect();
-                self.known_edit_ids.extend(new_ids);
-                self.current_envelope = Some(value);
+                let Ok(reader) = protocol::HistoryReader::open(&spr, &protocol::DecodeOptions::default()) else { return };
+                let mut appended = Vec::new();
+                for edit in reader.edits() {
+                    let Ok(edit) = edit else { break };
+                    if op_ids_of(&edit).iter().any(|id| new_ids.contains(id)) {
+                        if let Ok(mut envelopes) = envelopes_from_history_edit(&edit, &self.document_id, &self.schema) {
+                            appended.append(&mut envelopes);
+                        }
+                    }
+                }
+                self.known_op_ids.extend(new_ids);
+                self.current_pack = Some(pack);
+                self.current_spr = Some(spr);
                 self.last_written_hash = Some(hash);
                 self.deliver_remote_operations(appended);
             } else if !lost.is_empty() {
                 if !self.pending_batches.is_empty() {
                     self.emit(DocumentEvent::Conflict(StudioConflict { kind: "externalDivergence".into(), uri: format!("folder://{}", self.document_id), message: "external history diverged while local operations are pending".into() }));
                 } else {
-                    self.known_edit_ids = file_ids;
-                    self.current_envelope = Some(value);
+                    self.known_op_ids = file_ids;
+                    self.current_pack = Some(pack.clone());
+                    self.current_spr = Some(spr.clone());
                     self.last_written_hash = Some(hash);
-                    self.deliver_snapshot(json);
+                    self.deliver_snapshot(pack, spr);
                 }
             }
         }
@@ -1052,17 +1107,10 @@ mod native_actor {
             self.emit(DocumentEvent::RemoteOperations { envelopes });
         }
 
-        /// @emoji 📸 Pushes a full-envelope snapshot into the store's inbound queue and notifies subscribers.
-        fn deliver_snapshot(&mut self, envelope_json: String) {
-            // 🚧 B2/B3 seam: see the matching comment in `drain_and_relay`'s `Snapshot` arm — the
-            // wire-facing push is real pack+spr bytes; this actor's own event stays JSON-typed
-            // until B3.
-            if let Some(codec) = store::document_codec(&self.schema) {
-                if let Ok((pack_files, _dsl_mirror)) = (codec.print)(&envelope_json) {
-                    let _ = self.remote.push(BackboneMessage::Snapshot { pack: pack_files.pack, spr: pack_files.spr });
-                }
-            }
-            self.emit(DocumentEvent::SnapshotReplaced { envelope_json });
+        /// @emoji 📸 Pushes a full pack+spr snapshot into the store's inbound queue and notifies subscribers.
+        fn deliver_snapshot(&mut self, pack: Vec<u8>, spr: Vec<u8>) {
+            let _ = self.remote.push(BackboneMessage::Snapshot { pack: pack.clone(), spr: spr.clone() });
+            self.emit(DocumentEvent::SnapshotReplaced { pack, spr });
         }
 
         fn emit(&self, event: DocumentEvent) {
@@ -1289,9 +1337,6 @@ mod wasm_actor {
                         self.relay_operations(&envelopes);
                     }
                 }
-                DocumentActorMsg::LocalSnapshot { .. } => {
-                    self.drain_and_relay();
-                }
                 DocumentActorMsg::PresenceHeartbeat { peer } => {
                     self.send_frame(&ClientFrame::Presence { peer: presence_to_bytes(&peer) }, Lane::Preview);
                 }
@@ -1443,8 +1488,7 @@ use wasm_actor::spawn_actor;
 /// @emoji 🎬 A scripted actor test vector shared by cargo test (here) and vitest (WS-E's TS twin).
 /// Each fixture drives inbound events at a document actor and asserts the resulting `DocumentEvent`
 /// sequence and the final persisted envelope edit ids. See `framework/sync/fixtures/README.md`.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug)]
 pub struct ActorFixture {
     pub name: String,
     pub schema: String,
@@ -1458,35 +1502,81 @@ pub struct ActorFixture {
 }
 
 /// @emoji 📥 One scripted inbound stimulus: either a hub server frame or an external folder edit.
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+/// Document/op CONTENT lives in sibling text files (never JSON) — this is the LOADED shape
+/// (content already read off disk); see `RawFixtureInbound` for the on-disk manifest shape that
+/// only references filenames.
+#[derive(Clone, Debug)]
 pub enum FixtureInbound {
     /// @emoji 📬 A raw `protocol_wire::ServerFrame`'s encoded bytes (`protocol::encode_server_frame`
-    /// output, `lane` byte included), delivered as if received over the hub WebSocket. 🎯 W5:
-    /// `ServerFrame` no longer derives `serde` (fully binary now, no JSON body) — the fixture
-    /// carries the already-encoded frame bytes (a JSON number array, same convention this crate's
-    /// module doc documents for `OperationEnvelope.diff.payload`) instead of a JSON-shaped frame.
-    /// Driven by `backbone-worker.ts`'s TS fallback vitest harness (which decodes these bytes with
-    /// its own binary decoder); the folder-only Rust harness skips these.
+    /// output, `lane` byte included), delivered as if received over the hub WebSocket — already
+    /// real binary, not document/op content, so it stays inline in the manifest as a JSON number
+    /// array. Driven by `backbone-worker.ts`'s TS fallback vitest harness (which decodes these
+    /// bytes with its own binary decoder); the folder-only Rust harness skips these.
     HubFrame { frame_bytes: Vec<u8> },
-    /// @emoji 📁 An external folder edit: append these edit JSON objects to `vcs.edits` out-of-band.
-    ExternalEdits { edits: Vec<Value> },
-    /// @emoji ♻️ An external whole-envelope rewrite (divergent history): replace the stored envelope.
-    ReplaceEnvelope { envelope: Value },
+    /// @emoji 📁 An external folder edit: `.ops`-grammar text (one or more `edit ...` blocks) to
+    /// append to the spr log out-of-band.
+    ExternalEdits { ops_text: String },
+    /// @emoji ♻️ An external whole-document rewrite (divergent history): dsl + ops text compiled
+    /// via `codec.compile_dsl` and written in place of the stored document.
+    ReplaceDocument { dsl_text: String, ops_text: String },
 }
 
-/// @emoji 📂 Loads every `*.json` fixture from `framework/sync/fixtures/`.
+/// @emoji 📄 The on-disk manifest shape: `kind`-tagged like `FixtureInbound`, but content-bearing
+/// variants reference a sibling filename (relative to the fixture's own directory) instead of
+/// carrying the text inline — `load_fixtures` resolves these into real `FixtureInbound`s.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+enum RawFixtureInbound {
+    HubFrame { frame_bytes: Vec<u8> },
+    ExternalEdits { ops_file: String },
+    ReplaceDocument { dsl_file: String, ops_file: String },
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct FixtureManifest {
+    name: String,
+    schema: String,
+    document_id: String,
+    inbound: Vec<RawFixtureInbound>,
+    expected_events: Vec<String>,
+    expected_edit_ids: Vec<String>,
+}
+
+/// @emoji 📂 Loads every `<name>/fixture.json` manifest directory under `dir`, resolving each
+/// content-bearing `RawFixtureInbound` against its sibling text file. A fixture whose manifest or
+/// any referenced file is missing/unreadable is skipped (never a partial/silently-wrong fixture).
 #[cfg(not(target_arch = "wasm32"))]
 pub fn load_fixtures(dir: &std::path::Path) -> Vec<ActorFixture> {
     let mut fixtures = Vec::new();
     let Ok(entries) = std::fs::read_dir(dir) else { return fixtures };
-    let mut paths: Vec<std::path::PathBuf> = entries.filter_map(|entry| entry.ok().map(|entry| entry.path())).filter(|path| path.extension().and_then(|ext| ext.to_str()) == Some("json")).collect();
-    paths.sort();
-    for path in paths {
-        if let Ok(text) = std::fs::read_to_string(&path) {
-            if let Ok(fixture) = serde_json::from_str::<ActorFixture>(&text) {
-                fixtures.push(fixture);
+    let mut fixture_dirs: Vec<std::path::PathBuf> = entries.filter_map(|entry| entry.ok().map(|entry| entry.path())).filter(|path| path.is_dir()).collect();
+    fixture_dirs.sort();
+    for fixture_dir in fixture_dirs {
+        let Ok(manifest_text) = std::fs::read_to_string(fixture_dir.join("fixture.json")) else { continue };
+        let Ok(manifest) = serde_json::from_str::<FixtureManifest>(&manifest_text) else { continue };
+        let mut inbound = Vec::with_capacity(manifest.inbound.len());
+        let mut all_resolved = true;
+        for raw in manifest.inbound {
+            let resolved = match raw {
+                RawFixtureInbound::HubFrame { frame_bytes } => Some(FixtureInbound::HubFrame { frame_bytes }),
+                RawFixtureInbound::ExternalEdits { ops_file } => std::fs::read_to_string(fixture_dir.join(&ops_file)).ok().map(|ops_text| FixtureInbound::ExternalEdits { ops_text }),
+                RawFixtureInbound::ReplaceDocument { dsl_file, ops_file } => {
+                    let dsl_text = std::fs::read_to_string(fixture_dir.join(&dsl_file)).ok();
+                    let ops_text = std::fs::read_to_string(fixture_dir.join(&ops_file)).ok();
+                    dsl_text.zip(ops_text).map(|(dsl_text, ops_text)| FixtureInbound::ReplaceDocument { dsl_text, ops_text })
+                }
+            };
+            match resolved {
+                Some(inbound_item) => inbound.push(inbound_item),
+                None => {
+                    all_resolved = false;
+                    break;
+                }
             }
+        }
+        if all_resolved {
+            fixtures.push(ActorFixture { name: manifest.name, schema: manifest.schema, document_id: manifest.document_id, inbound, expected_events: manifest.expected_events, expected_edit_ids: manifest.expected_edit_ids });
         }
     }
     fixtures
@@ -1764,7 +1854,7 @@ mod tests {
         create_document_envelope, parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines, register_document_codec, BlobStore, DocumentCodec,
         DocumentCommand, DocumentDsl, ParsedDocumentText,
     };
-    use protocol::{Edit, Operation, OperationDiff};
+    use protocol::{Edit, OpBinary, OpText, Operation, OperationDiff};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
     #[dsl(extension = "demo")]
@@ -2037,17 +2127,20 @@ mod tests {
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn op_envelope_from_stored_edit_round_trips_through_ingest() {
-        ensure_demo_codec_registered();
-        let edit_json = serde_json::json!({
-            "id": "ext-1",
-            "actor": "peer",
-            "forwards": [{ "operation": "SetN", "n": 42 }],
-            "backwards": [{ "operation": "SetN", "n": 0 }],
-            "sequenceNumber": 3,
-            "startedAt": "0"
-        });
-        let envelopes = operation_envelopes_from_stored_edit("demo/v1", "demo", &edit_json);
+        let edit = protocol::HistoryEdit {
+            id: "ext-1".into(),
+            actor: Some("peer".into()),
+            started_at: "0".into(),
+            finished_at: None,
+            coalesce_key: None,
+            description: None,
+            ops: vec![protocol::OpPayload { text: None, binary: Some(DemoOperation::SetN { n: 42 }.encode_op().expect("encode")) }],
+            backwards: vec![protocol::OpPayload { text: None, binary: Some(DemoOperation::SetN { n: 0 }.encode_op().expect("encode")) }],
+            meta: None,
+        };
+        let envelopes = envelopes_from_history_edit(&edit, "demo", "demo/v1").expect("envelopes from history edit");
         assert_eq!(envelopes.len(), 1, "single-op edit yields one envelope");
+        assert_eq!(envelopes[0].operation_id.0, "ext-1#0", "meta-less fallback: edit id # op index");
         let recovered = <DemoOperation as protocol::OpBinary>::decode_op(&envelopes[0].diff.payload).expect("decode op");
         assert_eq!(recovered, DemoOperation::SetN { n: 42 });
     }
@@ -2110,7 +2203,6 @@ mod tests {
         #[tokio::test]
         async fn folder_external_edit_delivers_remote_operations() {
             ensure_demo_codec_registered();
-            let codec = store::document_codec("demo/v1").expect("demo/v1 codec registered");
             let dir = tempfile::tempdir().expect("tempdir");
             let host = DocumentHost::new();
             let channels = host.open(DocumentActorConfig { document_id: "doc-a".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() });
@@ -2122,35 +2214,29 @@ mod tests {
             store.dispatch(store::DocumentCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply");
             channels.cmd_tx.send(DocumentActorMsg::LocalOperations { envelopes: Vec::new() }).expect("wake");
 
-            // Wait until the actor has persisted the local edit to the folder db (pack+spr bytes,
-            // decoded back to envelope JSON through the same codec `FolderEndpoint` uses).
+            // Wait until the actor has persisted the local edit to the folder db as real pack+spr bytes.
             let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
-            let stored = wait_until_value("persisted edit on disk", || {
-                if let Some((pack, spr)) = storage.read("doc-a").expect("read") {
-                    let json = (codec.parse)(&pack, &spr).expect("codec parse");
-                    if json.contains("\"edits\":[{") {
-                        return Some(json);
-                    }
-                }
-                None
+            let (pack, spr) = wait_until_value("persisted edit on disk", || {
+                let (pack, spr) = storage.read("doc-a").expect("read")?;
+                if spr_op_ids(&spr).ok()?.is_empty() { None } else { Some((pack, spr)) }
             })
             .await;
 
-            // Out-of-band: append a foreign edit directly to the stored envelope, then re-encode
-            // through the codec (mirroring exactly what `FolderEndpoint::write` does internally)
-            // before writing the pack+spr bytes back.
-            let mut value: serde_json::Value = serde_json::from_str(&stored).expect("parse");
-            let external_edit = serde_json::json!({
-                "id": "external-1",
-                "actor": "peer",
-                "forwards": [{ "operation": "SetN", "n": 42 }],
-                "backwards": [{ "operation": "SetN", "n": 1 }],
-                "sequenceNumber": 9,
-                "startedAt": "0"
-            });
-            value["vcs"]["edits"].as_array_mut().unwrap().push(external_edit);
-            let (pack_files, _dsl_mirror) = (codec.print)(&serde_json::to_string(&value).unwrap()).expect("codec print");
-            storage.write("doc-a", "demo/v1", &pack_files.pack, &pack_files.spr).expect("out-of-band write");
+            // Out-of-band: append a foreign edit directly to the spr bytes (real binary op
+            // payloads, no codec, no JSON) before writing pack+spr back.
+            let external_edit = protocol::HistoryEdit {
+                id: "external-1".into(),
+                actor: Some("peer".into()),
+                started_at: "0".into(),
+                finished_at: None,
+                coalesce_key: None,
+                description: None,
+                ops: vec![protocol::OpPayload { text: None, binary: Some(DemoOperation::SetN { n: 42 }.encode_op().expect("encode")) }],
+                backwards: vec![protocol::OpPayload { text: None, binary: Some(DemoOperation::SetN { n: 1 }.encode_op().expect("encode")) }],
+                meta: None,
+            };
+            let new_spr = store::append_history_edits_to_spr(&spr, &[external_edit]).expect("append external edit");
+            storage.write("doc-a", "demo/v1", &pack, &new_spr).expect("out-of-band write");
 
             // Deterministically poke the actor to re-read (notify also wired, but timing-independent here).
             channels.cmd_tx.send(DocumentActorMsg::ExternalChanged).expect("poke");
@@ -2166,7 +2252,6 @@ mod tests {
 
             // The store ingests the pushed operation on tick(); the timeline grows and projection updates.
             store.tick().expect("tick");
-            eprintln!("[DEBUG] edits: {:?}", store.envelope().vcs.edits.iter().map(|e| (e.id.clone(), e.forwards.clone())).collect::<Vec<_>>());
             assert_eq!(store.envelope().vcs.edits.len(), 2, "external edit joined the timeline");
             assert_eq!(store.projection().expect("projection").n, 42);
             host.close("doc-a");
@@ -2506,20 +2591,31 @@ mod tests {
             let mut observed: Vec<String> = Vec::new();
             for (inbound, expected) in fixture.inbound.iter().zip(fixture.expected_events.iter()) {
                 match inbound {
-                    FixtureInbound::ExternalEdits { edits } => {
+                    FixtureInbound::ExternalEdits { ops_text } => {
                         let (pack, spr) = storage.read(&fixture.document_id).expect("read").expect("some");
-                        let stored = (codec.parse)(&pack, &spr).expect("codec parse");
-                        let mut value: Value = serde_json::from_str(&stored).expect("parse");
-                        let array = value["vcs"]["edits"].as_array_mut().expect("edits array");
-                        for edit in edits {
-                            array.push(edit.clone());
-                        }
-                        let (pack_files, _dsl_mirror) = (codec.print)(&serde_json::to_string(&value).unwrap()).expect("codec print");
-                        storage.write(&fixture.document_id, &fixture.schema, &pack_files.pack, &pack_files.spr).expect("write");
+                        let parsed = protocol::parse_ops_text(ops_text).unwrap_or_else(|error| panic!("fixture {} parse_ops_text: {error}", fixture.name));
+                        let new_edits: Vec<protocol::HistoryEdit> = parsed
+                            .edits
+                            .into_iter()
+                            .map(|edit| {
+                                let ops: Vec<protocol::OpPayload> = edit
+                                    .ops
+                                    .iter()
+                                    .map(|op| {
+                                        let text = op.text.as_deref().unwrap_or_else(|| panic!("fixture {} op line has no text", fixture.name));
+                                        let concrete = DemoOperation::parse_op(text).unwrap_or_else(|error| panic!("fixture {} parse_op {text:?}: {error}", fixture.name));
+                                        protocol::OpPayload { text: None, binary: Some(concrete.encode_op().expect("encode demo op")) }
+                                    })
+                                    .collect();
+                                protocol::HistoryEdit { ops, meta: None, ..edit }
+                            })
+                            .collect();
+                        let new_spr = store::append_history_edits_to_spr(&spr, &new_edits).expect("append fixture edits");
+                        storage.write(&fixture.document_id, &fixture.schema, &pack, &new_spr).expect("write");
                         channels.cmd_tx.send(DocumentActorMsg::ExternalChanged).expect("poke");
                     }
-                    FixtureInbound::ReplaceEnvelope { envelope } => {
-                        let (pack_files, _dsl_mirror) = (codec.print)(&serde_json::to_string(envelope).unwrap()).expect("codec print");
+                    FixtureInbound::ReplaceDocument { dsl_text, ops_text } => {
+                        let (pack_files, _dsl_mirror) = (codec.compile_dsl)(dsl_text, ops_text).unwrap_or_else(|error| panic!("fixture {} compile_dsl: {error}", fixture.name));
                         storage.write(&fixture.document_id, &fixture.schema, &pack_files.pack, &pack_files.spr).expect("replace write");
                         channels.cmd_tx.send(DocumentActorMsg::ExternalChanged).expect("poke");
                     }

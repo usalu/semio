@@ -6,8 +6,8 @@ pub mod component {
 
     use crate::plugin_runtime::{
         ensure_plugin_initialized, plugin_attach_backbone, plugin_clear_instance_guard, plugin_consume_media, plugin_create_app,
-        plugin_detach_backbone, plugin_document, plugin_document_pack, plugin_document_text, plugin_handle_action, plugin_handle_command,
-        plugin_ingest_operations, plugin_ingest_operations_text, plugin_load_document, plugin_load_document_pack, plugin_load_document_text,
+        plugin_detach_backbone, plugin_document_pack, plugin_document_text, plugin_handle_action, plugin_handle_command,
+        plugin_ingest_operations, plugin_ingest_operations_text, plugin_load_document_pack, plugin_load_document_text,
         plugin_manifest, plugin_produce_media, plugin_refresh_ui, plugin_render_with_document,
     };
     use wit_bindgen::generate;
@@ -90,19 +90,9 @@ pub mod component {
             Err(PluginError::Message("migrate-document not implemented".into()))
         }
 
-        fn apply_operations(instance_id: u32, operations_json: String) -> Result<(), PluginError> {
+        fn apply_operations(instance_id: u32, operations: Vec<u8>) -> Result<(), PluginError> {
             ensure_plugin_initialized();
-            plugin_ingest_operations(instance_id, &operations_json).map_err(PluginError::Message)
-        }
-
-        fn read_app_document(instance_id: u32) -> Result<String, PluginError> {
-            ensure_plugin_initialized();
-            plugin_document(instance_id).map_err(PluginError::Message)
-        }
-
-        fn load_app_document(instance_id: u32, document_json: String) -> Result<(), PluginError> {
-            ensure_plugin_initialized();
-            plugin_load_document(instance_id, &document_json).map_err(PluginError::Message)
+            plugin_ingest_operations(instance_id, &operations).map_err(PluginError::Message)
         }
 
         fn apply_operations_text(instance_id: u32, operations_text: String) -> Result<(), PluginError> {
@@ -125,12 +115,12 @@ pub mod component {
         fn read_app_document_pack(instance_id: u32) -> Result<DocumentPackFiles, PluginError> {
             ensure_plugin_initialized();
             let files = plugin_document_pack(instance_id).map_err(PluginError::Message)?;
-            Ok(DocumentPackFiles { pack: files.pack, ops: files.ops })
+            Ok(DocumentPackFiles { pack: files.pack, spr: files.spr, ops: files.ops })
         }
 
         fn load_app_document_pack(instance_id: u32, document_pack: DocumentPackFiles) -> Result<(), PluginError> {
             ensure_plugin_initialized();
-            let files = store::DocumentPackFiles { pack: document_pack.pack, ops: document_pack.ops };
+            let files = store::DocumentPackFiles { pack: document_pack.pack, spr: document_pack.spr, ops: document_pack.ops };
             plugin_load_document_pack(instance_id, &files).map_err(PluginError::Message)
         }
 
@@ -462,14 +452,14 @@ impl AppBuilder {
         self
     }
 
-    /// 🔌 Declares one media graph input port this app accepts (see `MediaPortSpec`). Repeatable;
+    /// 🔌 Declares one workflow input port this app accepts (see `MediaPortSpec`). Repeatable;
     /// validated in `build_definition` (non-empty/unique id, `direction` must be `In`).
     pub fn media_input(mut self, spec: MediaPortSpec) -> Self {
         self.media_inputs.push(spec);
         self
     }
 
-    /// 🔌 Declares one media graph output port this app produces (see `MediaPortSpec`). Repeatable;
+    /// 🔌 Declares one workflow output port this app produces (see `MediaPortSpec`). Repeatable;
     /// validated in `build_definition` (non-empty/unique id, `direction` must be `Out`, `MediaForm::Any`
     /// is rejected — `Any` is only ever legal on the accepting/input side, see `media_types_compatible`).
     pub fn media_output(mut self, spec: MediaPortSpec) -> Self {
@@ -2067,12 +2057,12 @@ pub fn assert_ingest_idempotent<A, P>(
             envelopes.extend(operations);
         }
     }
-    let operations_json = serde_json::to_string(&envelopes).expect("serialize envelopes");
+    let operations = protocol::encode_envelopes(&envelopes);
 
     let mut receiver = new_app::<A>();
-    receiver.ingest_operations(&operations_json).expect("ingest once");
+    receiver.ingest_operations(&operations).expect("ingest once");
     let once = probe(&receiver);
-    receiver.ingest_operations(&operations_json).expect("ingest twice");
+    receiver.ingest_operations(&operations).expect("ingest twice");
     assert_eq!(probe(&receiver), once, "feeding the same operation twice must not double-apply");
 }
 
@@ -3224,14 +3214,14 @@ pub trait DocumentApp: Send + 'static {
     /// by user actions leaves it untouched.
     fn seed(&self, _store: &mut DocumentStore<Self::Projection, Self::Operation>) {}
 
-    /// 🎞️ Declares this app's media-graph ports (empty by default — an app with no ports simply
-    /// cannot be wired into a media graph; every other capability is unaffected).
+    /// 🎞️ Declares this app's workflow ports (empty by default — an app with no ports simply
+    /// cannot be wired into a workflow; every other capability is unaffected).
     fn media_ports(&self) -> Vec<MediaPortSpec> {
         Vec::new()
     }
     /// 🎞️ Pure projection of the current document onto one declared output port — must not mutate
     /// anything. Called by both the UI (preview/export) and a headless runner (moving media along a
-    /// media-graph edge). Default: `MediaError::NotImplemented` for apps that declare no ports.
+    /// workflow edge). Default: `MediaError::NotImplemented` for apps that declare no ports.
     fn export_media(
         &self,
         _port: &str,
@@ -3263,7 +3253,7 @@ pub trait DocumentApp: Send + 'static {
 
 /// 🎞️ Rust mirror of WIT's `media-artifact` record (`framework/wit/world.wit`): `descriptor` is the
 /// parsed `descriptor-json`, `data` the sibling raw-bytes field. Deliberately separate from
-/// `mesh::Media` (which pairs a `MediaType` with a `MediaPayload` for the declared-port media graph
+/// `mesh::Media` (which pairs a `MediaType` with a `MediaPayload` for the declared-port workflow
 /// via `export_media`/`import_media`) — `consume-media`/`produce-media` operate at the whole-document
 /// level, not a specific `MediaPortSpec`, so `PluginApp::{consume_media, produce_media}` below default
 /// to a document passthrough rather than requiring any `media_ports()` declaration at all.
@@ -3326,9 +3316,9 @@ pub trait PluginApp: Send {
         view_state: &ViewState,
         meta: &ActionMeta,
     ) -> Result<InvocationResult, String>;
-    fn ingest_operations(&mut self, operations_json: &str) -> Result<(), String>;
-    fn document_json(&self) -> Result<String, String>;
-    fn load_document(&mut self, document_json: &str) -> Result<(), String>;
+    /// @emoji 📥 Ingests binary-encoded remote `OperationEnvelope`s (`protocol::decode_envelopes`)
+    /// into the causal DAG (idempotent — duplicate operation ids are dropped).
+    fn ingest_operations(&mut self, operations: &[u8]) -> Result<(), String>;
     /// @emoji 📜 Text-DSL counterpart to {@link Self::ingest_operations}: applies one already-authored
     /// `Self::Operation` per non-blank line (via `store::OpText::parse_op`) as a fresh local edit — unlike
     /// the JSON path (which ingests already-caused remote `OperationEnvelope`s into the causal DAG
@@ -3337,14 +3327,14 @@ pub trait PluginApp: Send {
     /// inverse) — the natural mapping for hand-authored or externally-generated op-text, which carries
     /// no envelope metadata of its own.
     fn ingest_operations_text(&mut self, operations_text: &str) -> Result<(), String>;
-    /// @emoji 📜 Text-DSL counterpart to {@link Self::document_json}: the whole document as
+    /// @emoji 📜 Text-DSL counterpart to {@link Self::document_pack}: the whole document as
     /// {@link store::DocumentTextFiles} (the `dsl` initial-projection text plus the full `ops` op-log
     /// text) via `store::print_document_text` — returned as the established two-file struct rather than
     /// a single concatenated string, since that struct (not an ad hoc delimiter format) is already the
     /// canonical text representation everywhere else in this codebase (`FolderTextStorage`,
     /// `parse_document_text`).
     fn document_text(&self) -> Result<store::DocumentTextFiles, String>;
-    /// @emoji 📜 Text-DSL counterpart to {@link Self::load_document}.
+    /// @emoji 📜 Text-DSL counterpart to {@link Self::load_document_pack}.
     fn load_document_text(&mut self, files: &store::DocumentTextFiles) -> Result<(), String>;
     /// @emoji 📦 Binary-pack counterpart to {@link Self::document_text}: the whole document as
     /// {@link store::DocumentPackFiles} (pack-encoded initial projection plus the same `ops` op-log
@@ -3377,7 +3367,7 @@ pub trait PluginApp: Send {
     fn app_labels(&mut self, _view_state: &ViewState) -> AppLabelsOverlay {
         AppLabelsOverlay::default()
     }
-    /// 🎞️ Object-safe counterpart to `DocumentApp::export_media` — the seam a headless media-graph
+    /// 🎞️ Object-safe counterpart to `DocumentApp::export_media` — the seam a headless workflow
     /// runner calls without knowing the app's concrete `Projection`/`Operation` types.
     fn export_media(&mut self, _port: &str) -> Result<Media, MediaError> {
         Err(MediaError::NotImplemented)
@@ -3392,12 +3382,13 @@ pub trait PluginApp: Send {
     }
     /// 🎞️ ABI-level media artifact request for one port (`framework/wit/world.wit`'s `produce-media`).
     /// Default: a whole-document passthrough (`wire: Document{schema: document_schema()}` wrapping
-    /// `document_json()`'s bytes) — the fallback every `PluginApp` gets for free without declaring any
-    /// `media_ports()`. Apps whose media output isn't simply their raw document (computed/derived
-    /// outputs) override this directly; `port` is accepted for parity with `export_media` and ignored
-    /// by the default (there is exactly one document to hand back).
+    /// `document_pack()`'s pack+spr bytes via `store::encode_document_pack_bytes`) — the fallback every
+    /// `PluginApp` gets for free without declaring any `media_ports()`. Apps whose media output isn't
+    /// simply their raw document (computed/derived outputs) override this directly; `port` is accepted
+    /// for parity with `export_media` and ignored by the default (there is exactly one document to hand
+    /// back).
     fn produce_media(&mut self, port: &str) -> Result<MediaArtifact, MediaArtifactError> {
-        let json = self.document_json().map_err(MediaArtifactError::Payload)?;
+        let files = self.document_pack().map_err(MediaArtifactError::Payload)?;
         Ok(MediaArtifact {
             descriptor: MediaArtifactDescriptor {
                 edge_id: None,
@@ -3407,20 +3398,22 @@ pub trait PluginApp: Send {
                 wire: MediaWireFormat::Document { schema: self.document_schema().to_string() },
                 blob_hash: None,
             },
-            data: json.into_bytes(),
+            data: store::encode_document_pack_bytes(&files.pack, &files.spr),
         })
     }
     /// 🎞️ ABI-level media artifact delivery for one port (`framework/wit/world.wit`'s `consume-media`).
     /// Default: a `Document{schema}` wire matching this app's own `document_schema()` loads straight
-    /// through `load_document` — the same envelope `read-app-document`/`load-app-document` already
-    /// round-trip. Anything else (a foreign document schema, or a `Binary{format}` wire) has no
-    /// SDK-level importer registry yet, so the default rejects it; apps that need one override this
-    /// method directly.
+    /// through `load_document_pack` — the same pack+spr bytes `read-app-document-pack`/
+    /// `load-app-document-pack` already round-trip. Anything else (a foreign document schema, or a
+    /// `Binary{format}` wire) has no SDK-level importer registry yet, so the default rejects it; apps
+    /// that need one override this method directly.
     fn consume_media(&mut self, _port: &str, artifact: MediaArtifact) -> Result<(), MediaArtifactError> {
         match artifact.descriptor.wire {
             MediaWireFormat::Document { schema } if schema == self.document_schema() => {
-                let json = String::from_utf8(artifact.data).map_err(|error| MediaArtifactError::Payload(error.to_string()))?;
-                self.load_document(&json).map_err(MediaArtifactError::Payload)
+                let (pack, spr) = store::decode_document_pack_bytes(&artifact.data)
+                    .map_err(|error| MediaArtifactError::Payload(error.to_string()))?;
+                self.load_document_pack(&store::DocumentPackFiles { pack, spr, ops: String::new() })
+                    .map_err(MediaArtifactError::Payload)
             }
             MediaWireFormat::Document { schema } => Err(MediaArtifactError::SchemaMismatch {
                 expected: self.document_schema().to_string(),
@@ -3627,7 +3620,14 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             let forwards = &forwards[forwards_offset.min(forwards.len())..];
             let backwards = &backwards[backwards_offset.min(backwards.len())..];
             let operation_meta = &operation_meta[forwards_offset.min(operation_meta.len())..];
-            let inverse_payload = serde_json::json!({ "backwards": backwards });
+            // 🎯 B5: real binary — each backward op's own `OpBinary::encode_op()`, framed as a
+            // binary ops-vec (`protocol::encode_ops_vec`, replacing the old `json!({"backwards":
+            // [...]})` convention). Every op in `backwards` shares the same encoding; a decode
+            // failure here would mean a real corrupt/foreign operation, not a schema choice, so
+            // `unwrap_or_default` on an individual encode failure degrades to an empty inverse
+            // (same fallback behavior `payload: Vec::new()` already has elsewhere) rather than
+            // panicking mid-invocation.
+            let inverse_payload = protocol::encode_ops_vec(&backwards.iter().map(|op| ::protocol::OpBinary::encode_op(op).unwrap_or_default()).collect::<Vec<_>>());
             for (index, forward) in forwards.iter().enumerate() {
                 let entry = operation_meta.get(index);
                 // 🎯 W6 kernel unification: `operation_meta` entries are `protocol::OperationMeta`,
@@ -3650,13 +3650,13 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
                     invocation_id: invocation_id.clone(),
                     diff: DocumentDiff {
                         schema: SchemaId(format!("{schema}.operation")),
-                        payload: serde_json::to_vec(forward).unwrap_or_default(),
+                        payload: ::protocol::OpBinary::encode_op(forward).unwrap_or_default(),
                     },
                     inverse: InverseOperation {
                         target_operation: operation_id,
                         inverse_diff: DocumentDiff {
                             schema: SchemaId(format!("{schema}.operation.inverse")),
-                            payload: serde_json::to_vec(&inverse_payload).unwrap_or_default(),
+                            payload: inverse_payload.clone(),
                         },
                         base_version,
                         dependencies: Vec::new(),
@@ -3823,30 +3823,11 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         self.dispatch_emit(command, emit, meta)
     }
 
-    fn ingest_operations(&mut self, operations_json: &str) -> Result<(), String> {
-        let envelopes: Vec<protocol::OperationEnvelope> =
-            serde_json::from_str(operations_json).map_err(|error| error.to_string())?;
+    fn ingest_operations(&mut self, operations: &[u8]) -> Result<(), String> {
+        let envelopes = protocol::decode_envelopes(operations).map_err(|error| error.to_string())?;
         for envelope in envelopes {
             self.store.ingest_remote(envelope).map_err(|error| error.to_string())?;
         }
-        self.cache = None;
-        Ok(())
-    }
-
-    fn document_json(&self) -> Result<String, String> {
-        // 🚧 B2/B5 seam: `DocumentStore::envelope_json()` is deleted (the store keeps bytes now,
-        // `snapshot_pack()` is the real path) — this JSON trait method itself is B5's WIT-flip
-        // scope (`document_json`/`load_document` -> `document_pack`/`load_document_pack`, already
-        // present below), kept working meanwhile via a direct serialize of the still-public
-        // `envelope()` getter.
-        serde_json::to_string(self.store.envelope()).map_err(|error| error.to_string())
-    }
-
-    fn load_document(&mut self, document_json: &str) -> Result<(), String> {
-        let envelope: DocumentEnvelope<A::Projection, A::Operation> =
-            serde_json::from_str(document_json).map_err(|error| error.to_string())?;
-        let applied: Vec<String> = envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
-        self.store.set_envelope(envelope, applied);
         self.cache = None;
         Ok(())
     }
@@ -4327,33 +4308,18 @@ pub fn plugin_handle_command(
     })
 }
 
-/// @emoji 📥 Ingests a JSON array of remote `OperationEnvelope`s into the instance's document store
-/// (idempotent — duplicate operation ids are dropped by the causal DAG / edit-id dedupe).
-pub fn plugin_ingest_operations(instance_id: u32, operations_json: &str) -> Result<(), String> {
+/// @emoji 📥 Ingests binary-encoded remote `OperationEnvelope`s (`protocol::decode_envelopes`) into
+/// the instance's document store (idempotent — duplicate operation ids are dropped by the causal
+/// DAG / edit-id dedupe).
+pub fn plugin_ingest_operations(instance_id: u32, operations: &[u8]) -> Result<(), String> {
     with_instances_mut(|list| {
         let instance = find_instance(list, instance_id)?;
-        instance.app.ingest_operations(operations_json)
-    })
-}
-
-/// @emoji 📖 Serializes the instance's full persistent document (the `DocumentEnvelope`).
-pub fn plugin_document(instance_id: u32) -> Result<String, String> {
-    with_instances_mut(|list| {
-        let instance = find_instance(list, instance_id)?;
-        instance.app.document_json()
-    })
-}
-
-/// @emoji 📂 Replaces the instance's document from a serialized `DocumentEnvelope`.
-pub fn plugin_load_document(instance_id: u32, document_json: &str) -> Result<(), String> {
-    with_instances_mut(|list| {
-        let instance = find_instance(list, instance_id)?;
-        instance.app.load_document(document_json)
+        instance.app.ingest_operations(operations)
     })
 }
 
 /// @emoji 📜 Text-DSL counterpart of {@link plugin_ingest_operations}: one already-authored operation
-/// per non-blank op-text line instead of a JSON `OperationEnvelope` array.
+/// per non-blank op-text line instead of a binary `OperationEnvelope` array.
 pub fn plugin_ingest_operations_text(instance_id: u32, operations_text: &str) -> Result<(), String> {
     with_instances_mut(|list| {
         let instance = find_instance(list, instance_id)?;
@@ -4361,7 +4327,7 @@ pub fn plugin_ingest_operations_text(instance_id: u32, operations_text: &str) ->
     })
 }
 
-/// @emoji 📜 Text-DSL counterpart of {@link plugin_document}.
+/// @emoji 📜 Text-DSL counterpart of {@link plugin_document_pack}.
 pub fn plugin_document_text(instance_id: u32) -> Result<store::DocumentTextFiles, String> {
     with_instances_mut(|list| {
         let instance = find_instance(list, instance_id)?;
@@ -4369,7 +4335,7 @@ pub fn plugin_document_text(instance_id: u32) -> Result<store::DocumentTextFiles
     })
 }
 
-/// @emoji 📜 Text-DSL counterpart of {@link plugin_load_document}.
+/// @emoji 📜 Text-DSL counterpart of {@link plugin_load_document_pack}.
 pub fn plugin_load_document_text(instance_id: u32, files: &store::DocumentTextFiles) -> Result<(), String> {
     with_instances_mut(|list| {
         let instance = find_instance(list, instance_id)?;
@@ -4377,7 +4343,8 @@ pub fn plugin_load_document_text(instance_id: u32, files: &store::DocumentTextFi
     })
 }
 
-/// @emoji 📦 Binary-pack counterpart of {@link plugin_document}.
+/// @emoji 📦 Serializes the instance's full persistent document as pack+spr bytes
+/// ({@link store::DocumentPackFiles}) via `store::print_document_pack`.
 pub fn plugin_document_pack(instance_id: u32) -> Result<store::DocumentPackFiles, String> {
     with_instances_mut(|list| {
         let instance = find_instance(list, instance_id)?;
@@ -4385,7 +4352,8 @@ pub fn plugin_document_pack(instance_id: u32) -> Result<store::DocumentPackFiles
     })
 }
 
-/// @emoji 📦 Binary-pack counterpart of {@link plugin_load_document}.
+/// @emoji 📦 Replaces the instance's document from pack+spr bytes ({@link store::DocumentPackFiles})
+/// via `store::parse_document_pack`.
 pub fn plugin_load_document_pack(instance_id: u32, files: &store::DocumentPackFiles) -> Result<(), String> {
     with_instances_mut(|list| {
         let instance = find_instance(list, instance_id)?;
@@ -4966,10 +4934,10 @@ mod semio_plugin_macro_tests {
         let mut app = VcsDocumentApp::new(TestApp::default());
         let result = app.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment");
         assert_eq!(result.operations.len(), 1);
-        assert_eq!(result.operations[0].diff.payload, serde_json::to_vec(&json!({ "operation": "setCount", "value": 1 })).unwrap());
+        assert_eq!(result.operations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestOperation::SetCount { value: 1 }).unwrap());
         assert_eq!(
             result.operations[0].inverse.inverse_diff.payload,
-            serde_json::to_vec(&json!({ "backwards": [{ "operation": "setCount", "value": 0 }] })).unwrap()
+            protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestOperation::SetCount { value: 0 }).unwrap()])
         );
         assert_eq!(result.inverse_group.operations.len(), 1);
         assert_eq!(app.test_projection().count, 1);
@@ -5041,10 +5009,10 @@ mod semio_plugin_macro_tests {
         let mut app = VcsDocumentApp::new(TestApp::default());
         app.handle_action("increment", None, &ViewState::default(), &meta()).expect("inc");
         app.handle_action("setLabel", Some(&json!({ "value": "hi" })), &ViewState::default(), &meta()).expect("label");
-        let json = app.document_json().expect("document json");
+        let files = app.document_pack().expect("document pack");
 
         let mut restored = VcsDocumentApp::new(TestApp::default());
-        restored.load_document(&json).expect("load document");
+        restored.load_document_pack(&files).expect("load document pack");
         assert_eq!(restored.test_projection(), TestProjection { count: 1, label: "hi".into() });
     }
 
@@ -5062,11 +5030,11 @@ mod semio_plugin_macro_tests {
             }
         }
         assert!(!envelopes.is_empty(), "expected the applied operation to flow onto the channel");
-        let operations_json = serde_json::to_string(&envelopes).expect("serialize envelopes");
+        let operations = protocol::encode_envelopes(&envelopes);
 
         let mut receiver = VcsDocumentApp::new(TestApp::default());
-        receiver.ingest_operations(&operations_json).expect("ingest once");
-        receiver.ingest_operations(&operations_json).expect("ingest twice");
+        receiver.ingest_operations(&operations).expect("ingest once");
+        receiver.ingest_operations(&operations).expect("ingest twice");
         assert_eq!(receiver.test_projection().count, 1, "feeding the same operation twice must not double-apply");
     }
 
@@ -5181,10 +5149,10 @@ mod semio_plugin_macro_tests {
             .handle_action("amendLabel", Some(&json!({ "value": "abc" })), &ViewState::default(), &meta())
             .expect("amendLabel abc");
         assert_eq!(result.operations.len(), 1, "must report only this dispatch's new operation, not the whole coalesced edit");
-        assert_eq!(result.operations[0].diff.payload, serde_json::to_vec(&json!({ "operation": "setLabel", "value": "abc" })).unwrap());
+        assert_eq!(result.operations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestOperation::SetLabel { value: "abc".into() }).unwrap());
         assert_eq!(
             result.operations[0].inverse.inverse_diff.payload,
-            serde_json::to_vec(&json!({ "backwards": [{ "operation": "setLabel", "value": "ab" }] })).unwrap(),
+            protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestOperation::SetLabel { value: "ab".into() }).unwrap()]),
             "the new operation's own inverse undoes back to the pre-dispatch label, not the whole gesture"
         );
         assert_eq!(result.inverse_group.operations.len(), 1);
@@ -5202,10 +5170,10 @@ mod semio_plugin_macro_tests {
             .handle_command("incrementViaCommand", None, &ViewState::default(), &meta())
             .expect("incrementViaCommand");
         assert_eq!(result.operations.len(), 1);
-        assert_eq!(result.operations[0].diff.payload, serde_json::to_vec(&json!({ "operation": "setCount", "value": 1 })).unwrap());
+        assert_eq!(result.operations[0].diff.payload, ::protocol::OpBinary::encode_op(&TestOperation::SetCount { value: 1 }).unwrap());
         assert_eq!(
             result.operations[0].inverse.inverse_diff.payload,
-            serde_json::to_vec(&json!({ "backwards": [{ "operation": "setCount", "value": 0 }] })).unwrap()
+            protocol::encode_ops_vec(&[::protocol::OpBinary::encode_op(&TestOperation::SetCount { value: 0 }).unwrap()])
         );
         assert_eq!(app.test_projection().count, 1);
     }
@@ -6183,8 +6151,8 @@ pub use host_port::{
     register_host_backbone_channel, HostBackboneChannel,
 };
 pub use plugin_runtime::{
-    install_plugin_bundle, plugin_attach_backbone, plugin_detach_backbone, plugin_document,
-    plugin_ingest_operations, plugin_load_document,
+    install_plugin_bundle, plugin_attach_backbone, plugin_detach_backbone, plugin_document_pack,
+    plugin_ingest_operations, plugin_load_document_pack,
 };
 pub use world3d_host::{
     apply_world3d_projection_action, apply_world3d_sun_action, default_world3d_selection,

@@ -268,7 +268,7 @@ pub mod app_home {
                     name: document.name.clone(),
                     backbone_uri: String::new(),
                     app_count: projection.app_instances.len(),
-                    node_count: projection.media_graph.nodes.len(),
+                    node_count: projection.workflow.nodes.len(),
                     updated_at: "0".into(),
                 });
             }
@@ -799,19 +799,19 @@ pub mod app_home {
 
 //#region 🔖app_studio
 pub mod app_studio {
-    //! 🎛️ S Studio — the media-graph composition app hosting spawned app instances, parameters, and
+    //! 🎛️ S Studio — the workflow composition app hosting spawned app instances, parameters, and
     //! their compiled DAG.
 
     use super::{demo_studio_projection, ensure_studio_fixtures_registered, parse_demo_studio_document};
     use semio_framework_os::{
-        apply_flow_fixture_to_os_media_graph, build_os_media_flow_operator_infos, create_default_os_parameter,
-        create_empty_os_document, create_os_document_id, create_os_id, default_os_projection, list_os_media_graph_vfs_children, list_os_programs,
+        apply_flow_fixture_to_os_workflow, build_os_workflow_operator_infos, create_default_os_parameter,
+        create_empty_os_document, create_os_document_id, create_os_id, default_os_projection, list_os_workflow_vfs_children, list_os_programs,
         materialize_os_app_instance_document_json, materialize_os_projection, media_port_spec_id, negotiate_media_contract, os_app_primary_output_kind,
-        os_app_registration, os_document_to_json, os_media_graph_to_flow_fixture, os_media_graph_to_node_graph_payload,
-        os_media_graph_vfs_schema, os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id,
-        patch_os_parameter, MediaGraphPosition, OsAppInstance, OsDocumentRef, OsMediaGraphCamera,
-        OsMediaGraphVfsNodeRecord, OsMediaPort, OsOperation, OsParameter, OsParameterFieldBinding, OsParameterType, OsProjection,
-        OS_MEDIA_GRAPH_VFS_ROOT_ID, OS_STUDIO_SCHEMA,
+        os_app_registration, os_document_to_json, os_workflow_to_flow_fixture, os_workflow_to_node_graph_payload,
+        os_workflow_vfs_schema, os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id,
+        patch_os_parameter, WorkflowPosition, OsAppInstance, OsDocumentRef, OsWorkflowCamera,
+        OsWorkflowVfsNodeRecord, OsMediaPort, OsOperation, OsParameter, OsParameterFieldBinding, OsParameterType, OsProjection,
+        OS_WORKFLOW_VFS_ROOT_ID, OS_STUDIO_SCHEMA,
     };
     // 🕳️ `export_os_studio_pack`/`export_os_studio_dsl`/`import_os_studio_from_pack` (wave 1, `host`
     // region) aren't in `framework/product/os/core/rs/lib.rs`'s crate-root `pub use host::{...}` list
@@ -842,13 +842,13 @@ pub mod app_studio {
     //#region 🔖Constants
     const S_PLAY_APP_ID: &str = "studio";
     const S_PLAY_CONTROLLER_ID: &str = "s-play";
-    const S_PLAY_SURFACE_MEDIA_GRAPH: &str = "s.play.media-graph";
+    const S_PLAY_SURFACE_WORKFLOW: &str = "s.play.workflow";
     const S_PLAY_SURFACE_MEDIA_VFS: &str = "s.play.media-vfs";
     const S_PLAY_SURFACE_COMPILED_DAG: &str = "s.play.compiled-dag";
-    const S_PLAY_BODY_MEDIA_GRAPH: &str = "s.play.media-graph";
+    const S_PLAY_BODY_WORKFLOW: &str = "s.play.workflow";
     const S_PLAY_BODY_MEDIA_VFS: &str = "s.play.media-vfs";
     const S_PLAY_BODY_COMPILED_DAG: &str = "s.play.compiled-dag";
-    const S_PLAY_WINDOW_MEDIA_GRAPH: &str = "s-media-graph";
+    const S_PLAY_WINDOW_WORKFLOW: &str = "s-workflow";
     const S_PLAY_WINDOW_MEDIA_VFS: &str = "s-media-vfs";
     const S_PLAY_WINDOW_COMPILED_DAG: &str = "s-compiled-dag";
     const S_PLAY_CATALOGUE_TAB_ID: &str = "s-play-catalogue";
@@ -912,7 +912,7 @@ pub mod app_studio {
         #[serde(skip_serializing_if = "Option::is_none")]
         hovered_media_node_id: Option<String>,
         #[serde(default)]
-        media_graph_engagement_input: String,
+        workflow_engagement_input: String,
         #[serde(default)]
         compiled_dag_engagement_input: String,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -920,7 +920,7 @@ pub mod app_studio {
         #[serde(default)]
         clipboard_instance_ids: Vec<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
-        media_graph_camera: Option<OsMediaGraphCamera>,
+        workflow_camera: Option<OsWorkflowCamera>,
         #[serde(skip_serializing_if = "Option::is_none")]
         client_id: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -969,7 +969,7 @@ pub mod app_studio {
     }
 
     /// @emoji ✨ Builds the `SpawnAppInstance` operation (minting a deterministic instance id + app-document id
-    /// + media-graph node id, all embedded in the operation, so replay never re-mints) plus the new instance
+    /// + workflow node id, all embedded in the operation, so replay never re-mints) plus the new instance
     /// id for the caller to focus.
     /// The store-free operation-builder the plugin uses in place of os-core's `OsStore::spawn_app_instance`
     /// (a `DocumentApp` owns no store — its wrapper does).
@@ -977,7 +977,7 @@ pub mod app_studio {
         program_id: &str,
         app_id: &str,
         label: Option<&str>,
-        position: MediaGraphPosition,
+        position: WorkflowPosition,
     ) -> Option<(OsOperation, String)> {
         let registration = os_app_registration(program_id, app_id)?;
         let instance_id = create_os_id("app");
@@ -1020,7 +1020,7 @@ pub mod app_studio {
         runtime.selected_app_instance_ids.first().cloned().or_else(|| {
             runtime.selected_media_node_ids.first().and_then(|node_id| {
                 projection
-                    .media_graph
+                    .workflow
                     .nodes
                     .iter()
                     .find(|node| node.id == *node_id)
@@ -1038,7 +1038,7 @@ pub mod app_studio {
             .iter()
             .filter_map(|node_id| {
                 projection
-                    .media_graph
+                    .workflow
                     .nodes
                     .iter()
                     .find(|node| node.id == *node_id)
@@ -1049,18 +1049,18 @@ pub mod app_studio {
 
     /// @emoji 🤝 Resolves the source/target `OsMediaPort`s for a proposed connect from the live projection
     /// and negotiates their wire contract — shared by both connect entry points (`"connectMediaPorts"` and
-    /// the `nodeGraphEdit`/`"connect"` fixture edit) so neither can push an `OsOperation::ConnectMediaPorts` for an
+    /// the `nodeGraphEdit`/`"connect"` fixture edit) so neither can push an `OsOperation::ConnectWorkflowPorts` for an
     /// incompatible or unresolved pair of ports.
     fn negotiate_media_connect(projection: &OsProjection, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<semio_framework_os::MediaContract, String> {
         let source_port: &OsMediaPort = projection
-            .media_graph
+            .workflow
             .nodes
             .iter()
             .find(|node| node.id == source_node_id)
             .and_then(|node| node.outputs.iter().find(|port| port.id == source_port_id))
             .ok_or_else(|| format!("unknown source port {source_node_id}:{source_port_id}"))?;
         let target_port: &OsMediaPort = projection
-            .media_graph
+            .workflow
             .nodes
             .iter()
             .find(|node| node.id == target_node_id)
@@ -1069,7 +1069,7 @@ pub mod app_studio {
         negotiate_media_contract(source_port, target_port)
     }
 
-    fn media_graph_context_menu_json(labels: &SStudioLabels) -> String {
+    fn workflow_context_menu_json(labels: &SStudioLabels) -> String {
         json!([
             { "id": "open-instance", "label": labels.context_open_instance, "icon": "external-link", "action": "openInstance" },
             { "id": "duplicate-instance", "label": labels.context_duplicate, "icon": "copy", "action": "duplicateAppInstance" },
@@ -1081,7 +1081,7 @@ pub mod app_studio {
             { "id": "sep-selection", "separator": true },
             { "id": "select-all", "label": labels.context_select_all, "icon": "maximize-2", "action": "setMediaNodeSelection", "args": { "selectAll": true } },
             { "id": "clear-selection", "label": labels.context_clear_selection, "icon": "square-dashed", "action": "setMediaNodeSelection", "args": { "nodeIds": [] } },
-            { "id": "reorganize", "label": labels.context_reorganize, "icon": "layout-grid", "action": "reorganizeMediaGraph" }
+            { "id": "reorganize", "label": labels.context_reorganize, "icon": "layout-grid", "action": "reorganizeWorkflow" }
         ])
         .to_string()
     }
@@ -1155,12 +1155,12 @@ pub mod app_studio {
     fn flatten_media_vfs_rows(
         parent_id: &str,
         instances: &[OsAppInstance],
-        graph: &semio_framework_os::OsMediaGraph,
+        graph: &semio_framework_os::OsWorkflow,
         bindings: &[OsParameterFieldBinding],
         parameters: &[OsParameter],
         rows: &mut Vec<Value>,
     ) {
-        let children = list_os_media_graph_vfs_children(parent_id, instances, graph, bindings, parameters);
+        let children = list_os_workflow_vfs_children(parent_id, instances, graph, bindings, parameters);
         for child in &children {
             rows.push(vfs_node_to_row(child));
             if child.has_children {
@@ -1169,7 +1169,7 @@ pub mod app_studio {
         }
     }
 
-    fn vfs_node_to_row(node: &OsMediaGraphVfsNodeRecord) -> Value {
+    fn vfs_node_to_row(node: &OsWorkflowVfsNodeRecord) -> Value {
         json!({
             "id": node.id,
             "fileNodeKindId": node.file_node_kind_id,
@@ -1201,7 +1201,7 @@ pub mod app_studio {
             .unwrap_or_else(|| port_id.to_string())
     }
 
-    fn media_graph_to_dag_fixture(projection: &OsProjection) -> DagFixture {
+    fn workflow_to_dag_fixture(projection: &OsProjection) -> DagFixture {
         let instance_by_id: HashMap<_, _> = projection
             .app_instances
             .iter()
@@ -1218,7 +1218,7 @@ pub mod app_studio {
             })
             .collect();
         let nodes = projection
-            .media_graph
+            .workflow
             .nodes
             .iter()
             .map(|node| {
@@ -1290,7 +1290,7 @@ pub mod app_studio {
             })
             .collect();
         let edges = projection
-            .media_graph
+            .workflow
             .edges
             .iter()
             .map(|edge| DagFixtureEdge {
@@ -1313,7 +1313,7 @@ pub mod app_studio {
     }
 
     fn compiled_dag_wire_literal(projection: &OsProjection) -> String {
-        let fixture = media_graph_to_dag_fixture(projection);
+        let fixture = workflow_to_dag_fixture(projection);
         dag_fixture_to_wire_literal(&fixture)
     }
     //#endregion 🔖DocumentHelpers
@@ -1323,7 +1323,7 @@ pub mod app_studio {
         /// 🗣️ Complete UI label set for the Studio app; one field per label makes every locale combination compile-checked.
         struct SStudioLabels {
             apps_section: &'static str = en: "Apps", de: "Apps";
-            media_vfs_empty_message: &'static str = en: "No app instances in the media graph.", de: "Keine App-Instanzen im Mediengraphen.";
+            media_vfs_empty_message: &'static str = en: "No app instances in the workflow.", de: "Keine App-Instanzen im Workflows.";
             add_parameter: &'static str = en: "Add Parameter", de: "Parameter hinzufügen";
             name: &'static str = en: "Name", de: "Name";
             value: &'static str = en: "Value", de: "Wert";
@@ -1336,17 +1336,17 @@ pub mod app_studio {
             node_id: &'static str = en: "Node id", de: "Knoten-ID";
             label: &'static str = en: "Label", de: "Beschriftung";
             direct_value: &'static str = en: "Direct value", de: "Direkter Wert";
-            media_graph_node: &'static str = en: "Media graph node", de: "Mediengraph-Knoten";
-            media_graph_nodes: &'static str = en: "Media graph nodes", de: "Mediengraph-Knoten";
+            workflow_node: &'static str = en: "Workflow node", de: "Workflow-Knoten";
+            workflow_nodes: &'static str = en: "Workflow nodes", de: "Workflow-Knoten";
             app_instance: &'static str = en: "App instance", de: "App-Instanz";
             app_instances: &'static str = en: "App instances", de: "App-Instanzen";
-            select_hint: &'static str = en: "Select media graph nodes or app instances in the canvas.", de: "Wähle Mediengraph-Knoten oder App-Instanzen im Arbeitsbereich aus.";
+            select_hint: &'static str = en: "Select workflow nodes or app instances in the canvas.", de: "Wähle Workflow-Knoten oder App-Instanzen im Arbeitsbereich aus.";
             program_prefix: &'static str = en: "Program", de: "Programm";
             app_prefix: &'static str = en: "App", de: "App";
             instance_id_prefix: &'static str = en: "Instance id", de: "Instanz-ID";
             bound_value_prefix: &'static str = en: "Bound value", de: "Gebundener Wert";
             active_app: &'static str = en: "Active app", de: "Aktive App";
-            window_media_graph: &'static str = en: "Media Graph", de: "Mediengraph";
+            window_workflow: &'static str = en: "Workflow", de: "Workflow";
             window_media_vfs: &'static str = en: "Media VFS", de: "Media-VFS";
             window_compiled_dag: &'static str = en: "Compiled DAG", de: "Kompilierter DAG";
             toggle_on: &'static str = en: "On", de: "An";
@@ -1392,10 +1392,10 @@ pub mod app_studio {
             ("patchAppInstances", "Patch App Instances", "App-Instanzen aktualisieren"),
             ("bindParameterField", "Bind Parameter Field", "Parameterfeld verknüpfen"),
             ("unbindParameterField", "Unbind Parameter Field", "Parameterfeld lösen"),
-            ("reorganizeMediaGraph", "Reorganize Media Graph", "Mediengraph neu anordnen"),
-            ("mediaGraphEngagementSubmit", "Media Graph Engagement Submit", "Mediengraph-Eingabe bestätigen"),
+            ("reorganizeWorkflow", "Reorganize Workflow", "Workflow neu anordnen"),
+            ("workflowEngagementSubmit", "Workflow Engagement Submit", "Workflow-Eingabe bestätigen"),
             ("compiledDagEngagementSubmit", "Compiled DAG Engagement Submit", "Kompilierter-DAG-Eingabe bestätigen"),
-            ("nodeGraphEdit", "Edit Media Graph", "Mediengraph bearbeiten"),
+            ("nodeGraphEdit", "Edit Workflow", "Workflow bearbeiten"),
             // 👁️ Ephemeral view state
             ("setActivePanelTab", "Set Active Panel Tab", "Aktiven Panel-Tab festlegen"),
             ("selectInstance", "Select Instance", "Instanz auswählen"),
@@ -1406,7 +1406,7 @@ pub mod app_studio {
             ("nodeGraphViewport", "Set Graph Viewport", "Graph-Ansichtsfenster festlegen"),
             ("presenceHeartbeat", "Presence Heartbeat", "Anwesenheits-Heartbeat"),
             ("setAppInstanceSelection", "Set App Instance Selection", "App-Instanz-Auswahl festlegen"),
-            ("mediaGraphEngagementInput", "Media Graph Engagement Input", "Mediengraph-Eingabe"),
+            ("workflowEngagementInput", "Workflow Engagement Input", "Workflow-Eingabe"),
             ("compiledDagEngagementInput", "Compiled DAG Engagement Input", "Kompilierter-DAG-Eingabe"),
             // 🗨️ Shell-only effects
             ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
@@ -1798,7 +1798,7 @@ pub mod app_studio {
         if !media_node_ids.is_empty() {
             let nodes: Vec<_> = media_node_ids
                 .iter()
-                .filter_map(|node_id| projection.media_graph.nodes.iter().find(|node| &node.id == node_id))
+                .filter_map(|node_id| projection.workflow.nodes.iter().find(|node| &node.id == node_id))
                 .collect();
             let xs: Vec<_> = nodes.iter().map(|node| node.x).collect();
             let ys: Vec<_> = nodes.iter().map(|node| node.y).collect();
@@ -1881,9 +1881,9 @@ pub mod app_studio {
             children.push(UiSectionNode {
                 id: "s-play-inspector.media-nodes".into(),
                 label: Some(if media_node_ids.len() == 1 {
-                    term_labels.media_graph_node.into()
+                    term_labels.workflow_node.into()
                 } else {
-                    format!("{} ({})", term_labels.media_graph_nodes, media_node_ids.len())
+                    format!("{} ({})", term_labels.workflow_nodes, media_node_ids.len())
                 }),
                 default_open: Some(true),
                 presence: UiPresence::default(),
@@ -2059,12 +2059,12 @@ pub mod app_studio {
     //#endregion 🔖Panels
 
     //#region 🔖Render
-    fn render_media_graph(projection: &OsProjection, runtime: &StudioRuntimeState, labels: &SStudioLabels) -> UiNode {
-        let graph_payload = os_media_graph_to_node_graph_payload(&projection.media_graph, &projection.app_instances);
-        let camera = runtime.media_graph_camera.clone().unwrap_or_default();
-        let fixture = os_media_graph_to_flow_fixture(&projection.media_graph, &projection.app_instances, &camera);
-        let operators = build_os_media_flow_operator_infos(
-            &projection.media_graph,
+    fn render_workflow(projection: &OsProjection, runtime: &StudioRuntimeState, labels: &SStudioLabels) -> UiNode {
+        let graph_payload = os_workflow_to_node_graph_payload(&projection.workflow, &projection.app_instances);
+        let camera = runtime.workflow_camera.clone().unwrap_or_default();
+        let fixture = os_workflow_to_flow_fixture(&projection.workflow, &projection.app_instances, &camera);
+        let operators = build_os_workflow_operator_infos(
+            &projection.workflow,
             &projection.app_instances,
             &projection.parameters,
         );
@@ -2077,12 +2077,12 @@ pub mod app_studio {
             json!({ "nodeId": id }).to_string()
         });
         build_node_graph_scene(
-            S_PLAY_SURFACE_MEDIA_GRAPH,
+            S_PLAY_SURFACE_WORKFLOW,
             S_PLAY_CONTROLLER_ID,
             NodeGraphScene {
                 editable: Some(true),
                 operators_json: Some(serde_json::to_string(&operators).unwrap_or_else(|_| "[]".into())),
-                context_menu_json: Some(media_graph_context_menu_json(labels)),
+                context_menu_json: Some(workflow_context_menu_json(labels)),
                 find_items_json: Some(graph_payload.find_items_json),
                 selection_json,
                 hover_json,
@@ -2109,23 +2109,23 @@ pub mod app_studio {
 
     fn render_media_vfs(projection: &OsProjection, labels: &SStudioLabels) -> UiNode {
         let mut rows = vec![json!({
-            "id": OS_MEDIA_GRAPH_VFS_ROOT_ID,
+            "id": OS_WORKFLOW_VFS_ROOT_ID,
             "fileNodeKindId": "root",
-            "name": "Media Graph",
+            "name": "Workflow",
             "path": "/",
             "parentId": null,
             "hasChildren": true,
             "descriptorValues": {}
         })];
         flatten_media_vfs_rows(
-            OS_MEDIA_GRAPH_VFS_ROOT_ID,
+            OS_WORKFLOW_VFS_ROOT_ID,
             &projection.app_instances,
-            &projection.media_graph,
+            &projection.workflow,
             &projection.parameter_bindings,
             &projection.parameters,
             &mut rows,
         );
-        let schema = os_media_graph_vfs_schema();
+        let schema = os_workflow_vfs_schema();
         build_virtual_file_system_scene(
             S_PLAY_SURFACE_MEDIA_VFS,
             S_PLAY_CONTROLLER_ID,
@@ -2305,7 +2305,7 @@ pub mod app_studio {
                         let position = args
                             .and_then(|value| value.get("position"))
                             .and_then(|value| value.as_object())
-                            .map(|position| MediaGraphPosition {
+                            .map(|position| WorkflowPosition {
                                 x: position
                                     .get("x")
                                     .and_then(|value| value.as_f64())
@@ -2315,7 +2315,7 @@ pub mod app_studio {
                                     .and_then(|value| value.as_f64())
                                     .unwrap_or(80.0),
                             })
-                            .unwrap_or(MediaGraphPosition { x: 80.0, y: 80.0 });
+                            .unwrap_or(WorkflowPosition { x: 80.0, y: 80.0 });
                         if let Some((operation, instance_id)) = spawn_app_instance_operation(program_id, app_id, None, position) {
                             self.runtime.active_instance_id = Some(instance_id);
                             operations.push(operation);
@@ -2329,7 +2329,7 @@ pub mod app_studio {
                         args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()),
                     ) {
                         coalesce_key = Some(format!("moveMediaNode:{node_id}"));
-                        operations.push(OsOperation::MoveMediaNode {
+                        operations.push(OsOperation::MoveWorkflowNode {
                             node_id: node_id.into(),
                             x,
                             y,
@@ -2353,8 +2353,8 @@ pub mod app_studio {
                             .and_then(|value| value.as_str()),
                     ) {
                         match negotiate_media_connect(projection, source_node_id, source_port_id, target_node_id, target_port_id) {
-                            Ok(contract) => operations.push(OsOperation::ConnectMediaPorts {
-                                edge: semio_framework_os::OsMediaGraphEdge {
+                            Ok(contract) => operations.push(OsOperation::ConnectWorkflowPorts {
+                                edge: semio_framework_os::OsWorkflowEdge {
                                     id: create_os_id("edge"),
                                     source_node_id: source_node_id.into(),
                                     source_port_id: source_port_id.into(),
@@ -2372,7 +2372,7 @@ pub mod app_studio {
                         .and_then(|value| value.get("edgeId"))
                         .and_then(|value| value.as_str())
                     {
-                        operations.push(OsOperation::DisconnectMediaEdge {
+                        operations.push(OsOperation::DisconnectWorkflowEdge {
                             edge_id: edge_id.into(),
                         });
                     }
@@ -2425,15 +2425,15 @@ pub mod app_studio {
                             continue;
                         };
                         let position = projection
-                            .media_graph
+                            .workflow
                             .nodes
                             .iter()
                             .find(|node| node.instance_id == instance_id)
-                            .map(|node| MediaGraphPosition {
+                            .map(|node| WorkflowPosition {
                                 x: node.x + 40.0,
                                 y: node.y + 40.0,
                             })
-                            .unwrap_or(MediaGraphPosition { x: 80.0, y: 80.0 });
+                            .unwrap_or(WorkflowPosition { x: 80.0, y: 80.0 });
                         let label = format!("{} Copy", instance.label);
                         if let Some((operation, new_id)) = spawn_app_instance_operation(
                             &instance.program_id,
@@ -2625,7 +2625,7 @@ pub mod app_studio {
                         .map(str::to_string);
                     if let Some(instance_id) = self.runtime.active_instance_id.clone() {
                         let node_id = projection
-                            .media_graph
+                            .workflow
                             .nodes
                             .iter()
                             .find(|node| node.instance_id == instance_id)
@@ -2640,7 +2640,7 @@ pub mod app_studio {
                         .and_then(|value| value.as_bool())
                         .unwrap_or(false)
                     {
-                        projection.media_graph.nodes.iter().map(|node| node.id.clone()).collect()
+                        projection.workflow.nodes.iter().map(|node| node.id.clone()).collect()
                     } else {
                         args
                             .and_then(|value| value.get("nodeIds"))
@@ -2657,7 +2657,7 @@ pub mod app_studio {
                         .iter()
                         .filter_map(|node_id| {
                             projection
-                                .media_graph
+                                .workflow
                                 .nodes
                                 .iter()
                                 .find(|node| node.id == *node_id)
@@ -2668,16 +2668,16 @@ pub mod app_studio {
                         self.runtime.active_instance_id = self.runtime.selected_app_instance_ids.first().cloned();
                     }
                 }
-                "reorganizeMediaGraph" => {
+                "reorganizeWorkflow" => {
                     let node_ids: Vec<String> = if self.runtime.selected_media_node_ids.is_empty() {
-                        projection.media_graph.nodes.iter().map(|node| node.id.clone()).collect()
+                        projection.workflow.nodes.iter().map(|node| node.id.clone()).collect()
                     } else {
                         self.runtime.selected_media_node_ids.clone()
                     };
                     for (index, node_id) in node_ids.iter().enumerate() {
                         let col = (index % 4) as f64;
                         let row = (index / 4) as f64;
-                        operations.push(OsOperation::MoveMediaNode {
+                        operations.push(OsOperation::MoveWorkflowNode {
                             node_id: node_id.clone(),
                             x: 80.0 + col * 220.0,
                             y: 80.0 + row * 160.0,
@@ -2704,9 +2704,9 @@ pub mod app_studio {
                     if let Some(camera) = args
                         .and_then(|value| value.get("viewportJson"))
                         .and_then(|value| value.as_str())
-                        .and_then(|viewport_json| serde_json::from_str::<OsMediaGraphCamera>(viewport_json).ok())
+                        .and_then(|viewport_json| serde_json::from_str::<OsWorkflowCamera>(viewport_json).ok())
                     {
-                        self.runtime.media_graph_camera = Some(camera);
+                        self.runtime.workflow_camera = Some(camera);
                     }
                 }
                 "nodeGraphEdit" => {
@@ -2722,11 +2722,11 @@ pub mod app_studio {
                                     if let Some(camera) = serde_json::from_str::<Value>(fixture_json)
                                         .ok()
                                         .and_then(|fixture| fixture.get("camera").cloned())
-                                        .and_then(|camera| serde_json::from_value::<OsMediaGraphCamera>(camera).ok())
+                                        .and_then(|camera| serde_json::from_value::<OsWorkflowCamera>(camera).ok())
                                     {
-                                        self.runtime.media_graph_camera = Some(camera);
+                                        self.runtime.workflow_camera = Some(camera);
                                     }
-                                    operations.extend(apply_flow_fixture_to_os_media_graph(&projection.media_graph, fixture_json));
+                                    operations.extend(apply_flow_fixture_to_os_workflow(&projection.workflow, fixture_json));
                                 }
                             }
                             "move" => {
@@ -2735,7 +2735,7 @@ pub mod app_studio {
                                     edit.get("x").and_then(|value| value.as_f64()),
                                     edit.get("y").and_then(|value| value.as_f64()),
                                 ) {
-                                    operations.push(OsOperation::MoveMediaNode { node_id: node_id.into(), x, y });
+                                    operations.push(OsOperation::MoveWorkflowNode { node_id: node_id.into(), x, y });
                                 }
                             }
                             "connect" => {
@@ -2746,8 +2746,8 @@ pub mod app_studio {
                                     edit.get("targetPortId").and_then(|value| value.as_str()),
                                 ) {
                                     match negotiate_media_connect(projection, source_node_id, source_port_id, target_node_id, target_port_id) {
-                                        Ok(contract) => operations.push(OsOperation::ConnectMediaPorts {
-                                            edge: semio_framework_os::OsMediaGraphEdge {
+                                        Ok(contract) => operations.push(OsOperation::ConnectWorkflowPorts {
+                                            edge: semio_framework_os::OsWorkflowEdge {
                                                 id: create_os_id("edge"),
                                                 source_node_id: source_node_id.into(),
                                                 source_port_id: source_port_id.into(),
@@ -2762,7 +2762,7 @@ pub mod app_studio {
                             }
                             "deleteSelection" => {
                                 for node_id in &self.runtime.selected_media_node_ids {
-                                    if let Some(node) = projection.media_graph.nodes.iter().find(|node| node.id == *node_id) {
+                                    if let Some(node) = projection.workflow.nodes.iter().find(|node| node.id == *node_id) {
                                         operations.push(OsOperation::RemoveAppInstance { instance_id: node.instance_id.clone() });
                                     }
                                 }
@@ -2800,7 +2800,7 @@ pub mod app_studio {
                         .iter()
                         .filter_map(|instance_id| {
                             projection
-                                .media_graph
+                                .workflow
                                 .nodes
                                 .iter()
                                 .find(|node| node.instance_id == *instance_id)
@@ -2833,7 +2833,7 @@ pub mod app_studio {
                         });
                     if field == Some("position") && numeric.is_some() {
                         for node_id in node_ids {
-                            if let Some(node) = projection.media_graph.nodes.iter().find(|row| row.id == node_id) {
+                            if let Some(node) = projection.workflow.nodes.iter().find(|row| row.id == node_id) {
                                 let x = if axis == Some("x") {
                                     numeric.unwrap()
                                 } else {
@@ -2844,7 +2844,7 @@ pub mod app_studio {
                                 } else {
                                     node.y
                                 };
-                                operations.push(OsOperation::MoveMediaNode {
+                                operations.push(OsOperation::MoveWorkflowNode {
                                     node_id,
                                     x,
                                     y,
@@ -2974,7 +2974,7 @@ pub mod app_studio {
                         self.runtime.active_instance_id = Some(instance_id.clone());
                         self.runtime.selected_app_instance_ids = vec![instance_id.clone()];
                         if let Some(node) = projection
-                            .media_graph
+                            .workflow
                             .nodes
                             .iter()
                             .find(|row| row.instance_id == instance_id)
@@ -3001,26 +3001,26 @@ pub mod app_studio {
                     return ActionEmit::effect(HostEffect::SetPanel { panel_json: panel_json(&panel) });
                 }
                 "goHome" => return ActionEmit::effect(HostEffect::Navigate { uri: "/".into() }),
-                "mediaGraphEngagementInput" => {
-                    self.runtime.media_graph_engagement_input = args
+                "workflowEngagementInput" => {
+                    self.runtime.workflow_engagement_input = args
                         .and_then(|value| value.get("value"))
                         .and_then(|value| value.as_str())
                         .unwrap_or("")
                         .into();
                 }
-                "mediaGraphEngagementSubmit" => {
+                "workflowEngagementSubmit" => {
                     let raw = args
                         .and_then(|value| value.get("value"))
                         .and_then(|value| value.as_str())
                         .map(str::to_string)
-                        .unwrap_or_else(|| self.runtime.media_graph_engagement_input.clone());
+                        .unwrap_or_else(|| self.runtime.workflow_engagement_input.clone());
                     let mut parts = raw.split_whitespace();
                     if let (Some(program_id), Some(app_id)) = (parts.next(), parts.next()) {
                         if let Some((operation, instance_id)) = spawn_app_instance_operation(
                             program_id,
                             app_id,
                             None,
-                            MediaGraphPosition { x: 80.0, y: 80.0 },
+                            WorkflowPosition { x: 80.0, y: 80.0 },
                         ) {
                             self.runtime.active_instance_id = Some(instance_id);
                             operations.push(operation);
@@ -3057,7 +3057,7 @@ pub mod app_studio {
             let panel = parse_panel_state(view_state);
             let labels = resolve_labels::<SStudioLabels>(view_state);
             match body_key {
-                S_PLAY_BODY_MEDIA_GRAPH => render_media_graph(projection, &self.runtime, labels),
+                S_PLAY_BODY_WORKFLOW => render_workflow(projection, &self.runtime, labels),
                 S_PLAY_BODY_MEDIA_VFS => render_media_vfs(projection, labels),
                 S_PLAY_BODY_COMPILED_DAG => render_compiled_dag(projection),
                 S_PLAY_CATALOGUE_BODY_KEY => build_catalogue_tree(&panel, labels),
@@ -3070,8 +3070,8 @@ pub mod app_studio {
         fn window_measures(&self, doc: &DocumentView<'_, OsProjection>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
             let labels = resolve_labels::<SStudioLabels>(view_state);
             HashMap::from([(
-                S_PLAY_WINDOW_MEDIA_GRAPH.into(),
-                media_graph_measures(&self.runtime, &doc.projection.app_instances, labels),
+                S_PLAY_WINDOW_WORKFLOW.into(),
+                workflow_measures(&self.runtime, &doc.projection.app_instances, labels),
             )])
         }
 
@@ -3079,7 +3079,7 @@ pub mod app_studio {
             let labels = resolve_labels::<SStudioLabels>(view_state);
             let is_de = is_de_locale(view_state);
             AppLabelsOverlay::default()
-                .window_kind_label(S_PLAY_WINDOW_MEDIA_GRAPH, labels.window_media_graph)
+                .window_kind_label(S_PLAY_WINDOW_WORKFLOW, labels.window_workflow)
                 .window_kind_label(S_PLAY_WINDOW_MEDIA_VFS, labels.window_media_vfs)
                 .window_kind_label(S_PLAY_WINDOW_COMPILED_DAG, labels.window_compiled_dag)
                 .action_labels(s_studio_action_labels(is_de))
@@ -3091,30 +3091,30 @@ pub mod app_studio {
     fn studio_play_layout() -> WindowLayout {
         create_default_layout(
             &[
-                S_PLAY_WINDOW_MEDIA_GRAPH.into(),
+                S_PLAY_WINDOW_WORKFLOW.into(),
                 S_PLAY_WINDOW_MEDIA_VFS.into(),
                 S_PLAY_WINDOW_COMPILED_DAG.into(),
             ],
             "row",
             Some(&[40.0, 30.0, 30.0]),
             Some(&[
-                "Media Graph".into(),
+                "Workflow".into(),
                 "Media VFS".into(),
                 "Compiled DAG".into(),
             ]),
         )
     }
 
-    fn media_graph_engagement(runtime: &StudioRuntimeState, node_count: usize, app_count: usize) -> WindowEngagement {
+    fn workflow_engagement(runtime: &StudioRuntimeState, node_count: usize, app_count: usize) -> WindowEngagement {
         WindowEngagement {
             session_active: Some(false),
             options: None,
             input: Some(WindowEngagementInput {
                 id: Some("s-media-catalogue-hint".into()),
-                value: Some(runtime.media_graph_engagement_input.clone()),
+                value: Some(runtime.workflow_engagement_input.clone()),
                 placeholder: Some("Drag apps from Catalogue workbench tab".into()),
-                on_change: Some(s_play_action("mediaGraphEngagementInput", None)),
-                on_submit: Some(s_play_action("mediaGraphEngagementSubmit", None)),
+                on_change: Some(s_play_action("workflowEngagementInput", None)),
+                on_submit: Some(s_play_action("workflowEngagementSubmit", None)),
                 disabled: None,
                 on_repeat_last: None,
                 on_abort: None,
@@ -3129,7 +3129,7 @@ pub mod app_studio {
         }
     }
 
-    fn media_graph_measures(runtime: &StudioRuntimeState, instances: &[OsAppInstance], labels: &SStudioLabels) -> Vec<WindowMeasure> {
+    fn workflow_measures(runtime: &StudioRuntimeState, instances: &[OsAppInstance], labels: &SStudioLabels) -> Vec<WindowMeasure> {
         vec![WindowMeasure::Select {
             id: "s-media-active-instance".into(),
             label: Some(labels.active_app.into()),
@@ -3168,17 +3168,17 @@ pub mod app_studio {
             active_instance_id: projection.app_instances.first().map(|instance| instance.id.clone()),
             ..StudioRuntimeState::default()
         };
-        let engagement = media_graph_engagement(
+        let engagement = workflow_engagement(
             &runtime,
-            projection.media_graph.nodes.len(),
+            projection.workflow.nodes.len(),
             projection.app_instances.len(),
         );
-        let measures = media_graph_measures(&runtime, &projection.app_instances, resolve_labels::<SStudioLabels>(&ViewState::default()));
+        let measures = workflow_measures(&runtime, &projection.app_instances, resolve_labels::<SStudioLabels>(&ViewState::default()));
         let builder = App::builder(S_PLAY_APP_ID, "Studio").document(["semio", "s", "studio"])
             .icon_id("s")
             .mode("main", "Studio")
             .default_mode_id("main")
-            .window_kind(S_PLAY_WINDOW_MEDIA_GRAPH, "Media Graph", S_PLAY_BODY_MEDIA_GRAPH, SurfaceKind::NodeGraph, "graph-media")
+            .window_kind(S_PLAY_WINDOW_WORKFLOW, "Workflow", S_PLAY_BODY_WORKFLOW, SurfaceKind::NodeGraph, "graph-media")
             .window_kind(S_PLAY_WINDOW_MEDIA_VFS, "Media VFS", S_PLAY_BODY_MEDIA_VFS, SurfaceKind::VirtualFileSystem, "folder")
             .window_kind(
                 S_PLAY_WINDOW_COMPILED_DAG,
@@ -3224,10 +3224,10 @@ pub mod app_studio {
             .operation("patchAppInstances", "Patch App Instances")
             .operation("bindParameterField", "Bind Parameter Field")
             .operation("unbindParameterField", "Unbind Parameter Field")
-            .operation("reorganizeMediaGraph", "Reorganize Media Graph")
-            .operation("mediaGraphEngagementSubmit", "Media Graph Engagement Submit")
+            .operation("reorganizeWorkflow", "Reorganize Workflow")
+            .operation("workflowEngagementSubmit", "Workflow Engagement Submit")
             .operation("compiledDagEngagementSubmit", "Compiled DAG Engagement Submit")
-            .operation("nodeGraphEdit", "Edit Media Graph")
+            .operation("nodeGraphEdit", "Edit Workflow")
             .view_action("setActivePanelTab", "Set Active Panel Tab")
             .view_action("selectInstance", "Select Instance")
             .view_action("nodeGraphSelect", "Select Graph Node")
@@ -3237,7 +3237,7 @@ pub mod app_studio {
             .view_action("nodeGraphViewport", "Set Graph Viewport")
             .view_action("presenceHeartbeat", "Presence Heartbeat")
             .view_action("setAppInstanceSelection", "Set App Instance Selection")
-            .view_action("mediaGraphEngagementInput", "Media Graph Engagement Input")
+            .view_action("workflowEngagementInput", "Workflow Engagement Input")
             .view_action("compiledDagEngagementInput", "Compiled DAG Engagement Input")
             .shell_action("setActiveExample", "Set Active Example")
             .shell_action("exportMedia", "Export Media")
@@ -3262,19 +3262,19 @@ pub mod app_studio {
                     ActionArgOption::new("text", "Text"),
                 ]).default_value("numeric"),
             ])
-            // 📇 Per-window action scoping — the Media Graph (NodeGraph) window owns all graph/instance/
+            // 📇 Per-window action scoping — the Workflow (NodeGraph) window owns all graph/instance/
             // parameter editing plus the per-instance media import/export; the Media VFS
             // (VirtualFileSystem) window only navigates the media file tree; the read-only Compiled DAG
             // window only drives its own engagement. Navigation, panel-tab, presence, example and generic
             // node-graph view actions stay unscoped orphans and appear on every window.
-            .window_kind_actions(S_PLAY_WINDOW_MEDIA_GRAPH, vec![
+            .window_kind_actions(S_PLAY_WINDOW_WORKFLOW, vec![
                 "setParameter".into(), "patchParameter".into(), "addParameter".into(), "removeParameter".into(),
                 "spawnApp".into(), "moveMediaNode".into(), "connectMediaPorts".into(), "disconnectMediaEdge".into(),
                 "removeAppInstance".into(), "deleteSelection".into(), "copyAppInstance".into(),
                 "duplicateAppInstance".into(), "pasteAppInstance".into(), "renameAppInstance".into(),
                 "patchMediaNodes".into(), "patchAppInstances".into(), "bindParameterField".into(),
-                "unbindParameterField".into(), "reorganizeMediaGraph".into(), "mediaGraphEngagementSubmit".into(),
-                "mediaGraphEngagementInput".into(), "nodeGraphEdit".into(), "selectInstance".into(),
+                "unbindParameterField".into(), "reorganizeWorkflow".into(), "workflowEngagementSubmit".into(),
+                "workflowEngagementInput".into(), "nodeGraphEdit".into(), "selectInstance".into(),
                 "setMediaNodeSelection".into(), "setAppInstanceSelection".into(), "exportMedia".into(),
                 "importMedia".into(), "importMediaPayload".into(),
             ])
@@ -3291,7 +3291,7 @@ pub mod app_studio {
         if let Some(window) = definition
             .window_kinds
             .iter_mut()
-            .find(|window| window.id == S_PLAY_WINDOW_MEDIA_GRAPH)
+            .find(|window| window.id == S_PLAY_WINDOW_WORKFLOW)
         {
             window.options.measures = measures;
             window.options.engagement = WindowEngagementSlot::Some(engagement);
@@ -3324,8 +3324,8 @@ pub mod app_studio {
     mod tests {
         use super::*;
         use semio_framework_os::{
-            apply_os_operation, merge_os_program_definition, os_baseline_resource, os_in_port, os_out_port, register_resource_descriptor, validate_media_graph, MediaClass, MediaForm, MediaType, MediaWireFormat, OsAppResourceSpec,
-            OsMediaFormat, OsMediaGraphNode, OsMediaPort, OsPlatformAppInput, OsPlatformInput, ResourceKindSpec,
+            apply_os_operation, merge_os_program_definition, os_baseline_resource, os_in_port, os_out_port, register_resource_descriptor, validate_workflow, MediaClass, MediaForm, MediaType, MediaWireFormat, OsAppResourceSpec,
+            OsMediaFormat, OsWorkflowNode, OsMediaPort, OsPlatformAppInput, OsPlatformInput, ResourceKindSpec,
         };
         use semio_framework_plugin::{testkit, HistoryView, ModeDefinition, PluginApp, UiControlNode, UiNode, VcsDocumentApp};
 
@@ -3484,9 +3484,9 @@ pub mod app_studio {
         fn demo_document_has_instances_and_edges() {
             let projection = demo_studio_projection();
             assert!(projection.app_instances.len() >= 5);
-            assert!(projection.media_graph.nodes.len() >= 2);
-            assert!(projection.media_graph.edges.len() >= 1);
-            assert!(validate_media_graph(&projection.media_graph).ok);
+            assert!(projection.workflow.nodes.len() >= 2);
+            assert!(projection.workflow.edges.len() >= 1);
+            assert!(validate_workflow(&projection.workflow).ok);
         }
 
         #[test]
@@ -3497,14 +3497,14 @@ pub mod app_studio {
         }
 
         #[test]
-        fn renders_media_graph_scene() {
+        fn renders_workflow_scene() {
             let mut app = VcsDocumentApp::new(StudioApp::new());
-            let node = app.render(S_PLAY_BODY_MEDIA_GRAPH, None, &ViewState::default()).expect("render");
+            let node = app.render(S_PLAY_BODY_WORKFLOW, None, &ViewState::default()).expect("render");
             assert!(serde_json::to_string(&node).unwrap().contains("node-graph"));
         }
 
         #[test]
-        fn studio_window_kind_actions_scope_editing_to_media_graph() {
+        fn studio_window_kind_actions_scope_editing_to_workflow() {
             let definition = create_studio_app().definition;
             let resolve = |window_id: &str| -> Vec<String> {
                 let window = definition.window_kinds.iter().find(|window| window.id == window_id).unwrap();
@@ -3513,11 +3513,11 @@ pub mod app_studio {
                     .map(|action| action.id.clone())
                     .collect()
             };
-            let graph = resolve(S_PLAY_WINDOW_MEDIA_GRAPH);
+            let graph = resolve(S_PLAY_WINDOW_WORKFLOW);
             let vfs = resolve(S_PLAY_WINDOW_MEDIA_VFS);
             let dag = resolve(S_PLAY_WINDOW_COMPILED_DAG);
             for graph_operation in ["spawnApp", "connectMediaPorts", "removeAppInstance", "exportMedia", "addParameter"] {
-                assert!(graph.contains(&graph_operation.to_string()), "Media Graph must expose {graph_operation}");
+                assert!(graph.contains(&graph_operation.to_string()), "Workflow must expose {graph_operation}");
                 assert!(!vfs.contains(&graph_operation.to_string()), "Media VFS must NOT expose {graph_operation}");
                 assert!(!dag.contains(&graph_operation.to_string()), "Compiled DAG must NOT expose {graph_operation}");
             }
@@ -3552,11 +3552,11 @@ pub mod app_studio {
         fn move_media_node_emits_coalesced_move_operation() {
             let mut app = StudioApp::new();
             let projection = demo_studio_projection();
-            let node_id = projection.media_graph.nodes.first().expect("node").id.clone();
+            let node_id = projection.workflow.nodes.first().expect("node").id.clone();
             let emit = studio_emit(&mut app, &projection, "moveMediaNode", json!({ "nodeId": node_id, "x": 120.0, "y": 160.0 }));
             assert_eq!(emit.coalesce_key.as_deref(), Some(format!("moveMediaNode:{node_id}").as_str()));
             let node = apply_operations(&projection, &emit.operations)
-                .media_graph
+                .workflow
                 .nodes
                 .into_iter()
                 .find(|row| row.id == node_id)
@@ -3593,7 +3593,7 @@ pub mod app_studio {
                 import_formats: vec![OsMediaFormat::Glb],
             });
             let mut projection = demo_studio_projection();
-            projection.media_graph.nodes.push(OsMediaGraphNode {
+            projection.workflow.nodes.push(OsWorkflowNode {
                 id: "contract-src".into(),
                 instance_id: "contract-src".into(),
                 x: 0.0,
@@ -3603,7 +3603,7 @@ pub mod app_studio {
                 inputs: vec![],
                 outputs: vec![OsMediaPort { id: "contract-src:out".into(), resource_kind: "test.contract.2d".into(), direction: "out".into() }],
             });
-            projection.media_graph.nodes.push(OsMediaGraphNode {
+            projection.workflow.nodes.push(OsWorkflowNode {
                 id: "contract-dst".into(),
                 instance_id: "contract-dst".into(),
                 x: 0.0,
@@ -3620,7 +3620,7 @@ pub mod app_studio {
                 "connectMediaPorts",
                 json!({ "sourceNodeId": "contract-src", "sourcePortId": "contract-src:out", "targetNodeId": "contract-dst", "targetPortId": "contract-dst:in" }),
             );
-            assert!(emit.operations.is_empty(), "an incompatible connect must not push OsOperation::ConnectMediaPorts");
+            assert!(emit.operations.is_empty(), "an incompatible connect must not push OsOperation::ConnectWorkflowPorts");
             assert!(matches!(emit.effects.first(), Some(HostEffect::Notify { .. })), "an incompatible connect must surface a Notify effect instead");
         }
 
@@ -3651,7 +3651,7 @@ pub mod app_studio {
                 import_formats: vec![],
             });
             let mut projection = demo_studio_projection();
-            projection.media_graph.nodes.push(OsMediaGraphNode {
+            projection.workflow.nodes.push(OsWorkflowNode {
                 id: "contract-src-2".into(),
                 instance_id: "contract-src-2".into(),
                 x: 0.0,
@@ -3661,7 +3661,7 @@ pub mod app_studio {
                 inputs: vec![],
                 outputs: vec![OsMediaPort { id: "contract-src-2:out".into(), resource_kind: "test.contract.doc-a".into(), direction: "out".into() }],
             });
-            projection.media_graph.nodes.push(OsMediaGraphNode {
+            projection.workflow.nodes.push(OsWorkflowNode {
                 id: "contract-dst-2".into(),
                 instance_id: "contract-dst-2".into(),
                 x: 0.0,
@@ -3682,15 +3682,15 @@ pub mod app_studio {
                 .operations
                 .iter()
                 .find_map(|operation| match operation {
-                    OsOperation::ConnectMediaPorts { edge } if edge.source_node_id == "contract-src-2" => Some(edge.clone()),
+                    OsOperation::ConnectWorkflowPorts { edge } if edge.source_node_id == "contract-src-2" => Some(edge.clone()),
                     _ => None,
                 })
-                .expect("a compatible connect must push OsOperation::ConnectMediaPorts with a negotiated contract");
+                .expect("a compatible connect must push OsOperation::ConnectWorkflowPorts with a negotiated contract");
             assert_eq!(edge.contract.kind_id, "test.contract.doc-b");
             assert_eq!(edge.contract.wire, MediaWireFormat::Document { schema: "test.contract.doc.schema".into() });
             assert!(edge.contract.conversion.is_none());
             let next = apply_operations(&projection, &emit.operations);
-            assert!(validate_media_graph(&next.media_graph).ok, "a freshly negotiated edge must pass validate_media_graph's contract-consistency check");
+            assert!(validate_workflow(&next.workflow).ok, "a freshly negotiated edge must pass validate_workflow's contract-consistency check");
         }
         //#endregion 🔖MediaContractConnect
 
@@ -3725,7 +3725,7 @@ pub mod app_studio {
                 .find(|i| i.program_id == "draw" && !existing.contains(&i.id))
                 .expect("newly spawned draw instance");
             let node = next
-                .media_graph
+                .workflow
                 .nodes
                 .iter()
                 .find(|n| n.instance_id == instance.id)
@@ -4064,13 +4064,13 @@ pub mod app_studio {
             let puzzle_instance = projection.app_instances.iter().rev().nth(1).expect("puzzle");
             let shooting_instance = projection.app_instances.last().expect("shooting");
             let puzzle_node = projection
-                .media_graph
+                .workflow
                 .nodes
                 .iter()
                 .find(|node| node.instance_id == puzzle_instance.id)
                 .expect("puzzle node");
             let shooting_node = projection
-                .media_graph
+                .workflow
                 .nodes
                 .iter()
                 .find(|node| node.instance_id == shooting_instance.id)
@@ -4163,14 +4163,14 @@ pub mod app_studio {
         fn studio_declares_expected_actions_and_examples() {
             let studio = create_studio_app();
             assert!(studio.definition.actions.iter().any(|action| action.id == "spawnApp"));
-            assert!(studio.definition.actions.iter().any(|action| action.id == "reorganizeMediaGraph"));
+            assert!(studio.definition.actions.iter().any(|action| action.id == "reorganizeWorkflow"));
             assert_eq!(studio.examples.len(), S_STUDIO_EXAMPLES.len());
         }
 
         #[test]
-        fn media_graph_scene_uses_flow_engine_with_fixture() {
+        fn workflow_scene_uses_flow_engine_with_fixture() {
             let mut app = VcsDocumentApp::new(StudioApp::new());
-            let node = app.render(S_PLAY_BODY_MEDIA_GRAPH, None, &ViewState::default()).expect("render");
+            let node = app.render(S_PLAY_BODY_WORKFLOW, None, &ViewState::default()).expect("render");
             let json = serde_json::to_string(&node).unwrap();
             assert!(json.contains(r#"\"engine\":\"flow\""#));
             assert!(json.contains("fixtureJson"));
@@ -4181,9 +4181,9 @@ pub mod app_studio {
         fn node_graph_edit_set_fixture_moves_node_and_persists_camera() {
             let mut app = StudioApp::new();
             let projection = demo_studio_projection();
-            let node = projection.media_graph.nodes.first().expect("node").clone();
-            let camera = OsMediaGraphCamera { x: 40.0, y: -20.0, zoom: 2.0 };
-            let mut fixture = os_media_graph_to_flow_fixture(&projection.media_graph, &projection.app_instances, &camera);
+            let node = projection.workflow.nodes.first().expect("node").clone();
+            let camera = OsWorkflowCamera { x: 40.0, y: -20.0, zoom: 2.0 };
+            let mut fixture = os_workflow_to_flow_fixture(&projection.workflow, &projection.app_instances, &camera);
             fixture["layout"][&node.id] = json!({ "x": 500.0 + node.width / 2.0, "y": 300.0 + node.height / 2.0 });
             let emit = studio_emit(
                 &mut app,
@@ -4192,14 +4192,14 @@ pub mod app_studio {
                 json!({ "operations": [{ "operation": "setFixture", "fixtureJson": fixture.to_string() }] }),
             );
             let moved = apply_operations(&projection, &emit.operations)
-                .media_graph
+                .workflow
                 .nodes
                 .into_iter()
                 .find(|row| row.id == node.id)
                 .expect("node");
             assert!((moved.x - 500.0).abs() < 0.01);
             assert!((moved.y - 300.0).abs() < 0.01);
-            assert_eq!(app.runtime.media_graph_camera, Some(camera));
+            assert_eq!(app.runtime.workflow_camera, Some(camera));
         }
 
         #[test]
@@ -4207,14 +4207,14 @@ pub mod app_studio {
             let mut app = StudioApp::new();
             let projection = demo_studio_projection();
             studio_emit(&mut app, &projection, "nodeGraphViewport", json!({ "viewportJson": r#"{"x":7.0,"y":9.0,"zoom":0.5}"# }));
-            assert_eq!(app.runtime.media_graph_camera, Some(OsMediaGraphCamera { x: 7.0, y: 9.0, zoom: 0.5 }));
+            assert_eq!(app.runtime.workflow_camera, Some(OsWorkflowCamera { x: 7.0, y: 9.0, zoom: 0.5 }));
         }
 
         #[test]
         fn presence_heartbeat_publishes_peer_for_other_clients() {
             let mut app = StudioApp::new();
             let projection = demo_studio_projection();
-            let first_node_id = projection.media_graph.nodes[0].id.clone();
+            let first_node_id = projection.workflow.nodes[0].id.clone();
             studio_emit(&mut app, &projection, "nodeGraphSelect", json!({ "nodeIds": [first_node_id] }));
             studio_emit(&mut app, &projection, "presenceHeartbeat", json!({ "clientId": "client-test-a", "name": "Ada" }));
             let other_runtime = StudioRuntimeState {
@@ -4270,7 +4270,7 @@ pub mod app_studio {
             assert!(!parameters_json.contains("Add Parameter"));
 
             let inspector_json = serde_json::to_string(&app.render(S_PLAY_INSPECTOR_BODY_KEY, &doc, &view_state)).unwrap();
-            assert!(inspector_json.contains("Wähle Mediengraph-Knoten oder App-Instanzen im Arbeitsbereich aus."));
+            assert!(inspector_json.contains("Wähle Workflow-Knoten oder App-Instanzen im Arbeitsbereich aus."));
         }
     }
     //#endregion 🧪Tests

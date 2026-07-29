@@ -1,7 +1,7 @@
 {
   "name": "diamond",
   "graph": {
-    "schema": "s.media-graph",
+    "schema": "s.workflow",
     "nodes": [
       { "id": "node-1", "instanceId": "app-a", "x": 0, "y": 0, "width": 160, "height": 72, "inputs": [{ "id": "app-a:in", "resourceKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-a:out", "resourceKind": "2d.drawing", "direction": "out" }] },
       { "id": "node-2", "instanceId": "app-b", "x": 200, "y": -80, "width": 160, "height": 72, "inputs": [{ "id": "app-b:in", "resourceKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-b:out", "resourceKind": "2d.drawing", "direction": "out" }] },

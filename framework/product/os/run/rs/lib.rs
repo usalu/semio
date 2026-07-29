@@ -1,25 +1,25 @@
-//! 🕸️ Headless computation of an OS studio's media graph — no UI involved. A `StudioRunner` walks
-//! `OsMediaGraph` in topological order, instantiates each node's app through a `MediaNodeHost`, moves
+//! 🕸️ Headless computation of an OS studio's workflow — no UI involved. A `StudioRunner` walks
+//! `OsWorkflow` in topological order, instantiates each node's app through a `MediaNodeHost`, moves
 //! `Media` along edges, and skips any node whose inputs and document are unchanged since the last run.
 //! Importing media is emitting operations: a headless run is an ordinary editing session (actor `runner`)
 //! recorded in each app document's own VCS envelope, so a later UI open sees it as normal history.
 
 //#region 🔖Types
 use semio_framework_core::{Media, MediaError, MediaFingerprint};
-use semio_framework_os::{OsAppInstance, OsMediaGraph, OsMediaGraphNode};
+use semio_framework_os::{OsAppInstance, OsWorkflow, OsWorkflowNode};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
-/// 🚧 A failure computing a studio's media graph headlessly.
+/// 🚧 A failure computing a studio's workflow headlessly.
 #[derive(Debug, thiserror::Error)]
 pub enum RunError {
-    #[error("unknown media-graph node {0}")]
+    #[error("unknown workflow node {0}")]
     UnknownNode(String),
     #[error("unknown app instance {0}")]
     UnknownInstance(String),
-    #[error("media-graph edge {edge_id} type mismatch: producer is `{produced}`, consumer accepts `{accepted}`")]
+    #[error("workflow edge {edge_id} type mismatch: producer is `{produced}`, consumer accepts `{accepted}`")]
     Incompatible { edge_id: String, produced: String, accepted: String },
-    #[error("media graph has a cycle (unreachable nodes: {0:?})")]
+    #[error("workflow has a cycle (unreachable nodes: {0:?})")]
     Cycle(Vec<String>),
     #[error("host error: {0}")]
     Host(String),
@@ -106,7 +106,7 @@ impl MediaCache for FileMediaCache {
 //#endregion 🔖MediaCache
 
 //#region 🔖RunState
-/// 📇 Everything the runner remembers about one media-graph node between runs: the document
+/// 📇 Everything the runner remembers about one workflow node between runs: the document
 /// fingerprint that produced its current outputs, and the fingerprints of its inputs and outputs at
 /// that time. A node is dirty iff any of these three no longer match reality.
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -117,7 +117,7 @@ pub struct NodeRunRecord {
     pub output_fingerprints: BTreeMap<String, String>,
 }
 
-/// 🗄️ The runner's persisted incremental-recompute state for one studio bundle, keyed by media-graph
+/// 🗄️ The runner's persisted incremental-recompute state for one studio bundle, keyed by workflow
 /// node id (not instance id — a node's record is tied to its position in the graph).
 #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -209,9 +209,9 @@ impl StudioBundle {
 //#region 🔖Topology
 /// 🔢 Deterministic topological order (Kahn's algorithm, lexicographically-smallest-ready-node-first)
 /// over `graph`'s nodes. `Err(RunError::Cycle)` names whichever nodes never became ready — the media
-/// graph's own `validate_media_graph` should be called first to reject cycles with a friendlier
+/// graph's own `validate_workflow` should be called first to reject cycles with a friendlier
 /// message; this is the runner's authoritative order once that check has passed.
-fn topological_order(graph: &OsMediaGraph) -> Result<Vec<String>, RunError> {
+fn topological_order(graph: &OsWorkflow) -> Result<Vec<String>, RunError> {
     let mut indegree: BTreeMap<String, usize> = graph.nodes.iter().map(|node| (node.id.clone(), 0)).collect();
     let mut outgoing: HashMap<String, Vec<String>> = HashMap::new();
     for edge in &graph.edges {
@@ -252,11 +252,11 @@ pub struct RunReport {
 /// 🩺 Computes which nodes `StudioRunner::run` would recompute, without instantiating a single host
 /// — the `--dry` plan. Reuses exactly the dirty check `run` applies, so the plan can never drift
 /// from what an actual run would do.
-pub fn plan(graph: &OsMediaGraph, documents: &BTreeMap<String, String>, state: &RunState) -> Result<RunReport, RunError> {
+pub fn plan(graph: &OsWorkflow, documents: &BTreeMap<String, String>, state: &RunState) -> Result<RunReport, RunError> {
     StudioRunner::<NullHost>::validate_edge_kinds(graph)?;
     let order = topological_order(graph)?;
-    let node_by_id: HashMap<&str, &OsMediaGraphNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
-    let mut incoming: HashMap<&str, Vec<&semio_framework_os::OsMediaGraphEdge>> = HashMap::new();
+    let node_by_id: HashMap<&str, &OsWorkflowNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
+    let mut incoming: HashMap<&str, Vec<&semio_framework_os::OsWorkflowEdge>> = HashMap::new();
     for edge in &graph.edges {
         incoming.entry(edge.target_node_id.as_str()).or_default().push(edge);
     }
@@ -307,7 +307,7 @@ impl MediaNodeHost for NullHost {
     }
 }
 
-/// 🕸️ Computes one studio's media graph against a `MediaNodeHost`. Node dirtiness is decided purely
+/// 🕸️ Computes one studio's workflow against a `MediaNodeHost`. Node dirtiness is decided purely
 /// from `NodeRunRecord`: the document's own fingerprint (did the app's document change since last
 /// run — e.g. a UI edit) and its resolved input fingerprints (did anything upstream change). A clean
 /// node is never instantiated at all; its cached output fingerprints feed straight into its consumers.
@@ -327,8 +327,8 @@ impl<H: MediaNodeHost> StudioRunner<H> {
     /// 🩹 Baseline wire-compatibility check: plain `resource_kind` string equality. `OsMediaPort`
     /// doesn't carry a typed `MediaType` yet (that unification is a separate, concurrently in-flight
     /// ticket) — once it does, this is where `media_types_compatible` conversion-insertion lands.
-    fn validate_edge_kinds(graph: &OsMediaGraph) -> Result<(), RunError> {
-        let node_by_id: HashMap<&str, &OsMediaGraphNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
+    fn validate_edge_kinds(graph: &OsWorkflow) -> Result<(), RunError> {
+        let node_by_id: HashMap<&str, &OsWorkflowNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
         for edge in &graph.edges {
             let produced = node_by_id
                 .get(edge.source_node_id.as_str())
@@ -350,7 +350,7 @@ impl<H: MediaNodeHost> StudioRunner<H> {
     /// document json; the returned map has the same keys, updated wherever a node actually ran.
     pub fn run(
         &mut self,
-        graph: &OsMediaGraph,
+        graph: &OsWorkflow,
         instances: &[OsAppInstance],
         documents: &BTreeMap<String, String>,
         state: &mut RunState,
@@ -358,9 +358,9 @@ impl<H: MediaNodeHost> StudioRunner<H> {
     ) -> Result<(BTreeMap<String, String>, RunReport), RunError> {
         Self::validate_edge_kinds(graph)?;
         let order = topological_order(graph)?;
-        let node_by_id: HashMap<&str, &OsMediaGraphNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
+        let node_by_id: HashMap<&str, &OsWorkflowNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
         let instance_by_id: HashMap<&str, &OsAppInstance> = instances.iter().map(|instance| (instance.id.as_str(), instance)).collect();
-        let mut incoming: HashMap<&str, Vec<&semio_framework_os::OsMediaGraphEdge>> = HashMap::new();
+        let mut incoming: HashMap<&str, Vec<&semio_framework_os::OsWorkflowEdge>> = HashMap::new();
         for edge in &graph.edges {
             incoming.entry(edge.target_node_id.as_str()).or_default().push(edge);
         }
@@ -507,7 +507,7 @@ impl MediaNodeHost for WasmtimeNodeHost {
 mod tests {
     use super::*;
     use semio_framework_core::MediaPayload;
-    use semio_framework_os::{placeholder_media_contract, OsMediaGraphEdge, OsMediaPort};
+    use semio_framework_os::{placeholder_media_contract, OsWorkflowEdge, OsMediaPort};
 
     /// 🧪 A fake `MediaNodeHost` for tests: no wasm at all, just a per-instance document string and
     /// a fixed structured output per port, so `StudioRunner`'s dirty/clean bookkeeping can be
@@ -560,8 +560,8 @@ mod tests {
         }
     }
 
-    fn two_node_graph() -> (OsMediaGraph, Vec<OsAppInstance>) {
-        let source = OsMediaGraphNode {
+    fn two_node_graph() -> (OsWorkflow, Vec<OsAppInstance>) {
+        let source = OsWorkflowNode {
             id: "node-a".into(),
             instance_id: "instance-a".into(),
             x: 0.0,
@@ -571,7 +571,7 @@ mod tests {
             inputs: Vec::new(),
             outputs: vec![OsMediaPort { id: "out".into(), resource_kind: "data.value".into(), direction: "out".into() }],
         };
-        let target = OsMediaGraphNode {
+        let target = OsWorkflowNode {
             id: "node-b".into(),
             instance_id: "instance-b".into(),
             x: 1.0,
@@ -581,8 +581,8 @@ mod tests {
             inputs: vec![OsMediaPort { id: "in".into(), resource_kind: "data.value".into(), direction: "in".into() }],
             outputs: Vec::new(),
         };
-        let edge = OsMediaGraphEdge { id: "edge-1".into(), source_node_id: "node-a".into(), source_port_id: "out".into(), target_node_id: "node-b".into(), target_port_id: "in".into(), contract: placeholder_media_contract("data.value") };
-        let graph = OsMediaGraph { schema: "s.media-graph".into(), nodes: vec![source, target], edges: vec![edge] };
+        let edge = OsWorkflowEdge { id: "edge-1".into(), source_node_id: "node-a".into(), source_port_id: "out".into(), target_node_id: "node-b".into(), target_port_id: "in".into(), contract: placeholder_media_contract("data.value") };
+        let graph = OsWorkflow { schema: "s.workflow".into(), nodes: vec![source, target], edges: vec![edge] };
         let instances = vec![
             OsAppInstance { id: "instance-a".into(), program_id: "program".into(), app_id: "app-a".into(), label: "A".into(), yields: "data.value".into(), document: semio_framework_os::OsDocumentRef { document_id: "instance-a".into(), schema: "app-a.document".into() } },
             OsAppInstance { id: "instance-b".into(), program_id: "program".into(), app_id: "app-b".into(), label: "B".into(), yields: "".into(), document: semio_framework_os::OsDocumentRef { document_id: "instance-b".into(), schema: "app-b.document".into() } },
@@ -600,7 +600,7 @@ mod tests {
     #[test]
     fn detects_cycles() {
         let (mut graph, _) = two_node_graph();
-        graph.edges.push(OsMediaGraphEdge { id: "edge-2".into(), source_node_id: "node-b".into(), source_port_id: "in".into(), target_node_id: "node-a".into(), target_port_id: "out".into(), contract: placeholder_media_contract("data.value") });
+        graph.edges.push(OsWorkflowEdge { id: "edge-2".into(), source_node_id: "node-b".into(), source_port_id: "in".into(), target_node_id: "node-a".into(), target_port_id: "out".into(), contract: placeholder_media_contract("data.value") });
         assert!(matches!(topological_order(&graph), Err(RunError::Cycle(_))));
     }
 

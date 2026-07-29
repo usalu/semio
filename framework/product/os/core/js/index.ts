@@ -5,8 +5,8 @@
  * {@link buildFrameworkSyncUtilities}) consumed by `framework/renderer/react/index.tsx` and
  * `framework/product/os/dev/script.ts`. The OS kernel's *stateful* logic (operation application, program
  * registry) is Rust/wasm-only, hosted by the s-plugin wasm — this file is not a JS port of that. The
- * one exception is {@link planMediaFlow}: a pure, side-effect-free scheduling function has no state
- * to keep in sync with a live wasm host, so it's hand-mirrored here against the Rust `plan_media_flow`
+ * one exception is {@link planWorkflow}: a pure, side-effect-free scheduling function has no state
+ * to keep in sync with a live wasm host, so it's hand-mirrored here against the Rust `plan_workflow`
  * (`framework/product/os/core/rs/lib.rs`) with shared fixtures (`framework/product/os/core/fixtures/`)
  * asserting parity. This file still exposes a small legacy `osBaselineResource`/
  * `mergeOsProgramDefinition`/`registerAppVcsHandler` app-registration shim kept alive only because
@@ -899,9 +899,9 @@ export type BackboneWorkerRequest = ({ readonly kind: "open" } & DocumentActorCo
 export type BackboneWorkerResponse = { readonly kind: "event"; readonly documentId: string; readonly event: DocumentEvent } | { readonly kind: "ready" };
 //#endregion 🔖SyncProtocol
 
-//#region 🔖MediaFlow
+//#region 🔖WorkflowPlanner
 /**
- * 🎬 TS mirror of `media_graph::{OsMediaPort,OsMediaGraphNode,OsMediaGraphEdge,OsMediaGraph}` (Rust,
+ * 🎬 TS mirror of `workflow::{OsMediaPort,OsWorkflowNode,OsWorkflowEdge,OsWorkflow}` (Rust,
  * `framework/product/os/core/rs/lib.rs`) — camelCase-field-identical (Rust: `#[serde(rename_all =
  * "camelCase")]`). See this file's header for why only this pure-planner slice is hand-mirrored.
  */
@@ -911,7 +911,7 @@ export type OsMediaPort = {
   readonly direction: string;
 };
 
-export type OsMediaGraphNode = {
+export type OsWorkflowNode = {
   readonly id: string;
   readonly instanceId: string;
   readonly x: number;
@@ -922,7 +922,7 @@ export type OsMediaGraphNode = {
   readonly outputs: readonly OsMediaPort[];
 };
 
-export type OsMediaGraphEdge = {
+export type OsWorkflowEdge = {
   readonly id: string;
   readonly sourceNodeId: string;
   readonly sourcePortId: string;
@@ -930,14 +930,14 @@ export type OsMediaGraphEdge = {
   readonly targetPortId: string;
 };
 
-export type OsMediaGraph = {
+export type OsWorkflow = {
   readonly schema: string;
-  readonly nodes: readonly OsMediaGraphNode[];
-  readonly edges: readonly OsMediaGraphEdge[];
+  readonly nodes: readonly OsWorkflowNode[];
+  readonly edges: readonly OsWorkflowEdge[];
 };
 
-/** 🚚 TS twin of Rust `MediaFlowDelivery`. */
-export type MediaFlowDelivery = {
+/** 🚚 TS twin of Rust `WorkflowDelivery`. */
+export type WorkflowDelivery = {
   readonly edgeId: string;
   readonly producerInstanceId: string;
   readonly producerPortId: string;
@@ -946,11 +946,11 @@ export type MediaFlowDelivery = {
 };
 
 /**
- * 🧭 TS twin of Rust `media_flow_topological_node_order` — DFS post-order reversed into a
+ * 🧭 TS twin of Rust `workflow_topological_node_order` — DFS post-order reversed into a
  * topological node order (source before target); deterministic purely from `graph.nodes`/
  * `graph.edges` insertion order, so it matches the Rust side edge-for-edge.
  */
-function mediaFlowTopologicalNodeOrder(graph: OsMediaGraph): readonly string[] {
+function mediaFlowTopologicalNodeOrder(graph: OsWorkflow): readonly string[] {
   const adjacency = new Map<string, string[]>();
   for (const edge of graph.edges) {
     const targets = adjacency.get(edge.sourceNodeId) ?? [];
@@ -971,13 +971,13 @@ function mediaFlowTopologicalNodeOrder(graph: OsMediaGraph): readonly string[] {
 }
 
 /**
- * 🚚 TS twin of Rust `plan_media_flow` — plans one {@link MediaFlowDelivery} per edge in the
+ * 🚚 TS twin of Rust `plan_workflow` — plans one {@link WorkflowDelivery} per edge in the
  * downstream closure of `dirtyInstanceIds`, propagating dirtiness onto each edge's consumer instance
  * so multi-hop chains (A→B→C) resolve in a single topological pass. Pure/side-effect-free.
  */
-export function planMediaFlow(graph: OsMediaGraph, dirtyInstanceIds: ReadonlySet<string>): readonly MediaFlowDelivery[] {
-  const nodeById = new Map<string, OsMediaGraphNode>(graph.nodes.map((node) => [node.id, node]));
-  const edgesBySource = new Map<string, OsMediaGraphEdge[]>();
+export function planWorkflow(graph: OsWorkflow, dirtyInstanceIds: ReadonlySet<string>): readonly WorkflowDelivery[] {
+  const nodeById = new Map<string, OsWorkflowNode>(graph.nodes.map((node) => [node.id, node]));
+  const edgesBySource = new Map<string, OsWorkflowEdge[]>();
   for (const edge of graph.edges) {
     const edges = edgesBySource.get(edge.sourceNodeId) ?? [];
     edges.push(edge);
@@ -985,7 +985,7 @@ export function planMediaFlow(graph: OsMediaGraph, dirtyInstanceIds: ReadonlySet
   }
   const order = mediaFlowTopologicalNodeOrder(graph);
   const dirty = new Set(dirtyInstanceIds);
-  const deliveries: MediaFlowDelivery[] = [];
+  const deliveries: WorkflowDelivery[] = [];
   for (const nodeId of order) {
     const node = nodeById.get(nodeId);
     if (!node || !dirty.has(node.instanceId)) continue;
@@ -1004,7 +1004,7 @@ export function planMediaFlow(graph: OsMediaGraph, dirtyInstanceIds: ReadonlySet
   }
   return deliveries;
 }
-//#endregion 🔖MediaFlow
+//#endregion 🔖WorkflowPlanner
 
 //#region 🧪Tests
 if (import.meta.vitest) {
@@ -1075,8 +1075,8 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("@semio-tech/framework-os-core media flow", () => {
-    const mediaNode = (id: string, instanceId: string): OsMediaGraphNode => ({
+  describe("@semio-tech/framework-os-core workflow", () => {
+    const mediaNode = (id: string, instanceId: string): OsWorkflowNode => ({
       id,
       instanceId,
       x: 0,
@@ -1088,31 +1088,31 @@ if (import.meta.vitest) {
     });
 
     it("plans a single delivery across one dirty edge", () => {
-      const graph: OsMediaGraph = {
-        schema: "s.media-graph",
+      const graph: OsWorkflow = {
+        schema: "s.workflow",
         nodes: [mediaNode("node-1", "app-1"), mediaNode("node-2", "app-2")],
         edges: [{ id: "edge-1", sourceNodeId: "node-1", sourcePortId: "app-1:out", targetNodeId: "node-2", targetPortId: "app-2:in" }],
       };
-      const deliveries = planMediaFlow(graph, new Set(["app-1"]));
+      const deliveries = planWorkflow(graph, new Set(["app-1"]));
       expect(deliveries).toEqual([{ edgeId: "edge-1", producerInstanceId: "app-1", producerPortId: "app-1:out", consumerInstanceId: "app-2", consumerPortId: "app-2:in" }]);
     });
 
     it("plans a chain in topological order when only the root is dirty", () => {
-      const graph: OsMediaGraph = {
-        schema: "s.media-graph",
+      const graph: OsWorkflow = {
+        schema: "s.workflow",
         nodes: [mediaNode("node-1", "app-1"), mediaNode("node-2", "app-2"), mediaNode("node-3", "app-3")],
         edges: [
           { id: "edge-ab", sourceNodeId: "node-1", sourcePortId: "app-1:out", targetNodeId: "node-2", targetPortId: "app-2:in" },
           { id: "edge-bc", sourceNodeId: "node-2", sourcePortId: "app-2:out", targetNodeId: "node-3", targetPortId: "app-3:in" },
         ],
       };
-      const deliveries = planMediaFlow(graph, new Set(["app-1"]));
+      const deliveries = planWorkflow(graph, new Set(["app-1"]));
       expect(deliveries.map((delivery) => delivery.edgeId)).toEqual(["edge-ab", "edge-bc"]);
     });
 
     it("plans a diamond with one delivery per incoming edge", () => {
-      const graph: OsMediaGraph = {
-        schema: "s.media-graph",
+      const graph: OsWorkflow = {
+        schema: "s.workflow",
         nodes: [mediaNode("node-1", "app-a"), mediaNode("node-2", "app-b"), mediaNode("node-3", "app-c"), mediaNode("node-4", "app-d")],
         edges: [
           { id: "edge-ab", sourceNodeId: "node-1", sourcePortId: "app-a:out", targetNodeId: "node-2", targetPortId: "app-b:in" },
@@ -1121,7 +1121,7 @@ if (import.meta.vitest) {
           { id: "edge-cd", sourceNodeId: "node-3", sourcePortId: "app-c:out", targetNodeId: "node-4", targetPortId: "app-d:in" },
         ],
       };
-      const deliveries = planMediaFlow(graph, new Set(["app-a"]));
+      const deliveries = planWorkflow(graph, new Set(["app-a"]));
       const edgeIds = deliveries.map((delivery) => delivery.edgeId);
       expect(edgeIds).toHaveLength(4);
       expect(edgeIds.indexOf("edge-bd")).toBeGreaterThan(edgeIds.indexOf("edge-ab"));
@@ -1129,24 +1129,24 @@ if (import.meta.vitest) {
     });
 
     it("plans nothing when no instance is dirty", () => {
-      const graph: OsMediaGraph = {
-        schema: "s.media-graph",
+      const graph: OsWorkflow = {
+        schema: "s.workflow",
         nodes: [mediaNode("node-1", "app-1"), mediaNode("node-2", "app-2")],
         edges: [{ id: "edge-1", sourceNodeId: "node-1", sourcePortId: "app-1:out", targetNodeId: "node-2", targetPortId: "app-2:in" }],
       };
-      expect(planMediaFlow(graph, new Set())).toEqual([]);
+      expect(planWorkflow(graph, new Set())).toEqual([]);
     });
 
     it("plans nothing for a dirty node with no outgoing edges", () => {
-      const graph: OsMediaGraph = { schema: "s.media-graph", nodes: [mediaNode("node-1", "app-1")], edges: [] };
-      expect(planMediaFlow(graph, new Set(["app-1"]))).toEqual([]);
+      const graph: OsWorkflow = { schema: "s.workflow", nodes: [mediaNode("node-1", "app-1")], edges: [] };
+      expect(planWorkflow(graph, new Set(["app-1"]))).toEqual([]);
     });
 
     // 🔬 Shared fixtures replay (`framework/product/os/core/fixtures/*.json`) — the same files drive
-    // the Rust harness's `media_flow_fixtures_match_expected_deliveries` test. Node builtins are
+    // the Rust harness's `workflow_fixtures_match_expected_deliveries` test. Node builtins are
     // imported dynamically inside this vitest-only block so they never reach the browser bundle (this
     // whole `if (import.meta.vitest)` block is stripped from production builds).
-    it("matches the Rust plan_media_flow across shared fixtures", async () => {
+    it("matches the Rust plan_workflow across shared fixtures", async () => {
       const { readdirSync, readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, join } = await import("node:path");
@@ -1156,11 +1156,11 @@ if (import.meta.vitest) {
       for (const file of files) {
         const fixture = JSON.parse(readFileSync(join(fixturesDir, file), "utf8")) as {
           name: string;
-          graph: OsMediaGraph;
+          graph: OsWorkflow;
           dirtyInstanceIds: readonly string[];
-          expectedDeliveries: readonly MediaFlowDelivery[];
+          expectedDeliveries: readonly WorkflowDelivery[];
         };
-        const deliveries = planMediaFlow(fixture.graph, new Set(fixture.dirtyInstanceIds));
+        const deliveries = planWorkflow(fixture.graph, new Set(fixture.dirtyInstanceIds));
         expect(deliveries).toEqual(fixture.expectedDeliveries);
       }
     });

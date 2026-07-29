@@ -2502,7 +2502,7 @@ fn mesh_from_mesh_document(doc: &serde_json::Value) -> Result<MeshData, String> 
         .unwrap_or_else(|| Ok(mesh_from_kind("box")))
 }
 
-/// 🔌 One call per `MeshExporter`/`MeshImporter` format so the OS media-graph VFS auto-populates from
+/// 🔌 One call per `MeshExporter`/`MeshImporter` format so the OS workflow VFS auto-populates from
 /// `required_os_media_export_formats`/`required_os_media_import_formats`; also registers the
 /// `DocumentPack` codec so `.pack`/`.ops` sync/storage paths can encode/decode `LowpolyProjection`.
 fn register_lowpoly_exports() {

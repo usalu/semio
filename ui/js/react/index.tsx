@@ -3010,7 +3010,7 @@ export type UiTranslationSchema = {
       readonly noPluginsLoaded: UiLabelValue;
       readonly missingWindow: UiLabelValue;
       readonly home: UiLabelValue;
-      readonly backToMediaGraph: UiLabelValue;
+      readonly backToWorkflow: UiLabelValue;
       readonly execute: UiLabelValue;
       readonly reset: UiLabelValue;
       readonly windowOptions: UiLabelValue;
@@ -3651,7 +3651,7 @@ export const uiChromeTranslationBundles = {
           noPluginsLoaded: { label: { normal: "Keine Plugins geladen", beginner: "Keine Plugins geladen" } },
           missingWindow: { label: { normal: "Fehlendes Fenster", beginner: "Fehlendes Fenster" } },
           home: { label: { normal: "Startseite", beginner: "Startseite" } },
-          backToMediaGraph: { label: { normal: "Zurück zum Media Graph", beginner: "Zurück zum Media Graph" } },
+          backToWorkflow: { label: { normal: "Zurück zum Workflow", beginner: "Zurück zum Workflow" } },
           execute: { label: { normal: "Ausführen", beginner: "Ausführen" } },
           reset: { label: { normal: "Zurücksetzen", beginner: "Zurücksetzen" } },
           windowOptions: { label: { normal: "Fensteroptionen", beginner: "Fensteroptionen" } },
@@ -4266,7 +4266,7 @@ export const uiChromeTranslationBundles = {
           noPluginsLoaded: { label: { normal: "No plugins loaded", beginner: "No plugins loaded" } },
           missingWindow: { label: { normal: "Missing window", beginner: "Missing window" } },
           home: { label: { normal: "Home", beginner: "Home" } },
-          backToMediaGraph: { label: { normal: "Back to Media Graph", beginner: "Back to Media Graph" } },
+          backToWorkflow: { label: { normal: "Back to Workflow", beginner: "Back to Workflow" } },
           execute: { label: { normal: "Execute", beginner: "Execute" } },
           reset: { label: { normal: "Reset", beginner: "Reset" } },
           windowOptions: { label: { normal: "Window Options", beginner: "Window Options" } },

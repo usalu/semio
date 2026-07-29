@@ -62,7 +62,7 @@ fn run(args: &Args) -> Result<(), Box<dyn std::error::Error>> {
         documents.insert(instance.id.clone(), bundle.read_document(&instance.document.document_id).unwrap_or_default());
     }
 
-    let mut graph = projection.media_graph.clone();
+    let mut graph = projection.workflow.clone();
     if let Some(node_id) = &args.only_node {
         graph.nodes.retain(|node| &node.id == node_id);
         graph.edges.retain(|edge| &edge.source_node_id == node_id || &edge.target_node_id == node_id);

@@ -1,10 +1,9 @@
 #!/usr/bin/env bun
 /** 🧭 `@semio-tech/coda-assistant` router: `bun ./script.ts <dev|build|policy>`. */
-import { execFileSync } from "node:child_process";
 import type { FileLinter } from "../../../../repo/lib/js/index.ts";
 import { dependencyBoundaryBreachesForFile } from "../../../../repo/lib/js/index.ts";
 import { getWorkspaceRoot } from "../../../../repo/lib/js/index.ts";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runBunx } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, daemonBudgetOpts, runBundleScriptMain, runBunx, runCmd } from "../../../../repo/lib/js/index.ts";
 import { defineLint } from "../../../../repo/lib/js/index.ts";
 
 export const policyFile = "mcp-app.tsx";
@@ -17,7 +16,7 @@ export const policy = defineLint("coda-assistant-mcp-app", (l: FileLinter) => {
 
 class DevScript extends BundleScript {
   run(segments: string[]): void {
-    execFileSync("uv", ["run", "main.py", ...segments], { cwd: this.root, stdio: "inherit" });
+    runCmd("uv", ["run", "main.py", ...segments], { cwd: this.root, ...daemonBudgetOpts() });
   }
 }
 

@@ -204,7 +204,7 @@ impl Operation<MathProjection> for MathOperation {
 /// (`source->target`) instead of two separate string fields, per the unified syntax law for graph
 /// edges/connections. Converts at the `store::DocumentDsl`/`protocol::OpText` boundary only
 /// (`math_edge_to_dsl`/`math_edge_from_dsl`); `MathEdge` itself (JSON shape, `algorithm_overlay`,
-/// `media_graph_json`, the `nodeGraphEdit` action) is completely untouched.
+/// `workflow_json`, the `nodeGraphEdit` action) is completely untouched.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 struct MathEdgeDsl {
     id: String,
@@ -416,7 +416,7 @@ fn algorithm_overlay(graph: &MathGraph) -> std::collections::HashMap<String, Str
     overlay
 }
 
-fn media_graph_json(graph: &MathGraph) -> (String, String) {
+fn workflow_json(graph: &MathGraph) -> (String, String) {
     let overlay = algorithm_overlay(graph);
     let nodes: Vec<Value> = graph
         .nodes
@@ -537,7 +537,7 @@ fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiCom
 }
 
 fn render_graph_window(graph: &MathGraph) -> UiNode {
-    let (nodes_json, edges_json) = media_graph_json(graph);
+    let (nodes_json, edges_json) = workflow_json(graph);
     let viewport_json = serde_json::to_string(&graph.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
     let mut scene = empty_component_scene(MATH_BODY_GRAPH, SurfaceKind::NodeGraph);
     scene.node_graph = Some(NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes_json, edges_json, viewport_json) });
@@ -753,9 +753,9 @@ mod tests {
     }
 
     #[test]
-    fn media_graph_json_round_trips_node_count() {
+    fn workflow_json_round_trips_node_count() {
         let graph = MathGraph::default();
-        let (nodes_json, edges_json) = media_graph_json(&graph);
+        let (nodes_json, edges_json) = workflow_json(&graph);
         let nodes: Vec<Value> = serde_json::from_str(&nodes_json).unwrap();
         let edges: Vec<Value> = serde_json::from_str(&edges_json).unwrap();
         assert_eq!(nodes.len(), graph.nodes.len());

@@ -1,9 +1,8 @@
 #!/usr/bin/env bun
 /** 🧭 Desktop app router: `bun ./script.ts test [level]` (integration test runner). */
-import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runTestBudgeted } from "../../../../repo/lib/js/index.ts";
 
 export async function runTests(
   options: {
@@ -36,19 +35,7 @@ export async function runTests(
 
   const extra = options.launchArgs?.length ? options.launchArgs : [];
 
-  await new Promise<void>((resolve, reject) => {
-    const child = spawn("bunx", ["electron-forge", "start", ...extra], {
-      cwd: extensionDevelopmentPath,
-      env,
-      stdio: "inherit",
-      shell: true,
-    });
-    child.on("error", reject);
-    child.on("exit", (code) => {
-      if (code === 0) resolve();
-      else reject(new Error(`Desktop integration tests exited with code ${code}`));
-    });
-  });
+  await runTestBudgeted("bunx", ["electron-forge", "start", ...extra], { cwd: extensionDevelopmentPath, env });
 }
 
 /** ⏱️The Electron integration suite (`test/suite/index.mjs`) boots a real `electron-forge` app and loads a >200-file fixture kit — genuinely `exhaustive`-only, no fast in-repo unit split exists. */

@@ -1,10 +1,9 @@
 #!/usr/bin/env bun
 /** 🧭 Coordinator package router: `bun ./script.ts build|test|policy`. */
-import { execFileSync } from "node:child_process";
 import type { BundleLinter } from "../../lib/js/index.ts";
 import { dependencyBoundaryBreachesForBundleDir } from "../../lib/js/index.ts";
 import { getWorkspaceRoot } from "../../lib/js/index.ts";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest, resolveTestLevel } from "../../lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest, resolveTestLevel, runCmd } from "../../lib/js/index.ts";
 import { defineLint } from "../../lib/js/index.ts";
 
 export const policy = defineLint("@repo/server/coordinator-bundle", (l: BundleLinter) => {
@@ -15,7 +14,7 @@ export const policy = defineLint("@repo/server/coordinator-bundle", (l: BundleLi
 class BuildScript extends BundleScript {
   run(): void {
     const ext = process.platform === "win32" ? ".exe" : "";
-    execFileSync("go", ["build", "-o", `server${ext}`, "."], { cwd: this.root, stdio: "inherit" });
+    runCmd("go", ["build", "-o", `server${ext}`, "."], { cwd: this.root });
   }
 }
 

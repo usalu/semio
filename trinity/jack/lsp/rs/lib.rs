@@ -144,7 +144,7 @@ impl JackLanguageServer {
             "dag" => JackGraphBackend::Board(BoardQueryableGraph::from_dag_fixture_json(json)?),
             "puzzle2d" | "2d" => JackGraphBackend::Board(BoardQueryableGraph::from_puzzle2d_fixture_json(json)?),
             "puzzle3d" | "3d" => JackGraphBackend::Board(BoardQueryableGraph::from_puzzle3d_fixture_json(json)?),
-            "s-media-graph" | "s" => JackGraphBackend::Board(BoardQueryableGraph::from_fixture_json(json, Some("s-resources"))?),
+            "s-workflow" | "s" => JackGraphBackend::Board(BoardQueryableGraph::from_fixture_json(json, Some("s-resources"))?),
             "flow" => JackGraphBackend::Board(BoardQueryableGraph::from_fixture_json(json, Some("flow-dag"))?),
             "sequence" => JackGraphBackend::Board(BoardQueryableGraph::from_fixture_json(json, Some("flow-dag"))?),
             "wires" => JackGraphBackend::Board(BoardQueryableGraph::from_fixture_json(json, Some("wires-default"))?),
@@ -674,7 +674,7 @@ mod tests {
     #[test]
     fn load_fixture_for_domain_board_aliases_succeed() {
         let mut server = JackLanguageServer::new();
-        for domain in ["dag", "puzzle2d", "2d", "s-media-graph", "s", "flow", "sequence", "wires", "some-unlisted-domain"] {
+        for domain in ["dag", "puzzle2d", "2d", "s-workflow", "s", "flow", "sequence", "wires", "some-unlisted-domain"] {
             server.load_fixture_for_domain("{}", domain).unwrap();
             assert_eq!(server.graph_domain(), domain);
         }

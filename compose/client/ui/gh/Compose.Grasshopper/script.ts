@@ -1,9 +1,8 @@
 #!/usr/bin/env bun
 /** 🧭 Grasshopper project router: `bun ./script.ts <build|test|publish|setup|generate value-list>`. */
-import { execFileSync, execSync } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, dotnetLevelArgs, dotnetCoverageArgs, runTestBudgeted } from "../../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, dotnetLevelArgs, dotnetCoverageArgs, runCmd, runTestBudgeted } from "../../../../../repo/lib/js/index.ts";
 
 const yakWin8 = "C:\\Program Files\\Rhino 8\\System\\Yak.exe";
 const yakWin7 = "C:\\Program Files\\Rhino 7\\System\\Yak.exe";
@@ -45,7 +44,7 @@ function runYakBuild(root: string): void {
   if (!existsSync(distDir)) mkdirSync(distDir);
   copyFileSync(join(root, "..", "..", "..", "..", "..", "assets", "icons", "compose_512x512.png"), join(distDir, "compose_512x512.png"));
   copyFileSync(join(yakRoot, "manifest.yml"), join(distDir, "manifest.yml"));
-  execFileSync(yakExecutable(), ["build", "--platform", "win"], { cwd: distDir, stdio: "inherit" });
+  runCmd(yakExecutable(), ["build", "--platform", "win"], { cwd: distDir });
   console.log("✅ Yak package built");
 }
 
@@ -70,12 +69,12 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "push") {
       const packageFile = segments[1] || "compose-2.1.0-any-win.yak";
-      execSync(`"${yakWin8}" push --source https://test.yak.rhino3d.com ${packageFile}`, { stdio: "inherit" });
+      runCmd(yakWin8, ["push", "--source", "https://test.yak.rhino3d.com", packageFile]);
       console.log(`✅ Pushed ${packageFile} to test server`);
       return;
     }
     if (segments[0] === "search") {
-      execSync(`"${yakWin8}" search --source https://test.yak.rhino3d.com --all --prerelease compose`, { stdio: "inherit" });
+      runCmd(yakWin8, ["search", "--source", "https://test.yak.rhino3d.com", "--all", "--prerelease", "compose"]);
       return;
     }
     const { level, rest } = resolveTestLevel(segments);
@@ -89,8 +88,8 @@ class TestScript extends BundleScript {
 class BuildScript extends BundleScript {
   run(): void {
     runGenerateValueList(this.root);
-    execFileSync("dotnet", ["clean", "Compose.Grasshopper.csproj", "-c", "Debug"], { cwd: this.root, stdio: "inherit" });
-    execFileSync("dotnet", ["build", "Compose.Grasshopper.csproj", "-c", "Debug"], { cwd: this.root, stdio: "inherit" });
+    runCmd("dotnet", ["clean", "Compose.Grasshopper.csproj", "-c", "Debug"], { cwd: this.root });
+    runCmd("dotnet", ["build", "Compose.Grasshopper.csproj", "-c", "Debug"], { cwd: this.root });
     const yakDistFolder = join(this.root, "yak", "dist");
     if (existsSync(yakDistFolder)) rmSync(yakDistFolder, { recursive: true });
     mkdirSync(yakDistFolder, { recursive: true });
@@ -107,13 +106,13 @@ class PublishScript extends BundleScript {
   run(segments: string[]): void {
     if (segments[0] === "yank") {
       const version = segments[1] || "5.1.0-beta";
-      execSync(`"${yakWin7}" yank compose ${version}`, { stdio: "inherit" });
+      runCmd(yakWin7, ["yank", "compose", version]);
       console.log(`✅ Yanked compose ${version}`);
       return;
     }
     if (segments[0] === "unyank") {
       const version = segments[1] || "5.1.0-beta";
-      execSync(`"${yakWin7}" unyank compose ${version}`, { stdio: "inherit" });
+      runCmd(yakWin7, ["unyank", "compose", version]);
       console.log(`✅ Unyanked compose ${version}`);
       return;
     }
@@ -123,7 +122,7 @@ class PublishScript extends BundleScript {
     if (!versionMatch) throw new Error("Could not find version in manifest.yml");
     const version = versionMatch[1]!.trim();
     const buildName = `compose-${version}-rh8_10-win.yak`;
-    execSync(`"${yakWin8}" push ${buildName}`, { cwd: dist, stdio: "inherit" });
+    runCmd(yakWin8, ["push", buildName], { cwd: dist });
     console.log("✅ Yak package published");
   }
 }
@@ -134,7 +133,7 @@ class SetupScript extends BundleScript {
       console.error("usage: bun ./script.ts setup login");
       process.exit(1);
     }
-    execSync(`"${yakWin8}" login`, { stdio: "inherit" });
+    runCmd(yakWin8, ["login"]);
     console.log("✅ Logged in to Yak");
   }
 }

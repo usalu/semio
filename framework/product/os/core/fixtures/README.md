@@ -1,25 +1,25 @@
 # 🎬 Media-flow planner fixtures
 
-Scripted `OsMediaGraph` + dirty-instance-set vectors that keep `plan_media_flow` (Rust,
-`framework/product/os/core/rs/lib.rs`) and `planMediaFlow` (TS twin, `framework/product/os/core/js/index.ts`)
+Scripted `OsWorkflow` + dirty-instance-set vectors that keep `plan_workflow` (Rust,
+`framework/product/os/core/rs/lib.rs`) and `planWorkflow` (TS twin, `framework/product/os/core/js/index.ts`)
 in lockstep. Both sides replay every `*.json` file here and assert an **exact-order** match against
 `expectedDeliveries` — both implementations are deterministic (topological DFS driven purely by
 `graph.nodes`/`graph.edges` insertion order, no hashmap-iteration-order dependence), so exact order is a
 meaningful assertion, not a flaky one.
 
-- **Rust** — `framework/product/os/core/rs/lib.rs` `media_graph::tests::media_flow_fixtures_match_expected_deliveries`.
-- **TypeScript** — `framework/product/os/core/js/index.ts`'s `import.meta.vitest` block, `"planMediaFlow matches shared fixtures"`.
+- **Rust** — `framework/product/os/core/rs/lib.rs` `workflow::tests::workflow_fixtures_match_expected_deliveries`.
+- **TypeScript** — `framework/product/os/core/js/index.ts`'s `import.meta.vitest` block, `"planWorkflow matches shared fixtures"`.
 
-## Format (`MediaFlowFixture`)
+## Format (`WorkflowFixture`)
 
 ```jsonc
 {
   "name": "single-edge",
-  "graph": { "schema": "s.media-graph", "nodes": [ /* OsMediaGraphNode[] */ ], "edges": [ /* OsMediaGraphEdge[] */ ] },
+  "graph": { "schema": "s.workflow", "nodes": [ /* OsWorkflowNode[] */ ], "edges": [ /* OsWorkflowEdge[] */ ] },
   "dirtyInstanceIds": ["app-1"],
-  "expectedDeliveries": [ /* MediaFlowDelivery[], in the exact order plan_media_flow/planMediaFlow must produce */ ]
+  "expectedDeliveries": [ /* WorkflowDelivery[], in the exact order plan_workflow/planWorkflow must produce */ ]
 }
 ```
 
-All keys are camelCase, matching `OsMediaGraph`/`OsMediaGraphNode`/`OsMediaGraphEdge`/`OsMediaPort`/
-`MediaFlowDelivery`'s `#[serde(rename_all = "camelCase")]` on the Rust side.
+All keys are camelCase, matching `OsWorkflow`/`OsWorkflowNode`/`OsWorkflowEdge`/`OsMediaPort`/
+`WorkflowDelivery`'s `#[serde(rename_all = "camelCase")]` on the Rust side.

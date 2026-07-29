@@ -663,7 +663,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn fixture_from_media_graph_json() {
+    fn fixture_from_workflow_json() {
         let nodes = r#"[{"id":"a","label":"Alpha","x":10,"y":20,"inputs":[],"outputs":[{"id":"out","label":"Out"}]}]"#;
         let edges = r#"[]"#;
         let fixture = fixture_from_node_graph_json(nodes, edges, r#"{"x":0,"y":0,"zoom":1}"#).expect("fixture");

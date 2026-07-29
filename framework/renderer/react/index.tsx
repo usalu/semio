@@ -3088,8 +3088,8 @@ function resolveCanvasBodyKey(app: AppDefinition): string {
   const windowKind = app.windowKinds[0];
   if (!windowKind) return "main";
   if (windowKind.bodyKey.includes("composite")) {
-    const mediaGraph = app.windowKinds.find((kind) => kind.bodyKey.includes("media-graph"));
-    return mediaGraph?.bodyKey ?? windowKind.bodyKey;
+    const workflow = app.windowKinds.find((kind) => kind.bodyKey.includes("workflow"));
+    return workflow?.bodyKey ?? windowKind.bodyKey;
   }
   return windowKind.bodyKey;
 }
@@ -6023,7 +6023,7 @@ export function FrameworkOsShell({
           const program = catalog.find((entry) => entry.programId === programId && entry.appId === appId) ?? catalog.find((entry) => entry.programId === programId);
           if (program) {
             // 🪟 Fold focus into `nextViewState` so the final SET_SESSION keeps `activeSpawnedId`
-            // (opening a media-graph node depends on this — otherwise nothing appears to happen).
+            // (opening a workflow node depends on this — otherwise nothing appears to happen).
             const nextPanel = await ensureSpawnedPlugin(program, undefined, osInstanceId, undefined, nextViewState);
             if (nextPanel) {
               nextViewState = viewStateWithStudioPanel(nextViewState, nextPanel);
@@ -8387,7 +8387,7 @@ export function FrameworkOsShell({
     const focusedBar = focusedSpawned ? (
       <div className={cn(borderNormalBottomClass, "flex items-center gap-single px-single py-single text-sm text-muted-foreground")}>
         <button type="button" className="hover:text-foreground" onClick={() => (openStudioIdRef.current ? navigateHistory(`/studios/${openStudioIdRef.current}`) : onAction({ controllerId: session.app.controllerId, action: "closeFocusedInstance" }))}>
-          ← {shellLabel("ui.common.backToMediaGraph")}
+          ← {shellLabel("ui.common.backToWorkflow")}
         </button>
         <span>·</span>
         <span>{appDocumentLabel(resolveDocumentByAppId(loadedPlugins, focusedSpawned.appId, focusedSpawned.document, uiTerminology))}</span>
@@ -15968,14 +15968,14 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
 
 //#region 🔖NodeGraphHost
 //#region Types
-type MediaGraphPort = {
+type WorkflowDiagramPort = {
   readonly id: string;
   readonly resourceKind?: string;
   readonly direction?: string;
   readonly label?: string;
 };
 
-type MediaGraphNodeRecord = {
+type WorkflowNodeRecord = {
   readonly id: string;
   readonly instanceId?: string;
   readonly label?: string;
@@ -15983,11 +15983,11 @@ type MediaGraphNodeRecord = {
   readonly y?: number;
   readonly width?: number;
   readonly height?: number;
-  readonly inputs?: readonly MediaGraphPort[];
-  readonly outputs?: readonly MediaGraphPort[];
+  readonly inputs?: readonly WorkflowDiagramPort[];
+  readonly outputs?: readonly WorkflowDiagramPort[];
 };
 
-type MediaGraphEdgeRecord = {
+type WorkflowEdgeRecord = {
   readonly id: string;
   readonly sourceNodeId: string;
   readonly sourcePortId: string;
@@ -15995,10 +15995,10 @@ type MediaGraphEdgeRecord = {
   readonly targetPortId: string;
 };
 
-type MediaGraphNodeData = {
+type WorkflowNodeData = {
   readonly label: string;
-  readonly inputs: readonly MediaGraphPort[];
-  readonly outputs: readonly MediaGraphPort[];
+  readonly inputs: readonly WorkflowDiagramPort[];
+  readonly outputs: readonly WorkflowDiagramPort[];
   readonly width: number;
   readonly height: number;
 };
@@ -16054,7 +16054,7 @@ function parseViewport(viewportJson: string): DiagramViewport {
   }
 }
 
-/** @emoji 🔎 Resolves a flow fixture widget id to the media-graph instance id it previews, used to open an app instance without depending on plugin-side selection state. */
+/** @emoji 🔎 Resolves a flow fixture widget id to the workflow instance id it previews, used to open an app instance without depending on plugin-side selection state. */
 export function resolveFixtureWidgetInstanceId(fixtureJson: string | undefined, widgetId: string | undefined | null): string | undefined {
   if (!fixtureJson || !widgetId) return undefined;
   try {
@@ -16084,7 +16084,7 @@ export function parseCatalogueAppDragPayload(raw: string): CatalogueAppDragPaylo
   }
 }
 
-/** @emoji 👻 Builds the ghost widget descriptor shown while a catalogue app is dragged over the media graph. */
+/** @emoji 👻 Builds the ghost widget descriptor shown while a catalogue app is dragged over the workflow. */
 export function catalogueGhostDescriptorJson(payload: CatalogueAppDragPayload): string {
   return JSON.stringify({ kind: "neuron", neuronKind: payload.label ?? payload.appId });
 }
@@ -16331,25 +16331,25 @@ function FlowSpotlight({
 }
 //#endregion FlowCatalogueSpotlight
 
-function portLabel(port: MediaGraphPort): string {
+function portLabel(port: WorkflowDiagramPort): string {
   if (port.label) return port.label;
   const segments = port.id.split("@");
   return segments[segments.length - 1] ?? port.id;
 }
 
-// 🩹 `port.id` is the wire-level `nodeId@portId` key (see `MediaGraphPortRecord`), but React Flow's
-// `Handle id` must match `sourceHandle`/`targetHandle`, which carry the bare port id (`MediaGraphEdgeRecord.
+// 🩹 `port.id` is the wire-level `nodeId@portId` key (see `WorkflowDiagramPortRecord`), but React Flow's
+// `Handle id` must match `sourceHandle`/`targetHandle`, which carry the bare port id (`WorkflowEdgeRecord.
 // sourcePortId`/`targetPortId`) — strip the node-id prefix here so per-port anchoring and onConnect's
 // round-trip back to `sourcePortId`/`targetPortId` both resolve against the same bare id.
-function portHandleId(port: MediaGraphPort): string {
+function portHandleId(port: WorkflowDiagramPort): string {
   const segments = port.id.split("@");
   return segments[segments.length - 1] ?? port.id;
 }
 
-function mediaGraphNodesToDiagramNodes(records: readonly MediaGraphNodeRecord[]): Node<MediaGraphNodeData>[] {
+function workflowNodesToDiagramNodes(records: readonly WorkflowNodeRecord[]): Node<WorkflowNodeData>[] {
   return records.map((record) => ({
     id: record.id,
-    type: "mediaGraph",
+    type: "workflow",
     position: { x: record.x ?? 0, y: record.y ?? 0 },
     data: {
       label: record.label?.trim() || record.instanceId || record.id,
@@ -16361,7 +16361,7 @@ function mediaGraphNodesToDiagramNodes(records: readonly MediaGraphNodeRecord[])
   }));
 }
 
-function mediaGraphEdgesToDiagramEdges(records: readonly MediaGraphEdgeRecord[]): Edge[] {
+function workflowEdgesToDiagramEdges(records: readonly WorkflowEdgeRecord[]): Edge[] {
   return records.map((record) => ({
     id: record.id,
     source: record.sourceNodeId,
@@ -16381,7 +16381,7 @@ function isEditableGraphKeyTarget(target: EventTarget | null): boolean {
   return target.closest("[contenteditable='true'], [role='textbox']") != null;
 }
 
-function handleGraphKeyboard(event: KeyboardEvent<HTMLDivElement>, editable: boolean, parsedNodes: readonly MediaGraphNodeRecord[], dispatch: (action: string, args?: Record<string, unknown>) => void) {
+function handleGraphKeyboard(event: KeyboardEvent<HTMLDivElement>, editable: boolean, parsedNodes: readonly WorkflowNodeRecord[], dispatch: (action: string, args?: Record<string, unknown>) => void) {
   if (!editable || isEditableGraphKeyTarget(event.target)) return;
   const mod = event.metaKey || event.ctrlKey;
   if (mod && event.key.toLowerCase() === "a") {
@@ -16402,7 +16402,7 @@ function handleGraphKeyboard(event: KeyboardEvent<HTMLDivElement>, editable: boo
 //#endregion Keyboard
 
 //#region DiagramNode
-function MediaGraphDiagramNode({ data }: NodeProps<MediaGraphNodeData>) {
+function WorkflowDiagramNode({ data }: NodeProps<WorkflowNodeData>) {
   const inputCount = Math.max(data.inputs.length, 1);
   const outputCount = Math.max(data.outputs.length, 1);
   const rowCount = Math.max(inputCount, outputCount);
@@ -16438,7 +16438,7 @@ function MediaGraphDiagramNode({ data }: NodeProps<MediaGraphNodeData>) {
   );
 }
 
-const mediaGraphNodeTypes: NodeTypes = { mediaGraph: MediaGraphDiagramNode };
+const workflowNodeTypes: NodeTypes = { workflow: WorkflowDiagramNode };
 //#endregion DiagramNode
 
 //#region WasmGraphSurface
@@ -16755,15 +16755,15 @@ function DiagramGraphFallback({
   readonly scene: NodeGraphScene;
   readonly node: UiComponentSceneNode;
   readonly editable: boolean;
-  readonly parsedNodes: readonly MediaGraphNodeRecord[];
-  readonly parsedEdges: readonly MediaGraphEdgeRecord[];
+  readonly parsedNodes: readonly WorkflowNodeRecord[];
+  readonly parsedEdges: readonly WorkflowEdgeRecord[];
   readonly findItems: readonly GraphFindItem[];
   readonly contextMenuItems: readonly GraphContextMenuItem[];
   readonly onAction: (action: ActionDescriptor) => void;
 }) {
   const viewport = useMemo(() => parseViewport(scene.viewportJson ?? "{}"), [scene.viewportJson]);
-  const initialNodes = useMemo(() => mediaGraphNodesToDiagramNodes(parsedNodes), [parsedNodes]);
-  const initialEdges = useMemo(() => mediaGraphEdgesToDiagramEdges(parsedEdges), [parsedEdges]);
+  const initialNodes = useMemo(() => workflowNodesToDiagramNodes(parsedNodes), [parsedNodes]);
+  const initialEdges = useMemo(() => workflowEdgesToDiagramEdges(parsedEdges), [parsedEdges]);
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState(initialEdges);
   useEffect(() => {
@@ -16817,7 +16817,7 @@ function DiagramGraphFallback({
     >
       <Diagram
         className="h-full w-full"
-        nodeTypes={mediaGraphNodeTypes}
+        nodeTypes={workflowNodeTypes}
         nodes={nodes}
         edges={edges}
         fitView={false}
@@ -16830,7 +16830,7 @@ function DiagramGraphFallback({
         nodesDraggable={editable}
         nodesConnectable={editable}
         edgesReconnectable={editable}
-        onNodesChange={(nextNodes) => setNodes(nextNodes as Node<MediaGraphNodeData>[])}
+        onNodesChange={(nextNodes) => setNodes(nextNodes as Node<WorkflowNodeData>[])}
         onEdgesChange={(nextEdges) => setEdges(nextEdges)}
         onNodeDragStop={
           editable
@@ -16913,8 +16913,8 @@ function PresencePeersOverlay({ peers }: { readonly peers: readonly PresencePeer
 export function NodeGraphHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.nodeGraph;
   const editable = scene?.editable ?? true;
-  const parsedNodes = useMemo(() => parseJsonArray<MediaGraphNodeRecord>(scene?.nodesJson), [scene?.nodesJson]);
-  const parsedEdges = useMemo(() => parseJsonArray<MediaGraphEdgeRecord>(scene?.edgesJson), [scene?.edgesJson]);
+  const parsedNodes = useMemo(() => parseJsonArray<WorkflowNodeRecord>(scene?.nodesJson), [scene?.nodesJson]);
+  const parsedEdges = useMemo(() => parseJsonArray<WorkflowEdgeRecord>(scene?.edgesJson), [scene?.edgesJson]);
   const findItems = useMemo(() => parseJsonArray<GraphFindItem>(scene?.findItemsJson), [scene?.findItemsJson]);
   const contextMenuItems = useMemo(() => parseJsonArray<GraphContextMenuItem>(scene?.contextMenuJson), [scene?.contextMenuJson]);
   const presencePeers = useMemo(() => parseJsonArray<PresencePeer>(scene?.presencePeersJson), [scene?.presencePeersJson]);

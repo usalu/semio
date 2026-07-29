@@ -1,0 +1,15 @@
+Rename media pipeline / media graph → workflow (2026-07-29)
+
+Scope: all active source (excludes .repo ticket archives, AGENTS.md per policy)
+
+Grep verification (active source only):
+- OsMediaGraph, SMediaGraph, media_graph, media-graph, MediaGraph, planMediaFlow: 0 matches outside .repo
+- media pipeline: 0 matches outside .repo
+
+Key renames:
+- pub mod media_graph → workflow; OsMediaGraph → OsWorkflow; projection.workflow field
+- s.media-graph schema → s.workflow; s.play.workflow surface ids
+- plan_media_flow / planMediaFlow → plan_workflow / planWorkflow
+- UI: Media Graph → Workflow; reorganizeWorkflow; backToWorkflow
+
+Tests: cargo test semio-framework-os blocked by pre-existing DocumentCodec.parse/print errors in same crate (unrelated to rename).

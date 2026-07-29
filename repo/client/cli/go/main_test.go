@@ -9,6 +9,7 @@
 package client
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"database/sql"
@@ -23299,5 +23300,49 @@ func TestMicroCommitCommandExists(t *testing.T) {
 	}
 	if found.Use != "micro-commit [subcommand] [args...]" {
 		t.Fatalf("unexpected micro-commit use: %q", found.Use)
+	}
+}
+
+func TestMcpStdioInitializeHandshake(t *testing.T) {
+	repoRoot := findRepoRoot(".")
+	if repoRoot == "" {
+		t.Skip("repo root not found")
+	}
+	bin := filepath.Join(repoRoot, "repo", "client", "client")
+	if _, err := os.Stat(bin); err != nil {
+		t.Skip("repo client binary not built")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, bin, "mcp", "cursor")
+	cmd.Dir = repoRoot
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	cmd.Stderr = os.Stderr
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		_ = stdin.Close()
+		_ = cmd.Process.Kill()
+		_ = cmd.Wait()
+	}()
+	initReq := `{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"0"}}}` + "\n"
+	if _, err := io.WriteString(stdin, initReq); err != nil {
+		t.Fatal(err)
+	}
+	reader := bufio.NewReader(stdout)
+	line, err := reader.ReadString('\n')
+	if err != nil {
+		t.Fatalf("read initialize response: %v", err)
+	}
+	if !strings.Contains(line, `"result"`) || !strings.Contains(line, `jsonrpc`) {
+		t.Fatalf("unexpected initialize response: %s", line)
 	}
 }

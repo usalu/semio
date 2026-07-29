@@ -283,30 +283,13 @@ impl WasmPluginRuntime {
         Ok(())
     }
 
-    /// @emoji 📥 Ingests a JSON array of remote `OperationEnvelope`s into the plugin instance's store.
-    pub fn apply_operations(&self, instance_id: u32, operations_json: &str) -> Result<(), PluginHostError> {
+    /// @emoji 📥 Ingests a binary-encoded (`protocol::encode_envelopes`) array of remote
+    /// `OperationEnvelope`s into the plugin instance's store.
+    pub fn apply_operations(&self, instance_id: u32, operations: &[u8]) -> Result<(), PluginHostError> {
         let mut store = self.store_guard()?;
         let bindings = self.bindings_guard()?;
         Self::prepare_call(&mut store);
-        let result = bindings.semio_framework_plugin().call_apply_operations(&mut *store, instance_id, operations_json).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        Self::plugin_result(result)
-    }
-
-    /// @emoji 📖 Reads the plugin instance's full persistent document JSON.
-    pub fn read_app_document(&self, instance_id: u32) -> Result<String, PluginHostError> {
-        let mut store = self.store_guard()?;
-        let bindings = self.bindings_guard()?;
-        Self::prepare_call(&mut store);
-        let result = bindings.semio_framework_plugin().call_read_app_document(&mut *store, instance_id).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
-        Self::plugin_result(result)
-    }
-
-    /// @emoji 📂 Replaces the plugin instance's document from a serialized envelope.
-    pub fn load_app_document(&self, instance_id: u32, document_json: &str) -> Result<(), PluginHostError> {
-        let mut store = self.store_guard()?;
-        let bindings = self.bindings_guard()?;
-        Self::prepare_call(&mut store);
-        let result = bindings.semio_framework_plugin().call_load_app_document(&mut *store, instance_id, document_json).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        let result = bindings.semio_framework_plugin().call_apply_operations(&mut *store, instance_id, operations).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
         Self::plugin_result(result)
     }
 
@@ -319,7 +302,7 @@ impl WasmPluginRuntime {
         Self::plugin_result(result)
     }
 
-    /// @emoji 📜 Text-DSL counterpart of {@link Self::read_app_document}.
+    /// @emoji 📜 Text-DSL counterpart of {@link Self::read_app_document_pack}.
     pub fn read_app_document_text(&self, instance_id: u32) -> Result<semio::framework::types::DocumentTextFiles, PluginHostError> {
         let mut store = self.store_guard()?;
         let bindings = self.bindings_guard()?;
@@ -328,7 +311,7 @@ impl WasmPluginRuntime {
         Self::plugin_result(result)
     }
 
-    /// @emoji 📜 Text-DSL counterpart of {@link Self::load_app_document}.
+    /// @emoji 📜 Text-DSL counterpart of {@link Self::load_app_document_pack}.
     pub fn load_app_document_text(&self, instance_id: u32, document_text: semio::framework::types::DocumentTextFiles) -> Result<(), PluginHostError> {
         let mut store = self.store_guard()?;
         let bindings = self.bindings_guard()?;

@@ -57,15 +57,16 @@ interface types {
     ops: string,
   }
 
-  /// 📦 Binary counterpart of `document-text-files`: `pack` is the encoded initial projection
-  /// (pack container bytes), `ops` stays the op-log TEXT — the op grammar is format-invariant,
-  /// mirroring `vcs::DocumentPackFiles`.
+  /// 📦 Binary counterpart of `document-text-files`: `pack` is the encoded initial projection and
+  /// `spr` the encoded op log — both AUTHORITATIVE (pack container bytes); `ops` stays a TEXT
+  /// logging mirror of the same history, format-invariant — mirroring `store::DocumentPackFiles`.
   record document-pack-files {
     pack: list<u8>,
+    spr: list<u8>,
     ops: string,
   }
 
-  /// 🎞️ Payload crossing the plugin ABI on one declared media-graph port (`consume-media`/
+  /// 🎞️ Payload crossing the plugin ABI on one declared workflow port (`consume-media`/
   /// `produce-media`). `descriptor-json` is a JSON object `{ edgeId?, portId?, kindId?, mediaType?,
   /// wire, blobHash? }` — `mediaType` mirrors `framework/core/rs/lib.rs`'s `MediaType` (`{class,
   /// form}`), `wire` mirrors its `MediaWireFormat` (`{kind:"document",schema}` or
@@ -132,15 +133,14 @@ interface plugin {
   /// 📦 `data` (both directions) is pack-container bytes going forward (see `document-pack-files`) —
   /// the WIT signature itself is unchanged (`list<u8>` both ways) so no other func needed updating.
   migrate-document: func(input: migrate-document-input) -> result<migrate-document-output, plugin-error>;
-  apply-operations: func(instance-id: u32, operations-json: string) -> result<_, plugin-error>;
-  read-app-document: func(instance-id: u32) -> result<string, plugin-error>;
-  load-app-document: func(instance-id: u32, document-json: string) -> result<_, plugin-error>;
+  /// 📦 `operations` is `protocol::encode_envelopes` bytes (a binary `OperationEnvelope` array).
+  apply-operations: func(instance-id: u32, operations: list<u8>) -> result<_, plugin-error>;
   /// 📜 Text-DSL counterpart of `apply-operations`: one already-authored operation per non-blank line
-  /// (op-text grammar, `vcs::OpText::parse_op`/`print_op`) instead of a JSON `OperationEnvelope` array.
+  /// (op-text grammar, `vcs::OpText::parse_op`/`print_op`) instead of a binary `OperationEnvelope` array.
   apply-operations-text: func(instance-id: u32, operations-text: string) -> result<_, plugin-error>;
-  /// 📜 Text-DSL counterpart of `read-app-document`.
+  /// 📜 Text-DSL counterpart of `read-app-document-pack`.
   read-app-document-text: func(instance-id: u32) -> result<document-text-files, plugin-error>;
-  /// 📜 Text-DSL counterpart of `load-app-document`.
+  /// 📜 Text-DSL counterpart of `load-app-document-pack`.
   load-app-document-text: func(instance-id: u32, document-text: document-text-files) -> result<_, plugin-error>;
   /// 📦 Pack counterpart of `read-app-document-text`.
   read-app-document-pack: func(instance-id: u32) -> result<document-pack-files, plugin-error>;
@@ -155,7 +155,7 @@ interface plugin {
   consume-media: func(instance-id: u32, port-id: string, artifact: media-artifact) -> result<_, plugin-error>;
   /// 🎬 Requests a typed media artifact from a plugin instance's declared output port — the WIT-level
   /// counterpart of `PluginApp::produce_media`. Optional override point: most apps' "media output" is
-  /// just their document (the host can instead call `read-app-document` and transcode server-side), so
+  /// just their document (the host can instead call `read-app-document-pack` and transcode server-side), so
   /// this only matters for apps whose output isn't simply their raw document (computed/derived
   /// outputs). `request-json` is reserved for future parameterized requests and currently ignored by
   /// the SDK default.

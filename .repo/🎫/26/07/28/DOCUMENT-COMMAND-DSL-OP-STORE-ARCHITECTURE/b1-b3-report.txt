@@ -1,0 +1,215 @@
+JSON-FREE DOCUMENT PIPELINE — B1/B2/B3 REPORT
+================================================
+Plan: /Users/ueli/.claude/plans/steady-cuddling-dijkstra.md (approved, "Implement" — full
+autonomous execution mandated, no further pauses for confirmation).
+
+Mandate: the complete document pipeline must be free of any JSON. Commands binary over protocol
+(logging over op text). Documents binary over pack (logging over dsl text). Store keeps bytes;
+backbones move bytes. No fake binary.
+
+STATUS: B1, B2, B3 complete and verified. Full `cargo check --workspace --all-targets` is clean
+(0 errors). Every touched crate's test suite passes.
+
+## B1 — protocol: binary-first primitives (DONE)
+
+- `protocol_history::OpPayload.text` flipped `String` -> `Option<String>` (invariant: text or
+  binary present, enforced at write time). `write_op_payload`/`read_op_payload` tag bits
+  (bit0=text, bit1=binary) instead of the old "v1 requires text" rule. `print_ops_text` now
+  fallible (errors on a text-less op — this crate is schema-agnostic and cannot recover text from
+  opaque binary). All downstream constructors (protocol/io, protocol/cli, protocol/testkit,
+  protocol/materialize, protocol facade) updated to wrap in `Some(...)`.
+- `store::history_op_payloads` -> binary-only (`{ text: None, binary: Some(encode_op()) }`).
+  `.spr` is binary-only now; `.ops` text mirror is produced separately via `print_document_pack`'s
+  `print_ops_log` (uses the concrete `Operation::print_op`, unaffected).
+- New `protocol_causal::{encode_envelopes, decode_envelopes}` (batch envelope framing) and
+  `{encode_ops_vec, decode_ops_vec}` (binary vec-of-op-payloads, replacing the
+  `json!({"backwards":[...]})` convention — not yet consumed anywhere, ready for B5's
+  `result_from_last_edit` flip).
+- Presence goes real binary: `protocol_wire::ClientFrame::Presence`/`ServerFrame::Presence` now
+  carry opaque `Vec<u8>`/`Vec<Vec<u8>>` (protocol_wire has no dependency on framework_core, so it
+  can't know `PresencePeer` — the frame only moves pre-encoded bytes). New
+  `semio_framework_core::{encode_presence_peer, decode_presence_peer}` hand-rolled binary codec
+  next to the `PresencePeer` type (bitmask presence + varint/str/f64 fields;
+  `selection_json`/`drag_ghost_json` stay opaque app-owned text, never re-parsed). `store_sync`'s
+  `presence_to_json`/`presence_from_json` -> `presence_to_bytes`/`presence_from_bytes`.
+- `protocol_core` gained `write_f64`/`read_f64` (8-byte LE) — needed for PresencePoint/Viewport.
+- Fixed en route: `protocol_history::encode_history`'s per-encode `ordinals` map was built from
+  the WHOLE edit list upfront, letting an edit's own `operation_meta[i].op_id` (legitimately equal
+  to `edit.id` for a single-op edit) resolve to a self-referencing ordinal — undecodable, since the
+  decoder only knows edits already decoded. Now built incrementally (self inserted only AFTER
+  encoding), matching `HistoryAppender`'s already-correct streaming semantics. This was the root
+  cause of the `folder_external_edit_delivers_remote_operations` hang from earlier in the session.
+- Tests: protocol_history 32/32, protocol 8/8, protocol_causal 27/27 (+2 new), protocol_wire
+  26/26, protocol_testkit 29/29, protocol_io/protocol_materialize green, semio-framework-core
+  99/99 (+2 new presence round-trip tests).
+
+## B2 — store: bytes currency (DONE, with two scoped deviations noted)
+
+- `BackboneMessage::Snapshot` -> `{ pack: Vec<u8>, spr: Vec<u8> }`. `DocumentStore::envelope_json`
+  deleted, replaced by `snapshot_pack() -> DocumentPackFiles` (via `print_document_pack`).
+  `merge_remote_snapshot` takes `(&[u8], &[u8])` via `parse_document_pack`.
+- Main `DocumentStore` impl block (and `StudioMember` impl, and `test_support` helpers) gained
+  `P: DocumentPack`, `Operation: OpText` bounds (needed for the pack+spr snapshot pipeline). Every
+  REAL registered app already satisfies these (proven: zero fallout across the whole workspace
+  except two special-case types that never went through `DocumentCodec::of` registration).
+- `StudioHistoryOperation`/`StudioHistoryProjection` (store's own dogfooded studio meta-document)
+  gained real `OpText`+`OpBinary`+`DocumentDsl`+`DocumentPack` impls, replacing the JSON-bytes
+  hatch. **Deviation from the original design sketch**: `StudioCheckpoint`/`StudioAlternative`
+  embed foreign types (`vcs::Author`, `protocol_core::HybridLogicalTimestamp`) that cannot derive
+  `dsl::DslRecord` (orphan rule — `dsl` depends on `protocol` which depends on `protocol_core`, a
+  cycle). Implemented by hand instead: BINARY face via the already-existing
+  `pack_rt::encode_json_value`/`decode_json_value` bridge (real pack `Shape::Value` TLV bytes —
+  compliant structured binary per the plan's own scope ruling, NOT JSON text bytes); TEXT face
+  stays JSON text with an explicit rationale comment (same documented exception the
+  `serde_json::Value`-projected apps already have, deferred to B9 hygiene). Found and fixed a real
+  bug in this bridge: `DslValue::Number(f64)` round-trips lossily for typed `u64`/`i32` struct
+  fields (serde_json tags a float-sourced `Number` as float-kind even at whole values) — added
+  `renormalize_whole_number_floats` to coerce fractionless floats back to integers before final
+  deserialize.
+  Registered no codec for `"os.studio.history"` (not required by any current caller).
+- `TimestampedOperation` (store's own test fixture) -> real `#[derive(dsl::DslOps)]`, JSON hatch
+  deleted.
+- `DocumentCodec` reshaped: dropped `print`/`parse`/`parse_dsl`/`edit_json_from_envelope`/
+  `envelopes_from_edit_json` (all JSON-currency); added `compile_dsl` (text->binary import
+  fallback), `print_mirror` (binary->text logging mirror), `edit_text_from_envelope` (one op's
+  printed `.ops` block, for a future hot-path append optimization). **Deviation**: originally
+  scoped as its own B2 step, actually landed together with B3 since the actor is the only real
+  consumer and needed the new shape immediately.
+- `payload_hash` (in `replay_operations`) now hashes `operation.encode_op()` bytes, not a JSON
+  serialization — two ops that encode identically via `OpBinary` but differ in JSON shape (or vice
+  versa) now hash identically, closing a real correctness seam.
+- New `store::append_history_edits_to_spr(spr, &[HistoryEdit]) -> Vec<u8>`: decode -> extend
+  edits -> **refresh `cursor.applied_edit_ids`** (the subtle part — without this, appended edits
+  are durable but invisible to the next `parse_document_spr` live-projection fold) -> canonical
+  re-encode.
+- New `store::{encode_backbone_message, decode_backbone_message}` binary codec for
+  `BackboneMessage` (tag u8 | body), tested round-trip for all 3 variants. Not yet wired into
+  `PortBackbone`/`BackboneChannelPort` (those stay JSON-wrapped-around-bytes across the wasm
+  sandbox boundary by design — see that trait's doc — and the trait signature flip is B5's WIT
+  scope, touching ~7 app plugin crates via the shared host bridge).
+- Found and fixed a REAL pre-existing bug (unrelated to this wave's own changes, surfaced by it):
+  `DocumentStore::flush_outbound`'s Apply branch called `self.dag.insert(op_envelope.clone())`
+  instead of `self.dag.seed_applied(op_envelope.operation_id.clone())`. `insert` stores the
+  envelope for later `drain_applied_envelopes()` draining; `seed_applied` only marks it applied.
+  Consequence: the NEXT time `ingest_remote` ran on the same store (any real external/remote
+  ingestion), it would drain and re-materialize the already-local edit as a SECOND, duplicate
+  edit under its wire `operation_id` (which differs from the edit's own local id, so
+  `ingest_envelope`'s by-id dedup never caught it). Fixed to `seed_applied`, matching the
+  function's own doc comment and the established pattern already used in `merge_remote_snapshot`.
+- Tests: store 78/78 (+1 new: `backbone_message_binary_round_trips_every_variant`; replaced
+  `document_codec_of_round_trips_pack_and_dsl` with
+  `document_codec_of_round_trips_dsl_and_pack_and_edit_text`), db_engine 15/15 (+2 new, see B4
+  section below).
+
+## B3 — store_sync: bytes-native schema-agnostic actor (DONE)
+
+- `DocumentActor` state: `current_envelope: Option<Value>` + `known_edit_ids: HashSet<String>` ->
+  `current_pack: Option<Vec<u8>>` + `current_spr: Option<Vec<u8>>` + `known_op_ids:
+  HashSet<String>`. New schema-agnostic helpers (pure `protocol_history`/`protocol_causal`, no
+  codec, no JSON): `op_ids_of(&HistoryEdit)` (meta.op_id when present, else `"{edit.id}#{i}"` —
+  byte-for-byte `operation_envelope_from_edit`'s own fallback), `spr_op_ids(&[u8])` (via
+  `HistoryReader` scan — deliberately NEVER via `parse_document_spr`, whose meta-absent branch
+  mints fresh random ids per read), `envelopes_from_history_edit`/`history_edit_from_envelope`
+  (the byte-level twins of `edit_from_operation_envelope`/`operation_envelope_from_edit`).
+  **This closes the dedup-domain bug** the earlier session investigation traced (mixing envelope
+  op ids with raw JSON edit ids) by construction — one id function, one call site, used
+  everywhere.
+- `FolderEndpoint::read/write` now move `(pack, spr)` bytes directly. `Sqlite` variant fully
+  codec-free. `Pack` (file) variant uses `compile_dsl` for the no-`.pack`-yet DSL fallback import
+  and `print_mirror` for the `.dsl`/`.ops` logging mirrors on every full write; a missing codec on
+  the Pack endpoint degrades to pack+spr-only persistence with mirrors skipped (never a hard
+  failure — mirrors are logging, not truth).
+- `persist_write`/`persist_snapshot`/`persist_operations`/`handle_external_change`/
+  `deliver_snapshot` rewritten byte-native. `persist_operations` appends via
+  `append_history_edits_to_spr`; `handle_external_change` diffs `spr_op_ids` sets and, for the
+  append-only case, scans the `HistoryReader` for edits whose op ids intersect the new set,
+  building envelopes directly (no codec).
+- `DocumentEvent::SnapshotReplaced` and `BackboneMessage::Snapshot` both `{ pack, spr }`.
+  `DocumentActorMsg::LocalSnapshot` deleted (confirmed zero production senders).
+- Fixtures rewritten JSON-free per the approved design: `store/sync/fixtures/<name>/fixture.json`
+  manifest (metadata only — name/schema/inbound-kind/expected-events/expected-edit-ids) + sibling
+  `.ops`/`.dsl` sidecar text files for content. `FixtureInbound::{HubFrame{frame_bytes},
+  ExternalEdits{ops_text}, ReplaceDocument{dsl_text, ops_text}}` (loaded shape) vs
+  `RawFixtureInbound` (on-disk shape, filename references). Hit and fixed the SAME
+  `rename_all` vs `rename_all_fields` gotcha already documented elsewhere in this codebase
+  (framework/core's `ui_dirty_scope_partial_serializes_fields_as_camel_case` test) — `rename_all`
+  on an enum only renames variant tags, not fields inside variants. All 3 fixtures
+  (`basic-remote-operations`, `remote-operations-backlog`, `snapshot-replaced`) converted and
+  passing.
+- Removed the `[DEBUG]` eprintln left over from the earlier session's investigation.
+- Tests: store_sync 18/18 (was 17/18 stuck on the known dedup bug at the start of this wave).
+
+## Downstream fallout fixed to keep the workspace compiling
+
+- `framework/plugin`'s `document_json()` trait method: `self.store.envelope_json()` (deleted) ->
+  `serde_json::to_string(self.store.envelope())` (same behavior, this method itself is B5's own
+  WIT-flip scope — `document_pack`/`load_document_pack` already exist as the real replacement).
+- `db_engine`'s `HashProjection`/`HashOperation` (the schema-erased hash-only `vcs` feature type)
+  needed `DocumentPack`+`OpText` to keep satisfying the widened `DocumentStore` bound. Gave both
+  real hand-rolled codecs (not derives — same foreign-type/orphan-rule reasoning as the studio
+  document): `HashProjection::{encode,decode}_pack_with` = raw 32 bytes; `HashOperation`
+  `OpText`/`OpBinary` = a small hand-written `hash=<hex64>[ author=<id>][ ts=<a>,<p>,<l>]` line
+  grammar + `32 bytes | presence u8 | [author len+utf8] | [3x varint hlt]` binary layout. This
+  ALSO closes part of B4 (`HashOperation` was one of the 4 confirmed fake-binary production op
+  types). New tests: `hash_operation_text_and_binary_round_trip_with_every_field_present_and_absent`,
+  `hash_projection_pack_round_trips`.
+- `compose` crate's own test-local `KitProjection`/`KitOperation` (a `#[test] fn
+  vcs_typed_ops_materialize_projection`) needed the same bound — real `#[derive(dsl::DslDocument)]`/
+  `#[derive(dsl::DslOps)]` added (trivial, both types are already local/simple).
+  `1/1` passing.
+- `os-hub`'s presence relay (`ClientFrame::Presence`/`ServerFrame::Presence` pattern matches)
+  updated for the B1 binary presence frame shape; internal `presence: DashMap<(String,String),
+  String>` -> `Vec<u8>` (the hub is a pure pass-through, never decodes presence content anyway).
+  `9/9` passing.
+- `framework/product/os/core` (semio-framework-os): 8 call sites using the deleted
+  `codec.print`/`codec.parse`/`codec.parse_dsl` fields. Fixed properly, not just patched — this
+  crate is fully typed (`OsProjection`/`OsOperation`), so it never needed the type-erased
+  `DocumentCodec` at all: `import_os_studio_from_pack`/`export_os_studio_pack`/
+  `export_os_studio_dsl`/`StudioBackbonePort::{read,write}` now call
+  `store::{parse,print}_document_{pack,text}::<OsProjection, OsOperation>` directly. New shared
+  `os_envelope_of(&OsDocument) -> OsEnvelope` helper de-duplicates the envelope construction that
+  was previously copy-pasted 3x. This is a strict improvement over the pre-wave state (which had a
+  registration-order dependency on `s/plugin` registering the studio codec — now none). `54/54`
+  passing.
+- `semio-framework-renderer-wgpu`'s `pump_sync_events`: `DocumentEvent::SnapshotReplaced`'s new
+  `{pack, spr}` shape needed a byte-native load path. Found the native host bridge
+  (`WasmPluginRuntime::load_app_document_pack`) already existed but the WIT `document-pack-files`
+  record was missing an `spr` field (confirmed lossy/broken even before this wave — the guest-side
+  glue built `store::DocumentPackFiles{pack, ops}` with no `spr` while `load_document_pack`
+  immediately reads `files.spr`, always empty). Fixed at the root: added `spr: list<u8>` to the
+  WIT record (`framework/wit/world.wit`), updated the 2 Rust-side glue functions
+  (`framework/plugin/rs/lib.rs`'s `read/load_app_document_pack`) to thread it through. wgpu's
+  event handler now calls `runtime.load_app_document_pack` with real pack+spr bytes instead of
+  the JSON `load_app_document`. `281/281` passing.
+
+## Verification
+
+`cargo check --workspace --all-targets`: 0 errors (confirmed on a full run after all fixes above).
+Every touched crate's own test suite re-run and green: protocol_core, protocol_history, protocol,
+protocol_causal, protocol_wire, protocol_io, protocol_materialize, protocol_testkit,
+semio-framework-core, store, store_sync, db_engine, compose, os-hub, semio-framework-os,
+semio-framework-plugin, semio-framework-renderer-wgpu.
+
+## Deferred / explicitly out of scope for B1-B3
+
+- `DocumentCodec`'s `edit_text_from_envelope` field exists (tested in isolation) but is not yet
+  consumed by `store_sync`'s `persist_operations` — the hot-path `.ops` incremental append
+  optimization (vs. today's full `codec.print_mirror` rewrite on every persist) is specced as a
+  later optimization, not required for correctness (matches `append_history_edits_to_spr`'s own
+  documented O(history)-per-call tradeoff).
+- `PortBackbone`/`BackboneChannelPort` trait signatures stay `String`/JSON-in-bytes across the
+  wasm sandbox boundary — real `encode_backbone_message`/`decode_backbone_message` exist and are
+  tested, ready for B5's WIT flip to consume.
+- `"os.studio.history"` has no registered `DocumentCodec` (not required by any current caller;
+  would be needed if the studio meta-document ever needs folder/hub backbone persistence through
+  the generic `FolderEndpoint`/`document_codec` path rather than in-process `StudioHost`
+  composition).
+- `StudioCheckpoint`/`StudioAlternative`'s proper dsl-record grammar (vs. the hand-rolled
+  pack-Value-bridge + JSON-text-face compromise) — same class of deferral as the
+  `serde_json::Value`-projected apps' DSL-quality gap, tracked for B9 hygiene.
+
+Next: B4 (fake-binary op cleanup for `ComposeWireOperation`/`ProgramOperation` + db pathmap v2 +
+db WAL cleanup + gesture preview binary), then B5 (kernel+WIT+wgpu binary ABI, including the
+Decision-1-mandated invocation-wrapper binarization), B6 (TS/JS full binary worker frames per
+Decision-2), B7 (fixture regeneration + canary), B8 (fleet conformance), B9 (hygiene), B10 (final
+verification + browser runtime proof + ticket close).

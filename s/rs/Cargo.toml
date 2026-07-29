@@ -3,7 +3,7 @@ name = "s_studio"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "S studio CQRS store — programs, app instances, media graph, checkpoints"
+description = "S studio CQRS store — programs, app instances, workflow, checkpoints"
 
 
 [lints]

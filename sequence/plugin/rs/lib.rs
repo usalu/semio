@@ -42,7 +42,7 @@ struct SequencePlayRuntime {
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct MediaGraphPortRecord {
+struct WorkflowDiagramPortRecord {
     id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     label: Option<String>,
@@ -50,7 +50,7 @@ struct MediaGraphPortRecord {
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct MediaGraphNodeRecord {
+struct WorkflowNodeRecord {
     id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     label: Option<String>,
@@ -58,13 +58,13 @@ struct MediaGraphNodeRecord {
     y: f64,
     width: f64,
     height: f64,
-    inputs: Vec<MediaGraphPortRecord>,
-    outputs: Vec<MediaGraphPortRecord>,
+    inputs: Vec<WorkflowDiagramPortRecord>,
+    outputs: Vec<WorkflowDiagramPortRecord>,
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct MediaGraphEdgeRecord {
+struct WorkflowEdgeRecord {
     id: String,
     source_node_id: String,
     source_port_id: String,
@@ -88,28 +88,28 @@ fn split_endpoint(endpoint: &str) -> (String, String) {
     endpoint.split_once('@').map(|(node, port)| (node.to_string(), port.to_string())).unwrap_or_else(|| (endpoint.to_string(), "next".into()))
 }
 
-fn fixture_to_media_graph(fixture: &DagFixture) -> (String, String) {
-    let nodes: Vec<MediaGraphNodeRecord> = fixture
+fn fixture_to_workflow(fixture: &DagFixture) -> (String, String) {
+    let nodes: Vec<WorkflowNodeRecord> = fixture
         .nodes
         .iter()
-        .map(|node| MediaGraphNodeRecord {
+        .map(|node| WorkflowNodeRecord {
             id: node.id.clone(),
             label: Some(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
             x: node.x,
             y: node.y,
             width: node.width,
             height: node.height,
-            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| MediaGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
-            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| MediaGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
+            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| WorkflowDiagramPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
+            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| WorkflowDiagramPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
         })
         .collect();
-    let edges: Vec<MediaGraphEdgeRecord> = fixture
+    let edges: Vec<WorkflowEdgeRecord> = fixture
         .edges
         .iter()
         .map(|edge| {
             let (source_node_id, source_port_id) = split_endpoint(&edge.source);
             let (target_node_id, target_port_id) = split_endpoint(&edge.target);
-            MediaGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id }
+            WorkflowEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id }
         })
         .collect();
     (serde_json::to_string(&nodes).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&edges).unwrap_or_else(|_| "[]".into()))
@@ -325,7 +325,7 @@ fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String], labels: 
 fn render_main_graph(fixture: &SequenceFixture, runtime: &SequencePlayRuntime) -> UiNode {
     let mut host = host_from_fixture(fixture);
     host.layout_expanded_slots();
-    let (nodes_json, edges_json) = fixture_to_media_graph(&host.dag.fixture);
+    let (nodes_json, edges_json) = fixture_to_workflow(&host.dag.fixture);
     let viewport_json = serde_json::to_string(&fixture.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
     let selection_json = if runtime.selected_step_ids.is_empty() { None } else { serde_json::to_string(&runtime.selected_step_ids).ok() };
     build_node_graph_scene(

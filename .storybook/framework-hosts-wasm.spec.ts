@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/framework-hosts-wasm.spec.ts
 // Specs: End-to-end checks for the framework renderer hosts backed by prebuilt Rust/WASM engines, inside the
-// aggregated Storybook static build: `NodeGraphHost` (media-graph + flow-graph variants), `TextEditorHost`,
+// aggregated Storybook static build: `NodeGraphHost` (workflow + flow-graph variants), `TextEditorHost`,
 // `Paint2dHost`, `TiledMapHost`, `WorldTerrainLayer`, `World3dHost`.
 // Summary: Loads each story's `iframe.html?id=...`, asserts a clean boot (no page/console errors, storybook-root
 // populated) and a host-specific marker element/text. Tile/DEM fetches against intentionally-missing storybook
@@ -39,8 +39,8 @@ async function expectHostStory(page: Page, storyId: string): Promise<void> {
 //#endregion Helpers
 
 //#region NodeGraphHost
-test("NodeGraphHost media graph: boots the real GraphSession WASM engine and renders the host shell", async ({ page }) => {
-  await expectHostStory(page, "🛠️framework🔌hosts-nodegraphhost--media-graph");
+test("NodeGraphHost workflow: boots the real GraphSession WASM engine and renders the host shell", async ({ page }) => {
+  await expectHostStory(page, "🛠️framework🔌hosts-nodegraphhost--workflow");
   await expect(page.locator(".semio-node-graph-host")).toBeVisible();
 });
 

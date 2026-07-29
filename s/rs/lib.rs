@@ -1,4 +1,4 @@
-//! 🖥️ S studio CQRS — programs, app instances, media graph on `vcs`.
+//! 🖥️ S studio CQRS — programs, app instances, workflow on `vcs`.
 
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -7,7 +7,7 @@ use vcs::{DocumentVcs, VcsError};
 use store::{create_document_envelope, materialize_document_projection, DocumentBackboneRef, DocumentCommand, DocumentEnvelope, DocumentStore};
 
 pub const S_STUDIO_SCHEMA: &str = "s.studio";
-pub const S_MEDIA_GRAPH_SCHEMA: &str = "s.media-graph";
+pub const S_WORKFLOW_SCHEMA: &str = "s.workflow";
 
 //#region 🔖Schemas
 /// @emoji 🔗 Handle to an app instance's own vcs document — app content is never embedded on the
@@ -33,26 +33,26 @@ pub struct SAppInstance {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-pub struct SMediaGraphPort {
+pub struct SWorkflowPort {
     pub id: String,
     pub resource_kind: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-pub struct SMediaGraphNode {
+pub struct SWorkflowNode {
     pub id: String,
     pub instance_id: String,
     pub label: String,
     pub x: f64,
     pub y: f64,
-    pub inputs: Vec<SMediaGraphPort>,
-    pub outputs: Vec<SMediaGraphPort>,
+    pub inputs: Vec<SWorkflowPort>,
+    pub outputs: Vec<SWorkflowPort>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-pub struct SMediaGraphEdge {
+pub struct SWorkflowEdge {
     pub id: String,
     pub source_node_id: String,
     pub source_port_id: String,
@@ -62,12 +62,12 @@ pub struct SMediaGraphEdge {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-pub struct SMediaGraph {
+pub struct SWorkflow {
     pub schema: String,
     #[dsl(table)]
-    pub nodes: Vec<SMediaGraphNode>,
+    pub nodes: Vec<SWorkflowNode>,
     #[dsl(table)]
-    pub edges: Vec<SMediaGraphEdge>,
+    pub edges: Vec<SWorkflowEdge>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
@@ -81,12 +81,12 @@ pub struct SStudioProjection {
     pub active_alternative_id: Option<String>,
     pub app_instances: Vec<SAppInstance>,
     #[dsl(block)]
-    pub media_graph: SMediaGraph,
+    pub workflow: SWorkflow,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-pub struct MediaGraphPosition {
+pub struct WorkflowPosition {
     pub x: f64,
     pub y: f64,
 }
@@ -106,19 +106,19 @@ pub enum StudioOperation {
         #[dsl(block)]
         instance: SAppInstance,
         #[dsl(block)]
-        position: MediaGraphPosition,
+        position: WorkflowPosition,
     },
     RemoveAppInstance {
         instance_id: String,
     },
-    ConnectMediaPorts {
+    ConnectWorkflowPorts {
         #[dsl(block)]
-        edge: SMediaGraphEdge,
+        edge: SWorkflowEdge,
     },
-    DisconnectMediaEdge {
+    DisconnectWorkflowEdge {
         edge_id: String,
     },
-    MoveMediaNode {
+    MoveWorkflowNode {
         node_id: String,
         x: f64,
         y: f64,
@@ -148,12 +148,12 @@ pub fn create_s_id(prefix: &str) -> String {
     format!("{prefix}-{n}")
 }
 
-pub fn empty_media_graph() -> SMediaGraph {
-    SMediaGraph { schema: S_MEDIA_GRAPH_SCHEMA.into(), nodes: Vec::new(), edges: Vec::new() }
+pub fn empty_workflow() -> SWorkflow {
+    SWorkflow { schema: S_WORKFLOW_SCHEMA.into(), nodes: Vec::new(), edges: Vec::new() }
 }
 
 pub fn default_studio_projection() -> SStudioProjection {
-    SStudioProjection { programs: Vec::new(), active_program_id: None, active_alternative_id: None, app_instances: Vec::new(), media_graph: empty_media_graph() }
+    SStudioProjection { programs: Vec::new(), active_program_id: None, active_alternative_id: None, app_instances: Vec::new(), workflow: empty_workflow() }
 }
 
 pub fn create_empty_studio_document(id: &str, name: &str) -> SStudioDocument {
@@ -173,26 +173,26 @@ pub fn apply_studio_operation(projection: &SStudioProjection, operation: &Studio
             if !next.programs.contains(&instance.program_id) {
                 next.programs.push(instance.program_id.clone());
             }
-            let node = SMediaGraphNode { id: create_s_id("node"), instance_id: instance.id.clone(), label: instance.label.clone(), x: position.x, y: position.y, inputs: Vec::new(), outputs: Vec::new() };
-            next.media_graph.nodes.push(node);
+            let node = SWorkflowNode { id: create_s_id("node"), instance_id: instance.id.clone(), label: instance.label.clone(), x: position.x, y: position.y, inputs: Vec::new(), outputs: Vec::new() };
+            next.workflow.nodes.push(node);
             next.app_instances.push(instance.clone());
         }
         StudioOperation::RemoveAppInstance { instance_id } => {
-            let node_id = next.media_graph.nodes.iter().find(|node| node.instance_id == *instance_id).map(|node| node.id.clone());
+            let node_id = next.workflow.nodes.iter().find(|node| node.instance_id == *instance_id).map(|node| node.id.clone());
             next.app_instances.retain(|instance| instance.id != *instance_id);
-            next.media_graph.nodes.retain(|node| node.instance_id != *instance_id);
+            next.workflow.nodes.retain(|node| node.instance_id != *instance_id);
             if let Some(node_id) = node_id {
-                next.media_graph.edges.retain(|edge| edge.source_node_id != node_id && edge.target_node_id != node_id);
+                next.workflow.edges.retain(|edge| edge.source_node_id != node_id && edge.target_node_id != node_id);
             }
         }
-        StudioOperation::ConnectMediaPorts { edge } => {
-            next.media_graph.edges.push(edge.clone());
+        StudioOperation::ConnectWorkflowPorts { edge } => {
+            next.workflow.edges.push(edge.clone());
         }
-        StudioOperation::DisconnectMediaEdge { edge_id } => {
-            next.media_graph.edges.retain(|edge| edge.id != *edge_id);
+        StudioOperation::DisconnectWorkflowEdge { edge_id } => {
+            next.workflow.edges.retain(|edge| edge.id != *edge_id);
         }
-        StudioOperation::MoveMediaNode { node_id, x, y } => {
-            for node in &mut next.media_graph.nodes {
+        StudioOperation::MoveWorkflowNode { node_id, x, y } => {
+            for node in &mut next.workflow.nodes {
                 if node.id == *node_id {
                     node.x = *x;
                     node.y = *y;
@@ -218,18 +218,18 @@ pub enum StudioDiff {
     },
     SpawnAppInstance {
         instance: SAppInstance,
-        position: MediaGraphPosition,
+        position: WorkflowPosition,
     },
     RemoveAppInstance {
         instance_id: String,
     },
-    ConnectMediaPorts {
-        edge: SMediaGraphEdge,
+    ConnectWorkflowPorts {
+        edge: SWorkflowEdge,
     },
-    DisconnectMediaEdge {
+    DisconnectWorkflowEdge {
         edge_id: String,
     },
-    MoveMediaNode {
+    MoveWorkflowNode {
         node_id: String,
         x: f64,
         y: f64,
@@ -244,9 +244,9 @@ impl OperationDiff<SStudioProjection> for StudioDiff {
             StudioDiff::SetActiveAlternative { alternative_id } => StudioOperation::SetActiveAlternative { alternative_id: alternative_id.clone() },
             StudioDiff::SpawnAppInstance { instance, position } => StudioOperation::SpawnAppInstance { instance: instance.clone(), position: position.clone() },
             StudioDiff::RemoveAppInstance { instance_id } => StudioOperation::RemoveAppInstance { instance_id: instance_id.clone() },
-            StudioDiff::ConnectMediaPorts { edge } => StudioOperation::ConnectMediaPorts { edge: edge.clone() },
-            StudioDiff::DisconnectMediaEdge { edge_id } => StudioOperation::DisconnectMediaEdge { edge_id: edge_id.clone() },
-            StudioDiff::MoveMediaNode { node_id, x, y } => StudioOperation::MoveMediaNode { node_id: node_id.clone(), x: *x, y: *y },
+            StudioDiff::ConnectWorkflowPorts { edge } => StudioOperation::ConnectWorkflowPorts { edge: edge.clone() },
+            StudioDiff::DisconnectWorkflowEdge { edge_id } => StudioOperation::DisconnectWorkflowEdge { edge_id: edge_id.clone() },
+            StudioDiff::MoveWorkflowNode { node_id, x, y } => StudioOperation::MoveWorkflowNode { node_id: node_id.clone(), x: *x, y: *y },
         };
         apply_studio_operation(projection, &operation)
     }
@@ -267,9 +267,9 @@ impl Operation<SStudioProjection> for StudioOperation {
             StudioOperation::SetActiveAlternative { alternative_id } => StudioDiff::SetActiveAlternative { alternative_id: alternative_id.clone() },
             StudioOperation::SpawnAppInstance { instance, position } => StudioDiff::SpawnAppInstance { instance: instance.clone(), position: position.clone() },
             StudioOperation::RemoveAppInstance { instance_id } => StudioDiff::RemoveAppInstance { instance_id: instance_id.clone() },
-            StudioOperation::ConnectMediaPorts { edge } => StudioDiff::ConnectMediaPorts { edge: edge.clone() },
-            StudioOperation::DisconnectMediaEdge { edge_id } => StudioDiff::DisconnectMediaEdge { edge_id: edge_id.clone() },
-            StudioOperation::MoveMediaNode { node_id, x, y } => StudioDiff::MoveMediaNode { node_id: node_id.clone(), x: *x, y: *y },
+            StudioOperation::ConnectWorkflowPorts { edge } => StudioDiff::ConnectWorkflowPorts { edge: edge.clone() },
+            StudioOperation::DisconnectWorkflowEdge { edge_id } => StudioDiff::DisconnectWorkflowEdge { edge_id: edge_id.clone() },
+            StudioOperation::MoveWorkflowNode { node_id, x, y } => StudioDiff::MoveWorkflowNode { node_id: node_id.clone(), x: *x, y: *y },
         }
     }
 
@@ -283,13 +283,13 @@ impl Operation<SStudioProjection> for StudioOperation {
                 .iter()
                 .find(|i| i.id == *instance_id)
                 .map(|instance| {
-                    let node = projection.media_graph.nodes.iter().find(|n| n.instance_id == *instance_id);
-                    vec![StudioOperation::SpawnAppInstance { instance: instance.clone(), position: MediaGraphPosition { x: node.map(|n| n.x).unwrap_or(0.0), y: node.map(|n| n.y).unwrap_or(0.0) } }]
+                    let node = projection.workflow.nodes.iter().find(|n| n.instance_id == *instance_id);
+                    vec![StudioOperation::SpawnAppInstance { instance: instance.clone(), position: WorkflowPosition { x: node.map(|n| n.x).unwrap_or(0.0), y: node.map(|n| n.y).unwrap_or(0.0) } }]
                 })
                 .unwrap_or_default(),
-            StudioOperation::ConnectMediaPorts { edge } => vec![StudioOperation::DisconnectMediaEdge { edge_id: edge.id.clone() }],
-            StudioOperation::DisconnectMediaEdge { edge_id } => projection.media_graph.edges.iter().find(|e| e.id == *edge_id).map(|edge| vec![StudioOperation::ConnectMediaPorts { edge: edge.clone() }]).unwrap_or_default(),
-            StudioOperation::MoveMediaNode { node_id, .. } => projection.media_graph.nodes.iter().find(|n| n.id == *node_id).map(|node| vec![StudioOperation::MoveMediaNode { node_id: node_id.clone(), x: node.x, y: node.y }]).unwrap_or_default(),
+            StudioOperation::ConnectWorkflowPorts { edge } => vec![StudioOperation::DisconnectWorkflowEdge { edge_id: edge.id.clone() }],
+            StudioOperation::DisconnectWorkflowEdge { edge_id } => projection.workflow.edges.iter().find(|e| e.id == *edge_id).map(|edge| vec![StudioOperation::ConnectWorkflowPorts { edge: edge.clone() }]).unwrap_or_default(),
+            StudioOperation::MoveWorkflowNode { node_id, .. } => projection.workflow.nodes.iter().find(|n| n.id == *node_id).map(|node| vec![StudioOperation::MoveWorkflowNode { node_id: node_id.clone(), x: node.x, y: node.y }]).unwrap_or_default(),
         }
     }
 }
@@ -433,17 +433,17 @@ mod tests {
     fn spawns_app_instance_through_cqrs_dispatch() {
         let mut store = StudioStore::new(create_empty_studio_document("studio", "Studio"));
         let instance = SAppInstance { id: "app-1".into(), program_id: "draw".into(), app_id: "draw".into(), label: "Draw".into(), yields: "graph.dag".into(), document: SDocumentRef { document_id: "doc-1".into(), schema: "draw.document".into() } };
-        store.dispatch_apply(vec![StudioOperation::SpawnAppInstance { instance: instance.clone(), position: MediaGraphPosition { x: 0.0, y: 0.0 } }]).expect("spawn");
+        store.dispatch_apply(vec![StudioOperation::SpawnAppInstance { instance: instance.clone(), position: WorkflowPosition { x: 0.0, y: 0.0 } }]).expect("spawn");
         let projection = store.projection().expect("projection");
         assert_eq!(projection.app_instances.len(), 1);
-        assert_eq!(projection.media_graph.nodes.len(), 1);
+        assert_eq!(projection.workflow.nodes.len(), 1);
     }
 
     #[test]
     fn undo_after_spawn() {
         let mut store = StudioStore::new(create_empty_studio_document("studio", "Studio"));
         let instance = SAppInstance { id: "app-1".into(), program_id: "draw".into(), app_id: "draw".into(), label: "Draw".into(), yields: "graph.dag".into(), document: SDocumentRef { document_id: "doc-1".into(), schema: "draw.document".into() } };
-        store.dispatch_apply(vec![StudioOperation::SpawnAppInstance { instance, position: MediaGraphPosition { x: 0.0, y: 0.0 } }]).expect("spawn");
+        store.dispatch_apply(vec![StudioOperation::SpawnAppInstance { instance, position: WorkflowPosition { x: 0.0, y: 0.0 } }]).expect("spawn");
         store.dispatch_text("undo").expect("undo");
         assert_eq!(store.projection().expect("projection").app_instances.len(), 0);
     }
@@ -462,18 +462,18 @@ mod tests {
                 yields: "2d.drawing".into(),
                 document: SDocumentRef { document_id: "doc-1".into(), schema: "draw.document".into() },
             }],
-            media_graph: SMediaGraph {
-                schema: S_MEDIA_GRAPH_SCHEMA.into(),
-                nodes: vec![SMediaGraphNode {
+            workflow: SWorkflow {
+                schema: S_WORKFLOW_SCHEMA.into(),
+                nodes: vec![SWorkflowNode {
                     id: "node-1".into(),
                     instance_id: "app-1".into(),
                     label: "Draw\nNode".into(),
                     x: 40.0,
                     y: 80.0,
-                    inputs: vec![SMediaGraphPort { id: "app-1:in".into(), resource_kind: "2d.drawing".into() }],
-                    outputs: vec![SMediaGraphPort { id: "app-1:out".into(), resource_kind: "2d.drawing".into() }],
+                    inputs: vec![SWorkflowPort { id: "app-1:in".into(), resource_kind: "2d.drawing".into() }],
+                    outputs: vec![SWorkflowPort { id: "app-1:out".into(), resource_kind: "2d.drawing".into() }],
                 }],
-                edges: vec![SMediaGraphEdge {
+                edges: vec![SWorkflowEdge {
                     id: "edge-1".into(),
                     source_node_id: "node-1".into(),
                     source_port_id: "app-1:out".into(),
@@ -506,12 +506,12 @@ mod tests {
             yields: "text.document".into(),
             document: SDocumentRef { document_id: "doc-2".into(), schema: "writer.document".into() },
         };
-        store::test_support::assert_op_line_round_trip(&StudioOperation::SpawnAppInstance { instance, position: MediaGraphPosition { x: 12.0, y: 24.0 } });
+        store::test_support::assert_op_line_round_trip(&StudioOperation::SpawnAppInstance { instance, position: WorkflowPosition { x: 12.0, y: 24.0 } });
         store::test_support::assert_op_line_round_trip(&StudioOperation::RemoveAppInstance { instance_id: "app-1".into() });
-        let edge = SMediaGraphEdge { id: "edge-2".into(), source_node_id: "node-1".into(), source_port_id: "p-out".into(), target_node_id: "node-2".into(), target_port_id: "p-in".into() };
-        store::test_support::assert_op_line_round_trip(&StudioOperation::ConnectMediaPorts { edge });
-        store::test_support::assert_op_line_round_trip(&StudioOperation::DisconnectMediaEdge { edge_id: "edge-1".into() });
-        store::test_support::assert_op_line_round_trip(&StudioOperation::MoveMediaNode { node_id: "node-1".into(), x: 5.0, y: 6.0 });
+        let edge = SWorkflowEdge { id: "edge-2".into(), source_node_id: "node-1".into(), source_port_id: "p-out".into(), target_node_id: "node-2".into(), target_port_id: "p-in".into() };
+        store::test_support::assert_op_line_round_trip(&StudioOperation::ConnectWorkflowPorts { edge });
+        store::test_support::assert_op_line_round_trip(&StudioOperation::DisconnectWorkflowEdge { edge_id: "edge-1".into() });
+        store::test_support::assert_op_line_round_trip(&StudioOperation::MoveWorkflowNode { node_id: "node-1".into(), x: 5.0, y: 6.0 });
     }
 
     #[test]

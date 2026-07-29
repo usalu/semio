@@ -75,7 +75,7 @@ pub mod app_jack {
 
     #[derive(Serialize)]
     #[serde(rename_all = "camelCase")]
-    struct MediaGraphPortRecord {
+    struct WorkflowDiagramPortRecord {
         id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
         label: Option<String>,
@@ -83,7 +83,7 @@ pub mod app_jack {
 
     #[derive(Serialize)]
     #[serde(rename_all = "camelCase")]
-    struct MediaGraphNodeRecord {
+    struct WorkflowNodeRecord {
         id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
         label: Option<String>,
@@ -91,13 +91,13 @@ pub mod app_jack {
         y: f64,
         width: f64,
         height: f64,
-        inputs: Vec<MediaGraphPortRecord>,
-        outputs: Vec<MediaGraphPortRecord>,
+        inputs: Vec<WorkflowDiagramPortRecord>,
+        outputs: Vec<WorkflowDiagramPortRecord>,
     }
 
     #[derive(Serialize)]
     #[serde(rename_all = "camelCase")]
-    struct MediaGraphEdgeRecord {
+    struct WorkflowEdgeRecord {
         id: String,
         source_node_id: String,
         source_port_id: String,
@@ -299,19 +299,19 @@ pub mod app_jack {
         trinity_ram::parse_port_key(endpoint).map_or_else(|| (endpoint.to_string(), "in".into()), |(n, p)| (n.to_string(), p.to_string()))
     }
 
-    fn fixture_to_media_graph(fixture: &GraphFixture) -> (String, String, String) {
-        let nodes: Vec<MediaGraphNodeRecord> = fixture
+    fn fixture_to_workflow(fixture: &GraphFixture) -> (String, String, String) {
+        let nodes: Vec<WorkflowNodeRecord> = fixture
             .nodes
             .iter()
-            .map(|node| node_to_media_record(node))
+            .map(|node| node_to_workflow_record(node))
             .collect();
-        let edges: Vec<MediaGraphEdgeRecord> = fixture
+        let edges: Vec<WorkflowEdgeRecord> = fixture
             .edges
             .iter()
             .map(|edge| {
                 let (source_node_id, source_port_id) = split_endpoint(&edge.source);
                 let (target_node_id, target_port_id) = split_endpoint(&edge.target);
-                MediaGraphEdgeRecord {
+                WorkflowEdgeRecord {
                     id: edge.id.clone(),
                     source_node_id,
                     source_port_id,
@@ -328,10 +328,10 @@ pub mod app_jack {
         )
     }
 
-    fn node_to_media_record(node: &Node) -> MediaGraphNodeRecord {
+    fn node_to_workflow_record(node: &Node) -> WorkflowNodeRecord {
         let width = if node.width > 0.0 { node.width } else { 96.0 };
         let height = if node.height > 0.0 { node.height } else { 48.0 };
-        MediaGraphNodeRecord {
+        WorkflowNodeRecord {
             id: node.id.clone(),
             label: Some(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
             x: node.x,
@@ -342,7 +342,7 @@ pub mod app_jack {
                 .ports
                 .iter()
                 .filter(|port| port.direction == PortDirection::In)
-                .map(|port| MediaGraphPortRecord {
+                .map(|port| WorkflowDiagramPortRecord {
                     id: trinity_ram::port_key(&node.id, &port.id),
                     label: Some(port.id.clone()),
                 })
@@ -351,7 +351,7 @@ pub mod app_jack {
                 .ports
                 .iter()
                 .filter(|port| port.direction == PortDirection::Out)
-                .map(|port| MediaGraphPortRecord {
+                .map(|port| WorkflowDiagramPortRecord {
                     id: trinity_ram::port_key(&node.id, &port.id),
                     label: Some(port.id.clone()),
                 })
@@ -661,7 +661,7 @@ pub mod app_jack {
 
     //#region 🔖Render
     fn render_graph(fixture: &GraphFixture, runtime: &TrinityJackRuntime) -> UiNode {
-        let (nodes_json, edges_json, viewport_json) = fixture_to_media_graph(fixture);
+        let (nodes_json, edges_json, viewport_json) = fixture_to_workflow(fixture);
         let selection_json = if runtime.selected_node_ids.is_empty() {
             None
         } else {
@@ -707,7 +707,7 @@ pub mod app_jack {
         let result: QueryResult = serde_json::from_str(&runtime.jack_result_json).unwrap_or(QueryResult::table(vec![], vec![]));
         if result.kind == QueryResultKind::Graph {
             if let Some(fixture) = &result.graph_fixture {
-                let (nodes_json, edges_json, viewport_json) = fixture_to_media_graph(fixture);
+                let (nodes_json, edges_json, viewport_json) = fixture_to_workflow(fixture);
                 return build_node_graph_scene(
                     TRINITY_JACK_PLAY_SURFACE_RESULTS,
                     TRINITY_JACK_PLAY_CONTROLLER_ID,
@@ -1502,7 +1502,7 @@ pub mod app_rewrite {
 
     #[derive(Serialize)]
     #[serde(rename_all = "camelCase")]
-    struct MediaGraphPortRecord {
+    struct WorkflowDiagramPortRecord {
         id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
         label: Option<String>,
@@ -1510,7 +1510,7 @@ pub mod app_rewrite {
 
     #[derive(Serialize)]
     #[serde(rename_all = "camelCase")]
-    struct MediaGraphNodeRecord {
+    struct WorkflowNodeRecord {
         id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
         label: Option<String>,
@@ -1518,13 +1518,13 @@ pub mod app_rewrite {
         y: f64,
         width: f64,
         height: f64,
-        inputs: Vec<MediaGraphPortRecord>,
-        outputs: Vec<MediaGraphPortRecord>,
+        inputs: Vec<WorkflowDiagramPortRecord>,
+        outputs: Vec<WorkflowDiagramPortRecord>,
     }
 
     #[derive(Serialize)]
     #[serde(rename_all = "camelCase")]
-    struct MediaGraphEdgeRecord {
+    struct WorkflowEdgeRecord {
         id: String,
         source_node_id: String,
         source_port_id: String,
@@ -2083,15 +2083,15 @@ pub mod app_rewrite {
         trinity_ram::parse_port_key(endpoint).map_or_else(|| (endpoint.to_string(), "in".into()), |(n, p)| (n.to_string(), p.to_string()))
     }
 
-    fn fixture_to_media_graph(fixture: &GraphFixture) -> (String, String, String) {
-        let nodes: Vec<MediaGraphNodeRecord> = fixture.nodes.iter().map(node_to_media_record).collect();
-        let edges: Vec<MediaGraphEdgeRecord> = fixture
+    fn fixture_to_workflow(fixture: &GraphFixture) -> (String, String, String) {
+        let nodes: Vec<WorkflowNodeRecord> = fixture.nodes.iter().map(node_to_workflow_record).collect();
+        let edges: Vec<WorkflowEdgeRecord> = fixture
             .edges
             .iter()
             .map(|edge| {
                 let (source_node_id, source_port_id) = split_endpoint(&edge.source);
                 let (target_node_id, target_port_id) = split_endpoint(&edge.target);
-                MediaGraphEdgeRecord {
+                WorkflowEdgeRecord {
                     id: edge.id.clone(),
                     source_node_id,
                     source_port_id,
@@ -2108,10 +2108,10 @@ pub mod app_rewrite {
         )
     }
 
-    fn node_to_media_record(node: &Node) -> MediaGraphNodeRecord {
+    fn node_to_workflow_record(node: &Node) -> WorkflowNodeRecord {
         let width = if node.width > 0.0 { node.width } else { 96.0 };
         let height = if node.height > 0.0 { node.height } else { 48.0 };
-        MediaGraphNodeRecord {
+        WorkflowNodeRecord {
             id: node.id.clone(),
             label: Some(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
             x: node.x,
@@ -2122,7 +2122,7 @@ pub mod app_rewrite {
                 .ports
                 .iter()
                 .filter(|port| port.direction == PortDirection::In)
-                .map(|port| MediaGraphPortRecord {
+                .map(|port| WorkflowDiagramPortRecord {
                     id: trinity_ram::port_key(&node.id, &port.id),
                     label: Some(port.id.clone()),
                 })
@@ -2131,7 +2131,7 @@ pub mod app_rewrite {
                 .ports
                 .iter()
                 .filter(|port| port.direction == PortDirection::Out)
-                .map(|port| MediaGraphPortRecord {
+                .map(|port| WorkflowDiagramPortRecord {
                     id: trinity_ram::port_key(&node.id, &port.id),
                     label: Some(port.id.clone()),
                 })
@@ -2486,7 +2486,7 @@ pub mod app_rewrite {
         editable: bool,
     ) -> UiNode {
         let fixture = parse_fixture_json(fixture_json).unwrap_or_else(|| GraphFixture::parse_dsl(NAKAGIN_FIXTURE_DSL).unwrap());
-        let (nodes_json, edges_json, viewport_json) = fixture_to_media_graph(&fixture);
+        let (nodes_json, edges_json, viewport_json) = fixture_to_workflow(&fixture);
         let hover_json = graph_hover_json(fixture_json, &runtime.active_hover_var, hover_node_id);
         let selection_json = graph_selection_json(fixture_json, &runtime.active_select_var, &runtime.selected_node_ids);
         build_node_graph_scene(

@@ -1,11 +1,11 @@
-//! 🖥️ Plugin-based OS kernel: hot-swappable WASM components, media graph, document VCS.
+//! 🖥️ Plugin-based OS kernel: hot-swappable WASM components, workflow, document VCS.
 
 pub mod host {
     // #region host
     //! 🔌 Plugin host, studio document VCS store, backbone, and catalog.
 
     use crate::instance::{create_default_os_parameter, create_os_document_id, create_os_id, patch_os_parameter, OsAppInstance, OsDocumentRef, OsInstanceState, OsParameter, OsParameterFieldBinding, OsParameterType};
-    use crate::media_graph::{empty_media_graph, media_graph_node_for_instance, sync_media_graph_parameter_ports, MediaGraphPosition, OsMediaGraph, OsMediaGraphEdge, OsMediaGraphNode, OS_MEDIA_GRAPH_SCHEMA, OS_STUDIO_SCHEMA};
+    use crate::workflow::{empty_workflow, workflow_node_for_instance, sync_workflow_parameter_ports, WorkflowPosition, OsWorkflow, OsWorkflowEdge, OsWorkflowNode, OS_WORKFLOW_SCHEMA, OS_STUDIO_SCHEMA};
     use crate::registry::{os_app_primary_output_kind, os_app_registration, PluginRegistry};
     use semio_framework_core::{AppDefinition, Contribution, PluginManifest, ViewState};
     use serde::{Deserialize, Serialize};
@@ -327,7 +327,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         #[dsl(table)]
         pub app_instances: Vec<OsAppInstance>,
         #[dsl(block)]
-        pub media_graph: OsMediaGraph,
+        pub workflow: OsWorkflow,
         #[serde(default)]
         #[dsl(statements)]
         pub parameters: Vec<OsParameter>,
@@ -349,7 +349,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         },
         SpawnAppInstance {
             instance: OsAppInstance,
-            position: MediaGraphPosition,
+            position: WorkflowPosition,
             /// 🆔 Minted once at dispatch time (`OsStore::spawn_app_instance`) and carried in the op
             /// itself so replay never re-mints it — see `apply_os_operation`'s `SpawnAppInstance` arm.
             node_id: String,
@@ -357,13 +357,13 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         RemoveAppInstance {
             instance_id: String,
         },
-        ConnectMediaPorts {
-            edge: OsMediaGraphEdge,
+        ConnectWorkflowPorts {
+            edge: OsWorkflowEdge,
         },
-        DisconnectMediaEdge {
+        DisconnectWorkflowEdge {
             edge_id: String,
         },
-        MoveMediaNode {
+        MoveWorkflowNode {
             node_id: String,
             x: f64,
             y: f64,
@@ -415,7 +415,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
     pub type OsEnvelope = DocumentEnvelope<OsProjection, OsOperation>;
 
     pub fn default_os_projection() -> OsProjection {
-        OsProjection { programs: Vec::new(), active_program_id: None, active_alternative_id: None, app_instances: Vec::new(), media_graph: empty_media_graph(), parameters: Vec::new(), parameter_bindings: Vec::new() }
+        OsProjection { programs: Vec::new(), active_program_id: None, active_alternative_id: None, app_instances: Vec::new(), workflow: empty_workflow(), parameters: Vec::new(), parameter_bindings: Vec::new() }
     }
 
     pub fn create_empty_os_document(id: &str, name: &str) -> OsDocument {
@@ -436,24 +436,24 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                     next.programs.push(instance.program_id.clone());
                 }
                 if let Some(registration) = os_app_registration(&instance.program_id, &instance.app_id) {
-                    let node = sync_media_node_parameter_ports(&media_graph_node_for_instance(instance, &registration, position, node_id), &next.parameter_bindings);
-                    next.media_graph.nodes.push(node);
+                    let node = sync_workflow_node_parameter_ports(&workflow_node_for_instance(instance, &registration, position, node_id), &next.parameter_bindings);
+                    next.workflow.nodes.push(node);
                 }
                 next.app_instances.push(instance.clone());
             }
             OsOperation::RemoveAppInstance { instance_id } => {
-                let node_id = next.media_graph.nodes.iter().find(|node| node.instance_id == *instance_id).map(|node| node.id.clone());
+                let node_id = next.workflow.nodes.iter().find(|node| node.instance_id == *instance_id).map(|node| node.id.clone());
                 next.app_instances.retain(|instance| instance.id != *instance_id);
                 next.parameter_bindings.retain(|binding| binding.instance_id != *instance_id);
-                next.media_graph.nodes.retain(|node| node.instance_id != *instance_id);
+                next.workflow.nodes.retain(|node| node.instance_id != *instance_id);
                 if let Some(node_id) = node_id {
-                    next.media_graph.edges.retain(|edge| edge.source_node_id != node_id && edge.target_node_id != node_id);
+                    next.workflow.edges.retain(|edge| edge.source_node_id != node_id && edge.target_node_id != node_id);
                 }
             }
-            OsOperation::ConnectMediaPorts { edge } => next.media_graph.edges.push(edge.clone()),
-            OsOperation::DisconnectMediaEdge { edge_id } => next.media_graph.edges.retain(|edge| edge.id != *edge_id),
-            OsOperation::MoveMediaNode { node_id, x, y } => {
-                for node in &mut next.media_graph.nodes {
+            OsOperation::ConnectWorkflowPorts { edge } => next.workflow.edges.push(edge.clone()),
+            OsOperation::DisconnectWorkflowEdge { edge_id } => next.workflow.edges.retain(|edge| edge.id != *edge_id),
+            OsOperation::MoveWorkflowNode { node_id, x, y } => {
+                for node in &mut next.workflow.nodes {
                     if node.id == *node_id {
                         node.x = *x;
                         node.y = *y;
@@ -473,7 +473,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             OsOperation::RemoveParameter { parameter_id } => {
                 next.parameters.retain(|parameter| parameter_entity_id(parameter) != *parameter_id);
                 next.parameter_bindings.retain(|binding| binding.parameter_id != *parameter_id);
-                next.media_graph = sync_media_graph_parameter_ports(&next.media_graph, &next.parameter_bindings);
+                next.workflow = sync_workflow_parameter_ports(&next.workflow, &next.parameter_bindings);
             }
             OsOperation::PatchParameter { parameter_id, parameter } => {
                 for entry in &mut next.parameters {
@@ -485,21 +485,21 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             OsOperation::BindParameterField { binding } => {
                 next.parameter_bindings.retain(|entry| !(entry.instance_id == binding.instance_id && entry.field_path == binding.field_path));
                 next.parameter_bindings.push(binding.clone());
-                next.media_graph = sync_media_graph_parameter_ports(&next.media_graph, &next.parameter_bindings);
+                next.workflow = sync_workflow_parameter_ports(&next.workflow, &next.parameter_bindings);
             }
             OsOperation::UnbindParameterField { instance_id, field_path } => {
                 next.parameter_bindings.retain(|binding| !(binding.instance_id == *instance_id && binding.field_path == *field_path));
-                next.media_graph = sync_media_graph_parameter_ports(&next.media_graph, &next.parameter_bindings);
+                next.workflow = sync_workflow_parameter_ports(&next.workflow, &next.parameter_bindings);
             }
             OsOperation::SyncParameterPorts => {
-                next.media_graph = sync_media_graph_parameter_ports(&next.media_graph, &next.parameter_bindings);
+                next.workflow = sync_workflow_parameter_ports(&next.workflow, &next.parameter_bindings);
             }
         }
         next
     }
 
-    fn sync_media_node_parameter_ports(node: &crate::media_graph::OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> crate::media_graph::OsMediaGraphNode {
-        sync_media_graph_parameter_ports(&OsMediaGraph { schema: OS_MEDIA_GRAPH_SCHEMA.into(), nodes: vec![node.clone()], edges: Vec::new() }, bindings).nodes.into_iter().next().unwrap_or_else(|| node.clone())
+    fn sync_workflow_node_parameter_ports(node: &crate::workflow::OsWorkflowNode, bindings: &[OsParameterFieldBinding]) -> crate::workflow::OsWorkflowNode {
+        sync_workflow_parameter_ports(&OsWorkflow { schema: OS_WORKFLOW_SCHEMA.into(), nodes: vec![node.clone()], edges: Vec::new() }, bindings).nodes.into_iter().next().unwrap_or_else(|| node.clone())
     }
 
     fn parameter_entity_id(parameter: &OsParameter) -> &str {
@@ -523,19 +523,19 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         },
         SpawnAppInstance {
             instance: OsAppInstance,
-            position: MediaGraphPosition,
+            position: WorkflowPosition,
             node_id: String,
         },
         RemoveAppInstance {
             instance_id: String,
         },
-        ConnectMediaPorts {
-            edge: OsMediaGraphEdge,
+        ConnectWorkflowPorts {
+            edge: OsWorkflowEdge,
         },
-        DisconnectMediaEdge {
+        DisconnectWorkflowEdge {
             edge_id: String,
         },
-        MoveMediaNode {
+        MoveWorkflowNode {
             node_id: String,
             x: f64,
             y: f64,
@@ -573,9 +573,9 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 OsDiff::SetActiveAlternative { alternative_id } => OsOperation::SetActiveAlternative { alternative_id: alternative_id.clone() },
                 OsDiff::SpawnAppInstance { instance, position, node_id } => OsOperation::SpawnAppInstance { instance: instance.clone(), position: position.clone(), node_id: node_id.clone() },
                 OsDiff::RemoveAppInstance { instance_id } => OsOperation::RemoveAppInstance { instance_id: instance_id.clone() },
-                OsDiff::ConnectMediaPorts { edge } => OsOperation::ConnectMediaPorts { edge: edge.clone() },
-                OsDiff::DisconnectMediaEdge { edge_id } => OsOperation::DisconnectMediaEdge { edge_id: edge_id.clone() },
-                OsDiff::MoveMediaNode { node_id, x, y } => OsOperation::MoveMediaNode { node_id: node_id.clone(), x: *x, y: *y },
+                OsDiff::ConnectWorkflowPorts { edge } => OsOperation::ConnectWorkflowPorts { edge: edge.clone() },
+                OsDiff::DisconnectWorkflowEdge { edge_id } => OsOperation::DisconnectWorkflowEdge { edge_id: edge_id.clone() },
+                OsDiff::MoveWorkflowNode { node_id, x, y } => OsOperation::MoveWorkflowNode { node_id: node_id.clone(), x: *x, y: *y },
                 OsDiff::PatchAppInstance { instance_id, label } => OsOperation::PatchAppInstance { instance_id: instance_id.clone(), label: label.clone() },
                 OsDiff::AddParameter { parameter } => OsOperation::AddParameter { parameter: parameter.clone() },
                 OsDiff::RemoveParameter { parameter_id } => OsOperation::RemoveParameter { parameter_id: parameter_id.clone() },
@@ -603,9 +603,9 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 OsOperation::SetActiveAlternative { alternative_id } => OsDiff::SetActiveAlternative { alternative_id: alternative_id.clone() },
                 OsOperation::SpawnAppInstance { instance, position, node_id } => OsDiff::SpawnAppInstance { instance: instance.clone(), position: position.clone(), node_id: node_id.clone() },
                 OsOperation::RemoveAppInstance { instance_id } => OsDiff::RemoveAppInstance { instance_id: instance_id.clone() },
-                OsOperation::ConnectMediaPorts { edge } => OsDiff::ConnectMediaPorts { edge: edge.clone() },
-                OsOperation::DisconnectMediaEdge { edge_id } => OsDiff::DisconnectMediaEdge { edge_id: edge_id.clone() },
-                OsOperation::MoveMediaNode { node_id, x, y } => OsDiff::MoveMediaNode { node_id: node_id.clone(), x: *x, y: *y },
+                OsOperation::ConnectWorkflowPorts { edge } => OsDiff::ConnectWorkflowPorts { edge: edge.clone() },
+                OsOperation::DisconnectWorkflowEdge { edge_id } => OsDiff::DisconnectWorkflowEdge { edge_id: edge_id.clone() },
+                OsOperation::MoveWorkflowNode { node_id, x, y } => OsDiff::MoveWorkflowNode { node_id: node_id.clone(), x: *x, y: *y },
                 OsOperation::PatchAppInstance { instance_id, label } => OsDiff::PatchAppInstance { instance_id: instance_id.clone(), label: label.clone() },
                 OsOperation::AddParameter { parameter } => OsDiff::AddParameter { parameter: parameter.clone() },
                 OsOperation::RemoveParameter { parameter_id } => OsDiff::RemoveParameter { parameter_id: parameter_id.clone() },
@@ -626,17 +626,17 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                     .iter()
                     .find(|instance| instance.id == *instance_id)
                     .map(|instance| {
-                        let node = projection.media_graph.nodes.iter().find(|entry| entry.instance_id == *instance_id);
+                        let node = projection.workflow.nodes.iter().find(|entry| entry.instance_id == *instance_id);
                         vec![OsOperation::SpawnAppInstance {
                             instance: instance.clone(),
-                            position: MediaGraphPosition { x: node.map(|entry| entry.x).unwrap_or(0.0), y: node.map(|entry| entry.y).unwrap_or(0.0) },
+                            position: WorkflowPosition { x: node.map(|entry| entry.x).unwrap_or(0.0), y: node.map(|entry| entry.y).unwrap_or(0.0) },
                             node_id: node.map(|entry| entry.id.clone()).unwrap_or_else(|| create_os_id("node")),
                         }]
                     })
                     .unwrap_or_default(),
-                OsOperation::ConnectMediaPorts { edge } => vec![OsOperation::DisconnectMediaEdge { edge_id: edge.id.clone() }],
-                OsOperation::DisconnectMediaEdge { edge_id } => projection.media_graph.edges.iter().find(|edge| edge.id == *edge_id).map(|edge| vec![OsOperation::ConnectMediaPorts { edge: edge.clone() }]).unwrap_or_default(),
-                OsOperation::MoveMediaNode { node_id, .. } => projection.media_graph.nodes.iter().find(|node| node.id == *node_id).map(|node| vec![OsOperation::MoveMediaNode { node_id: node_id.clone(), x: node.x, y: node.y }]).unwrap_or_default(),
+                OsOperation::ConnectWorkflowPorts { edge } => vec![OsOperation::DisconnectWorkflowEdge { edge_id: edge.id.clone() }],
+                OsOperation::DisconnectWorkflowEdge { edge_id } => projection.workflow.edges.iter().find(|edge| edge.id == *edge_id).map(|edge| vec![OsOperation::ConnectWorkflowPorts { edge: edge.clone() }]).unwrap_or_default(),
+                OsOperation::MoveWorkflowNode { node_id, .. } => projection.workflow.nodes.iter().find(|node| node.id == *node_id).map(|node| vec![OsOperation::MoveWorkflowNode { node_id: node_id.clone(), x: node.x, y: node.y }]).unwrap_or_default(),
                 OsOperation::PatchAppInstance { instance_id, .. } => {
                     projection.app_instances.iter().find(|instance| instance.id == *instance_id).map(|instance| vec![OsOperation::PatchAppInstance { instance_id: instance_id.clone(), label: Some(instance.label.clone()) }]).unwrap_or_default()
                 }
@@ -656,7 +656,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             }
         }
 
-        /// @emoji 🤝 Media-graph referential-integrity pass — see `reconcile_os_media_graph` (region
+        /// @emoji 🤝 Workflow referential-integrity pass — see `reconcile_os_workflow` (region
         /// 🔖GraphReconcile below) for the four ordered rules it runs.
         ///
         /// 🎞️ CW3 kernel cut-over ripple fix: `Operation::reconcile` moved to `protocol_command` with
@@ -664,11 +664,11 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         /// Vec<StudioConflict>)`; now an instance method returning `protocol`-owned
         /// `Vec<ReconcileReport>`, per that trait's own doc comment: "`vcs` maps `ReconcileReport ->
         /// StudioConflict` at its own edge instead of this crate knowing about studio types"). The
-        /// media-graph rules themselves (`reconcile_os_media_graph`) are untouched — only this thin
+        /// workflow rules themselves (`reconcile_os_workflow`) are untouched — only this thin
         /// trait-facing wrapper adapts to the new signature, converting each `StudioConflict` to a
         /// `ReconcileReport` at the boundary.
         fn reconcile(&self, projection: OsProjection) -> (OsProjection, Vec<protocol::ReconcileReport>) {
-            let (projection, conflicts) = reconcile_os_media_graph(projection);
+            let (projection, conflicts) = reconcile_os_workflow(projection);
             let reports = conflicts
                 .into_iter()
                 .map(|conflict| protocol::ReconcileReport { id: conflict.kind, message: conflict.message, severity: protocol::ReconcileSeverity::Warning })
@@ -678,17 +678,17 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
     }
 
     //#region 🔖GraphReconcile
-    /// @emoji 🧵 Post-materialization media-graph integrity pass run by `OsOperation::reconcile`. Runs, in
+    /// @emoji 🧵 Post-materialization workflow integrity pass run by `OsOperation::reconcile`. Runs, in
     /// order: (1) drop edges whose source/target node or port no longer exists (a concurrent delete
     /// tombstone wins over the wiring), (2) drop edges whose port types no longer match (a concurrent
     /// re-typing wins over the wiring), (3) dedupe edges with identical endpoints down to the
     /// lexicographically smallest id (deterministic across peers replaying the same operation log), (4) break
     /// any cycle the previous rules left behind. Each rule operates on the edge set the previous one
     /// produced.
-    fn reconcile_os_media_graph(mut projection: OsProjection) -> (OsProjection, Vec<StudioConflict>) {
+    fn reconcile_os_workflow(mut projection: OsProjection) -> (OsProjection, Vec<StudioConflict>) {
         let mut conflicts = Vec::new();
-        let mut edges = std::mem::take(&mut projection.media_graph.edges);
-        let node_by_id: HashMap<&str, &OsMediaGraphNode> = projection.media_graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
+        let mut edges = std::mem::take(&mut projection.workflow.edges);
+        let node_by_id: HashMap<&str, &OsWorkflowNode> = projection.workflow.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
 
         //#region OrphanEdgeDrop
         edges.retain(|edge| {
@@ -698,7 +698,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 true
             } else {
                 conflicts.push(StudioConflict {
-                    kind: "media-graph/edge-orphaned".into(),
+                    kind: "workflow/edge-orphaned".into(),
                     uri: edge.id.clone(),
                     message: format!("edge {} references a node or port that no longer exists ({}:{} -> {}:{})", edge.id, edge.source_node_id, edge.source_port_id, edge.target_node_id, edge.target_port_id),
                 });
@@ -708,7 +708,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         //#endregion OrphanEdgeDrop
 
         //#region TypeMismatchDrop
-        // 🩹 Baseline comparison: straight `resource_kind` string equality, since `OsMediaGraphEdge` has
+        // 🩹 Baseline comparison: straight `resource_kind` string equality, since `OsWorkflowEdge` has
         // no `contract` field yet. Once edge contracts land, prefer the contract's `kind_id` against the
         // live port types (contract wins if present), falling back to this comparison otherwise.
         edges.retain(|edge| {
@@ -718,7 +718,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 (Some(source), Some(target)) if source == target => true,
                 _ => {
                     conflicts.push(StudioConflict {
-                        kind: "media-graph/edge-type-mismatch".into(),
+                        kind: "workflow/edge-type-mismatch".into(),
                         uri: edge.id.clone(),
                         message: format!("edge {} connects ports whose types no longer match", edge.id),
                     });
@@ -742,37 +742,37 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         //#endregion DuplicateWireDedupe
 
         //#region CycleDrop
-        edges = drop_media_graph_cycle_edges(edges, &mut conflicts);
+        edges = drop_workflow_cycle_edges(edges, &mut conflicts);
         //#endregion CycleDrop
 
-        projection.media_graph.edges = edges;
+        projection.workflow.edges = edges;
         (projection, conflicts)
     }
 
     /// @emoji 🌀 Repeatedly finds a cycle in `edges` (by node-id adjacency) and drops the participating
     /// edge with the highest array index — a deterministic proxy for "newest edit" since
     /// `Operation::reconcile` only receives the materialized `OsProjection` by value, not per-edge
-    /// `HybridLogicalTimestamp`s from the edit log. `apply_os_operation`'s `ConnectMediaPorts` handler
+    /// `HybridLogicalTimestamp`s from the edit log. `apply_os_operation`'s `ConnectWorkflowPorts` handler
     /// appends new edges to the end of the vec, so a higher index approximates a later edit; true
     /// HLT-based tie-breaking would need `reconcile` to also see edit history, not just the projection.
-    fn drop_media_graph_cycle_edges(mut edges: Vec<OsMediaGraphEdge>, conflicts: &mut Vec<StudioConflict>) -> Vec<OsMediaGraphEdge> {
-        while let Some(cycle_node_ids) = find_media_graph_cycle_participants(&edges) {
+    fn drop_workflow_cycle_edges(mut edges: Vec<OsWorkflowEdge>, conflicts: &mut Vec<StudioConflict>) -> Vec<OsWorkflowEdge> {
+        while let Some(cycle_node_ids) = find_workflow_cycle_participants(&edges) {
             let newest_cycle_edge_index = edges.iter().enumerate().filter(|(_, edge)| cycle_node_ids.contains(&edge.source_node_id) && cycle_node_ids.contains(&edge.target_node_id)).map(|(index, _)| index).max();
             let Some(newest_cycle_edge_index) = newest_cycle_edge_index else { break };
             let dropped = edges.remove(newest_cycle_edge_index);
             conflicts.push(StudioConflict {
-                kind: "media-graph/edge-cycle".into(),
+                kind: "workflow/edge-cycle".into(),
                 uri: dropped.id.clone(),
-                message: format!("edge {} was dropped to break a cycle in the media graph", dropped.id),
+                message: format!("edge {} was dropped to break a cycle in the workflow", dropped.id),
             });
         }
         edges
     }
 
-    /// @emoji 🔍 DFS cycle detection adapted from `media_graph::validate_media_graph`'s check, but
+    /// @emoji 🔍 DFS cycle detection adapted from `workflow::validate_workflow`'s check, but
     /// returning the participant node ids of the first cycle found (rather than just an error string)
     /// so the caller can identify which edges are eligible for dropping.
-    fn find_media_graph_cycle_participants(edges: &[OsMediaGraphEdge]) -> Option<HashSet<String>> {
+    fn find_workflow_cycle_participants(edges: &[OsWorkflowEdge]) -> Option<HashSet<String>> {
         let mut adjacency: HashMap<String, Vec<String>> = HashMap::new();
         let mut node_ids: HashSet<String> = HashSet::new();
         for edge in edges {
@@ -787,14 +787,14 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             }
             let mut stack: Vec<String> = Vec::new();
             let mut on_stack: HashSet<String> = HashSet::new();
-            if let Some(cycle) = dfs_find_media_graph_cycle(node_id, &adjacency, &mut stack, &mut on_stack, &mut visited) {
+            if let Some(cycle) = dfs_find_workflow_cycle(node_id, &adjacency, &mut stack, &mut on_stack, &mut visited) {
                 return Some(cycle);
             }
         }
         None
     }
 
-    fn dfs_find_media_graph_cycle(node_id: &str, adjacency: &HashMap<String, Vec<String>>, stack: &mut Vec<String>, on_stack: &mut HashSet<String>, visited: &mut HashSet<String>) -> Option<HashSet<String>> {
+    fn dfs_find_workflow_cycle(node_id: &str, adjacency: &HashMap<String, Vec<String>>, stack: &mut Vec<String>, on_stack: &mut HashSet<String>, visited: &mut HashSet<String>) -> Option<HashSet<String>> {
         if on_stack.contains(node_id) {
             let start = stack.iter().position(|id| id == node_id).unwrap_or(0);
             return Some(stack[start..].iter().cloned().collect());
@@ -805,7 +805,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         stack.push(node_id.to_string());
         on_stack.insert(node_id.to_string());
         for next in adjacency.get(node_id).into_iter().flatten() {
-            if let Some(cycle) = dfs_find_media_graph_cycle(next, adjacency, stack, on_stack, visited) {
+            if let Some(cycle) = dfs_find_workflow_cycle(next, adjacency, stack, on_stack, visited) {
                 return Some(cycle);
             }
         }
@@ -820,7 +820,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
     /// @emoji 🧬 `OsProjection`'s `.os` studio DSL now derives from `#[derive(dsl::DslDocument)]` on
     /// `OsProjection` itself (see its declaration above, in `🔖OsDocument`) — none of its own fields
     /// need boxing (no bare nested tagged-enum field), so the real type derives the grammar directly,
-    /// no local mirror type needed. `MediaContract` (`media_graph` module, `🔖MediaContractDsl` region)
+    /// no local mirror type needed. `MediaContract` (`workflow` module, `🔖MediaContractDsl` region)
     /// is the one exception, hand-bridged instead of derived. `store::DocumentDsl for OsProjection` is
     /// therefore generated entirely by the derive macro; nothing further to implement here.
     //#endregion 🔖Dsl
@@ -846,17 +846,17 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             #[dsl(key = "id")]
             alternative_id: Option<String>,
         },
-        SpawnAppInstance { instance: OsAppInstance, position: MediaGraphPosition, #[dsl(key = "node")] node_id: String },
+        SpawnAppInstance { instance: OsAppInstance, position: WorkflowPosition, #[dsl(key = "node")] node_id: String },
         RemoveAppInstance {
             #[dsl(key = "id")]
             instance_id: String,
         },
-        ConnectMediaPorts { edge: OsMediaGraphEdge },
-        DisconnectMediaEdge {
+        ConnectWorkflowPorts { edge: OsWorkflowEdge },
+        DisconnectWorkflowEdge {
             #[dsl(key = "id")]
             edge_id: String,
         },
-        MoveMediaNode {
+        MoveWorkflowNode {
             #[dsl(key = "id")]
             node_id: String,
             x: f64,
@@ -892,9 +892,9 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             OsOperation::SetActiveAlternative { alternative_id } => OsOperationDsl::SetActiveAlternative { alternative_id: alternative_id.clone() },
             OsOperation::SpawnAppInstance { instance, position, node_id } => OsOperationDsl::SpawnAppInstance { instance: instance.clone(), position: position.clone(), node_id: node_id.clone() },
             OsOperation::RemoveAppInstance { instance_id } => OsOperationDsl::RemoveAppInstance { instance_id: instance_id.clone() },
-            OsOperation::ConnectMediaPorts { edge } => OsOperationDsl::ConnectMediaPorts { edge: edge.clone() },
-            OsOperation::DisconnectMediaEdge { edge_id } => OsOperationDsl::DisconnectMediaEdge { edge_id: edge_id.clone() },
-            OsOperation::MoveMediaNode { node_id, x, y } => OsOperationDsl::MoveMediaNode { node_id: node_id.clone(), x: *x, y: *y },
+            OsOperation::ConnectWorkflowPorts { edge } => OsOperationDsl::ConnectWorkflowPorts { edge: edge.clone() },
+            OsOperation::DisconnectWorkflowEdge { edge_id } => OsOperationDsl::DisconnectWorkflowEdge { edge_id: edge_id.clone() },
+            OsOperation::MoveWorkflowNode { node_id, x, y } => OsOperationDsl::MoveWorkflowNode { node_id: node_id.clone(), x: *x, y: *y },
             OsOperation::PatchAppInstance { instance_id, label } => OsOperationDsl::PatchAppInstance { instance_id: instance_id.clone(), label: label.clone() },
             OsOperation::AddParameter { parameter } => OsOperationDsl::AddParameter { parameter: Box::new(parameter.clone()) },
             OsOperation::RemoveParameter { parameter_id } => OsOperationDsl::RemoveParameter { parameter_id: parameter_id.clone() },
@@ -911,9 +911,9 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             OsOperationDsl::SetActiveAlternative { alternative_id } => OsOperation::SetActiveAlternative { alternative_id },
             OsOperationDsl::SpawnAppInstance { instance, position, node_id } => OsOperation::SpawnAppInstance { instance, position, node_id },
             OsOperationDsl::RemoveAppInstance { instance_id } => OsOperation::RemoveAppInstance { instance_id },
-            OsOperationDsl::ConnectMediaPorts { edge } => OsOperation::ConnectMediaPorts { edge },
-            OsOperationDsl::DisconnectMediaEdge { edge_id } => OsOperation::DisconnectMediaEdge { edge_id },
-            OsOperationDsl::MoveMediaNode { node_id, x, y } => OsOperation::MoveMediaNode { node_id, x, y },
+            OsOperationDsl::ConnectWorkflowPorts { edge } => OsOperation::ConnectWorkflowPorts { edge },
+            OsOperationDsl::DisconnectWorkflowEdge { edge_id } => OsOperation::DisconnectWorkflowEdge { edge_id },
+            OsOperationDsl::MoveWorkflowNode { node_id, x, y } => OsOperation::MoveWorkflowNode { node_id, x, y },
             OsOperationDsl::PatchAppInstance { instance_id, label } => OsOperation::PatchAppInstance { instance_id, label },
             OsOperationDsl::AddParameter { parameter } => OsOperation::AddParameter { parameter: *parameter },
             OsOperationDsl::RemoveParameter { parameter_id } => OsOperation::RemoveParameter { parameter_id },
@@ -948,8 +948,14 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
     //#endregion 🔖OpTextMirror
     //#endregion 🔖OpText
 
+    /// @emoji 🌉 Builds the bare `OsEnvelope` an `OsDocument` wraps (dropping the app-level `name`/
+    /// `applied_edit_ids` fields) — shared by every typed pack/text export path below.
+    fn os_envelope_of(document: &OsDocument) -> OsEnvelope {
+        OsEnvelope { schema: document.schema.clone(), id: document.id.clone(), vcs: document.vcs.clone(), backbone: document.backbone.clone(), active_alternative_id: document.vcs.initial_projection.active_alternative_id.clone(), cursor: None }
+    }
+
     pub fn materialize_os_projection(document: &OsDocument, applied_edit_ids: &[String]) -> Result<OsProjection, VcsError> {
-        let envelope = OsEnvelope { schema: document.schema.clone(), id: document.id.clone(), vcs: document.vcs.clone(), backbone: document.backbone.clone(), active_alternative_id: document.vcs.initial_projection.active_alternative_id.clone(), cursor: None };
+        let envelope = os_envelope_of(document);
         materialize_document_projection(&envelope, applied_edit_ids)
     }
 
@@ -1005,7 +1011,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             self.inner.projection()
         }
 
-        /// @emoji 🤝 Fresh replay plus whatever `OsOperation::reconcile`'s media-graph pass reports. See
+        /// @emoji 🤝 Fresh replay plus whatever `OsOperation::reconcile`'s workflow pass reports. See
         /// `store::DocumentStore::projection_with_conflicts`.
         pub fn projection_with_conflicts(&self) -> Result<(OsProjection, Vec<StudioConflict>), VcsError> {
             self.inner.projection_with_conflicts()
@@ -1033,7 +1039,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             let _ = self.inner.generation();
         }
 
-        pub fn spawn_app_instance(&mut self, program_id: &str, app_id: &str, label: Option<&str>, position: MediaGraphPosition) -> Result<String, VcsError> {
+        pub fn spawn_app_instance(&mut self, program_id: &str, app_id: &str, label: Option<&str>, position: WorkflowPosition) -> Result<String, VcsError> {
             let registration = os_app_registration(program_id, app_id).ok_or_else(|| VcsError::Deserialize(format!("unknown app {program_id}/{app_id}")))?;
             let instance_id = create_os_id("app");
             // 🆔 Minted once, here, at dispatch time; the id is embedded in the stored `OsOperation` itself so
@@ -1172,7 +1178,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         let studio_id = os_studio_id_from_backbone_uri(backbone_uri).unwrap_or_else(|| document.id.clone());
         let projection = materialize_os_projection(document, &[])?;
         let updated_at = document.vcs.changes.last().map(|change| change.saved_at.clone()).unwrap_or_else(|| "0".into());
-        Ok(OsStudioCatalogEntry { id: studio_id, name: document.name.clone(), backbone_uri: backbone_uri.into(), app_count: projection.app_instances.len(), node_count: projection.media_graph.nodes.len(), updated_at })
+        Ok(OsStudioCatalogEntry { id: studio_id, name: document.name.clone(), backbone_uri: backbone_uri.into(), app_count: projection.app_instances.len(), node_count: projection.workflow.nodes.len(), updated_at })
     }
 
     /// @emoji 📚 Lists persisted studio documents from the dev backbone namespace.
@@ -1225,13 +1231,13 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         os_studio_catalog_entry_from_document(&backbone_uri, &document)
     }
 
-    /// @emoji 📦 Pack counterpart of `import_os_studio_from_json`: decodes `pack`+`spr` through the
-    /// `OS_STUDIO_SCHEMA` codec (`store::document_codec`, registered by `s/plugin`'s
-    /// `register_document_codec_for_app::<StudioApp>` — wave 2) into the same envelope JSON shape,
+    /// @emoji 📦 Pack counterpart of `import_os_studio_from_json`: decodes `pack`+`spr` directly via
+    /// the typed `store::parse_document_pack::<OsProjection, OsOperation>` (this crate is fully
+    /// typed — no `store::DocumentCodec` indirection needed) into the same envelope JSON shape,
     /// then follows the identical admission flow.
     pub fn import_os_studio_from_pack(pack: &[u8], spr: &[u8], port: Arc<dyn OsBackbonePort>) -> Result<OsStudioCatalogEntry, VcsError> {
-        let codec = store::document_codec(OS_STUDIO_SCHEMA).ok_or_else(|| VcsError::Deserialize(format!("no document codec registered for schema {OS_STUDIO_SCHEMA}")))?;
-        let json = (codec.parse)(pack, spr)?;
+        let parsed: store::ParsedDocumentText<OsProjection, OsOperation> = store::parse_document_pack(pack, spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+        let json = serde_json::to_string(&parsed.envelope).map_err(|error| VcsError::Serialize(error.to_string()))?;
         import_os_studio_from_json(&json, port)
     }
 
@@ -1243,20 +1249,13 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
     /// the result into a `HostEffect::DownloadMediaExport` exactly the way `exportMedia` already wraps
     /// `export_os_app_instance_media`'s `OsMediaExportResult`.
     pub fn export_os_studio_pack(document: &OsDocument) -> Result<store::DocumentPackFiles, VcsError> {
-        let codec = store::document_codec(OS_STUDIO_SCHEMA).ok_or_else(|| VcsError::Deserialize(format!("no document codec registered for schema {OS_STUDIO_SCHEMA}")))?;
-        let json = os_document_to_envelope_json(document)?;
-        let (pack_files, _dsl_mirror) = (codec.print)(&json)?;
-        Ok(pack_files)
+        store::print_document_pack(&os_envelope_of(document))
     }
 
     /// @emoji 📤 DSL-text counterpart of `export_os_studio_pack` — exercises the text export path
-    /// (`exportDocumentDsl`) via the same codec's `print` (which already computes the DSL mirror
-    /// alongside the pack bytes).
+    /// (`exportDocumentDsl`) via the same typed `store::print_document_text`.
     pub fn export_os_studio_dsl(document: &OsDocument) -> Result<store::DocumentTextFiles, VcsError> {
-        let codec = store::document_codec(OS_STUDIO_SCHEMA).ok_or_else(|| VcsError::Deserialize(format!("no document codec registered for schema {OS_STUDIO_SCHEMA}")))?;
-        let json = os_document_to_envelope_json(document)?;
-        let (pack_files, dsl_mirror) = (codec.print)(&json)?;
-        Ok(store::DocumentTextFiles { dsl: dsl_mirror, ops: pack_files.ops })
+        store::print_document_text(&os_envelope_of(document))
     }
 
     /// @emoji 📂 Loads a studio document from the dev backbone.
@@ -1287,7 +1286,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::media_graph::{empty_media_graph, placeholder_media_contract, validate_media_graph, MediaContract, OsMediaPort};
+        use crate::workflow::{empty_workflow, placeholder_media_contract, validate_workflow, MediaContract, OsMediaPort};
         use crate::registry::{merge_os_program_definition, os_baseline_resource, os_in_port, OsAppResourceSpec, OsPlatformAppInput, OsPlatformInput};
         use semio_framework_core::{MediaClass, MediaForm, MediaType, MediaWireFormat, ModeDefinition, OsMediaFormat, PluginManifest, WindowKindDefinition};
         use std::sync::Arc;
@@ -1638,7 +1637,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         fn spawns_and_removes_app_instances() {
             seed_draw_program();
             let mut store = OsStore::new(create_empty_os_document("studio", "Studio"));
-            store.spawn_app_instance("draw", "draw", None, MediaGraphPosition { x: 40.0, y: 40.0 }).expect("spawn");
+            store.spawn_app_instance("draw", "draw", None, WorkflowPosition { x: 40.0, y: 40.0 }).expect("spawn");
             assert_eq!(store.projection().expect("projection").app_instances.len(), 1);
             store.dispatch_text("undo").expect("undo");
             assert_eq!(store.projection().expect("projection").app_instances.len(), 0);
@@ -1675,8 +1674,8 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         }
 
         #[test]
-        fn validates_media_graph_cycles() {
-            assert!(validate_media_graph(&empty_media_graph()).ok);
+        fn validates_workflow_cycles() {
+            assert!(validate_workflow(&empty_workflow()).ok);
         }
 
         #[test]
@@ -1684,8 +1683,8 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             seed_draw_program();
             seed_sink_program();
             let mut store_a = OsStore::new(create_empty_os_document("studio", "Studio"));
-            let node_a_instance = store_a.spawn_app_instance("draw", "draw", None, MediaGraphPosition { x: 0.0, y: 0.0 }).expect("spawn a");
-            let node_b_instance = store_a.spawn_app_instance("sink", "sink", None, MediaGraphPosition { x: 200.0, y: 0.0 }).expect("spawn b");
+            let node_a_instance = store_a.spawn_app_instance("draw", "draw", None, WorkflowPosition { x: 0.0, y: 0.0 }).expect("spawn a");
+            let node_b_instance = store_a.spawn_app_instance("sink", "sink", None, WorkflowPosition { x: 200.0, y: 0.0 }).expect("spawn b");
             let mut store_b = OsStore::new(store_a.document());
 
             let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://reconcile-race", "mem://reconcile-race");
@@ -1693,8 +1692,8 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             store_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
 
             let projection = store_a.projection().expect("projection");
-            let node_a = projection.media_graph.nodes.iter().find(|node| node.instance_id == node_a_instance).expect("node a");
-            let node_b = projection.media_graph.nodes.iter().find(|node| node.instance_id == node_b_instance).expect("node b");
+            let node_a = projection.workflow.nodes.iter().find(|node| node.instance_id == node_a_instance).expect("node a");
+            let node_b = projection.workflow.nodes.iter().find(|node| node.instance_id == node_b_instance).expect("node b");
             let source_node_id = node_a.id.clone();
             let source_port_id = node_a.outputs.first().expect("node a output port").id.clone();
             let target_node_id = node_b.id.clone();
@@ -1704,8 +1703,8 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             // to a port on node B — the classic delete/wire race `reconcile` must clean up post-merge.
             store_a.dispatch_apply(vec![OsOperation::RemoveAppInstance { instance_id: node_b_instance.clone() }]).expect("remove node b");
             store_b
-                .dispatch_apply(vec![OsOperation::ConnectMediaPorts {
-                    edge: OsMediaGraphEdge { id: "edge-race".into(), source_node_id: source_node_id.clone(), source_port_id, target_node_id: target_node_id.clone(), target_port_id, contract: placeholder_media_contract("draw") },
+                .dispatch_apply(vec![OsOperation::ConnectWorkflowPorts {
+                    edge: OsWorkflowEdge { id: "edge-race".into(), source_node_id: source_node_id.clone(), source_port_id, target_node_id: target_node_id.clone(), target_port_id, contract: placeholder_media_contract("draw") },
                 }])
                 .expect("wire edge to node b");
             store_a.tick().expect("pump a");
@@ -1714,9 +1713,9 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
             let (converged_a, conflicts_a) = store_a.projection_with_conflicts().expect("projection with conflicts a");
             let (converged_b, conflicts_b) = store_b.projection_with_conflicts().expect("projection with conflicts b");
             assert_eq!(converged_a, converged_b, "both peers must converge on the same reconciled projection");
-            assert!(converged_a.media_graph.nodes.iter().all(|node| node.instance_id != node_b_instance), "node b must stay removed");
-            assert!(converged_a.media_graph.edges.iter().all(|edge| edge.target_node_id != target_node_id), "the edge wired to the deleted node must be dropped, not dangling");
-            assert!(conflicts_a.iter().any(|conflict| conflict.kind == "media-graph/edge-orphaned"), "dropping the dangling edge must surface a conflict");
+            assert!(converged_a.workflow.nodes.iter().all(|node| node.instance_id != node_b_instance), "node b must stay removed");
+            assert!(converged_a.workflow.edges.iter().all(|edge| edge.target_node_id != target_node_id), "the edge wired to the deleted node must be dropped, not dangling");
+            assert!(conflicts_a.iter().any(|conflict| conflict.kind == "workflow/edge-orphaned"), "dropping the dangling edge must surface a conflict");
             assert_eq!(conflicts_a, conflicts_b, "both peers must report the same reconciliation conflicts");
         }
 
@@ -1730,9 +1729,9 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         /// 🧵 A representative `OsProjection` exercising every collection: two app instances, two media
         /// graph nodes (one with an input port, one with an output port) wired by one edge, one of each
         /// `OsParameter` variant, and one parameter binding — so the DSL round trip actually covers the
-        /// media-graph encoding, not just an empty-projection fixpoint.
+        /// workflow encoding, not just an empty-projection fixpoint.
         fn sample_os_projection() -> OsProjection {
-            let node_a = OsMediaGraphNode {
+            let node_a = OsWorkflowNode {
                 id: "node-1".into(),
                 instance_id: "app-1".into(),
                 x: 0.0,
@@ -1742,7 +1741,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 inputs: Vec::new(),
                 outputs: vec![OsMediaPort { id: "app-1:puzzle.out:out".into(), resource_kind: "puzzle.2d.fixture".into(), direction: "out".into() }],
             };
-            let node_b = OsMediaGraphNode {
+            let node_b = OsWorkflowNode {
                 id: "node-2".into(),
                 instance_id: "app-2".into(),
                 x: 240.0,
@@ -1752,7 +1751,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                 inputs: vec![OsMediaPort { id: "app-2:draw.in:in".into(), resource_kind: "puzzle.2d.fixture".into(), direction: "in".into() }],
                 outputs: Vec::new(),
             };
-            let edge = OsMediaGraphEdge {
+            let edge = OsWorkflowEdge {
                 id: "edge-1".into(),
                 source_node_id: "node-1".into(),
                 source_port_id: "app-1:puzzle.out:out".into(),
@@ -1782,7 +1781,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                         document: OsDocumentRef { document_id: "doc-2".into(), schema: "draw.document".into() },
                     },
                 ],
-                media_graph: OsMediaGraph { schema: OS_MEDIA_GRAPH_SCHEMA.into(), nodes: vec![node_a, node_b], edges: vec![edge] },
+                workflow: OsWorkflow { schema: OS_WORKFLOW_SCHEMA.into(), nodes: vec![node_a, node_b], edges: vec![edge] },
                 parameters: vec![
                     OsParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: Some(0.0), max: Some(100.0), step: Some(1.0) },
                     OsParameter::Categorical { id: "p2".into(), name: "Mode".into(), value: "Option A".into(), options: vec!["Option A".into(), "Option B, with comma".into()] },
@@ -1800,7 +1799,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
         }
 
         #[test]
-        fn dsl_round_trips_projection_with_media_graph_and_parameters() {
+        fn dsl_round_trips_projection_with_workflow_and_parameters() {
             store::test_support::assert_dsl_round_trip(&sample_os_projection());
             store::test_support::assert_dsl_pack_equivalence(&sample_os_projection());
         }
@@ -1828,7 +1827,7 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
                     yields: "puzzle.2d.fixture".into(),
                     document: OsDocumentRef { document_id: "doc-1".into(), schema: "puzzle.2d.fixture".into() },
                 },
-                position: MediaGraphPosition { x: 10.0, y: -20.5 },
+                position: WorkflowPosition { x: 10.0, y: -20.5 },
                 node_id: "node-1".into(),
             });
         }
@@ -1840,8 +1839,8 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
 
         #[test]
         fn op_text_round_trips_connect_media_ports() {
-            store::test_support::assert_op_line_round_trip(&OsOperation::ConnectMediaPorts {
-                edge: OsMediaGraphEdge {
+            store::test_support::assert_op_line_round_trip(&OsOperation::ConnectWorkflowPorts {
+                edge: OsWorkflowEdge {
                     id: "edge-1".into(),
                     source_node_id: "node-1".into(),
                     source_port_id: "app-1:out:out".into(),
@@ -1859,12 +1858,12 @@ use store::{create_document_envelope, document_backbone_ref, materialize_documen
 
         #[test]
         fn op_text_round_trips_disconnect_media_edge() {
-            store::test_support::assert_op_line_round_trip(&OsOperation::DisconnectMediaEdge { edge_id: "edge-1".into() });
+            store::test_support::assert_op_line_round_trip(&OsOperation::DisconnectWorkflowEdge { edge_id: "edge-1".into() });
         }
 
         #[test]
         fn op_text_round_trips_move_media_node() {
-            store::test_support::assert_op_line_round_trip(&OsOperation::MoveMediaNode { node_id: "node-1".into(), x: 5.5, y: -6.25 });
+            store::test_support::assert_op_line_round_trip(&OsOperation::MoveWorkflowNode { node_id: "node-1".into(), x: 5.5, y: -6.25 });
         }
 
         #[test]
@@ -1928,11 +1927,13 @@ pub mod backbone {
 
     use crate::host::OsBackbonePort;
     #[cfg(not(target_arch = "wasm32"))]
-    use crate::media_graph::OS_STUDIO_SCHEMA;
+    use crate::workflow::OS_STUDIO_SCHEMA;
+    #[cfg(not(target_arch = "wasm32"))]
+    use crate::{OsEnvelope, OsOperation, OsProjection};
     #[cfg(not(target_arch = "wasm32"))]
     use std::sync::Arc;
     use vcs::VcsError;
-    use store::MemoryBackbonePort;
+    use store::{DocumentDsl, MemoryBackbonePort};
     #[cfg(not(target_arch = "wasm32"))]
     use store_sync::{FolderSqliteStorage, FolderTextStorage};
 
@@ -1945,9 +1946,9 @@ pub mod backbone {
     enum StudioPortKind {
         /// @emoji 🗃️ A single document's pack blob addressed by an arbitrary `file://` path —
         /// `<folder>/<document_id>.<extension>.pack` (authoritative) + `.ops` + a DSL mirror, via
-        /// `FolderTextStorage::write_pack`/`read_pack` and the `store::document_codec(OS_STUDIO_SCHEMA)`
-        /// registered codec (same fix as `framework/sync`'s `FolderEndpoint::Pack` — see there for the
-        /// rationale: a missing codec is a hard error, never a silent JSON-in-`.dsl` dump).
+        /// `FolderTextStorage::write_pack`/`read_pack` and the typed `store::parse_document_pack`/
+        /// `print_document_pack::<OsProjection, OsOperation>` (this crate is fully typed, no
+        /// `store::DocumentCodec` indirection needed).
         #[cfg(not(target_arch = "wasm32"))]
         File { uri: String, storage: FolderTextStorage, document_id: String, extension: String },
         #[cfg(not(target_arch = "wasm32"))]
@@ -1983,24 +1984,23 @@ pub mod backbone {
                 match kind {
                     #[cfg(not(target_arch = "wasm32"))]
                     StudioPortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
-                        let Some(codec) = store::document_codec(OS_STUDIO_SCHEMA) else {
-                            return Err(VcsError::Backbone(format!("no document codec registered for schema {OS_STUDIO_SCHEMA:?}")));
-                        };
                         if let Some(pack_files) = storage.read_pack(document_id, extension)? {
-                            return (codec.parse)(&pack_files.pack, &pack_files.spr);
+                            let parsed: store::ParsedDocumentText<OsProjection, OsOperation> = store::parse_document_pack(&pack_files.pack, &pack_files.spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+                            return serde_json::to_string(&parsed.envelope).map_err(|error| VcsError::Serialize(error.to_string()));
                         }
                         return match storage.read(document_id, extension)? {
-                            Some(text_files) => (codec.parse_dsl)(&text_files.dsl, &text_files.ops),
+                            Some(text_files) => {
+                                let parsed: store::ParsedDocumentText<OsProjection, OsOperation> = store::parse_document_text(&text_files.dsl, &text_files.ops).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+                                serde_json::to_string(&parsed.envelope).map_err(|error| VcsError::Serialize(error.to_string()))
+                            }
                             None => Err(VcsError::Backbone(format!("missing backbone file {uri}"))),
                         };
                     }
                     #[cfg(not(target_arch = "wasm32"))]
                     StudioPortKind::Folder(folder_uri, storage) if uri == folder_uri => {
-                        let Some(codec) = store::document_codec(OS_STUDIO_SCHEMA) else {
-                            return Err(VcsError::Backbone(format!("no document codec registered for schema {OS_STUDIO_SCHEMA:?}")));
-                        };
                         let (pack, spr) = storage.read(STUDIO_FOLDER_DOCUMENT_ID)?.ok_or_else(|| VcsError::Backbone(format!("missing backbone file {uri}")))?;
-                        return (codec.parse)(&pack, &spr);
+                        let parsed: store::ParsedDocumentText<OsProjection, OsOperation> = store::parse_document_pack(&pack, &spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+                        return serde_json::to_string(&parsed.envelope).map_err(|error| VcsError::Serialize(error.to_string()));
                     }
                     _ => {}
                 }
@@ -2013,18 +2013,15 @@ pub mod backbone {
                 match kind {
                     #[cfg(not(target_arch = "wasm32"))]
                     StudioPortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
-                        let Some(codec) = store::document_codec(OS_STUDIO_SCHEMA) else {
-                            return Err(VcsError::Backbone(format!("no document codec registered for schema {OS_STUDIO_SCHEMA:?}")));
-                        };
-                        let (pack_files, dsl_mirror) = (codec.print)(payload)?;
+                        let envelope: OsEnvelope = serde_json::from_str(payload).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+                        let pack_files = store::print_document_pack(&envelope)?;
+                        let dsl_mirror = envelope.vcs.initial_projection.print_dsl();
                         return storage.write_pack(document_id, extension, &pack_files, &dsl_mirror);
                     }
                     #[cfg(not(target_arch = "wasm32"))]
                     StudioPortKind::Folder(folder_uri, storage) if uri == folder_uri => {
-                        let Some(codec) = store::document_codec(OS_STUDIO_SCHEMA) else {
-                            return Err(VcsError::Backbone(format!("no document codec registered for schema {OS_STUDIO_SCHEMA:?}")));
-                        };
-                        let (pack_files, _dsl_mirror) = (codec.print)(payload)?;
+                        let envelope: OsEnvelope = serde_json::from_str(payload).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+                        let pack_files = store::print_document_pack(&envelope)?;
                         return storage.write(STUDIO_FOLDER_DOCUMENT_ID, OS_STUDIO_SCHEMA, &pack_files.pack, &pack_files.spr);
                     }
                     _ => {}
@@ -2472,7 +2469,7 @@ pub mod instance {
         values
     }
 
-    /// @emoji 🎛️ Builds the media graph input port id for a bound studio parameter.
+    /// @emoji 🎛️ Builds the workflow input port id for a bound studio parameter.
     pub fn parameter_port_id(instance_id: &str, parameter_id: &str) -> String {
         media_port_id_for_spec(instance_id, &format!("{OS_PARAMETER_PORT_PREFIX}{parameter_id}"), "in")
     }
@@ -2527,7 +2524,7 @@ pub mod instance {
     /// Content itself lives in the app's own `framework/sync`-hosted document (referenced by
     /// {@link OsDocumentRef}, read host-side and passed in as `current_document_json`) — this function
     /// no longer resolves embedded/upstream source documents; that concept was deleted with
-    /// `OsSourceDocument`. Cross-instance ("upstream") dataflow through media-graph edges is deferred
+    /// `OsSourceDocument`. Cross-instance ("upstream") dataflow through workflow edges is deferred
     /// (see `host_runtime` doc-comment) to a follow-up that reads the upstream app's live document.
     pub fn materialize_os_app_instance_document_json(current_document_json: &str, instance_id: &str, bindings: &[OsParameterFieldBinding], parameters: &[OsParameter]) -> String {
         let projection: Value = serde_json::from_str(current_document_json).unwrap_or_else(|_| json!({}));
@@ -2609,7 +2606,7 @@ pub mod media_export_raster {
     // #region media_export_raster
     //! 🖼️ SVG rasterization, DWG flattening, and media-export registration helpers.
 
-    use crate::media_graph::{register_os_media_export_handler, register_os_media_import_handler, OsMediaExportResult, OsMediaFormat};
+    use crate::workflow::{register_os_media_export_handler, register_os_media_import_handler, OsMediaExportResult, OsMediaFormat};
     use base64::Engine;
     use png::{BitDepth, ColorType, Encoder};
     use semio_framework_core::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry};
@@ -2788,7 +2785,7 @@ pub mod media_export_raster {
         });
     }
 
-    /// @emoji 🧵 Registers one `MeshExporter` format (Obj/Glb/Stl/…) for a mesh resource kind; call once per format — `mesh_from_document` bridges the OS media-graph's per-document export pipeline down to the format-agnostic `MeshData` the exporter instance actually encodes. DWG stays on `register_mesh_dwg_import_handler`'s sibling below; it is not part of the `MeshExporter` mechanism.
+    /// @emoji 🧵 Registers one `MeshExporter` format (Obj/Glb/Stl/…) for a mesh resource kind; call once per format — `mesh_from_document` bridges the OS workflow's per-document export pipeline down to the format-agnostic `MeshData` the exporter instance actually encodes. DWG stays on `register_mesh_dwg_import_handler`'s sibling below; it is not part of the `MeshExporter` mechanism.
     pub fn register_mesh_exporter(resource_kind: &'static str, file_stem: &'static str, mesh_from_document: fn(&Value) -> Result<semio_framework_plugin::MeshData, String>, exporter: Box<dyn semio_framework_plugin::MeshExporter>) {
         let format = exporter.format();
         let ext = format.as_str();
@@ -2969,9 +2966,9 @@ pub mod media_export_simple {
     // #endregion media_export_simple
 }
 
-pub mod media_graph {
-    // #region media_graph
-    //! 🎬 Media graph, VFS projection types, and media export registry.
+pub mod workflow {
+    // #region workflow
+    //! 🎬 Workflow, VFS projection types, and media export registry.
 
     use crate::host::OsOperation;
     use crate::instance::{create_os_id, is_parameter_port_id, media_port_spec_id, parameter_id_from_port_id, parameter_port_id, OsAppInstance, OsParameter, OsParameterFieldBinding};
@@ -2983,11 +2980,11 @@ pub mod media_graph {
     use std::sync::{Mutex, OnceLock};
 
     pub const OS_STUDIO_SCHEMA: &str = "s.studio";
-    pub const OS_MEDIA_GRAPH_SCHEMA: &str = "s.media-graph";
-    pub const OS_MEDIA_GRAPH_VFS_ROOT_ID: &str = "os-media-graph-root";
+    pub const OS_WORKFLOW_SCHEMA: &str = "s.workflow";
+    pub const OS_WORKFLOW_VFS_ROOT_ID: &str = "os-workflow-root";
     pub const OS_MEDIA_FLOW_MODULE_ID: &str = "os-media";
 
-    //#region 🔖MediaGraph
+    //#region 🔖Workflow
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct OsMediaPort {
@@ -2998,7 +2995,7 @@ pub mod media_graph {
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
-    pub struct OsMediaGraphNode {
+    pub struct OsWorkflowNode {
         pub id: String,
         pub instance_id: String,
         pub x: f64,
@@ -3011,7 +3008,7 @@ pub mod media_graph {
 
     //#region 🔖MediaContract
     /// 🤝 A connect-time negotiated wire contract between two `OsMediaPort`s — produced by
-    /// `negotiate_media_contract` and stored on `OsMediaGraphEdge` so later passes (`validate_media_graph`,
+    /// `negotiate_media_contract` and stored on `OsWorkflowEdge` so later passes (`validate_workflow`,
     /// merge reconciliation) can re-check it without re-resolving the resource registry. `kind_id`/`media_type`
     /// describe the *accepted* (target) side — see `semio_framework_core::media_types_compatible`.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3074,7 +3071,7 @@ pub mod media_graph {
     /// to/from a scalar `dsl::FieldValue::Enum`/`Ident` right here, so none of them ever need their own
     /// `DslField` impl or a local-twin type. `media_contract_spec()`'s `keyword: None` makes
     /// `Shape::Record` splice these eight fields inline wherever `MediaContract` is used as a
-    /// `#[dsl(block)]` field (see `OsMediaGraphEdge.contract`), with no keyword of its own repeated
+    /// `#[dsl(block)]` field (see `OsWorkflowEdge.contract`), with no keyword of its own repeated
     /// inside the braces.
     fn media_class_ordinal(class: MediaClass) -> u32 {
         match class {
@@ -3287,7 +3284,7 @@ pub mod media_graph {
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
-    pub struct OsMediaGraphEdge {
+    pub struct OsWorkflowEdge {
         pub id: String,
         pub source_node_id: String,
         pub source_port_id: String,
@@ -3299,52 +3296,52 @@ pub mod media_graph {
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
-    pub struct OsMediaGraph {
+    pub struct OsWorkflow {
         pub schema: String,
         #[dsl(table)]
-        pub nodes: Vec<OsMediaGraphNode>,
+        pub nodes: Vec<OsWorkflowNode>,
         #[dsl(table)]
-        pub edges: Vec<OsMediaGraphEdge>,
+        pub edges: Vec<OsWorkflowEdge>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
-    pub struct MediaGraphPosition {
+    pub struct WorkflowPosition {
         pub x: f64,
         pub y: f64,
     }
 
     #[derive(Clone, Debug, PartialEq)]
-    pub struct MediaGraphValidation {
+    pub struct WorkflowValidation {
         pub ok: bool,
         pub errors: Vec<String>,
     }
 
-    pub fn empty_media_graph() -> OsMediaGraph {
-        OsMediaGraph { schema: OS_MEDIA_GRAPH_SCHEMA.into(), nodes: Vec::new(), edges: Vec::new() }
+    pub fn empty_workflow() -> OsWorkflow {
+        OsWorkflow { schema: OS_WORKFLOW_SCHEMA.into(), nodes: Vec::new(), edges: Vec::new() }
     }
 
-    pub fn media_graph_node_for_instance(instance: &OsAppInstance, registration: &OsAppRegistration, position: &MediaGraphPosition, node_id: &str) -> OsMediaGraphNode {
-        let (inputs, outputs) = crate::registry::media_graph_node_ports_for_registration(&instance.id, registration);
+    pub fn workflow_node_for_instance(instance: &OsAppInstance, registration: &OsAppRegistration, position: &WorkflowPosition, node_id: &str) -> OsWorkflowNode {
+        let (inputs, outputs) = crate::registry::workflow_node_ports_for_registration(&instance.id, registration);
         let port_count = inputs.len().max(outputs.len()).max(1);
-        OsMediaGraphNode { id: node_id.into(), instance_id: instance.id.clone(), x: position.x, y: position.y, width: 220.0, height: 56.0 + port_count as f64 * 18.0, inputs, outputs }
+        OsWorkflowNode { id: node_id.into(), instance_id: instance.id.clone(), x: position.x, y: position.y, width: 220.0, height: 56.0 + port_count as f64 * 18.0, inputs, outputs }
     }
 
-    fn sync_media_node_parameter_ports(node: &OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> OsMediaGraphNode {
+    fn sync_workflow_node_parameter_ports(node: &OsWorkflowNode, bindings: &[OsParameterFieldBinding]) -> OsWorkflowNode {
         let instance_bindings: Vec<_> = bindings.iter().filter(|binding| binding.instance_id == node.instance_id).collect();
         let base_inputs: Vec<_> = node.inputs.iter().filter(|port| !is_parameter_port_id(&port.id)).cloned().collect();
         let parameter_inputs: Vec<_> = instance_bindings.iter().map(|binding| OsMediaPort { id: parameter_port_id(&node.instance_id, &binding.parameter_id), resource_kind: "parameter.value".into(), direction: "in".into() }).collect();
         let inputs: Vec<_> = base_inputs.into_iter().chain(parameter_inputs).collect();
         let port_count = inputs.len().max(node.outputs.len()).max(1);
-        OsMediaGraphNode { inputs, height: 56.0 + port_count as f64 * 18.0, ..node.clone() }
+        OsWorkflowNode { inputs, height: 56.0 + port_count as f64 * 18.0, ..node.clone() }
     }
 
-    pub fn sync_media_graph_parameter_ports(graph: &OsMediaGraph, bindings: &[OsParameterFieldBinding]) -> OsMediaGraph {
-        OsMediaGraph { schema: OS_MEDIA_GRAPH_SCHEMA.into(), nodes: graph.nodes.iter().map(|node| sync_media_node_parameter_ports(node, bindings)).collect(), edges: graph.edges.clone() }
+    pub fn sync_workflow_parameter_ports(graph: &OsWorkflow, bindings: &[OsParameterFieldBinding]) -> OsWorkflow {
+        OsWorkflow { schema: OS_WORKFLOW_SCHEMA.into(), nodes: graph.nodes.iter().map(|node| sync_workflow_node_parameter_ports(node, bindings)).collect(), edges: graph.edges.clone() }
     }
 
-    /// @emoji ✅ Validates media graph connectivity, cycle freedom, and edge-contract consistency.
-    pub fn validate_media_graph(graph: &OsMediaGraph) -> MediaGraphValidation {
+    /// @emoji ✅ Validates workflow connectivity, cycle freedom, and edge-contract consistency.
+    pub fn validate_workflow(graph: &OsWorkflow) -> WorkflowValidation {
         let mut errors = Vec::new();
         let node_ids: HashSet<_> = graph.nodes.iter().map(|node| node.id.clone()).collect();
         for edge in &graph.edges {
@@ -3360,7 +3357,7 @@ pub mod media_graph {
         // 🛡️ Defense in depth for merged/imported studio documents: re-negotiate each edge's endpoints
         // against the *current* resource registry and flag any edge whose stored `contract` no longer
         // matches — a concurrent re-typing or a stale import can leave a wire's contract behind.
-        let node_by_id: HashMap<&str, &OsMediaGraphNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
+        let node_by_id: HashMap<&str, &OsWorkflowNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
         for edge in &graph.edges {
             let Some(source_port) = node_by_id.get(edge.source_node_id.as_str()).and_then(|node| node.outputs.iter().find(|port| port.id == edge.source_port_id)) else { continue };
             let Some(target_port) = node_by_id.get(edge.target_node_id.as_str()).and_then(|node| node.inputs.iter().find(|port| port.id == edge.target_port_id)) else { continue };
@@ -3396,7 +3393,7 @@ pub mod media_graph {
         for node in &graph.nodes {
             dfs(&node.id, &adjacency, &mut visiting, &mut visited, &mut errors);
         }
-        MediaGraphValidation { ok: errors.is_empty(), errors }
+        WorkflowValidation { ok: errors.is_empty(), errors }
     }
 
     pub fn os_media_neuron_kind_for_node(node_id: &str) -> String {
@@ -3405,19 +3402,19 @@ pub mod media_graph {
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct OsMediaGraphCamera {
+    pub struct OsWorkflowCamera {
         pub x: f64,
         pub y: f64,
         pub zoom: f64,
     }
 
-    impl Default for OsMediaGraphCamera {
+    impl Default for OsWorkflowCamera {
         fn default() -> Self {
             Self { x: 0.0, y: 0.0, zoom: 1.0 }
         }
     }
 
-    pub fn os_media_graph_to_flow_fixture(graph: &OsMediaGraph, instances: &[OsAppInstance], camera: &OsMediaGraphCamera) -> Value {
+    pub fn os_workflow_to_flow_fixture(graph: &OsWorkflow, instances: &[OsAppInstance], camera: &OsWorkflowCamera) -> Value {
         let instance_by_id: HashMap<_, _> = instances.iter().map(|instance| (instance.id.clone(), instance)).collect();
         let widgets: Vec<_> = graph
             .nodes
@@ -3462,8 +3459,8 @@ pub mod media_graph {
         })
     }
 
-    /** @emoji 🔁 Diffs a flow fixture back into media-graph operations — inverse of [`os_media_graph_to_flow_fixture`]. */
-    pub fn apply_flow_fixture_to_os_media_graph(graph: &OsMediaGraph, fixture_json: &str) -> Vec<OsOperation> {
+    /** @emoji 🔁 Diffs a flow fixture back into workflow operations — inverse of [`os_workflow_to_flow_fixture`]. */
+    pub fn apply_flow_fixture_to_os_workflow(graph: &OsWorkflow, fixture_json: &str) -> Vec<OsOperation> {
         let Ok(fixture) = serde_json::from_str::<Value>(fixture_json) else {
             return Vec::new();
         };
@@ -3477,7 +3474,7 @@ pub mod media_graph {
                 let x = center_x - node.width / 2.0;
                 let y = center_y - node.height / 2.0;
                 if (x - node.x).abs() > 1e-6 || (y - node.y).abs() > 1e-6 {
-                    operations.push(OsOperation::MoveMediaNode { node_id: node.id.clone(), x, y });
+                    operations.push(OsOperation::MoveWorkflowNode { node_id: node.id.clone(), x, y });
                 }
             }
         }
@@ -3494,11 +3491,11 @@ pub mod media_graph {
         let synapse_endpoints = |synapse: &Value| -> Option<(String, String, String, String)> {
             Some((synapse.get("from").and_then(Value::as_str)?.into(), synapse.get("fromPort").and_then(Value::as_str)?.into(), synapse.get("to").and_then(Value::as_str)?.into(), synapse.get("toPort").and_then(Value::as_str)?.into()))
         };
-        let edge_endpoints = |edge: &OsMediaGraphEdge| (edge.source_node_id.clone(), edge.source_port_id.clone(), edge.target_node_id.clone(), edge.target_port_id.clone());
+        let edge_endpoints = |edge: &OsWorkflowEdge| (edge.source_node_id.clone(), edge.source_port_id.clone(), edge.target_node_id.clone(), edge.target_port_id.clone());
         let synapses = fixture.get("synapses").and_then(Value::as_array).cloned().unwrap_or_default();
         let fixture_endpoints: HashSet<_> = synapses.iter().filter_map(synapse_endpoints).collect();
         let graph_endpoints: HashSet<_> = graph.edges.iter().map(edge_endpoints).collect();
-        let node_by_id: HashMap<&str, &OsMediaGraphNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
+        let node_by_id: HashMap<&str, &OsWorkflowNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
         for synapse in &synapses {
             let Some(endpoints) = synapse_endpoints(synapse) else { continue };
             if graph_endpoints.contains(&endpoints) {
@@ -3512,7 +3509,7 @@ pub mod media_graph {
             let Some(target_port) = node_by_id.get(target_node_id.as_str()).and_then(|node| node.inputs.iter().find(|port| port.id == target_port_id)) else { continue };
             let Ok(contract) = negotiate_media_contract(source_port, target_port) else { continue };
             let id = synapse.get("id").and_then(Value::as_str).filter(|value| !value.is_empty()).map(str::to_string).unwrap_or_else(|| create_os_id("edge"));
-            operations.push(OsOperation::ConnectMediaPorts { edge: OsMediaGraphEdge { id, source_node_id, source_port_id, target_node_id, target_port_id, contract } });
+            operations.push(OsOperation::ConnectWorkflowPorts { edge: OsWorkflowEdge { id, source_node_id, source_port_id, target_node_id, target_port_id, contract } });
         }
         if fixture.get("synapses").and_then(Value::as_array).is_some() {
             for edge in &graph.edges {
@@ -3522,7 +3519,7 @@ pub mod media_graph {
                 if removed_node_ids.contains(&edge.source_node_id) || removed_node_ids.contains(&edge.target_node_id) {
                     continue;
                 }
-                operations.push(OsOperation::DisconnectMediaEdge { edge_id: edge.id.clone() });
+                operations.push(OsOperation::DisconnectWorkflowEdge { edge_id: edge.id.clone() });
             }
         }
         operations
@@ -3530,15 +3527,15 @@ pub mod media_graph {
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct OsMediaNodeGraphPayload {
+    pub struct OsWorkflowNodeGraphPayload {
         pub nodes_json: String,
         pub edges_json: String,
         pub viewport_json: String,
         pub find_items_json: String,
     }
 
-    /** @emoji 🕸️ Serializes an OS media graph into generic node-graph scene payloads. */
-    pub fn os_media_graph_to_node_graph_payload(graph: &OsMediaGraph, instances: &[OsAppInstance]) -> OsMediaNodeGraphPayload {
+    /** @emoji 🕸️ Serializes an OS workflow into generic node-graph scene payloads. */
+    pub fn os_workflow_to_node_graph_payload(graph: &OsWorkflow, instances: &[OsAppInstance]) -> OsWorkflowNodeGraphPayload {
         let instance_by_id: HashMap<_, _> = instances.iter().map(|instance| (instance.id.clone(), instance)).collect();
         let nodes: Vec<_> = graph
             .nodes
@@ -3596,11 +3593,11 @@ pub mod media_graph {
                     "label": instance
                         .map(|entry| format!("{} / {}", entry.program_id, entry.app_id))
                         .unwrap_or_else(|| node.instance_id.clone()),
-                    "category": "Media graph",
+                    "category": "Workflow",
                 })
             })
             .collect();
-        OsMediaNodeGraphPayload {
+        OsWorkflowNodeGraphPayload {
             nodes_json: serde_json::to_string(&nodes).unwrap_or_else(|_| "[]".into()),
             edges_json: serde_json::to_string(&edges).unwrap_or_else(|_| "[]".into()),
             viewport_json: r#"{"x":0,"y":0,"zoom":1}"#.into(),
@@ -3610,7 +3607,7 @@ pub mod media_graph {
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct OsMediaFlowChannelSpec {
+    pub struct OsWorkflowChannelSpec {
         pub name: String,
         pub code: String,
         pub abbreviation: String,
@@ -3620,21 +3617,21 @@ pub mod media_graph {
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct OsMediaFlowOperatorInfo {
+    pub struct OsWorkflowOperatorInfo {
         pub id: String,
         pub module: String,
         pub name: String,
         pub abbreviation: String,
         pub icon: String,
         pub summary: String,
-        pub inputs: Vec<OsMediaFlowChannelSpec>,
-        pub outputs: Vec<OsMediaFlowChannelSpec>,
+        pub inputs: Vec<OsWorkflowChannelSpec>,
+        pub outputs: Vec<OsWorkflowChannelSpec>,
     }
 
-    fn os_media_flow_channel_spec(port_id: &str, resource_kind: &str, label: &str) -> OsMediaFlowChannelSpec {
+    fn os_workflow_channel_spec(port_id: &str, resource_kind: &str, label: &str) -> OsWorkflowChannelSpec {
         let code = port_id.chars().next().map(|ch| ch.to_uppercase().collect::<String>()).unwrap_or_else(|| "P".into());
         let abbreviation = if label.chars().count() <= 3 { label.into() } else { label.chars().take(3).collect() };
-        OsMediaFlowChannelSpec { name: port_id.into(), code, abbreviation, full_name: label.into(), operators: vec![resource_kind.into()] }
+        OsWorkflowChannelSpec { name: port_id.into(), code, abbreviation, full_name: label.into(), operators: vec![resource_kind.into()] }
     }
 
     fn parameter_label(parameter: &OsParameter) -> &str {
@@ -3649,8 +3646,8 @@ pub mod media_graph {
         }
     }
 
-    /// @emoji 🧩 Registers per-node neuron metadata for the OS media graph flow extension.
-    pub fn build_os_media_flow_operator_infos(graph: &OsMediaGraph, instances: &[OsAppInstance], parameters: &[OsParameter]) -> Vec<OsMediaFlowOperatorInfo> {
+    /// @emoji 🧩 Registers per-node neuron metadata for the OS workflow flow extension.
+    pub fn build_os_workflow_operator_infos(graph: &OsWorkflow, instances: &[OsAppInstance], parameters: &[OsParameter]) -> Vec<OsWorkflowOperatorInfo> {
         let instance_by_id: HashMap<_, _> = instances.iter().map(|row| (row.id.clone(), row)).collect();
         let parameter_by_id: HashMap<_, _> = parameters.iter().map(|row| (parameter_entity_id(row).to_string(), row)).collect();
         graph
@@ -3660,7 +3657,7 @@ pub mod media_graph {
                 let instance = instance_by_id.get(&node.instance_id);
                 let registration = instance.and_then(|row| os_app_registration(&row.program_id, &row.app_id));
                 let neuron_kind = os_media_neuron_kind_for_node(&node.id);
-                OsMediaFlowOperatorInfo {
+                OsWorkflowOperatorInfo {
                     id: neuron_kind,
                     module: OS_MEDIA_FLOW_MODULE_ID.into(),
                     name: instance.map(|row| row.label.clone()).unwrap_or_else(|| node.instance_id.clone()),
@@ -3673,7 +3670,7 @@ pub mod media_graph {
                         .map(|port| {
                             let parameter_id = parameter_id_from_port_id(&port.id);
                             let label = parameter_id.as_ref().and_then(|id| parameter_by_id.get(id)).map(|parameter| parameter_label(parameter).to_string()).or_else(|| media_port_spec_id(&port.id)).unwrap_or_else(|| port.id.clone());
-                            os_media_flow_channel_spec(&port.id, &port.resource_kind, &label)
+                            os_workflow_channel_spec(&port.id, &port.resource_kind, &label)
                         })
                         .collect(),
                     outputs: node
@@ -3681,33 +3678,33 @@ pub mod media_graph {
                         .iter()
                         .map(|port| {
                             let label = media_port_spec_id(&port.id).unwrap_or_else(|| port.id.clone());
-                            os_media_flow_channel_spec(&port.id, &port.resource_kind, &label)
+                            os_workflow_channel_spec(&port.id, &port.resource_kind, &label)
                         })
                         .collect(),
                 }
             })
             .collect()
     }
-    //#endregion 🔖MediaGraph
+    //#endregion 🔖Workflow
 
-    //#region 🔖MediaFlow
+    //#region 🔖WorkflowPlanner
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct MediaFlowDelivery {
+    pub struct WorkflowDelivery {
         pub edge_id: String,
         pub producer_instance_id: String,
         pub producer_port_id: String,
         pub consumer_instance_id: String,
         pub consumer_port_id: String,
-        // 🩹 `OsMediaGraphEdge` has no `contract` field yet (see `reconcile_os_media_graph`'s baseline
+        // 🩹 `OsWorkflowEdge` has no `contract` field yet (see `reconcile_os_workflow`'s baseline
         // comment above). Once a sibling ticket lands `contract: MediaContract` on the edge, carry it
         // through here too so delivery-execution knows what to transcode.
     }
 
     /// @emoji 🧭 Post-order DFS reversed into a topological node order (source before target); same
-    /// recursive shape as `validate_media_graph`'s cycle-detection DFS, but collects the traversal
+    /// recursive shape as `validate_workflow`'s cycle-detection DFS, but collects the traversal
     /// order instead of flagging revisits (the graph is validated acyclic before planning runs).
-    fn media_flow_topological_node_order(graph: &OsMediaGraph) -> Vec<String> {
+    fn workflow_topological_node_order(graph: &OsWorkflow) -> Vec<String> {
         let mut adjacency: HashMap<String, Vec<String>> = HashMap::new();
         for edge in &graph.edges {
             adjacency.entry(edge.source_node_id.clone()).or_default().push(edge.target_node_id.clone());
@@ -3730,16 +3727,16 @@ pub mod media_graph {
         order
     }
 
-    /// @emoji 🚚 Plans one [`MediaFlowDelivery`] per edge in the downstream closure of `dirty_instance_ids`,
+    /// @emoji 🚚 Plans one [`WorkflowDelivery`] per edge in the downstream closure of `dirty_instance_ids`,
     /// propagating dirtiness onto each edge's consumer instance so multi-hop chains (A→B→C) resolve in a
     /// single topological pass. Pure/side-effect-free — callers own applying the deliveries.
-    pub fn plan_media_flow(graph: &OsMediaGraph, dirty_instance_ids: &HashSet<String>) -> Vec<MediaFlowDelivery> {
-        let node_by_id: HashMap<&str, &OsMediaGraphNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
-        let mut edges_by_source: HashMap<&str, Vec<&OsMediaGraphEdge>> = HashMap::new();
+    pub fn plan_workflow(graph: &OsWorkflow, dirty_instance_ids: &HashSet<String>) -> Vec<WorkflowDelivery> {
+        let node_by_id: HashMap<&str, &OsWorkflowNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
+        let mut edges_by_source: HashMap<&str, Vec<&OsWorkflowEdge>> = HashMap::new();
         for edge in &graph.edges {
             edges_by_source.entry(edge.source_node_id.as_str()).or_default().push(edge);
         }
-        let order = media_flow_topological_node_order(graph);
+        let order = workflow_topological_node_order(graph);
         let mut dirty = dirty_instance_ids.clone();
         let mut deliveries = Vec::new();
         for node_id in &order {
@@ -3749,7 +3746,7 @@ pub mod media_graph {
             }
             for edge in edges_by_source.get(node_id.as_str()).into_iter().flatten() {
                 let Some(target_node) = node_by_id.get(edge.target_node_id.as_str()) else { continue };
-                deliveries.push(MediaFlowDelivery {
+                deliveries.push(WorkflowDelivery {
                     edge_id: edge.id.clone(),
                     producer_instance_id: node.instance_id.clone(),
                     producer_port_id: edge.source_port_id.clone(),
@@ -3761,7 +3758,7 @@ pub mod media_graph {
         }
         deliveries
     }
-    //#endregion 🔖MediaFlow
+    //#endregion 🔖WorkflowPlanner
 
     //#region 🔖ProgramRegistry
     #[derive(Clone, Debug, Default)]
@@ -3908,10 +3905,10 @@ pub mod media_graph {
     }
     //#endregion 🔖MediaExport
 
-    //#region 🔖MediaGraphVfs
+    //#region 🔖WorkflowVfs
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct OsMediaGraphVfsDescriptorKind {
+    pub struct OsWorkflowVfsDescriptorKind {
         pub id: String,
         pub name: String,
         pub presentation: String,
@@ -3919,7 +3916,7 @@ pub mod media_graph {
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct OsMediaGraphVfsFileNodeDescriptor {
+    pub struct OsWorkflowVfsFileNodeDescriptor {
         pub id: String,
         pub descriptor_kind_id: String,
         pub label: String,
@@ -3927,23 +3924,23 @@ pub mod media_graph {
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct OsMediaGraphVfsFileNodeKind {
+    pub struct OsWorkflowVfsFileNodeKind {
         pub id: String,
         pub name: String,
-        pub descriptors: Vec<OsMediaGraphVfsFileNodeDescriptor>,
+        pub descriptors: Vec<OsWorkflowVfsFileNodeDescriptor>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct OsMediaGraphVfsSchema {
-        pub descriptor_kinds: HashMap<String, OsMediaGraphVfsDescriptorKind>,
-        pub file_node_kinds: HashMap<String, OsMediaGraphVfsFileNodeKind>,
+    pub struct OsWorkflowVfsSchema {
+        pub descriptor_kinds: HashMap<String, OsWorkflowVfsDescriptorKind>,
+        pub file_node_kinds: HashMap<String, OsWorkflowVfsFileNodeKind>,
         pub descriptor_column_ids: Vec<String>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct OsMediaGraphVfsNodeRecord {
+    pub struct OsWorkflowVfsNodeRecord {
         pub id: String,
         pub file_node_kind_id: String,
         pub name: String,
@@ -3959,50 +3956,50 @@ pub mod media_graph {
         pub descriptor_values: HashMap<String, String>,
     }
 
-    pub fn os_media_graph_vfs_schema() -> OsMediaGraphVfsSchema {
+    pub fn os_workflow_vfs_schema() -> OsWorkflowVfsSchema {
         let mut descriptor_kinds = HashMap::new();
-        descriptor_kinds.insert("text".into(), OsMediaGraphVfsDescriptorKind { id: "text".into(), name: "Text".into(), presentation: "text".into() });
-        let binding = OsMediaGraphVfsFileNodeDescriptor { id: "binding".into(), descriptor_kind_id: "text".into(), label: "Binding".into() };
+        descriptor_kinds.insert("text".into(), OsWorkflowVfsDescriptorKind { id: "text".into(), name: "Text".into(), presentation: "text".into() });
+        let binding = OsWorkflowVfsFileNodeDescriptor { id: "binding".into(), descriptor_kind_id: "text".into(), label: "Binding".into() };
         let mut file_node_kinds = HashMap::new();
         for kind in ["root", "instance", "folder", "source", "input"] {
-            file_node_kinds.insert(kind.into(), OsMediaGraphVfsFileNodeKind { id: kind.into(), name: kind.into(), descriptors: vec![binding.clone()] });
+            file_node_kinds.insert(kind.into(), OsWorkflowVfsFileNodeKind { id: kind.into(), name: kind.into(), descriptors: vec![binding.clone()] });
         }
         file_node_kinds.insert(
             "export".into(),
-            OsMediaGraphVfsFileNodeKind { id: "export".into(), name: "Export".into(), descriptors: vec![binding.clone(), OsMediaGraphVfsFileNodeDescriptor { id: "format".into(), descriptor_kind_id: "text".into(), label: "Format".into() }] },
+            OsWorkflowVfsFileNodeKind { id: "export".into(), name: "Export".into(), descriptors: vec![binding.clone(), OsWorkflowVfsFileNodeDescriptor { id: "format".into(), descriptor_kind_id: "text".into(), label: "Format".into() }] },
         );
-        OsMediaGraphVfsSchema { descriptor_kinds, file_node_kinds, descriptor_column_ids: vec!["binding".into(), "format".into()] }
+        OsWorkflowVfsSchema { descriptor_kinds, file_node_kinds, descriptor_column_ids: vec!["binding".into(), "format".into()] }
     }
 
-    pub fn os_media_graph_vfs_instance_id(node_id: &str) -> Option<String> {
+    pub fn os_workflow_vfs_instance_id(node_id: &str) -> Option<String> {
         regex_lite(node_id, r"^inst:([^:]+)(?::|$)")
     }
 
-    pub fn os_media_graph_vfs_instance_folder_id(instance_id: &str) -> String {
+    pub fn os_workflow_vfs_instance_folder_id(instance_id: &str) -> String {
         format!("inst:{instance_id}")
     }
 
-    pub fn os_media_graph_vfs_source_id(instance_id: &str) -> String {
+    pub fn os_workflow_vfs_source_id(instance_id: &str) -> String {
         format!("inst:{instance_id}:source")
     }
 
-    pub fn os_media_graph_vfs_inputs_folder_id(instance_id: &str) -> String {
+    pub fn os_workflow_vfs_inputs_folder_id(instance_id: &str) -> String {
         format!("inst:{instance_id}:inputs")
     }
 
-    pub fn os_media_graph_vfs_outputs_folder_id(instance_id: &str) -> String {
+    pub fn os_workflow_vfs_outputs_folder_id(instance_id: &str) -> String {
         format!("inst:{instance_id}:outputs")
     }
 
-    pub fn os_media_graph_vfs_input_port_id(instance_id: &str, port_spec_id: &str) -> String {
+    pub fn os_workflow_vfs_input_port_id(instance_id: &str, port_spec_id: &str) -> String {
         format!("inst:{instance_id}:input:{port_spec_id}")
     }
 
-    pub fn os_media_graph_vfs_export_id(instance_id: &str, port_spec_id: &str, format: &OsMediaFormat) -> String {
+    pub fn os_workflow_vfs_export_id(instance_id: &str, port_spec_id: &str, format: &OsMediaFormat) -> String {
         format!("inst:{instance_id}:export:{port_spec_id}:{}", format.as_str())
     }
 
-    pub fn os_media_graph_vfs_import_id(instance_id: &str, format: &OsMediaFormat) -> String {
+    pub fn os_workflow_vfs_import_id(instance_id: &str, format: &OsMediaFormat) -> String {
         format!("inst:{instance_id}:import:{}", format.as_str())
     }
 
@@ -4020,19 +4017,19 @@ pub mod media_graph {
         }
     }
 
-    /// @emoji 📁 Lists VFS children for one media graph folder node.
-    pub fn list_os_media_graph_vfs_children(parent_id: &str, instances: &[OsAppInstance], graph: &OsMediaGraph, bindings: &[OsParameterFieldBinding], parameters: &[OsParameter]) -> Vec<OsMediaGraphVfsNodeRecord> {
-        if parent_id == OS_MEDIA_GRAPH_VFS_ROOT_ID {
+    /// @emoji 📁 Lists VFS children for one workflow folder node.
+    pub fn list_os_workflow_vfs_children(parent_id: &str, instances: &[OsAppInstance], graph: &OsWorkflow, bindings: &[OsParameterFieldBinding], parameters: &[OsParameter]) -> Vec<OsWorkflowVfsNodeRecord> {
+        if parent_id == OS_WORKFLOW_VFS_ROOT_ID {
             return instances
                 .iter()
                 .map(|instance| {
                     let registration = os_app_registration(&instance.program_id, &instance.app_id);
-                    OsMediaGraphVfsNodeRecord {
-                        id: os_media_graph_vfs_instance_folder_id(&instance.id),
+                    OsWorkflowVfsNodeRecord {
+                        id: os_workflow_vfs_instance_folder_id(&instance.id),
                         file_node_kind_id: "instance".into(),
                         name: format!("{} ({}.{}))", instance.label, instance.program_id, instance.app_id),
                         path: format!("/{}", instance.label),
-                        parent_id: Some(OS_MEDIA_GRAPH_VFS_ROOT_ID.into()),
+                        parent_id: Some(OS_WORKFLOW_VFS_ROOT_ID.into()),
                         has_children: true,
                         icon: registration.as_ref().map(|entry| entry.component_kind.clone()),
                         navigate_uri: None,
@@ -4041,17 +4038,17 @@ pub mod media_graph {
                 })
                 .collect();
         }
-        let Some(instance_id) = os_media_graph_vfs_instance_id(parent_id) else {
+        let Some(instance_id) = os_workflow_vfs_instance_id(parent_id) else {
             return Vec::new();
         };
         let Some(instance) = instances.iter().find(|entry| entry.id == instance_id) else {
             return Vec::new();
         };
         let registration = os_app_registration(&instance.program_id, &instance.app_id);
-        if parent_id == os_media_graph_vfs_instance_folder_id(&instance_id) {
+        if parent_id == os_workflow_vfs_instance_folder_id(&instance_id) {
             return vec![
-                OsMediaGraphVfsNodeRecord {
-                    id: os_media_graph_vfs_source_id(&instance_id),
+                OsWorkflowVfsNodeRecord {
+                    id: os_workflow_vfs_source_id(&instance_id),
                     file_node_kind_id: "source".into(),
                     name: "source.json".into(),
                     path: format!("/{}/source.json", instance.label),
@@ -4061,8 +4058,8 @@ pub mod media_graph {
                     navigate_uri: Some(format!("os://instance/{}", instance.id)),
                     descriptor_values: HashMap::from([("binding".into(), registration.as_ref().map(|entry| entry.source_format.clone()).unwrap_or_else(|| instance.yields.clone()))]),
                 },
-                OsMediaGraphVfsNodeRecord {
-                    id: os_media_graph_vfs_inputs_folder_id(&instance_id),
+                OsWorkflowVfsNodeRecord {
+                    id: os_workflow_vfs_inputs_folder_id(&instance_id),
                     file_node_kind_id: "folder".into(),
                     name: "inputs".into(),
                     path: format!("/{}/inputs", instance.label),
@@ -4072,8 +4069,8 @@ pub mod media_graph {
                     navigate_uri: None,
                     descriptor_values: HashMap::new(),
                 },
-                OsMediaGraphVfsNodeRecord {
-                    id: os_media_graph_vfs_outputs_folder_id(&instance_id),
+                OsWorkflowVfsNodeRecord {
+                    id: os_workflow_vfs_outputs_folder_id(&instance_id),
                     file_node_kind_id: "folder".into(),
                     name: "outputs".into(),
                     path: format!("/{}/outputs", instance.label),
@@ -4085,12 +4082,12 @@ pub mod media_graph {
                 },
             ];
         }
-        if parent_id == os_media_graph_vfs_inputs_folder_id(&instance_id) {
+        if parent_id == os_workflow_vfs_inputs_folder_id(&instance_id) {
             let mut rows = Vec::new();
             if let Some(registration) = registration.as_ref() {
                 for spec in &registration.inputs {
-                    rows.push(OsMediaGraphVfsNodeRecord {
-                        id: os_media_graph_vfs_input_port_id(&instance_id, &spec.id),
+                    rows.push(OsWorkflowVfsNodeRecord {
+                        id: os_workflow_vfs_input_port_id(&instance_id, &spec.id),
                         file_node_kind_id: "input".into(),
                         name: spec.id.clone(),
                         path: format!("/{}/inputs/{}", instance.label, spec.id),
@@ -4108,8 +4105,8 @@ pub mod media_graph {
                         id == &binding.parameter_id
                     }
                 });
-                rows.push(OsMediaGraphVfsNodeRecord {
-                    id: os_media_graph_vfs_input_port_id(&instance_id, &format!("param.{}", binding.parameter_id)),
+                rows.push(OsWorkflowVfsNodeRecord {
+                    id: os_workflow_vfs_input_port_id(&instance_id, &format!("param.{}", binding.parameter_id)),
                     file_node_kind_id: "input".into(),
                     name: parameter
                         .map(|entry| match entry {
@@ -4138,8 +4135,8 @@ pub mod media_graph {
             let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
             for format in required_os_media_import_formats(&descriptor.dimension, os_resource_media_capability(&descriptor.kind)) {
                 let ext = format.as_str();
-                rows.push(OsMediaGraphVfsNodeRecord {
-                    id: os_media_graph_vfs_import_id(&instance_id, &format),
+                rows.push(OsWorkflowVfsNodeRecord {
+                    id: os_workflow_vfs_import_id(&instance_id, &format),
                     file_node_kind_id: "import".into(),
                     name: format!("import.{ext}"),
                     path: format!("/{}/inputs/import.{ext}", instance.label),
@@ -4152,7 +4149,7 @@ pub mod media_graph {
             }
             return rows;
         }
-        if parent_id == os_media_graph_vfs_outputs_folder_id(&instance_id) {
+        if parent_id == os_workflow_vfs_outputs_folder_id(&instance_id) {
             let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
             let formats = required_os_media_export_formats(&descriptor.dimension, os_resource_media_capability(&descriptor.kind));
             let mut rows = Vec::new();
@@ -4160,8 +4157,8 @@ pub mod media_graph {
                 for spec in &registration.outputs {
                     for format in &formats {
                         let ext = os_media_export_extension_for_format(format);
-                        rows.push(OsMediaGraphVfsNodeRecord {
-                            id: os_media_graph_vfs_export_id(&instance_id, &spec.id, format),
+                        rows.push(OsWorkflowVfsNodeRecord {
+                            id: os_workflow_vfs_export_id(&instance_id, &spec.id, format),
                             file_node_kind_id: "export".into(),
                             name: format!("{}.{}", spec.id, ext),
                             path: format!("/{}/outputs/{}.{}", instance.label, spec.id, ext),
@@ -4182,7 +4179,7 @@ pub mod media_graph {
         let _ = os_app_primary_output_kind;
         Vec::new()
     }
-    //#endregion 🔖MediaGraphVfs
+    //#endregion 🔖WorkflowVfs
 
     //#region 🧪Tests
     #[cfg(test)]
@@ -4192,8 +4189,8 @@ pub mod media_graph {
         use crate::registry::{merge_os_program_definition, os_baseline_resource, OsPlatformAppInput, OsPlatformInput};
 
         #[test]
-        fn validates_empty_media_graph() {
-            assert!(validate_media_graph(&empty_media_graph()).ok);
+        fn validates_empty_workflow() {
+            assert!(validate_workflow(&empty_workflow()).ok);
         }
 
         #[test]
@@ -4288,15 +4285,15 @@ pub mod media_graph {
                 yields: os_app_primary_output_kind(&registration),
                 document: OsDocumentRef { document_id: "doc-app-1".into(), schema: "draw.document".into() },
             };
-            let mut graph = empty_media_graph();
-            graph.nodes.push(media_graph_node_for_instance(&instance, &registration, &MediaGraphPosition { x: 0.0, y: 0.0 }, "node-1"));
-            let fixture = os_media_graph_to_flow_fixture(&graph, std::slice::from_ref(&instance), &OsMediaGraphCamera::default());
+            let mut graph = empty_workflow();
+            graph.nodes.push(workflow_node_for_instance(&instance, &registration, &WorkflowPosition { x: 0.0, y: 0.0 }, "node-1"));
+            let fixture = os_workflow_to_flow_fixture(&graph, std::slice::from_ref(&instance), &OsWorkflowCamera::default());
             assert_eq!(fixture["schema"], "flow.fixture");
             assert_eq!(fixture["widgets"][0]["preview"], true);
             assert_eq!(fixture["widgets"][0]["params"]["instanceId"], "app-1");
             assert_eq!(fixture["widgets"][0]["params"]["programId"], "draw");
             assert_eq!(fixture["widgets"][0]["params"]["appId"], "draw");
-            let operators = build_os_media_flow_operator_infos(&graph, &[instance], &[]);
+            let operators = build_os_workflow_operator_infos(&graph, &[instance], &[]);
             assert_eq!(operators.len(), 1);
             assert_eq!(operators[0].id, "os.media.node.node-1");
             assert_eq!(operators[0].module, OS_MEDIA_FLOW_MODULE_ID);
@@ -4335,16 +4332,16 @@ pub mod media_graph {
                 yields: os_app_primary_output_kind(&registration),
                 document: OsDocumentRef { document_id: "doc-app-vfs-1".into(), schema: "draw.document".into() },
             };
-            let graph = empty_media_graph();
-            let inputs_folder = os_media_graph_vfs_inputs_folder_id(&instance.id);
-            let rows = list_os_media_graph_vfs_children(&inputs_folder, std::slice::from_ref(&instance), &graph, &[], &[]);
+            let graph = empty_workflow();
+            let inputs_folder = os_workflow_vfs_inputs_folder_id(&instance.id);
+            let rows = list_os_workflow_vfs_children(&inputs_folder, std::slice::from_ref(&instance), &graph, &[], &[]);
             let import_row = rows.iter().find(|row| row.file_node_kind_id == "import").expect("import row present");
             assert_eq!(import_row.name, "import.dwg");
             assert_eq!(import_row.navigate_uri, Some(format!("os://import/{}/2d.drawing/dwg", instance.id)));
         }
 
-        fn media_node(id: &str, instance_id: &str, x: f64, y: f64) -> OsMediaGraphNode {
-            OsMediaGraphNode {
+        fn media_node(id: &str, instance_id: &str, x: f64, y: f64) -> OsWorkflowNode {
+            OsWorkflowNode {
                 id: id.into(),
                 instance_id: instance_id.into(),
                 x,
@@ -4358,73 +4355,73 @@ pub mod media_graph {
 
         #[test]
         fn flow_fixture_round_trips_camera_and_diffs_back_to_operations() {
-            let mut graph = empty_media_graph();
+            let mut graph = empty_workflow();
             graph.nodes.push(media_node("node-1", "app-1", 40.0, 80.0));
             graph.nodes.push(media_node("node-2", "app-2", 300.0, 80.0));
-            graph.edges.push(OsMediaGraphEdge { id: "edge-1".into(), source_node_id: "node-1".into(), source_port_id: "app-1:out".into(), target_node_id: "node-2".into(), target_port_id: "app-2:in".into(), contract: placeholder_media_contract("2d.drawing") });
-            let camera = OsMediaGraphCamera { x: 12.0, y: -8.0, zoom: 1.5 };
-            let fixture = os_media_graph_to_flow_fixture(&graph, &[], &camera);
+            graph.edges.push(OsWorkflowEdge { id: "edge-1".into(), source_node_id: "node-1".into(), source_port_id: "app-1:out".into(), target_node_id: "node-2".into(), target_port_id: "app-2:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            let camera = OsWorkflowCamera { x: 12.0, y: -8.0, zoom: 1.5 };
+            let fixture = os_workflow_to_flow_fixture(&graph, &[], &camera);
             assert_eq!(fixture["camera"]["x"], 12.0);
             assert_eq!(fixture["camera"]["zoom"], 1.5);
-            let unchanged = apply_flow_fixture_to_os_media_graph(&graph, &fixture.to_string());
+            let unchanged = apply_flow_fixture_to_os_workflow(&graph, &fixture.to_string());
             assert!(unchanged.is_empty());
             let mut moved = fixture.clone();
             moved["layout"]["node-1"] = json!({ "x": 220.0, "y": 156.0 });
-            let operations = apply_flow_fixture_to_os_media_graph(&graph, &moved.to_string());
-            assert_eq!(operations, vec![OsOperation::MoveMediaNode { node_id: "node-1".into(), x: 140.0, y: 120.0 }]);
+            let operations = apply_flow_fixture_to_os_workflow(&graph, &moved.to_string());
+            assert_eq!(operations, vec![OsOperation::MoveWorkflowNode { node_id: "node-1".into(), x: 140.0, y: 120.0 }]);
         }
 
         #[test]
         fn flow_fixture_diff_connects_disconnects_and_removes() {
-            let mut graph = empty_media_graph();
+            let mut graph = empty_workflow();
             graph.nodes.push(media_node("node-1", "app-1", 0.0, 0.0));
             graph.nodes.push(media_node("node-2", "app-2", 200.0, 0.0));
-            graph.edges.push(OsMediaGraphEdge { id: "edge-1".into(), source_node_id: "node-1".into(), source_port_id: "app-1:out".into(), target_node_id: "node-2".into(), target_port_id: "app-2:in".into(), contract: placeholder_media_contract("2d.drawing") });
-            let mut fixture = os_media_graph_to_flow_fixture(&graph, &[], &OsMediaGraphCamera::default());
+            graph.edges.push(OsWorkflowEdge { id: "edge-1".into(), source_node_id: "node-1".into(), source_port_id: "app-1:out".into(), target_node_id: "node-2".into(), target_port_id: "app-2:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            let mut fixture = os_workflow_to_flow_fixture(&graph, &[], &OsWorkflowCamera::default());
             fixture["synapses"] = json!([
                 { "id": "", "from": "node-2", "fromPort": "app-2:out", "to": "node-1", "toPort": "app-1:in" }
             ]);
-            let operations = apply_flow_fixture_to_os_media_graph(&graph, &fixture.to_string());
+            let operations = apply_flow_fixture_to_os_workflow(&graph, &fixture.to_string());
             assert!(matches!(
                 &operations[0],
-                OsOperation::ConnectMediaPorts { edge } if edge.source_node_id == "node-2" && edge.target_port_id == "app-1:in" && !edge.id.is_empty()
+                OsOperation::ConnectWorkflowPorts { edge } if edge.source_node_id == "node-2" && edge.target_port_id == "app-1:in" && !edge.id.is_empty()
             ));
-            assert!(operations.contains(&OsOperation::DisconnectMediaEdge { edge_id: "edge-1".into() }));
-            let mut removal = os_media_graph_to_flow_fixture(&graph, &[], &OsMediaGraphCamera::default());
+            assert!(operations.contains(&OsOperation::DisconnectWorkflowEdge { edge_id: "edge-1".into() }));
+            let mut removal = os_workflow_to_flow_fixture(&graph, &[], &OsWorkflowCamera::default());
             removal["widgets"] = json!([{ "id": "node-1" }]);
             removal["synapses"] = json!([]);
-            let removal_operations = apply_flow_fixture_to_os_media_graph(&graph, &removal.to_string());
+            let removal_operations = apply_flow_fixture_to_os_workflow(&graph, &removal.to_string());
             assert!(removal_operations.contains(&OsOperation::RemoveAppInstance { instance_id: "app-2".into() }));
-            assert!(!removal_operations.iter().any(|operation| matches!(operation, OsOperation::DisconnectMediaEdge { .. })));
+            assert!(!removal_operations.iter().any(|operation| matches!(operation, OsOperation::DisconnectWorkflowEdge { .. })));
         }
 
-        //#region 🔖MediaFlow
+        //#region 🔖WorkflowPlanner
         fn dirty_set(instance_ids: &[&str]) -> HashSet<String> {
             instance_ids.iter().map(|id| id.to_string()).collect()
         }
 
         #[test]
         fn plans_a_single_delivery_across_one_dirty_edge() {
-            let mut graph = empty_media_graph();
+            let mut graph = empty_workflow();
             graph.nodes.push(media_node("node-1", "app-1", 0.0, 0.0));
             graph.nodes.push(media_node("node-2", "app-2", 200.0, 0.0));
-            graph.edges.push(OsMediaGraphEdge { id: "edge-1".into(), source_node_id: "node-1".into(), source_port_id: "app-1:out".into(), target_node_id: "node-2".into(), target_port_id: "app-2:in".into(), contract: placeholder_media_contract("2d.drawing") });
-            let deliveries = plan_media_flow(&graph, &dirty_set(&["app-1"]));
+            graph.edges.push(OsWorkflowEdge { id: "edge-1".into(), source_node_id: "node-1".into(), source_port_id: "app-1:out".into(), target_node_id: "node-2".into(), target_port_id: "app-2:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            let deliveries = plan_workflow(&graph, &dirty_set(&["app-1"]));
             assert_eq!(
                 deliveries,
-                vec![MediaFlowDelivery { edge_id: "edge-1".into(), producer_instance_id: "app-1".into(), producer_port_id: "app-1:out".into(), consumer_instance_id: "app-2".into(), consumer_port_id: "app-2:in".into() }]
+                vec![WorkflowDelivery { edge_id: "edge-1".into(), producer_instance_id: "app-1".into(), producer_port_id: "app-1:out".into(), consumer_instance_id: "app-2".into(), consumer_port_id: "app-2:in".into() }]
             );
         }
 
         #[test]
         fn plans_a_chain_in_topological_order_when_only_the_root_is_dirty() {
-            let mut graph = empty_media_graph();
+            let mut graph = empty_workflow();
             graph.nodes.push(media_node("node-1", "app-1", 0.0, 0.0));
             graph.nodes.push(media_node("node-2", "app-2", 200.0, 0.0));
             graph.nodes.push(media_node("node-3", "app-3", 400.0, 0.0));
-            graph.edges.push(OsMediaGraphEdge { id: "edge-ab".into(), source_node_id: "node-1".into(), source_port_id: "app-1:out".into(), target_node_id: "node-2".into(), target_port_id: "app-2:in".into(), contract: placeholder_media_contract("2d.drawing") });
-            graph.edges.push(OsMediaGraphEdge { id: "edge-bc".into(), source_node_id: "node-2".into(), source_port_id: "app-2:out".into(), target_node_id: "node-3".into(), target_port_id: "app-3:in".into(), contract: placeholder_media_contract("2d.drawing") });
-            let deliveries = plan_media_flow(&graph, &dirty_set(&["app-1"]));
+            graph.edges.push(OsWorkflowEdge { id: "edge-ab".into(), source_node_id: "node-1".into(), source_port_id: "app-1:out".into(), target_node_id: "node-2".into(), target_port_id: "app-2:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            graph.edges.push(OsWorkflowEdge { id: "edge-bc".into(), source_node_id: "node-2".into(), source_port_id: "app-2:out".into(), target_node_id: "node-3".into(), target_port_id: "app-3:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            let deliveries = plan_workflow(&graph, &dirty_set(&["app-1"]));
             assert_eq!(deliveries.iter().map(|delivery| delivery.edge_id.as_str()).collect::<Vec<_>>(), vec!["edge-ab", "edge-bc"], "A→B must be planned before B→C");
         }
 
@@ -4432,16 +4429,16 @@ pub mod media_graph {
         fn plans_a_diamond_with_one_delivery_per_incoming_edge() {
             // 🔀 One delivery per edge, not per node: D has two producers (B and C), so D is the
             // target of two separate deliveries rather than a single merged one.
-            let mut graph = empty_media_graph();
+            let mut graph = empty_workflow();
             graph.nodes.push(media_node("node-1", "app-a", 0.0, 0.0));
             graph.nodes.push(media_node("node-2", "app-b", 200.0, -80.0));
             graph.nodes.push(media_node("node-3", "app-c", 200.0, 80.0));
             graph.nodes.push(media_node("node-4", "app-d", 400.0, 0.0));
-            graph.edges.push(OsMediaGraphEdge { id: "edge-ab".into(), source_node_id: "node-1".into(), source_port_id: "app-a:out".into(), target_node_id: "node-2".into(), target_port_id: "app-b:in".into(), contract: placeholder_media_contract("2d.drawing") });
-            graph.edges.push(OsMediaGraphEdge { id: "edge-ac".into(), source_node_id: "node-1".into(), source_port_id: "app-a:out".into(), target_node_id: "node-3".into(), target_port_id: "app-c:in".into(), contract: placeholder_media_contract("2d.drawing") });
-            graph.edges.push(OsMediaGraphEdge { id: "edge-bd".into(), source_node_id: "node-2".into(), source_port_id: "app-b:out".into(), target_node_id: "node-4".into(), target_port_id: "app-d:in".into(), contract: placeholder_media_contract("2d.drawing") });
-            graph.edges.push(OsMediaGraphEdge { id: "edge-cd".into(), source_node_id: "node-3".into(), source_port_id: "app-c:out".into(), target_node_id: "node-4".into(), target_port_id: "app-d:in".into(), contract: placeholder_media_contract("2d.drawing") });
-            let deliveries = plan_media_flow(&graph, &dirty_set(&["app-a"]));
+            graph.edges.push(OsWorkflowEdge { id: "edge-ab".into(), source_node_id: "node-1".into(), source_port_id: "app-a:out".into(), target_node_id: "node-2".into(), target_port_id: "app-b:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            graph.edges.push(OsWorkflowEdge { id: "edge-ac".into(), source_node_id: "node-1".into(), source_port_id: "app-a:out".into(), target_node_id: "node-3".into(), target_port_id: "app-c:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            graph.edges.push(OsWorkflowEdge { id: "edge-bd".into(), source_node_id: "node-2".into(), source_port_id: "app-b:out".into(), target_node_id: "node-4".into(), target_port_id: "app-d:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            graph.edges.push(OsWorkflowEdge { id: "edge-cd".into(), source_node_id: "node-3".into(), source_port_id: "app-c:out".into(), target_node_id: "node-4".into(), target_port_id: "app-d:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            let deliveries = plan_workflow(&graph, &dirty_set(&["app-a"]));
             let edge_ids: Vec<&str> = deliveries.iter().map(|delivery| delivery.edge_id.as_str()).collect();
             assert_eq!(edge_ids.len(), 4);
             let index_of = |id: &str| edge_ids.iter().position(|candidate| *candidate == id).unwrap();
@@ -4451,34 +4448,34 @@ pub mod media_graph {
 
         #[test]
         fn plans_nothing_when_no_instance_is_dirty() {
-            let mut graph = empty_media_graph();
+            let mut graph = empty_workflow();
             graph.nodes.push(media_node("node-1", "app-1", 0.0, 0.0));
             graph.nodes.push(media_node("node-2", "app-2", 200.0, 0.0));
-            graph.edges.push(OsMediaGraphEdge { id: "edge-1".into(), source_node_id: "node-1".into(), source_port_id: "app-1:out".into(), target_node_id: "node-2".into(), target_port_id: "app-2:in".into(), contract: placeholder_media_contract("2d.drawing") });
-            assert!(plan_media_flow(&graph, &dirty_set(&[])).is_empty());
+            graph.edges.push(OsWorkflowEdge { id: "edge-1".into(), source_node_id: "node-1".into(), source_port_id: "app-1:out".into(), target_node_id: "node-2".into(), target_port_id: "app-2:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            assert!(plan_workflow(&graph, &dirty_set(&[])).is_empty());
         }
 
         #[test]
         fn plans_nothing_for_a_dirty_node_with_no_outgoing_edges() {
-            let mut graph = empty_media_graph();
+            let mut graph = empty_workflow();
             graph.nodes.push(media_node("node-1", "app-1", 0.0, 0.0));
-            assert!(plan_media_flow(&graph, &dirty_set(&["app-1"])).is_empty());
+            assert!(plan_workflow(&graph, &dirty_set(&["app-1"])).is_empty());
         }
 
         /// 🔬 Shared fixtures replay (`framework/product/os/core/fixtures/*.json`) — the same files
-        /// drive `planMediaFlow`'s vitest harness in `js/index.ts`, keeping the two implementations
+        /// drive `planWorkflow`'s vitest harness in `js/index.ts`, keeping the two implementations
         /// in lockstep. See `framework/product/os/core/fixtures/README.md`.
         #[derive(Deserialize)]
         #[serde(rename_all = "camelCase")]
-        struct MediaFlowFixture {
+        struct WorkflowFixture {
             name: String,
-            graph: OsMediaGraph,
+            graph: OsWorkflow,
             dirty_instance_ids: Vec<String>,
-            expected_deliveries: Vec<MediaFlowDelivery>,
+            expected_deliveries: Vec<WorkflowDelivery>,
         }
 
         #[test]
-        fn media_flow_fixtures_match_expected_deliveries() {
+        fn workflow_fixtures_match_expected_deliveries() {
             let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../fixtures");
             let entries = std::fs::read_dir(&fixtures_dir).unwrap_or_else(|error| panic!("read fixtures dir {fixtures_dir:?}: {error}"));
             let mut fixture_count = 0;
@@ -4488,18 +4485,18 @@ pub mod media_graph {
                     continue;
                 }
                 let contents = std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("read fixture {path:?}: {error}"));
-                let fixture: MediaFlowFixture = serde_json::from_str(&contents).unwrap_or_else(|error| panic!("parse fixture {path:?}: {error}"));
+                let fixture: WorkflowFixture = serde_json::from_str(&contents).unwrap_or_else(|error| panic!("parse fixture {path:?}: {error}"));
                 let dirty: HashSet<String> = fixture.dirty_instance_ids.into_iter().collect();
-                let deliveries = plan_media_flow(&fixture.graph, &dirty);
+                let deliveries = plan_workflow(&fixture.graph, &dirty);
                 assert_eq!(deliveries, fixture.expected_deliveries, "fixture {} mismatch", fixture.name);
                 fixture_count += 1;
             }
-            assert!(fixture_count >= 5, "expected media-flow fixtures in {fixtures_dir:?}, found {fixture_count}");
+            assert!(fixture_count >= 5, "expected workflow fixtures in {fixtures_dir:?}, found {fixture_count}");
         }
-        //#endregion 🔖MediaFlow
+        //#endregion 🔖WorkflowPlanner
     }
     //#endregion 🧪Tests
-    // #endregion media_graph
+    // #endregion workflow
 }
 
 pub mod registry {
@@ -4524,11 +4521,11 @@ pub mod registry {
         pub source_format: String,
         pub component_kind: String,
         pub dimension: String,
-        /// 🧬 The `MediaType` this resource kind negotiates on the media graph — see
+        /// 🧬 The `MediaType` this resource kind negotiates on the workflow — see
         /// `semio_framework_core::media_types_compatible`.
         pub media_type: MediaType,
         /// 🔌 Structured-payload schema id, mirrored from `ResourceKindSpec::schema` — see
-        /// `crate::media_graph::negotiate_media_contract`, which prefers a matching schema over a shared
+        /// `crate::workflow::negotiate_media_contract`, which prefers a matching schema over a shared
         /// binary `OsMediaFormat`.
         pub schema: String,
         pub export_formats: Vec<OsMediaFormat>,
@@ -4586,7 +4583,7 @@ pub mod registry {
     }
 
     /// 🗂️ Manifest-driven OS resource catalog, populated at plugin registration time instead of hardcoding
-    /// the app roster — mirrors the `crate::media_graph::export_handlers()` runtime-registry pattern.
+    /// the app roster — mirrors the `crate::workflow::export_handlers()` runtime-registry pattern.
     static RESOURCE_KIND_REGISTRY: LazyLock<Mutex<HashMap<OsResourceKindId, ResourceKindEntry>>> = LazyLock::new(|| Mutex::new(seed_builtin_resource_kinds()));
 
     /// @emoji 📚 Registers every `ResourceKindSpec` declared by `manifest`'s apps into the OS resource
@@ -4899,9 +4896,9 @@ pub mod registry {
         })
     }
 
-    pub fn media_graph_node_ports_for_registration(instance_id: &str, registration: &OsAppRegistration) -> (Vec<crate::media_graph::OsMediaPort>, Vec<crate::media_graph::OsMediaPort>) {
-        let inputs = registration.inputs.iter().map(|spec| crate::media_graph::OsMediaPort { id: media_port_id_for_spec(instance_id, &spec.id, "in"), resource_kind: spec.resource_kind.clone(), direction: "in".into() }).collect();
-        let outputs = registration.outputs.iter().map(|spec| crate::media_graph::OsMediaPort { id: media_port_id_for_spec(instance_id, &spec.id, "out"), resource_kind: spec.resource_kind.clone(), direction: "out".into() }).collect();
+    pub fn workflow_node_ports_for_registration(instance_id: &str, registration: &OsAppRegistration) -> (Vec<crate::workflow::OsMediaPort>, Vec<crate::workflow::OsMediaPort>) {
+        let inputs = registration.inputs.iter().map(|spec| crate::workflow::OsMediaPort { id: media_port_id_for_spec(instance_id, &spec.id, "in"), resource_kind: spec.resource_kind.clone(), direction: "in".into() }).collect();
+        let outputs = registration.outputs.iter().map(|spec| crate::workflow::OsMediaPort { id: media_port_id_for_spec(instance_id, &spec.id, "out"), resource_kind: spec.resource_kind.clone(), direction: "out".into() }).collect();
         (inputs, outputs)
     }
     //#endregion 🔖ProgramRegistry
@@ -4986,13 +4983,13 @@ pub use media_export_raster::{
     register_mesh_exporter, register_mesh_importer, register_solid_exporter, register_solid_importer, solid_exporter_for, svg_to_dwg_bytes,
 };
 pub use media_export_simple::{map_points_svg, pages_rects_svg, title_card_svg, wrap_svg};
-pub use media_graph::{
-    apply_flow_fixture_to_os_media_graph, assert_os_media_export_coverage, assert_os_media_import_coverage, build_os_media_flow_operator_infos, empty_media_graph, export_os_app_instance_media, import_os_app_instance_media,
-    list_os_media_graph_vfs_children, media_graph_node_for_instance, negotiate_media_contract, os_media_export_extension_for_format, os_media_graph_to_flow_fixture, os_media_graph_to_node_graph_payload, os_media_graph_vfs_export_id,
-    os_media_graph_vfs_import_id, os_media_graph_vfs_instance_folder_id, os_media_graph_vfs_instance_id, os_media_graph_vfs_schema, os_media_graph_vfs_source_id, os_media_neuron_kind_for_node, os_resource_media_capability,
-    placeholder_media_contract, register_os_media_export_handler, register_os_media_import_handler, required_os_media_export_formats, required_os_media_import_formats, sync_media_graph_parameter_ports, validate_media_graph, MediaContract,
-    MediaGraphPosition, MediaGraphValidation, OsMediaCapability, OsMediaExportResult, OsMediaFlowOperatorInfo, OsMediaFormat, OsMediaGraph, OsMediaGraphCamera, OsMediaGraphEdge, OsMediaGraphNode, OsMediaGraphVfsNodeRecord, OsMediaGraphVfsSchema,
-    OsMediaNodeGraphPayload, OsMediaPort, ProgramRegistry, OS_MEDIA_FLOW_MODULE_ID, OS_MEDIA_GRAPH_SCHEMA, OS_MEDIA_GRAPH_VFS_ROOT_ID, OS_STUDIO_SCHEMA,
+pub use workflow::{
+    apply_flow_fixture_to_os_workflow, assert_os_media_export_coverage, assert_os_media_import_coverage, build_os_workflow_operator_infos, empty_workflow, export_os_app_instance_media, import_os_app_instance_media,
+    list_os_workflow_vfs_children, workflow_node_for_instance, negotiate_media_contract, os_media_export_extension_for_format, os_workflow_to_flow_fixture, os_workflow_to_node_graph_payload, os_workflow_vfs_export_id,
+    os_workflow_vfs_import_id, os_workflow_vfs_instance_folder_id, os_workflow_vfs_instance_id, os_workflow_vfs_schema, os_workflow_vfs_source_id, os_media_neuron_kind_for_node, os_resource_media_capability,
+    placeholder_media_contract, register_os_media_export_handler, register_os_media_import_handler, required_os_media_export_formats, required_os_media_import_formats, sync_workflow_parameter_ports, validate_workflow, MediaContract,
+    WorkflowPosition, WorkflowValidation, OsMediaCapability, OsMediaExportResult, OsWorkflowOperatorInfo, OsMediaFormat, OsWorkflow, OsWorkflowCamera, OsWorkflowEdge, OsWorkflowNode, OsWorkflowVfsNodeRecord, OsWorkflowVfsSchema,
+    OsWorkflowNodeGraphPayload, OsMediaPort, ProgramRegistry, OS_MEDIA_FLOW_MODULE_ID, OS_WORKFLOW_SCHEMA, OS_WORKFLOW_VFS_ROOT_ID, OS_STUDIO_SCHEMA,
 };
 pub use registry::{
     list_os_programs, list_os_resource_descriptors, merge_os_program_definition, os_app_primary_output_kind, os_app_registration, os_baseline_resource, os_in_port, os_out_port, os_program_by_id, os_resource_descriptor, register_os_builtin_program,

@@ -1082,7 +1082,13 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
 
   if (coverageEnabled()) {
     const testBudgetMs = testLevelBudgetMs(level);
-    await runTestBudgeted("cargo", ["llvm-cov", "nextest", "--release", "--no-report", ...profileArgs, ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], {
+    const covArgs = cargoNextestAvailable()
+      ? (["llvm-cov", "nextest", "--release", "--no-report", ...profileArgs, ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs] as const)
+      : (["llvm-cov", "test", "--release", "--no-report", ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs] as const);
+    if (!cargoNextestAvailable()) {
+      console.error("[budget] cargo-nextest not installed — coverage uses cargo llvm-cov test fallback");
+    }
+    await runTestBudgeted("cargo", [...covArgs], {
       cwd,
       env,
       budgetMs: buildBudgetMs() + testBudgetMs,
@@ -1104,7 +1110,17 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
     budgetMs: buildBudgetMs(),
     onTimeoutHint: budgetTimeoutHint("cargo"),
   });
-  await runTestBudgeted("cargo", ["nextest", "run", ...profileArgs, ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], { cwd, env });
+  if (cargoNextestAvailable()) {
+    await runTestBudgeted("cargo", ["nextest", "run", ...profileArgs, ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], { cwd, env });
+    return;
+  }
+  console.error("[budget] cargo-nextest not installed — falling back to cargo test (run setup or: cargo install cargo-nextest --locked)");
+  await runTestBudgeted("cargo", ["test", ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], { cwd, env });
+}
+
+function cargoNextestAvailable(): boolean {
+  const result = spawnSync("cargo", ["nextest", "--version"], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  return result.status === 0;
 }
 
 export interface RunCmdOpts {

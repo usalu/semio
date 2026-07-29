@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 /** 🦀 `@semio-tech/compose-rs-wasm` router: `bun ./script.ts <wasm|build|test>`. */
-import { execFileSync } from "node:child_process";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild, runCargoTestBudgeted, resolveTestLevel } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runWasmPackWebBuild, runCargoTestBudgeted, resolveTestLevel, runCmd } from "../../../../repo/lib/js/index.ts";
 
 class WasmScript extends BundleScript {
   run(): void {
@@ -23,8 +22,8 @@ class WasmScript extends BundleScript {
 
 class SetupScript extends BundleScript {
   run(): void {
-    execFileSync("rustup", ["target", "add", "wasm32-unknown-unknown"], { stdio: "inherit" });
-    execFileSync("cargo", ["fetch", "--manifest-path", "Cargo.toml"], { stdio: "inherit", cwd: this.root });
+    runCmd("rustup", ["target", "add", "wasm32-unknown-unknown"]);
+    runCmd("cargo", ["fetch", "--manifest-path", "Cargo.toml"], { cwd: this.root });
   }
 }
 
@@ -33,7 +32,7 @@ class BuildScript extends BundleScript {
     if (process.env.COMPOSE_RS_SKIP_WASM !== "1") {
       new WasmScript(this.root, this.repoRoot).run();
     }
-    execFileSync("cargo", ["build", "--release"], { stdio: "inherit", cwd: this.root });
+    runCmd("cargo", ["build", "--release"], { cwd: this.root, budgetMs: buildBudgetMs() });
   }
 }
 

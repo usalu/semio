@@ -1,7 +1,7 @@
 {
   "name": "single-edge",
   "graph": {
-    "schema": "s.media-graph",
+    "schema": "s.workflow",
     "nodes": [
       { "id": "node-1", "instanceId": "app-1", "x": 0, "y": 0, "width": 160, "height": 72, "inputs": [{ "id": "app-1:in", "resourceKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-1:out", "resourceKind": "2d.drawing", "direction": "out" }] },
       { "id": "node-2", "instanceId": "app-2", "x": 200, "y": 0, "width": 160, "height": 72, "inputs": [{ "id": "app-2:in", "resourceKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-2:out", "resourceKind": "2d.drawing", "direction": "out" }] }

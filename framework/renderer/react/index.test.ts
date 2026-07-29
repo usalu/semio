@@ -1336,12 +1336,12 @@ describe("declarative forms parity", () => {
 });
 
 describe("framework renderer hosts", () => {
-  it("renders node graph host from media graph scene json", () => {
+  it("renders node graph host from workflow scene json", () => {
     const markup = renderToStaticMarkup(
       createElement(NodeGraphHost, {
         node: {
           type: "componentScene",
-          surfaceId: "s.play.media-graph",
+          surfaceId: "s.play.workflow",
           controllerId: "s-play",
           componentKind: "node-graph",
           nodeGraph: {
@@ -1371,7 +1371,7 @@ describe("framework renderer hosts", () => {
       createElement(NodeGraphHost, {
         node: {
           type: "componentScene",
-          surfaceId: "s.play.media-graph",
+          surfaceId: "s.play.workflow",
           controllerId: "s-play",
           componentKind: "node-graph",
           nodeGraph: {
@@ -1389,7 +1389,7 @@ describe("framework renderer hosts", () => {
             edgesJson: "[]",
             viewportJson: '{"x":0,"y":0,"zoom":1}',
             editable: true,
-            findItemsJson: JSON.stringify([{ id: "app-a", label: "Draw", category: "Media graph" }]),
+            findItemsJson: JSON.stringify([{ id: "app-a", label: "Draw", category: "Workflow" }]),
           },
         },
         onAction: noopAction,
@@ -3399,7 +3399,7 @@ describe("utility ribbon", () => {
   });
 });
 
-describe("s media graph flow routing", () => {
+describe("s workflow flow routing", () => {
   it("selects the flow engine for scenes with engine flow capabilities", () => {
     expect(isFlowGraphScene('{"engine":"flow","spotlight":false,"noteEdit":false}')).toBe(true);
     expect(isFlowGraphScene('{"spotlight":false,"noteEdit":false,"clusters":false}')).toBe(false);
@@ -3411,7 +3411,7 @@ describe("s media graph flow routing", () => {
       createElement(NodeGraphHost, {
         node: {
           type: "componentScene",
-          surfaceId: "s.play.media-graph",
+          surfaceId: "s.play.workflow",
           controllerId: "s-play",
           componentKind: "node-graph",
           nodeGraph: {
@@ -3527,7 +3527,7 @@ describe("s media graph flow routing", () => {
     expect(config.dragAndDropController).toBeUndefined();
   });
 
-  it("resolves a fixture widget id to its media-graph instance id, independent of selection state", () => {
+  it("resolves a fixture widget id to its workflow instance id, independent of selection state", () => {
     const fixtureJson = JSON.stringify({
       widgets: [
         { id: "widget-1", params: { instanceId: "app-1" } },

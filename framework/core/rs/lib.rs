@@ -1012,7 +1012,7 @@ pub struct ResourceKindSpec {
 //#endregion ResourceKind
 
 //#region MediaType
-/// 🧬 Typed-media lattice: every port/wire in the media graph carries a `MediaType` (`class` × `form`) instead of the legacy string `resource_kind`. This is separate from `OsMediaFormat` above — `MediaType` is what a wire negotiates, `OsMediaFormat` is only how bytes are encoded once they actually cross a process boundary (see `MediaWireFormat`). Dependent tickets retire `OsMediaCapability` (see the `ResourceKind` region above) onto `MediaForm::{Brep,Mesh}`, which already covers what `OsMediaCapability::{Brep,MeshOnly}` expresses.
+/// 🧬 Typed-media lattice: every port/wire in the workflow carries a `MediaType` (`class` × `form`) instead of the legacy string `resource_kind`. This is separate from `OsMediaFormat` above — `MediaType` is what a wire negotiates, `OsMediaFormat` is only how bytes are encoded once they actually cross a process boundary (see `MediaWireFormat`). Dependent tickets retire `OsMediaCapability` (see the `ResourceKind` region above) onto `MediaForm::{Brep,Mesh}`, which already covers what `OsMediaCapability::{Brep,MeshOnly}` expresses.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -1091,7 +1091,7 @@ pub enum MediaPortDirection {
     Out,
 }
 
-/// 🔌 A single port an app exposes on the media graph — `kind_id` optionally pins it to one `MediaKindDescriptor.id` when the port is more specific than its `media_type` alone conveys.
+/// 🔌 A single port an app exposes on the workflow — `kind_id` optionally pins it to one `MediaKindDescriptor.id` when the port is more specific than its `media_type` alone conveys.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -1114,7 +1114,7 @@ pub enum MediaCompat {
     Reject,
 }
 
-/// 🔀 One-way `MediaForm` conversions the media graph is allowed to insert implicitly (e.g. a B-Rep producer feeding a mesh-only consumer). `media_types_compatible` looks up `(produced, accepted)` directly, so add the reverse pair too if a conversion should also hold the other way.
+/// 🔀 One-way `MediaForm` conversions the workflow is allowed to insert implicitly (e.g. a B-Rep producer feeding a mesh-only consumer). `media_types_compatible` looks up `(produced, accepted)` directly, so add the reverse pair too if a conversion should also hold the other way.
 const MEDIA_FORM_CONVERSIONS: &[(MediaForm, MediaForm)] = &[
     (MediaForm::Brep, MediaForm::Mesh),
     (MediaForm::Vector, MediaForm::Raster),
@@ -1140,7 +1140,7 @@ pub fn media_types_compatible(produced: &MediaType, accepted: &MediaType) -> Med
 //#endregion MediaType
 
 //#region Media
-/// 🎞️ The value that actually flows over a media-graph wire, produced by `DocumentApp::export_media` and consumed by `DocumentApp::import_media`. Kept separate from the `MediaType` lattice above (which only negotiates *compatibility*, never carries a value) so headless runners and the UI share one payload shape.
+/// 🎞️ The value that actually flows over a workflow wire, produced by `DocumentApp::export_media` and consumed by `DocumentApp::import_media`. Kept separate from the `MediaType` lattice above (which only negotiates *compatibility*, never carries a value) so headless runners and the UI share one payload shape.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -1188,7 +1188,7 @@ pub enum MediaError {
     NotImplemented,
 }
 
-/// 🔀 A registered one-way conversion the media graph may insert on a wire when `media_types_compatible` reports `MediaCompat::Convert`. Kept behind a trait (never a bare closure) so converters can be enumerated, tested, and swapped without touching the runner.
+/// 🔀 A registered one-way conversion the workflow may insert on a wire when `media_types_compatible` reports `MediaCompat::Convert`. Kept behind a trait (never a bare closure) so converters can be enumerated, tested, and swapped without touching the runner.
 pub trait MediaConverter: Send + Sync {
     fn from_form(&self) -> MediaForm;
     fn to_form(&self) -> MediaForm;
@@ -5410,10 +5410,10 @@ pub struct AppDefinition {
     /// 🗨️ The modal form dialogs this app can open via `HostEffect::OpenDialog`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub dialogs: Vec<DialogDefinition>,
-    /// 🔌 This app's media graph input ports — see `crate::MediaPortSpec`.
+    /// 🔌 This app's workflow input ports — see `crate::MediaPortSpec`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub media_inputs: Vec<MediaPortSpec>,
-    /// 🔌 This app's media graph output ports — see `crate::MediaPortSpec`.
+    /// 🔌 This app's workflow output ports — see `crate::MediaPortSpec`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub media_outputs: Vec<MediaPortSpec>,
     /// 🗂️ OS resource kinds this app produces/consumes — see `crate::ResourceKindSpec`. Drives

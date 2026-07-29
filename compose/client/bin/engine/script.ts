@@ -1,16 +1,18 @@
 #!/usr/bin/env bun
 /** 🧭 Engine package router: `bun ./script.ts <build|test|dev mcp> [segments…]`. */
-import { execSync, spawn } from "node:child_process";
 import { existsSync, readFileSync, rmSync, copyFileSync, cpSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runTestBudgeted, resolveTestLevel, pytestLevelArgs, pytestCoverageArgs } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, runBunx, runBundleScriptMain, runCmd, runTestBudgeted, resolveTestLevel, pytestLevelArgs, pytestCoverageArgs, spawnDaemon } from "../../../../repo/lib/js/index.ts";
 
 class DevMcpScript extends BundleScript {
   run(): void {
     const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
-    execSync("bunx vite build --config compose/client/bin/engine/vite.mcp-app.config.ts", { cwd: this.repoRoot, stdio: "inherit", shell: true });
-    const child = spawn("npx", ["--yes", "@mcpjam/inspector@latest", "uv", "--directory", this.root, "run", "main.py", "--mcp-stdio"], { stdio: "inherit", shell: true, env: { ...process.env, HOST: host }, cwd: this.repoRoot });
-    child.on("exit", (c) => process.exit(c ?? 0));
+    runBunx(["vite", "build", "--config", "compose/client/bin/engine/vite.mcp-app.config.ts"], this.repoRoot);
+    const daemon = spawnDaemon("npx", ["--yes", "@mcpjam/inspector@latest", "uv", "--directory", this.root, "run", "main.py", "--mcp-stdio"], {
+      cwd: this.repoRoot,
+      env: { ...process.env, HOST: host },
+    });
+    daemon.child.on("exit", (c) => process.exit(c ?? 0));
   }
 }
 
@@ -47,7 +49,7 @@ class BuildScript extends BundleScript {
       return;
     }
     const env = { ...process.env, UV_PROJECT_ENVIRONMENT: join(this.root, ".venv") };
-    execSync("uv sync --python 3.14", { cwd: join(this.root, "../.."), env, stdio: "inherit" });
+    runCmd("uv", ["sync", "--python", "3.14"], { cwd: join(this.root, "../.."), env });
     for (const d of ["build", "dist"]) {
       const p = join(this.root, d);
       if (existsSync(p)) rmSync(p, { recursive: true });
@@ -78,9 +80,9 @@ class BuildScript extends BundleScript {
       "../asset/icon/semio.ico",
       "main.py",
     ];
-    execSync(`uv run pyinstaller ${args.join(" ")}`, { cwd: this.root, env, stdio: "inherit" });
+    runCmd("uv", ["run", "pyinstaller", ...args], { cwd: this.root, env, budgetMs: buildBudgetMs() });
     if (!process.argv.includes("--skip-post-build")) {
-      execSync("bun ./script.ts build post", { cwd: this.root, stdio: "inherit" });
+      runCmd("bun", ["./script.ts", "build", "post"], { cwd: this.root });
     }
     console.log("✅ Build complete");
   }

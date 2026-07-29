@@ -3,7 +3,7 @@ name = "semio-framework-os-run"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "Headless runner: computes an OS studio's media graph without a UI"
+description = "Headless runner: computes an OS studio's workflow without a UI"
 
 
 [lints]

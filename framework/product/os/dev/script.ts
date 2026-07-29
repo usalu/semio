@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 /** @emoji 🧭 `@semio-tech/framework-os-dev` task router — Rust plugin OS dev host. */
-import { createWriteStream } from "node:fs";
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, watch, writeFileSync } from "node:fs";
+import { createWriteStream, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, watch, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -1336,19 +1335,19 @@ async function openStudioE2e(page: import("playwright").Page, deadline: number):
   throw new Error("timeout waiting for studio workspace");
 }
 
-async function activateStudioE2eMediaGraphWindow(page: import("playwright").Page): Promise<void> {
+async function activateStudioE2eWorkflowWindow(page: import("playwright").Page): Promise<void> {
   await page.locator(".semio-node-graph-host").first().click({ force: true });
   await page.waitForTimeout(200);
 }
 
-async function expandStudioE2eMediaGraphEngagement(page: import("playwright").Page): Promise<void> {
-  await activateStudioE2eMediaGraphWindow(page);
-  await page.evaluate(() => document.getElementById("framework.window.sMediaGraph.search.toggle")?.click());
+async function expandStudioE2eWorkflowEngagement(page: import("playwright").Page): Promise<void> {
+  await activateStudioE2eWorkflowWindow(page);
+  await page.evaluate(() => document.getElementById("framework.window.sWorkflow.search.toggle")?.click());
   await page.waitForSelector("#s-media-catalogue-hint", { timeout: 10_000 });
 }
 
 async function spawnStudioE2eDrawFromEngagement(page: import("playwright").Page): Promise<string> {
-  await expandStudioE2eMediaGraphEngagement(page);
+  await expandStudioE2eWorkflowEngagement(page);
   const engagementInput = page.locator("#s-media-catalogue-hint");
   await engagementInput.fill("draw draw");
   await engagementInput.press("Enter");

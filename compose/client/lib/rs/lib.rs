@@ -7917,16 +7917,29 @@ pub mod vcs {
         }
 
         /// @emoji 🌱 Binary twin of the `OpText` impl above — same schema-less rationale: `{kind,
-        /// input: Value}` has no fixed per-kind shape to hand to `dsl::op_rt`, so this is plain JSON
-        /// bytes (mirrors `store::pack_rt`'s JSON-bridge treatment of `DocumentPack for
-        /// serde_json::Value`, one level down at the op-payload granularity instead of a whole doc).
+        /// input: Value}` has no fixed per-kind shape to hand to `dsl::op_rt`, so `input` goes
+        /// through `store::pack_rt`'s `Shape::Value` bridge (real pack TLV binary — the same
+        /// compliant dynamic-value encoding `DocumentPack for serde_json::Value` uses one level up,
+        /// applied here at the op-payload granularity) — NOT JSON text bytes. Layout: `kind` length
+        /// (u32 LE) + utf8 bytes, then the pack-value bytes to the end of the payload.
         impl protocol::OpBinary for ComposeWireOperation {
             fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-                crate::external_adapters::serde_json::to_vec(self).map_err(|error| protocol::ProtocolError::Malformed { what: "compose wire operation", offset: 0, detail: error.to_string() })
+                let mut out = Vec::new();
+                let kind_bytes = self.kind.as_bytes();
+                out.extend_from_slice(&(kind_bytes.len() as u32).to_le_bytes());
+                out.extend_from_slice(kind_bytes);
+                out.extend_from_slice(&store::pack_rt::encode_json_value(&self.input));
+                Ok(out)
             }
 
             fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-                crate::external_adapters::serde_json::from_slice(bytes).map_err(|error| protocol::ProtocolError::Malformed { what: "compose wire operation", offset: 0, detail: error.to_string() })
+                let malformed = |detail: String| protocol::ProtocolError::Malformed { what: "compose wire operation", offset: 0, detail };
+                let len_bytes: [u8; 4] = bytes.get(0..4).ok_or_else(|| malformed("truncated kind length".to_string()))?.try_into().expect("checked len");
+                let kind_len = u32::from_le_bytes(len_bytes) as usize;
+                let kind_end = 4 + kind_len;
+                let kind = std::str::from_utf8(bytes.get(4..kind_end).ok_or_else(|| malformed("truncated kind".to_string()))?).map_err(|error| malformed(error.to_string()))?.to_string();
+                let input = store::pack_rt::decode_json_value(&bytes[kind_end..]).map(store::pack_rt::renormalize_whole_number_floats).map_err(|error| malformed(error.to_string()))?;
+                Ok(ComposeWireOperation { kind, input })
             }
         }
         //#endregion 🔖OpText
@@ -8026,6 +8039,18 @@ pub mod vcs {
                 store.dispatch(DocumentCommand::Apply { operations: vec![ComposeWireOperation::from_operation(&operation)], description: None }).expect("apply");
                 let snap = store.projection().expect("projection");
                 assert_eq!(snap.0.get("name").and_then(|v| v.as_str()), Some("patched"));
+            }
+
+            #[test]
+            fn compose_wire_operation_binary_round_trips_including_nested_and_empty_input() {
+                use protocol::OpBinary;
+                let with_nested_input = ComposeWireOperation { kind: "renameKit".into(), input: serde_json::json!({ "name": "patched", "n": 3, "nested": { "a": [1, 2, 3] } }) };
+                let bytes = with_nested_input.encode_op().expect("encode");
+                assert_eq!(ComposeWireOperation::decode_op(&bytes).expect("decode"), with_nested_input);
+
+                let empty_kind_and_input = ComposeWireOperation { kind: String::new(), input: Value::Null };
+                let bytes = empty_kind_and_input.encode_op().expect("encode");
+                assert_eq!(ComposeWireOperation::decode_op(&bytes).expect("decode"), empty_kind_and_input);
             }
         }
     }

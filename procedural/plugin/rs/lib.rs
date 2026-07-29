@@ -152,7 +152,7 @@ pub mod app_2d {
 
     #[derive(Serialize)]
     #[serde(rename_all = "camelCase")]
-    struct MediaGraphPortRecord {
+    struct WorkflowDiagramPortRecord {
         id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
         label: Option<String>,
@@ -160,7 +160,7 @@ pub mod app_2d {
 
     #[derive(Serialize)]
     #[serde(rename_all = "camelCase")]
-    struct MediaGraphNodeRecord {
+    struct WorkflowNodeRecord {
         id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
         label: Option<String>,
@@ -168,13 +168,13 @@ pub mod app_2d {
         y: f64,
         width: f64,
         height: f64,
-        inputs: Vec<MediaGraphPortRecord>,
-        outputs: Vec<MediaGraphPortRecord>,
+        inputs: Vec<WorkflowDiagramPortRecord>,
+        outputs: Vec<WorkflowDiagramPortRecord>,
     }
 
     #[derive(Serialize)]
     #[serde(rename_all = "camelCase")]
-    struct MediaGraphEdgeRecord {
+    struct WorkflowEdgeRecord {
         id: String,
         source_node_id: String,
         source_port_id: String,
@@ -182,11 +182,11 @@ pub mod app_2d {
         target_port_id: String,
     }
 
-    fn fixture_to_media_graph(fixture: &DagFixture) -> (String, String) {
-        let nodes: Vec<MediaGraphNodeRecord> = fixture
+    fn fixture_to_workflow(fixture: &DagFixture) -> (String, String) {
+        let nodes: Vec<WorkflowNodeRecord> = fixture
             .nodes
             .iter()
-            .map(|node| MediaGraphNodeRecord {
+            .map(|node| WorkflowNodeRecord {
                 id: node.id.clone(),
                 label: Some(if node.name.is_empty() { node.id.clone() } else { node.name.clone() }),
                 x: node.x,
@@ -197,7 +197,7 @@ pub mod app_2d {
                     .inputs()
                     .iter()
                     .filter(|port| port.visible)
-                    .map(|port| MediaGraphPortRecord {
+                    .map(|port| WorkflowDiagramPortRecord {
                         id: format!("{}@{}", node.id, port.id),
                         label: Some(port.label.clone()),
                     })
@@ -206,20 +206,20 @@ pub mod app_2d {
                     .outputs()
                     .iter()
                     .filter(|port| port.visible)
-                    .map(|port| MediaGraphPortRecord {
+                    .map(|port| WorkflowDiagramPortRecord {
                         id: format!("{}@{}", node.id, port.id),
                         label: Some(port.label.clone()),
                     })
                     .collect(),
             })
             .collect();
-        let edges: Vec<MediaGraphEdgeRecord> = fixture
+        let edges: Vec<WorkflowEdgeRecord> = fixture
             .edges
             .iter()
             .map(|edge| {
                 let (source_node_id, source_port_id) = split_endpoint(&edge.source);
                 let (target_node_id, target_port_id) = split_endpoint(&edge.target);
-                MediaGraphEdgeRecord {
+                WorkflowEdgeRecord {
                     id: edge.id.clone(),
                     source_node_id,
                     source_port_id,
@@ -609,7 +609,7 @@ pub mod app_2d {
     //#region 🔖Render
     fn render_main_graph(play: &Procedural2dPlayView, labels: &Procedural2dLabels) -> UiNode {
         let host = host_from_fixture(&play.fixture);
-        let (nodes_json, edges_json) = fixture_to_media_graph(&host.dag.fixture);
+        let (nodes_json, edges_json) = fixture_to_workflow(&host.dag.fixture);
         let viewport_json = serde_json::to_string(&play.runtime.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
         let selection_json = if play.runtime.selected_ids.is_empty() {
             None
@@ -1755,7 +1755,7 @@ pub mod app_3d {
             .unwrap_or_else(|| (endpoint.to_string(), "out".into()))
     }
 
-    fn fixture_to_media_graph(fixture: &DagFixture) -> (String, String) {
+    fn fixture_to_workflow(fixture: &DagFixture) -> (String, String) {
         let nodes: Vec<Value> = fixture
             .nodes
             .iter()
@@ -2736,7 +2736,7 @@ pub mod app_3d {
             let active_utility = view_state.active_utility_id.as_deref().unwrap_or(PROCEDURAL_3D_TRANSFORM_UTILITY_DEFAULT);
             match body_key {
                 PROCEDURAL_3D_PLAY_BODY_MAIN => {
-                    let (nodes_json, edges_json) = fixture_to_media_graph(&host.dag.fixture);
+                    let (nodes_json, edges_json) = fixture_to_workflow(&host.dag.fixture);
                     let viewport_json =
                         serde_json::to_string(&envelope.runtime.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
                     let selection_json = if envelope.runtime.selected_node_ids.is_empty() {

@@ -163,7 +163,7 @@ export function jackVarForBoardNodeId(fixtureJson: string, query: string, nodeId
   return null;
 }
 
-export function runJackOnMediaGraph(graph: { readonly nodes: readonly { readonly id: string; readonly instanceId: string }[] }, instances: readonly { readonly id: string; readonly programId: string }[], query: string): JackRunResult {
+export function runJackOnWorkflow(graph: { readonly nodes: readonly { readonly id: string; readonly instanceId: string }[] }, instances: readonly { readonly id: string; readonly programId: string }[], query: string): JackRunResult {
   const instanceById = new Map(instances.map((row) => [row.id, row]));
   const fixtureJson = JSON.stringify({
     nodes: graph.nodes.map((node) => {
@@ -176,7 +176,7 @@ export function runJackOnMediaGraph(graph: { readonly nodes: readonly { readonly
   return runJackOnBoardFixture(fixtureJson, query);
 }
 
-export function mediaGraphFixtureJson(graph: { readonly nodes: readonly { readonly id: string; readonly instanceId: string }[] }, instances: readonly { readonly id: string; readonly programId: string }[]): string {
+export function workflowFixtureJson(graph: { readonly nodes: readonly { readonly id: string; readonly instanceId: string }[] }, instances: readonly { readonly id: string; readonly programId: string }[]): string {
   const instanceById = new Map(instances.map((row) => [row.id, row]));
   return JSON.stringify({
     nodes: graph.nodes.map((node) => {

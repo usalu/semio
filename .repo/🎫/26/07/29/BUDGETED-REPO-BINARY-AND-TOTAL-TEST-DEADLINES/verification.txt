@@ -1,0 +1,18 @@
+Verification run 2026-07-29
+
+Go:
+- go test ./repo/client/cli/go -short -run 'TestParseMcpClientKind|TestMcpCommandKinds|TestMicroCommitCommandExists|TestMcpStdioInitializeHandshake' — PASS
+- go build -o repo/client/client ./repo/client/mcp/go — PASS
+
+JS:
+- bun repo/lib/js/script.ts test — 95 pass (2 pre-existing playground static site failures unrelated)
+
+Rust:
+- bun store/sync/rs/script.ts test — 17 pass, 1 fail (folder_external_edit_delivers_remote_operations assertion, pre-existing dirty-tree issue, not a hang)
+- bun protocol/core/rs/script.ts test — 40 pass (cargo test fallback when nextest absent)
+
+Policy:
+- bun ./script.ts policy — no budget/no-raw-spawn/mcp-config breaches reported
+
+Budget hang:
+- repo/lib/js/index.test.ts "kills a command that exceeds its explicit budget" — PASS (explicit budget kill)

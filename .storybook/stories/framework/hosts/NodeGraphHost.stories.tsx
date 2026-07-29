@@ -1,6 +1,6 @@
 // #region 🧲Header
 // 💻 .storybook/stories/framework/hosts/NodeGraphHost.stories.tsx
-// Specs: Host the framework renderer's `NodeGraphHost` against real prebuilt WASM engines — the media-graph
+// Specs: Host the framework renderer's `NodeGraphHost` against real prebuilt WASM engines — the workflow
 // `GraphSession` (`framework/surface/node-graph/rs`) for the default DAG variant, and the `FlowSession`
 // (`flow/core/rs`) for the flow-graph variant `isFlowGraphScene`/`fixtureJson` routes to.
 // Summary: Two stories share one debug-readout host component; each sets `parameters.wasm` to the loader id
@@ -16,8 +16,8 @@ import { NodeGraphHost } from "@semio-tech/framework-renderer-react";
 import type { ActionDescriptor, NodeGraphScene, UiComponentSceneNode } from "@semio-tech/framework-core";
 
 //#region SceneFixtures
-/** 🕸️ Two connected media-graph nodes, matching the shape `framework/renderer/react/index.test.ts` exercises for `NodeGraphHost`. */
-const MEDIA_GRAPH_SCENE: NodeGraphScene = {
+/** 🕸️ Two connected workflow nodes, matching the shape `framework/renderer/react/index.test.ts` exercises for `NodeGraphHost`. */
+const WORKFLOW_SCENE: NodeGraphScene = {
   nodesJson: JSON.stringify([
     { id: "node-a", instanceId: "app-a", label: "Draw", x: 10, y: 20, inputs: [{ id: "in", resourceKind: "2d.drawing" }], outputs: [{ id: "out", resourceKind: "2d.drawing" }] },
     { id: "node-b", instanceId: "app-b", label: "Composite", x: 260, y: 60, inputs: [{ id: "in", resourceKind: "2d.drawing" }], outputs: [] },
@@ -25,7 +25,7 @@ const MEDIA_GRAPH_SCENE: NodeGraphScene = {
   edgesJson: JSON.stringify([{ id: "edge-1", sourceNodeId: "node-a", sourcePortId: "out", targetNodeId: "node-b", targetPortId: "in" }]),
   viewportJson: '{"x":0,"y":0,"zoom":1}',
   editable: true,
-  findItemsJson: JSON.stringify([{ id: "app-a", label: "Draw", category: "Media graph" }]),
+  findItemsJson: JSON.stringify([{ id: "app-a", label: "Draw", category: "Workflow" }]),
 };
 
 /** 🌊 A `FlowFixture`-shaped `fixtureJson` (mirrors `FlowFixture::default()` in `flow/core/rs/lib.rs`) — its presence alone routes `NodeGraphHost` to `FlowGraphCanvasHost`/`createFlowSession` (see `isFlowGraphScene`). */
@@ -89,8 +89,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 /** 🕸️ Default DAG engine — `WasmGraphSurface` against the real `framework_surface_node_graph` `GraphSession`. */
-export const MediaGraph: Story = {
-  args: { scene: MEDIA_GRAPH_SCENE, controllerId: "s-play", surfaceId: "s.play.media-graph" },
+export const Workflow: Story = {
+  args: { scene: WORKFLOW_SCENE, controllerId: "s-play", surfaceId: "s.play.workflow" },
   parameters: { wasm: ["node-graph"] },
 };
 

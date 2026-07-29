@@ -1,15 +1,10 @@
 #!/usr/bin/env bun
 /** 🧭 Compose.Rhino build/test router: `bun ./script.ts build|test`. */
-import { spawnSync } from "node:child_process";
-import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, dotnetLevelArgs, dotnetCoverageArgs, runTestBudgeted } from "../../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, dotnetLevelArgs, dotnetCoverageArgs, runCmd, runTestBudgeted } from "../../../../../repo/lib/js/index.ts";
 
 class BuildScript extends BundleScript {
   run(): void {
-    const buildResult = spawnSync("dotnet", ["build"], {
-      cwd: this.root,
-      stdio: "inherit",
-    });
-    if (buildResult.status !== 0) process.exit(buildResult.status ?? 1);
+    runCmd("dotnet", ["build"], { cwd: this.root });
     console.log("✅ Compose.Rhino build complete");
   }
 }

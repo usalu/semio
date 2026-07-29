@@ -691,11 +691,11 @@ impl DocumentEngine {
             conflicts_all.extend(conflicts);
             newly_applied.push((envelope.clone(), touched));
 
-            let diff_bytes = serde_json::to_vec(&envelope.diff).map_err(json_err)?;
-            let inverse_bytes = serde_json::to_vec(&envelope.inverse).map_err(json_err)?;
+            // 🎯 B4: `WalRecord::Diff`/`Inverse` (JSON `serde_json::to_vec` of the same fields
+            // `Command` already carries in real binary, via `protocol::encode_envelope`) deleted —
+            // never read anywhere in recovery/replay (confirmed: `db_document`/`db_engine` only
+            // ever reconstruct state from `WalRecord::Command`), a pure redundant JSON duplicate.
             records.push(db_wal::WalRecord::Command(envelope_bytes.clone()));
-            records.push(db_wal::WalRecord::Diff(diff_bytes));
-            records.push(db_wal::WalRecord::Inverse(inverse_bytes));
             records.push(db_wal::WalRecord::Outbox(envelope_bytes.clone()));
             self.outbox.push(OutboxEntry { operation_id: envelope.operation_id.clone(), bytes: envelope_bytes });
         }

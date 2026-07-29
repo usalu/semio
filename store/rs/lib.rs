@@ -195,6 +195,28 @@ pub mod pack_rt {
             _ => Ok(serde_json::Value::Null),
         }
     }
+
+    /// @emoji 🔧 `encode_json_value`/`decode_json_value`'s `DslValue` bridge normalizes every JSON
+    /// number to `f64` (matching JS/JSON dynamic-value semantics, `dsl/schema/rs/lib.rs`'s
+    /// `🔖Value` region) — lossless for a genuinely schema-less consumer, but lossy for a
+    /// whole-number field a `serde`-derived struct expects to deserialize as `u64`/`i32`
+    /// (serde_json's `Number` is float-tagged once round-tripped through `f64`, and integer
+    /// `Deserialize` impls reject a float-tagged `Number` even at a whole value like `0.0`). Walks
+    /// the decoded tree and rewrites every fractionless float back to an integer `Number` — call
+    /// this on `decode_json_value`'s output before `serde_json::from_value`-ing into a typed
+    /// struct with integer fields (skip it for a genuinely dynamic `serde_json::Value` consumer,
+    /// where the distinction doesn't matter and the rewrite is just wasted work).
+    pub fn renormalize_whole_number_floats(value: serde_json::Value) -> serde_json::Value {
+        match value {
+            serde_json::Value::Number(n) => match n.as_f64() {
+                Some(f) if f.fract() == 0.0 && f.is_finite() && f.abs() < (1u64 << 53) as f64 => serde_json::json!(f as i64),
+                _ => serde_json::Value::Number(n),
+            },
+            serde_json::Value::Array(items) => serde_json::Value::Array(items.into_iter().map(renormalize_whole_number_floats).collect()),
+            serde_json::Value::Object(map) => serde_json::Value::Object(map.into_iter().map(|(k, v)| (k, renormalize_whole_number_floats(v))).collect()),
+            other => other,
+        }
+    }
 }
 
 /// @emoji 📦 Binary counterpart to `DocumentDsl` — same shape, opposite face. LAW: `P::decode_pack(
@@ -240,6 +262,30 @@ pub struct DocumentPackFiles {
     pub pack: Vec<u8>,
     pub spr: Vec<u8>,
     pub ops: String,
+}
+
+/// @emoji 🔌 Wire codec for the authoritative half of `DocumentPackFiles` (`pack` + `spr`; `ops` is
+/// a derived text mirror, not carried — `parse_document_pack` never reads it) — one length-prefixed
+/// `pack` blob followed by the remaining bytes as `spr`. Used wherever a single binary blob must
+/// stand in for a whole document (media document wire, WIT `list<u8>` document hops).
+pub fn encode_document_pack_bytes(pack: &[u8], spr: &[u8]) -> Vec<u8> {
+    let mut out = Vec::new();
+    pack::write_varint_u64(&mut out, pack.len() as u64);
+    out.extend_from_slice(pack);
+    out.extend_from_slice(spr);
+    out
+}
+
+/// @emoji 🔌 Inverse of `encode_document_pack_bytes`.
+pub fn decode_document_pack_bytes(bytes: &[u8]) -> Result<(Vec<u8>, Vec<u8>), VcsError> {
+    let mut pos = 0usize;
+    let pack_len = pack::read_varint_u64(bytes, &mut pos)
+        .map_err(|error| VcsError::Deserialize(error.to_string()))? as usize;
+    let pack_end = pos.checked_add(pack_len).ok_or_else(|| VcsError::Deserialize("document pack bytes overflow".to_string()))?;
+    if pack_end > bytes.len() {
+        return Err(VcsError::Deserialize("document pack bytes truncated".to_string()));
+    }
+    Ok((bytes[pos..pack_end].to_vec(), bytes[pack_end..].to_vec()))
 }
 
 /// @emoji 🌱 Pack counterpart of the schema-less `serde_json::Value` escape hatch (puzzle-plugin/
@@ -290,29 +336,20 @@ pub struct DocumentCodec {
     /// hash always skips validation (schema-agnostic client). Durable pinning belongs in the db
     /// catalog once it grows a column for it; this in-memory pin is this wave's scope.
     pub pack_schema_hash: [u8; 32],
-    /// @emoji 📤 `envelope_json -> (pack files, dsl mirror text)` — the write path: `pack`+`spr`
-    /// are what `FolderTextStorage::write_pack`/`FolderSqliteStorage::write_pack` persist as
-    /// authoritative, the returned `String` is the always-written DSL mirror (`print_dsl` on the
-    /// initial projection).
-    pub print: fn(&str) -> Result<(DocumentPackFiles, String), VcsError>,
-    /// @emoji 📥 `(pack bytes, spr bytes) -> envelope_json` — the pack+spr-first read path (both
-    /// are authoritative; recovers real `backwards`/`operation_meta`/`cursor`, never replay-recomputed).
-    pub parse: fn(&[u8], &[u8]) -> Result<String, VcsError>,
-    /// @emoji 📥 `(dsl text, ops text) -> envelope_json` — the DSL-mirror fallback read path (no
-    /// `.pack`/`.spr` yet: hand-authored or freshly imported documents; backwards/meta/cursor are
-    /// replay-recomputed, matching pre-W4 behavior).
-    pub parse_dsl: fn(&str, &str) -> Result<String, VcsError>,
-    /// @emoji 🧩 `OperationEnvelope -> one edit-shaped JSON value` — decodes the envelope's opaque
-    /// `OpBinary` payload back into a concrete `Operation` and re-serializes it as an `Edit<Operation>`
-    /// JSON object, for schema-agnostic callers (`store_sync`'s `DocumentActor`) that only ever see
-    /// `serde_json::Value` and cannot otherwise turn a binary payload into JSON matching this
-    /// document kind's op shape.
-    pub edit_json_from_envelope: fn(&protocol::OperationEnvelope) -> Result<serde_json::Value, VcsError>,
-    /// @emoji 🧩 The inverse of {@link edit_json_from_envelope}: one edit-shaped JSON value ->
-    /// real `protocol::OperationEnvelope`s with genuine `OpBinary`-encoded payloads (never raw
-    /// JSON bytes), for schema-agnostic callers turning a folder-mirror or externally-authored
-    /// edit back into wire-shaped envelopes.
-    pub envelopes_from_edit_json: fn(&serde_json::Value, &str, &str) -> Result<Vec<protocol::OperationEnvelope>, VcsError>,
+    /// @emoji 📤 `(dsl text, ops text) -> (pack files, dsl mirror text)` — the hand-authored/
+    /// imported fallback path: compiles text straight to binary pack+spr (no JSON envelope
+    /// currency anywhere in between). Returns the re-printed canonical dsl mirror alongside the
+    /// pack files so a caller can write all four files (`.pack`/`.spr`/`.dsl`/`.ops`) in one shot.
+    pub compile_dsl: fn(&str, &str) -> Result<(DocumentPackFiles, String), VcsError>,
+    /// @emoji 📥 `(pack bytes, spr bytes) -> (dsl text, ops text)` — the sanctioned human/agent
+    /// LOGGING mirror, produced from the authoritative binary for schema-agnostic callers
+    /// (`store_sync`'s `FolderEndpoint::Pack` write path) that never touch a concrete `P`/`Operation`.
+    pub print_mirror: fn(&[u8], &[u8]) -> Result<DocumentTextFiles, VcsError>,
+    /// @emoji 🧩 One `OperationEnvelope` -> one printed `.ops` edit block (header line + indented
+    /// op line), for `FolderTextStorage::append_ops`'s hot-path logging append — decodes the
+    /// envelope's opaque `OpBinary` payload back into a concrete `Operation` just long enough to
+    /// print it, for schema-agnostic callers that otherwise never see a concrete op type.
+    pub edit_text_from_envelope: fn(&protocol::OperationEnvelope) -> Result<String, VcsError>,
 }
 
 impl DocumentCodec {
@@ -324,62 +361,41 @@ impl DocumentCodec {
         P: Clone + PartialEq + Serialize + DeserializeOwned + DocumentDsl + DocumentPack + Send + 'static,
         Operation: crate::Operation<P> + PartialEq + Serialize + DeserializeOwned + OpText + protocol::OpBinary + Send + 'static,
     {
-        fn print_impl<P, Operation>(envelope_json: &str) -> Result<(DocumentPackFiles, String), VcsError>
+        fn compile_dsl_impl<P, Operation>(dsl: &str, ops: &str) -> Result<(DocumentPackFiles, String), VcsError>
         where
-            P: DocumentDsl + DocumentPack + Serialize + DeserializeOwned,
-            Operation: OpText + protocol::OpBinary + Serialize + DeserializeOwned,
+            P: Clone + DocumentDsl + DocumentPack,
+            Operation: OpText + protocol::OpBinary + crate::Operation<P>,
         {
-            let envelope: DocumentEnvelope<P, Operation> =
-                serde_json::from_str(envelope_json).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-            let pack_files = print_document_pack(&envelope)?;
-            let dsl_mirror = envelope.vcs.initial_projection.print_dsl();
+            let parsed: ParsedDocumentText<P, Operation> = parse_document_text(dsl, ops).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+            let pack_files = print_document_pack(&parsed.envelope)?;
+            let dsl_mirror = parsed.envelope.vcs.initial_projection.print_dsl();
             Ok((pack_files, dsl_mirror))
         }
 
-        fn parse_impl<P, Operation>(pack: &[u8], spr: &[u8]) -> Result<String, VcsError>
+        fn print_mirror_impl<P, Operation>(pack: &[u8], spr: &[u8]) -> Result<DocumentTextFiles, VcsError>
         where
-            P: Clone + DocumentPack + Serialize + DeserializeOwned,
-            Operation: OpText + protocol::OpBinary + crate::Operation<P> + Serialize + DeserializeOwned,
+            P: Clone + DocumentDsl + DocumentPack,
+            Operation: OpText + protocol::OpBinary + crate::Operation<P>,
         {
             let parsed: ParsedDocumentText<P, Operation> = parse_document_pack(pack, spr).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-            serde_json::to_string(&parsed.envelope).map_err(|error| VcsError::Serialize(error.to_string()))
+            print_document_text(&parsed.envelope)
         }
 
-        fn parse_dsl_impl<P, Operation>(dsl: &str, ops: &str) -> Result<String, VcsError>
+        fn edit_text_from_envelope_impl<P, Operation>(envelope: &protocol::OperationEnvelope) -> Result<String, VcsError>
         where
-            P: Clone + DocumentDsl + Serialize + DeserializeOwned,
-            Operation: OpText + crate::Operation<P> + Serialize + DeserializeOwned,
-        {
-            let parsed: ParsedDocumentText<P, Operation> = parse_document_text(dsl, ops).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-            serde_json::to_string(&parsed.envelope).map_err(|error| VcsError::Serialize(error.to_string()))
-        }
-
-        fn edit_json_from_envelope_impl<P, Operation>(envelope: &protocol::OperationEnvelope) -> Result<serde_json::Value, VcsError>
-        where
-            Operation: protocol::OpBinary + Serialize,
+            Operation: OpText + protocol::OpBinary,
         {
             let edit = edit_from_operation_envelope::<Operation>(envelope)?;
-            serde_json::to_value(&edit).map_err(|error| VcsError::Serialize(error.to_string()))
-        }
-
-        fn envelopes_from_edit_json_impl<P, Operation>(edit_json: &serde_json::Value, document_id: &str, schema: &str) -> Result<Vec<protocol::OperationEnvelope>, VcsError>
-        where
-            Operation: crate::Operation<P> + protocol::OpBinary + DeserializeOwned,
-        {
-            let edit: Edit<Operation> = serde_json::from_value(edit_json.clone()).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-            protocol::operation_envelope_from_edit::<P, Operation>(&edit, &protocol::DocumentId(document_id.to_string()), &protocol::SchemaId(schema.to_string()))
-                .map_err(|error| VcsError::Serialize(error.to_string()))
+            print_edit_lines(&edit)
         }
 
         Self {
             schema: schema.into(),
             extension: P::EXTENSION,
             pack_schema_hash: P::record_spec().map(|spec| pack::schema_hash(&spec)).unwrap_or([0u8; 32]),
-            print: print_impl::<P, Operation>,
-            parse: parse_impl::<P, Operation>,
-            parse_dsl: parse_dsl_impl::<P, Operation>,
-            edit_json_from_envelope: edit_json_from_envelope_impl::<P, Operation>,
-            envelopes_from_edit_json: envelopes_from_edit_json_impl::<P, Operation>,
+            compile_dsl: compile_dsl_impl::<P, Operation>,
+            print_mirror: print_mirror_impl::<P, Operation>,
+            edit_text_from_envelope: edit_text_from_envelope_impl::<P, Operation>,
         }
     }
 }
@@ -2625,9 +2641,16 @@ where
                     match protocol::operation_envelope_from_edit::<P, Operation>(edit, &document_id, &schema) {
                         Ok(op_envelopes) => {
                             // Registers these locally-authored ops as already-applied in our own
-                            // DAG, so a later remote envelope depending on one doesn't stall as pending.
+                            // DAG, so a later remote envelope depending on one doesn't stall as
+                            // pending. `seed_applied` (out-of-band knowledge, mark-only) — NOT
+                            // `insert` (which stores the envelope for later `drain_applied_
+                            // envelopes()` too), or the next real remote `ingest_remote` call on
+                            // this same store would drain and re-materialize this already-local
+                            // edit as a SECOND, duplicate edit under its wire operation_id (which
+                            // differs from the edit's own local id, so `ingest_envelope`'s by-id
+                            // dedup check never catches it).
                             for op_envelope in &op_envelopes {
-                                let _ = self.dag.insert(op_envelope.clone());
+                                self.dag.seed_applied(op_envelope.operation_id.clone());
                             }
                             backbone.send(BackboneMessage::Operations { envelopes: op_envelopes })
                         }
@@ -2742,7 +2765,7 @@ pub struct StudioConflict {
 /// `kind: report.id` verbatim (NOT prefixed with severity) — a technology's own `reconcile` override
 /// (e.g. `framework/product/os/core`'s `OsOperation`) round-trips its own `StudioConflict.kind`
 /// through `ReconcileReport.id` on the way in (see that crate's `reconcile` wrapper), and callers
-/// pattern-match `StudioConflict.kind` against exact strings (e.g. `"media-graph/edge-orphaned"`) —
+/// pattern-match `StudioConflict.kind` against exact strings (e.g. `"workflow/edge-orphaned"`) —
 /// mangling it here would silently break every such exact-match call site. `severity` has no
 /// `StudioConflict` field to land in, so it is dropped (a real, structural information loss inherent
 /// to `ReconcileReport`'s frozen shape, not fixable at this edge). `ReconcileReport` also has no
@@ -2767,6 +2790,93 @@ pub enum BackboneMessage {
     /// @emoji ✅ Acknowledges inbound operations the store has ingested (store→actor). Lets a future actor
     /// implement at-least-once redelivery with id-based dedupe — safe across store crashes/reloads.
     Ack { op_ids: Vec<String> },
+}
+
+/// @emoji 🎯 `tag u8 (variant decl order) | body` — Snapshot: `pack bytes | spr bytes`;
+/// Operations: `count varint | protocol::encode_envelope each`; Ack: `count varint | str each`.
+/// The `Serialize`/`Deserialize` derive on `BackboneMessage` stays (kept for the wasm-sandbox
+/// `BackboneChannelPort` seam, itself real bytes wrapped in a JSON-array-of-numbers by design —
+/// see that trait's doc) — this is the real, primary binary encoding for every OTHER caller.
+fn write_backbone_bytes(out: &mut Vec<u8>, b: &[u8]) {
+    pack::write_varint_u64(out, b.len() as u64);
+    out.extend_from_slice(b);
+}
+
+fn read_backbone_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<u8>, protocol::ProtocolError> {
+    let offset = *pos as u64;
+    let malformed = |detail: String| protocol::ProtocolError::Malformed { what: "backbone message", offset, detail };
+    let len = pack::read_varint_u64(bytes, pos).map_err(|error| malformed(error.to_string()))? as usize;
+    let end = *pos + len;
+    let slice = bytes.get(*pos..end).ok_or_else(|| malformed("truncated".to_string()))?.to_vec();
+    *pos = end;
+    Ok(slice)
+}
+
+fn write_backbone_str(out: &mut Vec<u8>, s: &str) {
+    write_backbone_bytes(out, s.as_bytes());
+}
+
+fn read_backbone_str(bytes: &[u8], pos: &mut usize) -> Result<String, protocol::ProtocolError> {
+    let offset = *pos as u64;
+    let raw = read_backbone_bytes(bytes, pos)?;
+    String::from_utf8(raw).map_err(|error| protocol::ProtocolError::Malformed { what: "backbone message", offset, detail: error.to_string() })
+}
+
+pub fn encode_backbone_message(message: &BackboneMessage) -> Vec<u8> {
+    let mut out = Vec::new();
+    match message {
+        BackboneMessage::Snapshot { pack, spr } => {
+            out.push(0);
+            write_backbone_bytes(&mut out, pack);
+            write_backbone_bytes(&mut out, spr);
+        }
+        BackboneMessage::Operations { envelopes } => {
+            out.push(1);
+            pack::write_varint_u64(&mut out, envelopes.len() as u64);
+            for envelope in envelopes {
+                protocol::encode_envelope(envelope, &mut out);
+            }
+        }
+        BackboneMessage::Ack { op_ids } => {
+            out.push(2);
+            pack::write_varint_u64(&mut out, op_ids.len() as u64);
+            for op_id in op_ids {
+                write_backbone_str(&mut out, op_id);
+            }
+        }
+    }
+    out
+}
+
+/// @emoji 🎯 Inverse of [`encode_backbone_message`].
+pub fn decode_backbone_message(bytes: &[u8]) -> Result<BackboneMessage, protocol::ProtocolError> {
+    let malformed = |detail: String| protocol::ProtocolError::Malformed { what: "backbone message", offset: 0, detail };
+    let tag = *bytes.first().ok_or_else(|| malformed("empty".to_string()))?;
+    let mut pos = 1usize;
+    match tag {
+        0 => {
+            let pack = read_backbone_bytes(bytes, &mut pos)?;
+            let spr = read_backbone_bytes(bytes, &mut pos)?;
+            Ok(BackboneMessage::Snapshot { pack, spr })
+        }
+        1 => {
+            let count = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+            let mut envelopes = Vec::with_capacity(count as usize);
+            for _ in 0..count {
+                envelopes.push(protocol::decode_envelope(bytes, &mut pos)?);
+            }
+            Ok(BackboneMessage::Operations { envelopes })
+        }
+        2 => {
+            let count = pack::read_varint_u64(bytes, &mut pos).map_err(|error| malformed(error.to_string()))?;
+            let mut op_ids = Vec::with_capacity(count as usize);
+            for _ in 0..count {
+                op_ids.push(read_backbone_str(bytes, &mut pos)?);
+            }
+            Ok(BackboneMessage::Ack { op_ids })
+        }
+        other => Err(malformed(format!("unknown tag {other}"))),
+    }
 }
 
 /// @emoji 🧵 Non-blocking, IO-free in-memory queue contract between a `DocumentStore` and its
@@ -3440,26 +3550,10 @@ impl Operation<StudioHistoryProjection> for StudioHistoryOperation {
 // (compliant structured binary per this wave's scope ruling — NOT raw JSON text bytes, unlike
 // the deleted `serde_json::to_vec` hatch this replaces). TEXT face: JSON text, the same
 // documented, scoped exception the `Value`-projected apps already have.
-/// @emoji 🔧 `pack_rt::{encode,decode}_json_value`'s `DslValue` bridge normalizes every JSON
-/// number to `f64` (matching JS/JSON dynamic-value semantics, `dsl/schema/rs/lib.rs`'s `🔖Value`
-/// region) — lossless for the schema-less `serde_json::Value` projections it was built for, but
-/// lossy for a whole-number field a `serde`-derived struct expects to deserialize as `u64`/`i32`
-/// (serde_json's `Number` is float-tagged once round-tripped through `f64`, and integer
-/// `Deserialize` impls reject a float-tagged `Number` even at a whole value like `0.0`). Walks
-/// the decoded tree and rewrites every fractionless float back to an integer `Number` before the
-/// final `serde_json::from_value`, restoring round-trip fidelity for `StudioCheckpoint`'s nested
-/// `HybridLogicalTimestamp`.
-fn renormalize_whole_number_floats(value: serde_json::Value) -> serde_json::Value {
-    match value {
-        serde_json::Value::Number(n) => match n.as_f64() {
-            Some(f) if f.fract() == 0.0 && f.is_finite() && f.abs() < (1u64 << 53) as f64 => serde_json::json!(f as i64),
-            _ => serde_json::Value::Number(n),
-        },
-        serde_json::Value::Array(items) => serde_json::Value::Array(items.into_iter().map(renormalize_whole_number_floats).collect()),
-        serde_json::Value::Object(map) => serde_json::Value::Object(map.into_iter().map(|(k, v)| (k, renormalize_whole_number_floats(v))).collect()),
-        other => other,
-    }
-}
+// 🎯 `renormalize_whole_number_floats` moved into `pack_rt` (this file's :209) — general
+// property of `pack_rt::decode_json_value`'s output, not specific to this type; `compose`'s
+// `ComposeWireOperation` needs the exact same fix and calls the same `pack_rt::` function.
+use pack_rt::renormalize_whole_number_floats;
 
 impl protocol::OpText for StudioHistoryOperation {
     fn print_op(&self) -> String {
@@ -4379,6 +4473,34 @@ mod tests {
     }
 
     #[test]
+    fn backbone_message_binary_round_trips_every_variant() {
+        let snapshot = BackboneMessage::Snapshot { pack: vec![1, 2, 3], spr: Vec::new() };
+        assert_eq!(decode_backbone_message(&encode_backbone_message(&snapshot)).unwrap(), snapshot);
+
+        let envelope = sample_envelope_for_backbone_test();
+        let operations = BackboneMessage::Operations { envelopes: vec![envelope.clone(), envelope] };
+        assert_eq!(decode_backbone_message(&encode_backbone_message(&operations)).unwrap(), operations);
+
+        let ack = BackboneMessage::Ack { op_ids: vec!["op-1".to_string(), "op-2".to_string()] };
+        assert_eq!(decode_backbone_message(&encode_backbone_message(&ack)).unwrap(), ack);
+
+        let empty_ack = BackboneMessage::Ack { op_ids: Vec::new() };
+        assert_eq!(decode_backbone_message(&encode_backbone_message(&empty_ack)).unwrap(), empty_ack);
+    }
+
+    fn sample_envelope_for_backbone_test() -> protocol::OperationEnvelope {
+        protocol::OperationEnvelope {
+            operation_id: OperationId("op-1".to_string()),
+            document_id: DocumentId("doc-1".to_string()),
+            actor: ActorId("actor-1".to_string()),
+            dependencies: Vec::new(),
+            diff: protocol::DocumentDiff { schema: SchemaId("demo/v1".to_string()), payload: vec![1, 2, 3] },
+            inverse: protocol::InverseOperation { schema: SchemaId("demo/v1".to_string()), payload: Vec::new() },
+            timestamp: HybridLogicalTimestamp::new(0, 0),
+        }
+    }
+
+    #[test]
     fn no_backbone_by_default() {
         let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
             create_document_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
@@ -4476,28 +4598,40 @@ mod tests {
 
 
     #[test]
-    fn document_codec_of_round_trips_pack_and_dsl() {
+    fn document_codec_of_round_trips_dsl_and_pack_and_edit_text() {
         let codec = DocumentCodec::of::<DemoProjection, DemoOperation>("demo/v1");
         assert_eq!(codec.schema, "demo/v1");
         assert_eq!(codec.extension, "demo");
 
         let envelope: DocumentEnvelope<DemoProjection, DemoOperation> =
             create_document_envelope("demo/v1", "demo", DemoProjection { n: 4 }, None);
-        let envelope_json = serde_json::to_string(&envelope).expect("envelope json");
+        let text_files = print_document_text(&envelope).expect("print document text");
 
-        let (pack_files, dsl_mirror) = (codec.print)(&envelope_json).expect("codec print");
+        let (pack_files, dsl_mirror) = (codec.compile_dsl)(&text_files.dsl, &text_files.ops).expect("codec compile_dsl");
         assert_eq!(dsl_mirror, DemoProjection { n: 4 }.print_dsl(), "dsl mirror matches the initial projection's print_dsl");
 
-        let parsed_json = (codec.parse)(&pack_files.pack, &pack_files.spr).expect("codec parse");
-        let parsed: DocumentEnvelope<DemoProjection, DemoOperation> = serde_json::from_str(&parsed_json).expect("parse envelope json");
-        assert_eq!(parsed.vcs.initial_projection.n, 4, "codec.parse round trips through pack bytes");
+        let mirrored = (codec.print_mirror)(&pack_files.pack, &pack_files.spr).expect("codec print_mirror");
+        assert_eq!(mirrored.dsl, dsl_mirror, "print_mirror's dsl text agrees with compile_dsl's own mirror, no JSON round trip");
 
-        let parsed_dsl_json = (codec.parse_dsl)(&dsl_mirror, &pack_files.ops).expect("codec parse_dsl");
-        let parsed_dsl: DocumentEnvelope<DemoProjection, DemoOperation> = serde_json::from_str(&parsed_dsl_json).expect("parse envelope json (dsl path)");
-        assert_eq!(
-            parsed.vcs.initial_projection, parsed_dsl.vcs.initial_projection,
-            "codec.parse and codec.parse_dsl agree on the same document"
-        );
+        let document_id = DocumentId("demo".to_string());
+        let schema = SchemaId("demo/v1".to_string());
+        let edit = Edit {
+            id: "edit-1".into(),
+            actor: Some("peer".into()),
+            forwards: vec![DemoOperation::SetN { n: 9 }],
+            backwards: vec![DemoOperation::SetN { n: 4 }],
+            operation_meta: Vec::new(),
+            description: None,
+            coalesce_key: None,
+            sequence_number: 1,
+            started_at: "0".into(),
+            finished_at: None,
+        };
+        let mut op_envelopes = protocol::operation_envelope_from_edit::<DemoProjection, DemoOperation>(&edit, &document_id, &schema).expect("op envelopes");
+        let op_envelope = op_envelopes.pop().expect("exactly one op envelope for a single-op edit");
+        let edit_text = (codec.edit_text_from_envelope)(&op_envelope).expect("codec edit_text_from_envelope");
+        assert!(edit_text.contains("set-n"), "edit text contains the printed op line: {edit_text:?}");
+        assert!(!edit_text.contains('\n') || edit_text.trim_end_matches('\n').lines().count() <= 2, "one header line + one op line: {edit_text:?}");
 
         register_document_codec(codec);
         assert!(document_codec("demo/v1").is_some(), "registered codec is discoverable by schema string");

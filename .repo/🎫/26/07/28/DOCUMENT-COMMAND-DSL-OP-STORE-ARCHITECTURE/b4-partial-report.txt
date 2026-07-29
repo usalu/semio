@@ -1,0 +1,70 @@
+JSON-FREE DOCUMENT PIPELINE — B4 (PARTIAL) REPORT
+====================================================
+See b1-b3-report.txt for B1-B3 (all complete). This covers B4's status: 3 of 5 items done, 2
+explicitly deferred (matching the plan's own "largest single items, isolated sub-step" scoping).
+
+## Done
+
+- `HashOperation` (db_engine): closed during B2 as a forced dependency of the widened
+  `DocumentStore` bound (see b1-b3-report.txt) — real hand-rolled `OpText`/`OpBinary` codec,
+  `HashProjection` real `DocumentPack`. Tested.
+- `ComposeWireOperation` (compose): `serde_json::to_vec`/`from_slice` -> real pack `Shape::Value`
+  binary via `store::pack_rt::{encode_json_value, decode_json_value}` (`kind` len-prefixed str +
+  pack-value bytes to end). Hit the SAME lossy-whole-number-float issue found in B2's
+  `StudioHistoryOperation` fix — moved `renormalize_whole_number_floats` from a store-private
+  helper to `pub store::pack_rt::renormalize_whole_number_floats` (one shared implementation, two
+  real callers now) and applied it in `decode_op`. New test:
+  `compose_wire_operation_binary_round_trips_including_nested_and_empty_input`. `1/1` passing
+  (plus the pre-existing `kit_snapshot_vcs_rename_roundtrip`, `1/1`).
+  **Found 12 pre-existing, UNRELATED test failures** while verifying (`cargo test -p compose`):
+  GraphQL mutation roundtrip tests (createTag/createDesign/createQuality/etc.) that dispatch via
+  a completely different mechanism (`Command::ApplyOperation`/`dispatch_wip_wait`, not
+  `ComposeWireOperation`/`kit_vcs`/`store::DocumentStore`). Confirmed unrelated by instrumenting
+  `ComposeWireOperation::decode_op` with a temporary eprintln during a failing test run — zero
+  calls observed, ruling out any connection to this wave's changes. Flagged via a spawned
+  background task for separate investigation (not fixed here — out of scope for JSON removal,
+  and `compose` could not even compile until this session fixed an unrelated `KitProjection` test
+  type, so these failures may have been silently broken for a while).
+- db WAL: `db_document`'s `submit` no longer writes `WalRecord::Diff`/`Inverse` (were
+  `serde_json::to_vec` of fields `WalRecord::Command`'s binary envelope already carries in full,
+  via `protocol::encode_envelope`) — confirmed via grep that nothing in `db_document`/`db_engine`
+  ever reads these records during recovery/replay (`db_cli`'s inspect display and `db_wal`'s own
+  generic encode/decode match arms are the only other references, both harmless with fewer
+  records). Did NOT delete the `WalRecord::Diff`/`Inverse` enum variants from `db_wal` itself —
+  that crate is a generic, opaque-bytes WAL substrate (its own doc: "Command/Diff/Inverse/Event/
+  Outbox/Migration carry opaque bytes verbatim"); the JSON violation was specifically
+  `db_document`'s producer, not the record *kind*, so removing the write calls is the correctly
+  scoped fix. `db_document` `21/21` passing.
+
+## Explicitly deferred (matches the plan's own scoping — not started)
+
+- **`ProgramOperation`** (architect/program/rs/lib.rs:1615, 66 collection variants x
+  {Add,Remove,Move,Patch} ≈ 264 total, `OpText` also currently JSON via
+  `serde_json::from_str`/`to_string`): the plan's own text flagged this as "the one large item —
+  isolate as its own sub-step" and "the only real project" among the 4 fake-binary production op
+  types. Needs a `ProgramOperationDsl` mirror enum (the `gis`/`layout` pattern already established
+  fleet-wide) or a hand-rolled `format u8 | collection ordinal varint | CollectionOperation tag |
+  pack body` codec. Not started.
+- **db pathmap v2** (`db_document`'s `encode_pathmap`/`decode_pathmap`, module doc :31-41): the
+  JSON-object-with-`/`-path-keys convention is a genuine semantic format (not a drop-in binary
+  swap) — needs `varint count | per entry: path str | tag u8 (set/tombstone) | pack_rt value
+  bytes`, touching `db_document`'s encode/decode + state application, plus hand-rolled pathmap
+  constructors in `compose/server/hub/rs/bin.rs` (2 sites) and `db/cli/rs/lib.rs` (1 site) that
+  bypass `encode_pathmap` entirely, plus `db/testkit`'s shared fixtures. The explicit tombstone
+  tag also fixes a real documented gap (`null` is currently indistinguishable from delete). Not
+  started — genuinely separate, multi-file work.
+- **Gesture preview binary** (5 plugin sites: draw/layout/lowpoly/puzzle/cad, `serde_json::to_vec`
+  into the already-bytes-typed `payload: Vec<u8>` preview lane): small, mechanical, but not yet
+  touched — each site needs its own preview-ghost shape decided (real op-encode where the ghost
+  IS an op, or `pack_rt` value bytes otherwise). Not started.
+
+## Verification
+
+`cargo check --workspace --all-targets`: 0 errors after all B4 changes above.
+`cargo test`: db_document 21/21, compose 61/73 (12 pre-existing unrelated failures, see above;
+0 regressions from this wave's own changes, confirmed via the relevant tests: kit_snapshot_vcs_
+rename_roundtrip + the new compose_wire_operation_binary test, both passing).
+
+Next: B5 (kernel + WIT + wgpu binary ABI) is the next wave in plan order; ProgramOperation/db
+pathmap v2/gesture previews remain open B4 items that can land independently whenever picked up
+(no other wave is blocked on them, per the plan's own risk section).

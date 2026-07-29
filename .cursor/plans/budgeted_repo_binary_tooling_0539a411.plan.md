@@ -7,40 +7,40 @@ todos:
     status: completed
   - id: single-binary
     content: Collapse the 5 per-IDE Go MCP packages into the single repo/client/client binary; mcp takes a kind arg; fix serveMcp discarding ctx; update go.work and .gitignore
-    status: in_progress
+    status: completed
   - id: configs
     content: Rewrite all MCP configs, agent-hook configs and git hooks to exec repo/client/client directly instead of bun script.ts -> go run
-    status: pending
+    status: completed
   - id: zero-touch
     content: Build the binary in native bootstrap scripts and devcontainer post-create; make DevScript resolve-and-build instead of go run
-    status: pending
+    status: completed
   - id: budget-classes
     content: "Replace budgetMs: null with ORCHESTRATOR_BUDGET_MS and DAEMON_BUDGET_MS; add runProbe; update all 24 exemption sites"
-    status: pending
+    status: completed
   - id: spawn-migration
     content: Migrate all 52 raw spawn/spawnSync/execSync/execFileSync/Bun.spawn sites in script.ts files onto the budgeted runners
-    status: pending
+    status: completed
   - id: rust-nextest
     content: Switch runCargoTestBudgeted to cargo nextest with per-level nextest.toml profiles; wire llvm-cov nextest; install nextest in setup/bootstrap/devcontainer
-    status: pending
+    status: completed
   - id: other-toolchains
     content: Add inner per-test deadlines for go, vitest, bun test, pytest, dotnet, ctest and playwright derived from the level budget
-    status: pending
+    status: completed
   - id: unbounded-waits
     content: Bound the unbounded waits in store/sync, os-hub, compose-hub Rust tests and switch Go tests to exec.CommandContext
-    status: pending
+    status: completed
   - id: go-tool-timeout
     content: Give --timeout a non-zero default and enforce per-MCP-tool-call and per-hook deadlines in the Go client
-    status: pending
+    status: completed
   - id: policy
     content: "Add repo-wide statutes: no raw spawn in script.ts, no budgetMs: null, all tool configs reference repo/client/client"
-    status: pending
+    status: completed
   - id: tests
     content: Extend repo/lib/js/index.test.ts and repo/client/cli/go/main_test.go; add MCP config handshake test; register commands in launch.json
-    status: pending
+    status: completed
   - id: verify
     content: Verify with injected never-terminating tests per toolchain that deadlines fire and name the test; run full suites
-    status: pending
+    status: completed
 isProject: false
 ---
 

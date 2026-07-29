@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🦀 `kernel/3d/brep/rs` router: `bun ./script.ts test`. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd } from "../../../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
@@ -12,7 +12,7 @@ class TestScript extends BundleScript {
 /** 📈 Runs the criterion benchmark suite (`benches/kernel.rs`). */
 class BenchScript extends BundleScript {
   run(): void {
-    Bun.spawnSync(["cargo", "bench", "-p", "kernel_3d_brepkit"], { cwd: this.root, stdio: "inherit" });
+    runCmd("cargo", ["bench", "-p", "kernel_3d_brepkit"], { cwd: this.root, budgetMs: buildBudgetMs() });
   }
 }
 

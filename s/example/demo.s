@@ -1,6 +1,6 @@
 programs=[ draw writer raster note ]
-media-graph {
-  schema=s.media-graph
+workflow {
+  schema=s.workflow
   nodes [id:TEXT instance-id:TEXT x:NUM y:NUM width:NUM height:NUM inputs:LIST outputs:LIST] {
     node-app-draw-1 app-draw-1 40 80 160 72 [ id="app-draw-1:out:in" resource-kind="2d.drawing" direction=in ] [ id="app-draw-1:out:out" resource-kind="2d.drawing" direction=out ]
     node-app-draw-2 app-draw-2 220 80 160 72 [ id="app-draw-2:out:in" resource-kind="2d.drawing" direction=in ] [ id="app-draw-2:out:out" resource-kind="2d.drawing" direction=out ]

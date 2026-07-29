@@ -1063,7 +1063,7 @@ export class CommitScript extends Script {
 //#endregion 🔖CommitScript
 
 //#region 🔖OsScript
-/** 🕸️Headless OS studio commands — computes a media graph without a UI (`os run <bundle>.studio`). */
+/** 🕸️Headless OS studio commands — computes a workflow without a UI (`os run <bundle>.studio`). */
 export class OsScript extends Script {
   run(segments: string[]): void {
     const sub = segments[0];

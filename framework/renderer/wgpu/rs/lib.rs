@@ -3422,7 +3422,7 @@ pub fn node_graph_catalogue_drop_action(
             ((x - bounds.x) as f64, (y - bounds.y) as f64)
         });
         eprintln!(
-            "[DEBUG] catalogue media-graph drop surface={surface_id} controller={controller_id} program={program_id} app={app_id} world=({:.1},{:.1})",
+            "[DEBUG] catalogue workflow drop surface={surface_id} controller={controller_id} program={program_id} app={app_id} world=({:.1},{:.1})",
             world.0, world.1
         );
         return Some(ActionDescriptor {
@@ -3439,7 +3439,7 @@ pub fn node_graph_catalogue_drop_action(
 }
 
 #[cfg(test)]
-mod catalogue_media_graph_drop_tests {
+mod catalogue_workflow_drop_tests {
     use super::*;
 
     #[test]
@@ -3508,9 +3508,9 @@ mod catalogue_media_graph_drop_tests {
             140.0,
             90.0,
             &drag_data,
-            &[("s.play.media-graph", bounds, "s-play")],
+            &[("s.play.workflow", bounds, "s-play")],
         )
-        .expect("drop over media graph");
+        .expect("drop over workflow");
         assert_eq!(action.controller_id, "s-play");
         assert_eq!(action.action, "spawnApp");
         let args = action.args.unwrap();
@@ -3537,7 +3537,7 @@ mod catalogue_media_graph_drop_tests {
             10.0,
             10.0,
             &catalogue,
-            &[("s.play.media-graph", bounds, "s-play")],
+            &[("s.play.workflow", bounds, "s-play")],
         )
         .is_none());
         let mut flow = HashMap::new();
@@ -3549,7 +3549,7 @@ mod catalogue_media_graph_drop_tests {
             140.0,
             90.0,
             &flow,
-            &[("s.play.media-graph", bounds, "s-play")],
+            &[("s.play.workflow", bounds, "s-play")],
         )
         .is_none());
     }
@@ -17809,18 +17809,20 @@ impl ShellState {
         for event in events {
             match event {
                 DocumentEvent::RemoteOperations { envelopes } => {
-                    if let (Some(runtime), Ok(json)) = (runtime.as_ref(), serde_json::to_string(&envelopes)) {
-                        match runtime.apply_operations(instance_id, &json) {
+                    if let Some(runtime) = runtime.as_ref() {
+                        let operations = semio_protocol::encode_envelopes(&envelopes);
+                        match runtime.apply_operations(instance_id, &operations) {
                             Ok(()) => changed = true,
                             Err(error) => eprintln!("[DEBUG] wgpu shell apply_operations failed: {error}"),
                         }
                     }
                 }
-                DocumentEvent::SnapshotReplaced { envelope_json } => {
+                DocumentEvent::SnapshotReplaced { pack, spr } => {
                     if let Some(runtime) = runtime.as_ref() {
-                        match runtime.load_app_document(instance_id, &envelope_json) {
+                        let files = semio_framework_plugin_host::semio::framework::types::DocumentPackFiles { pack, spr, ops: String::new() };
+                        match runtime.load_app_document_pack(instance_id, files) {
                             Ok(()) => changed = true,
-                            Err(error) => eprintln!("[DEBUG] wgpu shell load_app_document failed: {error}"),
+                            Err(error) => eprintln!("[DEBUG] wgpu shell load_app_document_pack failed: {error}"),
                         }
                     }
                 }
@@ -25258,7 +25260,7 @@ impl ShellState {
                 .and_then(|id| panel.spawned_apps.iter().find(|app| &app.id == id))
             {
                 let label = format!(
-                    "Back to Media Graph · {}",
+                    "Back to Workflow · {}",
                     app_document_label(&spawned.document)
                 );
                 let item = ChromeGroupItem {

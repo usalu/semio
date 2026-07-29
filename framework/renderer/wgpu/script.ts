@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 /** @emoji 🧊 `@semio-tech/framework-renderer-wgpu` task router. */
-import { spawn, spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -9,13 +8,17 @@ import {
   SEMIO_ASSET_SERVER_PORT,
   SEMIO_ASSET_BASE_URL_ENV,
   buildBudgetMs,
+  daemonBudgetOpts,
   getWorkspaceRoot,
+  orchestratorBudgetOpts,
   resolveTestLevel,
   runBundleScriptMain,
   runCargoTestBudgeted,
   runCmd,
   runCmdStatus,
+  runProbe,
   runVitest,
+  spawnDaemon,
   frameworkOsPlaygroundDefaultPort,
   loadFrameworkOsPlaygroundCatalog,
 } from "../../../repo/lib/js/index.ts";
@@ -39,30 +42,31 @@ function trunkEnv(): NodeJS.ProcessEnv {
 
 /** 🌐 Runs a long-lived child without blocking Bun's asset-server event loop. */
 async function runInteractiveCommand(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv): Promise<number> {
-  const child = spawn(command, args, { cwd, env, stdio: "inherit" });
-  const terminate = () => child.kill();
+  const daemon = spawnDaemon(command, args, { cwd, env });
+  const terminate = () => daemon.kill();
   process.once("SIGINT", terminate);
   process.once("SIGTERM", terminate);
   try {
     return await new Promise<number>((resolve, reject) => {
-      child.once("error", reject);
-      child.once("exit", (code) => resolve(code ?? 1));
+      daemon.child.once("error", reject);
+      daemon.child.once("exit", (code) => resolve(code ?? 1));
     });
   } finally {
     process.off("SIGINT", terminate);
     process.off("SIGTERM", terminate);
+    daemon.kill();
   }
 }
 
 function ensureWasmTarget(): void {
-  const probe = spawnSync("rustup", ["target", "list", "--installed"], { encoding: "utf8" });
-  if (!probe.stdout?.includes(wasmTarget)) {
+  const probe = runProbe("rustup", ["target", "list", "--installed"]);
+  if (!probe.stdout.includes(wasmTarget)) {
     runCmd("rustup", ["target", "add", wasmTarget]);
   }
 }
 
 function ensureTrunk(): void {
-  const probe = spawnSync("trunk", ["--version"], { encoding: "utf8" });
+  const probe = runProbe("trunk", ["--version"]);
   if (probe.status !== 0) {
     runCmd("cargo", ["install", "trunk", "--locked"], { budgetMs: buildBudgetMs() });
   }
@@ -151,12 +155,12 @@ class NativeBuildScript extends BundleScript {
     }
     const osDevScript = join(repoRoot, "framework/product/os/dev/script.ts");
     // Recurses into os/dev's own `plugin` build loop, whose per-plugin `cargo build` calls are individually budgeted.
-    const plugin = spawnSync("bun", [osDevScript, "plugin", filterPlugin], {
+    const plugin = runCmdStatus("bun", [osDevScript, "plugin", filterPlugin], {
       cwd: join(repoRoot, "framework/product/os/dev"),
-      stdio: "inherit",
       env: { ...process.env, SEMIO_RENDERER: "wgpu", SEMIO_PLUGIN: filterPlugin },
+      ...orchestratorBudgetOpts(),
     });
-    if (plugin.status !== 0) throw new Error(`wasm plugin build failed: ${filterPlugin}`);
+    if (plugin !== 0) throw new Error(`wasm plugin build failed: ${filterPlugin}`);
     console.log(`[DEBUG] built native wgpu renderer and wasm plugins for ${filterPlugin}`);
   }
 }
@@ -176,7 +180,7 @@ class NativeRunScript extends BundleScript {
     const catalog = loadFrameworkOsPlaygroundCatalog();
     const appArgs = resolveNativeAppArgs(catalog, filterPlugin);
     // Interactive native app window — runs until the user closes it.
-    if (runCmdStatus("cargo", ["run", "-p", crateName, "--bin", "semio-wgpu-native", "--release", "--features", "native-bin", "--", "--plugin", filterPlugin, ...appArgs], { cwd: repoRoot, env: nativeEnv, budgetMs: null }) !== 0) {
+    if (runCmdStatus("cargo", ["run", "-p", crateName, "--bin", "semio-wgpu-native", "--release", "--features", "native-bin", "--", "--plugin", filterPlugin, ...appArgs], { cwd: repoRoot, env: nativeEnv, ...daemonBudgetOpts() }) !== 0) {
       throw new Error("native wgpu renderer run failed");
     }
   }

@@ -3,7 +3,7 @@ name = "semio-framework-os"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "Plugin-based OS kernel: hot-swappable WASM components, media graph, document VCS"
+description = "Plugin-based OS kernel: hot-swappable WASM components, workflow, document VCS"
 
 
 [lints]
