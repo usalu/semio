@@ -1,6 +1,6 @@
 //! ⚡ Process 3d app — operation enum + laws (constitutional: op).
 
-use process_3d::{Pose, Process3dDocument, ProcessMeasure, ProcessStep, ProcessStepPatch, SolidSpec, Stock, StepOrigin};
+use process_3d::{Process3dDocument, ProcessMeasure, ProcessStep, ProcessStepPatch, Stock, StepOrigin};
 use protocol::{apply_collection_operation, invert_collection_operation, CollectionOperation, Operation, OperationDiff, OpText};
 use serde::{Deserialize, Serialize};
 
@@ -252,7 +252,7 @@ impl protocol::OpBinary for Process3dOperation {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use process_3d::empty_process3d_projection;
+    use process_3d::{empty_process3d_projection, Pose, SolidSpec};
 
     fn cut_step(id: &str) -> ProcessStep {
         ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: SolidSpec::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }

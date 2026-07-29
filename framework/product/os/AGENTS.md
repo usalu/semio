@@ -1,6 +1,6 @@
-# Os
+# os
 
-A cooperative operating system with version control, collaboration, plugin-mechanisms, renderers and kernels.
+os is a cooperative pseudo operating system with version control, collaboration, plugin-mechanisms, renderers and kernels built in.
 
 [s](`s/AGENTS.md`) is one concrete os instance for the design domain.
 
@@ -14,7 +14,13 @@ A manifest for an app with schema, commands (along with cmd and cde),
 
 # Schema
 
-A schema for a document.
+A schema for a document with entity schemas.
+
+# EntitySchema
+
+# Entity
+
+An entity inside a document
 
 # Engine
 

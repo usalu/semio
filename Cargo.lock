@@ -2225,34 +2225,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8b14ccef22fc6f5a8f4d7d768562a182c04ce9a3b3157b91390b52ddfdf1a76"
 
 [[package]]
-name = "draw"
-version = "0.1.0"
-dependencies = [
- "base64 0.22.1",
- "image",
- "semio-framework-core",
- "semio-framework-kernel-dsl",
- "semio-framework-kernel-protocol",
- "semio-framework-kernel-vcs",
- "semio-s-kernel-geometry-2d",
- "semio-s-kernel-geometry-2d-engine",
- "semio-s-kernel-store",
- "serde",
- "serde_json",
- "wasm-bindgen",
-]
-
-[[package]]
 name = "draw-plugin"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
- "draw",
- "fsm",
  "semio-framework-os",
  "semio-framework-plugin",
- "serde",
- "serde_json",
+ "semio-s-app-draw",
+ "semio-s-app-draw-engine",
+ "semio-s-app-draw-ui",
 ]
 
 [[package]]
@@ -6719,31 +6700,12 @@ dependencies = [
 name = "process-plugin"
 version = "0.1.0"
 dependencies = [
- "base64 0.22.1",
- "process_3d",
- "semio-framework-core",
- "semio-framework-kernel-protocol",
- "semio-framework-kernel-vcs",
  "semio-framework-os",
  "semio-framework-plugin",
- "semio-s-kernel-geometry-3d-brep",
- "semio-s-kernel-geometry-3d-brep-engine",
- "semio-s-kernel-store",
- "serde",
+ "semio-s-app-process-3d",
+ "semio-s-app-process-3d-engine",
+ "semio-s-app-process-3d-ui",
  "serde_json",
-]
-
-[[package]]
-name = "process_3d"
-version = "0.1.0"
-dependencies = [
- "semio-framework-kernel-dsl",
- "semio-framework-kernel-protocol",
- "semio-framework-kernel-vcs",
- "semio-s-kernel-store",
- "serde",
- "serde_json",
- "wasm-bindgen",
 ]
 
 [[package]]
@@ -9341,6 +9303,90 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-app-draw"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-dsl",
+ "semio-s-kernel-store",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-draw-dsl"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-draw",
+ "semio-s-app-draw-engine",
+ "semio-s-kernel-store",
+]
+
+[[package]]
+name = "semio-s-app-draw-engine"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "image",
+ "semio-framework-core",
+ "semio-s-app-draw",
+ "semio-s-app-draw-dsl",
+ "semio-s-kernel-geometry-2d",
+ "semio-s-kernel-geometry-2d-engine",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-draw-op"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-dsl",
+ "semio-framework-kernel-protocol",
+ "semio-s-app-draw",
+ "semio-s-app-draw-engine",
+ "semio-s-kernel-store",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-draw-pack"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-draw",
+ "semio-s-app-draw-dsl",
+ "semio-s-app-draw-engine",
+ "semio-s-kernel-pack",
+ "semio-s-kernel-store",
+]
+
+[[package]]
+name = "semio-s-app-draw-protocol"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-protocol",
+ "semio-s-app-draw",
+ "semio-s-app-draw-engine",
+ "semio-s-app-draw-op",
+ "semio-s-kernel-store",
+]
+
+[[package]]
+name = "semio-s-app-draw-ui"
+version = "0.1.0"
+dependencies = [
+ "fsm",
+ "semio-framework-plugin",
+ "semio-s-app-draw",
+ "semio-s-app-draw-engine",
+ "semio-s-app-draw-op",
+ "semio-s-kernel-store",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "semio-s-app-flow"
 version = "0.1.0"
 dependencies = [
@@ -9704,6 +9750,88 @@ dependencies = [
  "semio-s-app-note-dsl",
  "semio-s-app-note-engine",
  "semio-s-app-note-op",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-process-3d"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-dsl",
+ "semio-framework-kernel-protocol",
+ "semio-s-kernel-store",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-process-3d-dsl"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-process-3d",
+ "semio-s-kernel-store",
+]
+
+[[package]]
+name = "semio-s-app-process-3d-engine"
+version = "0.1.0"
+dependencies = [
+ "base64 0.22.1",
+ "semio-framework-plugin",
+ "semio-s-app-process-3d",
+ "semio-s-app-process-3d-dsl",
+ "semio-s-kernel-geometry-3d-brep",
+ "semio-s-kernel-geometry-3d-brep-engine",
+ "semio-s-kernel-store",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-app-process-3d-op"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-dsl",
+ "semio-framework-kernel-protocol",
+ "semio-s-app-process-3d",
+ "semio-s-kernel-store",
+ "serde",
+]
+
+[[package]]
+name = "semio-s-app-process-3d-pack"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-process-3d",
+ "semio-s-app-process-3d-dsl",
+ "semio-s-kernel-pack",
+ "semio-s-kernel-store",
+]
+
+[[package]]
+name = "semio-s-app-process-3d-protocol"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-protocol",
+ "semio-framework-kernel-vcs",
+ "semio-s-app-process-3d",
+ "semio-s-app-process-3d-op",
+ "semio-s-kernel-store",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-app-process-3d-ui"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-core",
+ "semio-framework-kernel-protocol",
+ "semio-framework-plugin",
+ "semio-s-app-process-3d",
+ "semio-s-app-process-3d-engine",
+ "semio-s-app-process-3d-op",
  "serde",
  "serde_json",
 ]
@@ -10228,6 +10356,27 @@ dependencies = [
  "semio-s-app-writer-engine",
  "semio-s-kernel-store",
  "serde",
+]
+
+[[package]]
+name = "semio-s-app-writer-pack"
+version = "0.1.0"
+dependencies = [
+ "semio-s-app-writer",
+ "semio-s-app-writer-engine",
+ "semio-s-kernel-pack",
+ "semio-s-kernel-store",
+]
+
+[[package]]
+name = "semio-s-app-writer-protocol"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-kernel-protocol",
+ "semio-s-app-writer",
+ "semio-s-app-writer-engine",
+ "semio-s-app-writer-op",
+ "semio-s-kernel-store",
 ]
 
 [[package]]
@@ -14504,20 +14653,6 @@ name = "writeable"
 version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ffae5123b2d3fc086436f8834ae3ab053a283cfac8fe0a0b8eaae044768a4c4"
-
-[[package]]
-name = "writer"
-version = "0.1.0"
-dependencies = [
- "framework_editor",
- "semio-framework-kernel-dsl",
- "semio-framework-kernel-protocol",
- "semio-framework-kernel-vcs",
- "semio-s-kernel-store",
- "serde",
- "serde_json",
- "wasm-bindgen",
-]
 
 [[package]]
 name = "writer-plugin"

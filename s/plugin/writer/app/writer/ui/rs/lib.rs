@@ -5,7 +5,7 @@ use writer::{WriterCamera, WriterProjection, WRITER_DOCUMENT_SCHEMA};
 use writer_engine::{
     apply_jack_rename, dag_jack_example_document, dag_jack_example_json, empty_writer_projection, find_deepest_jack_ast_node_at, format_writer_text, jack_ast_node_by_id,
     jack_ast_node_for_selection, jack_ast_tree_icon, jack_completions_json, jack_editor_placeholders, jack_example_document, jack_example_json, jack_newline_gate_offsets, jack_symbol_at_offset,
-    jack_variable_occurrences, parse_jack_ast, selectable_spans_for_jack, tokenize_language, GrammarToken, JackAstNode, JackSymbolKind,
+    parse_jack_ast, selectable_spans_for_jack, tokenize_language, JackAstNode, JackSymbolKind,
 };
 use writer_op::WriterOperation;
 use semio_framework_plugin::{SurfaceKind, PanelGroup, PanelTabSpec,
@@ -443,7 +443,7 @@ fn apply_engagement(runtime: &mut WriterPlayRuntime, current_text: &str, languag
 
 //#region 🔖WriterPlayApp
 #[derive(Default)]
-struct WriterPlayApp {
+pub struct WriterPlayApp {
     /// 🎛️ Ephemeral view state (selection, hover, editor settings, signals, engagement draft) that
     /// lives on the app struct — never in the document projection, so it emits no history entries.
     runtime: WriterPlayRuntime,
@@ -916,6 +916,7 @@ mod tests {
         testkit::{meta, new_app, new_app_with_registry},
         PluginApp, VcsDocumentApp,
     };
+    use writer_engine::jack_variable_occurrences;
 
     const CANONICAL_QUERY: &str = "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = 'core'\nRETURN a.name, b.name";
 

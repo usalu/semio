@@ -21,11 +21,10 @@ crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
 
 [dependencies]
-draw = { path = "../../rs", package = "draw" }
-fsm = { path = "../../fsm/rs", package = "fsm" }
+draw = { path = "../../app/draw/rs", package = "semio-s-app-draw" }
+draw_engine = { path = "../../app/draw/engine/rs", package = "semio-s-app-draw-engine" }
+draw_ui = { path = "../../app/draw/ui/rs", package = "semio-s-app-draw-ui" }
 semio-framework-os = { path = "../../../../../framework/product/os/core/rs" }
 semio-framework-plugin = { path = "../../../../../framework/plugin/rs" }
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.140"
 base64 = "0.22"
 

@@ -5,19 +5,6 @@ use serde::{Deserialize, Serialize};
 /// `.print_dsl()` without taking a direct `vcs` dependency just for the trait.
 pub use store::DocumentDsl;
 
-//! ✏️ Draw document domain + typed VCS on `vcs`.
-
-use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
-use serde::{Deserialize, Serialize};
-use std::sync::atomic::{AtomicU64, Ordering};
-#[cfg(target_arch = "wasm32")]
-use store::create_document_envelope;
-use protocol::{Operation, OperationDiff};
-use store::{DocumentEnvelope, DocumentStore};
-/// 🔁 Reexported so downstream crates (e.g. `draw-plugin`) can call `DrawDocument::parse_dsl`/
-/// `.print_dsl()` without taking a direct `vcs` dependency just for the trait.
-pub use store::DocumentDsl;
-
 pub const DRAW_DOCUMENT_SCHEMA: &str = "draw.document";
 pub const DRAW_BLEND_MODES: &[&str] = &["normal", "multiply", "screen", "overlay", "darken", "lighten", "colorDodge", "colorBurn", "hardLight", "softLight", "difference", "exclusion", "hue", "saturation", "color", "luminosity"];
 pub const DRAW_BOOLEAN_OPERATIONS: &[&str] = &["union", "difference", "intersection", "xor"];

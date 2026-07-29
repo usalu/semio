@@ -1599,7 +1599,6 @@ const POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST = new Set<string>([
   "s/plugin/note/rs/lib.rs",
   "s/plugin/procedural/2d/rs/lib.rs",
   "s/plugin/procedural/3d/rs/lib.rs",
-  "s/plugin/process/3d/rs/lib.rs",
   "s/plugin/puzzle/2d/rs/lib.rs",
   "s/plugin/puzzle/3d/rs/lib.rs",
   "s/plugin/puzzle/5d/rs/lib.rs",
@@ -1608,13 +1607,9 @@ const POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST = new Set<string>([
   "s/plugin/reasoning/rs/lib.rs",
   "s/plugin/remodel/rs/lib.rs",
   "s/plugin/space/plugin/rs/lib.rs",
-  "s/plugin/sequence/core/rs/lib.rs",
-  "s/plugin/shooting/rs/lib.rs",
-  "s/plugin/sourcing/curate/rs/lib.rs",
   "s/plugin/trinity/ram/rs/lib.rs",
   "s/plugin/trinity/rewrite/engine/rs/lib.rs",
   "s/plugin/vcs/plugin/rs/lib.rs",
-  "s/plugin/writer/rs/lib.rs",
   "s/plugin/space/rs/lib.rs",
 ]);
 

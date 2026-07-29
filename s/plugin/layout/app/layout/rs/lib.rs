@@ -1,5 +1,6 @@
 //! 📄 Layout app — document entities (constitutional: general).
 
+use protocol::{Identified, Patchable};
 use serde::{Deserialize, Serialize};
 
 //#region 🔖Constants
@@ -333,6 +334,168 @@ pub struct LayoutDocument {
     pub print_target: Option<String>,
 }
 //#endregion 🔖Types
+
+//#region 🔖CollectionSupport
+impl Identified<String> for Page {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+
+impl Identified<String> for TextStory {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+
+impl Identified<String> for ImageLink {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+
+/// 📄 Sparse scalar patch for a {@link Page} (name, size, margins, columns).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct PagePatch {
+    pub name: Option<String>,
+    pub width: Option<f64>,
+    pub height: Option<f64>,
+    pub margin_top: Option<f64>,
+    pub margin_right: Option<f64>,
+    pub margin_bottom: Option<f64>,
+    pub margin_left: Option<f64>,
+    pub columns_count: Option<u32>,
+    pub columns_gutter: Option<f64>,
+}
+
+impl Patchable<PagePatch> for Page {
+    fn apply_patch(&mut self, patch: &PagePatch) {
+        if let Some(name) = &patch.name {
+            self.name = name.clone();
+        }
+        if let Some(value) = patch.width {
+            self.width = value;
+        }
+        if let Some(value) = patch.height {
+            self.height = value;
+        }
+        if let Some(value) = patch.margin_top {
+            self.margins.top = value;
+        }
+        if let Some(value) = patch.margin_right {
+            self.margins.right = value;
+        }
+        if let Some(value) = patch.margin_bottom {
+            self.margins.bottom = value;
+        }
+        if let Some(value) = patch.margin_left {
+            self.margins.left = value;
+        }
+        if let Some(value) = patch.columns_count {
+            self.columns.count = value;
+        }
+        if let Some(value) = patch.columns_gutter {
+            self.columns.gutter = value;
+        }
+    }
+
+    fn diff_patch(&self, other: &Self) -> Option<PagePatch> {
+        let mut patch = PagePatch::default();
+        let mut changed = false;
+        if self.name != other.name {
+            patch.name = Some(other.name.clone());
+            changed = true;
+        }
+        if self.width != other.width {
+            patch.width = Some(other.width);
+            changed = true;
+        }
+        if self.height != other.height {
+            patch.height = Some(other.height);
+            changed = true;
+        }
+        if self.margins.top != other.margins.top {
+            patch.margin_top = Some(other.margins.top);
+            changed = true;
+        }
+        if self.margins.right != other.margins.right {
+            patch.margin_right = Some(other.margins.right);
+            changed = true;
+        }
+        if self.margins.bottom != other.margins.bottom {
+            patch.margin_bottom = Some(other.margins.bottom);
+            changed = true;
+        }
+        if self.margins.left != other.margins.left {
+            patch.margin_left = Some(other.margins.left);
+            changed = true;
+        }
+        if self.columns.count != other.columns.count {
+            patch.columns_count = Some(other.columns.count);
+            changed = true;
+        }
+        if self.columns.gutter != other.columns.gutter {
+            patch.columns_gutter = Some(other.columns.gutter);
+            changed = true;
+        }
+        changed.then_some(patch)
+    }
+}
+
+/// 📝 Sparse patch for a {@link TextStory}'s body content.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct TextStoryPatch {
+    pub content: Option<String>,
+}
+
+impl Patchable<TextStoryPatch> for TextStory {
+    fn apply_patch(&mut self, patch: &TextStoryPatch) {
+        if let Some(content) = &patch.content {
+            self.content = content.clone();
+        }
+    }
+
+    fn diff_patch(&self, other: &Self) -> Option<TextStoryPatch> {
+        (self.content != other.content).then(|| TextStoryPatch { content: Some(other.content.clone()) })
+    }
+}
+
+/// 🔗 Sparse patch for an {@link ImageLink}'s file path.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct ImageLinkPatch {
+    pub path: Option<String>,
+}
+
+impl Patchable<ImageLinkPatch> for ImageLink {
+    fn apply_patch(&mut self, patch: &ImageLinkPatch) {
+        if let Some(path) = &patch.path {
+            self.path = path.clone();
+        }
+    }
+
+    fn diff_patch(&self, other: &Self) -> Option<ImageLinkPatch> {
+        (self.path != other.path).then(|| ImageLinkPatch { path: Some(other.path.clone()) })
+    }
+}
+
+/// 🖼️ Sparse patch for a {@link Frame}: bounds for any kind, fill/stroke for rects, wrap-mode/columns
+/// for text. The doubly-optional `fill`/`stroke` distinguishes "unchanged" (outer `None`) from
+/// "cleared" (inner `None`). Needed both by `op`'s `PatchFrame` operation and by the DSL/OpText mirror
+/// in `op` (`FramePatchDsl`), so it lives here alongside the other `*Patch` records rather than in `op`
+/// itself. Frame patching is per-page nested rather than a flat `CollectionOperation`, so unlike the
+/// patches above it has no `Patchable` impl.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct FramePatch {
+    pub x: Option<f64>,
+    pub y: Option<f64>,
+    pub width: Option<f64>,
+    pub height: Option<f64>,
+    pub fill: Option<Option<[f32; 4]>>,
+    pub stroke: Option<Option<[f32; 4]>>,
+    pub wrap_mode: Option<String>,
+    pub columns: Option<u32>,
+}
+//#endregion 🔖CollectionSupport
 
 //#region 🧪Tests
 #[cfg(test)]

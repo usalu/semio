@@ -1,5 +1,5 @@
 {
-  "name": "@semio-tech/draw-rs",
+  "name": "@semio-tech/draw-ui-rs",
   "private": true,
   "type": "module",
   "exports": {

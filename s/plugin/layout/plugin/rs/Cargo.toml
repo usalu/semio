@@ -1,5 +1,5 @@
 [package]
-name = "layout-plugin"
+name = "semio-s-plugin-layout"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
@@ -23,12 +23,6 @@ path = "lib.rs"
 [dependencies]
 semio-framework-os = { path = "../../../../../framework/product/os/core/rs" }
 semio-framework-plugin = { path = "../../../../../framework/plugin/rs" }
-semio-framework-core = { path = "../../../../../framework/core/rs" }
-layout_rs = { path = "../../rs", package = "layout_rs" }
-protocol = { path = "../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
-vcs = { path = "../../../../../framework/kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
-store = { path = "../../../../kernel/store/rs", package = "semio-s-kernel-store" }
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.140"
-base64 = "0.22.1"
-
+layout = { path = "../../app/layout/rs", package = "semio-s-app-layout" }
+layout_engine = { path = "../../app/layout/engine/rs", package = "semio-s-app-layout-engine" }
+layout_ui = { path = "../../app/layout/ui/rs", package = "semio-s-app-layout-ui" }

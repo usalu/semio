@@ -1,5 +1,6 @@
 //! ⚙️ Draw app — headless compute (constitutional: engine).
 
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use draw::{
     default_draw_trace_params, default_draw_transform, DocumentDsl, DrawArtboard, DrawAttributes, DrawBooleanBody, DrawCamera, DrawCircle, DrawDocument,
     DrawEllipse, DrawGroupBody, DrawImageAsset, DrawImageBody, DrawLayerBase, DrawLayerNode, DrawLine, DrawPathBody, DrawPolygon, DrawRect, DrawShapeBody,
@@ -572,7 +573,7 @@ pub fn mutate_draw_layer(doc: &DrawDocument, target_id: &str, mutator: impl FnMu
     next
 }
 
-fn update_layer_in_tree(layers: &mut [DrawLayerNode], target_id: &str, mutator: &mut impl FnMut(&mut DrawLayerNode)) -> bool {
+pub fn update_layer_in_tree(layers: &mut [DrawLayerNode], target_id: &str, mutator: &mut impl FnMut(&mut DrawLayerNode)) -> bool {
     for layer in layers.iter_mut() {
         if layer_id(layer) == target_id {
             mutator(layer);
@@ -587,7 +588,7 @@ fn update_layer_in_tree(layers: &mut [DrawLayerNode], target_id: &str, mutator: 
     false
 }
 
-fn remove_layer_from_tree(layers: &mut Vec<DrawLayerNode>, target_id: &str) -> bool {
+pub fn remove_layer_from_tree(layers: &mut Vec<DrawLayerNode>, target_id: &str) -> bool {
     if let Some(index) = layers.iter().position(|layer| layer_id(layer) == target_id) {
         layers.remove(index);
         return true;
@@ -602,7 +603,7 @@ fn remove_layer_from_tree(layers: &mut Vec<DrawLayerNode>, target_id: &str) -> b
     false
 }
 
-fn extract_layer_node(layers: &mut Vec<DrawLayerNode>, target_id: &str) -> Option<DrawLayerNode> {
+pub fn extract_layer_node(layers: &mut Vec<DrawLayerNode>, target_id: &str) -> Option<DrawLayerNode> {
     if let Some(index) = layers.iter().position(|layer| layer_id(layer) == target_id) {
         return Some(layers.remove(index));
     }
@@ -616,7 +617,7 @@ fn extract_layer_node(layers: &mut Vec<DrawLayerNode>, target_id: &str) -> Optio
     None
 }
 
-fn insert_layer(layers: &mut Vec<DrawLayerNode>, parent_id: Option<&str>, index: usize, node: DrawLayerNode) {
+pub fn insert_layer(layers: &mut Vec<DrawLayerNode>, parent_id: Option<&str>, index: usize, node: DrawLayerNode) {
     if let Some(parent_id) = parent_id {
         if !insert_layer_in_parent(layers, parent_id, index, node.clone()) {
             layers.push(node);
