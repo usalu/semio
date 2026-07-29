@@ -5,7 +5,7 @@ use infinite_board_port_directed_dag as dag;
 use dag::{dag_fixture_to_wire_literal, would_create_cycle, DagCamera, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape};
 use imperative_engine::{compile_to_text as imperative_compile_to_text, imperative_catalogue_json, imperative_module_registry, Executor, Path, RunResult, Step};
 use mathematical_graph_manifest::PropertyBag;
-use neural_engine::{Atom, ChannelSpec, Dictionary, Registry, Value};
+use neural_engine::{ChannelSpec, Dictionary, Registry, Value};
 use sequence::{default_fixture, SequenceCamera, SequenceEdge, SequenceFixture, SequenceStep, SlotRef, StepParams};
 use std::collections::{BTreeMap, HashMap};
 use store::DocumentDsl;
@@ -587,6 +587,7 @@ pub fn sequence_example_json() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use neural_engine::Atom;
 
     #[test]
     fn disconnect_steps_removes_edge() {
@@ -661,8 +662,8 @@ mod tests {
     fn execution_ports_use_triangle_shape() {
         let host = SequenceHost::default();
         let node = host.step_to_dag_node(&host.fixture.steps[1]);
-        assert_eq!(node.inputs()[0].shape, dag::PortShape::Triangle);
-        assert_eq!(node.outputs()[0].shape, dag::PortShape::Triangle);
+        assert_eq!(node.inputs()[0].shape, PortShape::Triangle);
+        assert_eq!(node.outputs()[0].shape, PortShape::Triangle);
     }
 
     #[test]
@@ -673,7 +674,7 @@ mod tests {
         assert!(node.inputs().iter().any(|port| port.id == "a" && port.visible));
         assert!(node.inputs().iter().any(|port| port.id == "prev" && !port.visible));
         assert!(node.outputs().iter().any(|port| port.id == "next" && !port.visible));
-        assert!(!node.inputs().iter().any(|port| port.shape == dag::PortShape::Triangle && port.visible));
+        assert!(!node.inputs().iter().any(|port| port.shape == PortShape::Triangle && port.visible));
     }
 
     #[test]
@@ -685,7 +686,7 @@ mod tests {
         assert!(node.inputs().iter().any(|port| port.id == "into" && port.visible));
         assert!(node.inputs().iter().any(|port| port.id == "prev" && !port.visible));
         assert!(node.outputs().iter().any(|port| port.id == "next" && !port.visible));
-        assert!(!node.inputs().iter().any(|port| port.shape == dag::PortShape::Triangle && port.visible));
+        assert!(!node.inputs().iter().any(|port| port.shape == PortShape::Triangle && port.visible));
     }
 
     #[test]
@@ -728,7 +729,7 @@ mod tests {
     fn execution_edges_use_sharp_sz_routing() {
         let host = SequenceHost::default();
         let fixture = host.build_dag_fixture();
-        assert!(fixture.edges.iter().all(|edge| edge.route_style == dag::EdgeRouteStyle::SharpSz));
+        assert!(fixture.edges.iter().all(|edge| edge.route_style == EdgeRouteStyle::SharpSz));
     }
 
     #[test]

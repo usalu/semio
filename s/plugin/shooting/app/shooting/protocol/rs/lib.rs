@@ -3,7 +3,7 @@
 //! `ShootingOperation` (from `shooting_op`) alongside `ShootingFixture` (from `shooting`), so this is
 //! the first constitutional crate in the stack where that pairing is available.
 
-use shooting::{ShootingFixture, SHOOTING_FIXTURE_SCHEMA};
+use shooting::ShootingFixture;
 use shooting_op::ShootingOperation;
 use protocol::OpBinary;
 use store::{DocumentEnvelope, DocumentStore};
@@ -27,6 +27,7 @@ pub type ShootingStore = DocumentStore<ShootingFixture, ShootingOperation>;
 #[cfg(target_arch = "wasm32")]
 mod wasm_bridge {
     use super::*;
+    use shooting::SHOOTING_FIXTURE_SCHEMA;
     use std::cell::RefCell;
     use wasm_bindgen::prelude::*;
 
@@ -72,7 +73,7 @@ mod wasm_bridge {
 mod tests {
     use super::*;
     use protocol::CollectionOperation;
-    use shooting::{ShootingAsset, ShootingCamera};
+    use shooting::{ShootingAsset, ShootingCamera, SHOOTING_FIXTURE_SCHEMA};
     use store::DocumentCommand;
 
     fn sample_asset(id: &str) -> ShootingAsset {

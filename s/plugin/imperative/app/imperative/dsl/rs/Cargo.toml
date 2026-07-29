@@ -15,4 +15,4 @@ imperative = { path = "../../rs", package = "semio-s-app-imperative" }
 store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
 
 [dev-dependencies]
-neural_engine = { path = "../../../../../../framework/kernel/neural/engine/rs", package = "semio-framework-kernel-neural-engine" }
+neural_engine = { path = "../../../../../../../framework/kernel/neural/engine/rs", package = "semio-framework-kernel-neural-engine" }

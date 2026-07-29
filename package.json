@@ -27,8 +27,6 @@
     "s/kernel/flow/core",
     "s/kernel/flow/module/brep",
     "s/kernel/flow/module/*/pkg",
-    "s/plugin/imperative/core",
-    "s/plugin/sequence/core",
     "s/plugin/layout/rs",
     "lowpoly/core",
     "s/kernel/geometry/3d/brep/js",

@@ -12,9 +12,9 @@ path = "lib.rs"
 
 [dependencies]
 sequence = { path = "../../rs", package = "semio-s-app-sequence" }
-pack = { path = "../../../../../kernel/pack/rs", package = "semio-s-kernel-pack" }
-store = { path = "../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+pack = { path = "../../../../../../kernel/pack/rs", package = "semio-s-kernel-pack" }
+store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
 
 [dev-dependencies]
 sequence_dsl = { path = "../../dsl/rs", package = "semio-s-app-sequence-dsl" }
-neural_engine = { path = "../../../../../../framework/kernel/neural/engine/rs", package = "semio-framework-kernel-neural-engine" }
+neural_engine = { path = "../../../../../../../framework/kernel/neural/engine/rs", package = "semio-framework-kernel-neural-engine" }

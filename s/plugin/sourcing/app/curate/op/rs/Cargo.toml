@@ -1,0 +1,21 @@
+[package]
+name = "semio-s-app-sourcing-curate-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Sourcing curate app - operation enum + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+sourcing = { path = "../../rs", package = "semio-s-app-sourcing-curate" }
+dsl = { path = "../../../../../../../framework/kernel/dsl/rs", package = "semio-framework-kernel-dsl" }
+protocol = { path = "../../../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
+store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]
+sourcing_engine = { path = "../../engine/rs", package = "semio-s-app-sourcing-curate-engine" }

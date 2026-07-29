@@ -1,6 +1,6 @@
 //! ⚙️ Shooting app — headless compute (constitutional: engine).
 
-use shooting::{default_camera_position, default_fov, empty_shooting_fixture, ShootingAsset, ShootingCamera, ShootingFixture, ShootingShot, SHOOTING_FIXTURE_SCHEMA};
+use shooting::{default_camera_position, default_fov, empty_shooting_fixture, ShootingAsset, ShootingCamera, ShootingFixture, ShootingShot};
 use serde_json::Value;
 use std::sync::atomic::{AtomicU32, Ordering};
 use store::DocumentDsl;
@@ -134,6 +134,7 @@ pub fn shooting_document_json_from_dwg(drawing: &semio_framework_plugin::DwgDraw
 #[cfg(test)]
 mod tests {
     use super::*;
+    use shooting::SHOOTING_FIXTURE_SCHEMA;
 
     #[test]
     fn default_example_fixture_parses() {

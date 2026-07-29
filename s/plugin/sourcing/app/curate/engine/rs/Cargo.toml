@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-sourcing-curate-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Sourcing curate app - headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+sourcing = { path = "../../rs", package = "semio-s-app-sourcing-curate" }
+sourcing_dsl = { path = "../../dsl/rs", package = "semio-s-app-sourcing-curate-dsl" }
+store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

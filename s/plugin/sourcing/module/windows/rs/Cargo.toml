@@ -18,7 +18,7 @@ crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
 
 [dependencies]
-sourcing_curate = { path = "../../../curate/rs", package = "sourcing_curate" }
+sourcing_curate = { path = "../../../app/curate/engine/rs", package = "semio-s-app-sourcing-curate-engine" }
 semio-framework-plugin = { path = "../../../../../../framework/plugin/rs" }
 semio-framework-core = { path = "../../../../../../framework/core/rs" }
 serde_json = "1.0.140"

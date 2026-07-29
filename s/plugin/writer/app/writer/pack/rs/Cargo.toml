@@ -1,0 +1,19 @@
+[package]
+name = "semio-s-app-writer-pack"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Writer app - binary document surface + laws (constitutional: pack)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+writer = { path = "../../rs", package = "semio-s-app-writer" }
+pack = { path = "../../../../../../kernel/pack/rs", package = "semio-s-kernel-pack" }
+store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+
+[dev-dependencies]
+writer_engine = { path = "../../engine/rs", package = "semio-s-app-writer-engine" }

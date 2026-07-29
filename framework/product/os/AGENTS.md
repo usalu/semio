@@ -77,3 +77,40 @@ An author is a user with write permission.
 ## Specator
 
 A spectator is auser with only read permission.
+
+---
+
+```
+ui
+
+os
+    kernel
+        math
+            ...
+
+        2d
+        3d
+        dsl
+        vcs
+        protocol
+    renderer
+        react
+            components
+                
+            index.tsx
+        wgpu
+            components
+
+s
+    plugin
+        <plugin> # puzzle, draw, shooting, fem, energy, …
+            app
+                <app> # single crate
+                    engine.rs
+                    manifest
+                        document.rs
+                        pack.rs
+                        command
+                            <command>.rs # each cd
+
+```

@@ -7057,7 +7057,7 @@ fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: &mut 
 #[serde(tag = "operation", rename_all = "camelCase")]
 #[allow(
     clippy::large_enum_variant,
-    reason = "boxing `Nodes`'s CollectionOperation would require rewrapping every construction/match site across this crate and infinite/board/port/directed/dag/plugin/rs (10+ call sites, out of this crate's scope); DagOperation values are short-lived per-dispatch operations, not stored in bulk"
+    reason = "boxing `Nodes`'s CollectionOperation would require rewrapping every construction/match site across this crate and s/plugin/dag/rs (10+ call sites, out of this crate's scope); DagOperation values are short-lived per-dispatch operations, not stored in bulk"
 )]
 pub enum DagOperation {
     Nodes(CollectionOperation<String, DagNodeSpec, DagNodePatch>),

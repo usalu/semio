@@ -1,0 +1,7 @@
+[
+  {"oldDir": "playbook/plugin/rs", "newDir": "s/plugin/playbook/rs", "newPkg": "playbook-plugin"},
+  {"oldDir": "playbook/module/procedural/rs", "newDir": "s/plugin/playbook/module/procedural/rs", "newPkg": "playbook-module-procedural"},
+  {"oldDir": "lowpoly/core/rs", "newDir": "s/plugin/lowpoly/core/rs", "newPkg": "lowpoly_core"},
+  {"oldDir": "lowpoly/plugin/rs", "newDir": "s/plugin/lowpoly/plugin/rs", "newPkg": "lowpoly-plugin"},
+  {"oldDir": "infinite/board/port/directed/dag/plugin/rs", "newDir": "s/plugin/dag/rs", "newPkg": "dag-plugin"}
+]

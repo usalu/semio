@@ -1,8 +1,0 @@
-{
-  "name": "@semio-tech/sourcing-curate-rs",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": "./pkg/sourcing_curate.js"
-  }
-}
