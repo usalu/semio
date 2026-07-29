@@ -90,6 +90,14 @@
 \dim_new:N \l_semio_window_textsize_dim
 \bool_new:N \l_semio_window_textsize_set_bool
 \bool_new:N \l_semio_window_textfit_bool
+% 🔒 Per-window opt-out of page breaking. A kind window (Table, Figure, …) is
+% `breakable` by default (see the `semio~window` tcbset style), so a table that
+% does not fit the remaining page space splits across the break. `break=false`
+% forces breakable=false on that one window, so tcolorbox floats the whole box
+% to the next page and keeps it intact instead. Defaults to true → unchanged
+% behaviour for every window that does not pass the key.
+\bool_new:N \l_semio_window_break_bool
+\bool_set_true:N \l_semio_window_break_bool
 \tl_new:N \l_semio_window_imagefit_tl
 \tl_set:Nn \l_semio_window_imagefit_tl { contain }
 \tl_new:N \l_semio_image_fit_tl
@@ -465,6 +473,17 @@
     % "1"+sliver; the header lost its last glyph). Local to this group → the
     % appendix register keeps the plain closer and is unchanged.
     \renewcommand{\semio@register@lastclose}{\semio@cell@strutbotR}%
+    % Inhaltsverzeichnis exception (3): the shared first-head macro passes the old
+    % 6-arg form to \semio@table@long@header@repeat@three (now 4-arg), leaking
+    % "0.78"/"0.10" into the header row. Correct it to the 4-arg form — but LOCALLY,
+    % so ONLY the TOC header is touched; the appendix register (rendered outside
+    % this group) is left exactly as it is, per the "only Inhaltsverzeichnis" scope.
+    \renewcommand{\semio@register@table@header}{%
+      \semio@table@long@header@repeat@three
+        {0.12}{\semio@register@header@key}
+        {\semio@register@header@title}
+        {\semio@register@header@page}%
+    }%
     \semio@register@window@open{\SemioTocTitle}%
     \SemioTableRegister{\semio@register@table@body}%
     \semio@register@window@close
@@ -870,6 +889,8 @@
   key .tl_set:N = \l_semio_window_key_tl,
   hierarchy .bool_set:N = \l_semio_window_hierarchy_bool,
   hierarchy .default:n = true,
+  break .bool_set:N = \l_semio_window_break_bool,
+  break .default:n = true,
   anchor .choice:,
   anchor / nw .code:n = { \semio_window_anchor_set:nn { top } { left } },
   anchor / n .code:n = { \semio_window_anchor_set:nn { top } { center } },
@@ -908,6 +929,7 @@
   \dim_zero:N \l_semio_window_height_dim
   \bool_set_false:N \l_semio_window_textsize_set_bool
   \bool_set_false:N \l_semio_window_textfit_bool
+  \bool_set_true:N \l_semio_window_break_bool
   \tl_clear:N \l_semio_window_key_tl
   \semio_window_imagefit_set:n { contain }
   \group_begin:
@@ -1313,18 +1335,22 @@
   % generic \Window's behavior for the same context.
   \str_if_eq:nnTF {#1} { semiotable }
     {
-      \bool_if:NTF \l_semio_window_in_item_bool
-        { \semio_window_tcb_open:n { semio~window~tier~#2, semio~window~table, breakable=false } }
-        { \semio_window_tcb_open:n { semio~window~tier~#2, semio~window~table } }
+      \tl_set:Nn \l_tmpa_tl { semio~window~tier~#2, semio~window~table }
+      % breakable=false when inside a WindowItem (see note above) OR when the
+      % window explicitly opted out of breaking via `break=false`.
+      \bool_lazy_or:nnT
+        { \l_semio_window_in_item_bool } { ! \l_semio_window_break_bool }
+        { \tl_put_right:Nn \l_tmpa_tl { , breakable=false } }
+      \exp_args:NV \semio_window_tcb_open:n \l_tmpa_tl
     }
     {
       \tl_set:Nn \l_tmpa_tl { semio~window~tier~#2 }
       \str_if_eq:VnT \l_semio_window_imagefit_tl { cover } {
         \tl_put_right:Nn \l_tmpa_tl { , semio~window~image~cover }
       }
-      \bool_if:NT \l_semio_window_in_item_bool {
-        \tl_put_right:Nn \l_tmpa_tl { , breakable=false }
-      }
+      \bool_lazy_or:nnT
+        { \l_semio_window_in_item_bool } { ! \l_semio_window_break_bool }
+        { \tl_put_right:Nn \l_tmpa_tl { , breakable=false } }
       \exp_args:NV \semio_window_tcb_open:n \l_tmpa_tl
     }
   \semio_window_textsize_apply:
@@ -1954,15 +1980,10 @@
 \newcommand{\semio@register@table@body}{}
 
 \newcommand{\semio@register@table@header}{%
-  % 4-arg form {col1-frac}{col1-label}{col2-label}{col3-label} — matching
-  % \semio@table@long@header@repeat@three's signature and the continuation header
-  % \semio@register@table@header@long@repeat below. The col2/col3 widths come from
-  % the body colspec (the header cells drop into it), so no per-column fraction is
-  % passed here; passing the old 6-arg form leaked "0.78"/"0.10" into the header row.
   \semio@table@long@header@repeat@three
     {0.12}{\semio@register@header@key}
-    {\semio@register@header@title}
-    {\semio@register@header@page}%
+    {0.78}{\semio@register@header@title}
+    {0.10}{\semio@register@header@page}%
 }
 
 \newcommand{\semio@register@list@begin}[1]{%
