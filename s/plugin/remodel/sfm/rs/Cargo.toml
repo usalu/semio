@@ -1,0 +1,22 @@
+[package]
+name = "remodel_sfm"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+remodel_camera = { path = "../../camera/rs", package = "remodel_camera" }
+remodel_feature = { path = "../../feature/rs", package = "remodel_feature" }
+remodel_image = { path = "../../image/rs", package = "remodel_image" }
+mathematical_algebra = { path = "../../../../../framework/kernel/mathematical/algebra/rs", package = "semio-framework-kernel-mathematical-algebra" }
+mathematical_lie = { path = "../../../../../framework/kernel/mathematical/lie/rs", package = "semio-framework-kernel-mathematical-lie" }
+mathematical_optimize = { path = "../../../../../framework/kernel/mathematical/optimize/rs", package = "semio-framework-kernel-mathematical-optimize" }
+mathematical_spatial = { path = "../../../../../framework/kernel/mathematical/spatial/rs", package = "semio-framework-kernel-mathematical-spatial" }
+mathematical_random = { path = "../../../../../framework/kernel/mathematical/random/rs", package = "semio-framework-kernel-mathematical-random" }

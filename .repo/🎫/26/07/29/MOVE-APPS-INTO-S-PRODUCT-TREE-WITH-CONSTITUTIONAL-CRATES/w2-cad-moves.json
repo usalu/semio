@@ -1,0 +1,4 @@
+[
+  {"oldDir": "cad/rs", "newDir": "s/plugin/cad/rs", "newPkg": "cad_document"},
+  {"oldDir": "cad/plugin/rs", "newDir": "s/plugin/cad/plugin/rs", "newPkg": "cad-plugin"}
+]

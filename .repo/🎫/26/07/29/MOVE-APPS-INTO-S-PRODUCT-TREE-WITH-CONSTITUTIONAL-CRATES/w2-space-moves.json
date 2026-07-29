@@ -1,0 +1,4 @@
+[
+  {"oldDir": "s/rs", "newDir": "s/plugin/space/rs", "newPkg": "s_studio"},
+  {"oldDir": "s/plugin/rs", "newDir": "s/plugin/space/plugin/rs", "newPkg": "s-plugin"}
+]

@@ -1,0 +1,6 @@
+[
+  {"oldDir": "draw/rs", "newDir": "s/plugin/draw/rs", "newPkg": "draw"},
+  {"oldDir": "draw/plugin/rs", "newDir": "s/plugin/draw/plugin/rs", "newPkg": "draw-plugin"},
+  {"oldDir": "fsm/rs", "newDir": "s/plugin/draw/fsm/rs", "newPkg": "fsm"},
+  {"oldDir": "fsm/macros/rs", "newDir": "s/plugin/draw/fsm/macros/rs", "newPkg": "fsm_macros"}
+]

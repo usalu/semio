@@ -1,0 +1,20 @@
+[package]
+name = "semio-s-app-note-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Note app - binary command protocol surface + laws (constitutional: protocol)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+note = { path = "../../rs", package = "semio-s-app-note" }
+note_op = { path = "../../op/rs", package = "semio-s-app-note-op" }
+protocol = { path = "../../../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
+store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+
+[dev-dependencies]
+note_engine = { path = "../../engine/rs", package = "semio-s-app-note-engine" }
