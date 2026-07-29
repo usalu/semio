@@ -1949,10 +1949,9 @@
 
 \newcommand{\semio@register@table@header}{%
   \semio@table@long@header@repeat@three
-    {0.12}
-    {\semio@register@header@key}
-    {\semio@register@header@title}
-    {\semio@register@header@page}%
+    {0.12}{\semio@register@header@key}
+    {0.78}{\semio@register@header@title}
+    {0.10}{\semio@register@header@page}%
 }
 
 \newcommand{\semio@register@list@begin}[1]{%
@@ -2426,20 +2425,29 @@
   }%
 }
 
+% LR-headline-full: the heading's connecting line runs the FULL width of the row
+% — from the left tab's outer-left corner to the right tab's outer-right corner —
+% rather than only bridging the inner gap between the two tabs. It is drawn as a
+% baseline underlay (\rlap → zero width, so tab placement is untouched) at the
+% tabs' bottom edge in the tab colour #1, so under a solid tab it continues the
+% tab's fill and under an outline tab it merges with the tab's bottom border,
+% reading as one continuous rule that reaches both tab corners. The two tabs are
+% then placed flush-left / flush-right with \hfil between them, so the line is
+% visible across the whole heading including the segments beneath the tabs.
+\newcommand{\semio@heading@baseline@full}[1]{%
+  \rlap{{\color{#1}\rule[\z@]{\linewidth}{\semio@stroke@hairline}}}%
+}
+
 \newcommand{\semio@heading@pair}[5]{%
   \semio@hierarchy@path@set{\csname the#4\endcsname}%
   \sbox{\semio@window@tab@box}{\semio@heading@chip{#1}{#2}{#5}}%
 
   \sbox{\semio@window@ctrl@box}{\semio@heading@chip{#1}{#2}{\semio@heading@kind@number{#3}{#4}}}%
-  \setlength{\semio@window@gap@w}{%
-    \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
-  }%
   \semio@heading@row@wrap{%
     \hbox to \linewidth{%
+      \semio@heading@baseline@full{#1}%
       \usebox{\semio@window@tab@box}%
-      % Solid heading bars: the chips fill with #1, so the band fills with #1
-      % too (stroke = #1, i.e. seamless) → one continuous coloured bar.
-      \semio@window@header@gap@paint{#1}{#1}%
+      \hfil
       \usebox{\semio@window@ctrl@box}%
     }%
   }%
@@ -2449,13 +2457,11 @@
   \semio@hierarchy@path@set{\csname the#4\endcsname}%
   \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill{#5}{#2}{#1}}%
   \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill{\semio@heading@kind@number{#3}{#4}}{#2}{#1}}%
-  \setlength{\semio@window@gap@w}{%
-    \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
-  }%
   \semio@heading@row@wrap{%
     \hbox to \linewidth{%
+      \semio@heading@baseline@full{#1}%
       \usebox{\semio@window@tab@box}%
-      \semio@window@header@gap@paint@nofill{#1}%
+      \hfil
       \usebox{\semio@window@ctrl@box}%
     }%
   }%
@@ -2465,13 +2471,11 @@
   \semio@hierarchy@path@set{#1}%
   \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill{#2}{#3}{#4}}%
   \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill{\semio@kind@number@bare{#1}}{#3}{#4}}%
-  \setlength{\semio@window@gap@w}{%
-    \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
-  }%
   \semio@heading@row@wrap{%
     \hbox to \linewidth{%
+      \semio@heading@baseline@full{#4}%
       \usebox{\semio@window@tab@box}%
-      \semio@window@header@gap@paint@nofill{#4}%
+      \hfil
       \usebox{\semio@window@ctrl@box}%
     }%
   }%
@@ -2525,12 +2529,12 @@
 % shared dispatch below via \addvspace, which merges with the block-before glue
 % (no double gap) and is dropped at the top of a page (leading headings aren't
 % pushed down). Adjust this one length to taste.
-\providecommand{\semio@heading@topskip}{1.6em}
+\providecommand{\semio@heading@topskip}{1.28em}
 % LR-bottomskip: dedicated space BELOW every heading bar, before the body text
 % (KOMA's afterskip is pinned to 1sp, so without this there is no knob). Used by
 % \semio@koma@heading@lines and the nested-paragraph renderer below; may be
 % negative to tighten below the natural minimum.
-\providecommand{\semio@heading@bottomskip}{-1.53pt}
+\providecommand{\semio@heading@bottomskip}{-1.38pt}
 \newcommand{\semio@koma@heading@lines}[5]{%
   \semio@block@before
   \addvspace{\semio@heading@topskip}% LR-topspace: a bit more air above headings
