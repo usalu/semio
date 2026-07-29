@@ -30,6 +30,18 @@
 % table content sit the same distance from their borders document-wide. Tables
 % zero the window inset and supply their own padding, so they are untouched.
 \providecommand{\semio@window@bodypad}{5.5pt}
+% 🔲 Title-tab content inset. Matches the document inset constant
+% (\semio@window@bodypad = table cell \semio@table@hpad + frame gap ≈ 5.5pt) so a
+% tab's label sits the SAME distance from its four borders as body/table content
+% does. Applied ONLY in the muted cap core (\semio@heading@cap@muted@core → the
+% table / figure / contents / window title & number tabs); accent tabs, heading
+% bars, and the nav/footer chips keep their own tighter \semio@chrome@padding.
+% The tab is anchored so growing this inset never moves the borders that must
+% stay continuous with the frame: the title tab is flush-left (left border fixed,
+% grows right), the number tab flush-right (right border fixed, grows left), and
+% the depth-0 cap raisebox sends all vertical growth upward (bottom border, the
+% shared top rule, fixed).
+\providecommand{\semio@tab@inset}{\semio@window@bodypad}
 \providecommand{\semio@window@imagefit}{contain}
 \providecommand{\semio@chrome@navbar@height}{1.8em}
 \providecommand{\semio@chrome@footer@height}{1.8em}
@@ -447,18 +459,10 @@
     % \semio_window_appendix_register_render: — is affected.
     \renewcommand{\semio@table@vtop}{\semio@table@vtop@toc}%
     \renewcommand{\semio@table@vbot}{\semio@table@vbot@toc}%
-    \global\semio@invert@tabtrue% LR-invert-tab: Inhaltsverzeichnis only — DELETE this line + the false reset below to revert
-    % Thick outer SIDE rules — literal colspec (array forbids \if in a preamble),
-    % local to this group, read immediately at \begin{longtable}. Same as
-    % \semio@table@colspec@register@long but with the |…| replaced by 2× \vrule.
-    \renewcommand{\semio@table@colspec@register@long}{!{\vrule width 2\arrayrulewidth}@{\semio@table@padendL}>{\semio@cell@pre}m{\dimexpr0.12\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@pre}m{\dimexpr0.78\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@preR}m{\dimexpr0.10\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padendR}!{\vrule width 2\arrayrulewidth}}%
-    \gdef\semio@toc@frametop{2\arrayrulewidth}% LR-invert-tab: thick TOP rule (arrayrulewidth is a LENGTH REGISTER, so 2× = correct; the string macro \semio@stroke@hairline would concatenate into "20.75pt"). Global — firsthead typesets during \clearpage.
     \semio@register@window@open{\SemioTocTitle}%
-    \SemioTableRegister{\semio@register@table@body\noalign{\hrule height\arrayrulewidth}}% LR-invert-tab: thick BOTTOM — one extra hairline stacked under the last row's rule (0.75pt+0.75pt = 2×)
+    \SemioTableRegister{\semio@register@table@body}%
     \semio@register@window@close
     \clearpage
-    \gdef\semio@toc@frametop{\semio@stroke@hairline}% LR-invert-tab: restore normal top rule for all other tables
-    \global\semio@invert@tabfalse% LR-invert-tab end (global: the longtable firsthead typesets during \clearpage, after the group)
     \makeatother
     \group_end:
   }
@@ -2195,10 +2199,16 @@
     \dimexpr\semio@window@cap@titleh-\semio@stroke@hairline\relax
   }%
 }
+% Vertical padding budget added to the measured slot to form the cap height.
+% Default = 3·\semio@chrome@padding (unchanged for accent tabs, heading bars and
+% chips). The muted cap core locally \renewcommands this — scoped to its own
+% \hbox — so its label gets the full \semio@tab@inset above and below.
+\newcommand{\semio@window@cap@vpad@budget}{%
+  \semio@chrome@padding+\semio@chrome@padding+\semio@chrome@padding}
 \newcommand{\semio@window@cap@metrics@set}{%
   \setlength{\semio@window@cap@titleh}{%
     \dimexpr\ht\semio@window@cap@slot+\dp\semio@window@cap@slot
-      +\semio@chrome@padding+\semio@chrome@padding+\semio@chrome@padding\relax
+      +\semio@window@cap@vpad@budget\relax
   }%
   \ifdim\semio@window@cap@titleh<\dimexpr\semio@chrome@titlebar@height\relax
     \setlength{\semio@window@cap@titleh}{\dimexpr\semio@chrome@titlebar@height\relax}%
@@ -2364,11 +2374,17 @@
   \sbox{\semio@window@cap@slot}{%
     \begingroup
     \semio@heading@bar@font\color{semio-chrome-text-normal}%
-    \hspace{\semio@chrome@padding}#1\hspace{\semio@chrome@padding}%
+    \hspace{\semio@tab@inset}#1\hspace{\semio@tab@inset}%
     \endgroup
   }%
   \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
-    \semio@window@cap@metrics@set
+  % Full title-tab inset: the label sits \semio@tab@inset from the top and bottom
+  % borders too. The +hairline compensates the tab's own top border stroke, so the
+  % canvas body (titleh−hairline) yields \semio@tab@inset above AND below the
+  % vertically-centred label. Local to the enclosing \hbox → other caps unaffected.
+  \renewcommand{\semio@window@cap@vpad@budget}{%
+    \semio@tab@inset+\semio@tab@inset+\semio@stroke@hairline}%
+  \semio@window@cap@metrics@set
   \semio@window@cap@raise{\semio@window@cap@muted@vbox{semio-chrome-canvas}}%
 }
 
@@ -2823,77 +2839,8 @@
   \ifvmode\nointerlineskip\fi
 }
 
-% LR-invert-tab (experiment): when \semio@invert@tab is true, the muted title tab
-% is drawn as a SOLID dark box (fill = chrome-foreground) with canvas-colour text,
-% instead of the default outline tab. Default off; scoped on per table via the
-% toggle. Remove this \newif + the \ifsemio@invert@tab branch below to revert.
-\newif\ifsemio@invert@tab
-% The register/TOC title tab is actually built in the LONGTABLE path
-% (\semio@table@long@title@chrome@prepare, semio-table.sty). Override it here the
-% same way — window.sty loads after the table file, so this wins without editing
-% it. Identical body, with only the title-tab sbox branched on the toggle.
-\renewcommand{\semio@table@long@title@chrome@prepare}{%
-  \ifsemio@invert@tab
-    \sbox{\semio@window@tab@box}{\semio@heading@chip{semio-chrome-foreground}{semio-chrome-canvas}{\semio@window@header@title}}%
-  \else
-    \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{\textcolor{semio-chrome-foreground}{\semio@window@header@title}}}%
-  \fi
-  \edef\semio@table@long@title@number{\semio@window@header@number}%
-  \ifx\semio@table@long@title@number\@empty
-    \semio@table@long@title@numberfalse
-    \setlength{\semio@window@gap@w}{\dimexpr\linewidth-\wd\semio@window@tab@box\relax}%
-  \else
-    \semio@table@long@title@numbertrue
-    \sbox{\semio@window@ctrl@box}{\semio@heading@cap@muted{\semio@table@long@title@number}}%
-    \setlength{\semio@window@gap@w}{%
-      \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
-    }%
-  \fi
-}
-% LR-invert-tab: the OUTER frame SIDES (thick |) can't be gated with \if here —
-% array forbids a conditional inside a preamble (Illegal pream-token). Instead the
-% whole colspec is swapped for a literal thick-sided version by a LOCAL
-% \renewcommand at the Inhaltsverzeichnis render point (see the toc renderer
-% above); the preamble is read at \begin{longtable}, inside that same group.
-% LR-invert-tab: TOP frame rule width, driven by a plain macro (NOT an \if inside
-% the \noalign{\hrule} — that produced a phantom grey band). Default = one
-% hairline; the toc renderer \gdef's it to 2× for the Inhaltsverzeichnis and back.
-\newcommand{\semio@toc@frametop}{\semio@stroke@hairline}
-\renewcommand{\semio@table@long@title@chrome@row}[1]{%
-  \multicolumn{#1}{@{}l@{}}{%
-    \hskip-\semio@stroke@hairline\relax
-    \hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
-      \usebox{\semio@window@tab@box}%
-      \hfil
-      \ifsemio@table@long@title@number\usebox{\semio@window@ctrl@box}\fi
-    }%
-  }%
-  \\%
-  \noalign{\vskip\dimexpr-\extrarowheight-\dp\@arstrutbox\relax}%
-  \noalign{{\color{semio-chrome-border-normal}\hrule height\semio@toc@frametop}}%
-}
-% LR-invert-tab: the HEADER row's first cell is a \multicolumn whose left rule is
-% a thin literal | — so the outer LEFT border is thin along the header while thick
-% along the body, breaking the rectangle. Override to pick between two LITERAL
-% \multicolumn preambles OUTSIDE the preamble (array forbids \if inside one), using
-% the 2× \vrule when the toggle is on. Register-based width, so no string bug.
-\renewcommand{\semio@table@long@header@left@cell}[2]{%
-  \ifsemio@table@headerfill
-    \ifsemio@invert@tab
-      \multicolumn{1}{!{\vrule width 2\arrayrulewidth}@{\semio@table@padendL}>{\semio@cell@pre}m{\dimexpr#1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}}{\semio@table@header@cell{#2}}%
-    \else
-      \multicolumn{1}{|@{\semio@table@padendL}>{\semio@cell@pre}m{\dimexpr#1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}}{\semio@table@header@cell{#2}}%
-    \fi
-  \else
-    \multicolumn{1}{|@{\hspace{\semio@chrome@padding}}@{}>{\semio@cell@pre}m{\dimexpr#1\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{}}{\semio@table@header@cell{#2}}%
-  \fi
-}
 \newcommand{\semio@window@header@muted}[2]{%
-  \ifsemio@invert@tab
-    \sbox{\semio@window@tab@box}{\semio@heading@chip{semio-chrome-foreground}{semio-chrome-canvas}{#2}}%
-  \else
-    \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{\textcolor{semio-chrome-foreground}{#2}}}%
-  \fi
+  \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{\textcolor{semio-chrome-foreground}{#2}}}%
   \edef\semio@window@header@numval{#1}%
   % LR-tabbleed: the component frame below (tcolorbox) is drawn one boxrule
   % (= one hairline) OUTSIDE \linewidth on the left, so a title row of exactly

@@ -133,8 +133,8 @@
         \cs_if_exist:cTF { zukunftbau@type } {
           \str_if_eq:eeTF { \use:c { zukunftbau@type } } { zwischenbericht } {
             \bool_set_true:N \l_semio_is_zwischenbericht_bool
-            \tl_set:Nn \l_semio_cover_institution_weight_tl { 6.5 }
-            \tl_set:Nn \l_semio_cover_logo_weight_tl { 6.5 }
+            \tl_set:Nn \l_semio_cover_institution_weight_tl { 4.5 }
+            \tl_set:Nn \l_semio_cover_logo_weight_tl { 2.5 }
             \seq_set_split:Nnx \l_semio_title_seq { --- } { \@title }
             \tl_set:Nx \l_semio_clean_title_tl { \seq_item:Nn \l_semio_title_seq { 2 } }
             \tl_trim_spaces:N \l_semio_clean_title_tl
@@ -183,8 +183,8 @@
           }
         }
         \tl_if_blank:eF { \semio@cover@arbeitsprobe@image } {
-          \WindowItem[7.15]{
-            \begin{Window}[title=Arbeitsprobe, anchor=center]
+          \WindowItem[11]{
+            \begin{Window}[title=Arbeitsprobe, anchor=s]
               \begin{minipage}[c]{\linewidth}
                 \centering
                 \includegraphics[
@@ -252,30 +252,25 @@
             \end{WindowRow}
           }
         }
-      \end{WindowColumn}
-    \end{WindowArrangement}
-    % LR-cover-logos: the funder logos move to their own page so the Arbeitsprobe
-    % image on page 1 can scale up to fill the column width (consistent
-    % \semio@window@bodypad gap on both sides and the bottom). The remaining page-1
-    % elements stay together on page 1; only this logo strip flows to page 2.
-    \newpage
-    \begin{WindowArrangement}[height=4cm]
-      \begin{WindowColumn}
-        \WindowItem[1]{
+        % LR-cover-logos: funder logos stay on page 1 with everything else. Their
+        % weight is kept small so the Arbeitsprobe image above can take the
+        % maximum remaining height (largest possible image while all cover
+        % windows stay together on one page).
+        \WindowItem[\tl_use:N \l_semio_cover_logo_weight_tl]{
           \begin{WindowRow}
             \WindowItem{
               \begin{Window}[title=BMWSB, anchor=center]
-                \semio@logo@fit[\linewidth]{2.5cm}{\semio@cover@bundesministerium@logo}
+                \semio@logo@fit[\linewidth]{2cm}{\semio@cover@bundesministerium@logo}
               \end{Window}
             }
             \WindowItem{
               \begin{Window}[title=BBSR, anchor=center]
-                \semio@logo@fit[0.82\linewidth]{2.5cm}{\semio@cover@bbsr@logo}
+                \semio@logo@fit[0.82\linewidth]{2cm}{\semio@cover@bbsr@logo}
               \end{Window}
             }
             \WindowItem{
               \begin{Window}[title=Zukunft~Bau, anchor=center]
-                \semio@logo@fit[\linewidth]{2.5cm}{\semio@cover@zukunftbau@logo}
+                \semio@logo@fit[\linewidth]{2cm}{\semio@cover@zukunftbau@logo}
               \end{Window}
             }
           \end{WindowRow}
