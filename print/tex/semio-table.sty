@@ -806,9 +806,15 @@
 % edges get one combined (chrome+cellpad)-wide rule so the fill reaches the
 % border in a single stroke (no seam between abutting rules).
 \newcommand{\semio@project@padcp}{{\color{semio-chrome-canvas}\vrule width \semio@table@long@cellpad}}
-% Edge fills overlap one cellpad INTO the first/last cell (net width still
-% chrome+cellpad) so they cover the cell↔pad seam and meet the border cleanly.
-\newcommand{\semio@project@padendL}{{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+2\semio@table@long@cellpad\relax}\hspace{-\semio@table@long@cellpad}}
+% Edge fills: a (chrome+cellpad)-wide canvas rule with a -cellpad kern, so the
+% vrule starts one cellpad INSIDE the first/last cell (covering the cell↔pad seam)
+% while the NET advance is only chrome@padding. padendL and padendR MUST stay
+% symmetric: a wider +2cellpad vrule on either edge pushes that outer border a
+% cellpad past \linewidth, so the border no longer lines up with the top rule and
+% the flush-right P.K.x title tab — the tab then floats a cellpad inside the border
+% (the "shifted tab" / broken top-right corner). At net chrome each side the whole
+% card is exactly \linewidth wide and border, rule and tab all coincide.
+\newcommand{\semio@project@padendL}{{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+\semio@table@long@cellpad\relax}\hspace{-\semio@table@long@cellpad}}
 % Net advance chrome (not chrome+cellpad): the wider +2cellpad vrule pushed the
 % right border one cellpad PAST where the horizontal rules end, so the top rule,
 % the band↔component divider and every row separator stopped a cellpad short of
