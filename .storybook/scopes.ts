@@ -76,7 +76,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
   {
     id: "compose",
     titlePrefix: "🏘️compose",
-    sourceRoots: [repoRelative("compose/client/lib/js"), repoRelative("compose/client/lib/rs"), repoRelative("asset"), repoRelative("compose/fixture"), repoRelative("compose/dev/algorithm")],
+    sourceRoots: [repoRelative("compose/client/lib/js"), repoRelative("compose/client/lib/rs"), repoRelative("framework/asset"), repoRelative("compose/fixture"), repoRelative("compose/dev/algorithm")],
     aliases: {
       "@semio-tech/ui-react/globals.css": "framework/ui/js/react/globals.css",
       "@semio-tech/compose-rs-wasm": "compose/client/lib/rs/pkg/compose.js",
@@ -86,7 +86,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
   {
     id: "compose/ui",
     titlePrefix: "🏘️compose⚛️react",
-    sourceRoots: [repoRelative("compose/client/lib/js"), repoRelative("compose/client/lib/rs"), repoRelative("asset"), repoRelative("compose/fixture")],
+    sourceRoots: [repoRelative("compose/client/lib/js"), repoRelative("compose/client/lib/rs"), repoRelative("framework/asset"), repoRelative("compose/fixture")],
   },
   {
     // Directory is singular (`stories/compose/algorithm/`) though the story `title`s read "algorithms" (plural) —
@@ -135,7 +135,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
   {
     id: "infinite",
     titlePrefix: "♾️infinite",
-    sourceRoots: [repoRelative("framework/os/kernel/infinite/canvas/react-renderer"), repoRelative("framework/os/kernel/infinite/world/r3f"), repoRelative("infinite/fixture")],
+    sourceRoots: [repoRelative("framework/os/kernel/infinite/canvas/react-renderer"), repoRelative("framework/os/kernel/infinite/world/r3f"), repoRelative("framework/os/kernel/infinite/fixture")],
     aliases: {
       "@semio-tech/infinite-cavas-react-renderer": "framework/os/kernel/infinite/canvas/react-renderer/index.tsx",
     },
@@ -143,7 +143,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
   {
     id: "cad",
     titlePrefix: "📐cad",
-    sourceRoots: [repoRelative("cad/renderer"), repoRelative("cad/asset"), repoRelative("cad/fixture")],
+    sourceRoots: [repoRelative("s/plugin/cad/renderer"), repoRelative("s/plugin/cad/asset"), repoRelative("s/plugin/cad/fixture")],
   },
   {
     id: "coda",
@@ -156,7 +156,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
   {
     id: "animate",
     titlePrefix: "🎬animate",
-    sourceRoots: [repoRelative("animate/present/renderer/react")],
+    sourceRoots: [repoRelative("s/plugin/animate/present/renderer/react")],
   },
 ];
 // #endregion 🔖ScopeRegistry

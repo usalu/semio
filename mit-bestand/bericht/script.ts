@@ -30,7 +30,7 @@ async function buildDocument(segments: string[]): Promise<void> {
 async function watchDocument(segments: string[]): Promise<void> {
   const texAbs = resolveTexPath(segments);
   const outDir = resolveOutDir(texAbs, segments);
-  const roots = [dirname(texAbs), join(berichtRoot, "../../print/tex")];
+  const roots = [dirname(texAbs), join(berichtRoot, "../../framework/print/tex")];
   const mtimes = new Map<string, number>();
   const rebuild = async () => {
     try {

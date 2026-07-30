@@ -1274,7 +1274,7 @@ export function coverageSlug(bundleRoot: string): string {
  */
 export const COVERAGE_EXCLUDE_GLOBS: readonly string[] = [
   "**/generated/**",
-  "asset/metabolism/icon/generated/**",
+  "framework/asset/metabolism/icon/generated/**",
   "**/pkg/**",
   ".storybook/**",
   "**/*.stories.*",
@@ -1294,7 +1294,7 @@ export const COVERAGE_EXCLUDE_GLOBS: readonly string[] = [
 /** 📊One-line rationale per [[COVERAGE_EXCLUDE_GLOBS]] entry — printed alongside the coverage summary. */
 export const COVERAGE_EXCLUDE_REASONS: Readonly<Record<string, string>> = {
   "**/generated/**": "Emitted lookup tables/codegen output, not hand-authored logic.",
-  "asset/metabolism/icon/generated/**": "~22k LOC generated icon table.",
+  "framework/asset/metabolism/icon/generated/**": "~22k LOC generated icon table.",
   "**/pkg/**": "wasm-bindgen build output.",
   ".storybook/**": "Covered by Playwright specs, not unit line coverage.",
   "**/*.stories.*": "Storybook fixtures, exercised visually not via line coverage.",
@@ -2268,8 +2268,6 @@ export function shouldSkipPathForUloc(root: string, relPath: string): boolean {
   if (hasHiddenDotPathSegment(rel)) return true;
   if (isMetricsLicenseTemplateFile(rel)) return true;
   if (isMetricsLockOrGenerated(rel)) return true;
-  const ignored = spawnSync("git", ["check-ignore", "-q", "--", rel], { cwd: gitRepoRoot(root) });
-  if (ignored.status === 0) return true;
   for (const dir of ULOC_EXCLUDE_DIRS) {
     if (rel === dir || rel.startsWith(`${dir}/`)) return true;
   }
@@ -2366,7 +2364,7 @@ export function gitRepoRoot(start: string): string {
 
 function gitTrackedPaths(root: string): string[] {
   const repoRoot = gitRepoRoot(root);
-  const r = spawnSync("git", ["ls-files", "-z"], { cwd: repoRoot, maxBuffer: 256 * 1024 * 1024 });
+  const r = spawnSync("git", ["ls-files", "-z"], { cwd: repoRoot, maxBuffer: 64 * 1024 * 1024 });
   if (r.status !== 0) return [];
   return (r.stdout ?? Buffer.alloc(0)).toString("utf8").split("\0").filter(Boolean);
 }
@@ -2571,7 +2569,7 @@ function parseGitNumstatZ(stdout: Buffer | string): { path: string; added: numbe
 }
 
 function gitCachedNumstat(root: string): { path: string; added: number; removed: number }[] {
-  const r = spawnSync("git", ["diff", "--cached", "--numstat", "-z"], { cwd: gitRepoRoot(root), maxBuffer: 256 * 1024 * 1024 });
+  const r = spawnSync("git", ["diff", "--cached", "--numstat", "-z"], { cwd: gitRepoRoot(root), maxBuffer: 64 * 1024 * 1024 });
   if (r.status !== 0) return [];
   return parseGitNumstatZ(r.stdout ?? Buffer.alloc(0));
 }
@@ -2593,7 +2591,7 @@ export function gitRangeNumstat(root: string, base: string, head: string): { pat
   const repoRoot = gitRepoRoot(root);
   const r = spawnSync("git", ["diff", "--numstat", "-z", `${base}..${head}`], {
     cwd: repoRoot,
-    maxBuffer: 256 * 1024 * 1024,
+    maxBuffer: 64 * 1024 * 1024,
   });
   if (r.status !== 0) return [];
   return parseGitNumstatZ(r.stdout ?? Buffer.alloc(0));
@@ -2826,13 +2824,13 @@ function safeGitEnv(extraEnv?: Record<string, string>): Record<string, string> {
 }
 
 function git(root: string, args: string[]): { ok: boolean; out: string } {
-  const r = spawnSync("git", args, { cwd: root, encoding: "utf8", maxBuffer: 256 * 1024 * 1024, env: safeGitEnv() });
+  const r = spawnSync("git", args, { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024, env: safeGitEnv() });
   if (r.status !== 0) return { ok: false, out: (r.stderr ?? r.stdout ?? "").trim() };
   return { ok: true, out: (r.stdout ?? "").trim() };
 }
 
 function gitCachedNames(root: string, extra: string[] = []): string[] {
-  const r = spawnSync("git", ["diff", "--cached", "--name-only", "-z", ...extra], { cwd: root, maxBuffer: 256 * 1024 * 1024, env: safeGitEnv() });
+  const r = spawnSync("git", ["diff", "--cached", "--name-only", "-z", ...extra], { cwd: root, maxBuffer: 64 * 1024 * 1024, env: safeGitEnv() });
   if (r.status !== 0) return [];
   const raw = (r.stdout ?? Buffer.alloc(0)).toString("utf8");
   if (!raw) return [];

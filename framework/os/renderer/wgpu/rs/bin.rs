@@ -14,7 +14,7 @@ fn main() {
     let modules_root = env::var("SEMIO_PLUGIN_MODULES")
         .map(PathBuf::from)
         .unwrap_or_else(|_| {
-            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../product/os/dev/plugin-modules")
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../dev/plugin-modules")
         });
     run_native(&plugin_filter, modules_root);
 }

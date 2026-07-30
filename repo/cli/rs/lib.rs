@@ -1296,8 +1296,8 @@ root = "cad/fixture"
 [[package.metadata.semio.assets]]
 kind = "mesh-collection"
 route = "/mesh"
-roots = ["asset/metabolism/representation", "asset/abbau-aufbau"]
-placeholder = "asset/mesh/placeholder.glb"
+roots = ["framework/asset/metabolism/representation", "framework/asset/abbau-aufbau"]
+placeholder = "framework/asset/mesh/placeholder.glb"
 filter_from_examples = true
 app = "puzzle3d"
 "#;
@@ -1309,8 +1309,8 @@ app = "puzzle3d"
         assert_eq!(assets[1].kind, "static-dir");
         assert_eq!(assets[1].root.as_deref(), Some("cad/fixture"));
         assert_eq!(assets[2].kind, "mesh-collection");
-        assert_eq!(assets[2].roots, vec!["asset/metabolism/representation", "asset/abbau-aufbau"]);
-        assert_eq!(assets[2].placeholder.as_deref(), Some("asset/mesh/placeholder.glb"));
+        assert_eq!(assets[2].roots, vec!["framework/asset/metabolism/representation", "framework/asset/abbau-aufbau"]);
+        assert_eq!(assets[2].placeholder.as_deref(), Some("framework/asset/mesh/placeholder.glb"));
         assert!(assets[2].filter_from_examples);
         assert_eq!(assets[2].app.as_deref(), Some("puzzle3d"));
     }

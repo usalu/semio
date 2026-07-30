@@ -42,15 +42,15 @@ ports = { react = 6023, wgpu = 6123 }
 kind = "mesh-collection"
 route = "/mesh"
 app = "puzzle3d-play"
-roots = ["asset/metabolism/representation", "asset/abbau-aufbau"]
-placeholder = "asset/mesh/placeholder.glb"
+roots = ["framework/asset/metabolism/representation", "framework/asset/abbau-aufbau"]
+placeholder = "framework/asset/mesh/placeholder.glb"
 filter_from_examples = true
 
 [[package.metadata.semio.assets]]
 kind = "static-dir"
 route = "/infinite-fixture"
 app = "puzzle3d-play"
-root = "infinite/fixture"
+root = "framework/os/kernel/infinite/fixture"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

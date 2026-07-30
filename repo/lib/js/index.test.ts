@@ -19,7 +19,7 @@ import {
   loadFrameworkOsPlaygroundCatalog,
   playgroundPlayViteDefine,
 } from "./index.ts";
-import { playgroundStaticSiteBuildOptions } from "../../../ui/styling/vite-elements-assets.ts";
+import { playgroundStaticSiteBuildOptions } from "../../../framework/ui/styling/vite-elements-assets.ts";
 describe("Neo4j graph database registry", () => {
   test("joins name segments with hyphen", () => {
     expect(joinNeo4jGraphDatabaseName(["compose", "kit"])).toBe("compose-kit");

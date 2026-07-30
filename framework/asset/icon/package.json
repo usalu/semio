@@ -2,7 +2,7 @@
   "name": "@semio-tech/semio-icon",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "asset/icon",
+  "sourceRoot": "framework/asset/icon",
   "projectType": "library",
   "devDependencies": {
     "@semio-tech/semio-logo": "*"

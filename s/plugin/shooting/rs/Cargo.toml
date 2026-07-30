@@ -19,8 +19,8 @@ ports = { react = 6019, wgpu = 6119 }
 [[package.metadata.semio.assets]]
 kind = "mesh-collection"
 route = "/mesh"
-roots = ["asset/metabolism/representation", "asset/abbau-aufbau"]
-placeholder = "asset/mesh/placeholder.glb"
+roots = ["framework/asset/metabolism/representation", "framework/asset/abbau-aufbau"]
+placeholder = "framework/asset/mesh/placeholder.glb"
 filter_from_examples = true
 
 [lib]

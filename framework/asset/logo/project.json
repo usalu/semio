@@ -5,7 +5,7 @@
     "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "asset/logo",
+        "cwd": "framework/asset/logo",
         "command": "bun --watch ./script.ts generate",
         "forwardAllArgs": true
       }
@@ -13,7 +13,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "asset/logo",
+        "cwd": "framework/asset/logo",
         "command": "bun ./script.ts generate && bun ./script.ts export",
         "forwardAllArgs": true
       }

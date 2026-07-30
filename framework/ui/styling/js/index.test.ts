@@ -126,8 +126,8 @@ describe("puzzle3d mesh-collection asset spec", () => {
   const puzzle3dMeshSpec: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }> = {
     kind: "mesh-collection",
     route: "/mesh",
-    roots: ["asset/metabolism/representation", "asset/abbau-aufbau"],
-    placeholder: "asset/mesh/placeholder.glb",
+    roots: ["framework/asset/metabolism/representation", "framework/asset/abbau-aufbau"],
+    placeholder: "framework/asset/mesh/placeholder.glb",
     filterFromExamples: true,
   };
 

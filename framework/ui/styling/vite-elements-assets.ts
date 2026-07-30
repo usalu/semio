@@ -524,7 +524,7 @@ export const SEMIO_FAVICON_HEAD_HTML = `<link rel="icon" href="./favicon.svg" ty
 
 /** @emoji 🔖 Repo-root paths for the round dark emblem SVG and ICO fallback (matches {@link SemioLogo}). */
 export function semioFaviconSources(repoRoot: string): { readonly svg: string; readonly ico: string } {
-  const logoRoot = resolve(repoRoot, "asset/logo");
+  const logoRoot = resolve(repoRoot, "framework/asset/logo");
   return {
     svg: resolve(logoRoot, "emblem_dark_round.svg"),
     ico: resolve(logoRoot, "favicon_dark_round_32x32.ico"),
@@ -1451,7 +1451,7 @@ export function staticDirVitePlugin(repoRoot: string, spec: Extract<PlaygroundAs
  * across playgrounds), kept as a literal baseline rather than per-plugin metadata. */
 export const PLAYGROUND_PLAY_STATIC_ASSETS: readonly Extract<PlaygroundAssetSpec, { kind: "static-dir" }>[] = [
   { kind: "static-dir", route: "/cad-fixture", root: "cad/fixture" },
-  { kind: "static-dir", route: "/infinite-fixture", root: "infinite/fixture" },
+  { kind: "static-dir", route: "/infinite-fixture", root: "framework/os/kernel/infinite/fixture" },
 ];
 //#endregion 🔖StaticDirAssetPlugin
 
@@ -1757,8 +1757,8 @@ if (import.meta.vitest) {
   describe("semioFaviconVitePlugin", () => {
     it("points at round dark emblem svg and ico under asset/logo", () => {
       const { svg, ico } = semioFaviconSources(repoRoot);
-      expect(svg).toBe(resolve(repoRoot, "asset/logo/emblem_dark_round.svg"));
-      expect(ico).toBe(resolve(repoRoot, "asset/logo/favicon_dark_round_32x32.ico"));
+      expect(svg).toBe(resolve(repoRoot, "framework/asset/logo/emblem_dark_round.svg"));
+      expect(ico).toBe(resolve(repoRoot, "framework/asset/logo/favicon_dark_round_32x32.ico"));
       expect(existsSync(svg)).toBe(true);
       expect(existsSync(ico)).toBe(true);
     });
@@ -1779,8 +1779,8 @@ if (import.meta.vitest) {
     const puzzle3dMeshSpec: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }> = {
       kind: "mesh-collection",
       route: "/mesh",
-      roots: ["asset/metabolism/representation", "asset/abbau-aufbau"],
-      placeholder: "asset/mesh/placeholder.glb",
+      roots: ["framework/asset/metabolism/representation", "framework/asset/abbau-aufbau"],
+      placeholder: "framework/asset/mesh/placeholder.glb",
       filterFromExamples: true,
     };
 

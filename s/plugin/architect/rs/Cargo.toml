@@ -19,11 +19,11 @@ crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
 
 [dependencies]
-architect_spine = { path = "../../plugin/rs" }
-vcs = { path = "../../../framework/os/kernel/vcs/rs" }
-store = { path = "../../../framework/os/kernel/store/rs" }
-protocol = { path = "../../../framework/os/kernel/protocol/rs" }
-semio-framework-plugin = { path = "../../../framework/plugin/rs" }
-semio-framework-core = { path = "../../../framework/core/rs" }
+architect_spine = { path = "." }
+vcs = { path = "../../../../framework/os/kernel/vcs/rs" }
+store = { path = "../../../../framework/os/kernel/store/rs" }
+protocol = { path = "../../../../framework/os/kernel/protocol/rs" }
+semio-framework-plugin = { path = "../../../../framework/plugin/rs" }
+semio-framework-core = { path = "../../../../framework/core/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

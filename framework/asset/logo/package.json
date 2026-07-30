@@ -2,7 +2,7 @@
   "name": "@semio-tech/semio-logo",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "asset/logo",
+  "sourceRoot": "framework/asset/logo",
   "projectType": "library",
   "dependencies": {
     "jsdom": "^24.1.3"

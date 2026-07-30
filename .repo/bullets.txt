@@ -1,3 +1,5 @@
-🧩Restructure semio plugins into app subcrates (dsl, engine, op, pack, protocol, ui)
-📦Update Cargo workspace dependencies and lockfile for plugin crates
-⚙️Refactor repo script runner in script.ts
+🏗️Restructure architect plugin into s/plugin/architect/ namespace
+📂Relocate assets into framework/asset/ and mit-bestand/asset/
+🖥️Fix Bun spawnSync maxBuffer deadlock in repo/lib/js/index.ts
+🎨Refactor framework kernel, renderer, and print configurations
+🧹Remove deprecated fixture assets and widget code

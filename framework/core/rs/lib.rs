@@ -606,7 +606,7 @@ pub fn mesh_to_glb(mesh: &MeshData) -> Vec<u8> {
     let indices_offset = normals_offset + normals_len;
     let json = format!(
         r#"{{
-  "asset": {{"version": "2.0"}},
+  "framework/asset": {{"version": "2.0"}},
   "scene": 0,
   "scenes": [{{"nodes": [0]}}],
   "nodes": [{{"mesh": 0}}],
@@ -2520,7 +2520,7 @@ mod tests {
     /// 🏙️ Puzzle GLBs may start with non-triangle guide geometry before their renderable surfaces.
     #[test]
     fn glb_import_collects_triangle_primitives_after_guides() {
-        let decoded = mesh_from_glb(include_bytes!("../../../asset/metabolism/representation/capsule_J.glb")).expect("decode Puzzle GLB");
+        let decoded = mesh_from_glb(include_bytes!("../../asset/metabolism/representation/capsule_J.glb")).expect("decode Puzzle GLB");
         assert_eq!(decoded.vertex_count(), 1472);
         assert_eq!(decoded.triangle_count(), 1750);
         assert!(decoded.indices.iter().all(|index| (*index as usize) < decoded.vertex_count()));

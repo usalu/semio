@@ -46,8 +46,8 @@ const __dirname = path.dirname(__filename);
 const PUZZLE_3D_MESH_ASSET_SPEC: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }> = {
   kind: "mesh-collection",
   route: "/mesh",
-  roots: ["asset/metabolism/representation", "asset/abbau-aufbau"],
-  placeholder: "asset/mesh/placeholder.glb",
+  roots: ["framework/asset/metabolism/representation", "framework/asset/abbau-aufbau"],
+  placeholder: "framework/asset/mesh/placeholder.glb",
   filterFromExamples: true,
 };
 

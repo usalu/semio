@@ -175,7 +175,6 @@ members = [
     "framework/os/kernel/math/graph/planarity/rs",
     "framework/os/kernel/math/graph/flow/rs",
     "framework/os/kernel/math/graph/centrality/rs",
-    "framework/os/kernel/math/graph/distance/rs",
     "framework/os/kernel/math/graph/similarity/rs",
     "framework/os/kernel/math/graph/isomorphism/rs",
     "framework/os/kernel/math/graph/connectivity/rs",
@@ -558,7 +557,7 @@ members = [
     "s/plugin/norm/app/vdi3805/ui/rs",
     "s/plugin/norm/rs",
     "s/plugin/energy/engine/rs",
-    "architect/spine/rs",
+    "s/plugin/architect/spine/rs",
 ]
 
 resolver = "2"

@@ -96,39 +96,49 @@ An author is a user with write permission.
 
 ## Specator
 
-A spectator is auser with only read permission.
+A spectator is a user with only read permission.
 
 ---
 
 ```
-ui
-    component
-        <component>
-            js
-                react
-                    index.tsx
-            rs
-                wgpu
-                    lib.rs
 framework
-    kernel
-    os
-        kernel
-            math
-            2d
-            3d
-            dsl
-            vcs
-            protocol
-            neural
-            flow
-            workflow
+    <language> # e.g. rs, js, etc for general framework
+    module
+        math
+            <language> # e.g. rs, js, …
+        2d
+            <language> # e.g. rs, js, …
+        3d
+            <language> # e.g. rs, js, …
+    product
+        os
+            <language> # e.g. rs, js, etc for general os code
+            module
+                dsl
+                    <language> # e.g. rs, js, …
+                vcs
+                    <language> # e.g. rs, js, …
+                protocol
+                    <language> # e.g. rs, js, …
+                neural
+                    <language> # e.g. rs, js, …
+                flow
+                    <language> # e.g. rs, js, …
+                workflow
+                    <language> # e.g. rs, js, …
+                …
+                renderer
+                    <language> e.g. rs, js, …
+                        <framework> e.g. react, wpgu, …
+                            <main-file> e.g. lib.rs, index.tsx
+        server
             …
-        renderer
-            js
-                react
-                    index.tsx
-s
+        presentation
+            …
+        print
+            …
+    …
+s # os
     plugin
         <plugin> # e.g. puzzle, draw, shooting, procedural, fem, energy, …
             app
@@ -148,6 +158,8 @@ s
                             pack.rs
                             command
                                 <command>.rs # each cd
-hub
-
+hub # server
+    …
+mit-bestand
+    …
 ```

@@ -1,12 +1,12 @@
 {
-  "extends": "../../../../tsconfig.json",
+  "extends": "../../../../../tsconfig.json",
   "compilerOptions": {
     "rootDir": ".",
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@semio-tech/cad-js-core": ["../../core/index.ts"],
-      "@semio-tech/cad-js-runtime": ["../../runtime/index.ts"]
+      "@semio-tech/cad-js-core": ["../../../core/js/index.ts"],
+      "@semio-tech/cad-js-runtime": ["../../../runtime/js/index.ts"]
     }
   },
   "include": ["index.ts"]

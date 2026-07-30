@@ -35,7 +35,6 @@ mathematical_graph_trees = { path = "../../../../trees/rs", package = "semio-fra
 mathematical_graph_planarity = { path = "../../../../planarity/rs", package = "semio-framework-os-kernel-math-graph-planarity" }
 mathematical_graph_flow = { path = "../../../../flow/rs", package = "semio-framework-os-kernel-math-graph-flow" }
 mathematical_graph_centrality = { path = "../../../../centrality/rs", package = "semio-framework-os-kernel-math-graph-centrality" }
-mathematical_graph_distance = { path = "../../../../distance/rs", package = "semio-framework-os-kernel-math-graph-distance" }
 mathematical_graph_similarity = { path = "../../../../similarity/rs", package = "semio-framework-os-kernel-math-graph-similarity" }
 mathematical_graph_isomorphism = { path = "../../../../isomorphism/rs", package = "semio-framework-os-kernel-math-graph-isomorphism" }
 mathematical_graph_connectivity = { path = "../../../../connectivity/rs", package = "semio-framework-os-kernel-math-graph-connectivity" }

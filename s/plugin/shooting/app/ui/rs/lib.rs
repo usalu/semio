@@ -1109,7 +1109,7 @@ impl DocumentApp for ShootingPlayApp {
             }),
             "importAsset" => {
                 if let Some(payload) = args.and_then(|value| value.get("payload")).and_then(|value| value.as_str()) {
-                    let id = next_shooting_id("asset");
+                    let id = next_shooting_id("framework/asset");
                     let name = args
                         .and_then(|value| value.get("name"))
                         .and_then(|value| value.as_str())
@@ -1258,7 +1258,7 @@ impl DocumentApp for ShootingPlayApp {
             }
             "addAsset" => {
                 let format = args.and_then(|value| value.get("format")).and_then(|value| value.as_str()).unwrap_or("glb");
-                let id = next_shooting_id("asset");
+                let id = next_shooting_id("framework/asset");
                 let asset = ShootingAsset {
                     id: id.clone(),
                     name: format!("Asset {}", fixture.assets.len() + 1),

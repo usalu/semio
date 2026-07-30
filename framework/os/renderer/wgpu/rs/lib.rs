@@ -14690,7 +14690,7 @@ fn build_vfs_visible_rows(rows: &[Value], expanded_ids: &HashSet<String>) -> Vec
 /// 🗂️ Resolves the row glyph, matching `VirtualFileSystemNodeGlyph`'s kind→icon lookup in
 /// `index.tsx`. Previously a configured `fileNodeKinds[kindId].icon` only gated an `.is_some()`
 /// check and the *actual* configured icon id was discarded in favor of a hardcoded `"folder"` —
-/// any non-folder kind with its own icon (e.g. a custom "asset" kind) rendered the wrong glyph.
+/// any non-folder kind with its own icon (e.g. a custom "framework/asset" kind) rendered the wrong glyph.
 /// Extension-based file-type glyphs (React's ~40-entry `zip`→file-archive table) are not ported
 /// here: the native icon atlas's available id set overlaps an in-flight `IconName` migration in
 /// another session, so guessing unverified ids risks silently blank icons — left as a known gap.
@@ -14987,8 +14987,8 @@ mod virtual_file_system_tests {
     /// kind with a custom icon configured, discarding the actual icon id.
     #[test]
     fn configured_kind_icon_is_used_verbatim_not_collapsed_to_folder() {
-        let schema: VfsSchema = serde_json::from_str(r#"{"fileNodeKinds":{"asset":{"icon":"box"}}}"#).unwrap();
-        let row = json!({ "fileNodeKindId": "asset" });
+        let schema: VfsSchema = serde_json::from_str(r#"{"fileNodeKinds":{"framework/asset":{"icon":"box"}}}"#).unwrap();
+        let row = json!({ "fileNodeKindId": "framework/asset" });
         assert_eq!(vfs_glyph_icon(&schema, &row), "box");
     }
 

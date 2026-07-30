@@ -13,7 +13,7 @@
 // Configuration MUST use the shared tailwindConfig preset from `@semio-tech/ui-styling`.
 
 import type { Config } from "tailwindcss";
-import { tailwindConfig } from "../../../../../elements/client/lib/styling/tailwind.config";
+import { tailwindConfig } from "../../../../../../framework/ui/styling/js/tailwind.config";
 
 /**
  * Tailwind CSS configuration with content paths and shared preset.

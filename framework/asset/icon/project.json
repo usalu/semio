@@ -5,7 +5,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "asset/icon",
+        "cwd": "framework/asset/icon",
         "command": "bun -e \"console.log('@semio-tech/semio-icon delegates to @semio-tech/ui-asset; run build on framework/ui/asset.')\"",
         "forwardAllArgs": true
       }

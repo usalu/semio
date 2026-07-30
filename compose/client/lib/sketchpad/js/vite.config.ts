@@ -35,8 +35,8 @@ import { readInitialKitFixtureFromPath } from "../../../../fixture/script.ts";
 const PUZZLE_3D_MESH_ASSET_SPEC: Extract<PlaygroundAssetSpec, { kind: "mesh-collection" }> = {
   kind: "mesh-collection",
   route: "/mesh",
-  roots: ["asset/metabolism/representation", "asset/abbau-aufbau"],
-  placeholder: "asset/mesh/placeholder.glb",
+  roots: ["framework/asset/metabolism/representation", "framework/asset/abbau-aufbau"],
+  placeholder: "framework/asset/mesh/placeholder.glb",
   filterFromExamples: true,
 };
 
@@ -282,7 +282,7 @@ export default defineConfig(async ({ mode }) => {
   const workspaceAliases: Array<{ find: string | RegExp; replacement: string }> = [
     { find: "@semio-tech/compose-sketchpad", replacement: path.resolve(__dirname) },
     { find: "@compose/studio", replacement: path.resolve(__dirname, "../../studio") },
-    { find: "@semio-tech/semio-asset/icon", replacement: path.resolve(workspaceRoot, "asset/index.ts") },
+    { find: "@semio-tech/semio-asset/icon", replacement: path.resolve(workspaceRoot, "framework/asset/js/index.ts") },
     ...(workspaceResolve.resolve?.alias ?? []),
     { find: /^use-sync-external-store\/shim\/with-selector(?:\.js)?$/, replacement: shimWithSelector },
     { find: /^use-sync-external-store\/shim(?:\.js)?$/, replacement: shimMain },

@@ -5,8 +5,8 @@ import { createRequire } from "node:module";
 import { arch, platform } from "node:os";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
-import { fileURLToPath } from "node:url";
 import { BundleScript, ScriptRouter, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, runCmd, runCmdStatus, runProbe, tryRun, TEST_LEVELS } from "../../repo/lib/js/index.ts";
+import { oklabMix } from "../ui/styling/script.ts";
 
 const printRoot = import.meta.dir;
 const repoRoot = getWorkspaceRoot();
@@ -15,6 +15,24 @@ const texDir = join(printRoot, "tex");
 const fontRoot = join(printRoot, "asset/font");
 const distDir = join(printRoot, "dist");
 const tokensOut = join(texDir, "semio-tokens.sty");
+
+type Rgba8 = [number, number, number, number];
+
+type StylingLevels = {
+  readonly names: readonly string[];
+  readonly shadeStepPercent: number;
+  readonly glassAlphaStep: number;
+  readonly glassBlurStepPx: number;
+  readonly glassSaturate: number;
+};
+
+const LEVELS_DEFAULT: StylingLevels = {
+  names: ["base", "window", "pane", "panel", "dialog", "menu"],
+  shadeStepPercent: 5,
+  glassAlphaStep: 0.12,
+  glassBlurStepPx: 8,
+  glassSaturate: 1.45,
+};
 
 const PRINT_FONTS: readonly { readonly family: string; readonly dir: string; readonly file: string; readonly url: string }[] = [
   {
@@ -75,6 +93,7 @@ type Tokens = {
   readonly opacities?: {
     readonly glassPanelAlpha?: number;
   };
+  readonly levels?: StylingLevels;
   readonly appearances?: Record<string, Record<string, Record<string, PaintRef>>>;
   readonly metrics?: {
     readonly chrome?: {
@@ -106,7 +125,8 @@ const PANEL_GLASS_DIR = ".semio-panel-glass";
 const PANEL_RENDER_DPI = 200;
 const PDF_PT_PER_INCH = 72;
 
-const CHROME_PAINT_KEYS = ["base", "window", "canvas", "panel", "borderNormal", "borderEmphasized", "activeBase", "activeForeground", "foreground", "accent"] as const;
+const CHROME_PAINT_KEYS = ["base", "borderNormal", "borderEmphasized", "activeBase", "activeForeground", "foreground", "accent"] as const;
+const PRINT_LEVEL_SURFACE_KEYS = ["window", "pane", "panel", "dialog", "menu"] as const;
 
 function parseHex6(hex: string): [number, number, number] {
   const s = hex.trim().replace(/^#/, "");
@@ -115,6 +135,35 @@ function parseHex6(hex: string): [number, number, number] {
   }
   const v = Number.parseInt(s, 16);
   return [(v >> 16) & 0xff, (v >> 8) & 0xff, v & 0xff];
+}
+
+function hexToRgba8(hex: string): Rgba8 {
+  const [r, g, b] = parseHex6(hex);
+  return [r, g, b, 255];
+}
+
+function rgba8ToHex(rgba: Rgba8): string {
+  return `#${[rgba[0], rgba[1], rgba[2]].map((c) => c!.toString(16).padStart(2, "0")).join("")}`;
+}
+
+function resolveLevels(tokens: Tokens): StylingLevels {
+  return { ...LEVELS_DEFAULT, ...tokens.levels, names: tokens.levels?.names ?? LEVELS_DEFAULT.names };
+}
+
+function levelIndex(levels: StylingLevels, name: string): number {
+  const index = levels.names.indexOf(name);
+  if (index < 0) throw new Error(`tokens.levels.names missing ${name}`);
+  return index;
+}
+
+/** @emoji 🪟 Derives a formula level surface paint (`bg(k) = mix_oklab(base, foreground, k*shadeStep)`). */
+function levelSurfaceHex(tokens: Tokens, theme: "light" | "dark", name: string): string {
+  const chrome = tokens.appearances?.[theme]?.chrome;
+  if (!chrome?.base || !chrome.foreground) throw new Error(`tokens.appearances.${theme}.chrome needs base and foreground`);
+  const levels = resolveLevels(tokens);
+  const base = hexToRgba8(resolvePaint(tokens.colors, chrome.base));
+  const foreground = hexToRgba8(resolvePaint(tokens.colors, chrome.foreground));
+  return rgba8ToHex(oklabMix(base, foreground, levelIndex(levels, name) * (levels.shadeStepPercent / 100)));
 }
 
 function blendHex(a: string, b: string, ratioA: number): string {
@@ -196,15 +245,17 @@ function loadTokens(): Tokens {
 }
 
 function panelGlassTintHex(theme: "light" | "dark"): string {
-  const tokens = loadTokens();
-  const paint = tokens.appearances?.[theme]?.chrome?.panel;
-  if (!paint) throw new Error(`tokens.appearances.${theme}.chrome.panel missing`);
-  return resolvePaint(tokens.colors, paint);
+  return levelSurfaceHex(loadTokens(), theme, "panel");
 }
 
-function loadPdfjsNapiCanvas(): { createCanvas: (width: number, height: number) => import("@napi-rs/canvas").Canvas } {
-  const pdfjsEntry = fileURLToPath(new URL("../node_modules/pdfjs-dist/legacy/build/pdf.mjs", import.meta.url));
-  return createRequire(pdfjsEntry)("@napi-rs/canvas");
+function loadPdfjsNapiCanvas(): {
+  readonly createCanvas: (width: number, height: number) => import("@napi-rs/canvas").Canvas;
+  readonly Path2D: typeof import("@napi-rs/canvas").Path2D;
+  readonly DOMMatrix: typeof import("@napi-rs/canvas").DOMMatrix;
+} {
+  const pdfjsEntry = join(repoRoot, "node_modules/pdfjs-dist/legacy/build/pdf.mjs");
+  const canvas = createRequire(pdfjsEntry)("@napi-rs/canvas") as typeof import("@napi-rs/canvas");
+  return { createCanvas: canvas.createCanvas, Path2D: canvas.Path2D, DOMMatrix: canvas.DOMMatrix };
 }
 
 /** @emoji 🪟 Rasterizes pass-1 PDF pages and writes frosted glass PNGs for each panel manifest entry. */
@@ -212,17 +263,21 @@ export async function renderPanelGlass(options: { readonly manifestPath: string;
   const entries = parsePanelManifest(options.manifestPath);
   if (entries.length === 0) return;
   const tokens = loadTokens();
-  const glassPanelAlpha = tokens.opacities?.glassPanelAlpha ?? 0.58;
-  const glassPanelBlurPx = tokens.metrics?.chrome?.glassPanelBlurPx ?? 40;
-  const glassSaturate = tokens.metrics?.chrome?.glassSaturate ?? 1.45;
+  const levels = resolveLevels(tokens);
+  const panelK = levelIndex(levels, "panel");
+  const glassPanelAlpha = 1 - panelK * levels.glassAlphaStep;
+  const glassPanelBlurPx = panelK * levels.glassBlurStepPx;
+  const glassSaturate = levels.glassSaturate;
   const panelTint = panelGlassTintHex(options.theme);
   const [tintR, tintG, tintB] = parseHex6(panelTint);
   const tintAlpha = Math.round(glassPanelAlpha * 255);
   const renderScale = PANEL_RENDER_DPI / PDF_PT_PER_INCH;
   const blurSigma = Math.max(1.5, (glassPanelBlurPx * renderScale) / 9);
 
+  const { createCanvas, Path2D, DOMMatrix } = loadPdfjsNapiCanvas();
+  (globalThis as { Path2D?: typeof Path2D }).Path2D ??= Path2D;
+  (globalThis as { DOMMatrix?: typeof DOMMatrix }).DOMMatrix ??= DOMMatrix;
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  const { createCanvas } = loadPdfjsNapiCanvas();
   const sharp = (await import("sharp")).default;
 
   const pdfBytes = readFileSync(options.pdfPath);
@@ -372,6 +427,14 @@ export function emitSemioTokensSty(): void {
       const hex = resolvePaint(tokens.colors, paint).replace(/^#/, "");
       const latexKey = chromePaintKeyToLatex(key);
       lines.push(`\\definecolor{semio-chrome-${themeName}-${latexKey}}{HTML}{${hex}}`);
+    }
+    const basePaint = chrome.base;
+    if (!basePaint) throw new Error(`tokens.appearances.${themeName}.chrome.base missing`);
+    const baseHex = resolvePaint(tokens.colors, basePaint).replace(/^#/, "");
+    lines.push(`\\definecolor{semio-chrome-${themeName}-canvas}{HTML}{${baseHex}}`);
+    for (const name of PRINT_LEVEL_SURFACE_KEYS) {
+      const hex = levelSurfaceHex(tokens, themeName, name).replace(/^#/, "");
+      lines.push(`\\definecolor{semio-chrome-${themeName}-${name}}{HTML}{${hex}}`);
     }
   }
   lines.push("");
@@ -653,6 +716,13 @@ class TestScript extends BundleScript {
     rmSync(manifestPath);
     assert.equal(panelGlassDir(distDir, "flyer"), join(distDir, PANEL_GLASS_DIR, "flyer"));
     assert.equal(panelGlassDir(distDir, "flyer-dark"), join(distDir, PANEL_GLASS_DIR, "flyer-dark"));
+    //#endregion
+
+    //#region levelSurfaceHex / panelGlassTintHex
+    assert.match(levelSurfaceHex(loadTokens(), "light", "window"), /^#[0-9a-f]{6}$/);
+    assert.match(levelSurfaceHex(loadTokens(), "light", "panel"), /^#[0-9a-f]{6}$/);
+    assert.notEqual(levelSurfaceHex(loadTokens(), "light", "window"), levelSurfaceHex(loadTokens(), "light", "panel"));
+    assert.equal(panelGlassTintHex("light"), levelSurfaceHex(loadTokens(), "light", "panel"));
     //#endregion
 
     //#region resolvePaint

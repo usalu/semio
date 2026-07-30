@@ -59,7 +59,7 @@ pub struct ShootingSavedCamera {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[dsl(keyword = "asset")]
+#[dsl(keyword = "framework/asset")]
 #[serde(rename_all = "camelCase")]
 pub struct ShootingAsset {
     pub id: String,

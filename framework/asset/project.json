@@ -5,7 +5,7 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "asset",
+        "cwd": "framework/asset",
         "command": "bun ./script.ts build",
         "forwardAllArgs": true
       }
