@@ -26,8 +26,8 @@ async function warm(url) {
 
 for (const path of [
   "/js/index.ts",
-  "/@fs/Users/ueli/Documents/semio/framework/ui/js/react/index.tsx",
-  "/@fs/Users/ueli/Documents/semio/framework/os/renderer/js/react/index.tsx",
+  "/@fs/Users/ueli/Documents/semio/framework/module/ui/js/react/index.tsx",
+  "/@fs/Users/ueli/Documents/semio/framework/product/os/module/renderer/js/react/index.tsx",
   "/plugin-modules/puzzle/puzzle_plugin.js",
   MESH_PATH,
 ]) {

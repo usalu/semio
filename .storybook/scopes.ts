@@ -74,6 +74,11 @@ export const STORY_SCOPES: readonly StoryScope[] = [
     sourceRoots: [repoRelative("s/plugin/puzzle/app/5d"), repoRelative("s/plugin/puzzle/module/asset")],
   },
   {
+    id: "block",
+    titlePrefix: "🧱block",
+    sourceRoots: [repoRelative("s/plugin/block")],
+  },
+  {
     id: "compose",
     titlePrefix: "🏘️compose",
     sourceRoots: [repoRelative("compose/client/lib/js"), repoRelative("compose/client/lib/rs"), repoRelative("framework/module/asset"), repoRelative("compose/fixture"), repoRelative("compose/dev/algorithm")],

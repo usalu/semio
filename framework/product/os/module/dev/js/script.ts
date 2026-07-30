@@ -1095,7 +1095,7 @@ async function buildEngineWasm(variant: string, renderer: string): Promise<void>
   if (runCmdStatus("bun", [flowCoreScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("flow-core wasm build failed");
   const row = playgroundCatalog.find((entry) => entry.variant === variant);
   for (const engineCratePath of row?.engines ?? []) {
-    if (engineCratePath === "framework/os/kernel/flow/core/rs" || engineCratePath === "framework/os/kernel/flow/core") continue;
+    if (engineCratePath === "framework/product/os/module/flow/core/rs" || engineCratePath === "framework/product/os/module/flow/core") continue;
     const script = engineWasmScriptPath(engineCratePath);
     if (runCmdStatus("bun", [script, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error(`${engineCratePath} wasm build failed`);
   }

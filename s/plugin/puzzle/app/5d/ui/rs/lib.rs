@@ -1,7 +1,7 @@
 //! 👯 Puzzle 5d app — DocumentApp impl, render, manifest (constitutional: ui).
 
 use puzzle_5d::Puzzle5dProjection;
-use puzzle_5d_engine::{BrushPlacePayload, Puzzle5dPrecomputeSession};
+use puzzle_5d_engine::{import_compose_design_json, BrushPlacePayload, Puzzle5dPrecomputeSession};
 use puzzle_5d_op::{puzzle5d_document_delta_operations, Puzzle5dOperation, Puzzle5dPlayProjection};
 use semio_framework_os::{register_mesh_exporter, register_mesh_importer};
 use semio_framework_plugin::{
@@ -12,7 +12,7 @@ use semio_framework_plugin::{
     WindowEngagementInput, WindowMeasure, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
 };
-use semio_framework_plugin::kernel::HostEffect;
+use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, HashMap, HashSet};
@@ -113,6 +113,13 @@ struct Puzzle5dLabels {
     utility: &'static str,
     none: &'static str,
     example_concrete_forest: &'static str,
+    gap: &'static str,
+    shift: &'static str,
+    rise: &'static str,
+    rotation: &'static str,
+    turn: &'static str,
+    tilt: &'static str,
+    mixed: &'static str,
 }
 
 const PUZZLE5D_LABELS_NATIVE_EN: Puzzle5dLabels = Puzzle5dLabels {
@@ -161,6 +168,13 @@ const PUZZLE5D_LABELS_NATIVE_EN: Puzzle5dLabels = Puzzle5dLabels {
     utility: "Utility",
     none: "(none)",
     example_concrete_forest: "Concrete Forest",
+    gap: "Gap",
+    shift: "Shift",
+    rise: "Rise",
+    rotation: "Rotation",
+    turn: "Turn",
+    tilt: "Tilt",
+    mixed: "Mixed",
 };
 
 const PUZZLE5D_LABELS_NATIVE_DE: Puzzle5dLabels = Puzzle5dLabels {
@@ -209,6 +223,13 @@ const PUZZLE5D_LABELS_NATIVE_DE: Puzzle5dLabels = Puzzle5dLabels {
     utility: "Werkzeug",
     none: "(keine)",
     example_concrete_forest: "Betonwald",
+    gap: "Abstand",
+    shift: "Verschiebung",
+    rise: "Anstieg",
+    rotation: "Rotation",
+    turn: "Drehung",
+    tilt: "Neigung",
+    mixed: "Gemischt",
 };
 
 const PUZZLE5D_LABELS_REUSE_EN: Puzzle5dLabels = Puzzle5dLabels {
@@ -336,6 +357,18 @@ struct Puzzle5dFastener {
     target: String,
     #[serde(default, rename = "fastenerKind", skip_serializing_if = "Option::is_none")]
     fastener_kind: Option<String>,
+    #[serde(default)]
+    gap: f64,
+    #[serde(default)]
+    shift: f64,
+    #[serde(default)]
+    rise: f64,
+    #[serde(default)]
+    rotation: f64,
+    #[serde(default)]
+    turn: f64,
+    #[serde(default)]
+    tilt: f64,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
@@ -629,6 +662,108 @@ fn next_fastener_id() -> String {
     let next = PUZZLE5D_ID_COUNTER.fetch_add(1, Ordering::Relaxed) + 1;
     format!("fastener-{next}")
 }
+
+//#region 🔖CopyPaste
+/// 🧩 The part id a `"part_id:grip_id"` full grip reference belongs to.
+fn owning_part_id_local(grip_ref: &str) -> &str {
+    grip_ref.split(':').next().unwrap_or(grip_ref)
+}
+
+fn rewrite_grip_ref_local(grip_ref: &str, id_map: &HashMap<String, String>) -> String {
+    match grip_ref.split_once(':') {
+        Some((part_id, grip_id)) => match id_map.get(part_id) {
+            Some(fresh_part_id) => format!("{fresh_part_id}:{grip_id}"),
+            None => grip_ref.to_string(),
+        },
+        None => grip_ref.to_string(),
+    }
+}
+
+/// 🧮 Closure-selects a copy fragment: expands the part set to include every selected fastener's
+/// endpoint parts, then expands the fastener set to include every fastener whose BOTH endpoints are
+/// now in the part set — mirrors compose's `copyDesign` closure rule
+/// (`compose/dev/algorithm/js/index.ts:483`) and `puzzle_5d_engine::copy_selection`'s typed twin.
+fn copy_selection_local(document: &Puzzle5dDocument, part_ids: &[String], fastener_ids: &[String]) -> (Vec<Puzzle5dPart>, Vec<Puzzle5dFastener>) {
+    let mut part_set: HashSet<String> = part_ids.iter().cloned().collect();
+    for fastener in &document.fasteners {
+        if fastener_ids.contains(&fastener.id) {
+            part_set.insert(owning_part_id_local(&fastener.source).to_string());
+            part_set.insert(owning_part_id_local(&fastener.target).to_string());
+        }
+    }
+    let mut fastener_set: HashSet<String> = fastener_ids.iter().cloned().collect();
+    if !part_set.is_empty() {
+        for fastener in &document.fasteners {
+            let source_part = owning_part_id_local(&fastener.source);
+            let target_part = owning_part_id_local(&fastener.target);
+            if part_set.contains(source_part) && part_set.contains(target_part) {
+                fastener_set.insert(fastener.id.clone());
+            }
+        }
+    }
+    let parts = document.parts.iter().filter(|part| part_set.contains(&part.id)).cloned().collect();
+    let fasteners = document.fasteners.iter().filter(|fastener| fastener_set.contains(&fastener.id)).cloned().collect();
+    (parts, fasteners)
+}
+
+fn centroid_2d_local(parts: &[Puzzle5dPart]) -> Option<(f64, f64)> {
+    if parts.is_empty() {
+        return None;
+    }
+    let (mut sum_x, mut sum_y) = (0.0, 0.0);
+    for part in parts {
+        sum_x += part.part_2d.x;
+        sum_y += part.part_2d.y;
+    }
+    let count = parts.len() as f64;
+    Some((sum_x / count, sum_y / count))
+}
+
+/// 🧮 Resolves the 2D paste offset from `placement`: `Original` uses the (optional) position
+/// override verbatim; every other anchor uses the target-minus-source centroid delta plus the
+/// (optional) position override — mirrors compose's `__pasteCoordinateOffset`
+/// (`compose/dev/algorithm/js/index.ts:358`; compose itself only differentiates `original` vs
+/// every other anchor, all of which resolve to the centroid offset).
+fn paste_delta_2d(fragment_parts: &[Puzzle5dPart], target_parts: &[Puzzle5dPart], placement: &PastePlacement) -> (f64, f64) {
+    let (offset_x, offset_y) = placement.position.map(|position| (position[0], position[1])).unwrap_or((0.0, 0.0));
+    if matches!(placement.anchor, PasteAnchor::Original) {
+        return (offset_x, offset_y);
+    }
+    match (centroid_2d_local(fragment_parts), centroid_2d_local(target_parts)) {
+        (Some(source), Some(target)) => (target.0 - source.0 + offset_x, target.1 - source.1 + offset_y),
+        _ => (offset_x, offset_y),
+    }
+}
+
+/// 🧮 Materializes a copied fragment at 2D delta `delta` (applied verbatim to the 3D origin's x/y
+/// too) — fresh ids (via `next_part_id`/`next_fastener_id`) dodge collisions with the live document,
+/// and fastener endpoints are remapped onto the fresh part ids. Mirrors compose's `pasteDesign`
+/// (`compose/dev/algorithm/js/index.ts:515`).
+fn paste_selection_local(fragment_parts: &[Puzzle5dPart], fragment_fasteners: &[Puzzle5dFastener], delta: (f64, f64)) -> (Vec<Puzzle5dPart>, Vec<Puzzle5dFastener>) {
+    let mut id_map: HashMap<String, String> = HashMap::new();
+    let mut fresh_parts = Vec::with_capacity(fragment_parts.len());
+    for part in fragment_parts {
+        let fresh_id = next_part_id();
+        id_map.insert(part.id.clone(), fresh_id.clone());
+        let mut next = part.clone();
+        next.id = fresh_id;
+        next.part_2d.x += delta.0;
+        next.part_2d.y += delta.1;
+        next.part_3d.origin[0] += delta.0;
+        next.part_3d.origin[1] += delta.1;
+        fresh_parts.push(next);
+    }
+    let mut fresh_fasteners = Vec::with_capacity(fragment_fasteners.len());
+    for fastener in fragment_fasteners {
+        let mut next = fastener.clone();
+        next.id = next_fastener_id();
+        next.source = rewrite_grip_ref_local(&fastener.source, &id_map);
+        next.target = rewrite_grip_ref_local(&fastener.target, &id_map);
+        fresh_fasteners.push(next);
+    }
+    (fresh_parts, fresh_fasteners)
+}
+//#endregion 🔖CopyPaste
 
 /** @emoji 📐 Resolves one numeric-field edit: an absolute `value` (typed entry) wins when
  * present, otherwise a `delta` (stepper nudge) is added to `current`. `None` when neither parses. */
@@ -1102,6 +1237,8 @@ fn merge_engine_fixture(envelope: &Puzzle5dScene, fixture_json: &str) -> Option<
         })
         .collect();
     let existing_kinds: HashMap<String, Option<String>> = envelope.document.fasteners.iter().map(|fastener| (fastener.id.clone(), fastener.fastener_kind.clone())).collect();
+    let existing_transforms: HashMap<String, (f64, f64, f64, f64, f64, f64)> =
+        envelope.document.fasteners.iter().map(|fastener| (fastener.id.clone(), (fastener.gap, fastener.shift, fastener.rise, fastener.rotation, fastener.turn, fastener.tilt))).collect();
     next.document.fasteners = parsed
         .get("attractions")
         .and_then(|value| value.as_array())
@@ -1109,11 +1246,18 @@ fn merge_engine_fixture(envelope: &Puzzle5dScene, fixture_json: &str) -> Option<
         .flatten()
         .filter_map(|attraction| {
             let id = attraction.get("id").and_then(|value| value.as_str()).unwrap_or("fastener").to_string();
+            let (gap, shift, rise, rotation, turn, tilt) = existing_transforms.get(&id).copied().unwrap_or_default();
             Some(Puzzle5dFastener {
                 fastener_kind: existing_kinds.get(&id).cloned().flatten().or_else(|| attraction.get("attractionKind").and_then(|value| value.as_str()).map(str::to_string)),
                 source: attraction.get("attracting")?.as_str()?.to_string(),
                 target: attraction.get("attracted")?.as_str()?.to_string(),
                 id,
+                gap,
+                shift,
+                rise,
+                rotation,
+                turn,
+                tilt,
             })
         })
         .collect();
@@ -1918,6 +2062,29 @@ fn build_grip_inspector(part: &Puzzle5dPart, grip: &Puzzle5dGrip, labels: &Puzzl
     }])
 }
 
+/// 🔧 Editable fastener inspector: the six pose-solver offsets (gap/shift/rise/rotation/turn/tilt) as
+/// steppers bound to `patchFastener`, plus a "Mixed" summary when more than one fastener is selected
+/// (steppers edit the first selected fastener only; a real multi-edit broadcast is a follow-up).
+fn build_fastener_inspector(fastener: &Puzzle5dFastener, selected_count: usize, labels: &Puzzle5dLabels) -> UiNode {
+    let patch_cmd = |field: &str| puzzle5d_action("patchFastener", Some(json!({ "fastenerId": fastener.id, "field": field })));
+    let mut fields = vec![
+        ui_inspector_readonly_field("puzzle5d-play-inspector.fastener.id", labels.id, &fastener.id),
+        ui_inspector_readonly_field("puzzle5d-play-inspector.fastener.source", labels.source, &fastener.source),
+        ui_inspector_readonly_field("puzzle5d-play-inspector.fastener.target", labels.target, &fastener.target),
+        inspector_text_field("puzzle5d-play-inspector.fastener.kind", labels.kind, fastener.fastener_kind.clone().unwrap_or_default(), patch_cmd("fastenerKind")),
+        ui_inspector_stepper_field("puzzle5d-play-inspector.fastener.gap", labels.gap, &[fastener.gap], 0.05, patch_cmd("gap")),
+        ui_inspector_stepper_field("puzzle5d-play-inspector.fastener.shift", labels.shift, &[fastener.shift], 0.05, patch_cmd("shift")),
+        ui_inspector_stepper_field("puzzle5d-play-inspector.fastener.rise", labels.rise, &[fastener.rise], 0.05, patch_cmd("rise")),
+        ui_inspector_stepper_field("puzzle5d-play-inspector.fastener.rotation", labels.rotation, &[fastener.rotation], 1.0, patch_cmd("rotation")),
+        ui_inspector_stepper_field("puzzle5d-play-inspector.fastener.turn", labels.turn, &[fastener.turn], 1.0, patch_cmd("turn")),
+        ui_inspector_stepper_field("puzzle5d-play-inspector.fastener.tilt", labels.tilt, &[fastener.tilt], 1.0, patch_cmd("tilt")),
+    ];
+    if selected_count > 1 {
+        fields.push(ui_inspector_readonly_field("puzzle5d-play-inspector.fastener.mixed", labels.mixed, format!("{selected_count}")));
+    }
+    ui_stack_vertical(fields)
+}
+
 fn build_inspector_tree(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> UiNode {
     if let Some(grip_full_id) = envelope.runtime.selection.grip_ids.first() {
         if let Some((part, grip)) = find_part_by_grip_full_id(&envelope.document, grip_full_id) {
@@ -1931,12 +2098,7 @@ fn build_inspector_tree(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> Ui
     }
     if let Some(fastener_id) = envelope.runtime.selection.fastener_ids.first() {
         if let Some(fastener) = envelope.document.fasteners.iter().find(|entry| &entry.id == fastener_id) {
-            return ui_stack_vertical(vec![
-                ui_inspector_readonly_field("puzzle5d-play-inspector.fastener.id", labels.id, &fastener.id),
-                ui_inspector_readonly_field("puzzle5d-play-inspector.fastener.source", labels.source, &fastener.source),
-                ui_inspector_readonly_field("puzzle5d-play-inspector.fastener.target", labels.target, &fastener.target),
-                ui_inspector_readonly_field("puzzle5d-play-inspector.fastener.kind", labels.kind, fastener.fastener_kind.as_deref().unwrap_or("link")),
-            ]);
+            return build_fastener_inspector(fastener, envelope.runtime.selection.fastener_ids.len(), labels);
         }
     }
     ui_stack_vertical(vec![
@@ -2032,7 +2194,7 @@ impl Puzzle5dPlayApp {
         if let (Some(source), Some(part)) = (source_grip, envelope.document.parts.last()) {
             if let Some(grip) = part.grips.first() {
                 let target = puzzle5d_grip_full_id(&part.id, &grip.id);
-                envelope.document.fasteners.push(Puzzle5dFastener { id: payload.get("edgeId").and_then(|value| value.as_str()).map(str::to_string).unwrap_or_else(next_fastener_id), source, target, fastener_kind: None });
+                envelope.document.fasteners.push(Puzzle5dFastener { id: payload.get("edgeId").and_then(|value| value.as_str()).map(str::to_string).unwrap_or_else(next_fastener_id), source, target, fastener_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 });
             }
         }
         envelope.runtime.selection = Puzzle5dSelection { part_ids: vec![id], grip_ids: Vec::new(), fastener_ids: Vec::new() };
@@ -2082,6 +2244,12 @@ impl Puzzle5dPlayApp {
                             source,
                             target,
                             fastener_kind: payload.get("edgeKind").and_then(|value| value.as_str()).map(str::to_string),
+                            gap: 0.0,
+                            shift: 0.0,
+                            rise: 0.0,
+                            rotation: 0.0,
+                            turn: 0.0,
+                            tilt: 0.0,
                         });
                     }
                 }
@@ -2118,6 +2286,67 @@ impl DocumentApp for Puzzle5dPlayApp {
         Puzzle5dPlayProjection(serde_json::to_value(default_document()).unwrap_or(Value::Null))
     }
 
+    fn clipboard_media_type(&self) -> Option<MediaType> {
+        Some(MediaType { class: MediaClass::Kit, form: MediaForm::Design })
+    }
+
+    fn copy_fragment(&mut self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _view_state: &ViewState) -> Result<ClipboardFragment, ClipboardError> {
+        let document: Puzzle5dDocument = serde_json::from_value(doc.projection.0.clone()).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
+        let selection = self.runtime.selection.clone();
+        let (parts, fasteners) = copy_selection_local(&document, &selection.part_ids, &selection.fastener_ids);
+        if parts.is_empty() {
+            return Err(ClipboardError::EmptySelection);
+        }
+        let fragment_value = json!({ "schema": PUZZLE5D_SCHEMA, "parts": parts, "fasteners": fasteners });
+        Ok(ClipboardFragment {
+            schema: PUZZLE5D_SCHEMA.to_string(),
+            media_type: self.clipboard_media_type().expect("declared above"),
+            dsl_text: serde_json::to_string_pretty(&fragment_value).unwrap_or_default(),
+            pack_bytes: None,
+            source_app: PUZZLE5D_PLAY_APP_ID.to_string(),
+            label: format!("{} part(s)", parts.len()),
+        })
+    }
+
+    fn cut_operations(&mut self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, _view_state: &ViewState) -> Vec<Puzzle5dOperation> {
+        let before = doc.projection.0.clone();
+        let Ok(document) = serde_json::from_value::<Puzzle5dDocument>(before.clone()) else {
+            return Vec::new();
+        };
+        let selection = self.runtime.selection.clone();
+        let (parts, fasteners) = copy_selection_local(&document, &selection.part_ids, &selection.fastener_ids);
+        if parts.is_empty() {
+            return Vec::new();
+        }
+        let remove_part_ids: HashSet<&str> = parts.iter().map(|part| part.id.as_str()).collect();
+        let remove_fastener_ids: HashSet<&str> = fasteners.iter().map(|fastener| fastener.id.as_str()).collect();
+        let mut after = document;
+        after.parts.retain(|part| !remove_part_ids.contains(part.id.as_str()));
+        after.fasteners.retain(|fastener| !remove_fastener_ids.contains(fastener.id.as_str()));
+        self.runtime.selection = Puzzle5dSelection::default();
+        puzzle5d_operations_from_document_change(&before, &after)
+    }
+
+    fn paste_operations(&mut self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<Puzzle5dOperation>, ClipboardError> {
+        let expected = self.clipboard_media_type().unwrap_or(MediaType { class: MediaClass::Kit, form: MediaForm::Design });
+        if fragment.media_type != expected {
+            return Err(ClipboardError::IncompatibleMediaType(fragment.media_type));
+        }
+        let fragment_value: Value = serde_json::from_str(&fragment.dsl_text).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
+        let fragment_parts: Vec<Puzzle5dPart> = serde_json::from_value(fragment_value.get("parts").cloned().unwrap_or_else(|| json!([]))).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
+        let fragment_fasteners: Vec<Puzzle5dFastener> = serde_json::from_value(fragment_value.get("fasteners").cloned().unwrap_or_else(|| json!([]))).unwrap_or_default();
+        let before = doc.projection.0.clone();
+        let document: Puzzle5dDocument = serde_json::from_value(before.clone()).map_err(|error| ClipboardError::ParseFailed(error.to_string()))?;
+        let delta = paste_delta_2d(&fragment_parts, &document.parts, placement);
+        let (fresh_parts, fresh_fasteners) = paste_selection_local(&fragment_parts, &fragment_fasteners, delta);
+        let new_part_ids: Vec<String> = fresh_parts.iter().map(|part| part.id.clone()).collect();
+        let mut after = document;
+        after.parts.extend(fresh_parts);
+        after.fasteners.extend(fresh_fasteners);
+        self.runtime.selection = Puzzle5dSelection { part_ids: new_part_ids, grip_ids: Vec::new(), fastener_ids: Vec::new() };
+        Ok(puzzle5d_operations_from_document_change(&before, &after))
+    }
+
     fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, view_state: &ViewState) -> ActionEmit<Puzzle5dOperation> {
         let before = doc.projection.0.clone();
         let active_utility_initial = puzzle5d_scene_active_utility(view_state, view_state.window_id.as_deref());
@@ -2128,6 +2357,26 @@ impl DocumentApp for Puzzle5dPlayApp {
                     if let Ok(document) = serde_json::from_str::<Puzzle5dDocument>(json_text) {
                         envelope.document = document;
                     }
+                }
+            }
+            "importComposeKit" => {
+                // 🌉 Merges a compose Design document's pieces/connections into the live document
+                // (replacing `parts`/`fasteners`; camera/catalogs untouched) — see
+                // `puzzle_5d_engine::import_compose_design_json`'s doc comment for scope (one already-
+                // exported design, not a full multi-file kit bundle).
+                if let Some(design_json) = args.and_then(|value| value.get("design")) {
+                    let imported = import_compose_design_json(design_json);
+                    let imported_value = serde_json::to_value(&imported).unwrap_or(Value::Null);
+                    if let Some(parts) = imported_value.get("parts").cloned().and_then(|value| serde_json::from_value::<Vec<Puzzle5dPart>>(value).ok()) {
+                        envelope.document.parts = parts;
+                    }
+                    if let Some(fasteners) = imported_value.get("fasteners").cloned().and_then(|value| serde_json::from_value::<Vec<Puzzle5dFastener>>(value).ok()) {
+                        envelope.document.fasteners = fasteners;
+                    }
+                    if let Some(label) = imported.label {
+                        envelope.document.label = Some(label);
+                    }
+                    envelope.runtime.selection = Puzzle5dSelection::default();
                 }
             }
             "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" => {
@@ -2462,6 +2711,52 @@ impl DocumentApp for Puzzle5dPlayApp {
                     }
                 }
             }
+            "patchFastener" => {
+                let fastener_id = args.and_then(|value| value.get("fastenerId")).and_then(|value| value.as_str()).unwrap_or("").to_string();
+                let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
+                let value = args.and_then(|value| value.get("value"));
+                let delta = args.and_then(|value| value.get("delta"));
+                let text = value.and_then(Value::as_str).map(str::to_string);
+                for fastener in &mut envelope.document.fasteners {
+                    if fastener.id != fastener_id {
+                        continue;
+                    }
+                    match field {
+                        "fastenerKind" => fastener.fastener_kind = text.clone().filter(|text| !text.is_empty()),
+                        "gap" => {
+                            if let Some(updated) = puzzle5d_resolve_number_edit(fastener.gap, value, delta) {
+                                fastener.gap = updated;
+                            }
+                        }
+                        "shift" => {
+                            if let Some(updated) = puzzle5d_resolve_number_edit(fastener.shift, value, delta) {
+                                fastener.shift = updated;
+                            }
+                        }
+                        "rise" => {
+                            if let Some(updated) = puzzle5d_resolve_number_edit(fastener.rise, value, delta) {
+                                fastener.rise = updated;
+                            }
+                        }
+                        "rotation" => {
+                            if let Some(updated) = puzzle5d_resolve_number_edit(fastener.rotation, value, delta) {
+                                fastener.rotation = updated;
+                            }
+                        }
+                        "turn" => {
+                            if let Some(updated) = puzzle5d_resolve_number_edit(fastener.turn, value, delta) {
+                                fastener.turn = updated;
+                            }
+                        }
+                        "tilt" => {
+                            if let Some(updated) = puzzle5d_resolve_number_edit(fastener.tilt, value, delta) {
+                                fastener.tilt = updated;
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
             "setCamera" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     let surface_id = args.and_then(|value| value.get("surfaceId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -2621,7 +2916,7 @@ impl DocumentApp for Puzzle5dPlayApp {
                                 if (dx * dx + dy * dy + dz * dz).sqrt() <= PUZZLE5D_PROXIMITY_RADIUS
                                     && !envelope.document.fasteners.iter().any(|entry| entry.source == source_id && entry.target == target_id || entry.source == target_id && entry.target == source_id)
                                 {
-                                    envelope.document.fasteners.push(Puzzle5dFastener { id: next_fastener_id(), source: source_id.clone(), target: target_id, fastener_kind: None });
+                                    envelope.document.fasteners.push(Puzzle5dFastener { id: next_fastener_id(), source: source_id.clone(), target: target_id, fastener_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 });
                                 }
                             }
                         }
@@ -2788,6 +3083,8 @@ fn puzzle5d_action_labels(is_de: bool) -> std::collections::HashMap<String, Stri
         ("setFillCount", "Set Fill Count", "Füllanzahl festlegen"),
         ("patchPart", "Patch Part", "Teil aktualisieren"),
         ("patchGrip", "Patch Grip", "Griff aktualisieren"),
+        ("patchFastener", "Patch Fastener", "Verbinder aktualisieren"),
+        ("importComposeKit", "Import Compose Kit", "Compose-Kit importieren"),
         ("setCamera", "Set Camera", "Kamera festlegen"),
         ("setCamera2d", "Set Camera 2D", "Kamera 2D festlegen"),
         ("setCamera3d", "Set Camera 3D", "Kamera 3D festlegen"),
@@ -2873,7 +3170,10 @@ pub fn create_puzzle5d_app() -> App {
             .default_mode_id("edit")
             .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_2D, "Puzzle 2D", PUZZLE5D_PLAY_BODY_2D, SurfaceKind::Board2d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_2D, manifest_labels), "layout-grid")
             .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_3D, "Puzzle 3D", PUZZLE5D_PLAY_BODY_3D, SurfaceKind::World3d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_3D, manifest_labels), "puzzle5d-3d")
-            .default_layout(create_default_layout(&[PUZZLE5D_PLAY_WINDOW_2D.into(), PUZZLE5D_PLAY_WINDOW_3D.into()], "row", Some(&[50.0, 50.0]), Some(&["Puzzle 2D".into(), "Puzzle 3D".into()])))
+            // 🏗️ 3D-first 60/40 split — mirrors compose's design app (scene 60% / diagram 40%,
+            // `compose/client/lib/sketchpad/js/index.ts:15367-15378`), the assembly-editing use case
+            // this app replaces.
+            .default_layout(create_default_layout(&[PUZZLE5D_PLAY_WINDOW_3D.into(), PUZZLE5D_PLAY_WINDOW_2D.into()], "row", Some(&[60.0, 40.0]), Some(&["Puzzle 3D".into(), "Puzzle 2D".into()])))
             .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_DOCUMENT)
             .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_KINDS)
             .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, PUZZLE5D_PLAY_BODY_INSPECTOR)
@@ -2893,6 +3193,8 @@ pub fn create_puzzle5d_app() -> App {
             .operation("setFillCount", "Set Fill Count")
             .operation("patchPart", "Patch Part")
             .operation("patchGrip", "Patch Grip")
+            .operation("patchFastener", "Patch Fastener")
+            .operation("importComposeKit", "Import Compose Kit")
             .operation("setCamera", "Set Camera")
             .operation("setCamera2d", "Set Camera 2D")
             .operation("setCamera3d", "Set Camera 3D")
@@ -3106,6 +3408,129 @@ mod tests {
         assert_eq!(part_count(&app), loaded, "undo restores the concrete-forest parts");
         app.handle_action("redo", None, &ViewState::default(), &testkit::meta("local")).expect("redo");
         assert_eq!(part_count(&app), 0);
+    }
+
+    #[test]
+    fn patch_fastener_updates_transform_offsets_and_undoes() {
+        let mut app = testkit::new_app::<Puzzle5dPlayApp>();
+        app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), &ViewState::default(), &testkit::meta("local")).expect("load nakagin (has fasteners)");
+        let projection = app.projection().expect("projection");
+        let fastener_id = projection.0["fasteners"][0]["id"].as_str().expect("seeded fastener").to_string();
+        app.handle_action("patchFastener", Some(&json!({ "fastenerId": fastener_id, "field": "gap", "value": 2.5 })), &ViewState::default(), &testkit::meta("local")).expect("patch gap");
+        let after = app.projection().expect("projection");
+        let fastener = after.0["fasteners"].as_array().unwrap().iter().find(|entry| entry["id"] == fastener_id).expect("fastener");
+        assert_eq!(fastener["gap"], 2.5);
+        assert_eq!(fastener["shift"], 0.0);
+        app.handle_action("patchFastener", Some(&json!({ "fastenerId": fastener_id, "field": "rotation", "value": 30.0 })), &ViewState::default(), &testkit::meta("local")).expect("patch rotation");
+        let after2 = app.projection().expect("projection");
+        let fastener2 = after2.0["fasteners"].as_array().unwrap().iter().find(|entry| entry["id"] == fastener_id).expect("fastener");
+        assert_eq!(fastener2["gap"], 2.5, "earlier gap edit must survive a later rotation edit");
+        assert_eq!(fastener2["rotation"], 30.0);
+        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
+        let undone = app.projection().expect("projection");
+        let fastener3 = undone.0["fasteners"].as_array().unwrap().iter().find(|entry| entry["id"] == fastener_id).expect("fastener");
+        assert_eq!(fastener3["rotation"], 0.0, "undo restores the pre-rotation-edit value");
+        assert_eq!(fastener3["gap"], 2.5, "undo of rotation edit must not also revert the earlier gap edit");
+    }
+
+    #[test]
+    fn copy_emits_clipboard_fragment_for_the_closed_selection() {
+        let mut app = testkit::new_app::<Puzzle5dPlayApp>();
+        app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), &ViewState::default(), &testkit::meta("local")).expect("load nakagin");
+        let projection = app.projection().expect("projection");
+        let first_part_id = projection.0["parts"][0]["id"].as_str().expect("seeded part").to_string();
+        app.handle_action("setSelection", Some(&json!({ "partIds": [first_part_id] })), &ViewState::default(), &testkit::meta("local")).expect("select");
+        let result = app.handle_action("copy", None, &ViewState::default(), &testkit::meta("local")).expect("copy");
+        assert!(result.operations.is_empty(), "copy must not record an undo entry");
+        assert_eq!(result.requested_effects.len(), 1);
+        let HostEffect::ClipboardWrite { fragment } = &result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
+        assert_eq!(fragment.source_app, PUZZLE5D_PLAY_APP_ID);
+        let fragment_value: Value = serde_json::from_str(&fragment.dsl_text).expect("fragment dsl_text is JSON");
+        assert_eq!(fragment_value["parts"].as_array().expect("parts").len(), 1);
+    }
+
+    #[test]
+    fn copy_with_no_selection_is_a_benign_no_operation() {
+        let mut app = testkit::new_app::<Puzzle5dPlayApp>();
+        let result = app.handle_action("copy", None, &ViewState::default(), &testkit::meta("local")).expect("copy");
+        assert!(result.operations.is_empty());
+        assert!(result.requested_effects.is_empty());
+    }
+
+    #[test]
+    fn cut_removes_selected_part_and_undo_restores_it() {
+        let mut app = testkit::new_app::<Puzzle5dPlayApp>();
+        app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), &ViewState::default(), &testkit::meta("local")).expect("load nakagin");
+        let before_count = part_count(&app);
+        let projection = app.projection().expect("projection");
+        let first_part_id = projection.0["parts"][0]["id"].as_str().expect("seeded part").to_string();
+        app.handle_action("setSelection", Some(&json!({ "partIds": [first_part_id.clone()] })), &ViewState::default(), &testkit::meta("local")).expect("select");
+        let result = app.handle_action("cut", None, &ViewState::default(), &testkit::meta("local")).expect("cut");
+        assert_eq!(result.requested_effects.len(), 1, "cut must also copy to the clipboard");
+        assert_eq!(part_count(&app), before_count - 1);
+        let after = app.projection().expect("projection");
+        assert!(!after.0["parts"].as_array().unwrap().iter().any(|part| part["id"] == first_part_id));
+        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
+        assert_eq!(part_count(&app), before_count, "one undo restores the cut part as a single edit");
+    }
+
+    #[test]
+    fn paste_materializes_fragment_parts_at_original_anchor_with_fresh_ids() {
+        let mut app = testkit::new_app::<Puzzle5dPlayApp>();
+        app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE5D_EXAMPLE_NAKAGIN })), &ViewState::default(), &testkit::meta("local")).expect("load nakagin");
+        let projection = app.projection().expect("projection");
+        let first_part_id = projection.0["parts"][0]["id"].as_str().expect("seeded part").to_string();
+        app.handle_action("setSelection", Some(&json!({ "partIds": [first_part_id.clone()] })), &ViewState::default(), &testkit::meta("local")).expect("select");
+        let copy_result = app.handle_action("copy", None, &ViewState::default(), &testkit::meta("local")).expect("copy");
+        let HostEffect::ClipboardWrite { fragment } = &copy_result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
+        let before_count = part_count(&app);
+        let before_ids: HashSet<String> = projection.0["parts"].as_array().unwrap().iter().map(|part| part["id"].as_str().unwrap_or_default().to_string()).collect();
+        let paste_args = json!({ "fragment": fragment, "anchor": "original", "position": [10.0, 0.0, 0.0] });
+        app.handle_action("paste", Some(&paste_args), &ViewState::default(), &testkit::meta("local")).expect("paste");
+        assert_eq!(part_count(&app), before_count + 1);
+        let after = app.projection().expect("projection");
+        let pasted_parts: Vec<&Value> = after.0["parts"].as_array().unwrap().iter().filter(|part| !before_ids.contains(part["id"].as_str().unwrap_or_default())).collect();
+        assert_eq!(pasted_parts.len(), 1);
+        // "original" anchor uses the raw position override verbatim as the 2D delta.
+        let original_x = projection.0["parts"][0]["2d"]["x"].as_f64().unwrap_or(0.0);
+        assert_eq!(pasted_parts[0]["2d"]["x"].as_f64().unwrap(), original_x + 10.0);
+        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
+        assert_eq!(part_count(&app), before_count, "one undo removes the whole pasted fragment");
+    }
+
+    #[test]
+    fn paste_with_no_fragment_arg_is_a_benign_no_operation() {
+        let mut app = testkit::new_app::<Puzzle5dPlayApp>();
+        let before_count = part_count(&app);
+        let result = app.handle_action("paste", None, &ViewState::default(), &testkit::meta("local")).expect("paste");
+        assert!(result.operations.is_empty());
+        assert_eq!(part_count(&app), before_count);
+    }
+
+    #[test]
+    fn import_compose_kit_replaces_parts_and_fasteners_and_undoes_as_one_edit() {
+        let mut app = testkit::new_app::<Puzzle5dPlayApp>();
+        let before_count = part_count(&app);
+        let compose_design = json!({
+            "id": "design-1",
+            "name": "Imported Tower",
+            "pieces": { "items": [
+                { "id": "piece-a", "type": { "id": "type-x" }, "pose": { "center": { "u": 1.0, "v": 2.0 }, "plane": { "origin": { "x": 0.0, "y": 0.0, "z": 0.0 }, "xAxis": { "x": 1.0, "y": 0.0, "z": 0.0 }, "yAxis": { "x": 0.0, "y": 1.0, "z": 0.0 } } } },
+                { "id": "piece-b", "type": { "id": "type-x" }, "pose": { "center": { "u": 3.0, "v": 4.0 }, "plane": { "origin": { "x": 1.0, "y": 1.0, "z": 1.0 }, "xAxis": { "x": 1.0, "y": 0.0, "z": 0.0 }, "yAxis": { "x": 0.0, "y": 1.0, "z": 0.0 } } } },
+            ] },
+            "connections": { "items": [
+                { "id": "conn-1", "parent": { "piece": { "id": "piece-a" }, "connector": { "id": "c1" } }, "child": { "piece": { "id": "piece-b" }, "connector": { "id": "c2" } }, "gap": 0.5, "shift": 0.0, "rise": 0.0, "rotation": 0.0, "turn": 0.0, "tilt": 0.0 },
+            ] },
+        });
+        app.handle_action("importComposeKit", Some(&json!({ "design": compose_design })), &ViewState::default(), &testkit::meta("local")).expect("import");
+        assert_eq!(part_count(&app), 2);
+        let projection = app.projection().expect("projection");
+        assert_eq!(projection.0["label"], "Imported Tower");
+        assert_eq!(projection.0["fasteners"].as_array().unwrap().len(), 1);
+        assert_eq!(projection.0["fasteners"][0]["gap"], 0.5);
+        assert_eq!(projection.0["fasteners"][0]["source"], "piece-a:c1");
+        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
+        assert_eq!(part_count(&app), before_count, "one undo restores the pre-import document");
     }
 
     #[test]

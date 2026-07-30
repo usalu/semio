@@ -1002,7 +1002,6 @@
     "@vscode/test-electron": "^2.5.2",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
-    "@semio-tech/compose-js": "^0.1.0",
     "jsonc-parser": "^3.3.1"
   },
   "dependencies": {},

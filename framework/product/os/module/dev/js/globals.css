@@ -1,4 +1,4 @@
-@import "../../ui/js/react/globals.css";
-@source "../core";
-@source "../../../s";
-@source "../../ui/js/react";
+@import "../../../../../module/ui/js/react/globals.css";
+@source "../../../js";
+@source "../../../../../../s";
+@source "../../../../../module/ui/js/react";

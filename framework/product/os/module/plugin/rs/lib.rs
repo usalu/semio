@@ -14,7 +14,7 @@ pub mod component {
 
     generate!({
         world: "plugin-world",
-        path: "../../wit",
+        path: "../wit",
     });
 
     use exports::semio::framework::plugin::Guest;
@@ -182,9 +182,9 @@ pub mod app {
 //! 🧩 Declarative app builder and plugin trait.
 
 use semio_framework_core::{
-    effective_action_args, element_id_segment, history_action_definitions, is_element_id, missing_required_args, kernel::{
-        ActorId, AppEvent, CapabilityRequirement, InvocationId, InvocationResult, HostEffect, HybridLogicalTimestamp,
-        InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OperationId, Rights,
+    clipboard_action_definitions, effective_action_args, element_id_segment, history_action_definitions, is_element_id, missing_required_args, kernel::{
+        ActorId, AppEvent, CapabilityRequirement, ClipboardError, ClipboardFragment, InvocationId, InvocationResult, HostEffect, HybridLogicalTimestamp,
+        InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OperationId, PastePlacement, Rights,
         ArtifactKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
     set_active_tool_action_definition, set_active_utility_action_definition, start_introduction_action_definition, record_tutorial_action_definition,
@@ -897,6 +897,11 @@ impl AppBuilder {
                 actions.push(history_action);
             }
         }
+        for clipboard_action in clipboard_action_definitions() {
+            if declared_action_ids.insert(clipboard_action.id.clone()) {
+                actions.push(clipboard_action);
+            }
+        }
         if !self.utilities.is_empty() && declared_action_ids.insert(SET_ACTIVE_UTILITY_ACTION_ID.to_string()) {
             actions.push(set_active_utility_action_definition());
         }
@@ -925,7 +930,7 @@ impl AppBuilder {
                 },
             })
             .collect();
-        for history_action in actions.iter().filter(|action| action.kind == ActionKind::History) {
+        for history_action in actions.iter().filter(|action| matches!(action.kind, ActionKind::History | ActionKind::Clipboard)) {
             if let Some(keys) = &history_action.keys {
                 if bound_keys.insert(keys.clone()) {
                     keybindings.push(Keybinding {
@@ -2357,6 +2362,24 @@ mod app_builder_tests {
     }
 
     #[test]
+    fn build_definition_auto_injects_clipboard_actions_and_keybindings() {
+        let definition = minimal_app("clipboard-app").build_definition();
+        let clipboard_ids: HashSet<&str> = definition.actions.iter().map(|c| c.id.as_str()).collect();
+        assert!(clipboard_ids.contains("copy"));
+        assert!(clipboard_ids.contains("cut"));
+        assert!(clipboard_ids.contains("paste"));
+        let copy_action = definition.actions.iter().find(|a| a.id == "copy").expect("copy declared");
+        assert_eq!(copy_action.kind, ActionKind::Clipboard);
+        let paste_action = definition.actions.iter().find(|a| a.id == "paste").expect("paste declared");
+        assert!(paste_action.args.iter().any(|arg| arg.id == "anchor"));
+        let copy_binding = definition.keybindings.iter().find(|binding| binding.keys == "mod+c").expect("copy keybinding auto-injected");
+        assert_eq!(copy_binding.action.action, "copy");
+        assert_eq!(copy_binding.action.controller_id, "clipboard-app");
+        let paste_binding = definition.keybindings.iter().find(|binding| binding.keys == "mod+v").expect("paste keybinding auto-injected");
+        assert_eq!(paste_binding.action.action, "paste");
+    }
+
+    #[test]
     fn operation_view_and_shell_actions_are_declared_with_their_kind() {
         let definition = minimal_app("typed-actions-app")
             .operation("addLayer", "Add Layer")
@@ -3217,6 +3240,37 @@ pub trait DocumentApp: Send + 'static {
     ) -> ActionEmit<Self::Operation> {
         ActionEmit::default()
     }
+    /// 📋 The `MediaType` this app copies fragments as and accepts pastes of by default — `None` (the
+    /// default) means this app doesn't participate in the clipboard mechanism, and `VcsDocumentApp`'s
+    /// injected `copy`/`cut`/`paste` actions silently no-op. Override alongside `copy_fragment`/
+    /// `cut_operations`/`paste_operations`.
+    fn clipboard_media_type(&self) -> Option<MediaType> {
+        None
+    }
+    /// 📋 Every `MediaType` this app accepts a paste of — defaults to just `clipboard_media_type()`.
+    /// Override to additionally accept fragments copied from a compatible sibling app (e.g. puzzle
+    /// accepting a block kind-definition fragment as a catalog merge).
+    fn clipboard_accepts(&self) -> Vec<MediaType> {
+        self.clipboard_media_type().into_iter().collect()
+    }
+    /// 📋 Builds a `ClipboardFragment` from the current selection (read from `view_state`). Called by
+    /// `VcsDocumentApp`'s injected `copy` and `cut` actions; `cut` additionally calls
+    /// `cut_operations`. Default: always empty (apps that don't override `clipboard_media_type` never
+    /// reach here in practice, since the interception only calls this when a media type is declared).
+    fn copy_fragment(&mut self, _doc: &DocumentView<'_, Self::Projection>, _view_state: &ViewState) -> Result<ClipboardFragment, ClipboardError> {
+        Err(ClipboardError::EmptySelection)
+    }
+    /// 📋 The operations that remove the current selection — paired with `copy_fragment` by the
+    /// injected `cut` action into one undo-able edit.
+    fn cut_operations(&mut self, _doc: &DocumentView<'_, Self::Projection>, _view_state: &ViewState) -> Vec<Self::Operation> {
+        Vec::new()
+    }
+    /// 📋 The operations that materialize `fragment` into the document at `placement`. Called by the
+    /// injected `paste` action; the fragment may have been copied from a different (but
+    /// `clipboard_accepts`-compatible) app.
+    fn paste_operations(&mut self, _doc: &DocumentView<'_, Self::Projection>, _fragment: &ClipboardFragment, _placement: &PastePlacement) -> Result<Vec<Self::Operation>, ClipboardError> {
+        Ok(Vec::new())
+    }
     /// ⏱️ Effects the host should dispatch right after a refresh (not tied to any one action) —
     /// the chokepoint for self-sustaining background work: since every action, document load, undo,
     /// and remote operation is followed by a `refreshUi` pass, an app that needs to notice "something changed,
@@ -3532,6 +3586,8 @@ const HISTORY_ACTION_IDS: [&str; 6] = [
     "checkoutCheckpoint",
 ];
 
+const CLIPBOARD_ACTION_IDS: [&str; 3] = ["copy", "cut", "paste"];
+
 impl<A: DocumentApp> VcsDocumentApp<A> {
     /// @emoji 🧬 Constructs a wrapper with an empty registry — contract enforcement is skipped. Used by
     /// tests and any registry-less construction path.
@@ -3834,6 +3890,48 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
                 }
                 Err(error) => Err(error.to_string()),
             }
+        } else if CLIPBOARD_ACTION_IDS.contains(&action) {
+            self.refresh_cache()?;
+            let emit = {
+                let VcsDocumentApp { app, cache, .. } = self;
+                let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
+                let doc = DocumentView { projection, history };
+                match action {
+                    "copy" => match app.copy_fragment(&doc, view_state) {
+                        Ok(fragment) => ActionEmit { effects: vec![HostEffect::ClipboardWrite { fragment }], ..ActionEmit::default() },
+                        Err(_) => ActionEmit::default(),
+                    },
+                    "cut" => {
+                        let fragment = app.copy_fragment(&doc, view_state).ok();
+                        let operations = app.cut_operations(&doc, view_state);
+                        let mut emit = ActionEmit::operations(operations);
+                        emit.description = Some("Cut".into());
+                        if let Some(fragment) = fragment {
+                            emit.effects.push(HostEffect::ClipboardWrite { fragment });
+                        }
+                        emit
+                    }
+                    "paste" => {
+                        let fragment = args.and_then(|value| value.get("fragment")).and_then(|value| serde_json::from_value::<ClipboardFragment>(value.clone()).ok());
+                        let placement = args
+                            .and_then(|value| serde_json::from_value::<PastePlacement>(value.clone()).ok())
+                            .unwrap_or_default();
+                        match fragment {
+                            Some(fragment) => match app.paste_operations(&doc, &fragment, &placement) {
+                                Ok(operations) => {
+                                    let mut emit = ActionEmit::operations(operations);
+                                    emit.description = Some("Paste".into());
+                                    emit
+                                }
+                                Err(_) => ActionEmit::default(),
+                            },
+                            None => ActionEmit::default(),
+                        }
+                    }
+                    _ => unreachable!("CLIPBOARD_ACTION_IDS exhaustively matched above"),
+                }
+            };
+            self.dispatch_emit(action, emit, meta)
         } else {
             self.refresh_cache()?;
             let definition = self.registry.get(action).cloned();
@@ -4765,9 +4863,9 @@ mod semio_plugin_macro_tests {
     use crate::app::{
         ActionEmit, ActionMeta, App, AppActionRegistry, DocumentApp, DocumentView, PluginApp, VcsDocumentApp,
     };
-    use crate::{ui_text, IconName, SurfaceKind, UiNode, ViewState};
-    use semio_framework_core::kernel::{AppEvent, HostEffect};
-    use semio_framework_core::ActionArgDef;
+    use crate::{ui_text, IconName, MediaClass, MediaType, SurfaceKind, UiNode, ViewState};
+    use semio_framework_core::kernel::{AppEvent, ClipboardError, ClipboardFragment, HostEffect, PasteAnchor, PastePlacement};
+    use semio_framework_core::{ActionArgDef, MediaForm};
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use store::{Backbone, BackboneMessage, MemoryBackbone};
@@ -4927,6 +5025,43 @@ mod semio_plugin_macro_tests {
         fn render(&self, _body_key: &str, doc: &DocumentView<'_, TestProjection>, _view_state: &ViewState) -> UiNode {
             ui_text(format!("count={}", doc.projection.count))
         }
+
+        fn clipboard_media_type(&self) -> Option<MediaType> {
+            Some(MediaType { class: MediaClass::Data, form: MediaForm::Value })
+        }
+
+        fn copy_fragment(&mut self, doc: &DocumentView<'_, TestProjection>, _view_state: &ViewState) -> Result<ClipboardFragment, ClipboardError> {
+            if doc.projection.label.is_empty() {
+                return Err(ClipboardError::EmptySelection);
+            }
+            Ok(ClipboardFragment {
+                schema: self.document_schema().to_string(),
+                media_type: self.clipboard_media_type().expect("declared above"),
+                dsl_text: doc.projection.label.clone(),
+                pack_bytes: None,
+                source_app: self.app_id().to_string(),
+                label: doc.projection.label.clone(),
+            })
+        }
+
+        fn cut_operations(&mut self, doc: &DocumentView<'_, TestProjection>, _view_state: &ViewState) -> Vec<TestOperation> {
+            if doc.projection.label.is_empty() {
+                Vec::new()
+            } else {
+                vec![TestOperation::SetLabel { value: String::new() }]
+            }
+        }
+
+        fn paste_operations(&mut self, _doc: &DocumentView<'_, TestProjection>, fragment: &ClipboardFragment, placement: &PastePlacement) -> Result<Vec<TestOperation>, ClipboardError> {
+            if !self.clipboard_accepts().contains(&fragment.media_type) {
+                return Err(ClipboardError::IncompatibleMediaType(fragment.media_type));
+            }
+            let value = match placement.anchor {
+                PasteAnchor::Original => fragment.dsl_text.clone(),
+                _ => format!("{}-{:?}", fragment.dsl_text, placement.anchor),
+            };
+            Ok(vec![TestOperation::SetLabel { value }])
+        }
     }
 
     fn meta() -> ActionMeta {
@@ -5025,6 +5160,88 @@ mod semio_plugin_macro_tests {
         let result = app.handle_action("navigate", None, &ViewState::default(), &meta()).expect("navigate");
         assert!(result.operations.is_empty());
         assert_eq!(result.requested_effects, vec![HostEffect::Navigate { uri: "semio://home".into() }]);
+    }
+
+    #[test]
+    fn copy_emits_clipboard_write_effect_with_no_operations() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        app.handle_action("setLabel", Some(&json!({ "value": "hello" })), &ViewState::default(), &meta()).expect("setLabel");
+        let result = app.handle_action("copy", None, &ViewState::default(), &meta()).expect("copy");
+        assert!(result.operations.is_empty(), "copy must not record an undo entry");
+        assert_eq!(result.requested_effects.len(), 1);
+        let HostEffect::ClipboardWrite { fragment } = &result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
+        assert_eq!(fragment.dsl_text, "hello");
+        assert_eq!(fragment.source_app, "synthetic-play");
+    }
+
+    #[test]
+    fn copy_on_empty_selection_is_a_benign_no_operation() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        let result = app.handle_action("copy", None, &ViewState::default(), &meta()).expect("copy");
+        assert!(result.operations.is_empty());
+        assert!(result.requested_effects.is_empty());
+    }
+
+    #[test]
+    fn cut_removes_label_and_emits_clipboard_write_as_one_undo_unit() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        app.handle_action("setLabel", Some(&json!({ "value": "hello" })), &ViewState::default(), &meta()).expect("setLabel");
+        let result = app.handle_action("cut", None, &ViewState::default(), &meta()).expect("cut");
+        assert_eq!(app.test_projection().label, "");
+        assert_eq!(result.requested_effects.len(), 1);
+        assert!(matches!(&result.requested_effects[0], HostEffect::ClipboardWrite { fragment } if fragment.dsl_text == "hello"));
+        // One undo restores the cut label — cut is a single coalesced edit, not two.
+        app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
+        assert_eq!(app.test_projection().label, "hello");
+    }
+
+    #[test]
+    fn paste_materializes_fragment_at_original_anchor() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        let fragment = ClipboardFragment {
+            schema: "semio.test/v1".into(),
+            media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+            dsl_text: "pasted".into(),
+            pack_bytes: None,
+            source_app: "synthetic-play".into(),
+            label: "pasted".into(),
+        };
+        let args = json!({ "fragment": fragment, "anchor": "original" });
+        app.handle_action("paste", Some(&args), &ViewState::default(), &meta()).expect("paste");
+        assert_eq!(app.test_projection().label, "pasted");
+    }
+
+    #[test]
+    fn paste_with_non_original_anchor_reaches_the_app_placement() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        let fragment = ClipboardFragment {
+            schema: "semio.test/v1".into(),
+            media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+            dsl_text: "pasted".into(),
+            pack_bytes: None,
+            source_app: "synthetic-play".into(),
+            label: "pasted".into(),
+        };
+        let args = json!({ "fragment": fragment, "anchor": "centroid" });
+        app.handle_action("paste", Some(&args), &ViewState::default(), &meta()).expect("paste");
+        assert_eq!(app.test_projection().label, format!("pasted-{:?}", PasteAnchor::Centroid));
+    }
+
+    #[test]
+    fn paste_with_no_fragment_arg_is_a_benign_no_operation() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        let result = app.handle_action("paste", None, &ViewState::default(), &meta()).expect("paste");
+        assert!(result.operations.is_empty());
+        assert_eq!(app.test_projection().label, "");
+    }
+
+    #[test]
+    fn copy_cut_paste_are_registered_as_clipboard_kind_actions() {
+        let definition = synthetic_play_app().definition;
+        for id in ["copy", "cut", "paste"] {
+            let action = definition.actions.iter().find(|a| a.id == id).unwrap_or_else(|| panic!("{id} must be auto-injected into every app's manifest"));
+            assert_eq!(action.kind, semio_framework_core::ActionKind::Clipboard);
+        }
     }
 
     #[test]

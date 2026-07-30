@@ -15,7 +15,7 @@ package = "semio:raster"
 [[package.metadata.semio.playground]]
 variant = "raster"
 ports = { react = 6060, wgpu = 6160 }
-engines = ["framework/surface/paint/rs"]
+engines = ["framework/module/surface/paint/rs"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]

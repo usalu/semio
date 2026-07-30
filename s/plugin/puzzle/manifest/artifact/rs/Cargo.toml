@@ -50,7 +50,7 @@ filter_from_examples = true
 kind = "static-dir"
 route = "/infinite-fixture"
 app = "puzzle3d-play"
-root = "framework/os/kernel/infinite/fixture"
+root = "framework/product/os/module/infinite/fixture"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

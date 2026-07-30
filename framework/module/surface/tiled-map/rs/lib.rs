@@ -3738,7 +3738,7 @@ mod tests {
     #[test]
     #[ignore = "requires .repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-2-2-1.pbf from demotiles"]
     fn decode_demotile_fixture_has_named_layers() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-2-2-1.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-2-2-1.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
         assert!(!tile.layers.is_empty());
@@ -3750,7 +3750,7 @@ mod tests {
 
     #[test]
     fn demotile_fixture_countries_use_multi_ring_polygons() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-2-2-1.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-2-2-1.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
         let countries = tile.layers.iter().find(|l| l.name == "countries").expect("countries layer");
@@ -3760,7 +3760,7 @@ mod tests {
 
     #[test]
     fn fixture_linestrings_split_at_moveto() {
-        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES");
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES");
         let mut found = false;
         for entry in std::fs::read_dir(&dir).expect("fixture dir") {
             let path = entry.expect("entry").path();
@@ -3784,7 +3784,7 @@ mod tests {
 
     #[test]
     fn demotile_z5_has_countries_and_centroids() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
         let countries = tile.layers.iter().find(|l| l.name == "countries").expect("countries");
@@ -3796,7 +3796,7 @@ mod tests {
 
     #[test]
     fn demotile_z0_has_many_country_features() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
         let countries = tile.layers.iter().find(|l| l.name == "countries").expect("countries");
@@ -3805,7 +3805,7 @@ mod tests {
 
     #[test]
     fn figure_world_tile_paints_many_countries() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
@@ -3820,7 +3820,7 @@ mod tests {
 
     #[test]
     fn colored_world_tile_paints_land_over_water_backdrop() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
@@ -3834,7 +3834,7 @@ mod tests {
 
     #[test]
     fn figure_country_lod_uses_land_mass_backdrop() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-3-4-2.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-3-4-2.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
@@ -3919,7 +3919,7 @@ mod tests {
 
     #[test]
     fn label_camera_setup_intersects_fixture_tile() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
@@ -3935,7 +3935,7 @@ mod tests {
 
     #[test]
     fn figure_ground_labels_increase_scene_when_enabled() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
@@ -3953,7 +3953,7 @@ mod tests {
 
     #[test]
     fn colored_vector_labels_increase_scene_when_enabled() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);

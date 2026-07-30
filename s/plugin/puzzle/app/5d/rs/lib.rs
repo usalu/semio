@@ -168,6 +168,21 @@ pub struct Puzzle5dFastener {
     pub target: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fastener_kind: Option<String>,
+    /// 🔧 The six pose-solver offsets `compute_brush_placement_pose` resolves into a world pose —
+    /// mirrors `puzzle_3d::Puzzle3dAttraction`'s gap/shift/rise/rotation/turn/tilt fields verbatim
+    /// (the 5d fastener is the unification of a 2d edge and a 3d attraction).
+    #[serde(default)]
+    pub gap: f64,
+    #[serde(default)]
+    pub shift: f64,
+    #[serde(default)]
+    pub rise: f64,
+    #[serde(default)]
+    pub rotation: f64,
+    #[serde(default)]
+    pub turn: f64,
+    #[serde(default)]
+    pub tilt: f64,
 }
 
 /// 🔗 How specifically two grip/rope kinds are allowed to fasten.

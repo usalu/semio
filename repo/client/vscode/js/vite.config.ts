@@ -58,7 +58,6 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@semio-tech/compose-js": path.resolve(__dirname, "../../../compose/client/lib/js"),
       "@semio-tech/semio-asset": path.resolve(__dirname, "../../../asset"),
     },
   },

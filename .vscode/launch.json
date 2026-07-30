@@ -1539,6 +1539,159 @@
       }
     },
     {
+      "name": "🛠️dev🧱block🩻2d⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:block:2d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "BLOCK_2D_PLAY_PORT": "6024",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 261
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6024)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧱block🩻2d🧊wgpu🌐wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:block:2d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "BLOCK_2D_PLAY_PORT": "6124",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 261.1
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6124)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧱block🩻2d🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native block2d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 261.2
+      }
+    },
+    {
+      "name": "🛠️dev🧱block🏙️3d⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:block:3d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "BLOCK_3D_PLAY_PORT": "6025",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 262
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6025)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧱block🏙️3d🧊wgpu🌐wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:block:3d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "BLOCK_3D_PLAY_PORT": "6125",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 262.1
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6125)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧱block🏙️3d🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native block3d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 262.2
+      }
+    },
+    {
+      "name": "🛠️dev🧱block👯5d⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:block:5d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "BLOCK_5D_PLAY_PORT": "6026",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 263
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6026)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧱block👯5d🧊wgpu🌐wasm",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:block:5d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "BLOCK_5D_PLAY_PORT": "6126",
+        "SEMIO_RENDERER": "wgpu"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 263.1
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6126)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev🧱block👯5d🧊wgpu🖥️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./framework/product/os/module/renderer/wgpu/script.ts native block5d",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 263.2
+      }
+    },
+    {
       "name": "🛠️dev🧠reasoning🔗wires⚛️react",
       "type": "node-terminal",
       "request": "launch",

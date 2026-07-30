@@ -3243,6 +3243,8 @@ pub enum ActionKind {
     View,
     /// Framework-provided undo/redo/checkpoint/alternative — auto-injected, never app-declared.
     History,
+    /// Framework-provided copy/cut/paste — auto-injected, never app-declared (mirrors `History`).
+    Clipboard,
     /// Shell-only effect (navigate, export, spawn) — no document mutation.
     Shell,
 }
@@ -3444,6 +3446,41 @@ pub fn history_action_definitions() -> Vec<ActionDefinition> {
         ActionDefinition::new("checkoutCheckpoint", "Checkout Checkpoint", ActionKind::History),
     ]
 }
+
+//#region 🔖Clipboard
+/// 🕹️ The three framework-owned Clipboard actions, auto-injected into every `AppDefinition` —
+/// mirrors `history_action_definitions`. `paste` carries a staged `anchoring` choice (defaulting to
+/// `original`) plus an optional `position` override, both consumed as a `PastePlacement`.
+pub fn clipboard_action_definitions() -> Vec<ActionDefinition> {
+    let anchoring_options = vec![
+        ActionArgOption::new("original", "Original"),
+        ActionArgOption::new("middle", "Middle"),
+        ActionArgOption::new("centroid", "Centroid"),
+        ActionArgOption::new("bottomLeft", "Bottom Left"),
+        ActionArgOption::new("bottomRight", "Bottom Right"),
+        ActionArgOption::new("topLeft", "Top Left"),
+        ActionArgOption::new("topRight", "Top Right"),
+    ];
+    vec![
+        ActionDefinition {
+            keys: Some("mod+c".into()),
+            ..ActionDefinition::new("copy", "Copy", ActionKind::Clipboard)
+        },
+        ActionDefinition {
+            keys: Some("mod+x".into()),
+            ..ActionDefinition::new("cut", "Cut", ActionKind::Clipboard)
+        },
+        ActionDefinition {
+            keys: Some("mod+v".into()),
+            ..ActionDefinition::new("paste", "Paste", ActionKind::Clipboard)
+        }
+        .with_args([
+            ActionArgDef::select("anchor", "Anchoring", anchoring_options).default_value(serde_json::json!("original")),
+            ActionArgDef::vec3("position", "Position"),
+        ]),
+    ]
+}
+//#endregion 🔖Clipboard
 
 /// @emoji 🧰 The framework-owned action id apps dispatch to activate a utility — auto-injected as a View
 /// action into any `AppDefinition` that declares utilities (mirrors `history_action_definitions`).
@@ -5764,6 +5801,7 @@ pub mod kernel {
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use ui_wgpu::UiNode;
+use crate::mesh::MediaType;
 
 //#region 🔖Identifiers
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -5944,6 +5982,68 @@ pub struct Diagnostic {
     pub message: String,
 }
 
+//#region 🔖Clipboard
+/// 📋 How a paste anchors the copied fragment relative to the paste point — the seven placement
+/// modes compose's `copyDesign`/`pasteDesign` supported, now an OS-owned concept.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum PasteAnchor {
+    #[default]
+    Original,
+    Middle,
+    Centroid,
+    BottomLeft,
+    BottomRight,
+    TopLeft,
+    TopRight,
+}
+
+/// 📋 Where/how a paste places its fragment: `anchor` picks the reference point, `position` (when
+/// given) overrides where that reference point lands.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct PastePlacement {
+    #[serde(default)]
+    pub anchor: PasteAnchor,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub position: Option<[f64; 3]>,
+}
+
+/// 📋 A copied document fragment: `dsl_text` is the human-readable/`text/plain`-fallback encoding
+/// (printed via the source app's own `DocumentDsl` grammar over a fragment-shaped projection),
+/// `pack_bytes` is the lossless binary lane for same-app/compatible paste. `media_type` is the
+/// cross-app compatibility key (see `media_types_compatible`) an app's `clipboard_accepts()` checks
+/// before offering to paste a fragment copied from a different app.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ClipboardFragment {
+    pub schema: String,
+    pub media_type: MediaType,
+    pub dsl_text: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
+    pub pack_bytes: Option<Vec<u8>>,
+    pub source_app: String,
+    pub label: String,
+}
+
+/// 🧯 Clipboard operation failures — an app's `copy_fragment`/`paste_operations` return these instead
+/// of panicking on an empty selection or an incompatible fragment.
+#[derive(Debug, thiserror::Error)]
+pub enum ClipboardError {
+    #[error("nothing selected to copy")]
+    EmptySelection,
+    #[error("clipboard fragment media type {0:?} not accepted by this app")]
+    IncompatibleMediaType(MediaType),
+    #[error("clipboard fragment failed to parse: {0}")]
+    ParseFailed(String),
+}
+//#endregion 🔖Clipboard
+
 // 🪪 `rename_all` on an enum only renames variant tags ("setActiveUtility"), not the fields *inside* each
 // struct-variant — those need `rename_all_fields` (serde 1.0.126+) or every multi-word field here
 // (window_kind_id, mime_type, plugin_id, ...) silently serializes as snake_case, breaking any TS side
@@ -5956,6 +6056,10 @@ pub enum HostEffect {
     OpenWindow { kind: WindowKindId, params: Value },
     CloseWindow { window: WindowHandle },
     Notify { message: String },
+    /// 📋 Asks the shell to write a copied/cut fragment to the OS clipboard (system clipboard where
+    /// available, session-local fallback otherwise) — emitted by `VcsDocumentApp`'s `copy`/`cut`
+    /// interception, never constructed by an app directly.
+    ClipboardWrite { fragment: ClipboardFragment },
     RequestSync,
     /// @emoji 🧭 Navigates the shell to a URI (studio/instance/document route).
     Navigate { uri: String },

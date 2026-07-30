@@ -10,8 +10,6 @@
     "resolveJsonModule": true,
     "noEmit": true,
     "paths": {
-      "@semio-tech/compose-js/*": ["../../../compose/client/lib/js/*"],
-      "@semio-tech/compose-js": ["../../../compose/client/lib/js/index.ts"],
       "@semio-tech/semio-asset/*": ["../../../asset/*"],
       "@semio-tech/semio-asset": ["../../../asset/index.ts"]
     }

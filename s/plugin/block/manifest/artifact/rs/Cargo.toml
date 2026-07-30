@@ -14,19 +14,19 @@ package = "semio:block"
 [[package.metadata.semio.playground]]
 variant = "block2d"
 app = "block2d-play"
-aliases = ["block-2d"]
+aliases = ["block 2d"]
 ports = { react = 6024, wgpu = 6124 }
 
 [[package.metadata.semio.playground]]
 variant = "block3d"
 app = "block3d-play"
-aliases = ["block-3d"]
+aliases = ["block 3d"]
 ports = { react = 6025, wgpu = 6125 }
 
 [[package.metadata.semio.playground]]
 variant = "block5d"
 app = "block5d-play"
-aliases = ["block-5d"]
+aliases = ["block 5d"]
 ports = { react = 6026, wgpu = 6126 }
 
 [[package.metadata.semio.assets]]

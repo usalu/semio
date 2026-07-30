@@ -34,6 +34,24 @@
       "port": 6023
     },
     {
+      "name": "block2d-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:block:2d"],
+      "port": 6024
+    },
+    {
+      "name": "block3d-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:block:3d"],
+      "port": 6025
+    },
+    {
+      "name": "block5d-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:block:5d"],
+      "port": 6026
+    },
+    {
       "name": "cad-react-dev",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev:cad"],

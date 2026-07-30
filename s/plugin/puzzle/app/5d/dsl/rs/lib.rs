@@ -45,7 +45,7 @@ mod tests {
                 grip_3d: Puzzle5dGrip3d { position: [4.05, 4.68, 3.0], direction: Some([0.0, 1.0, 0.0]), radius: Some(0.36), label: Some("b-l".into()) },
             }],
         });
-        projection.fasteners.push(Puzzle5dFastener { id: "f1".into(), source: "seed-left-001:v0".into(), target: "seed-right-001:v0".into(), fastener_kind: None });
+        projection.fasteners.push(Puzzle5dFastener { id: "f1".into(), source: "seed-left-001:v0".into(), target: "seed-right-001:v0".into(), fastener_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 });
         projection.kind_compatibility.push(Puzzle5dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true });
         store::test_support::assert_dsl_round_trip(&projection);
         store::test_support::assert_dsl_pack_equivalence(&projection);

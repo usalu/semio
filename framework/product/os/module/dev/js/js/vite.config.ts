@@ -12,7 +12,7 @@ import { semioBackboneVitePlugin, semioBlobVitePlugin } from "../script.ts";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
 const playDir = path.resolve(configDir, "..");
-const repoRoot = path.resolve(playDir, "../../../../../../..");
+const repoRoot = path.resolve(playDir, "../../../../../..");
 const pluginModulesDir = path.join(playDir, "plugin-modules");
 const rendererModulesDir = path.join(playDir, "renderer-modules");
 const renderer = process.env.SEMIO_RENDERER ?? "react";
@@ -28,7 +28,7 @@ const uiAssetsRoot = path.join(repoRoot, "framework/module/ui/asset");
  * build in `os/dev/script.ts`'s `buildEngineWasm`. */
 const FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE = ["@semio-tech/framework-surface-node-graph-rs", "@semio-tech/framework-editor-rs", "@semio-tech/flow-core"];
 
-/** @emoji 📦 Maps a registry `engines` crate path (e.g. `framework/surface/tiled-map/rs`) to its wasm-pack
+/** @emoji 📦 Maps a registry `engines` crate path (e.g. `framework/module/surface/tiled-map/rs`) to its wasm-pack
  * npm package name — read from the crate's own sibling `package.json`, not derived from its path, so a
  * crate keeps optimizing correctly across restructures/moves without touching this file. */
 function engineNpmPackage(cratePath: string): string {

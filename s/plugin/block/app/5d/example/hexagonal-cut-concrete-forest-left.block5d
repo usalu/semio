@@ -1,1 +1,34 @@
 schema=block.5d
+part-kind {
+  id="Hexagonal Cut Concrete Forest Left" name="Hexagonal Cut Concrete Forest Left" label="Hexagonal Cut Concrete Forest Left" description=""
+}
+part-2d {
+  shape=circle radius=20
+}
+part-3d {
+  orientation=0,0,0,1
+}
+camera2d {
+  x=230.7 y=93.5 zoom=2
+}
+camera3d {
+  position=30,-30,20 target=7,0,3 zoom=3
+}
+meta {
+  description=""
+}
+representations [id:TEXT name:TEXT mesh-url:TEXT tags:LIST lod:TEXT description:TEXT attributes:TABLE] {
+  r0 default "/mesh/hexagonal-cut-concrete-forest-left.glb" [ ] _ "" [ ]
+}
+grip-kinds [id:TEXT name:TEXT label:TEXT color:TEXT default-rope-kind:TEXT] {
+  b-l b-l b-l "hsl(206 52% 48%)" rope.link
+}
+grips [id:TEXT grip-kind:TEXT angle:NUM radius-2d:NUM position:TUPLE direction:TUPLE radius-3d:NUM] {
+  g0 b-l -0.1 3 4.05,4.68,3 0,1,0 0.36
+}
+compatibility [id:TEXT source:TEXT target:TEXT bidirectional:BOOL] {
+}
+attributes [key:TEXT value:TEXT definition:TEXT] {
+}
+authors [id:TEXT name:TEXT email:TEXT] {
+}
