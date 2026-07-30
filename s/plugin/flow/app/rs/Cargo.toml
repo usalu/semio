@@ -11,4 +11,4 @@ workspace = true
 path = "lib.rs"
 
 [dependencies]
-flow_core = { path = "../../../../kernel/flow/core/rs", package = "semio-s-kernel-flow-core" }
+flow_core = { path = "../../../../../framework/os/kernel/flow/core/rs", package = "semio-framework-os-kernel-flow-core" }

@@ -2,7 +2,7 @@
 /** 🎥 `@semio-tech/animate-video-rs` router: `bun ./script.ts test|render|preview|flush-cache`. */
 import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runCmd } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runCmd } from "../../../../../repo/lib/js/index.ts";
 
 const TICKET_TARGET_REL = ".repo/🎫/26/07/18/ANIMATE-VIDEO-CLI-PRESENT-BRIDGE/target";
 

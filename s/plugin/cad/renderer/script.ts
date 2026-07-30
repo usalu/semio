@@ -1,10 +1,10 @@
 #!/usr/bin/env bun
 /** 🧭 `@semio-tech/cad-js-renderer` task router: `bun ./script.ts test [args…]`. */
-import type { FileLinter } from "../../repo/lib/js/index.ts";
-import { dependencyBoundaryBreachesForFile } from "../../repo/lib/js/index.ts";
-import { getWorkspaceRoot } from "../../repo/lib/js/index.ts";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest, resolveTestLevel } from "../../repo/lib/js/index.ts";
-import { defineLint } from "../../repo/lib/js/index.ts";
+import type { FileLinter } from "../../../../repo/lib/js/index.ts";
+import { dependencyBoundaryBreachesForFile } from "../../../../repo/lib/js/index.ts";
+import { getWorkspaceRoot } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest, resolveTestLevel } from "../../../../repo/lib/js/index.ts";
+import { defineLint } from "../../../../repo/lib/js/index.ts";
 
 export const policyFile = "index.tsx";
 

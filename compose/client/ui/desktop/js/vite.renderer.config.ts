@@ -24,7 +24,7 @@ import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import wasm from "__KEEP_vite_plugin__-wasm";
 import topLevelAwait from "__KEEP_vite_plugin__-top-level-await";
-import { createWorkspaceViteResolveConfig, semioFaviconVitePlugin } from "../../../../ui/styling/vite-elements-assets.ts";
+import { createWorkspaceViteResolveConfig, semioFaviconVitePlugin } from "../../../../../framework/ui/styling/vite-elements-assets.ts";
 // #endregion 🔌Adapters
 
 type CjsFacadeResolveOpts = {

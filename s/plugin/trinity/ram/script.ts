@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🔺 `@semio-tech/trinity-ram-rs` router: `bun ./script.ts <wasm|test>`. */
-import { BundleScript, ScriptRouter, playPollingEnv, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, playPollingEnv, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../repo/lib/js/index.ts";
 import { join } from "node:path";
 
 class WasmScript extends BundleScript {

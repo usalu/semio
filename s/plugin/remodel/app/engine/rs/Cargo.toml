@@ -20,6 +20,6 @@ remodel_geo = { path = "../../../geo/rs", package = "remodel_geo" }
 remodel_video = { path = "../../../video/rs", package = "remodel_video" }
 remodel_image = { path = "../../../image/rs", package = "remodel_image" }
 semio-framework-plugin = { path = "../../../../../../framework/plugin/rs" }
-semio-framework-os = { path = "../../../../../../framework/product/os/core/rs" }
+semio-framework-os = { path = "../../../../../../framework/os/core/rs", package = "semio-framework-os" }
 serde_json = "1.0.140"
 base64 = "0.22.1"

@@ -13,8 +13,8 @@ path = "lib.rs"
 [dependencies]
 trinity_ram = { path = "../../../../ram/rs", package = "trinity_ram" }
 trinity_jack_op = { path = "../../op/rs", package = "semio-s-app-trinity-jack-op" }
-protocol = { path = "../../../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
-store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+protocol = { path = "../../../../../../../framework/os/kernel/protocol/rs", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
 
 [dev-dependencies]
 trinity_jack_engine = { path = "../../engine/rs", package = "semio-s-app-trinity-jack-engine" }

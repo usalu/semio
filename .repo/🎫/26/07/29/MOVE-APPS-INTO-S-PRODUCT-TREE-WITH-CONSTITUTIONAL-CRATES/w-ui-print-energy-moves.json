@@ -1,0 +1,4 @@
+[
+  {"oldDir": "ui/wgpu/rs", "newDir": "framework/ui/wgpu/rs", "newPkg": "ui_wgpu"},
+  {"oldDir": "energy/engine/rs", "newDir": "s/plugin/energy/engine/rs", "newPkg": "energy_engine"}
+]

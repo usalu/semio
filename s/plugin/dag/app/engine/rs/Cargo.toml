@@ -11,7 +11,7 @@ workspace = true
 path = "lib.rs"
 
 [dependencies]
-infinite_board_port_directed_dag = { path = "../../../../../../framework/kernel/infinite/board/port/directed/dag/rs", package = "semio-framework-kernel-infinite-board-port-directed-dag" }
+infinite_board_port_directed_dag = { path = "../../../../../../framework/os/kernel/infinite/board/port/directed/dag/rs", package = "semio-framework-os-kernel-infinite-board-port-directed-dag" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"

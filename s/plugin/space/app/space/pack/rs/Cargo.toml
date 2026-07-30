@@ -11,9 +11,9 @@ workspace = true
 path = "lib.rs"
 
 [dependencies]
-semio-framework-os = { path = "../../../../../../../framework/product/os/core/rs" }
-pack = { path = "../../../../../../kernel/pack/rs", package = "semio-s-kernel-pack" }
-store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+semio-framework-os = { path = "../../../../../../../framework/os/core/rs", package = "semio-framework-os" }
+pack = { path = "../../../../../../../framework/os/kernel/pack/rs", package = "semio-framework-os-kernel-pack" }
+store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
 
 [dev-dependencies]
 space_shared = { path = "../../../../shared/rs", package = "semio-s-plugin-space-shared" }

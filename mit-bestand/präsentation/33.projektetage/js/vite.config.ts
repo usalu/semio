@@ -4,14 +4,14 @@ import react from "@vitejs/plugin-react";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
-import { uiAssetsVitePlugin, playgroundStaticSiteBuildOptions } from "../../../../ui/styling/vite-elements-assets.ts";
+import { uiAssetsVitePlugin, playgroundStaticSiteBuildOptions } from "../../../../framework/ui/styling/vite-elements-assets.ts";
 // #endregion 🔌Adapters
 
 const dir = dirname(fileURLToPath(import.meta.url));
 const bundleRoot = resolve(dir, "..");
 const repoRoot = resolve(bundleRoot, "../../../");
-const uiAssetsRoot = resolve(repoRoot, "ui/asset");
-const uiReact = resolve(repoRoot, "ui/js/react/index.tsx");
+const uiAssetsRoot = resolve(repoRoot, "framework/ui/asset");
+const uiReact = resolve(repoRoot, "framework/ui/js/react/index.tsx");
 const presentationCore = resolve(repoRoot, "animate/present/core/js/index.ts");
 const presentationRenderer = resolve(repoRoot, "animate/present/renderer/react/index.tsx");
 const frameworkCore = resolve(repoRoot, "framework/core/js/index.ts");

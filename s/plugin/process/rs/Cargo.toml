@@ -27,5 +27,5 @@ process_3d = { path = "../app/3d/rs", package = "semio-s-app-process-3d" }
 process_3d_engine = { path = "../app/3d/engine/rs", package = "semio-s-app-process-3d-engine" }
 process_3d_ui = { path = "../app/3d/ui/rs", package = "semio-s-app-process-3d-ui" }
 semio-framework-plugin = { path = "../../../../framework/plugin/rs" }
-semio-framework-os = { path = "../../../../framework/product/os/core/rs" }
+semio-framework-os = { path = "../../../../framework/os/core/rs", package = "semio-framework-os" }
 serde_json = "1.0.140"

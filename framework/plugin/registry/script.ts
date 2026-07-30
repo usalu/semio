@@ -93,7 +93,7 @@ export type PlaygroundEntry = {
   readonly pluginId: string;
   readonly cratePath: string;
   readonly app?: string;
-  /** @emoji 🏷️ Shell brand id (see `framework/product/os/dev/brand`) this variant ships as. */
+  /** @emoji 🏷️ Shell brand id (see `framework/os/dev/brand`) this variant ships as. */
   readonly brand?: string;
   readonly aliases: readonly string[];
   readonly ports: { readonly react: number; readonly wgpu: number };
@@ -182,7 +182,7 @@ function parseAssetsForCrate(manifestPath: string): AssetSpecRow[] {
  * trailing `/rs` and `/plugin`), then — for multi-app crates where the playground `variant` diverges
  * from the shared crate path (e.g. `puzzle/plugin/rs` hosting `puzzle2d`/`puzzle3d`) — the sibling
  * module directory named after the variant's `pluginId`-stripped suffix (`puzzle2d` - `puzzle` = `2d`
- * → `puzzle/2d/example`). Mirrors `ui/tui/rs`'s `discover_examples_for_playground` byte-for-byte.
+ * → `puzzle/2d/example`). Mirrors `framework/ui/tui/rs`'s `discover_examples_for_playground` byte-for-byte.
  */
 function discoverExamplesForPlayground(repoRoot: string, cratePath: string, pluginId: string, variant: string): string[] {
   const idsIn = (dir: string): string[] => {

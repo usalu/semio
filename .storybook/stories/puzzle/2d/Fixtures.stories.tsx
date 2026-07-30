@@ -8,14 +8,14 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 
-import { Board2dHost } from "../../../../framework/renderer/react/index.tsx";
-import type { ActionDescriptor, UiComponentSceneNode } from "../../../../framework/renderer/react/index.tsx";
+import { Board2dHost } from "../../../../framework/os/renderer/js/react/index.tsx";
+import type { ActionDescriptor, UiComponentSceneNode } from "../../../../framework/os/renderer/js/react/index.tsx";
 
-import concreteForestFixtureDsl from "../../../../puzzle/2d/example/concrete-forest.puzzle2d?raw";
-import nakaginCapsuleTowerFixtureDsl from "../../../../puzzle/2d/example/nakagin-capsule-tower.puzzle2d?raw";
+import concreteForestFixtureDsl from "../../../../s/plugin/puzzle/2d/example/concrete-forest.puzzle2d?raw";
+import nakaginCapsuleTowerFixtureDsl from "../../../../s/plugin/puzzle/2d/example/nakagin-capsule-tower.puzzle2d?raw";
 
 //#region WasmFixtureLoader
-/** @emoji 🧵 Lazily loads+inits `@semio-tech/puzzle-2d-rs`'s wasm module once (mirrors `framework/renderer/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle2dParseDslJson` free export. */
+/** @emoji 🧵 Lazily loads+inits `@semio-tech/puzzle-2d-rs`'s wasm module once (mirrors `framework/os/renderer/js/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle2dParseDslJson` free export. */
 type Puzzle2dWasmModule = { readonly default: (input?: unknown) => Promise<unknown>; readonly puzzle2dParseDslJson: (dslText: string) => string };
 let puzzle2dWasmModulePromise: Promise<Puzzle2dWasmModule> | null = null;
 function loadPuzzle2dWasm(): Promise<Puzzle2dWasmModule> {

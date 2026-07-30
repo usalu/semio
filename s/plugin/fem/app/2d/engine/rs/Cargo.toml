@@ -17,4 +17,4 @@ thiserror = "2.0.12"
 
 [dev-dependencies]
 fem2d_dsl = { path = "../../dsl/rs", package = "semio-s-app-fem-2d-dsl" }
-store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }

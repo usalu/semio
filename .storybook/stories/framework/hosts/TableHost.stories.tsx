@@ -5,7 +5,7 @@
 // reducer alone is enough to make sorting, row selection, the stepper cell, and the row-action button all
 // round-trip for real.
 // Summary: `reduceStoryTableAction` mirrors the subset of a real host app's `sortTable`/`selectRow`/
-// `adjustCount`/`removeRow` handling `TableHost` (`framework/renderer/react/index.tsx`) actually dispatches —
+// `adjustCount`/`removeRow` handling `TableHost` (`framework/os/renderer/js/react/index.tsx`) actually dispatches —
 // `dispatchCellAction` merges a stepper's `{ delta }` or a row-action button's `{}` into that cell's own
 // `ActionDescriptor.args`, so the reducer reads `rowId` back out of `args` rather than needing a separate wire.
 // 2026 Ueli Saluz <ueli@semio-tech.com>

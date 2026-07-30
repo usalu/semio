@@ -155,7 +155,7 @@ pub fn bounds_to_display_rect(object_id: &str, bounds: &LayoutBounds, inherited:
 //#endregion 🖼️ Display
 
 //#region ⚙️ Scene
-static LAYOUT_SANS: &[u8] = include_bytes!("../../../../../../framework/kernel/infinite/canvas/rs/asset/MapLabelSans.ttf");
+static LAYOUT_SANS: &[u8] = include_bytes!("../../../../../../framework/os/kernel/infinite/canvas/rs/asset/MapLabelSans.ttf");
 
 pub struct LayoutEngine {
     pub font_context: FontContext,

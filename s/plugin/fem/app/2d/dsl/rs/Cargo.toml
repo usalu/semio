@@ -12,4 +12,4 @@ path = "lib.rs"
 
 [dependencies]
 fem2d = { path = "../../rs", package = "semio-s-app-fem-2d" }
-store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }

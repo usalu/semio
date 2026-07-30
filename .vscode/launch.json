@@ -968,10 +968,10 @@
       }
     },
     {
-      "name": "🛠️dev🖨️print",
+      "name": "🛠️dev🖨️framework/print",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:print",
+      "command": "bun run dev:framework/print",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -1778,10 +1778,10 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook🏘️compose🖱️ui",
+      "name": "🛠️dev📖storybook🏘️compose🖱️framework/ui",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:storybook:compose:ui",
+      "command": "bun run dev:storybook:compose:framework/ui",
       "cwd": "${workspaceFolder}",
       "env": {
         "STORYBOOK_PORT": "6010"
@@ -1816,10 +1816,10 @@
       }
     },
     {
-      "name": "🛠️dev📖storybook🖱️ui",
+      "name": "🛠️dev📖storybook🖱️framework/ui",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:storybook:ui",
+      "command": "bun run dev:storybook:framework/ui",
       "cwd": "${workspaceFolder}",
       "env": {
         "STORYBOOK_PORT": "6010"
@@ -3472,6 +3472,17 @@
       }
     },
     {
+      "name": "🧪test🖥️os-core",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-core:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.952
+      }
+    },
+    {
       "name": "🛠️dev🏗️fem🩻2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
@@ -3651,6 +3662,17 @@
       }
     },
     {
+      "name": "📦build🖥️os-core",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-core:wasm",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 121
+      }
+    },
+    {
       "name": "📦build🏘️compose🔗graphql",
       "type": "node-terminal",
       "request": "launch",
@@ -3695,10 +3717,10 @@
       }
     },
     {
-      "name": "📦build🖨️print",
+      "name": "📦build🖨️framework/print",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run build:print",
+      "command": "bun run build:framework/print",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",

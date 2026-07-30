@@ -15,4 +15,4 @@ en1994 = { path = "../../rs", package = "semio-s-app-norm-en1994" }
 norm_core = { path = "../../../../core/rs", package = "norm_core" }
 
 [dev-dependencies]
-store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }

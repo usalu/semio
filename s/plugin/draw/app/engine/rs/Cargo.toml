@@ -14,8 +14,8 @@ path = "lib.rs"
 draw = { path = "../../rs", package = "semio-s-app-draw" }
 draw_dsl = { path = "../../dsl/rs", package = "semio-s-app-draw-dsl" }
 semio-framework-core = { path = "../../../../../../framework/core/rs" }
-kernel_2d_engine = { path = "../../../../../kernel/geometry/2d/engine/rs", package = "semio-s-kernel-geometry-2d-engine" }
-kernel_2d_rs = { path = "../../../../../kernel/geometry/2d/rs", package = "semio-s-kernel-geometry-2d" }
+kernel_2d_engine = { path = "../../../../../../framework/os/kernel/2d/engine/rs", package = "semio-s-kernel-geometry-2d-engine" }
+kernel_2d_rs = { path = "../../../../../../framework/os/kernel/2d/rs", package = "semio-s-kernel-geometry-2d" }
 base64 = "0.22"
 image = { version = "0.25", default-features = false, features = ["png"] }
 serde = { version = "1.0.219", features = ["derive"] }

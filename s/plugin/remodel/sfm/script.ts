@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🏗️ `@semio-tech/remodel-sfm` — Structure from motion: two-view geometry, triangulation, PnP, incremental and global reconstruction, bundle adjustment, loop closure and pose priors. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runCargoTestBudgeted, runCargoLint, runBundleScriptMain } from "../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runCargoTestBudgeted, runCargoLint, runBundleScriptMain } from "../../../../repo/lib/js/index.ts";
 import { join } from "node:path";
 
 class TestScript extends BundleScript {

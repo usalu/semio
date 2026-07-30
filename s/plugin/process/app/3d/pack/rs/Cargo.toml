@@ -12,8 +12,8 @@ path = "lib.rs"
 
 [dependencies]
 process_3d = { path = "../../rs", package = "semio-s-app-process-3d" }
-pack = { path = "../../../../../../kernel/pack/rs", package = "semio-s-kernel-pack" }
-store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+pack = { path = "../../../../../../../framework/os/kernel/pack/rs", package = "semio-framework-os-kernel-pack" }
+store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
 
 [dev-dependencies]
 process_3d_dsl = { path = "../../dsl/rs", package = "semio-s-app-process-3d-dsl" }

@@ -13,8 +13,8 @@ path = "lib.rs"
 [dependencies]
 reasoning_wires = { path = "../../rs", package = "semio-s-app-reasoning-wires" }
 reasoning_wires_op = { path = "../../op/rs", package = "semio-s-app-reasoning-wires-op" }
-protocol = { path = "../../../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
-store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+protocol = { path = "../../../../../../../framework/os/kernel/protocol/rs", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
 
 [dev-dependencies]
 reasoning_wires_engine = { path = "../../engine/rs", package = "semio-s-app-reasoning-wires-engine" }

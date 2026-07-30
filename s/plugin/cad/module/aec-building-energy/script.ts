@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** ⚡ `@semio-tech/cad-js-module-aec-building-energy` task router: `bun ./script.ts test [args…]`. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {

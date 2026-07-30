@@ -15,8 +15,8 @@ crate-type = ["rlib", "cdylib"]
 path = "lib.rs"
 
 [dependencies]
-infinite_board_normal_directed = { path = "../../../../../framework/kernel/infinite/board/normal/directed/rs", package = "semio-framework-kernel-infinite-board-normal-directed" }
-infinite_cavas = { path = "../../../../../framework/kernel/infinite/canvas/rs", package = "semio-framework-kernel-infinite-canvas" }
+infinite_board_normal_directed = { path = "../../../../../framework/os/kernel/infinite/board/normal/directed/rs", package = "semio-framework-os-kernel-infinite-board-normal-directed" }
+infinite_cavas = { path = "../../../../../framework/os/kernel/infinite/canvas/rs", package = "semio-framework-os-kernel-infinite-canvas" }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.106"

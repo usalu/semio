@@ -12,12 +12,12 @@ path = "lib.rs"
 
 [dependencies]
 imperative = { path = "../../rs", package = "semio-s-app-imperative" }
-dsl = { path = "../../../../../../framework/kernel/dsl/rs", package = "semio-framework-kernel-dsl" }
-protocol = { path = "../../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
-store = { path = "../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+dsl = { path = "../../../../../../framework/os/kernel/dsl/rs", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../framework/os/kernel/protocol/rs", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
 serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]
 imperative_engine = { path = "../../engine/rs", package = "semio-s-app-imperative-engine" }
-vcs = { path = "../../../../../../framework/kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
-neural_engine = { path = "../../../../../../framework/kernel/neural/engine/rs", package = "semio-framework-kernel-neural-engine" }
+vcs = { path = "../../../../../../framework/os/kernel/vcs/rs", package = "semio-framework-os-kernel-vcs" }
+neural_engine = { path = "../../../../../../framework/os/kernel/neural/engine/rs", package = "semio-framework-os-kernel-neural-engine" }

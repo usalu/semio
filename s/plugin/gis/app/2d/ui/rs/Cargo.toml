@@ -14,8 +14,8 @@ path = "lib.rs"
 gis2d = { path = "../../rs", package = "semio-s-app-gis-2d" }
 gis2d_engine = { path = "../../engine/rs", package = "semio-s-app-gis-2d-engine" }
 gis2d_op = { path = "../../op/rs", package = "semio-s-app-gis-2d-op" }
-protocol = { path = "../../../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
-store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+protocol = { path = "../../../../../../../framework/os/kernel/protocol/rs", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
 framework_surface_tiled_map = { path = "../../../../../../../framework/surface/tiled-map/rs" }
 semio-framework-plugin = { path = "../../../../../../../framework/plugin/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

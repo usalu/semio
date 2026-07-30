@@ -1,0 +1,44 @@
+[package]
+name = "semio-framework-os-kernel-math-graph-normal-undirected"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+name = "mathematical_graph_normal_undirected"
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+mathematical_graph = { path = "../../../rs", package = "semio-framework-os-kernel-math-graph" }
+mathematical_random = { path = "../../../../random/rs", package = "semio-framework-os-kernel-math-random" }
+mathematical_algebra = { path = "../../../../algebra/rs", package = "semio-framework-os-kernel-math-algebra" }
+mathematical_graph_traversal = { path = "../../../traversal/rs", package = "semio-framework-os-kernel-math-graph-traversal" }
+mathematical_graph_components = { path = "../../../components/rs", package = "semio-framework-os-kernel-math-graph-components" }
+mathematical_graph_dag = { path = "../../../dag/rs", package = "semio-framework-os-kernel-math-graph-dag" }
+mathematical_graph_cycles = { path = "../../../cycles/rs", package = "semio-framework-os-kernel-math-graph-cycles" }
+mathematical_graph_paths = { path = "../../../paths/rs", package = "semio-framework-os-kernel-math-graph-paths" }
+mathematical_graph_operators = { path = "../../../operators/rs", package = "semio-framework-os-kernel-math-graph-operators" }
+mathematical_graph_coloring = { path = "../../../coloring/rs", package = "semio-framework-os-kernel-math-graph-coloring" }
+mathematical_graph_generate = { path = "../../../generate/rs", package = "semio-framework-os-kernel-math-graph-generate" }
+mathematical_graph_generate_random = { path = "../../../generate/random/rs", package = "semio-framework-os-kernel-math-graph-generate-random" }
+mathematical_graph_io = { path = "../../../io/rs", package = "semio-framework-os-kernel-math-graph-io" }
+mathematical_graph_structure = { path = "../../../structure/rs", package = "semio-framework-os-kernel-math-graph-structure" }
+mathematical_graph_cliques = { path = "../../../cliques/rs", package = "semio-framework-os-kernel-math-graph-cliques" }
+mathematical_graph_clustering = { path = "../../../clustering/rs", package = "semio-framework-os-kernel-math-graph-clustering" }
+mathematical_graph_matching = { path = "../../../matching/rs", package = "semio-framework-os-kernel-math-graph-matching" }
+mathematical_graph_bipartite = { path = "../../../bipartite/rs", package = "semio-framework-os-kernel-math-graph-bipartite" }
+mathematical_graph_trees = { path = "../../../trees/rs", package = "semio-framework-os-kernel-math-graph-trees" }
+mathematical_graph_planarity = { path = "../../../planarity/rs", package = "semio-framework-os-kernel-math-graph-planarity" }
+mathematical_graph_flow = { path = "../../../flow/rs", package = "semio-framework-os-kernel-math-graph-flow" }
+mathematical_graph_centrality = { path = "../../../centrality/rs", package = "semio-framework-os-kernel-math-graph-centrality" }
+mathematical_graph_distance = { path = "../../../distance/rs", package = "semio-framework-os-kernel-math-graph-distance" }
+mathematical_graph_similarity = { path = "../../../similarity/rs", package = "semio-framework-os-kernel-math-graph-similarity" }
+mathematical_graph_isomorphism = { path = "../../../isomorphism/rs", package = "semio-framework-os-kernel-math-graph-isomorphism" }
+mathematical_graph_connectivity = { path = "../../../connectivity/rs", package = "semio-framework-os-kernel-math-graph-connectivity" }
+mathematical_graph_community = { path = "../../../community/rs", package = "semio-framework-os-kernel-math-graph-community" }
+mathematical_graph_approximation = { path = "../../../approximation/rs", package = "semio-framework-os-kernel-math-graph-approximation" }
+mathematical_graph_spectral = { path = "../../../spectral/rs", package = "semio-framework-os-kernel-math-graph-spectral" }

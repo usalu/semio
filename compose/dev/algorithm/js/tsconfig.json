@@ -26,7 +26,7 @@
       "@semio-tech/compose-js/*": ["../js/*"],
       "@semio-tech/compose-rs-wasm": ["../rs/pkg"],
       "@semio-tech/compose-rs-wasm/*": ["../rs/pkg/*"],
-      "@semio-tech/ui-react": ["../../../ui/react/index.tsx"]
+      "@semio-tech/ui-react": ["../../../../framework/ui/js/react/index.tsx"]
     }
   },
   "exclude": ["node_modules", "storybook-static"]

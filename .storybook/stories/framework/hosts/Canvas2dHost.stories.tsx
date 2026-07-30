@@ -31,7 +31,7 @@ const STORY_LAYERS: readonly StoryLayer[] = [
 //#endregion Fixtures
 
 //#region Reducer
-/** @emoji 🎥 Story-local mirror of the `setCamera` handling a real host app performs against `Canvas2dHost`'s debounced camera-sync dispatch (`framework/renderer/react/index.tsx`'s `CAMERA_SYNC_DEBOUNCE_MS`). */
+/** @emoji 🎥 Story-local mirror of the `setCamera` handling a real host app performs against `Canvas2dHost`'s debounced camera-sync dispatch (`framework/os/renderer/js/react/index.tsx`'s `CAMERA_SYNC_DEBOUNCE_MS`). */
 function reduceStoryCanvas2dAction(state: StoryCanvas2dState, descriptor: ActionDescriptor): StoryCanvas2dState {
   if (descriptor.action !== "setCamera") return state;
   const camera = (descriptor.args as { readonly camera?: StoryCamera } | undefined)?.camera;

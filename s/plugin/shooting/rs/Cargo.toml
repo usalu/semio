@@ -28,7 +28,7 @@ crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
 
 [dependencies]
-semio-framework-os = { path = "../../../../framework/product/os/core/rs" }
+semio-framework-os = { path = "../../../../framework/os/core/rs", package = "semio-framework-os" }
 semio-framework-plugin = { path = "../../../../framework/plugin/rs" }
 shooting = { path = "../app/rs", package = "semio-s-app-shooting" }
 shooting_engine = { path = "../app/engine/rs", package = "semio-s-app-shooting-engine" }

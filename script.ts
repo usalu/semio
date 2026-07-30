@@ -574,7 +574,7 @@ export class LintScript extends Script {
       return;
     }
     runCmd("bun", ["nx", "run-many", "-t", "lint", "--all", "--exclude", "workspace"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    runCmd("bunx", ["dependency-cruiser@16", "compose", "framework", "flow", "layout", "puzzle", "ui", "draw", "note", "sequence", "s", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
+    runCmd("bunx", ["dependency-cruiser@16", "compose", "framework", "flow", "layout", "puzzle", "framework/ui", "draw", "note", "sequence", "s", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
   }
 }
 //#endregion 🔖LintScript
@@ -594,7 +594,7 @@ export class VerifyScript extends Script {
     // and framework-renderer-wgpu:lint has known pending color-literal violations (see spawn_task follow-ups) —
     // this gate must stay a meaningful, currently-green signal for refactor sessions, not inherit that noise.
     console.log("[verify] dependency-cruiser boundaries…");
-    runCmd("bunx", ["dependency-cruiser@16", "compose", "framework", "flow", "layout", "puzzle", "ui", "draw", "note", "sequence", "s", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
+    runCmd("bunx", ["dependency-cruiser@16", "compose", "framework", "flow", "layout", "puzzle", "framework/ui", "draw", "note", "sequence", "s", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
     console.log("[verify] generated catalog freshness…");
     // nx orchestrators: exempt — leaves individually budgeted.
     runCmd("bun", ["nx", "run", "@semio-tech/plugin-registry:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
@@ -1524,7 +1524,7 @@ const POLICY_SHARED_DOMAIN_CRATE_ALLOWLIST = new Set<string>(["flow_core", "flow
  * reachable only through the hub servers (and, behind a feature, `db_engine`), enforced by
  * `policyDbServerOnlyBreaches` instead of this always-allowed list.
  */
-const POLICY_ALWAYS_ALLOWED_DEP_PREFIXES = ["framework/", "ui/", "vcs/", "store/", "playbook/", "protocol/", "repo/"];
+const POLICY_ALWAYS_ALLOWED_DEP_PREFIXES = ["framework/", "framework/ui/", "vcs/", "store/", "playbook/", "protocol/", "repo/"];
 
 /**
  * 🎫 dsl/ derive-engine migration lock step: technologies whose example/*.json fixture has not yet
@@ -1563,13 +1563,13 @@ const POLICY_PACK_COMPLETENESS_ALLOWLIST = new Set<string>([]);
 const POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST = new Set<string>([
   "architect/spine/rs/lib.rs",
   "compose/client/lib/rs/lib.rs",
-  "framework/kernel/dsl/rs/lib.rs",
-  "framework/kernel/infinite/board/port/directed/dag/rs/lib.rs",
-  "framework/product/os/core/rs/lib.rs",
+  "framework/os/kernel/dsl/rs/lib.rs",
+  "framework/os/kernel/infinite/board/port/directed/dag/rs/lib.rs",
+  "framework/os/core/rs/lib.rs",
   "s/plugin/lowpoly/app/protocol/rs/lib.rs",
   "s/plugin/playbook/module/procedural/rs/lib.rs",
-  "s/kernel/flow/core/rs/lib.rs",
-  "s/kernel/playbook/rs/lib.rs",
+  "framework/os/kernel/flow/core/rs/lib.rs",
+  "framework/os/kernel/workflow/rs/lib.rs",
   "s/plugin/animate/app/present/protocol/rs/lib.rs",
   "s/plugin/gis/rs/lib.rs",
   "s/plugin/mathematical/rs/lib.rs",
@@ -2367,7 +2367,7 @@ const POLICY_PROTOCOL_MIGRATION_USE_BLOCK_RE = /use\s+(?:::)?vcs::\{([^}]*)\}/gs
 function policyProtocolMigrationBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const relPath of policyAllRustFiles(repoRoot)) {
-    if (relPath === "framework/kernel/vcs/rs/lib.rs") continue; // the crate that used to own the shim; never reaches itself via "vcs::"
+    if (relPath === "framework/os/kernel/vcs/rs/lib.rs") continue; // the crate that used to own the shim; never reaches itself via "vcs::"
     const content = readFileSync(join(repoRoot, relPath), "utf8");
     const seenLines = new Set<number>();
     const lineOf = (index: number): number => content.slice(0, index).split(/\r?\n/).length;
@@ -2445,7 +2445,7 @@ function policyDiscoverCargoTomlFiles(repoRoot: string): string[] {
 }
 
 /** 🛡️Directory prefixes always allowed to carry a `db`/`db_*` Cargo dependency: the db family itself and the os hub server. Compose hub crates (`compose/**​/hub/**`) are matched structurally in `policyDbAllowedDir` since they aren't one fixed prefix. */
-const POLICY_DB_SERVER_ONLY_ALLOWED_PREFIXES = ["db/", "framework/product/os/hub/"];
+const POLICY_DB_SERVER_ONLY_ALLOWED_PREFIXES = ["db/", "hub/"];
 
 /** 🛡️True if `dir` (a repo-relative directory, trailing "/") may depend on `db`/`db_*`: under `db/` itself, under the os hub server, or any compose crate whose path runs through a `hub/` segment. */
 function policyDbAllowedDir(dir: string): boolean {
@@ -2458,7 +2458,7 @@ const POLICY_DB_DEP_RE = /^(db(?:_[a-z0-9]+)*)\s*=\s*\{[^\n]*?\bpath\s*=\s*"([^"
 
 /**
  * 📏db/ server-only rule: no `db`/`db_*` family Cargo dependency may live outside `db/` itself, the
- * `os-hub` server (`framework/product/os/hub/`), or a compose hub crate (`compose/**​/hub/**`) — db is
+ * `os-hub` server (`hub/`), or a compose hub crate (`compose/**​/hub/**`) — db is
  * server-side storage for the hubs; clients keep local-first backbones (`vcs` + `store`) and
  * only ever reach db indirectly over the wire. `POLICY_ALWAYS_ALLOWED_DEP_PREFIXES` deliberately does
  * NOT include `"db/"` (unlike `"protocol/"`) so this stays the one gate that enforces it.
@@ -2480,8 +2480,8 @@ function policyDbServerOnlyBreaches(repoRoot: string): BreachRecord[] {
         kind: "protocol-migration/db-server-only",
         scope: relPath,
         priority: "high",
-        reason: "db is server-side storage for the hubs — only db/ itself, framework/product/os/hub/, and compose's hub crates may depend on a db/db_* crate; clients keep local-first backbones (vcs + store) and only ever reach db indirectly over the wire.",
-        solution: `Remove the "${depName}" dependency from ${relPath}, or if this crate genuinely is a hub server, move/confirm it under db/, framework/product/os/hub/, or a compose/**/hub/** directory.`,
+        reason: "db is server-side storage for the hubs — only db/ itself, hub/, and compose's hub crates may depend on a db/db_* crate; clients keep local-first backbones (vcs + store) and only ever reach db indirectly over the wire.",
+        solution: `Remove the "${depName}" dependency from ${relPath}, or if this crate genuinely is a hub server, move/confirm it under db/, hub/, or a compose/**/hub/** directory.`,
       });
     }
   }

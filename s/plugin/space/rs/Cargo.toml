@@ -24,6 +24,6 @@ path = "lib.rs"
 
 [dependencies]
 semio-framework-plugin = { path = "../../../../framework/plugin/rs" }
-semio-framework-os = { path = "../../../../framework/product/os/core/rs" }
+semio-framework-os = { path = "../../../../framework/os/core/rs", package = "semio-framework-os" }
 home_ui = { path = "../app/home/ui/rs", package = "semio-s-app-space-home-ui" }
 space_ui = { path = "../app/space/ui/rs", package = "semio-s-app-space-space-ui" }

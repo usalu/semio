@@ -3,7 +3,7 @@
 // #endregion 🧲Header
 
 import { METABOLISM_ICONS, isMetabolismIconName, type MetabolismIconName } from "../metabolism/icon/generated/metabolism_icons.ts";
-import type { UiThemeIcons } from "../../ui/styling/js/index.ts";
+import type { UiThemeIcons } from "../../framework/ui/styling/js/index.ts";
 
 /** @emoji 🖼 Resolves metabolism icon SVG markup with optional theme aliases and variants. */
 export function resolveMetabolismIconSvgFromTheme(name: MetabolismIconName, icons: UiThemeIcons | undefined): string {

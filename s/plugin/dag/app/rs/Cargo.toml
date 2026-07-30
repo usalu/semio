@@ -11,4 +11,4 @@ workspace = true
 path = "lib.rs"
 
 [dependencies]
-infinite_board_port_directed_dag = { path = "../../../../../framework/kernel/infinite/board/port/directed/dag/rs", package = "semio-framework-kernel-infinite-board-port-directed-dag" }
+infinite_board_port_directed_dag = { path = "../../../../../framework/os/kernel/infinite/board/port/directed/dag/rs", package = "semio-framework-os-kernel-infinite-board-port-directed-dag" }

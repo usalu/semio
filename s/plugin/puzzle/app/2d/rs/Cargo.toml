@@ -11,7 +11,7 @@ workspace = true
 path = "lib.rs"
 
 [dependencies]
-dsl = { path = "../../../../../../framework/kernel/dsl/rs", package = "semio-framework-kernel-dsl" }
-store = { path = "../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+dsl = { path = "../../../../../../framework/os/kernel/dsl/rs", package = "semio-framework-os-kernel-dsl" }
+store = { path = "../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

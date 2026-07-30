@@ -14,4 +14,4 @@ path = "lib.rs"
 trinity_ram = { path = "../../../../ram/rs", package = "trinity_ram" }
 
 [dev-dependencies]
-store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }

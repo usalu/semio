@@ -12,9 +12,9 @@ path = "lib.rs"
 
 [dependencies]
 semio-framework-core = { path = "../../../core/rs" }
-ui_wgpu = { path = "../../../../ui/wgpu/rs" }
-vcs = { path = "../../../kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
-store = { path = "../../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
+ui_wgpu = { path = "../../../ui/wgpu/rs", package = "ui_wgpu" }
+vcs = { path = "../../../os/kernel/vcs/rs", package = "semio-framework-os-kernel-vcs" }
+store = { path = "../../../os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
 wasmtime = { version = "22.0.1", features = ["cranelift", "component-model"] }
 wasmtime-wasi = "22.0.1"
 serde = { version = "1.0.219", features = ["derive"] }

@@ -13,8 +13,8 @@ path = "lib.rs"
 [dependencies]
 fem2d = { path = "../../rs", package = "semio-s-app-fem-2d" }
 fem2d_op = { path = "../../op/rs", package = "semio-s-app-fem-2d-op" }
-protocol = { path = "../../../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
-store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+protocol = { path = "../../../../../../../framework/os/kernel/protocol/rs", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
 
 [dev-dependencies]
 fem2d_engine = { path = "../../engine/rs", package = "semio-s-app-fem-2d-engine" }

@@ -1,0 +1,627 @@
+[
+  {
+    "oldDir": "framework/kernel/dsl/core/rs",
+    "newDir": "framework/os/kernel/dsl/core/rs",
+    "newPkg": "semio-framework-os-kernel-dsl-core"
+  },
+  {
+    "oldDir": "framework/kernel/dsl/token/rs",
+    "newDir": "framework/os/kernel/dsl/token/rs",
+    "newPkg": "semio-framework-os-kernel-dsl-token"
+  },
+  {
+    "oldDir": "framework/kernel/dsl/schema/rs",
+    "newDir": "framework/os/kernel/dsl/schema/rs",
+    "newPkg": "semio-framework-os-kernel-dsl-schema"
+  },
+  {
+    "oldDir": "framework/kernel/dsl/derive/rs",
+    "newDir": "framework/os/kernel/dsl/derive/rs",
+    "newPkg": "semio-framework-os-kernel-dsl-derive"
+  },
+  {
+    "oldDir": "framework/kernel/dsl/editor/rs",
+    "newDir": "framework/os/kernel/dsl/editor/rs",
+    "newPkg": "semio-framework-os-kernel-dsl-editor"
+  },
+  {
+    "oldDir": "framework/kernel/dsl/rs",
+    "newDir": "framework/os/kernel/dsl/rs",
+    "newPkg": "semio-framework-os-kernel-dsl"
+  },
+  {
+    "oldDir": "s/kernel/pack/core/rs",
+    "newDir": "framework/os/kernel/pack/core/rs",
+    "newPkg": "semio-framework-os-kernel-pack-core"
+  },
+  {
+    "oldDir": "s/kernel/pack/format/rs",
+    "newDir": "framework/os/kernel/pack/format/rs",
+    "newPkg": "semio-framework-os-kernel-pack-format"
+  },
+  {
+    "oldDir": "s/kernel/pack/value/rs",
+    "newDir": "framework/os/kernel/pack/value/rs",
+    "newPkg": "semio-framework-os-kernel-pack-value"
+  },
+  {
+    "oldDir": "s/kernel/pack/io/rs",
+    "newDir": "framework/os/kernel/pack/io/rs",
+    "newPkg": "semio-framework-os-kernel-pack-io"
+  },
+  {
+    "oldDir": "s/kernel/pack/async/rs",
+    "newDir": "framework/os/kernel/pack/async/rs",
+    "newPkg": "semio-framework-os-kernel-pack-async"
+  },
+  {
+    "oldDir": "s/kernel/pack/http/rs",
+    "newDir": "framework/os/kernel/pack/http/rs",
+    "newPkg": "semio-framework-os-kernel-pack-http"
+  },
+  {
+    "oldDir": "s/kernel/pack/index/rs",
+    "newDir": "framework/os/kernel/pack/index/rs",
+    "newPkg": "semio-framework-os-kernel-pack-index"
+  },
+  {
+    "oldDir": "s/kernel/pack/rs",
+    "newDir": "framework/os/kernel/pack/rs",
+    "newPkg": "semio-framework-os-kernel-pack"
+  },
+  {
+    "oldDir": "s/kernel/pack/testkit/rs",
+    "newDir": "framework/os/kernel/pack/testkit/rs",
+    "newPkg": "semio-framework-os-kernel-pack-testkit"
+  },
+  {
+    "oldDir": "s/kernel/pack/cli/rs",
+    "newDir": "framework/os/kernel/pack/cli/rs",
+    "newPkg": "semio-framework-os-kernel-pack-cli"
+  },
+  {
+    "oldDir": "framework/kernel/vcs/rs",
+    "newDir": "framework/os/kernel/vcs/rs",
+    "newPkg": "semio-framework-os-kernel-vcs"
+  },
+  {
+    "oldDir": "s/kernel/store/rs",
+    "newDir": "framework/os/kernel/store/rs",
+    "newPkg": "semio-framework-os-kernel-store"
+  },
+  {
+    "oldDir": "framework/kernel/db/core/rs",
+    "newDir": "framework/os/kernel/db/core/rs",
+    "newPkg": "semio-framework-os-kernel-db-core"
+  },
+  {
+    "oldDir": "framework/kernel/db/actor/rs",
+    "newDir": "framework/os/kernel/db/actor/rs",
+    "newPkg": "semio-framework-os-kernel-db-actor"
+  },
+  {
+    "oldDir": "framework/kernel/db/state/rs",
+    "newDir": "framework/os/kernel/db/state/rs",
+    "newPkg": "semio-framework-os-kernel-db-state"
+  },
+  {
+    "oldDir": "framework/kernel/db/storage/rs",
+    "newDir": "framework/os/kernel/db/storage/rs",
+    "newPkg": "semio-framework-os-kernel-db-storage"
+  },
+  {
+    "oldDir": "framework/kernel/db/storage/sqlite/rs",
+    "newDir": "framework/os/kernel/db/storage/sqlite/rs",
+    "newPkg": "semio-framework-os-kernel-db-storage-sqlite"
+  },
+  {
+    "oldDir": "framework/kernel/db/storage/postgres/rs",
+    "newDir": "framework/os/kernel/db/storage/postgres/rs",
+    "newPkg": "semio-framework-os-kernel-db-storage-postgres"
+  },
+  {
+    "oldDir": "framework/kernel/db/storage/neo4j/rs",
+    "newDir": "framework/os/kernel/db/storage/neo4j/rs",
+    "newPkg": "semio-framework-os-kernel-db-storage-neo4j"
+  },
+  {
+    "oldDir": "framework/kernel/db/wal/rs",
+    "newDir": "framework/os/kernel/db/wal/rs",
+    "newPkg": "semio-framework-os-kernel-db-wal"
+  },
+  {
+    "oldDir": "framework/kernel/db/snapshot/rs",
+    "newDir": "framework/os/kernel/db/snapshot/rs",
+    "newPkg": "semio-framework-os-kernel-db-snapshot"
+  },
+  {
+    "oldDir": "framework/kernel/db/index/rs",
+    "newDir": "framework/os/kernel/db/index/rs",
+    "newPkg": "semio-framework-os-kernel-db-index"
+  },
+  {
+    "oldDir": "framework/kernel/db/conflict/rs",
+    "newDir": "framework/os/kernel/db/conflict/rs",
+    "newPkg": "semio-framework-os-kernel-db-conflict"
+  },
+  {
+    "oldDir": "framework/kernel/db/projection/rs",
+    "newDir": "framework/os/kernel/db/projection/rs",
+    "newPkg": "semio-framework-os-kernel-db-projection"
+  },
+  {
+    "oldDir": "framework/kernel/db/query/rs",
+    "newDir": "framework/os/kernel/db/query/rs",
+    "newPkg": "semio-framework-os-kernel-db-query"
+  },
+  {
+    "oldDir": "framework/kernel/db/preview/rs",
+    "newDir": "framework/os/kernel/db/preview/rs",
+    "newPkg": "semio-framework-os-kernel-db-preview"
+  },
+  {
+    "oldDir": "framework/kernel/db/security/rs",
+    "newDir": "framework/os/kernel/db/security/rs",
+    "newPkg": "semio-framework-os-kernel-db-security"
+  },
+  {
+    "oldDir": "framework/kernel/db/document/rs",
+    "newDir": "framework/os/kernel/db/document/rs",
+    "newPkg": "semio-framework-os-kernel-db-document"
+  },
+  {
+    "oldDir": "framework/kernel/db/compact/rs",
+    "newDir": "framework/os/kernel/db/compact/rs",
+    "newPkg": "semio-framework-os-kernel-db-compact"
+  },
+  {
+    "oldDir": "framework/kernel/db/sync/rs",
+    "newDir": "framework/os/kernel/db/sync/rs",
+    "newPkg": "semio-framework-os-kernel-db-sync"
+  },
+  {
+    "oldDir": "framework/kernel/db/cluster/rs",
+    "newDir": "framework/os/kernel/db/cluster/rs",
+    "newPkg": "semio-framework-os-kernel-db-cluster"
+  },
+  {
+    "oldDir": "framework/kernel/db/observe/rs",
+    "newDir": "framework/os/kernel/db/observe/rs",
+    "newPkg": "semio-framework-os-kernel-db-observe"
+  },
+  {
+    "oldDir": "framework/kernel/db/engine/rs",
+    "newDir": "framework/os/kernel/db/engine/rs",
+    "newPkg": "semio-framework-os-kernel-db-engine"
+  },
+  {
+    "oldDir": "framework/kernel/db/rs",
+    "newDir": "framework/os/kernel/db/rs",
+    "newPkg": "semio-framework-os-kernel-db"
+  },
+  {
+    "oldDir": "framework/kernel/db/testkit/rs",
+    "newDir": "framework/os/kernel/db/testkit/rs",
+    "newPkg": "semio-framework-os-kernel-db-testkit"
+  },
+  {
+    "oldDir": "framework/kernel/db/cli/rs",
+    "newDir": "framework/os/kernel/db/cli/rs",
+    "newPkg": "semio-framework-os-kernel-db-cli"
+  },
+  {
+    "oldDir": "framework/kernel/protocol/core/rs",
+    "newDir": "framework/os/kernel/protocol/core/rs",
+    "newPkg": "semio-framework-os-kernel-protocol-core"
+  },
+  {
+    "oldDir": "framework/kernel/protocol/command/rs",
+    "newDir": "framework/os/kernel/protocol/command/rs",
+    "newPkg": "semio-framework-os-kernel-protocol-command"
+  },
+  {
+    "oldDir": "framework/kernel/protocol/causal/rs",
+    "newDir": "framework/os/kernel/protocol/causal/rs",
+    "newPkg": "semio-framework-os-kernel-protocol-causal"
+  },
+  {
+    "oldDir": "framework/kernel/protocol/crdt/rs",
+    "newDir": "framework/os/kernel/protocol/crdt/rs",
+    "newPkg": "semio-framework-os-kernel-protocol-crdt"
+  },
+  {
+    "oldDir": "framework/kernel/protocol/format/rs",
+    "newDir": "framework/os/kernel/protocol/format/rs",
+    "newPkg": "semio-framework-os-kernel-protocol-format"
+  },
+  {
+    "oldDir": "framework/kernel/protocol/history/rs",
+    "newDir": "framework/os/kernel/protocol/history/rs",
+    "newPkg": "semio-framework-os-kernel-protocol-history"
+  },
+  {
+    "oldDir": "framework/kernel/protocol/materialize/rs",
+    "newDir": "framework/os/kernel/protocol/materialize/rs",
+    "newPkg": "semio-framework-os-kernel-protocol-materialize"
+  },
+  {
+    "oldDir": "framework/kernel/protocol/io/rs",
+    "newDir": "framework/os/kernel/protocol/io/rs",
+    "newPkg": "semio-framework-os-kernel-protocol-io"
+  },
+  {
+    "oldDir": "framework/kernel/protocol/wire/rs",
+    "newDir": "framework/os/kernel/protocol/wire/rs",
+    "newPkg": "semio-framework-os-kernel-protocol-wire"
+  },
+  {
+    "oldDir": "framework/kernel/protocol/rs",
+    "newDir": "framework/os/kernel/protocol/rs",
+    "newPkg": "semio-framework-os-kernel-protocol"
+  },
+  {
+    "oldDir": "framework/kernel/protocol/testkit/rs",
+    "newDir": "framework/os/kernel/protocol/testkit/rs",
+    "newPkg": "semio-framework-os-kernel-protocol-testkit"
+  },
+  {
+    "oldDir": "framework/kernel/protocol/cli/rs",
+    "newDir": "framework/os/kernel/protocol/cli/rs",
+    "newPkg": "semio-framework-os-kernel-protocol-cli"
+  },
+  {
+    "oldDir": "s/kernel/playbook/rs",
+    "newDir": "framework/os/kernel/workflow/rs",
+    "newPkg": "semio-framework-os-kernel-workflow"
+  },
+  {
+    "oldDir": "framework/kernel/infinite/board/port/directed/normal/rs",
+    "newDir": "framework/os/kernel/infinite/board/port/directed/normal/rs",
+    "newPkg": "semio-framework-os-kernel-infinite-board-port-directed-normal"
+  },
+  {
+    "oldDir": "framework/kernel/infinite/board/port/directed/rs",
+    "newDir": "framework/os/kernel/infinite/board/port/directed/rs",
+    "newPkg": "semio-framework-os-kernel-infinite-board-port-directed"
+  },
+  {
+    "oldDir": "framework/kernel/infinite/board/port/directed/dag/rs",
+    "newDir": "framework/os/kernel/infinite/board/port/directed/dag/rs",
+    "newPkg": "semio-framework-os-kernel-infinite-board-port-directed-dag"
+  },
+  {
+    "oldDir": "framework/kernel/infinite/board/port/undirected/rs",
+    "newDir": "framework/os/kernel/infinite/board/port/undirected/rs",
+    "newPkg": "semio-framework-os-kernel-infinite-board-port-undirected"
+  },
+  {
+    "oldDir": "framework/kernel/infinite/board/normal/directed/rs",
+    "newDir": "framework/os/kernel/infinite/board/normal/directed/rs",
+    "newPkg": "semio-framework-os-kernel-infinite-board-normal-directed"
+  },
+  {
+    "oldDir": "framework/kernel/infinite/board/normal/undirected/rs",
+    "newDir": "framework/os/kernel/infinite/board/normal/undirected/rs",
+    "newPkg": "semio-framework-os-kernel-infinite-board-normal-undirected"
+  },
+  {
+    "oldDir": "framework/kernel/infinite/board/rs",
+    "newDir": "framework/os/kernel/infinite/board/rs",
+    "newPkg": "semio-framework-os-kernel-infinite-board"
+  },
+  {
+    "oldDir": "framework/kernel/infinite/board/port/rs",
+    "newDir": "framework/os/kernel/infinite/board/port/rs",
+    "newPkg": "semio-framework-os-kernel-infinite-board-port"
+  },
+  {
+    "oldDir": "framework/kernel/infinite/canvas/rs",
+    "newDir": "framework/os/kernel/infinite/canvas/rs",
+    "newPkg": "semio-framework-os-kernel-infinite-canvas"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/rs",
+    "newDir": "framework/os/kernel/math/graph/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/drawing/rs",
+    "newDir": "framework/os/kernel/math/graph/drawing/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-drawing"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/dsl/rs",
+    "newDir": "framework/os/kernel/math/graph/dsl/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-dsl"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/manifest/rs",
+    "newDir": "framework/os/kernel/math/graph/manifest/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-manifest"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/geometry/rs",
+    "newDir": "framework/os/kernel/math/geometry/rs",
+    "newPkg": "semio-framework-os-kernel-math-geometry"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/algebra/rs",
+    "newDir": "framework/os/kernel/math/algebra/rs",
+    "newPkg": "semio-framework-os-kernel-math-algebra"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/random/rs",
+    "newDir": "framework/os/kernel/math/random/rs",
+    "newPkg": "semio-framework-os-kernel-math-random"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/lie/rs",
+    "newDir": "framework/os/kernel/math/lie/rs",
+    "newPkg": "semio-framework-os-kernel-math-lie"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/optimize/rs",
+    "newDir": "framework/os/kernel/math/optimize/rs",
+    "newPkg": "semio-framework-os-kernel-math-optimize"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/spatial/rs",
+    "newDir": "framework/os/kernel/math/spatial/rs",
+    "newPkg": "semio-framework-os-kernel-math-spatial"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/signal/rs",
+    "newDir": "framework/os/kernel/math/signal/rs",
+    "newPkg": "semio-framework-os-kernel-math-signal"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/number/rs",
+    "newDir": "framework/os/kernel/math/number/rs",
+    "newPkg": "semio-framework-os-kernel-math-number"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/polynomial/rs",
+    "newDir": "framework/os/kernel/math/polynomial/rs",
+    "newPkg": "semio-framework-os-kernel-math-polynomial"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/cas/rs",
+    "newDir": "framework/os/kernel/math/cas/rs",
+    "newPkg": "semio-framework-os-kernel-math-cas"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/tabular/rs",
+    "newDir": "framework/os/kernel/math/tabular/rs",
+    "newPkg": "semio-framework-os-kernel-math-tabular"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/probability/rs",
+    "newDir": "framework/os/kernel/math/probability/rs",
+    "newPkg": "semio-framework-os-kernel-math-probability"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/statistics/rs",
+    "newDir": "framework/os/kernel/math/statistics/rs",
+    "newPkg": "semio-framework-os-kernel-math-statistics"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/causal/rs",
+    "newDir": "framework/os/kernel/math/causal/rs",
+    "newPkg": "semio-framework-os-kernel-math-causal"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/fuzzy/rs",
+    "newDir": "framework/os/kernel/math/fuzzy/rs",
+    "newPkg": "semio-framework-os-kernel-math-fuzzy"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/sampling/rs",
+    "newDir": "framework/os/kernel/math/sampling/rs",
+    "newPkg": "semio-framework-os-kernel-math-sampling"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/entropy/rs",
+    "newDir": "framework/os/kernel/math/entropy/rs",
+    "newPkg": "semio-framework-os-kernel-math-entropy"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/wfc/rs",
+    "newDir": "framework/os/kernel/math/wfc/rs",
+    "newPkg": "semio-framework-os-kernel-math-wfc"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/traversal/rs",
+    "newDir": "framework/os/kernel/math/graph/traversal/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-traversal"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/components/rs",
+    "newDir": "framework/os/kernel/math/graph/components/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-components"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/dag/rs",
+    "newDir": "framework/os/kernel/math/graph/dag/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-dag"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/cycles/rs",
+    "newDir": "framework/os/kernel/math/graph/cycles/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-cycles"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/paths/rs",
+    "newDir": "framework/os/kernel/math/graph/paths/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-paths"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/operators/rs",
+    "newDir": "framework/os/kernel/math/graph/operators/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-operators"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/coloring/rs",
+    "newDir": "framework/os/kernel/math/graph/coloring/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-coloring"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/generate/rs",
+    "newDir": "framework/os/kernel/math/graph/generate/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-generate"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/generate/random/rs",
+    "newDir": "framework/os/kernel/math/graph/generate/random/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-generate-random"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/io/rs",
+    "newDir": "framework/os/kernel/math/graph/io/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-io"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/structure/rs",
+    "newDir": "framework/os/kernel/math/graph/structure/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-structure"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/cliques/rs",
+    "newDir": "framework/os/kernel/math/graph/cliques/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-cliques"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/clustering/rs",
+    "newDir": "framework/os/kernel/math/graph/clustering/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-clustering"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/matching/rs",
+    "newDir": "framework/os/kernel/math/graph/matching/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-matching"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/bipartite/rs",
+    "newDir": "framework/os/kernel/math/graph/bipartite/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-bipartite"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/trees/rs",
+    "newDir": "framework/os/kernel/math/graph/trees/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-trees"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/planarity/rs",
+    "newDir": "framework/os/kernel/math/graph/planarity/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-planarity"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/flow/rs",
+    "newDir": "framework/os/kernel/math/graph/flow/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-flow"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/centrality/rs",
+    "newDir": "framework/os/kernel/math/graph/centrality/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-centrality"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/distance/rs",
+    "newDir": "framework/os/kernel/math/graph/distance/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-distance"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/similarity/rs",
+    "newDir": "framework/os/kernel/math/graph/similarity/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-similarity"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/isomorphism/rs",
+    "newDir": "framework/os/kernel/math/graph/isomorphism/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-isomorphism"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/connectivity/rs",
+    "newDir": "framework/os/kernel/math/graph/connectivity/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-connectivity"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/community/rs",
+    "newDir": "framework/os/kernel/math/graph/community/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-community"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/approximation/rs",
+    "newDir": "framework/os/kernel/math/graph/approximation/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-approximation"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/spectral/rs",
+    "newDir": "framework/os/kernel/math/graph/spectral/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-spectral"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/normal/undirected/rs",
+    "newDir": "framework/os/kernel/math/graph/normal/undirected/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-normal-undirected"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/normal/directed/rs",
+    "newDir": "framework/os/kernel/math/graph/normal/directed/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-normal-directed"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/port/undirected/rs",
+    "newDir": "framework/os/kernel/math/graph/port/undirected/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-port-undirected"
+  },
+  {
+    "oldDir": "framework/kernel/mathematical/graph/port/directed/normal/rs",
+    "newDir": "framework/os/kernel/math/graph/port/directed/normal/rs",
+    "newPkg": "semio-framework-os-kernel-math-graph-port-directed-normal"
+  },
+  {
+    "oldDir": "s/kernel/geometry/3d/scene/rs",
+    "newDir": "framework/os/kernel/3d/scene/rs",
+    "newPkg": "semio-framework-os-kernel-3d-scene"
+  },
+  {
+    "oldDir": "s/kernel/geometry/3d/mesh/rs",
+    "newDir": "framework/os/kernel/3d/mesh/rs",
+    "newPkg": "semio-framework-os-kernel-3d-mesh"
+  },
+  {
+    "oldDir": "framework/kernel/neural/engine/rs",
+    "newDir": "framework/os/kernel/neural/engine/rs",
+    "newPkg": "semio-framework-os-kernel-neural-engine"
+  },
+  {
+    "oldDir": "s/kernel/flow/core/rs",
+    "newDir": "framework/os/kernel/flow/core/rs",
+    "newPkg": "semio-framework-os-kernel-flow-core"
+  },
+  {
+    "oldDir": "s/kernel/geometry/3d/brep/rs",
+    "newDir": "framework/os/kernel/3d/brep/rs",
+    "newPkg": "semio-framework-os-kernel-3d-brep"
+  },
+  {
+    "oldDir": "s/kernel/geometry/3d/brep/engine/rs",
+    "newDir": "framework/os/kernel/3d/brep/engine/rs",
+    "newPkg": "semio-framework-os-kernel-3d-brep-engine"
+  },
+  {
+    "oldDir": "s/kernel/store/sync/rs",
+    "newDir": "framework/os/kernel/store/sync/rs",
+    "newPkg": "semio-framework-os-kernel-store-sync"
+  },
+  {
+    "oldDir": "s/kernel/store/worker/rs",
+    "newDir": "framework/os/kernel/store/worker/rs",
+    "newPkg": "semio-framework-os-kernel-store-worker"
+  },
+  {
+    "oldDir": "s/kernel/geometry/3d/spatial/rs",
+    "newDir": "framework/os/kernel/3d/spatial/rs",
+    "newPkg": "semio-framework-os-kernel-3d-spatial"
+  }
+]

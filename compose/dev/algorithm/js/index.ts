@@ -23,7 +23,7 @@ import {
   type MoveVector,
   type VecValue,
 } from "@semio-tech/ui-react";
-import { fixtureItemsOf } from "../../../repo/lib/js/index.ts";
+import { fixtureItemsOf } from "../../../../repo/lib/js/index.ts";
 import * as React from "react";
 
 import { NakaginCapsuleTowerCopySelection, NakaginCapsuleTowerPasteDesign } from "@semio-tech/compose-fixture";

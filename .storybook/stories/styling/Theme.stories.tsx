@@ -50,7 +50,7 @@ function ThemeSection({ theme }: { readonly theme: UiTheme }): ReactElement {
 //#endregion 🔖ThemeSection
 
 //#region 🔖Gallery
-/** @emoji 🖼️ Every builtin theme (semio + any `ui/styling/theme/*.theme.json` premade) rendered light+dark. `component` is this gallery itself — the story exercises `builtinUiThemes()`/`resolveThemeAppearancePalettes` data, not a UI widget. */
+/** @emoji 🖼️ Every builtin theme (semio + any `framework/ui/styling/theme/*.theme.json` premade) rendered light+dark. `component` is this gallery itself — the story exercises `builtinUiThemes()`/`resolveThemeAppearancePalettes` data, not a UI widget. */
 function ThemeGallery(): ReactElement {
   const themes = builtinUiThemes();
   return (

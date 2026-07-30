@@ -25,4 +25,4 @@ remodel = { path = "../app/rs", package = "semio-s-app-remodel" }
 remodel_engine = { path = "../app/engine/rs", package = "semio-s-app-remodel-engine" }
 remodel_ui = { path = "../app/ui/rs", package = "semio-s-app-remodel-ui" }
 semio-framework-plugin = { path = "../../../../framework/plugin/rs" }
-semio-framework-os = { path = "../../../../framework/product/os/core/rs" }
+semio-framework-os = { path = "../../../../framework/os/core/rs", package = "semio-framework-os" }

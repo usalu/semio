@@ -8,8 +8,8 @@
 use flow::FlowFixture;
 
 /// 📄 The canonical flow fixture, handcrafted in the `.flow` DSL — the same file the flow kernel's own
-/// tests parse via `include_str!("../../../../../kernel/flow/example/default.flow")`.
-pub const FLOW_EXAMPLE_TEXT: &str = include_str!("../../../../../kernel/flow/example/default.flow");
+/// tests parse via `include_str!("../../../../../../framework/os/kernel/flow/example/default.flow")`.
+pub const FLOW_EXAMPLE_TEXT: &str = include_str!("../../../../../../framework/os/kernel/flow/example/default.flow");
 
 /// 📖 Parses `.flow` DSL text into a `FlowFixture`.
 pub fn parse_dsl(text: &str) -> Result<FlowFixture, store::TextError> {

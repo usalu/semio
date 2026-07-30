@@ -20,9 +20,9 @@ path = "lib.rs"
 
 [dependencies]
 architect_spine = { path = "../../plugin/rs" }
-vcs = { path = "../../../framework/kernel/vcs/rs" }
-store = { path = "../../../s/kernel/store/rs" }
-protocol = { path = "../../../framework/kernel/protocol/rs" }
+vcs = { path = "../../../framework/os/kernel/vcs/rs" }
+store = { path = "../../../framework/os/kernel/store/rs" }
+protocol = { path = "../../../framework/os/kernel/protocol/rs" }
 semio-framework-plugin = { path = "../../../framework/plugin/rs" }
 semio-framework-core = { path = "../../../framework/core/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

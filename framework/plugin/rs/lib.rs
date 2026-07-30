@@ -1946,10 +1946,16 @@ pub fn meta(actor: &str) -> ActionMeta {
 /// plugins) each carry all seven constitutional-crate slots (`rs`, `engine`, `dsl`, `op`, `pack`,
 /// `protocol`, `ui`). Invoked automatically by `semio_plugin!`'s generated sanity test — see
 /// `.repo/🎫/26/07/29/MOVE-APPS-INTO-S-PRODUCT-TREE-WITH-CONSTITUTIONAL-CRATES/w31-constitutional-split-recipe.md`.
-/// The bundle crate itself lives at either `s/plugin/<p>/rs` (flattened) or `s/plugin/<p>/plugin/rs`
-/// (nested) — both `../app` and `../../app` are tried since callers don't know which shape they are.
+/// The bundle crate itself lives at `s/plugin/<p>/rs` — both `../app` and `../../app` are tried
+/// since a manual `#[path]`-included bundle could shift the depth by one. A no-op outside
+/// `s/plugin/` (e.g. `semio_plugin!`'s own in-crate macro tests, which have no real app tree) — the
+/// gate only applies to real migrated plugins, not synthetic test fixtures exercising the macro.
 pub fn assert_constitutional_crates(manifest_dir: &str) {
     const SLOTS: [&str; 6] = ["engine", "dsl", "op", "pack", "protocol", "ui"];
+    let normalized = manifest_dir.replace('\\', "/");
+    if !normalized.contains("/s/plugin/") {
+        return;
+    }
     let base = std::path::Path::new(manifest_dir);
     let app_root = [base.join("../app"), base.join("../../app")].into_iter().find(|candidate| candidate.is_dir());
     let Some(app_root) = app_root else {

@@ -18,8 +18,8 @@
       "@semio-tech/framework-core": ["../../../../../framework/core/index.ts"],
       "@semio-tech/framework-platform-core": ["../../../../../framework/product/platform/core/index.ts"],
       "@semio-tech/framework-platform-renderer-react": ["../../../../../framework/product/platform/renderer/react/index.tsx"],
-      "@semio-tech/ui-react": ["../../../../../ui/react/index.tsx"],
-      "@semio-tech/ui-react/*": ["../../../../../ui/react/*"]
+      "@semio-tech/ui-react": ["../../../../../framework/ui/js/react/index.tsx"],
+      "@semio-tech/ui-react/*": ["../../../../../framework/ui/js/react/*"]
     },
     "types": ["node", "react", "react-dom", "vite/client", "vitest/globals"]
   }

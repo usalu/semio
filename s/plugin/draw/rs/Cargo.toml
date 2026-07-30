@@ -24,7 +24,7 @@ path = "lib.rs"
 draw = { path = "../app/rs", package = "semio-s-app-draw" }
 draw_engine = { path = "../app/engine/rs", package = "semio-s-app-draw-engine" }
 draw_ui = { path = "../app/ui/rs", package = "semio-s-app-draw-ui" }
-semio-framework-os = { path = "../../../../framework/product/os/core/rs" }
+semio-framework-os = { path = "../../../../framework/os/core/rs", package = "semio-framework-os" }
 semio-framework-plugin = { path = "../../../../framework/plugin/rs" }
 base64 = "0.22"
 

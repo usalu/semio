@@ -1,0 +1,92 @@
+[package]
+name = "semio-framework-os-renderer-wgpu"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Raw wgpu WASM renderer for declarative framework UiNode trees"
+build = "build.rs"
+
+
+[lints]
+workspace = true
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "lib.rs"
+
+[dependencies]
+semio-framework-core = { path = "../../../../core/rs" }
+framework_surface_node_graph = { path = "../../../../surface/node-graph/rs" }
+framework_editor = { path = "../../../../editor/rs" }
+infinite_cavas = { path = "../../../kernel/infinite/canvas/rs", package = "semio-framework-os-kernel-infinite-canvas" }
+infinite_world = { path = "../../../kernel/infinite/world/rs", package = "semio-framework-kernel-infinite-world" }
+# 🎬 Direct dependency (rather than reaching through `infinite_world`, which imports these privately)
+# so the Tutorial track's camera keyframes can convert to/from `OrbitController`/`Camera3d` — see
+# `//#region 🎬Tutorial` in lib.rs.
+kernel_3d_scene = { path = "../../../kernel/3d/scene/rs", package = "semio-framework-os-kernel-3d-scene" }
+framework_surface_tiled_map = { path = "../../../../surface/tiled-map/rs" }
+puzzle_2d_engine = { path = "../../../../../s/plugin/puzzle/app/2d/engine/rs", package = "semio-s-app-puzzle-2d-engine" }
+flow_core = { path = "../../../kernel/flow/core/rs", package = "semio-framework-os-kernel-flow-core" }
+ui_wgpu = { path = "../../../../ui/wgpu/rs", features = ["engine"], package = "ui_wgpu" }
+semio-framework-plugin = { path = "../../../../plugin/rs" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+base64 = "0.22.1"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+vello = { version = "0.7.0", default-features = false, features = ["wgpu"] }
+winit = { version = "0.30.12", default-features = false, features = ["rwh_06"] }
+pollster = "0.4.0"
+resvg = "0.45.1"
+tiny-skia = "0.11.4"
+usvg = "0.45.1"
+
+[features]
+native-bin = []
+
+[[bin]]
+name = "semio-wgpu-native"
+path = "bin.rs"
+required-features = ["native-bin"]
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+semio-framework-plugin-host = { path = "../../../../plugin/host/rs" }
+store_sync = { path = "../../../kernel/store/sync/rs", package = "semio-framework-os-kernel-store-sync" }
+vcs = { path = "../../../kernel/vcs/rs", package = "semio-framework-os-kernel-vcs" }
+store = { path = "../../../kernel/store/rs", package = "semio-framework-os-kernel-store" }
+protocol = { path = "../../../kernel/protocol/rs", package = "semio-framework-os-kernel-protocol" }
+tokio = { version = "1", features = ["sync"], default-features = false }
+ureq = "2.12.1"
+rfd = "0.15.4"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+js-sys = "0.3.83"
+wasm-bindgen = "0.2.106"
+wasm-bindgen-futures = "0.4.71"
+web-sys = { version = "0.3.98", features = [
+    "Window",
+    "Document",
+    "HtmlCanvasElement",
+    "CanvasRenderingContext2d",
+    "Element",
+    "Event",
+    "MouseEvent",
+    "WheelEvent",
+    "KeyboardEvent",
+    "InputEvent",
+    "ResizeObserver",
+    "ResizeObserverEntry",
+    "DomRect",
+    "Performance",
+    "Request",
+    "RequestInit",
+    "RequestMode",
+    "Response",
+    "Headers",
+    "Blob",
+    "Url",
+    "HtmlAnchorElement",
+    "console",
+    "MediaQueryList",
+] }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.56"

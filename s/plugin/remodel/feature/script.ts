@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🔍 `@semio-tech/remodel-feature` — Feature detection, binary description, matching and optical flow: oriented FAST, rBRIEF, Hamming matching and pyramidal Lucas-Kanade. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runCargoTestBudgeted, runCargoLint, runBundleScriptMain } from "../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runCargoTestBudgeted, runCargoLint, runBundleScriptMain } from "../../../../repo/lib/js/index.ts";
 import { join } from "node:path";
 
 class TestScript extends BundleScript {

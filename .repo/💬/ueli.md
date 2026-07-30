@@ -18,6 +18,8 @@ Make a refactor plan that cleanly achieves this.
 
 The plan should be a downloadable markdown file. Add as much details as you can.
 
+End to end for a workforce of agents /workflows
+
 # 🔍 Research
 
 ##

@@ -15,8 +15,8 @@ path = "lib.rs"
 layout = { path = "../../rs", package = "semio-s-app-layout" }
 layout_engine = { path = "../../engine/rs", package = "semio-s-app-layout-engine" }
 layout_op = { path = "../../op/rs", package = "semio-s-app-layout-op" }
-infinite_cavas = { path = "../../../../../../framework/kernel/infinite/canvas/rs", package = "semio-framework-kernel-infinite-canvas" }
-protocol = { path = "../../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
+infinite_cavas = { path = "../../../../../../framework/os/kernel/infinite/canvas/rs", package = "semio-framework-os-kernel-infinite-canvas" }
+protocol = { path = "../../../../../../framework/os/kernel/protocol/rs", package = "semio-framework-os-kernel-protocol" }
 semio-framework-plugin = { path = "../../../../../../framework/plugin/rs" }
 semio-framework-core = { path = "../../../../../../framework/core/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

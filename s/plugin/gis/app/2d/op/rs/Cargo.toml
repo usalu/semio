@@ -12,12 +12,12 @@ path = "lib.rs"
 
 [dependencies]
 gis2d = { path = "../../rs", package = "semio-s-app-gis-2d" }
-dsl = { path = "../../../../../../../framework/kernel/dsl/rs", package = "semio-framework-kernel-dsl" }
-protocol = { path = "../../../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
-store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+dsl = { path = "../../../../../../../framework/os/kernel/dsl/rs", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../framework/os/kernel/protocol/rs", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 
 [dev-dependencies]
 gis2d_engine = { path = "../../engine/rs", package = "semio-s-app-gis-2d-engine" }
-vcs = { path = "../../../../../../../framework/kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
+vcs = { path = "../../../../../../../framework/os/kernel/vcs/rs", package = "semio-framework-os-kernel-vcs" }

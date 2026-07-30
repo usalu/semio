@@ -16,7 +16,7 @@ import { useState } from "react";
 // #endregion 🔌Adapters
 
 // 🗨️#region 🗨️UIDialog
-/** @emoji 🎛 Minimal `renderField` — `UIDialog` is injected this renderer so `ui-react` never has to import from `framework/renderer` (see the prop's docstring on `UIDialogProps`). A real shell renders the full staged-arg control set; this story only needs text/number/toggle. */
+/** @emoji 🎛 Minimal `renderField` — `UIDialog` is injected this renderer so `ui-react` never has to import from `framework/os/renderer` (see the prop's docstring on `UIDialogProps`). A real shell renders the full staged-arg control set; this story only needs text/number/toggle. */
 function renderStoryField(def: ActionArgDef, value: unknown, onChange: (value: unknown) => void) {
   if (def.control.kind === "toggle") {
     return (

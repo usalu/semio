@@ -1,0 +1,12 @@
+Staged index removals: 3702 paths targeted; git diff --cached --name-only count after git rm: 2878
+(remaining delta may include other staged work in the working tree)
+
+Paths untracked (--cached):
+- framework/os/dev/plugin-modules
+- framework/os/dev/plugin-modules-native
+- framework/os/dev/renderer-modules
+- public/plugin-modules
+- framework/os/kernel/math/graph/dsl/core/js/coverage
+- framework/os/renderer/wgpu/js/boot.js
+
+Post-check: git ls-files '*.wasm' => 0

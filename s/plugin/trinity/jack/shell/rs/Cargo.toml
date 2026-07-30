@@ -14,6 +14,6 @@ workspace = true
 [dependencies]
 trinity_jack = { path = "../../core/rs", package = "trinity_jack" }
 trinity_ram = { path = "../../../ram/rs", package = "trinity_ram" }
-vcs = { path = "../../../../../../framework/kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
-store = { path = "../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+vcs = { path = "../../../../../../framework/os/kernel/vcs/rs", package = "semio-framework-os-kernel-vcs" }
+store = { path = "../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
 thiserror = "2.0.12"

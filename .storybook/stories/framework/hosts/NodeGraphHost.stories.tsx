@@ -16,7 +16,7 @@ import { NodeGraphHost } from "@semio-tech/framework-renderer-react";
 import type { ActionDescriptor, NodeGraphScene, UiComponentSceneNode } from "@semio-tech/framework-core";
 
 //#region SceneFixtures
-/** 🕸️ Two connected workflow nodes, matching the shape `framework/renderer/react/index.test.ts` exercises for `NodeGraphHost`. */
+/** 🕸️ Two connected workflow nodes, matching the shape `framework/os/renderer/js/react/index.test.ts` exercises for `NodeGraphHost`. */
 const WORKFLOW_SCENE: NodeGraphScene = {
   nodesJson: JSON.stringify([
     { id: "node-a", instanceId: "app-a", label: "Draw", x: 10, y: 20, inputs: [{ id: "in", resourceKind: "2d.drawing" }], outputs: [{ id: "out", resourceKind: "2d.drawing" }] },

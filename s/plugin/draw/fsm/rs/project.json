@@ -1,6 +1,6 @@
 {
   "name": "@semio-tech/fsm-rs",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "targets": {
     "wasm": {
       "executor": "nx:run-commands",

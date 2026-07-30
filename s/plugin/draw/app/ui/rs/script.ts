@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🖥️ `@semio-tech/draw-ui-rs` router: `bun ./script.ts <wasm|test [fundamental|quick|long|exhaustive]>`. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../../../repo/lib/js/index.ts";
 
 class WasmScript extends BundleScript {
   run(): void {

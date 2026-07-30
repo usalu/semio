@@ -1,0 +1,21 @@
+[package]
+name = "semio-framework-os-kernel-db-preview"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db ephemeral previews — identity, base frontier, lifecycle, coalescing, TTL, never durable"
+
+[lints]
+workspace = true
+[lib]
+name = "db_preview"
+path = "lib.rs"
+
+[dependencies]
+db_core = { path = "../../core/rs", package = "semio-framework-os-kernel-db-core" }
+db_state = { path = "../../state/rs", package = "semio-framework-os-kernel-db-state" }
+db_conflict = { path = "../../conflict/rs", package = "semio-framework-os-kernel-db-conflict" }
+protocol = { path = "../../../protocol/rs", package = "semio-framework-os-kernel-protocol" }
+
+[dev-dependencies]
+serde_json = "1"

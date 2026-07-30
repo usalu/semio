@@ -13,7 +13,7 @@ import { dirname, join, resolve } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import type { StorybookConfig } from "@storybook/react-vite";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import { uiAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundAssetVitePlugins } from "../ui/styling/vite-elements-assets.ts";
+import { uiAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundAssetVitePlugins } from "../framework/ui/styling/vite-elements-assets.ts";
 import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
@@ -26,13 +26,13 @@ const __dirname = dirname(__filename);
 const repoRootPath = resolve(__dirname, "..");
 const storybookScope = process.env.STORYBOOK_SCOPE ?? "";
 
-const uiReactDir = resolve(repoRootPath, "ui/js/react");
-const uiStylingDir = resolve(repoRootPath, "ui/styling/js");
+const uiReactDir = resolve(repoRootPath, "framework/ui/js/react");
+const uiStylingDir = resolve(repoRootPath, "framework/ui/styling/js");
 const composeJsDir = resolve(repoRootPath, "compose/client/lib/js");
 const composeAssetsDir = resolve(repoRootPath, "asset");
 const composeFixturesDir = resolve(repoRootPath, "compose/fixture");
 const puzzleAssetsDir = resolve(repoRootPath, "puzzle/asset");
-const uiAssetsRootPath = resolve(repoRootPath, "ui/asset");
+const uiAssetsRootPath = resolve(repoRootPath, "framework/ui/asset");
 
 function toVitePath(value: string): string {
   return value.replaceAll("\\", "/");

@@ -2,7 +2,7 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
-import { createWorkspaceViteResolveConfig } from "../../../ui/styling/vite-elements-assets.ts";
+import { createWorkspaceViteResolveConfig } from "../../../../framework/ui/styling/vite-elements-assets.ts";
 // #endregion 🔌Adapters
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -31,7 +31,7 @@ export default defineConfig({
       { find: "@semio-tech/cad-js-module-aec-building", replacement: resolve(root, "../../module/aec-building/js/index.ts") },
       { find: "@semio-tech/cad-js-module-aec-building-energy", replacement: resolve(root, "../../module/aec-building-energy/js/index.ts") },
       { find: "@semio-tech/cad-js-module-aec-building-structure", replacement: resolve(root, "../../module/aec-building-structure/js/index.ts") },
-      { find: "@semio-tech/infinite-world-r3f", replacement: resolve(repoRoot, "infinite/world/r3f/index.tsx") },
+      { find: "@semio-tech/infinite-world-r3f", replacement: resolve(repoRoot, "framework/os/kernel/infinite/world/r3f/index.tsx") },
       { find: /^react$/, replacement: resolve(reactRoot, "index.js") },
       { find: /^react\/jsx-runtime$/, replacement: resolve(reactRoot, "jsx-runtime.js") },
       { find: /^react\/jsx-dev-runtime$/, replacement: resolve(reactRoot, "jsx-dev-runtime.js") },

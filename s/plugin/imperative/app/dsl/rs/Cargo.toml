@@ -12,7 +12,7 @@ path = "lib.rs"
 
 [dependencies]
 imperative = { path = "../../rs", package = "semio-s-app-imperative" }
-store = { path = "../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+store = { path = "../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
 
 [dev-dependencies]
-neural_engine = { path = "../../../../../../framework/kernel/neural/engine/rs", package = "semio-framework-kernel-neural-engine" }
+neural_engine = { path = "../../../../../../framework/os/kernel/neural/engine/rs", package = "semio-framework-os-kernel-neural-engine" }

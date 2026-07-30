@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/story/puzzle/5d/Timeline.stories.tsx
 // Specs: Compose `World3dHost` + `GraphTimelineHost` against the real puzzle-5d example fixtures — "5D" (3 spatial + assembly-order + fastener graph) rendered as a 3D world you can scrub through an assembly history.
-// Summary: `puzzle/5d`'s real fixture schema (`puzzle/5d/example/*.puzzle5d`) has no persisted checkpoint history (the plugin's `d5` module doesn't wire `graph_timeline` yet — grepped `puzzle/plugin/rs/lib.rs`, no `HistoryColumn`/`checkoutCheckpoint` hits under `mod d5`), so this story *synthesizes* one checkpoint per fixture `parts[]` entry (assembly order = array order, newest first per `HistoryColumn`'s docstring in `ui/js/react/index.tsx`) and lets `GraphTimelineHost`'s `checkoutCheckpoint` action scrub how many parts `World3dHost` reveals — same story-local-reducer pattern as `../3d/World.stories.tsx` and `../2d/Board.stories.tsx`. Fixture data comes from the real `.puzzle5d` DSL-text fixtures (`Puzzle5dProjection`'s `dsl::DslDocument` grammar) — raw-imported as text and parsed via `@semio-tech/puzzle-5d-rs`'s `puzzle5dParseDslJson` wasm export (the same `parse_dsl` Rust uses, reused as the single source of truth instead of duplicating the DSL grammar in TypeScript).
+// Summary: `puzzle/5d`'s real fixture schema (`puzzle/5d/example/*.puzzle5d`) has no persisted checkpoint history (the plugin's `d5` module doesn't wire `graph_timeline` yet — grepped `puzzle/plugin/rs/lib.rs`, no `HistoryColumn`/`checkoutCheckpoint` hits under `mod d5`), so this story *synthesizes* one checkpoint per fixture `parts[]` entry (assembly order = array order, newest first per `HistoryColumn`'s docstring in `framework/ui/js/react/index.tsx`) and lets `GraphTimelineHost`'s `checkoutCheckpoint` action scrub how many parts `World3dHost` reveals — same story-local-reducer pattern as `../3d/World.stories.tsx` and `../2d/Board.stories.tsx`. Fixture data comes from the real `.puzzle5d` DSL-text fixtures (`Puzzle5dProjection`'s `dsl::DslDocument` grammar) — raw-imported as text and parsed via `@semio-tech/puzzle-5d-rs`'s `puzzle5dParseDslJson` wasm export (the same `parse_dsl` Rust uses, reused as the single source of truth instead of duplicating the DSL grammar in TypeScript).
 // Mesh/reference-asset caveats are identical to `../3d/World.stories.tsx`: no `mesh-collection` route for this scope and the referenced GLBs don't exist on disk, so parts render as `World3dHost`'s neutral placeholder box.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
@@ -10,11 +10,11 @@ import type { Meta, StoryObj } from "@storybook/react";
 import type { HistoryColumn } from "@semio-tech/ui-react";
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 
-import { GraphTimelineHost, World3dHost } from "../../../../framework/renderer/react/index.tsx";
-import type { ActionDescriptor, UiComponentSceneNode } from "../../../../framework/renderer/react/index.tsx";
+import { GraphTimelineHost, World3dHost } from "../../../../framework/os/renderer/js/react/index.tsx";
+import type { ActionDescriptor, UiComponentSceneNode } from "../../../../framework/os/renderer/js/react/index.tsx";
 
-import concreteForestFixtureDsl from "../../../../puzzle/5d/example/concrete-forest.puzzle5d?raw";
-import nakaginCapsuleTowerFixtureDsl from "../../../../puzzle/5d/example/nakagin-capsule-tower.puzzle5d?raw";
+import concreteForestFixtureDsl from "../../../../s/plugin/puzzle/5d/example/concrete-forest.puzzle5d?raw";
+import nakaginCapsuleTowerFixtureDsl from "../../../../s/plugin/puzzle/5d/example/nakagin-capsule-tower.puzzle5d?raw";
 
 //#region StoryTypes
 type Vec3 = readonly [number, number, number];
@@ -52,7 +52,7 @@ type StoryPuzzle5dState = { readonly fixture: StoryPuzzle5dFixture; readonly run
 //#endregion StoryTypes
 
 //#region WasmFixtureLoader
-/** @emoji 🧵 Lazily loads+inits `@semio-tech/puzzle-5d-rs`'s wasm module once (mirrors `framework/renderer/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle5dParseDslJson` free export. */
+/** @emoji 🧵 Lazily loads+inits `@semio-tech/puzzle-5d-rs`'s wasm module once (mirrors `framework/os/renderer/js/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle5dParseDslJson` free export. */
 type Puzzle5dWasmModule = { readonly default: (input?: unknown) => Promise<unknown>; readonly puzzle5dParseDslJson: (dslText: string) => string };
 let puzzle5dWasmModulePromise: Promise<Puzzle5dWasmModule> | null = null;
 function loadPuzzle5dWasm(): Promise<Puzzle5dWasmModule> {
@@ -90,7 +90,7 @@ function historyColumnsFromParts(parts: readonly StoryPuzzle5dPart[]): readonly 
 //#endregion HistorySynthesis
 
 //#region PluginEmulator
-/** @emoji 🖱️ Story-local mirror of `instanceMergeArg` (`framework/renderer/react/index.tsx`) — see `../3d/World.stories.tsx`'s copy. */
+/** @emoji 🖱️ Story-local mirror of `instanceMergeArg` (`framework/os/renderer/js/react/index.tsx`) — see `../3d/World.stories.tsx`'s copy. */
 function applyStoryMerge(current: readonly string[], id: string, merge: string): string[] {
   const set = new Set(current);
   if (merge === "replace") return [id];

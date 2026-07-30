@@ -155,10 +155,10 @@ module.exports = {
     {
       name: "renderer-hosts-only-ui",
       severity: "error",
-      comment: "framework/renderer/react/components hosts may depend only on ui/styling, framework/core protocol types, react, and each other — never os-shell, ui-interpreter, or app packages",
-      from: { path: "^framework/renderer/react/components/" },
+      comment: "framework/os/renderer/js/react/components hosts may depend only on framework/ui/styling, framework/core protocol types, react, and each other — never os-shell, ui-interpreter, or app packages",
+      from: { path: "^framework/os/renderer/js/react/components/" },
       to: {
-        pathNot: ["^framework/renderer/react/components/", "^@semio-tech/ui-", "^@semio-tech/framework-core", "^react$", "^react/", "^react-dom$", "^react-dom/", "^node:"],
+        pathNot: ["^framework/os/renderer/js/react/components/", "^@semio-tech/ui-", "^@semio-tech/framework-core", "^react$", "^react/", "^react-dom$", "^react-dom/", "^node:"],
       },
     },
     {

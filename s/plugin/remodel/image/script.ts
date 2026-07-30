@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🖼️ `@semio-tech/remodel-image` — Image containers and classical image processing: grayscale pyramids, gradients, filtering, patch correlation and PNG codec behind an interface. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runCargoTestBudgeted, runCargoLint, runBundleScriptMain } from "../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runCargoTestBudgeted, runCargoLint, runBundleScriptMain } from "../../../../repo/lib/js/index.ts";
 import { join } from "node:path";
 
 class TestScript extends BundleScript {

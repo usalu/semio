@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/stories/styling/Tokens.stories.tsx
-// Specs: Docs gallery rendering the generated `ui/styling/js/tokens.generated.ts` constants as readable tables.
-// Summary: `STYLING_TOKENS` (primitive colors), `STYLING_SEMIO_THEME.spacing`, `STYLING_RADII`, `STYLING_STROKES`, and `STYLING_OPACITIES` — the flat numeric/hex maps a token author would want to eyeball after running `bun ./script.ts generate` in `ui/styling`. `STYLING_METRICS` is nested per-subsystem (camera/label/board/dag/…) rather than a flat map, so it's out of scope for a single table here.
+// Specs: Docs gallery rendering the generated `framework/ui/styling/js/tokens.generated.ts` constants as readable tables.
+// Summary: `STYLING_TOKENS` (primitive colors), `STYLING_SEMIO_THEME.spacing`, `STYLING_RADII`, `STYLING_STROKES`, and `STYLING_OPACITIES` — the flat numeric/hex maps a token author would want to eyeball after running `bun ./script.ts generate` in `framework/ui/styling`. `STYLING_METRICS` is nested per-subsystem (camera/label/board/dag/…) rather than a flat map, so it's out of scope for a single table here.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 

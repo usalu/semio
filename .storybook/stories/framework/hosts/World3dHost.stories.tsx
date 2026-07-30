@@ -23,7 +23,7 @@ const MINIMAL_SCENE: World3dScene = {
   interactionJson: '{"activeUtility":"select"}',
 };
 
-/** ⛰️ Matches the `terrainJson` fixture in `framework/renderer/react/index.test.ts` ("accepts extended world 3d scene fields") — mounts `WorldTerrainLayer` internally, backed by the real `TerrainSession` WASM engine. */
+/** ⛰️ Matches the `terrainJson` fixture in `framework/os/renderer/js/react/index.test.ts` ("accepts extended world 3d scene fields") — mounts `WorldTerrainLayer` internally, backed by the real `TerrainSession` WASM engine. */
 const TERRAIN_SCENE: World3dScene = {
   ...MINIMAL_SCENE,
   terrainJson: JSON.stringify({

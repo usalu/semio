@@ -84,7 +84,7 @@ const STORY_INK_DOCUMENT: InkDocument = {
 //#region Reducer
 type StoryInkState = { readonly document: InkDocument; readonly selection: readonly string[]; readonly hoveredId: string | null };
 
-/** @emoji ✍️ Story-local mirror of `applyEventsLocal` (`framework/renderer/react/index.tsx`) — the subset of a real plugin's `inkApplyEvents` operation vocabulary the stories exercise. */
+/** @emoji ✍️ Story-local mirror of `applyEventsLocal` (`framework/os/renderer/js/react/index.tsx`) — the subset of a real plugin's `inkApplyEvents` operation vocabulary the stories exercise. */
 function applyStoryInkEvents(document: InkDocument, events: readonly InkCanvasEvent[]): InkDocument {
   let blocks = document.blocks;
   let next = document;

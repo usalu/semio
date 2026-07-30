@@ -1,0 +1,10 @@
+[
+  {"oldDir": "framework/product/os/core/rs", "newDir": "framework/os/core/rs", "newPkg": "semio-framework-os"},
+  {"oldDir": "framework/product/os/run/rs", "newDir": "framework/os/run/rs", "newPkg": "semio-framework-os-run"},
+  {"oldDir": "framework/product/os/hub/rs", "newDir": "hub/rs", "newPkg": "hub"},
+  {"oldDir": "framework/product/os/hub/directory/rs", "newDir": "hub/directory/rs", "newPkg": "hub-directory"},
+  {"oldDir": "framework/product/os/hub/directory/postgres/rs", "newDir": "hub/directory/postgres/rs", "newPkg": "hub-directory-postgres"},
+  {"oldDir": "framework/product/os/hub/directory/neo4j/rs", "newDir": "hub/directory/neo4j/rs", "newPkg": "hub-directory-neo4j"},
+  {"oldDir": "framework/product/os/hub/directory/sqlite/rs", "newDir": "hub/directory/sqlite/rs", "newPkg": "hub-directory-sqlite"},
+  {"oldDir": "framework/renderer/wgpu/rs", "newDir": "framework/os/renderer/wgpu/rs", "newPkg": "semio-framework-os-renderer-wgpu"}
+]

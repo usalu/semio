@@ -4,8 +4,8 @@ use home::SHomeDocument;
 use home_op::SHomeOperation;
 use space_shared::{ensure_space_fixtures_registered, parse_demo_space_document};
 use semio_framework_os::{
-    create_ephemeral_os_space, create_os_space, delete_os_space, document_backbone_ref, export_os_space_pack, import_os_space_from_json,
-    list_os_space_catalog_entries, load_os_space_document, os_document_to_json,
+    create_ephemeral_os_space, create_os_space, delete_os_space, document_backbone_ref, encode_os_space_payload, export_os_space_pack, import_os_space_from_dsl,
+    list_os_space_catalog_entries, load_os_space_document,
     seed_os_space_catalog_if_empty, MemoryBackbonePort, OsBackbonePort, OsDocument, OS_HOME_VFS_ROOT_ID,
     OS_SPACE_BACKBONE_URI_PREFIX, VcsError,
 };
@@ -188,7 +188,7 @@ fn bind_studio_file(space_id: &str, file_path: &str) -> Result<(), VcsError> {
     register_studio_port(space_id, port.clone());
     let mut document = load_os_space_document(space_id, catalog_port())?;
     document.backbone = Some(document_backbone_ref(&uri));
-    port.write(&uri, &os_document_to_json(&document)?)?;
+    port.write(&uri, &encode_os_space_payload(&document)?)?;
     let catalog_uri = format!("{OS_SPACE_BACKBONE_URI_PREFIX}{space_id}");
     sync_os_space_document_helper(&document, &catalog_uri, &catalog_port())?;
     Ok(())
@@ -201,7 +201,7 @@ fn sync_os_space_document_helper(
 ) -> Result<(), VcsError> {
     let mut synced = document.clone();
     synced.backbone = Some(document_backbone_ref(backbone_uri));
-    port.write(backbone_uri, &os_document_to_json(&synced)?)
+    port.write(backbone_uri, &encode_os_space_payload(&synced)?)
 }
 
 fn os_home_vfs_schema_json() -> String {
@@ -379,29 +379,25 @@ impl DocumentApp for HomeApp {
                 ActionEmit::default()
             }
             "importSpace" => {
-                let json = args
-                    .and_then(|value| value.get("json"))
+                let dsl = args
+                    .and_then(|value| value.get("dsl"))
                     .and_then(|value| value.as_str())
                     .map(str::to_string)
                     .or_else(|| {
                         args.and_then(|value| value.get("payload"))
                             .and_then(|value| value.as_str())
                             .map(str::to_string)
-                    })
-                    .or_else(|| {
-                        args.and_then(|value| value.get("payload"))
-                            .map(|value| value.to_string())
                     });
-                match json {
-                    Some(json) => {
-                        if import_os_space_from_json(&json, port.clone()).is_ok() {
+                match dsl {
+                    Some(dsl) => {
+                        if import_os_space_from_dsl(&dsl, port.clone()).is_ok() {
                             bump(generation + 1)
                         } else {
                             ActionEmit::default()
                         }
                     }
                     None => ActionEmit::effect(HostEffect::RequestFileOpen {
-                        accept: ".json".into(),
+                        accept: ".os".into(),
                         read_as: None,
                         import_action: "importSpace".into(),
                         multiple: false,

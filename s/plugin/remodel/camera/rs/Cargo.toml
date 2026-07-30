@@ -12,6 +12,6 @@ crate-type = ["rlib"]
 path = "lib.rs"
 
 [dependencies]
-mathematical_algebra = { path = "../../../../../framework/kernel/mathematical/algebra/rs", package = "semio-framework-kernel-mathematical-algebra" }
-mathematical_lie = { path = "../../../../../framework/kernel/mathematical/lie/rs", package = "semio-framework-kernel-mathematical-lie" }
-mathematical_optimize = { path = "../../../../../framework/kernel/mathematical/optimize/rs", package = "semio-framework-kernel-mathematical-optimize" }
+mathematical_algebra = { path = "../../../../../framework/os/kernel/math/algebra/rs", package = "semio-framework-os-kernel-math-algebra" }
+mathematical_lie = { path = "../../../../../framework/os/kernel/math/lie/rs", package = "semio-framework-os-kernel-math-lie" }
+mathematical_optimize = { path = "../../../../../framework/os/kernel/math/optimize/rs", package = "semio-framework-os-kernel-math-optimize" }

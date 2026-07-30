@@ -26,7 +26,7 @@ framework_editor = { path = "../../../../framework/editor/rs" }
 writer = { path = "../app/rs", package = "semio-s-app-writer" }
 writer_op = { path = "../app/op/rs", package = "semio-s-app-writer-op" }
 writer_ui = { path = "../app/ui/rs", package = "semio-s-app-writer-ui" }
-store = { path = "../../../kernel/store/rs", package = "semio-s-kernel-store" }
+store = { path = "../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
 serde_json = "1.0.140"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/os-plugins.spec.ts
 // Specs: End-to-end readiness checks for the `framework/os` scope's per-plugin boot matrix (`.storybook/stories/framework/os/plugins.stories.tsx`).
-// Summary: For every `PLUGIN_BUILD_TARGETS` entry, navigates `iframe.html?id=<plugins-story-id>&viewMode=story` and waits for the shell's readiness beacon (`semioOsReady`/`semioOsError` dataset keys — see `#region 🔖ReadinessBeacon` in `framework/renderer/react/index.tsx`) for plugins with a prebuilt artifact, or the `OsBootHost` artifact-missing panel for the ones deliberately without one (`framework/product/os/dev/plugin-modules/`) — that panel never mounts `FrameworkOsShell`, so no beacon fires for it. Asserts zero unexpected `console.error` per story (model: `.storybook/puzzle-2d.spec.ts`).
+// Summary: For every `PLUGIN_BUILD_TARGETS` entry, navigates `iframe.html?id=<plugins-story-id>&viewMode=story` and waits for the shell's readiness beacon (`semioOsReady`/`semioOsError` dataset keys — see `#region 🔖ReadinessBeacon` in `framework/os/renderer/js/react/index.tsx`) for plugins with a prebuilt artifact, or the `OsBootHost` artifact-missing panel for the ones deliberately without one (`framework/os/dev/plugin-modules/`) — that panel never mounts `FrameworkOsShell`, so no beacon fires for it. Asserts zero unexpected `console.error` per story (model: `.storybook/puzzle-2d.spec.ts`).
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 

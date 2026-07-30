@@ -1,6 +1,6 @@
 // #region 🧲Header
 // 💻 .storybook/stories/framework/hosts/UiInterpreter.stories.tsx
-// Specs: Exercise `interpretUiNode` (`framework/renderer/react/index.tsx`) directly against hand-written
+// Specs: Exercise `interpretUiNode` (`framework/os/renderer/js/react/index.tsx`) directly against hand-written
 // `UiNode` JSON trees — no wasm, no scene protocol, just the declarative-UI half of the renderer barrel.
 // Summary: Three fixtures — a button-in-a-stack, a two-section tree (with a nested item and an inline
 // `toggle` control), and a field/section "properties panel" (input/select/slider/keyValue) — each rendered

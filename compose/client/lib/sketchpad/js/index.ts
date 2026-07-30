@@ -11583,7 +11583,7 @@ export function sketchpadFixtureUrlFromKitRelativePath(relativePath: string, bas
   return `/${segments.join("/")}`;
 }
 
-/** @emoji 🧊 Maps representation GLBs to puzzle 3d `/mesh/*` URLs (see `meshCollectionVitePlugin` in `ui/styling/vite-elements-assets.ts`). */
+/** @emoji 🧊 Maps representation GLBs to puzzle 3d `/mesh/*` URLs (see `meshCollectionVitePlugin` in `framework/ui/styling/vite-elements-assets.ts`). */
 export function sketchpadPuzzle3dMeshUrlForKitFile(row: { readonly name?: string; readonly path?: string }): string | undefined {
   const path = row.path?.replace(/^\.\//, "") ?? "";
   if (path.includes("representations/") || path.includes("representation/")) {

@@ -149,7 +149,7 @@ describe("dependency-boundary", () => {
     expect(isAdapterBoundaryFile("pkg/main.py", "# #region 🔌Adapters\nimport fastapi")).toBe(true);
     expect(isAdapterBoundaryFile("compose/client/lib/js/index.ts", "//#region 🌐RsWasmTransport\nexport async function x() {}")).toBe(true);
     expect(isAdapterBoundaryFile("compose/client/lib/js/kit-store.worker.ts", "export async function x() {}")).toBe(true);
-    expect(isAdapterBoundaryFile("coda/client/bin/assistant/mcp-app.tsx", "// #region 🔌Adapters\nimport x from 'react'")).toBe(true);
+    expect(isAdapterBoundaryFile("compose/client/bin/assistant/mcp-app.tsx", "// #region 🔌Adapters\nimport x from 'react'")).toBe(true);
     expect(isAdapterBoundaryFile("framework/platform/renderer/react/index.tsx", "// #region 🔌Adapters\nimport x from 'react'")).toBe(true);
     expect(isAdapterBoundaryFile("pkg/foo.ts", "import x from 'react'")).toBe(false);
   });
@@ -184,7 +184,7 @@ describe("dependency-boundary", () => {
 describe("ui scrollbar styling", () => {
   test("ui.css defines scrollbar tokens and native plus Scrollable rules", () => {
     const repoRoot = findRepoRoot(import.meta.dir);
-    const css = readFileSync(join(repoRoot, "ui/styling/js/ui.css"), "utf8");
+    const css = readFileSync(join(repoRoot, "framework/ui/styling/js/ui.css"), "utf8");
     expect(css).toContain("--scrollbar-size:");
     expect(css).toContain("--scrollbar-thumb:");
     expect(css).toContain("scrollbar-color:");
@@ -625,7 +625,7 @@ describe("package boundary guards", () => {
   });
 
   test("framework renderer host has no per-technology registerUi surface host APIs", () => {
-    const indexPath = join(repoRoot, "framework/renderer/react/index.tsx");
+    const indexPath = join(repoRoot, "framework/os/renderer/js/react/index.tsx");
     const indexSource = readFileSync(indexPath, "utf8");
     expect(indexSource).not.toMatch(/registerUi(?:Draw|Flow|Layout|Note|Puzzle2d|Puzzle3d|Puzzle5d|Sequence|Writer|Raster|Forms|Trinity|Procedural|Shooting|Gis|Cad|Dag|Lowpoly|Imperative|S)SurfaceHost/);
     expect(indexSource).toContain("bootFrameworkOs");

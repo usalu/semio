@@ -12,4 +12,4 @@ path = "lib.rs"
 
 [dependencies]
 en1997 = { path = "../../rs", package = "semio-s-app-norm-en1997" }
-store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }

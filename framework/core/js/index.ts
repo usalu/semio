@@ -86,7 +86,7 @@ export const UI_FOOTER_ELEMENT_ID = "ui.footer";
 
 /** 🆔 Normalizes arbitrary input into a single camelCase element-id segment — byte-for-byte mirror of
  * `element_id_segment` in `framework/core/rs/lib.rs` (core/js stays DOM-free, so the DOM-facing
- * `elementIdSelector`/alias helpers live in `ui/js/react` instead). */
+ * `elementIdSelector`/alias helpers live in `framework/ui/js/react` instead). */
 function elementIdSegment(raw: string): string {
   let segment = "";
   let capitalizeNext = false;
@@ -784,7 +784,7 @@ export type UiExternalSlotNode = {
   readonly paramsJson: string;
 };
 
-/** 🧭 The dispatch key on {@link UiComponentSceneNode} — matches the lazy-loaded host component per `framework/renderer/react/index.tsx`. */
+/** 🧭 The dispatch key on {@link UiComponentSceneNode} — matches the lazy-loaded host component per `framework/os/renderer/js/react/index.tsx`. */
 export type ComponentKind = "canvas-2d" | "world-3d" | "node-graph" | "text-editor" | "table" | "paint-2d" | "tiled-map" | "board-2d" | "icon-render" | "ink-canvas" | "graph-timeline" | "block-list" | "diff-view" | "event-feed";
 
 /** 🖥️ A native (non-declarative) rendering surface — mirrors the wasm `componentScene` node; the active `componentKind` selects which optional scene field is populated. */
@@ -812,7 +812,7 @@ export type UiComponentSceneNode = {
   readonly eventFeed?: EventFeedScene;
 };
 
-/** 🧷 Shared prop shape for every `framework/renderer/react/index.tsx` host component. */
+/** 🧷 Shared prop shape for every `framework/os/renderer/js/react/index.tsx` host component. */
 export type ComponentSceneHostProps = { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void };
 //#endregion ComponentSceneProtocol
 
@@ -986,7 +986,7 @@ export class NamedLayoutStore extends Store<readonly NamedLayout[]> {
   }
 }
 
-/** 🧭 The eight anchor ids, mirroring `Anchor` in `ui/js/react/index.tsx` (kept inline/private here to stay dependency-free of that package) — shared by every persisted anchor-keyed shape below so they can't drift apart from one another. */
+/** 🧭 The eight anchor ids, mirroring `Anchor` in `framework/ui/js/react/index.tsx` (kept inline/private here to stay dependency-free of that package) — shared by every persisted anchor-keyed shape below so they can't drift apart from one another. */
 type PersistedAnchor = "top-left" | "top-middle" | "top-right" | "right-middle" | "bottom-right" | "bottom-middle" | "bottom-left" | "left-middle";
 
 //#region DockLayoutStore
@@ -997,7 +997,7 @@ export interface DockTabSkeleton {
   trees?: readonly string[];
 }
 
-/** 🐳 The full persisted dock arrangement, one tab tree per anchor — anchor ids mirror `Anchor` in `ui/js/react/index.tsx` (kept inline here to stay dependency-free of that package). */
+/** 🐳 The full persisted dock arrangement, one tab tree per anchor — anchor ids mirror `Anchor` in `framework/ui/js/react/index.tsx` (kept inline here to stay dependency-free of that package). */
 export interface DockSkeleton {
   version: 3;
   anchors: Record<PersistedAnchor, readonly DockTabSkeleton[]>;
@@ -1449,7 +1449,7 @@ export type DialogDefinition = GeneratedDialogDefinition;
 //#region 🎬Tutorial
 /** 🎬 The framework-owned action id apps dispatch (or the shell auto-injects into the command palette,
  * with a `tutorialId` Select arg) to (re)start a tutorial — mirrors Rust `START_TUTORIAL_ACTION_ID`.
- * Distinct from the docs-tooltip `tutorial` link field on `UiLabelLeaf` (`ui/js/react`), a URL into the
+ * Distinct from the docs-tooltip `tutorial` link field on `UiLabelLeaf` (`framework/ui/js/react`), a URL into the
  * manual — this is the interactive recorded-walkthrough mechanism. */
 export const START_TUTORIAL_ACTION_ID = "startTutorial";
 
@@ -1465,7 +1465,7 @@ export const TUTORIAL_CONVERGE_MS = 600;
 // field-for-field (see that region's doc comments for the authoritative semantics) and are meant to be
 // ts-rs GENERATED like their `Introduction*` neighbors above. Regeneration is blocked right now by an
 // unrelated, pre-existing `typegen`-feature compile break in a concurrent session's work (`IconName` is
-// missing its `TS` derive in `ui/wgpu/rs/lib.rs`, breaking `cargo test --features typegen` workspace-wide).
+// missing its `TS` derive in `framework/ui/wgpu/rs/lib.rs`, breaking `cargo test --features typegen` workspace-wide).
 // Once that lands, run `bun nx run @semio-tech/framework-core:generate`, delete this hand-written block,
 // and re-add `Tutorial* as GeneratedTutorial*` imports above — names/shapes here were written to match the
 // eventual generated output exactly, so every other file importing from this module is unaffected.
@@ -1599,7 +1599,7 @@ export type TutorialDefinition = {
 
 //#region 🏷️ShellBrand
 /** 🌐 Locales the shell chrome ships a complete translation bundle for — the single source `UiLocale`
- * (`ui/js/react`), `ShellBrandLocks.locale`, and `resolveShellLocks` all derive from. Adding a locale
+ * (`framework/ui/js/react`), `ShellBrandLocks.locale`, and `resolveShellLocks` all derive from. Adding a locale
  * means adding it here, which the ui-react schema asserts force a matching bundle for. */
 export const SHELL_LOCALES = ["en", "de"] as const;
 export type ShellLocale = (typeof SHELL_LOCALES)[number];
@@ -1639,7 +1639,7 @@ export type ShellBrand = {
   readonly replayIntroductionOnLoad?: boolean;
   /** 🧊 When true, the shell never reads or writes device-local shell state (dock, panes, named layouts, chrome prefs, introduction seen) — every refresh boots from brand locks/defaults only. */
   readonly ephemeral?: boolean;
-  /** 🗂️ Repo-root-relative directory of this brand's own static assets (logos, etc.) — the dev/build server mounts it as a static route at `/<assetsDir>` alongside the shared `ui/asset` mount. */
+  /** 🗂️ Repo-root-relative directory of this brand's own static assets (logos, etc.) — the dev/build server mounts it as a static route at `/<assetsDir>` alongside the shared `framework/ui/asset` mount. */
   readonly assetsDir?: string;
   /** 📦 Repo-root-relative directory this brand's build output lands in instead of the shared playground `dist/` — keeps a brand's specialization (including its build artifact) self-contained. */
   readonly distDir?: string;
@@ -1920,7 +1920,7 @@ export type DerivedUtilitySpec = {
 };
 
 /**
- * 🧰 Hand-written twin of Rust `derive_utility_nodes` (`ui/wgpu/rs/lib.rs`): builds the utility bar node tree
+ * 🧰 Hand-written twin of Rust `derive_utility_nodes` (`framework/ui/wgpu/rs/lib.rs`): builds the utility bar node tree
  * from resolved utilities + the host-owned active utility id. Each utility becomes a `toggle` whose `pressed`
  * reflects `activeUtilityId === id` and whose `onChange` dispatches `setActiveUtility { utilityId }`; utilities
  * sharing a `group` collapse into one `collection` placed where the group first appears. A group that ends
@@ -1959,7 +1959,7 @@ export function deriveUtilityNodes(controllerId: string, utilities: readonly Der
 }
 
 /**
- * 🎯 Hand-written twin of Rust `partition_window_measures` (`ui/wgpu/rs/lib.rs`): splits a window's
+ * 🎯 Hand-written twin of Rust `partition_window_measures` (`framework/ui/wgpu/rs/lib.rs`): splits a window's
  * top-level measures into `general` and `utilityOptions`. A top-level `group` tagged with `activeUtilityId`
  * contributes its **children** to `utilityOptions` only when it equals the window's active utility (the
  * tagged wrapper is routing-only and never rendered), and is dropped from both buckets otherwise. Untagged
@@ -2368,7 +2368,7 @@ export function withSerializedPluginWasmHandle(handle: PluginWasmHandle): Plugin
 //#endregion SerializedPluginWasm
 
 //#region PluginWorkerClient
-/** @emoji 🧵 Message types the generated `plugin-worker.js` dispatches (framework/product/os/dev/script.ts `pluginWorkerSource`). */
+/** @emoji 🧵 Message types the generated `plugin-worker.js` dispatches (framework/os/dev/script.ts `pluginWorkerSource`). */
 type PluginWorkerMessageType = "init" | "manifest" | "createApp" | "handleAction" | "handleCommand" | "render" | "destroy" | "refreshUi" | "error";
 
 /** @emoji ⏱️ Logs only, never kills the worker — a plugin action owns in-flight, possibly undo-relevant
@@ -2381,7 +2381,7 @@ function pluginWorkerUrl(moduleUrl: string): string {
 
 /**
  * @emoji 🧵 Runs a component-model plugin's WASM inside a Web Worker so `handleAction` — including
- * long-running precompute — never blocks the UI thread. Mirrors `framework/renderer/wgpu/js/boot.ts`'s
+ * long-running precompute — never blocks the UI thread. Mirrors `framework/os/renderer/wgpu/js/boot.ts`'s
  * `PluginWorkerClient`, minus its 5s timeout+restart.
  */
 class PluginWorkerClient {
@@ -2788,7 +2788,7 @@ export function resolvePlaygroundBoot(variant: string, session?: PlaygroundBootS
  * the *loaded manifest*'s own `controllerId`/`panelTabs` on those apps rather than hardcoding separate
  * literals — this table only ever needs to carry app-id role assignments. A pluginFilter absent here
  * simply boots through the ordinary single-app path (`resolvePlaygroundDefaultAppId`). Mirrored by
- * `PLUGIN_HOST_CONFIGS`/`resolve_plugin_host_config` in `framework/renderer/wgpu/rs/lib.rs`'s
+ * `PLUGIN_HOST_CONFIGS`/`resolve_plugin_host_config` in `framework/os/renderer/wgpu/rs/lib.rs`'s
  * `program_bridge` module for the WGPU renderer. */
 export type PluginHostConfig = {
   readonly pluginId: string;

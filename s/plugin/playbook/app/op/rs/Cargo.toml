@@ -11,4 +11,4 @@ workspace = true
 path = "lib.rs"
 
 [dependencies]
-playbook = { path = "../../../../../kernel/playbook/rs", package = "semio-s-kernel-playbook" }
+playbook = { path = "../../../../../../framework/os/kernel/workflow/rs", package = "semio-framework-os-kernel-workflow" }

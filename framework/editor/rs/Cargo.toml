@@ -15,10 +15,10 @@ crate-type = ["rlib", "cdylib"]
 path = "lib.rs"
 
 [dependencies]
-vcs = { path = "../../kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
-store = { path = "../../../s/kernel/store/rs", package = "semio-s-kernel-store" }
-ui_styling = { path = "../../../ui/styling/rs" }
-infinite_cavas = { path = "../../kernel/infinite/canvas/rs", package = "semio-framework-kernel-infinite-canvas" }
+vcs = { path = "../../os/kernel/vcs/rs", package = "semio-framework-os-kernel-vcs" }
+store = { path = "../../os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
+ui_styling = { path = "../../ui/styling/rs" }
+infinite_cavas = { path = "../../os/kernel/infinite/canvas/rs", package = "semio-framework-os-kernel-infinite-canvas" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"

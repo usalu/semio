@@ -8,8 +8,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useMemo, useState, type ReactElement } from "react";
 
-import { Board2dHost } from "../../../../framework/renderer/react/index.tsx";
-import type { ActionDescriptor, UiComponentSceneNode } from "../../../../framework/renderer/react/index.tsx";
+import { Board2dHost } from "../../../../framework/os/renderer/js/react/index.tsx";
+import type { ActionDescriptor, UiComponentSceneNode } from "../../../../framework/os/renderer/js/react/index.tsx";
 
 //#region StoryTypes
 type StoryPuzzle2dEntity = Record<string, unknown> & { readonly id: string };

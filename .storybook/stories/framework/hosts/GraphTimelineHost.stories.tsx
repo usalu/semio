@@ -3,7 +3,7 @@
 // Specs: Host the framework renderer's `GraphTimelineHost` with zero WASM engine — it renders `@semio-tech/ui-react`'s
 // `HistoryTable` straight off `GraphTimelineScene.columnsJson` (a `HistoryColumn[]`), no engine involved.
 // Summary: A debug-readout host records the `checkoutCheckpoint` action `HistoryTable`'s row click dispatches;
-// `HistoryTable` itself has no selected-row prop to reflect back (see `ui/js/react/index.tsx`'s `HistoryTableProps`),
+// `HistoryTable` itself has no selected-row prop to reflect back (see `framework/ui/js/react/index.tsx`'s `HistoryTableProps`),
 // so — unlike the reducer-backed hosts in this scope — there is no further scene state to round-trip.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
@@ -16,7 +16,7 @@ import type { ActionDescriptor, GraphTimelineScene, UiComponentSceneNode } from 
 import type { HistoryColumn } from "@semio-tech/ui-react";
 
 //#region SceneFixtures
-/** 🌳 Two forked branches off a shared root — matches the swimlane/fork-elbow shape `HistoryTable`'s own test exercises (`ui/js/react/index.tsx`, "renders swimlane guides and fork elbows"). */
+/** 🌳 Two forked branches off a shared root — matches the swimlane/fork-elbow shape `HistoryTable`'s own test exercises (`framework/ui/js/react/index.tsx`, "renders swimlane guides and fork elbows"). */
 const BRANCHING_COLUMNS: readonly HistoryColumn[] = [
   { checkpointId: "c4", timestamp: "2026-07-19T10:04:00Z", labels: ["feature-hosts"], authors: [{ id: "u1", name: "Ueli" }], parentCheckpointId: "c2", description: "wire up TableHost story", lane: 1, alternativeIds: ["hosts"] },
   { checkpointId: "c3", timestamp: "2026-07-19T10:03:00Z", labels: ["feature-editor"], authors: [{ id: "u2", name: "Nadia" }], parentCheckpointId: "c2", description: "editor wasm gate", lane: 2, alternativeIds: ["editor"] },

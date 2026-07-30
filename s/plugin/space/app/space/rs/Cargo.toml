@@ -11,5 +11,5 @@ workspace = true
 path = "lib.rs"
 
 [dependencies]
-semio-framework-os = { path = "../../../../../../framework/product/os/core/rs" }
+semio-framework-os = { path = "../../../../../../framework/os/core/rs", package = "semio-framework-os" }
 serde = { version = "1.0.219", features = ["derive"] }

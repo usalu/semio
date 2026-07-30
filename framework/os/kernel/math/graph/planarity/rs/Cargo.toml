@@ -1,0 +1,17 @@
+[package]
+name = "semio-framework-os-kernel-math-graph-planarity"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+name = "mathematical_graph_planarity"
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+mathematical_graph = { path = "../../rs", package = "semio-framework-os-kernel-math-graph" }
+mathematical_graph_traversal = { path = "../../traversal/rs", package = "semio-framework-os-kernel-math-graph-traversal" }

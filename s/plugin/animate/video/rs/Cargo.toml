@@ -13,7 +13,7 @@ path = "lib.rs"
 
 [dependencies]
 animate_core = { path = "../../core/rs", package = "animate_core" }
-mathematical_geometry = { path = "../../../../../framework/kernel/mathematical/geometry/rs", package = "semio-framework-kernel-mathematical-geometry" }
+mathematical_geometry = { path = "../../../../../framework/os/kernel/math/geometry/rs", package = "semio-framework-os-kernel-math-geometry" }
 framework_hash = { package = "semio-framework-hash", path = "../../../../../framework/hash/rs" }
 vello = { version = "0.7.0", features = ["wgpu", "wgpu_default"] }
 wgpu = "27.0.1"

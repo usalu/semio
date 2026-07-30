@@ -18,15 +18,15 @@ crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
 
 [dependencies]
-playbook = { path = "../../../../../kernel/playbook/rs", package = "semio-s-kernel-playbook" }
-vcs = { path = "../../../../../../framework/kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
-store = { path = "../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
-protocol = { path = "../../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
-flow_core = { path = "../../../../../kernel/flow/core/rs", package = "semio-s-kernel-flow-core" }
-flow_module_brep = { path = "../../../../../kernel/flow/module/brep/rs", default-features = false, package = "semio-s-kernel-flow-module-brep" }
-kernel_3d_engine = { path = "../../../../../kernel/geometry/3d/brep/engine/rs", features = ["parallel"], package = "semio-s-kernel-geometry-3d-brep-engine" }
+playbook = { path = "../../../../../../framework/os/kernel/workflow/rs", package = "semio-framework-os-kernel-workflow" }
+vcs = { path = "../../../../../../framework/os/kernel/vcs/rs", package = "semio-framework-os-kernel-vcs" }
+store = { path = "../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
+protocol = { path = "../../../../../../framework/os/kernel/protocol/rs", package = "semio-framework-os-kernel-protocol" }
+flow_core = { path = "../../../../../../framework/os/kernel/flow/core/rs", package = "semio-framework-os-kernel-flow-core" }
+flow_module_brep = { path = "../../../../../../framework/os/kernel/flow/module/brep/rs", default-features = false, package = "semio-s-kernel-flow-module-brep" }
+kernel_3d_engine = { path = "../../../../../../framework/os/kernel/3d/brep/engine/rs", features = ["parallel"], package = "semio-framework-os-kernel-3d-brep-engine" }
 semio-framework-plugin = { path = "../../../../../../framework/plugin/rs" }
 semio-framework-core = { path = "../../../../../../framework/core/rs" }
-dsl = { path = "../../../../../../framework/kernel/dsl/rs", package = "semio-framework-kernel-dsl" }
+dsl = { path = "../../../../../../framework/os/kernel/dsl/rs", package = "semio-framework-os-kernel-dsl" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

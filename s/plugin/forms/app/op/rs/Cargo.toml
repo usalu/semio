@@ -12,7 +12,7 @@ path = "lib.rs"
 
 [dependencies]
 forms = { path = "../../rs", package = "semio-s-app-forms" }
-playbook = { path = "../../../../../kernel/playbook/rs", package = "semio-s-kernel-playbook" }
+playbook = { path = "../../../../../../framework/os/kernel/workflow/rs", package = "semio-framework-os-kernel-workflow" }
 
 [dev-dependencies]
 forms_engine = { path = "../../engine/rs", package = "semio-s-app-forms-engine" }

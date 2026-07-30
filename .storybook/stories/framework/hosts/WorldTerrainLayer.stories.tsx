@@ -18,7 +18,7 @@ import type { ReactElement } from "react";
 import { WorldTerrainLayer } from "@semio-tech/framework-renderer-react";
 
 //#region SceneFixtures
-/** ⛰️ Matches the `WorldTerrainStyle` fixture in `framework/renderer/react/index.test.ts` ("accepts extended world 3d scene fields"). */
+/** ⛰️ Matches the `WorldTerrainStyle` fixture in `framework/os/renderer/js/react/index.test.ts` ("accepts extended world 3d scene fields"). */
 const HANNOVER_TERRAIN_JSON = JSON.stringify({
   tileUrlTemplate: "/storybook-missing-dem/{z}/{x}/{y}.png",
   projectOriginLon: 9.7382,

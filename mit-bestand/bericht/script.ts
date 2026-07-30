@@ -3,7 +3,7 @@
 import { existsSync, statSync, watch } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../repo/lib/js/index.ts";
-import { buildPrintDocument, fetchPrintFonts } from "../../print/script.ts";
+import { buildPrintDocument, fetchPrintFonts } from "../../framework/print/script.ts";
 
 const berichtRoot = import.meta.dir;
 const defaultTex = join(berichtRoot, "zwischenbericht/zwischenbericht.tex");

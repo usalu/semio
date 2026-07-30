@@ -13,9 +13,9 @@ path = "lib.rs"
 [dependencies]
 forms = { path = "../../rs", package = "semio-s-app-forms" }
 forms_op = { path = "../../op/rs", package = "semio-s-app-forms-op" }
-playbook = { path = "../../../../../kernel/playbook/rs", package = "semio-s-kernel-playbook" }
-protocol = { path = "../../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
-store = { path = "../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+playbook = { path = "../../../../../../framework/os/kernel/workflow/rs", package = "semio-framework-os-kernel-workflow" }
+protocol = { path = "../../../../../../framework/os/kernel/protocol/rs", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
 
 [dev-dependencies]
 forms_engine = { path = "../../engine/rs", package = "semio-s-app-forms-engine" }

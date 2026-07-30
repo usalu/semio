@@ -3,7 +3,7 @@
 // Specs: Host the framework renderer's `IconRenderHost` with zero WASM engine and zero dev-server asset route —
 // the `framework/hosts` scope registers no static-dir for GLBs (unlike `framework/os`'s `/plugin-modules`), so
 // `assetUrl` is a hand-built `data:model/gltf+json` fixture (`.storybook/framework/hosts/iconRenderFixture.ts`).
-// Summary: The default `iconRenderPort` (`ui/js/react/index.tsx`) still does the real three.js offscreen render —
+// Summary: The default `iconRenderPort` (`framework/ui/js/react/index.tsx`) still does the real three.js offscreen render —
 // GLTFLoader + WebGLRenderer/SVGRenderer — against that fixture, so this exercises the real render pipeline, not
 // a stub. `ToolbarFormat` reads `context.globals.iconRenderer` directly (webgl → `format: "png"`, svg → `format:
 // "svg"`) per the toolbar's own description in `.storybook/preview.tsx` ("read directly from

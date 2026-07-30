@@ -1,0 +1,75 @@
+{
+  "name": "@semio-tech/framework-renderer-wgpu",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "framework/os/renderer/wgpu",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./script.ts test",
+        "cwd": "framework/os/renderer/wgpu"
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./script.ts test quick",
+        "cwd": "framework/os/renderer/wgpu"
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./script.ts test long",
+        "cwd": "framework/os/renderer/wgpu"
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./script.ts test exhaustive",
+        "cwd": "framework/os/renderer/wgpu"
+      }
+    },
+    "wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./script.ts wasm",
+        "cwd": "framework/os/renderer/wgpu"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./script.ts serve",
+        "cwd": "framework/os/renderer/wgpu",
+        "forwardAllArgs": true
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./script.ts dev",
+        "cwd": "framework/os/renderer/wgpu",
+        "forwardAllArgs": true
+      }
+    },
+    "native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./script.ts native",
+        "cwd": "framework/os/renderer/wgpu",
+        "forwardAllArgs": true
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./script.ts lint",
+        "cwd": "framework/os/renderer/wgpu"
+      }
+    }
+  },
+  "tags": ["scope:framework", "type:renderer"]
+}

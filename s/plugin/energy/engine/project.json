@@ -1,0 +1,86 @@
+{
+  "name": "@semio-tech/energy-engine",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/rs/Cargo.toml",
+        "{projectRoot}/rs/lib.rs",
+        "{projectRoot}/rs/src/**",
+        "{projectRoot}/script.ts",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "options": {
+        "cwd": "s/plugin/energy/engine",
+        "command": "bun ./script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/rs/Cargo.toml",
+        "{projectRoot}/rs/lib.rs",
+        "{projectRoot}/rs/src/**",
+        "{projectRoot}/script.ts",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "options": {
+        "cwd": "s/plugin/energy/engine",
+        "command": "bun ./script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/rs/Cargo.toml",
+        "{projectRoot}/rs/lib.rs",
+        "{projectRoot}/rs/src/**",
+        "{projectRoot}/script.ts",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "options": {
+        "cwd": "s/plugin/energy/engine",
+        "command": "bun ./script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/rs/Cargo.toml",
+        "{projectRoot}/rs/lib.rs",
+        "{projectRoot}/rs/src/**",
+        "{projectRoot}/script.ts",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "options": {
+        "cwd": "s/plugin/energy/engine",
+        "command": "bun ./script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/rs/Cargo.toml",
+        "{projectRoot}/rs/lib.rs",
+        "{projectRoot}/rs/src/**",
+        "{projectRoot}/script.ts",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "options": {
+        "cwd": "s/plugin/energy/engine",
+        "command": "bun ./script.ts lint",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

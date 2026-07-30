@@ -13,9 +13,9 @@ path = "lib.rs"
 [dependencies]
 layout = { path = "../../rs", package = "semio-s-app-layout" }
 layout_dsl = { path = "../../dsl/rs", package = "semio-s-app-layout-dsl" }
-store = { path = "../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
-infinite_cavas = { path = "../../../../../../framework/kernel/infinite/canvas/rs", package = "semio-framework-kernel-infinite-canvas" }
-semio-framework-os = { path = "../../../../../../framework/product/os/core/rs" }
+store = { path = "../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
+infinite_cavas = { path = "../../../../../../framework/os/kernel/infinite/canvas/rs", package = "semio-framework-os-kernel-infinite-canvas" }
+semio-framework-os = { path = "../../../../../../framework/os/core/rs", package = "semio-framework-os" }
 serde_json = "1.0.140"
 parley = { version = "0.5.0" }
 swash = { version = "0.2.6", default-features = false, features = ["render", "std"] }

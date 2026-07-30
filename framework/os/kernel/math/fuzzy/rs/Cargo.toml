@@ -1,0 +1,19 @@
+[package]
+name = "semio-framework-os-kernel-math-fuzzy"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+name = "mathematical_fuzzy"
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+mathematical_algebra = { path = "../../algebra/rs", package = "semio-framework-os-kernel-math-algebra" }
+mathematical_random = { path = "../../random/rs", package = "semio-framework-os-kernel-math-random" }
+serde = { version = "1.0.219", features = ["derive"] }
+thiserror = "2.0.12"

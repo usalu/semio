@@ -3399,7 +3399,7 @@ export async function exportModelSpaceToDwg(space: ModelSpace, deflection = 0.1)
       if (mesh.position.length > 0 && mesh.index.length > 0) meshes.push(mesh);
     }
   }
-  const flowCore = (await import("../../../../flow/core/rs/pkg/flow_core.js")) as { dwg_encode_mesh_json?: (meshJson: string) => string };
+  const flowCore = (await import("../../../../../../framework/os/kernel/flow/core/rs/pkg/flow_core.js")) as { dwg_encode_mesh_json?: (meshJson: string) => string };
   if (typeof flowCore.dwg_encode_mesh_json !== "function") {
     throw new Error("dwg_encode_mesh_json export missing — rebuild flow/core wasm");
   }

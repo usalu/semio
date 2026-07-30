@@ -13,8 +13,8 @@ path = "lib.rs"
 [dependencies]
 sourcing = { path = "../../rs", package = "semio-s-app-sourcing-curate" }
 sourcing_op = { path = "../../op/rs", package = "semio-s-app-sourcing-curate-op" }
-protocol = { path = "../../../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
-store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+protocol = { path = "../../../../../../../framework/os/kernel/protocol/rs", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
 
 [dev-dependencies]
 sourcing_engine = { path = "../../engine/rs", package = "semio-s-app-sourcing-curate-engine" }

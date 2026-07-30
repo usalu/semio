@@ -14,7 +14,7 @@ path = "lib.rs"
 lowpoly = { path = "../../rs", package = "semio-s-app-lowpoly" }
 lowpoly_engine = { path = "../../engine/rs", package = "semio-s-app-lowpoly-engine" }
 lowpoly_op = { path = "../../op/rs", package = "semio-s-app-lowpoly-op" }
-kernel_3d_mesh = { path = "../../../../../kernel/geometry/3d/mesh/rs", package = "semio-s-kernel-geometry-3d-mesh" }
+kernel_3d_mesh = { path = "../../../../../../framework/os/kernel/3d/mesh/rs", package = "semio-framework-os-kernel-3d-mesh" }
 semio-framework-plugin = { path = "../../../../../../framework/plugin/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

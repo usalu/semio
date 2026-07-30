@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/stories/styling/Glass.stories.tsx
 // Specs: Docs gallery for the `Level` context (`LevelProvider`/`useLevel`) and its glass fill (`@semio-tech/ui-react`) across every `Level`.
-// Summary: `glassClass` is a generic Tailwind `@utility` class defined in `ui/styling/js/ui.css` (backdrop-filter blur/saturate + a `color-mix` fill); its alpha/blur are derived per the `[data-level="…"]` ancestor the swatch is stamped with — not per a hand-picked tier. A level's attached chrome (title caps, ribbons, tab bars, rails) renders this exact same fill as its body, so one level always shows one appearance. Each swatch renders over a colorful backdrop so the blur/alpha differences across levels are visible without needing WebGL or a running program.
+// Summary: `glassClass` is a generic Tailwind `@utility` class defined in `framework/ui/styling/js/ui.css` (backdrop-filter blur/saturate + a `color-mix` fill); its alpha/blur are derived per the `[data-level="…"]` ancestor the swatch is stamped with — not per a hand-picked tier. A level's attached chrome (title caps, ribbons, tab bars, rails) renders this exact same fill as its body, so one level always shows one appearance. Each swatch renders over a colorful backdrop so the blur/alpha differences across levels are visible without needing WebGL or a running program.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 

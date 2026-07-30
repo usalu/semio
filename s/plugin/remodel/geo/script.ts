@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🌍 `@semio-tech/remodel-geo` — Georeferencing and survey products: GCPs, geodetic transforms, DSM/DTM, orthomosaics, contours, volumes and quality reports. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runCargoTestBudgeted, runCargoLint, runBundleScriptMain } from "../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runCargoTestBudgeted, runCargoLint, runBundleScriptMain } from "../../../../repo/lib/js/index.ts";
 import { join } from "node:path";
 
 class TestScript extends BundleScript {

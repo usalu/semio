@@ -14,4 +14,4 @@ path = "lib.rs"
 en1998 = { path = "../../rs", package = "semio-s-app-norm-en1998" }
 en1998_engine = { path = "../../engine/rs", package = "semio-s-app-norm-en1998-engine" }
 norm_core = { path = "../../../../core/rs", package = "norm_core" }
-store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }

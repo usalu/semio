@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** ⚙️ `@semio-tech/remodel-engine` — Reconstruction engine: cooperative staged pipeline turning decoded frames into textured meshes, previews and quality reports. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runCargoTestBudgeted, runCargoLint, runBundleScriptMain } from "../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runCargoTestBudgeted, runCargoLint, runBundleScriptMain } from "../../../../repo/lib/js/index.ts";
 import { join } from "node:path";
 
 class TestScript extends BundleScript {

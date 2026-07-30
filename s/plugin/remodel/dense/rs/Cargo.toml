@@ -14,5 +14,5 @@ path = "lib.rs"
 [dependencies]
 remodel_image = { path = "../../image/rs", package = "remodel_image" }
 remodel_camera = { path = "../../camera/rs", package = "remodel_camera" }
-mathematical_algebra = { path = "../../../../../framework/kernel/mathematical/algebra/rs", package = "semio-framework-kernel-mathematical-algebra" }
-mathematical_spatial = { path = "../../../../../framework/kernel/mathematical/spatial/rs", package = "semio-framework-kernel-mathematical-spatial" }
+mathematical_algebra = { path = "../../../../../framework/os/kernel/math/algebra/rs", package = "semio-framework-os-kernel-math-algebra" }
+mathematical_spatial = { path = "../../../../../framework/os/kernel/math/spatial/rs", package = "semio-framework-os-kernel-math-spatial" }

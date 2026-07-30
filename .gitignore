@@ -17,11 +17,9 @@ target*
 .tmp*
 #--------------------------------------PRINT--------------------------------------
 print/asset/font/
-print/template/**/.semio-panel-glass/
-print/template/**/*.panels
-print/dist/**/*.panels
-mit-bestand/bericht/**/.semio-panel-glass/
-mit-bestand/bericht/**/*.panels
+framework/print/asset/font/
+**/.semio-panel-glass/
+**/*.panels
 # Generated dark variants (canonical source is the light .tex only)
 **/.semio-dark/
 *-dark.tex
@@ -78,12 +76,15 @@ test-results
 /playwright/.auth/
 #--------------------------------------VITE--------------------------------------
 .vite
-/framework/product/os/dev/plugin-modules/
-/framework/product/os/dev/plugin-modules-native/
-/framework/product/os/dev/public/plugin-modules/
-/framework/product/os/dev/renderer-modules/
-/framework/product/os/dev/public/plugins/
+/framework/os/dev/plugin-modules/
+/framework/os/dev/plugin-modules-native/
+/framework/os/dev/public/plugin-modules/
+/framework/os/dev/renderer-modules/
+/framework/os/dev/public/plugins/
 /public/plugin-modules/
+/framework/os/renderer/wgpu/js/boot.js
+**/coverage/
+*.dylib
 #--------------------------------------NEXTJS--------------------------------------
 .next
 #--------------------------------------TURBO--------------------------------------

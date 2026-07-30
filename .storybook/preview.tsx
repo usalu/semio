@@ -340,7 +340,7 @@ export const withRenderer: Decorator = (Story, context) => {
  * via `parameters.wasm`. */
 
 // #region 🔌FrameworkHostsWasmLoaders
-/** 🧵 Wraps a `framework/renderer/react/index.tsx`-style wasm-bindgen module import (bare workspace
+/** 🧵 Wraps a `framework/os/renderer/js/react/index.tsx`-style wasm-bindgen module import (bare workspace
  * specifier, resolved by bun-symlinked `node_modules/@semio-tech/*` — no scope alias needed) into a
  * single-flight `WASM_LOADERS` entry; `mod.default()` is itself idempotent once the wasm instance is
  * live, but the cache also collapses concurrent first-call races and clears on failure so a later

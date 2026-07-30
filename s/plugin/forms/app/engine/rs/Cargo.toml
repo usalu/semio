@@ -13,6 +13,6 @@ path = "lib.rs"
 [dependencies]
 forms = { path = "../../rs", package = "semio-s-app-forms" }
 forms_dsl = { path = "../../dsl/rs", package = "semio-s-app-forms-dsl" }
-playbook = { path = "../../../../../kernel/playbook/rs", package = "semio-s-kernel-playbook" }
-store = { path = "../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+playbook = { path = "../../../../../../framework/os/kernel/workflow/rs", package = "semio-framework-os-kernel-workflow" }
+store = { path = "../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
 serde_json = "1.0.140"

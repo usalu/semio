@@ -8,8 +8,8 @@
 use dag::DagDocument;
 
 /// 📄 The canonical DAG fixture, handcrafted in the `.dag` DSL — the same file the DAG kernel's own
-/// tests parse via `include_str!("../example/demo.dag")`.
-pub const DAG_EXAMPLE_TEXT: &str = include_str!("../../../../../../framework/kernel/infinite/board/port/directed/dag/example/demo.dag");
+/// tests parse via `include_str!("../../../../../../framework/os/kernel/infinite/board/port/directed/dag/example/demo.dag")`.
+pub const DAG_EXAMPLE_TEXT: &str = include_str!("../../../../../../framework/os/kernel/infinite/board/port/directed/dag/example/demo.dag");
 
 /// 📖 Parses `.dag` DSL text into a `DagDocument`.
 pub fn parse_dsl(text: &str) -> Result<DagDocument, store::TextError> {

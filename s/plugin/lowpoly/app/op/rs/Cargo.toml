@@ -13,11 +13,11 @@ path = "lib.rs"
 [dependencies]
 lowpoly = { path = "../../rs", package = "semio-s-app-lowpoly" }
 lowpoly_engine = { path = "../../engine/rs", package = "semio-s-app-lowpoly-engine" }
-dsl = { path = "../../../../../../framework/kernel/dsl/rs", package = "semio-framework-kernel-dsl" }
-protocol = { path = "../../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
-store = { path = "../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+dsl = { path = "../../../../../../framework/os/kernel/dsl/rs", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../framework/os/kernel/protocol/rs", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
 serde = { version = "1.0.219", features = ["derive"] }
 base64 = "0.22.1"
 
 [dev-dependencies]
-kernel_3d_mesh = { path = "../../../../../kernel/geometry/3d/mesh/rs", package = "semio-s-kernel-geometry-3d-mesh" }
+kernel_3d_mesh = { path = "../../../../../../framework/os/kernel/3d/mesh/rs", package = "semio-framework-os-kernel-3d-mesh" }

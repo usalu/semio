@@ -16,8 +16,8 @@
       "@semio-tech/compose-sketchpad/*": ["../sketchpad/*"],
       "@semio-tech/compose-js": ["../js"],
       "@semio-tech/compose-js/*": ["../js/*"],
-      "@semio-tech/ui-react": ["../../../ui/react"],
-      "@semio-tech/ui-react/*": ["../../../ui/react/*"],
+      "@semio-tech/ui-react": ["../../../../../framework/ui/js/react"],
+      "@semio-tech/ui-react/*": ["../../../../../framework/ui/js/react/*"],
       "@semio-tech/semio-asset": ["../../../../asset"],
       "@semio-tech/semio-asset/*": ["../../../../asset/*"]
     },

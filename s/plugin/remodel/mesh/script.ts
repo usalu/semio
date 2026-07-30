@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🕸️ `@semio-tech/remodel-mesh` — Surface extraction and texturing: marching cubes, quadric simplification, hole filling, UV atlas and multi-view texture blending. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runCargoTestBudgeted, runCargoLint, runBundleScriptMain } from "../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runCargoTestBudgeted, runCargoLint, runBundleScriptMain } from "../../../../repo/lib/js/index.ts";
 import { join } from "node:path";
 
 class TestScript extends BundleScript {

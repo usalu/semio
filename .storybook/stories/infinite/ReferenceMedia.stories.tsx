@@ -1,6 +1,6 @@
 // #region 🧲Header
 // 💻 .storybook/story/infinite/ReferenceMedia.stories.tsx
-// Specs: Exercise `referenceMediaPort`/`referenceMediaKindFromUrl` (`ui/js/react/index.tsx`) against the real files in `infinite/fixture/` — a sketch PNG, two floor-plan raster scans, and a PDF.
+// Specs: Exercise `referenceMediaPort`/`referenceMediaKindFromUrl` (`framework/ui/js/react/index.tsx`) against the real files in `infinite/fixture/` — a sketch PNG, two floor-plan raster scans, and a PDF.
 // Summary: `infinite/fixture/*` isn't served by any registered Storybook static-dir route for this scope, so each fixture is brought in via a Vite asset `import` (the PDF via the `?url` suffix, since PDFs aren't in Vite's default `assetsInclude`) — that gives `referenceMediaPort.loadReferenceTexture` a real fetchable URL with zero extra plumbing. The loaded `THREE.Texture`'s backing image/canvas is blitted onto a plain 2D `<canvas>` so the story needs no r3f `<Canvas>` at all.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
