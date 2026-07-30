@@ -33,9 +33,11 @@
 % 🔲 Title-tab content inset. Matches the document inset constant
 % (\semio@window@bodypad = table cell \semio@table@hpad + frame gap ≈ 5.5pt) so a
 % tab's label sits the SAME distance from its four borders as body/table content
-% does. Applied ONLY in the muted cap core (\semio@heading@cap@muted@core → the
-% table / figure / contents / window title & number tabs); accent tabs, heading
-% bars, and the nav/footer chips keep their own tighter \semio@chrome@padding.
+% does. Applied by the muted cap core (\semio@heading@cap@muted@core → the
+% table / figure / contents / window title & number tabs) AND the section/appendix
+% heading chips (solid \semio@heading@chip and outline \semio@heading@cap@nofill@core,
+% via \semio@window@cap@hpad + the vpad budget), so heading boxes match the window/
+% table tabs; accent tabs and the nav/footer chips keep the tighter \semio@chrome@padding.
 % The tab is anchored so growing this inset never moves the borders that must
 % stay continuous with the frame: the title tab is flush-left (left border fixed,
 % grows right), the number tab flush-right (right border fixed, grows left), and
@@ -2234,6 +2236,12 @@
 % \hbox — so its label gets the full \semio@tab@inset above and below.
 \newcommand{\semio@window@cap@vpad@budget}{%
   \semio@chrome@padding+\semio@chrome@padding+\semio@chrome@padding}
+% Horizontal label inset inside a cap slot. Default = \semio@chrome@padding
+% (unchanged for accent tabs). Section/appendix heading chips \renewcommand this
+% — scoped to their own box — to the full \semio@tab@inset, so a heading box's
+% label sits the same distance from its left/right borders as a window/table
+% title tab's does (which uses \semio@tab@inset via the muted cap core).
+\newcommand{\semio@window@cap@hpad}{\semio@chrome@padding}
 \newcommand{\semio@window@cap@metrics@set}{%
   \setlength{\semio@window@cap@titleh}{%
     \dimexpr\ht\semio@window@cap@slot+\dp\semio@window@cap@slot
@@ -2314,7 +2322,7 @@
   \sbox{\semio@window@cap@slot}{%
     \begingroup
     #3\relax
-    \hspace{\semio@chrome@padding}#2\hspace{\semio@chrome@padding}%
+    \hspace{\semio@window@cap@hpad}#2\hspace{\semio@window@cap@hpad}%
     \endgroup
   }%
   \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
@@ -2377,10 +2385,15 @@
   \sbox{\semio@window@cap@slot}{%
     \begingroup
     \semio@heading@bar@font\color{#2}%
-    \hspace{\semio@chrome@padding}#1\hspace{\semio@chrome@padding}%
+    % LR-headbox-inset: full \semio@tab@inset, matching the window/table tabs.
+    \hspace{\semio@tab@inset}#1\hspace{\semio@tab@inset}%
     \endgroup
   }%
   \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
+  % LR-headbox-inset: same roomy vertical budget the muted cap core uses; scoped
+  % to the caller's \hbox (\semio@heading@cap@nofill), so other caps are untouched.
+  \renewcommand{\semio@window@cap@vpad@budget}{%
+    \semio@tab@inset+\semio@tab@inset+\semio@stroke@hairline}%
     \semio@window@cap@metrics@set
   \semio@window@cap@raise{\semio@heading@cap@nofill@vbox{#3}}%
 }
@@ -2434,9 +2447,18 @@
 }
 
 \newcommand{\semio@heading@chip}[3]{%
+  % LR-headbox-inset: match the window/table title tabs — the label sits the full
+  % \semio@tab@inset from all four borders (horizontal via \semio@window@cap@hpad,
+  % vertical via the vpad budget), instead of the tight \semio@chrome@padding.
+  % Scoped to this box so accent tabs (\semio@window@tab/@ctrl) keep their inset.
+  \begingroup
+  \renewcommand{\semio@window@cap@hpad}{\semio@tab@inset}%
+  \renewcommand{\semio@window@cap@vpad@budget}{%
+    \semio@tab@inset+\semio@tab@inset+\semio@stroke@hairline}%
   \semio@window@cap{#1}{#3}{%
     \semio@heading@bar@font\color{#2}%
   }%
+  \endgroup
 }
 
 \newcommand{\semio@window@gap@inbox}[1]{%

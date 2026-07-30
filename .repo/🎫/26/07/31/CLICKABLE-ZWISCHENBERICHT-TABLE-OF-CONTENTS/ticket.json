@@ -1,0 +1,10 @@
+{
+  "title": "Clickable Zwischenbericht Table of Contents",
+  "emoji": "🔗",
+  "status": "open",
+  "description": "Make each Inhaltsverzeichnis (TOC) entry in the Zwischenbericht a hyperlink that jumps exactly to the named section. The section-anchor label is already threaded into \\SemioTableTocRow (print/tex/semio-table.sty) as its 3rd argument. Wrap all three cells (number, title, page) in \\hyperref[label]{...}: number and title keep their current color (inner \\textcolor overrides colorlinks), page number takes the semio-primary link color like the glossary. Guard on the label resolving so undefined refs degrade to plain text / \"--\". Whole-row clickable. Rebuild with --skip-nx-cache and verify links land on exact sections.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪a6a8bf5c5a1a4549a5243b8d5d9158e2"
+  ]
+}

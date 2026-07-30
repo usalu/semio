@@ -80,6 +80,27 @@
   }%
 }
 
+% 🔗 TOC cell linking to the section anchor (label #1) when it resolves, else
+% the content #2 plain. Any \textcolor inside #2 overrides hyperref's colorlinks
+% tint, so number/title keep their own hue while still being clickable.
+\newcommand{\semio@toc@link}[2]{%
+  \ifcsname r@#1\endcsname
+    \hyperref[#1]{#2}%
+  \else
+    #2%
+  \fi
+}
+% 🔗 TOC page cell: links the page number to the section anchor (label #1); the
+% number is left uncoloured so it takes the semio-primary link colour like the
+% glossary, or renders "--" when the ref is unresolved.
+\newcommand{\semio@toc@page@link}[1]{%
+  \ifcsname r@#1\endcsname
+    \hyperref[#1]{\getpagerefnumber{#1}}%
+  \else
+    --%
+  \fi
+}
+
 \newcommand{\SemioTableTocRow}[3]{%
   \SemioTableRow{%
     \cellcolor{semio-chrome-canvas}\semio@toc@number{#1} &
