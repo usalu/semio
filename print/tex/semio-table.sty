@@ -851,14 +851,16 @@
 % Data cells are vertically centred (m) with the same symmetric strut padding as
 % every other table; the top strut rides in the cell-fill prefix, the bottom
 % strut in each column's <{} slot.
-\newcommand{\semio@project@cellfill}{\cellcolor{semio-chrome-canvas}\raggedright\arraybackslash\hspace{0pt}\semio@cell@struttop}
+\newcommand{\semio@project@cellfill}{\cellcolor{semio-chrome-canvas}\raggedright\hyphenpenalty=50\exhyphenpenalty=50\emergencystretch=1.2em\arraybackslash\hspace{0pt}\semio@cell@struttop}
 \newcommand{\semio@project@colspec}{%
-|@{\semio@project@padendL}>{\semio@project@cellfill}m{\dimexpr0.18\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+|@{\semio@project@padendL}>{\semio@project@cellfill}m{\dimexpr0.15\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.13\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.08\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
 @{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.10\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
-@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.26\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.15\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
 @{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.12\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
-@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.17\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
-@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.17\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padendR}|%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.13\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.14\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padendR}|%
 }
 
 % Cover-crop a project photo into an exact width×height box (no frame), reusing
@@ -941,7 +943,7 @@
     \end{minipage}%
   }%
   &
-  \multicolumn{4}{@{}>{\raggedright\arraybackslash}p{\dimexpr\semio@project@metaw+\semio@table@long@cellpad\relax}@{\semio@project@bandpadchrome}|}{%
+  \multicolumn{6}{@{}>{\raggedright\arraybackslash}p{\dimexpr\semio@project@metaw+\semio@table@long@cellpad\relax}@{\semio@project@bandpadchrome}|}{%
     \cellcolor{semio-chrome-canvas}%
     \begin{minipage}[t]{\linewidth}\vspace{0pt}%
       \semio@project@meta{#2}{#3}{#4}{#5}{#6}{#7}%
@@ -968,11 +970,13 @@
 % the body. Labels MUST stay in sync with the \semio@table@long@prepare call in
 % \SemioProject. \hline (not \hhline) guarantees one unbroken full-width divider.
 \newcommand{\semio@project@headrow}{%
-  \semio@table@header@cell{Bauteil / Menge} &
+  \semio@table@header@cell{Bauteil} &
+  \semio@table@header@cell{Neue Nutzung} &
+  \semio@table@header@cell{Menge} &
   \semio@table@header@cell{Material} &
-  \semio@table@header@cell{Spender} &
+  \semio@table@header@cell{Quelle} &
   \semio@table@header@cell{ReUse-Ort} &
-  \semio@table@header@cell{Schicht} &
+  \semio@table@header@cell{Herkunft $\rightarrow$ Ziel} &
   \semio@table@header@cell{Prozess}\\
   \hline
   \noalign{\global\semio@table@row@startedfalse}%
@@ -1004,7 +1008,7 @@
   \raggedright
   \noindent
   \begin{tabular}{#1}%
-  \semio@table@long@continuation@chrome{6}%
+  \semio@table@long@continuation@chrome{8}%
   #2%
   \noalign{\vskip\z@}%
   #3%
@@ -1030,7 +1034,7 @@
   \gdef\semio@window@header@title{#2}%
   \global\let\semio@window@header@number\semio@project@key
   \def\semio@project@bildrechte{#1}%
-  \semio@table@long@prepare{0.18,0.10,0.26,0.12,0.17,0.17}{Bauteil / Menge & Material & Spender & ReUse-Ort & Schicht & Prozess}%
+  \semio@table@long@prepare{0.15,0.13,0.08,0.10,0.15,0.12,0.13,0.14}{Bauteil & Neue Nutzung & Menge & Material & Quelle & ReUse-Ort & Herkunft $\rightarrow$ Ziel & Prozess}%
   \semio@project@splitmeta#5\relax
   \long\def\semio@project@firsthead{%
     \semio@project@overview@band{#4}%
