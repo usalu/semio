@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-space-space-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "S Studio app - textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+semio-framework-os = { path = "../../../../../../../../../🧰/🛍️/💻/⚡️/🦀", package = "semio-framework-os" }
+store = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/store/⚡️/🦀", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+space_shared = { path = "../../../../../../🔨/shared/⚡️/🦀", package = "semio-s-plugin-space-shared" }

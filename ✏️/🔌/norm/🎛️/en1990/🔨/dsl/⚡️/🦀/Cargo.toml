@@ -1,0 +1,15 @@
+[package]
+name = "semio-s-app-norm-en1990-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Norm EN 1990 app - textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+en1990 = { path = "../../../../⚡️/🦀", package = "semio-s-app-norm-en1990" }
+store = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/store/⚡️/🦀", package = "semio-framework-os-kernel-store" }

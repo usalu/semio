@@ -43,7 +43,7 @@ import {
   type BreachRecord,
   type LcovFileRecord,
   type TestLevel,
-} from "./repo/lib/js/index.ts";
+} from "./🧰/🛍️/🦑/🔨/lib/⚡️/🟦/📦.ts";
 import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, copyFileSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, extname, join, relative, resolve } from "node:path";
@@ -2540,7 +2540,7 @@ function policyNoPackFilesBreaches(repoRoot: string): BreachRecord[] {
 //#endregion 🔧PolicyRuleNoPackFiles
 
 //#region 🔧PolicyRuleNoRawSpawn
-const POLICY_RAW_SPAWN_EXEMPT = new Set(["repo/lib/js/index.ts"]);
+const POLICY_RAW_SPAWN_EXEMPT = new Set(["🧰/🛍️/🦑/🔨/lib/⚡️/🟦/📦.ts"]);
 const POLICY_RAW_SPAWN_RE = /\b(spawnSync|execSync|execFileSync|Bun\.spawn|spawn)\s*\(/g;
 
 /** 🔎Strips TS/JS comments and string literals so policy regexes only see executable code. */

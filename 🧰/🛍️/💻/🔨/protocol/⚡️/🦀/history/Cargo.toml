@@ -1,0 +1,20 @@
+[package]
+name = "semio-framework-os-kernel-protocol-history"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Protocol history log — typed record model, ops-text grammar twin, per-kind payload codecs, streaming append/scan"
+
+
+[lints]
+workspace = true
+[lib]
+name = "protocol_history"
+path = "📦.rs"
+
+[dependencies]
+protocol_core = { path = "../core", package = "semio-framework-os-kernel-protocol-core" }
+protocol_format = { path = "../format", package = "semio-framework-os-kernel-protocol-format" }
+pack_core = { path = "../../../../pack/⚡️/🦀/core", package = "semio-framework-os-kernel-pack-core" }
+dsl_core = { path = "../../../../dsl/⚡️/🦀/core", package = "semio-framework-os-kernel-dsl-core" }
+dsl_schema = { path = "../../../../dsl/⚡️/🦀/schema", package = "semio-framework-os-kernel-dsl-schema" }

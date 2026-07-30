@@ -1,0 +1,28 @@
+[package]
+name = "lowpoly-plugin"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[package.metadata.component]
+package = "semio:lowpoly"
+
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "lowpoly"
+ports = { react = 6078, wgpu = 6178 }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "📦.rs"
+
+[dependencies]
+semio-framework-plugin = { path = "../../../../../../../🧰/🛍️/💻/🔨/plugin/⚡️/🦀", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-os = { path = "../../../../../../../🧰/🛍️/💻/⚡️/🦀", package = "semio-framework-os" }
+lowpoly = { path = "../../../../🎛️/lowpoly/⚡️/🦀", package = "semio-s-app-lowpoly" }
+lowpoly_engine = { path = "../../../../🎛️/lowpoly/🔨/engine/⚡️/🦀", package = "semio-s-app-lowpoly-engine" }
+lowpoly_ui = { path = "../../../../🎛️/lowpoly/🔨/ui/⚡️/🦀", package = "semio-s-app-lowpoly-ui" }

@@ -1,6 +1,3 @@
-[submodule "compose/examples/metabolism"]
-	path = compose/examples/metabolism
-	url = https://github.com/usalu/metabolism.git
-[submodule "reuse/recherche"]
-	path = mit-bestand/recherche
+[submodule "♻️/recherche"]
+	path = ♻️/recherche
 	url = https://github.com/usalu/recherche.git

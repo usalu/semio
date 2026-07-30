@@ -1,0 +1,14 @@
+[package]
+name = "semio-s-app-flow"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Flow app - document entity facade (constitutional: general)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+flow_core = { path = "../../../../../../../🧰/🛍️/💻/🔨/flow/⚡️/🦀/core", package = "semio-framework-os-kernel-flow-core" }

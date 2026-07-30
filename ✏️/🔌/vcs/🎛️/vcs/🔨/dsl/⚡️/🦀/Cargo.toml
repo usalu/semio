@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-vcs-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "VCS app - textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+vcs = { path = "../../../../⚡️/🦀", package = "semio-s-app-vcs" }
+store = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/store/⚡️/🦀", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+vcs_engine = { path = "../../../engine/⚡️/🦀", package = "semio-s-app-vcs-engine" }

@@ -1,0 +1,19 @@
+[package]
+name = "semio-framework-os-kernel-pack-testkit"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Pack binary document format test kit — seeded generators, round-trip laws, corruption fuzzing, golden hashes"
+
+
+[lints]
+workspace = true
+[lib]
+name = "pack_testkit"
+path = "📦.rs"
+
+[dependencies]
+pack = { path = "..", package = "semio-framework-os-kernel-pack" }
+dsl_schema = { path = "../../../../dsl/⚡️/🦀/schema", package = "semio-framework-os-kernel-dsl-schema" }
+dsl_core = { path = "../../../../dsl/⚡️/🦀/core", package = "semio-framework-os-kernel-dsl-core" }
+blake3 = "1"

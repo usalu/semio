@@ -1,0 +1,16 @@
+[package]
+name = "semio-s-app-gis-3d-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "GIS 3D app - headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+gis3d = { path = "../../../../⚡️/🦀", package = "semio-s-app-gis-3d" }
+gis3d_dsl = { path = "../../../dsl/⚡️/🦀", package = "semio-s-app-gis-3d-dsl" }
+store = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/store/⚡️/🦀", package = "semio-framework-os-kernel-store" }

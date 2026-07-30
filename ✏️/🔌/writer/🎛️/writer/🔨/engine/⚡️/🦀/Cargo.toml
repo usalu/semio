@@ -1,0 +1,20 @@
+[package]
+name = "semio-s-app-writer-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Writer app - headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+writer = { path = "../../../../⚡️/🦀", package = "semio-s-app-writer" }
+writer_dsl = { path = "../../../dsl/⚡️/🦀", package = "semio-s-app-writer-dsl" }
+store = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/store/⚡️/🦀", package = "semio-framework-os-kernel-store" }
+trinity_jack = { path = "../../../../../../../trinity/🔨/jack/⚡️/🦀", package = "trinity_jack" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+regex = "1.11.1"

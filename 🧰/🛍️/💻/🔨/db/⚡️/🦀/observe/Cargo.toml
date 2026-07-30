@@ -1,0 +1,19 @@
+[package]
+name = "semio-framework-os-kernel-db-observe"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db observability — metrics, spans, health registries, structured/audit event sinks, determinism verification"
+
+[lints]
+workspace = true
+[lib]
+name = "db_observe"
+path = "📦.rs"
+
+[features]
+otel = []
+
+[dependencies]
+db_core = { path = "../core", package = "semio-framework-os-kernel-db-core" }
+pack_core = { path = "../../../../pack/⚡️/🦀/core", package = "semio-framework-os-kernel-pack-core" }

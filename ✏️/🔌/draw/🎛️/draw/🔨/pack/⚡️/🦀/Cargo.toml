@@ -1,0 +1,20 @@
+[package]
+name = "semio-s-app-draw-pack"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Draw app - binary document surface + laws (constitutional: pack)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+draw = { path = "../../../../⚡️/🦀", package = "semio-s-app-draw" }
+pack = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/pack/⚡️/🦀", package = "semio-framework-os-kernel-pack" }
+store = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/store/⚡️/🦀", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+draw_dsl = { path = "../../../dsl/⚡️/🦀", package = "semio-s-app-draw-dsl" }
+draw_engine = { path = "../../../engine/⚡️/🦀", package = "semio-s-app-draw-engine" }

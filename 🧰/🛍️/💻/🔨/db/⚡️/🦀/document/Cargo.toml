@@ -1,0 +1,30 @@
+[package]
+name = "semio-framework-os-kernel-db-document"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db document authority actor — command pipeline, materialize, transactions/batches, inverse undo, effect outbox, live-query notify"
+
+[lints]
+workspace = true
+[lib]
+name = "db_document"
+path = "📦.rs"
+
+[dependencies]
+db_core = { path = "../core", package = "semio-framework-os-kernel-db-core" }
+db_actor = { path = "../actor", package = "semio-framework-os-kernel-db-actor" }
+db_state = { path = "../state", package = "semio-framework-os-kernel-db-state" }
+db_wal = { path = "../wal", package = "semio-framework-os-kernel-db-wal" }
+db_storage = { path = "../storage", package = "semio-framework-os-kernel-db-storage" }
+db_snapshot = { path = "../snapshot", package = "semio-framework-os-kernel-db-snapshot" }
+db_index = { path = "../index", package = "semio-framework-os-kernel-db-index" }
+db_conflict = { path = "../conflict", package = "semio-framework-os-kernel-db-conflict" }
+db_projection = { path = "../projection", package = "semio-framework-os-kernel-db-projection" }
+db_query = { path = "../query", package = "semio-framework-os-kernel-db-query" }
+db_preview = { path = "../preview", package = "semio-framework-os-kernel-db-preview" }
+db_security = { path = "../security", package = "semio-framework-os-kernel-db-security" }
+protocol = { path = "../../../../protocol/⚡️/🦀", package = "semio-framework-os-kernel-protocol" }
+pack = { path = "../../../../pack/⚡️/🦀", package = "semio-framework-os-kernel-pack" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

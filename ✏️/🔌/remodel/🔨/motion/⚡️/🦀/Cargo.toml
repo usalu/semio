@@ -1,0 +1,23 @@
+[package]
+name = "remodel_motion"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["rlib"]
+path = "📦.rs"
+
+[dependencies]
+remodel_image = { path = "../../../image/⚡️/🦀", package = "remodel_image" }
+remodel_feature = { path = "../../../feature/⚡️/🦀", package = "remodel_feature" }
+remodel_camera = { path = "../../../camera/⚡️/🦀", package = "remodel_camera" }
+remodel_sfm = { path = "../../../sfm/⚡️/🦀", package = "remodel_sfm" }
+mathematical_algebra = { path = "../../../../../../../🧰/🔨/math/⚡️/🦀/algebra", package = "semio-framework-os-kernel-math-algebra" }
+mathematical_signal = { path = "../../../../../../../🧰/🔨/math/⚡️/🦀/signal", package = "semio-framework-os-kernel-math-signal" }
+mathematical_lie = { path = "../../../../../../../🧰/🔨/math/⚡️/🦀/lie", package = "semio-framework-os-kernel-math-lie" }
+mathematical_optimize = { path = "../../../../../../../🧰/🔨/math/⚡️/🦀/optimize", package = "semio-framework-os-kernel-math-optimize" }
+mathematical_spatial = { path = "../../../../../../../🧰/🔨/math/⚡️/🦀/spatial", package = "semio-framework-os-kernel-math-spatial" }

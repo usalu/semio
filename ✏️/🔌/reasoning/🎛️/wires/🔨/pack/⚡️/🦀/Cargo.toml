@@ -1,0 +1,20 @@
+[package]
+name = "semio-s-app-reasoning-wires-pack"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Reasoning wires app - binary document surface + laws (constitutional: pack)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+reasoning_wires = { path = "../../../../⚡️/🦀", package = "semio-s-app-reasoning-wires" }
+pack = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/pack/⚡️/🦀", package = "semio-framework-os-kernel-pack" }
+store = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/store/⚡️/🦀", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+reasoning_wires_dsl = { path = "../../../dsl/⚡️/🦀", package = "semio-s-app-reasoning-wires-dsl" }
+serde_json = "1.0.140"

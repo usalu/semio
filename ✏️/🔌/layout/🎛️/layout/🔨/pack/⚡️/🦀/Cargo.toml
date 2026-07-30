@@ -1,0 +1,20 @@
+[package]
+name = "semio-s-app-layout-pack"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Layout app - binary document surface + laws (constitutional: pack)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+layout = { path = "../../../../⚡️/🦀", package = "semio-s-app-layout" }
+pack = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/pack/⚡️/🦀", package = "semio-framework-os-kernel-pack" }
+store = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/store/⚡️/🦀", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+layout_dsl = { path = "../../../dsl/⚡️/🦀", package = "semio-s-app-layout-dsl" }
+serde_json = "1.0.140"

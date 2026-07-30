@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-animate-present-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Animate present app — textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+present = { path = "../../../../⚡️/🦀", package = "semio-s-app-animate-present" }
+store = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/store/⚡️/🦀", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+present_engine = { path = "../../../engine/⚡️/🦀", package = "semio-s-app-animate-present-engine" }

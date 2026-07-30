@@ -1,0 +1,15 @@
+[package]
+name = "semio-s-app-lowpoly-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Lowpoly app - textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+lowpoly = { path = "../../../../⚡️/🦀", package = "semio-s-app-lowpoly" }
+store = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/store/⚡️/🦀", package = "semio-framework-os-kernel-store" }

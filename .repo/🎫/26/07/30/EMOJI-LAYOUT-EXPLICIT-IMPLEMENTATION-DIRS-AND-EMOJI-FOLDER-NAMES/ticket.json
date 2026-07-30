@@ -1,0 +1,14 @@
+{
+  "title": "Emoji Layout: Explicit Implementation Dirs and Emoji Folder Names",
+  "emoji": "🎨",
+  "status": "closed",
+  "description": "Convert the already-completed pattern-exact re-layering into its emoji form. Insert explicit ⚡️ implementation folders before every language dir, invert the crate-tree so the language dir is a scope-wide root (not a per-crate leaf: framework/module/math/graph/cycles/rs/lib.rs → framework/module/math/⚡️/rs/graph/cycles/lib.rs style), rename structural folders (framework→🧰, module→🔨, product→🛍️, os→💻, plugin→🔌, app→🎛️, manifest→🛂, artifact→🗿, extension→🧩, renderer→📺, engine→🧑‍🎨, repo→🦑 moved under framework/product, hub→🌎, mit-bestand→♻️, s→✏️) and languages (rs→🦀, js→🟦, py→🐍, go→🐹, net→🔷, rb→💎), and rename entry files (lib.rs→📦.rs, index.ts→📦.ts, index.tsx→📦.tsx). Plugin/module/app names and deep package-tree segments stay ASCII words. Full plan at /Users/ueli/.claude/plans/make-sure-to-move-twinkling-lightning.md.",
+  "summary": "Duplicate — an existing (closed) ticket at 26/07/29/MOVE-ALL-APPS-INTO-THE-S-PRODUCT-TREE-WITH-CONSTITUTIONAL-CRATES-EMOJI-LAYOUT already covers this exact task and has been reopened instead. All work happens there.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2383"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪8bee7b0985d54338aace55028d3fb970"
+  ]
+}

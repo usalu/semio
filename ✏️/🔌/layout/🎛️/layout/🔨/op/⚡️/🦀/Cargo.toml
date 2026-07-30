@@ -1,0 +1,22 @@
+[package]
+name = "semio-s-app-layout-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Layout app - operation enum + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+layout = { path = "../../../../⚡️/🦀", package = "semio-s-app-layout" }
+dsl = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/dsl/⚡️/🦀", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/protocol/⚡️/🦀", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/store/⚡️/🦀", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]
+layout_engine = { path = "../../../engine/⚡️/🦀", package = "semio-s-app-layout-engine" }
+vcs = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/vcs/⚡️/🦀", package = "semio-framework-os-kernel-vcs" }

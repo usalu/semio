@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-imperative-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Imperative app - textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+imperative = { path = "../../../../⚡️/🦀", package = "semio-s-app-imperative" }
+store = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/store/⚡️/🦀", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+neural_engine = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/neural/⚡️/🦀/engine", package = "semio-framework-os-kernel-neural-engine" }

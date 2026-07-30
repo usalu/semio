@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-gis-3d-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "GIS 3D app - operation enum + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+gis3d = { path = "../../../../⚡️/🦀", package = "semio-s-app-gis-3d" }
+dsl = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/dsl/⚡️/🦀", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/protocol/⚡️/🦀", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/store/⚡️/🦀", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }

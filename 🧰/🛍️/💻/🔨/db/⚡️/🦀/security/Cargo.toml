@@ -1,0 +1,17 @@
+[package]
+name = "semio-framework-os-kernel-db-security"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db security — authn/authz, signatures, replay protection, audit, redaction, DoS budgets, tenant isolation"
+
+[lints]
+workspace = true
+[lib]
+name = "db_security"
+path = "📦.rs"
+
+[dependencies]
+db_core = { path = "../core", package = "semio-framework-os-kernel-db-core" }
+protocol = { path = "../../../../protocol/⚡️/🦀", package = "semio-framework-os-kernel-protocol" }
+serde_json = "1"

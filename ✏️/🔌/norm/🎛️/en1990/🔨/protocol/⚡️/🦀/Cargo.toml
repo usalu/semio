@@ -1,0 +1,17 @@
+[package]
+name = "semio-s-app-norm-en1990-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Norm EN 1990 app - binary command protocol surface + laws (constitutional: protocol)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+en1990 = { path = "../../../../⚡️/🦀", package = "semio-s-app-norm-en1990" }
+en1990_op = { path = "../../../op/⚡️/🦀", package = "semio-s-app-norm-en1990-op" }
+protocol = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/protocol/⚡️/🦀", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/store/⚡️/🦀", package = "semio-framework-os-kernel-store" }

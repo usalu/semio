@@ -1,0 +1,15 @@
+[package]
+name = "semio-s-app-playbook-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Playbook-play app - textual document grammar surface (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+playbook = { path = "../../../../⚡️/🦀", package = "semio-s-app-playbook" }
+store = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/store/⚡️/🦀", package = "semio-framework-os-kernel-store" }

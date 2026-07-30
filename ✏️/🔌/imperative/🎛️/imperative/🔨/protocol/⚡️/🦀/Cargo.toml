@@ -1,0 +1,20 @@
+[package]
+name = "semio-s-app-imperative-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Imperative app - binary command protocol surface + laws (constitutional: protocol)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+imperative = { path = "../../../../⚡️/🦀", package = "semio-s-app-imperative" }
+imperative_op = { path = "../../../op/⚡️/🦀", package = "semio-s-app-imperative-op" }
+protocol = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/protocol/⚡️/🦀", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/store/⚡️/🦀", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+imperative_engine = { path = "../../../engine/⚡️/🦀", package = "semio-s-app-imperative-engine" }

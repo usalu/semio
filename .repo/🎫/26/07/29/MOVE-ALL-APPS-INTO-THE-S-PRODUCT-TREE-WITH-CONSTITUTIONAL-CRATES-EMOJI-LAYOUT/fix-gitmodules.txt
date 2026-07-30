@@ -1,0 +1,6 @@
+Fixed .gitmodules after emoji folder rename:
+- Removed stale submodule compose/examples/metabolism (path gone; content now regular files under compose/client/example/metabolism)
+- Updated reuse/recherche → ♻️/recherche (mit-bestand → ♻️)
+- Relocated .git/modules/reuse/recherche → .git/modules/♻️/recherche
+- Updated worktree + gitdir pointers and .git/config submodule section
+Verified: `git submodule status` →  b8c2dede... ♻️/recherche

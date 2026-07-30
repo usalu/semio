@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-sequence-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Sequence app - textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+sequence = { path = "../../../../⚡️/🦀", package = "semio-s-app-sequence" }
+store = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/store/⚡️/🦀", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+neural_engine = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/neural/⚡️/🦀/engine", package = "semio-framework-os-kernel-neural-engine" }

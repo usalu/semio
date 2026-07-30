@@ -1,0 +1,20 @@
+[package]
+name = "semio-s-app-imperative-ui"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Imperative app - DocumentApp impl, render, manifest (constitutional: ui)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+imperative = { path = "../../../../⚡️/🦀", package = "semio-s-app-imperative" }
+imperative_engine = { path = "../../../engine/⚡️/🦀", package = "semio-s-app-imperative-engine" }
+imperative_op = { path = "../../../op/⚡️/🦀", package = "semio-s-app-imperative-op" }
+protocol = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/protocol/⚡️/🦀", package = "semio-framework-os-kernel-protocol" }
+semio-framework-plugin = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/plugin/⚡️/🦀", package = "semio-framework-plugin" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

@@ -1,0 +1,19 @@
+[package]
+name = "semio-s-app-vcs-pack"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "VCS app - binary document surface + laws (constitutional: pack)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+vcs = { path = "../../../../⚡️/🦀", package = "semio-s-app-vcs" }
+pack = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/pack/⚡️/🦀", package = "semio-framework-os-kernel-pack" }
+store = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/store/⚡️/🦀", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+vcs_engine = { path = "../../../engine/⚡️/🦀", package = "semio-s-app-vcs-engine" }

@@ -1,0 +1,16 @@
+[package]
+name = "semio-framework-os-kernel-math-algebra"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+name = "mathematical_algebra"
+crate-type = ["rlib"]
+path = "📦.rs"
+
+[dependencies]
+mathematical_number = { path = "../number", package = "semio-framework-os-kernel-math-number" }

@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-gis-2d-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "GIS 2D app - textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+gis2d = { path = "../../../../⚡️/🦀", package = "semio-s-app-gis-2d" }
+store = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/store/⚡️/🦀", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+serde_json = "1.0.140"

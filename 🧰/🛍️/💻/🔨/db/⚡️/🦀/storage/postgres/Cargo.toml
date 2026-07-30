@@ -1,0 +1,20 @@
+[package]
+name = "semio-framework-os-kernel-db-storage-postgres"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db storage backend over postgres"
+
+[lints]
+workspace = true
+[lib]
+name = "db_storage_postgres"
+path = "📦.rs"
+
+[dependencies]
+db_core = { path = "../../core", package = "semio-framework-os-kernel-db-core" }
+db_storage = { path = "..", package = "semio-framework-os-kernel-db-storage" }
+pack = { path = "../../../../../pack/⚡️/🦀", package = "semio-framework-os-kernel-pack" }
+blake3 = "1"
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "postgres"] }
+tokio = { version = "1", features = ["rt", "rt-multi-thread"] }

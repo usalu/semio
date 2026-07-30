@@ -1,0 +1,29 @@
+[package]
+name = "remodel_engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["rlib"]
+path = "📦.rs"
+
+[dependencies]
+remodel_image = { path = "../../../image/⚡️/🦀", package = "remodel_image" }
+remodel_video = { path = "../../../video/⚡️/🦀", package = "remodel_video" }
+remodel_camera = { path = "../../../camera/⚡️/🦀", package = "remodel_camera" }
+remodel_feature = { path = "../../../feature/⚡️/🦀", package = "remodel_feature" }
+remodel_sfm = { path = "../../../sfm/⚡️/🦀", package = "remodel_sfm" }
+remodel_dense = { path = "../../../dense/⚡️/🦀", package = "remodel_dense" }
+remodel_mesh = { path = "../../../mesh/⚡️/🦀", package = "remodel_mesh" }
+remodel_motion = { path = "../../../motion/⚡️/🦀", package = "remodel_motion" }
+remodel_geo = { path = "../../../geo/⚡️/🦀", package = "remodel_geo" }
+semio-framework-core = { path = "../../../../../../../🧰/⚡️/🦀", package = "semio-framework-core" }
+mathematical_random = { path = "../../../../../../../🧰/🔨/math/⚡️/🦀/random", package = "semio-framework-os-kernel-math-random" }
+
+[dev-dependencies]
+mathematical_lie = { path = "../../../../../../../🧰/🔨/math/⚡️/🦀/lie", package = "semio-framework-os-kernel-math-lie" }
+mathematical_algebra = { path = "../../../../../../../🧰/🔨/math/⚡️/🦀/algebra", package = "semio-framework-os-kernel-math-algebra" }

@@ -1,0 +1,27 @@
+#!/usr/bin/env bun
+/** 🦀 `@semio-tech/flow-module-brep` router: `bun ./script.ts wasm`. */
+import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../../../../../🦑/🔨/lib/⚡️/🟦/📦.ts";
+import { join } from "node:path";
+
+class WasmScript extends BundleScript {
+  run(): void {
+    runWasmPackWebBuild({
+      rsDir: join(this.root, "rs"),
+      skipEnvVar: "FLOW_MODULE_BREP_SKIP_WASM_BUILD",
+      logPrefix: "flow/module/brep",
+      wasmBaseName: "flow_module_brep",
+      threads: false,
+      pkg: {
+        name: "@semio-tech/flow-module-brep",
+        files: ["flow_module_brep_bg.wasm", "flow_module_brep.js", "flow_module_brep.d.ts", "flow_module_brep_bg.wasm.d.ts"],
+        main: "flow_module_brep.js",
+        module: "flow_module_brep.js",
+        types: "flow_module_brep.d.ts",
+      },
+    });
+  }
+}
+
+const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript);
+
+await runBundleScriptMain(router, import.meta.url, { defaultCommand: "wasm" });

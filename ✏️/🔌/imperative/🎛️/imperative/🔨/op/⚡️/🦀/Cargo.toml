@@ -1,0 +1,23 @@
+[package]
+name = "semio-s-app-imperative-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Imperative app - operation enum + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+imperative = { path = "../../../../⚡️/🦀", package = "semio-s-app-imperative" }
+dsl = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/dsl/⚡️/🦀", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/protocol/⚡️/🦀", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/store/⚡️/🦀", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]
+imperative_engine = { path = "../../../engine/⚡️/🦀", package = "semio-s-app-imperative-engine" }
+vcs = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/vcs/⚡️/🦀", package = "semio-framework-os-kernel-vcs" }
+neural_engine = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/neural/⚡️/🦀/engine", package = "semio-framework-os-kernel-neural-engine" }

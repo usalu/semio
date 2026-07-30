@@ -1,0 +1,19 @@
+[package]
+name = "semio-s-app-note-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Note app - headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "📦.rs"
+
+[dependencies]
+note = { path = "../../../../⚡️/🦀", package = "semio-s-app-note" }
+note_dsl = { path = "../../../dsl/⚡️/🦀", package = "semio-s-app-note-dsl" }
+store = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/store/⚡️/🦀", package = "semio-framework-os-kernel-store" }
+semio-framework-plugin = { path = "../../../../../../../../../🧰/🛍️/💻/🔨/plugin/⚡️/🦀", package = "semio-framework-plugin" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
