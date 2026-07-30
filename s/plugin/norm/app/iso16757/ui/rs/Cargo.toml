@@ -14,4 +14,4 @@ path = "lib.rs"
 iso16757 = { path = "../../rs", package = "semio-s-app-norm-iso16757" }
 iso16757_engine = { path = "../../engine/rs", package = "semio-s-app-norm-iso16757-engine" }
 iso16757_op = { path = "../../op/rs", package = "semio-s-app-norm-iso16757-op" }
-semio-framework-plugin = { path = "../../../../../../../framework/plugin/rs" }
+semio-framework-plugin = { path = "../../../../../../../framework/product/os/module/plugin/rs", package = "semio-framework-plugin" }

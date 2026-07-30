@@ -16,12 +16,12 @@ path = "lib.rs"
 
 [dependencies]
 rewrite = { path = "../../rs", package = "semio-s-app-trinity-rewrite" }
-trinity_ram = { path = "../../../../ram/rs", package = "trinity_ram" }
-trinity_jack = { path = "../../../../jack/core/rs", package = "trinity_jack" }
-store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
-infinite_board_port_directed = { path = "../../../../../../../framework/os/kernel/infinite/board/port/directed/rs", package = "semio-framework-os-kernel-infinite-board-port-directed" }
-infinite_board_port_directed_normal = { path = "../../../../../../../framework/os/kernel/infinite/board/port/directed/normal/rs", package = "semio-framework-os-kernel-infinite-board-port-directed-normal" }
-infinite_cavas = { path = "../../../../../../../framework/os/kernel/infinite/canvas/rs", package = "semio-framework-os-kernel-infinite-canvas" }
+trinity_ram = { path = "../../../../module/ram/rs", package = "trinity_ram" }
+trinity_jack = { path = "../../../../module/jack/rs", package = "trinity_jack" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }
+infinite_board_port_directed = { path = "../../../../../../../framework/product/os/module/infinite/board/port/directed/rs", package = "semio-framework-os-kernel-infinite-board-port-directed" }
+infinite_board_port_directed_normal = { path = "../../../../../../../framework/product/os/module/infinite/board/port/directed/normal/rs", package = "semio-framework-os-kernel-infinite-board-port-directed-normal" }
+infinite_cavas = { path = "../../../../../../../framework/product/os/module/infinite/canvas/rs", package = "semio-framework-os-kernel-infinite-canvas" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 

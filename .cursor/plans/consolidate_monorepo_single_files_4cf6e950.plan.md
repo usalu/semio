@@ -93,7 +93,7 @@ Continuing the ticket's established pattern (fold sibling files into the bundle'
 Using the generic helpers already in `repo/lib/js` (`runCargo`, `runCmd`, `runViteBuild`, `runVitest`, `runBunx`, `runPlaywright`), add missing command classes to each bundle's `script.ts` (creating one where absent) so `project.json` targets call only `bun ./script.ts <command>`:
 
 - Cargo direct calls: `reasoning/mindmap`, `procedural/{2d,3d}/rs`, `puzzle/{3d,5d}/rs`, `gis/2d/rs`, `writer/rs`, `trinity/jack/lsp`, `mathematical/graph/manifest`, `compose/server/hub`, `compose/client/lib/{query,rs}`
-- Go direct calls: `repo/client/cli`, `repo/lib/go`, `repo/server/coordinator`, `coda/client/lib/{__KEEP_pluginming__,blnbo}/go`, `compose/client/lib/go`
+- Go direct calls: `repo/client/cli`, `repo/lib/go`, `repo/server/coordinator`, `coda/client/lib/{programming,blnbo}/go`, `compose/client/lib/go`
 - .NET direct calls: `compose/client/lib/net/Compose{,.Tests,.Benchmark}`, `compose/client/ui/3dm/Compose.Rhino{,.Tests}`, `compose/client/ui/gh/Compose.Grasshopper.Tests`
 - Python/uv direct calls: `compose/client/bin/engine`, `compose/client/lib/py`
 - Vite direct calls: `compose/client/ui/vscode`, `compose/client/ui/3dm/ui`, `compose/client/lib/sketchpad/{doc,js,play}`, `repo/client/vscode`

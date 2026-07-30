@@ -1,0 +1,25 @@
+[DEBUG] e2e-probe {
+  "snap": {
+    "title": "Entwerfen mit Bestand · Aggregator",
+    "canvasCount": 2,
+    "r3fReports": [
+      {
+        "meshCount": 0,
+        "visibleMeshCount": 0,
+        "hasScene": false
+      },
+      {
+        "meshCount": 0,
+        "visibleMeshCount": 0,
+        "hasScene": false
+      }
+    ],
+    "glb": {
+      "ok": true,
+      "bytes": 86112,
+      "type": "model/gltf-binary"
+    },
+    "bodyHasAbbau": true
+  },
+  "errors": []
+}

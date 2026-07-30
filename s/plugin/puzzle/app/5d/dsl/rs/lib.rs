@@ -3,9 +3,9 @@
 use puzzle_5d::Puzzle5dProjection;
 
 /// 📄 The `concrete-forest` example fixture, handcrafted in the `.puzzle5d` DSL.
-pub const PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../../../../5d/example/concrete-forest.puzzle5d");
+pub const PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../../example/concrete-forest.puzzle5d");
 /// 📄 The `nakagin-capsule-tower` example fixture, handcrafted in the `.puzzle5d` DSL.
-pub const PUZZLE5D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../../5d/example/nakagin-capsule-tower.puzzle5d");
+pub const PUZZLE5D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../example/nakagin-capsule-tower.puzzle5d");
 
 /// 📖 Parses `.puzzle5d` DSL text into a `Puzzle5dProjection`.
 pub fn parse_dsl(text: &str) -> Result<Puzzle5dProjection, store::TextError> {

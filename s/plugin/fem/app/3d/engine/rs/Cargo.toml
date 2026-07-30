@@ -12,9 +12,9 @@ path = "lib.rs"
 
 [dependencies]
 fem3d = { path = "../../rs", package = "semio-s-app-fem-3d" }
-fem_core = { path = "../../../../core/rs", package = "fem_core" }
+fem_core = { path = "../../../../module/core/rs", package = "fem_core" }
 thiserror = "2.0.12"
 
 [dev-dependencies]
 fem3d_dsl = { path = "../../dsl/rs", package = "semio-s-app-fem-3d-dsl" }
-store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }

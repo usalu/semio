@@ -1,0 +1,18 @@
+warm 200 /js/index.ts
+warm 200 /@fs/Users/ueli/Documents/semio/framework/ui/js/react/index.tsx
+warm 200 /@fs/Users/ueli/Documents/semio/framework/os/renderer/js/react/index.tsx
+warm 200 /plugin-modules/puzzle/puzzle_plugin.js
+warm 200 /mesh/hexagonal-cut-concrete-forest-left.glb
+[pageerror] ReferenceError: program is not defined
+[pageerror] Error: Could not load /mesh/hexagonal-cut-concrete-forest-right.glb: Unexpected token '<', "<!doctype "... is not valid JSON
+[pageerror] Error: Could not load /mesh/hexagonal-cut-concrete-forest-right.glb: Unexpected token '<', "<!doctype "... is not valid JSON
+[console:error] %o
+
+%s
+
+%s
+ Error: Could not load /mesh/hexagonal-cut-concrete-forest-right.glb: Unexpected token '<', "<!doctype "... is not valid JSON
+    at http://127.0.0.1:6023/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/aggregator-react/deps/chunk-QZNWYEJ4.js?v=62f7c14f:1209:38
+    at _onError (http://127.0.0.1:6023/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/aggregator-react/deps/three_examples_jsm_loaders_GLTFLoader__js.js?v=8ff29934:215:9)
+    at Object.onLoad (http://127.0.0.1:6023/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/aggregator-react/deps/three_examples_jsm_loaders_GLTFLoader__js.js?v=8ff29934:234:9)
+    at http://127.0.0.1:6023/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/aggregator-react/deps/chunk-UB72GRVV.js?v=62f7c14f:24105:39 The above error occurred in the <CanvasImpl> component. React will try to recreate this component tree from scratch using the error boundary you provided, ShellRenderErrorBoundary.

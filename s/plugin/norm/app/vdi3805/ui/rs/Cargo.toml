@@ -14,4 +14,4 @@ path = "lib.rs"
 vdi3805 = { path = "../../rs", package = "semio-s-app-norm-vdi3805" }
 vdi3805_engine = { path = "../../engine/rs", package = "semio-s-app-norm-vdi3805-engine" }
 vdi3805_op = { path = "../../op/rs", package = "semio-s-app-norm-vdi3805-op" }
-semio-framework-plugin = { path = "../../../../../../../framework/plugin/rs" }
+semio-framework-plugin = { path = "../../../../../../../framework/product/os/module/plugin/rs", package = "semio-framework-plugin" }

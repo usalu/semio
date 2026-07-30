@@ -1,0 +1,16 @@
+[package]
+name = "semio-s-app-mathematical-pack"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Mathematical app - binary document surface + laws (constitutional: pack)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+mathematical = { path = "../../rs", package = "semio-s-app-mathematical" }
+pack = { path = "../../../../../../../framework/product/os/module/pack/rs", package = "semio-framework-os-kernel-pack" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }

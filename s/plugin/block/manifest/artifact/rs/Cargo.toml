@@ -1,0 +1,48 @@
+[package]
+name = "block-plugin"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lints]
+workspace = true
+[package.metadata.component]
+package = "semio:block"
+
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "block2d"
+app = "block2d-play"
+aliases = ["block-2d"]
+ports = { react = 6024, wgpu = 6124 }
+
+[[package.metadata.semio.playground]]
+variant = "block3d"
+app = "block3d-play"
+aliases = ["block-3d"]
+ports = { react = 6025, wgpu = 6125 }
+
+[[package.metadata.semio.playground]]
+variant = "block5d"
+app = "block5d-play"
+aliases = ["block-5d"]
+ports = { react = 6026, wgpu = 6126 }
+
+[[package.metadata.semio.assets]]
+kind = "mesh-collection"
+route = "/mesh"
+app = "block3d-play"
+roots = ["framework/module/asset/metabolism/representation", "mit-bestand/asset/abbau-aufbau"]
+placeholder = "framework/module/asset/mesh/placeholder.glb"
+filter_from_examples = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "lib.rs"
+
+[dependencies]
+semio-framework-plugin = { path = "../../../../../../framework/product/os/module/plugin/rs", features = ["component-guest"], package = "semio-framework-plugin" }
+block_2d_ui = { path = "../../../app/2d/ui/rs", package = "semio-s-app-block-2d-ui" }
+block_3d_ui = { path = "../../../app/3d/ui/rs", package = "semio-s-app-block-3d-ui" }
+block_5d_ui = { path = "../../../app/5d/ui/rs", package = "semio-s-app-block-5d-ui" }

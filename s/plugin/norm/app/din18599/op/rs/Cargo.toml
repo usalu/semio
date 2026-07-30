@@ -12,7 +12,7 @@ path = "lib.rs"
 
 [dependencies]
 din18599 = { path = "../../rs", package = "semio-s-app-norm-din18599" }
-norm_core = { path = "../../../../core/rs", package = "norm_core" }
+norm_core = { path = "../../../../module/core/rs", package = "norm_core" }
 
 [dev-dependencies]
-store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }

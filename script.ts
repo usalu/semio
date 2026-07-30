@@ -64,9 +64,9 @@ function resolvePlaygroundDevApp(segments: string[]): { readonly app: string; re
 }
 
 function runFrameworkOsPlaygroundDev(plugin: string, rest: string[] = []): void {
-  runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:dev", ...rest], {
+  runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:dev", "--", plugin, ...rest], {
     cwd: WORKSPACE_ROOT,
-    env: frameworkOsPlaygroundDevEnv(loadFrameworkOsPlaygroundCatalog(), program),
+    env: frameworkOsPlaygroundDevEnv(loadFrameworkOsPlaygroundCatalog(), plugin),
     ...daemonBudgetOpts(),
   });
 }
@@ -1524,7 +1524,7 @@ const POLICY_SHARED_DOMAIN_CRATE_ALLOWLIST = new Set<string>(["flow_core", "flow
  * reachable only through the hub servers (and, behind a feature, `db_engine`), enforced by
  * `policyDbServerOnlyBreaches` instead of this always-allowed list.
  */
-const POLICY_ALWAYS_ALLOWED_DEP_PREFIXES = ["framework/", "framework/ui/", "vcs/", "store/", "playbook/", "protocol/", "repo/"];
+const POLICY_ALWAYS_ALLOWED_DEP_PREFIXES = ["framework/", "framework/module/ui/", "vcs/", "store/", "playbook/", "protocol/", "repo/"];
 
 /**
  * 🎫 dsl/ derive-engine migration lock step: technologies whose example/*.json fixture has not yet
@@ -1561,20 +1561,20 @@ const POLICY_PACK_COMPLETENESS_ALLOWLIST = new Set<string>([]);
  * once that file adds the command-envelope-round-trip call.
  */
 const POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST = new Set<string>([
-  "architect/spine/rs/lib.rs",
+  "s/plugin/architect/module/spine/rs/lib.rs",
   "compose/client/lib/rs/lib.rs",
-  "framework/os/kernel/dsl/rs/lib.rs",
-  "framework/os/kernel/infinite/board/port/directed/dag/rs/lib.rs",
-  "framework/os/core/rs/lib.rs",
-  "s/plugin/lowpoly/app/protocol/rs/lib.rs",
-  "s/plugin/playbook/module/procedural/rs/lib.rs",
-  "framework/os/kernel/flow/core/rs/lib.rs",
-  "framework/os/kernel/workflow/rs/lib.rs",
+  "framework/product/os/module/dsl/rs/lib.rs",
+  "framework/product/os/module/infinite/board/port/directed/dag/rs/lib.rs",
+  "framework/product/os/rs/lib.rs",
+  "s/plugin/lowpoly/app/lowpoly/protocol/rs/lib.rs",
+  "s/plugin/playbook/extension/procedural/rs/lib.rs",
+  "framework/product/os/module/flow/core/rs/lib.rs",
+  "framework/product/os/module/workflow/rs/lib.rs",
   "s/plugin/animate/app/present/protocol/rs/lib.rs",
-  "s/plugin/gis/rs/lib.rs",
-  "s/plugin/mathematical/rs/lib.rs",
-  "s/plugin/norm/core/rs/lib.rs",
-  "s/plugin/note/rs/lib.rs",
+  "s/plugin/gis/manifest/artifact/rs/lib.rs",
+  "s/plugin/mathematical/manifest/artifact/rs/lib.rs",
+  "s/plugin/norm/module/core/rs/lib.rs",
+  "s/plugin/note/manifest/artifact/rs/lib.rs",
   "s/plugin/procedural/app/2d/dsl/rs/lib.rs",
   "s/plugin/procedural/app/2d/pack/rs/lib.rs",
   "s/plugin/procedural/app/2d/protocol/rs/lib.rs",
@@ -1590,14 +1590,14 @@ const POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST = new Set<string>([
   "s/plugin/puzzle/app/5d/dsl/rs/lib.rs",
   "s/plugin/puzzle/app/5d/pack/rs/lib.rs",
   "s/plugin/puzzle/app/5d/ui/rs/lib.rs",
-  "s/plugin/raster/rs/lib.rs",
-  "s/plugin/reasoning/rs/lib.rs",
-  "s/plugin/space/rs/lib.rs",
-  "s/plugin/trinity/ram/rs/lib.rs",
+  "s/plugin/raster/manifest/artifact/rs/lib.rs",
+  "s/plugin/reasoning/manifest/artifact/rs/lib.rs",
+  "s/plugin/space/manifest/artifact/rs/lib.rs",
+  "s/plugin/trinity/module/ram/rs/lib.rs",
   "s/plugin/trinity/app/rewrite/dsl/rs/lib.rs",
   "s/plugin/trinity/app/rewrite/pack/rs/lib.rs",
   "s/plugin/trinity/app/rewrite/protocol/rs/lib.rs",
-  "s/plugin/vcs/rs/lib.rs",
+  "s/plugin/vcs/manifest/artifact/rs/lib.rs",
 ]);
 
 /**
@@ -2367,7 +2367,7 @@ const POLICY_PROTOCOL_MIGRATION_USE_BLOCK_RE = /use\s+(?:::)?vcs::\{([^}]*)\}/gs
 function policyProtocolMigrationBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const relPath of policyAllRustFiles(repoRoot)) {
-    if (relPath === "framework/os/kernel/vcs/rs/lib.rs") continue; // the crate that used to own the shim; never reaches itself via "vcs::"
+    if (relPath === "framework/product/os/module/vcs/rs/lib.rs") continue; // the crate that used to own the shim; never reaches itself via "vcs::"
     const content = readFileSync(join(repoRoot, relPath), "utf8");
     const seenLines = new Set<number>();
     const lineOf = (index: number): number => content.slice(0, index).split(/\r?\n/).length;
@@ -2767,7 +2767,7 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
     breaches.push(...policyStructNamingBreaches(dir, content));
     breaches.push(...policyModLayoutBreaches(dir, lines));
 
-    if (dir === "framework/plugin/rs") continue; // the SDK itself, not a consumer of its own primitives
+    if (dir === "framework/product/os/module/plugin/rs") continue; // the SDK itself, not a consumer of its own primitives
     breaches.push(...policySelectionIdsBreaches(dir, content));
     breaches.push(...policyTestkitDelegateBreaches(dir, content));
     breaches.push(...policyTreeItemBreaches(dir, content, lines));

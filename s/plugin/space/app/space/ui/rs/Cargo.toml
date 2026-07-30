@@ -15,11 +15,11 @@ space = { path = "../../rs", package = "semio-s-app-space-space" }
 space_engine = { path = "../../engine/rs", package = "semio-s-app-space-space-engine" }
 space_op = { path = "../../op/rs", package = "semio-s-app-space-space-op" }
 home_ui = { path = "../../../home/ui/rs", package = "semio-s-app-space-home-ui" }
-space_shared = { path = "../../../../shared/rs", package = "semio-s-plugin-space-shared" }
-store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
-semio-framework-os = { path = "../../../../../../../framework/os/core/rs", package = "semio-framework-os" }
-semio-framework-core = { path = "../../../../../../../framework/core/rs" }
-semio-framework-plugin = { path = "../../../../../../../framework/plugin/rs" }
-infinite_board_port_directed_dag = { path = "../../../../../../../framework/os/kernel/infinite/board/port/directed/dag/rs", package = "semio-framework-os-kernel-infinite-board-port-directed-dag" }
+space_shared = { path = "../../../../module/shared/rs", package = "semio-s-plugin-space-shared" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }
+semio-framework-os = { path = "../../../../../../../framework/product/os/rs", package = "semio-framework-os" }
+semio-framework-core = { path = "../../../../../../../framework/rs", package = "semio-framework-core" }
+semio-framework-plugin = { path = "../../../../../../../framework/product/os/module/plugin/rs", package = "semio-framework-plugin" }
+infinite_board_port_directed_dag = { path = "../../../../../../../framework/product/os/module/infinite/board/port/directed/dag/rs", package = "semio-framework-os-kernel-infinite-board-port-directed-dag" }
 serde_json = "1.0.140"
 base64 = "0.22"

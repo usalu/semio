@@ -12,8 +12,8 @@ path = "lib.rs"
 
 [dependencies]
 puzzle_2d = { path = "../../rs", package = "semio-s-app-puzzle-2d" }
-pack = { path = "../../../../../../../framework/os/kernel/pack/rs", package = "semio-framework-os-kernel-pack" }
-store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
+pack = { path = "../../../../../../../framework/product/os/module/pack/rs", package = "semio-framework-os-kernel-pack" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }
 
 [dev-dependencies]
 puzzle_2d_dsl = { path = "../../dsl/rs", package = "semio-s-app-puzzle-2d-dsl" }

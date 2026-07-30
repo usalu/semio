@@ -16,8 +16,8 @@ path = "lib.rs"
 
 [dependencies]
 puzzle_3d = { path = "../../rs", package = "semio-s-app-puzzle-3d" }
-store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
-mathematical_graph_manifest = { path = "../../../../../../../framework/os/kernel/math/graph/manifest/rs", package = "semio-framework-os-kernel-math-graph-manifest" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }
+mathematical_graph_manifest = { path = "../../../../../../../framework/module/math/graph/manifest/rs", package = "semio-framework-os-kernel-math-graph-manifest" }
 nalgebra = { version = "0.33", default-features = false, features = ["std"] }
 parry3d = "0.17"
 serde = { version = "1.0.219", features = ["derive"] }

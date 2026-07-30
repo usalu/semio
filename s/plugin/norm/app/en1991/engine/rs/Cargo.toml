@@ -14,4 +14,4 @@ path = "lib.rs"
 en1991 = { path = "../../rs", package = "semio-s-app-norm-en1991" }
 en1991_op = { path = "../../op/rs", package = "semio-s-app-norm-en1991-op" }
 en1990_engine = { path = "../../../en1990/engine/rs", package = "semio-s-app-norm-en1990-engine" }
-norm_core = { path = "../../../../core/rs", package = "norm_core" }
+norm_core = { path = "../../../../module/core/rs", package = "norm_core" }

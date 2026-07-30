@@ -12,5 +12,5 @@ path = "lib.rs"
 
 [dependencies]
 en1998 = { path = "../../rs", package = "semio-s-app-norm-en1998" }
-norm_core = { path = "../../../../core/rs", package = "norm_core" }
+norm_core = { path = "../../../../module/core/rs", package = "norm_core" }
 norm_en_1990 = { path = "../../../en1990/engine/rs", package = "semio-s-app-norm-en1990-engine" }

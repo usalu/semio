@@ -12,5 +12,5 @@ path = "lib.rs"
 
 [dependencies]
 iso16757 = { path = "../../rs", package = "semio-s-app-norm-iso16757" }
-dsl = { path = "../../../../../../../framework/os/kernel/dsl/rs", package = "semio-framework-os-kernel-dsl" }
-store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
+dsl = { path = "../../../../../../../framework/product/os/module/dsl/rs", package = "semio-framework-os-kernel-dsl" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }

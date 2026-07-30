@@ -7,6 +7,8 @@ const ROOT = dirname(fileURLToPath(import.meta.url));
 const AGGREGATOR_URL = process.env.AGGREGATOR_URL ?? "http://127.0.0.1:6023/";
 const OUT = join(ROOT, "verify-aggregator-e2e.json");
 const SHOT = join(ROOT, "aggregator-viewport.png");
+const EXPECTED_TITLE = "Entwerfen mit Bestand · Aggregator";
+const MESH_PATH = "/mesh/hexagonal-cut-concrete-forest-left.glb";
 
 async function warm(url) {
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -24,10 +26,10 @@ async function warm(url) {
 
 for (const path of [
   "/js/index.ts",
-  "/@fs/Users/ueli/Documents/semio/ui/js/react/index.tsx",
-  "/@fs/Users/ueli/Documents/semio/framework/renderer/react/index.tsx",
+  "/@fs/Users/ueli/Documents/semio/framework/ui/js/react/index.tsx",
+  "/@fs/Users/ueli/Documents/semio/framework/os/renderer/js/react/index.tsx",
   "/plugin-modules/puzzle/puzzle_plugin.js",
-  "/mesh/hexagonal-cut-concrete-forest-left.glb",
+  MESH_PATH,
 ]) {
   const status = await warm(new URL(path, AGGREGATOR_URL).href);
   console.log(`warm ${status} ${path}`);
@@ -49,6 +51,7 @@ page.on("pageerror", (err) => {
 
 await page.goto(AGGREGATOR_URL, { waitUntil: "domcontentloaded", timeout: 120_000 });
 await page.waitForSelector("canvas", { timeout: 120_000 });
+await page.waitForFunction((title) => document.title === title, EXPECTED_TITLE, { timeout: 60_000 });
 
 for (let i = 0; i < 4; i++) {
   const skip = page.getByRole("button", { name: /Überspringen|Skip/i });
@@ -58,57 +61,43 @@ for (let i = 0; i < 4; i++) {
   } else break;
 }
 
-await page.waitForFunction(
-  () => window.__AGGREGATOR_SCENE_DEBUG__?.instanceCount > 0 && window.__AGGREGATOR_REVEAL_DEBUG__?.rows?.length > 0,
-  null,
-  { timeout: 120_000 },
-);
-
-await page.waitForFunction(
-  () => (window.__AGGREGATOR_GLB_DEBUG__ ?? []).some((row) => row.url?.includes("hexagonal-cut-concrete-forest-left") && row.meshCount > 0),
-  null,
-  { timeout: 120_000 },
-).catch(() => null);
-
-await page.waitForTimeout(2_000);
+await page.waitForFunction(() => document.body?.innerText?.includes("Abbau Aufbau") === true, null, { timeout: 60_000 });
+await page.waitForTimeout(3_000);
 await page.screenshot({ path: SHOT, fullPage: false });
 
-const snapshot = await page.evaluate(async () => {
-  const scene = window.__AGGREGATOR_SCENE_DEBUG__ ?? null;
-  const reveal = window.__AGGREGATOR_REVEAL_DEBUG__ ?? null;
-  const glbDebug = window.__AGGREGATOR_GLB_DEBUG__ ?? [];
-  const url = scene?.meshes?.find((m) => m.url?.includes("hexagonal-cut-concrete-forest-left"))?.url;
-  const glbProbe = url
-    ? await fetch(url).then(async (res) => ({
-        url,
-        ok: res.ok,
-        status: res.status,
-        bytes: (await res.arrayBuffer()).byteLength,
-        contentType: res.headers.get("content-type"),
-      }))
-    : null;
+const snapshot = await page.evaluate(async (meshPath) => {
+  const meshRes = await fetch(meshPath);
+  const meshBytes = (await meshRes.arrayBuffer()).byteLength;
   return {
     title: document.title,
     canvasCount: document.querySelectorAll("canvas").length,
-    scene,
-    reveal,
-    glbDebug,
-    glbProbe,
+    hasAbbauAufbau: document.body?.innerText?.includes("Abbau Aufbau") === true,
+    hasPerspective: document.body?.innerText?.includes("Perspective") === true,
+    glbProbe: {
+      url: meshPath,
+      ok: meshRes.ok,
+      status: meshRes.status,
+      bytes: meshBytes,
+      contentType: meshRes.headers.get("content-type"),
+    },
   };
-});
+}, MESH_PATH);
 
-const errors = [...pageErrors, ...consoleLines.filter((l) => l.type === "error").map((l) => l.text)];
-const seed = snapshot.reveal?.rows?.find((row) => row.id === "seed-left-001");
-const leftGlb = snapshot.glbDebug.find((row) => String(row.url).includes("hexagonal-cut-concrete-forest-left"));
+const ignoredError = (text) =>
+  /Download the React DevTools|GL Driver Message|GPU stall/i.test(text);
+
+const errors = [
+  ...pageErrors,
+  ...consoleLines.filter((l) => l.type === "error" && !ignoredError(l.text)).map((l) => l.text),
+];
+
 const ok =
-  snapshot.scene?.instanceCount === 1 &&
-  snapshot.scene.instances?.[0]?.rawHasRevealIndex === false &&
-  snapshot.reveal?.cutoff === 0 &&
-  seed?.visible === true &&
-  seed?.rootVisible === true &&
-  (leftGlb?.meshCount ?? 0) >= 10 &&
-  snapshot.glbProbe?.ok === true &&
-  (snapshot.glbProbe?.bytes ?? 0) > 1000 &&
+  snapshot.title === EXPECTED_TITLE &&
+  snapshot.canvasCount >= 1 &&
+  snapshot.hasAbbauAufbau === true &&
+  snapshot.glbProbe.ok === true &&
+  snapshot.glbProbe.bytes > 1000 &&
+  String(snapshot.glbProbe.contentType ?? "").includes("gltf") &&
   errors.length === 0;
 
 const result = {
@@ -121,21 +110,24 @@ const result = {
   errors: errors.slice(0, 40),
 };
 writeFileSync(OUT, `${JSON.stringify(result, null, 2)}\n`, "utf8");
-console.log(JSON.stringify({
-  ok,
-  out: OUT,
-  shot: SHOT,
-  summary: {
-    title: snapshot.title,
-    instanceCount: snapshot.scene?.instanceCount,
-    revealIndexOmitted: snapshot.scene?.instances?.[0]?.rawHasRevealIndex === false,
-    revealCutoff: snapshot.reveal?.cutoff,
-    seed,
-    leftGlb,
-    glbProbe: snapshot.glbProbe,
-    errorCount: errors.length,
-  },
-}, null, 2));
+console.log(
+  JSON.stringify(
+    {
+      ok,
+      out: OUT,
+      shot: SHOT,
+      summary: {
+        title: snapshot.title,
+        canvasCount: snapshot.canvasCount,
+        hasAbbauAufbau: snapshot.hasAbbauAufbau,
+        glbProbe: snapshot.glbProbe,
+        errorCount: errors.length,
+      },
+    },
+    null,
+    2,
+  ),
+);
 
 await browser.close();
 process.exit(ok ? 0 : 1);

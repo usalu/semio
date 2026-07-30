@@ -1,5 +1,5 @@
-// For more info, see https://github.com/storybookjs/__KEEP_eslint_plugin__-storybook#configuration-flat-config-format
-import storybook from "__KEEP_eslint_plugin__-storybook";
+// For more info, see https://github.com/storybookjs/eslint-plugin-storybook#configuration-flat-config-format
+import storybook from "eslint-plugin-storybook";
 
 // Root ESLint flat config for Bun/Nx lint (library entrypoints; non-type-checked for green CI).
 import eslint from "@eslint/js";

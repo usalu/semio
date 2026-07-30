@@ -13,8 +13,8 @@ import mdx from "@mdx-js/rollup";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import { defineConfig, type Plugin } from "vite";
-import { viteSingleFile } from "__KEEP_vite_plugin__-singlefile";
-import { createWorkspaceViteResolveConfig } from "../../../../../framework/ui/styling/vite-elements-assets.ts";
+import { viteSingleFile } from "vite-plugin-singlefile";
+import { createWorkspaceViteResolveConfig } from "../../../../../framework/module/ui/styling/vite-elements-assets.ts";
 // #endregion 🔌Adapters
 
 const repoRoot = path.resolve(__dirname, "../../../../../");

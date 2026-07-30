@@ -12,4 +12,4 @@ path = "lib.rs"
 
 [dependencies]
 gis3d = { path = "../../rs", package = "semio-s-app-gis-3d" }
-store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }

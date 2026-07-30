@@ -1,0 +1,13 @@
+{
+  "title": "Dissolve Compose Into S Via Puzzle 5d And New Block Plugin",
+  "emoji": "🧩",
+  "status": "open",
+  "description": "Dissolve the standalone `compose` technology into the `s` plugin OS. Compose's design app becomes the puzzle 5d app; compose's type app becomes the 3d app of a brand-new `s/plugin/block` plugin (2d/3d/5d single-definition editors: NodeKind/ObjectKind/PartKind). Cross-cutting compose features (copy/paste, drag/move, import/export, undo/redo, terminology) are integrated into OS mechanisms (vcs, store, dsl, pack, protocol, plugin SDK commands). Compose itself stays in the repo untouched for now (deleted later by the user) — the goal is that nothing outside /compose depends on it anymore and all its functionality is reachable through s. Full plan at /Users/ueli/.claude/plans/compose-should-disappear-and-delightful-treasure.md: Wave 0 fixes plugin-registry scanner + constitutional-crate gate + stale asset/launch paths; Wave 1 builds the 22-crate block plugin; Wave 2 adds an OS clipboard mechanism (copy/cut/paste actions injected like history actions); Wave 3 brings puzzle 5d to parity with compose's design app (fastener transform params, translate/paste/cluster ops, editable inspector, media import/export); Wave 4 migrates fixtures/assets; Wave 5 extracts remaining outside-compose references and leaves a deletion-day checklist.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2382"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪ba9c49dd6f2148b9a92bdc0e35566fa2"
+  ]
+}

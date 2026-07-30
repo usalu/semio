@@ -69,7 +69,7 @@ EOF
 - `🚩NNN` is a **three-digit** counter (`001`…`999`) bumped from git history. GitKraken may display only `NNN` in the panel; the prepared message still uses the **full** line 1.
 - Line 2 is always **now**; its date may differ from line 1’s epoch day.
 
-**Wrong prepare output** — re-run `prepare` (do not paste): line 1 uses **today’s** date with `🚩001` while recent commits are already numbered (`152`…`299` or `…🚩151`); or line 1 is missing `🎆YY🌙MM☀️DD🚩NNN` entirely.
+**Wrong prepare output** — re-run `prepare` (do not paste): line 1 uses **today’s** date with `🚩001` while recent commits are already numbered (`152`…`299` or `…🚩151`); line 1 is missing `🎆YY🌙MM☀️DD🚩NNN`; or the message has no `📊uloc` footer block. Missing uloc is a hard failure, never a valid prepare result.
 
 ### Newlines (required — GitKraken / `git commit` need them)
 

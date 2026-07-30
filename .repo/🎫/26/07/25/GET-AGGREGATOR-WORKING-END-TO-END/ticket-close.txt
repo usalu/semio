@@ -1,1 +1,6 @@
-[🎫getaggregatorworkingendtoend](repo://ticket/🎫getaggregatorworkingendtoend) - `CLOSED` - `closed 1 hour from now`
+# Ticket close (pending MCP)
+
+MCP `ticket_close` could not run (`Not connected` / auth skipped). Work is complete; close via MCP when available:
+
+- path: `26/07/25/GET-AGGREGATOR-WORKING-END-TO-END`
+- summary: Restored Aggregator e2e after restructure; verified on :6023 with brand title, Abbau Aufbau, GLB, screenshot (`verify-aggregator-e2e.json` ok:true).

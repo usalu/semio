@@ -1,0 +1,16 @@
+[DEBUG] snap {
+  "title": "Entwerfen mit Bestand · Aggregator",
+  "canvas": 2,
+  "bodyText": "Dokument\nKatalog\nInspektion\nVollbild\nEntwerfen mit Bestand · Aggregator\nBeispiel\nAbbau Aufbau\nTop\nFokussieren\nSchließen\nProjektion\nFensteroptionen\nAktionen\nSuche\nHilfsmittel\nPerspective\nFokussieren\nSchließen\nProjektion\nFensteroptionen\nAktionen\nSuche\nHilfsmittel\nAnzeige\nSynchronisierung\nEin Projekt von\nund\nGefördert durch\nEinstellungen\nVerlauf\nWerkzeug\nBefehl\nSuche\n\nNach Elementen suchen\n\nFinden\n\nElemente in dieser Ansicht finden",
+  "scene": null,
+  "reveal": null,
+  "glb": null,
+  "keys": []
+}
+[DEBUG] last logs [debug] [vite] connecting...
+[debug] [vite] connected.
+[info] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
+[warning] [.WebGL-0x12c004e6800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[warning] [.WebGL-0x12c004e6800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[warning] [.WebGL-0x12c004e6800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+[warning] [.WebGL-0x12c004e6800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)

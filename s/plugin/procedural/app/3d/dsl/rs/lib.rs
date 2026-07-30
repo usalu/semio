@@ -5,11 +5,11 @@ use procedural_3d::Procedural3dDocument;
 /// 📦 The `procedural3d-play` "hexagonal mushroom column" example, embedded at compile time as
 /// handcrafted `.procedural3d` DSL text — shared by the manifest's `.example(...)` registration, the
 /// `default_projection`/`example_projection` fallbacks, and every test fixture.
-pub const PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT: &str = include_str!("../../../../3d/example/hexagonal-mushroom-column.procedural3d");
+pub const PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT: &str = include_str!("../../example/hexagonal-mushroom-column.procedural3d");
 /// 📦 The `procedural3d-play` "rectangle extrude volume" example.
-pub const PROCEDURAL3D_EXAMPLE_RECT_EXTRUDE_TEXT: &str = include_str!("../../../../3d/example/rectangle-extrude-volume.procedural3d");
+pub const PROCEDURAL3D_EXAMPLE_RECT_EXTRUDE_TEXT: &str = include_str!("../../example/rectangle-extrude-volume.procedural3d");
 /// 📦 The `procedural3d-play` "sphere cut with torus" example.
-pub const PROCEDURAL3D_EXAMPLE_SPHERE_TORUS_TEXT: &str = include_str!("../../../../3d/example/sphere-cut-with-torus.procedural3d");
+pub const PROCEDURAL3D_EXAMPLE_SPHERE_TORUS_TEXT: &str = include_str!("../../example/sphere-cut-with-torus.procedural3d");
 
 /// 📖 Parses `.procedural3d` DSL text into a `Procedural3dDocument`.
 pub fn parse_dsl(text: &str) -> Result<Procedural3dDocument, store::TextError> {

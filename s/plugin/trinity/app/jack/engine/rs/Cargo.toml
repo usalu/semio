@@ -12,4 +12,4 @@ path = "lib.rs"
 
 [dependencies]
 trinity_jack_rs = { path = "../../rs", package = "semio-s-app-trinity-jack" }
-trinity_ram = { path = "../../../../ram/rs", package = "trinity_ram" }
+trinity_ram = { path = "../../../../module/ram/rs", package = "trinity_ram" }

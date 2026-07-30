@@ -1,0 +1,16 @@
+warm 200 /js/index.ts
+warm 200 /@fs/Users/ueli/Documents/semio/framework/ui/js/react/index.tsx
+warm 200 /@fs/Users/ueli/Documents/semio/framework/os/renderer/js/react/index.tsx
+warm 200 /plugin-modules/puzzle/puzzle_plugin.js
+warm 200 /mesh/hexagonal-cut-concrete-forest-left.glb
+52952 |     if (error.value === void 0)
+52953 |       throw new Error("Serialized error must have either an error or a value");
+52954 |     return parseSerializedValue(error.value, void 0);
+52955 |   }
+52956 |   if (error.error.name === "TimeoutError") {
+52957 |     const e2 = new TimeoutError2(error.error.message);
+                           ^
+TimeoutError: waitForFunction: Timeout 120000ms exceeded.
+      at /Users/ueli/Documents/semio/node_modules/playwright-core/lib/coreBundle.js:52957:20
+
+Bun v1.3.14 (macOS arm64)

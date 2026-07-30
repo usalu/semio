@@ -11,6 +11,6 @@ workspace = true
 path = "lib.rs"
 
 [dependencies]
-semio-framework-os = { path = "../../../../../../../framework/os/core/rs", package = "semio-framework-os" }
-protocol = { path = "../../../../../../../framework/os/kernel/protocol/rs", package = "semio-framework-os-kernel-protocol" }
-store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
+semio-framework-os = { path = "../../../../../../../framework/product/os/rs", package = "semio-framework-os" }
+protocol = { path = "../../../../../../../framework/product/os/module/protocol/rs", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }

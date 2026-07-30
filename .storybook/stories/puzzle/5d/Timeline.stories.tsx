@@ -10,11 +10,11 @@ import type { Meta, StoryObj } from "@storybook/react";
 import type { HistoryColumn } from "@semio-tech/ui-react";
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 
-import { GraphTimelineHost, World3dHost } from "../../../../framework/os/renderer/js/react/index.tsx";
-import type { ActionDescriptor, UiComponentSceneNode } from "../../../../framework/os/renderer/js/react/index.tsx";
+import { GraphTimelineHost, World3dHost } from "../../../../framework/product/os/module/renderer/js/react/index.tsx";
+import type { ActionDescriptor, UiComponentSceneNode } from "../../../../framework/product/os/module/renderer/js/react/index.tsx";
 
-import concreteForestFixtureDsl from "../../../../s/plugin/puzzle/5d/example/concrete-forest.puzzle5d?raw";
-import nakaginCapsuleTowerFixtureDsl from "../../../../s/plugin/puzzle/5d/example/nakagin-capsule-tower.puzzle5d?raw";
+import concreteForestFixtureDsl from "../../../../s/plugin/puzzle/app/5d/example/concrete-forest.puzzle5d?raw";
+import nakaginCapsuleTowerFixtureDsl from "../../../../s/plugin/puzzle/app/5d/example/nakagin-capsule-tower.puzzle5d?raw";
 
 //#region StoryTypes
 type Vec3 = readonly [number, number, number];
@@ -52,7 +52,7 @@ type StoryPuzzle5dState = { readonly fixture: StoryPuzzle5dFixture; readonly run
 //#endregion StoryTypes
 
 //#region WasmFixtureLoader
-/** @emoji 🧵 Lazily loads+inits `@semio-tech/puzzle-5d-rs`'s wasm module once (mirrors `framework/os/renderer/js/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle5dParseDslJson` free export. */
+/** @emoji 🧵 Lazily loads+inits `@semio-tech/puzzle-5d-rs`'s wasm module once (mirrors `framework/product/os/module/renderer/js/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle5dParseDslJson` free export. */
 type Puzzle5dWasmModule = { readonly default: (input?: unknown) => Promise<unknown>; readonly puzzle5dParseDslJson: (dslText: string) => string };
 let puzzle5dWasmModulePromise: Promise<Puzzle5dWasmModule> | null = null;
 function loadPuzzle5dWasm(): Promise<Puzzle5dWasmModule> {
@@ -90,7 +90,7 @@ function historyColumnsFromParts(parts: readonly StoryPuzzle5dPart[]): readonly 
 //#endregion HistorySynthesis
 
 //#region PluginEmulator
-/** @emoji 🖱️ Story-local mirror of `instanceMergeArg` (`framework/os/renderer/js/react/index.tsx`) — see `../3d/World.stories.tsx`'s copy. */
+/** @emoji 🖱️ Story-local mirror of `instanceMergeArg` (`framework/product/os/module/renderer/js/react/index.tsx`) — see `../3d/World.stories.tsx`'s copy. */
 function applyStoryMerge(current: readonly string[], id: string, merge: string): string[] {
   const set = new Set(current);
   if (merge === "replace") return [id];

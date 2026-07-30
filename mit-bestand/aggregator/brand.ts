@@ -9,7 +9,7 @@ import {
   FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
   type ShellBrand,
   type TutorialDefinition,
-} from "../../framework/core/js/index.ts";
+} from "../../framework/js/index.ts";
 
 //#region 🎬EntwerfenMitBestandTutorial
 /** 🪟 The Aggregator's one 3D window instance — matches `puzzle/plugin/rs/lib.rs`'s `puzzle3d-main` window

@@ -1,0 +1,29 @@
+[package]
+name = "semio-s-app-cad-ui"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Cad app - DocumentApp impl, render, manifest (constitutional: ui)"
+
+[lints]
+workspace = true
+[lib]
+crate-type = ["rlib", "cdylib"]
+path = "lib.rs"
+
+[dependencies]
+cad_document = { path = "../../rs", package = "semio-s-app-cad" }
+cad_document_engine = { path = "../../engine/rs", package = "semio-s-app-cad-engine" }
+cad_document_op = { path = "../../op/rs", package = "semio-s-app-cad-op" }
+semio-framework-plugin = { path = "../../../../../../../framework/product/os/module/plugin/rs", package = "semio-framework-plugin" }
+semio-framework-core = { path = "../../../../../../../framework/rs", package = "semio-framework-core" }
+kernel_3d_brepkit = { path = "../../../../../../module/3d/brep/rs", package = "semio-framework-os-kernel-3d-brep" }
+kernel_3d_engine = { path = "../../../../../../module/3d/brep/engine/rs", package = "semio-framework-os-kernel-3d-brep-engine" }
+ui_wgpu = { path = "../../../../../../../framework/module/ui/wgpu/rs", package = "ui_wgpu" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+base64 = "0.22.1"
+
+[dev-dependencies]
+protocol = { path = "../../../../../../../framework/product/os/module/protocol/rs", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }

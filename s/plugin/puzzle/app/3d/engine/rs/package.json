@@ -2,7 +2,7 @@
   "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
   "name": "@semio-tech/puzzle-3d-rs",
   "version": "0.1.0",
-  "description": "puzzle · 3d rs",
+  "description": "puzzle \u00b7 3d rs",
   "type": "module",
   "private": true,
   "scripts": {
@@ -17,7 +17,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/usalu/semio.git",
-    "directory": "puzzle/3d/rs"
+    "directory": "s/plugin/puzzle/app/3d/engine/rs"
   },
   "bundleKind": "library"
 }

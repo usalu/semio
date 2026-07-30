@@ -26,7 +26,7 @@ End to end for a workforce of agents /workflows
 
 ---
 
-We are building a collaborative plugin-based virtual operating system with multiple renderers (react, rs+wasm+wgpu, …).
+We are building a collaborative plugin-based virtual operating system with multiple backends (rs, js, C#, …), multiple renderers (react, rs+wasm+wgpu, …), etc
 Every plugin has apps.
 Every app has modes.
 Every app works over CQRS instead of CRUD (materialization over initial pack + patch)

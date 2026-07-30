@@ -10,7 +10,7 @@
 // #endregion 🧲Header
 
 import type { Plugin } from "vite";
-import type { PlaygroundAssetSpec } from "../framework/plugin/registry/generated/playgrounds.ts";
+import type { PlaygroundAssetSpec } from "../framework/product/os/module/plugin/registry/generated/playgrounds.ts";
 
 export type { PlaygroundAssetSpec };
 
@@ -41,44 +41,44 @@ export const STORY_SCOPES: readonly StoryScope[] = [
   {
     id: "ui",
     titlePrefix: "🖱️ui⚛️react",
-    sourceRoots: [repoRelative("framework/ui/js/react"), repoRelative("framework/ui/styling"), repoRelative("framework/ui/asset"), repoRelative("s/plugin/puzzle/asset"), repoRelative("framework/os/kernel/infinite/canvas/react-renderer"), repoRelative("compose/client/ui/desktop")],
+    sourceRoots: [repoRelative("framework/module/ui/js/react"), repoRelative("framework/module/ui/styling"), repoRelative("framework/module/ui/asset"), repoRelative("s/plugin/puzzle/module/asset"), repoRelative("framework/product/os/module/infinite/canvas/react-renderer"), repoRelative("compose/client/ui/desktop")],
     aliases: {
-      "@semio-tech/infinite-cavas-react-renderer": "framework/os/kernel/infinite/canvas/react-renderer/index.tsx",
-      "@elements/ui/globals.css": "framework/ui/js/react/globals.css",
+      "@semio-tech/infinite-cavas-react-renderer": "framework/product/os/module/infinite/canvas/react-renderer/index.tsx",
+      "@elements/ui/globals.css": "framework/module/ui/js/react/globals.css",
       "@semio-tech/coda-desktop/renderer": "compose/client/ui/desktop/js/renderer.tsx",
     },
   },
   {
     id: "styling",
     titlePrefix: "🎨styling",
-    sourceRoots: [repoRelative("framework/ui/styling")],
+    sourceRoots: [repoRelative("framework/module/ui/styling")],
   },
   {
     id: "puzzle",
     titlePrefix: "🧩puzzle",
-    sourceRoots: [repoRelative("s/plugin/puzzle/asset")],
+    sourceRoots: [repoRelative("s/plugin/puzzle/module/asset")],
   },
   {
     id: "puzzle/2d",
     titlePrefix: "🧩puzzle🩻2d",
-    sourceRoots: [repoRelative("s/plugin/puzzle/2d"), repoRelative("s/plugin/puzzle/asset")],
+    sourceRoots: [repoRelative("s/plugin/puzzle/app/2d"), repoRelative("s/plugin/puzzle/module/asset")],
   },
   {
     id: "puzzle/3d",
     titlePrefix: "🧩puzzle🧊3d",
-    sourceRoots: [repoRelative("s/plugin/puzzle/3d"), repoRelative("s/plugin/puzzle/asset"), repoRelative("framework/os/kernel/infinite/world/r3f")],
+    sourceRoots: [repoRelative("s/plugin/puzzle/app/3d"), repoRelative("s/plugin/puzzle/module/asset"), repoRelative("framework/product/os/module/infinite/world/r3f")],
   },
   {
     id: "puzzle/5d",
     titlePrefix: "🧩puzzle🕐5d",
-    sourceRoots: [repoRelative("s/plugin/puzzle/5d"), repoRelative("s/plugin/puzzle/asset")],
+    sourceRoots: [repoRelative("s/plugin/puzzle/app/5d"), repoRelative("s/plugin/puzzle/module/asset")],
   },
   {
     id: "compose",
     titlePrefix: "🏘️compose",
-    sourceRoots: [repoRelative("compose/client/lib/js"), repoRelative("compose/client/lib/rs"), repoRelative("framework/asset"), repoRelative("compose/fixture"), repoRelative("compose/dev/algorithm")],
+    sourceRoots: [repoRelative("compose/client/lib/js"), repoRelative("compose/client/lib/rs"), repoRelative("framework/module/asset"), repoRelative("compose/fixture"), repoRelative("compose/dev/algorithm")],
     aliases: {
-      "@semio-tech/ui-react/globals.css": "framework/ui/js/react/globals.css",
+      "@semio-tech/ui-react/globals.css": "framework/module/ui/js/react/globals.css",
       "@semio-tech/compose-rs-wasm": "compose/client/lib/rs/pkg/compose.js",
     },
     optimizeDepsExclude: ["@semio-tech/compose-react", "@semio-tech/compose-js", "@semio-tech/semio-asset"],
@@ -86,7 +86,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
   {
     id: "compose/ui",
     titlePrefix: "🏘️compose⚛️react",
-    sourceRoots: [repoRelative("compose/client/lib/js"), repoRelative("compose/client/lib/rs"), repoRelative("framework/asset"), repoRelative("compose/fixture")],
+    sourceRoots: [repoRelative("compose/client/lib/js"), repoRelative("compose/client/lib/rs"), repoRelative("framework/module/asset"), repoRelative("compose/fixture")],
   },
   {
     // Directory is singular (`stories/compose/algorithm/`) though the story `title`s read "algorithms" (plural) —
@@ -101,49 +101,49 @@ export const STORY_SCOPES: readonly StoryScope[] = [
   {
     id: "framework",
     titlePrefix: "🛠️framework",
-    sourceRoots: [repoRelative("framework/os/renderer/js/react"), repoRelative("framework/core/js")],
+    sourceRoots: [repoRelative("framework/product/os/module/renderer/js/react"), repoRelative("framework/js")],
   },
   {
     id: "framework/hosts",
     titlePrefix: "🛠️framework🔌hosts",
-    sourceRoots: [repoRelative("framework/os/renderer/js/react"), repoRelative("framework/core/js"), repoRelative("framework/surface"), repoRelative("framework/editor"), repoRelative("framework/os/kernel/flow/core/rs")],
+    sourceRoots: [repoRelative("framework/product/os/module/renderer/js/react"), repoRelative("framework/js"), repoRelative("framework/module/surface"), repoRelative("framework/module/editor"), repoRelative("framework/product/os/module/flow/core/rs")],
     aliases: {
-      "@semio-tech/framework-renderer-react": "framework/os/renderer/js/react/index.tsx",
-      "@semio-tech/framework-core": "framework/core/js/index.ts",
+      "@semio-tech/framework-renderer-react": "framework/product/os/module/renderer/js/react/index.tsx",
+      "@semio-tech/framework-core": "framework/js/index.ts",
     },
   },
   {
     id: "framework/os",
     titlePrefix: "🛠️framework🖥️os",
-    sourceRoots: [repoRelative("framework/os/renderer/js/react"), repoRelative("framework/os/renderer/wgpu"), repoRelative("framework/core/js"), repoRelative("framework/plugin/registry"), repoRelative("framework/os")],
+    sourceRoots: [repoRelative("framework/product/os/module/renderer/js/react"), repoRelative("framework/product/os/module/renderer/wgpu"), repoRelative("framework/js"), repoRelative("framework/product/os/module/plugin/registry"), repoRelative("framework/product/os")],
     aliases: {
-      "@semio-tech/framework-renderer-react": "framework/os/renderer/js/react/index.tsx",
-      "@semio-tech/framework-renderer-wgpu": "framework/os/renderer/wgpu/index.ts",
-      "@semio-tech/framework-core": "framework/core/js/index.ts",
-      "/plugin-modules": "framework/os/dev/plugin-modules",
-      "/renderer-modules": "framework/os/dev/renderer-modules",
+      "@semio-tech/framework-renderer-react": "framework/product/os/module/renderer/js/react/index.tsx",
+      "@semio-tech/framework-renderer-wgpu": "framework/product/os/module/renderer/wgpu/index.ts",
+      "@semio-tech/framework-core": "framework/js/index.ts",
+      "/plugin-modules": "framework/product/os/module/dev/js/plugin-modules",
+      "/renderer-modules": "framework/product/os/module/dev/js/renderer-modules",
     },
     assets: [
-      { kind: "static-dir", route: "/plugin-modules", root: "framework/os/dev/plugin-modules" },
-      { kind: "static-dir", route: "/renderer-modules", root: "framework/os/dev/renderer-modules" },
+      { kind: "static-dir", route: "/plugin-modules", root: "framework/product/os/module/dev/js/plugin-modules" },
+      { kind: "static-dir", route: "/renderer-modules", root: "framework/product/os/module/dev/js/renderer-modules" },
     ],
     vitePlugins: async () => {
-      const { playgroundIframeEmbedHeadersPlugin } = await import("../framework/ui/styling/vite-elements-assets.ts");
+      const { playgroundIframeEmbedHeadersPlugin } = await import("../framework/module/ui/styling/vite-elements-assets.ts");
       return [playgroundIframeEmbedHeadersPlugin()];
     },
   },
   {
     id: "infinite",
     titlePrefix: "♾️infinite",
-    sourceRoots: [repoRelative("framework/os/kernel/infinite/canvas/react-renderer"), repoRelative("framework/os/kernel/infinite/world/r3f"), repoRelative("framework/os/kernel/infinite/fixture")],
+    sourceRoots: [repoRelative("framework/product/os/module/infinite/canvas/react-renderer"), repoRelative("framework/product/os/module/infinite/world/r3f"), repoRelative("framework/product/os/module/infinite/fixture")],
     aliases: {
-      "@semio-tech/infinite-cavas-react-renderer": "framework/os/kernel/infinite/canvas/react-renderer/index.tsx",
+      "@semio-tech/infinite-cavas-react-renderer": "framework/product/os/module/infinite/canvas/react-renderer/index.tsx",
     },
   },
   {
     id: "cad",
     titlePrefix: "📐cad",
-    sourceRoots: [repoRelative("s/plugin/cad/renderer"), repoRelative("s/plugin/cad/asset"), repoRelative("s/plugin/cad/fixture")],
+    sourceRoots: [repoRelative("s/plugin/cad/module/renderer"), repoRelative("s/plugin/cad/asset"), repoRelative("s/plugin/cad/fixture")],
   },
   {
     id: "coda",
@@ -156,7 +156,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
   {
     id: "animate",
     titlePrefix: "🎬animate",
-    sourceRoots: [repoRelative("s/plugin/animate/present/renderer/react")],
+    sourceRoots: [repoRelative("s/plugin/animate/app/present/js/renderer/react")],
   },
 ];
 // #endregion 🔖ScopeRegistry
@@ -253,9 +253,9 @@ if (import.meta.vitest) {
 
   describe("buildScopeAliases", () => {
     it("merges workspace and scope aliases without conflict", () => {
-      const aliases = buildScopeAliases(resolveActiveScopes("ui"), { "@semio-tech/ui-react": "framework/ui/js/react" });
-      expect(aliases["@semio-tech/ui-react"]).toBe("framework/ui/js/react");
-      expect(aliases["@elements/ui/globals.css"]).toBe("framework/ui/js/react/globals.css");
+      const aliases = buildScopeAliases(resolveActiveScopes("ui"), { "@semio-tech/ui-react": "framework/module/ui/js/react" });
+      expect(aliases["@semio-tech/ui-react"]).toBe("framework/module/ui/js/react");
+      expect(aliases["@elements/ui/globals.css"]).toBe("framework/module/ui/js/react/globals.css");
     });
 
     it("throws on a genuine key conflict between scopes", () => {
@@ -275,7 +275,7 @@ if (import.meta.vitest) {
     it("ignores inactive scopes' source roots", () => {
       const ignores = buildScopeWatchIgnores(resolveActiveScopes("ui"));
       expect(ignores).toContain("**/compose/client/lib/js/**");
-      expect(ignores.some((g) => g.includes("framework/ui/js/react"))).toBe(false);
+      expect(ignores.some((g) => g.includes("framework/module/ui/js/react"))).toBe(false);
     });
 
     it("ignores nothing when every scope is active", () => {

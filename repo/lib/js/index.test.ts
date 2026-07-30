@@ -19,7 +19,7 @@ import {
   loadFrameworkOsPlaygroundCatalog,
   playgroundPlayViteDefine,
 } from "./index.ts";
-import { playgroundStaticSiteBuildOptions } from "../../../framework/ui/styling/vite-elements-assets.ts";
+import { playgroundStaticSiteBuildOptions } from "../../../framework/module/ui/styling/vite-elements-assets.ts";
 describe("Neo4j graph database registry", () => {
   test("joins name segments with hyphen", () => {
     expect(joinNeo4jGraphDatabaseName(["compose", "kit"])).toBe("compose-kit");
@@ -184,7 +184,7 @@ describe("dependency-boundary", () => {
 describe("ui scrollbar styling", () => {
   test("ui.css defines scrollbar tokens and native plus Scrollable rules", () => {
     const repoRoot = findRepoRoot(import.meta.dir);
-    const css = readFileSync(join(repoRoot, "framework/ui/styling/js/ui.css"), "utf8");
+    const css = readFileSync(join(repoRoot, "framework/module/ui/styling/js/ui.css"), "utf8");
     expect(css).toContain("--scrollbar-size:");
     expect(css).toContain("--scrollbar-thumb:");
     expect(css).toContain("scrollbar-color:");
@@ -194,6 +194,21 @@ describe("ui scrollbar styling", () => {
 });
 
 describe("micro-commit", () => {
+  test("safeGitEnv replaces an unusable configured global Git config", async () => {
+    const { safeGitEnv } = await import("./index.ts");
+    const { devNull } = await import("node:os");
+    const env = safeGitEnv({ GIT_CONFIG_GLOBAL: join(process.cwd(), ".missing-global-gitconfig") });
+    expect(env.GIT_CONFIG_GLOBAL).toBe(devNull);
+  });
+
+  test("branchValidationError distinguishes lookup failure, detached HEAD, and a wrong branch", async () => {
+    const { branchValidationError } = await import("./index.ts");
+    expect(branchValidationError("micro-commit", { ok: false, error: "permission denied" })).toBe("micro-commit: cannot read current branch: permission denied");
+    expect(branchValidationError("micro-commit", { ok: true, name: "" })).toContain("detached HEAD");
+    expect(branchValidationError("micro-commit", { ok: true, name: "🐙ueli/feature" })).toContain('current branch "🐙ueli/feature"');
+    expect(branchValidationError("micro-commit", { ok: true, name: "🐙ueli/⛳wip" })).toBeNull();
+  });
+
   test("extractCounterFromSubject reads formatted subject lines", async () => {
     const { extractCounterFromSubject } = await import("./index.ts");
     expect(extractCounterFromSubject("🧑ueli🎆26🌙06☀️02🚩009")).toEqual({ nnn: 9, line1Base: "🧑ueli🎆26🌙06☀️02" });
@@ -271,10 +286,27 @@ describe("micro-commit", () => {
     expect(lines.at(-2)).toBe("");
     const { MICRO_COMMIT_ULOC_HEADER: ulocHeader } = await import("./index.ts");
     const metricsIdx = lines.findIndex((l) => l.startsWith(ulocHeader));
-    if (metricsIdx >= 0) {
-      expect(lines[metricsIdx - 1]).toBe("");
-      expect(lines[metricsIdx]?.startsWith(ulocHeader)).toBe(true);
-      expect(lines[metricsIdx + 1]).toMatch(/^🟦|^🦀|🐍|🐚|🔵|🟣|📝|🧾|📋/);
+    expect(metricsIdx).toBeGreaterThan(2);
+    expect(lines[metricsIdx - 1]).toBe("");
+    expect(lines[metricsIdx]?.startsWith(ulocHeader)).toBe(true);
+    expect(lines[metricsIdx + 1]).toMatch(/^🟦|^🦀|🐍|🐚|🔵|🟣|📝|🧾|📋/);
+  });
+
+  test("buildMicroCommitMessage rejects output without the required uloc footer", async () => {
+    const { buildMicroCommitMessage } = await import("./index.ts");
+    const { mkdtempSync, rmSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const contributor = { alias: "ueli", emoji: "🐙", name: "Ueli Saluz", email: "ueli@semio-tech.com" };
+    const root = mkdtempSync(join(tmpdir(), "compose-micro-commit-empty-uloc-"));
+    try {
+      expect(spawnSync("git", ["init"], { cwd: root, encoding: "utf8" }).status).toBe(0);
+      expect(() =>
+        buildMicroCommitMessage(root, contributor, ["🐛Reject incomplete commit messages"], {
+          countRepoByLanguage: () => ({}),
+        }),
+      ).toThrow("required 📊uloc footer");
+    } finally {
+      rmSync(root, { recursive: true, force: true });
     }
   });
 
@@ -335,7 +367,7 @@ describe("micro-commit", () => {
     expect(shouldSkipPathForUloc(root, "repo/AGENTS.md")).toBe(false);
     expect(shouldSkipPathForUloc(root, "repo/CHANGELOG.md")).toBe(false);
     expect(shouldSkipPathForUloc(root, ".repo/cache/x")).toBe(true);
-    expect(shouldSkipPathForUloc(root, "framework/core/README.md")).toBe(false);
+    expect(shouldSkipPathForUloc(root, "framework/README.md")).toBe(false);
     expect(shouldSkipPathForUloc(root, "puzzle/3d/src/foo.ts")).toBe(false);
   });
 
@@ -625,7 +657,7 @@ describe("package boundary guards", () => {
   });
 
   test("framework renderer host has no per-technology registerUi surface host APIs", () => {
-    const indexPath = join(repoRoot, "framework/os/renderer/js/react/index.tsx");
+    const indexPath = join(repoRoot, "framework/product/os/module/renderer/js/react/index.tsx");
     const indexSource = readFileSync(indexPath, "utf8");
     expect(indexSource).not.toMatch(/registerUi(?:Draw|Flow|Layout|Note|Puzzle2d|Puzzle3d|Puzzle5d|Sequence|Writer|Raster|Forms|Trinity|Procedural|Shooting|Gis|Cad|Dag|Lowpoly|Imperative|S)SurfaceHost/);
     expect(indexSource).toContain("bootFrameworkOs");

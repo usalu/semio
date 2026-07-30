@@ -14,10 +14,10 @@ path = "lib.rs"
 gis2d = { path = "../../rs", package = "semio-s-app-gis-2d" }
 gis2d_engine = { path = "../../engine/rs", package = "semio-s-app-gis-2d-engine" }
 gis2d_op = { path = "../../op/rs", package = "semio-s-app-gis-2d-op" }
-protocol = { path = "../../../../../../../framework/os/kernel/protocol/rs", package = "semio-framework-os-kernel-protocol" }
-store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
-framework_surface_tiled_map = { path = "../../../../../../../framework/surface/tiled-map/rs" }
-semio-framework-plugin = { path = "../../../../../../../framework/plugin/rs" }
+protocol = { path = "../../../../../../../framework/product/os/module/protocol/rs", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }
+framework_surface_tiled_map = { path = "../../../../../../../framework/module/surface/tiled-map/rs", package = "framework_surface_tiled_map" }
+semio-framework-plugin = { path = "../../../../../../../framework/product/os/module/plugin/rs", package = "semio-framework-plugin" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 

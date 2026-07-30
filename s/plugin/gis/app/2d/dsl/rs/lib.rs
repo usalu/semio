@@ -3,7 +3,7 @@
 use gis2d::GisMapDocument;
 
 /// 🗺️ The bundled "reuse map" example document, handcrafted in the `.gismap` DSL.
-pub const REUSE_MAP_EXAMPLE_TEXT: &str = include_str!("../../../../2d/example/reuse.map.gismap");
+pub const REUSE_MAP_EXAMPLE_TEXT: &str = include_str!("../../example/reuse.map.gismap");
 
 /// 📖 Parses `.gismap` DSL text into a `GisMapDocument`.
 pub fn parse_dsl(text: &str) -> Result<GisMapDocument, store::TextError> {

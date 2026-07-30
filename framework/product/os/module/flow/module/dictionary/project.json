@@ -1,0 +1,13 @@
+{
+  "name": "@semio-tech/flow-module-dictionary",
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "framework/product/os/module/flow/module/dictionary",
+        "command": "bun ./script.ts wasm"
+      }
+    }
+  }
+}

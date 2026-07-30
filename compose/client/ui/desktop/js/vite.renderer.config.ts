@@ -22,9 +22,9 @@ import remarkFrontmatter from "remark-frontmatter";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import rehypeSlug from "rehype-slug";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import wasm from "__KEEP_vite_plugin__-wasm";
-import topLevelAwait from "__KEEP_vite_plugin__-top-level-await";
-import { createWorkspaceViteResolveConfig, semioFaviconVitePlugin } from "../../../../../framework/ui/styling/vite-elements-assets.ts";
+import wasm from "vite-plugin-wasm";
+import topLevelAwait from "vite-plugin-top-level-await";
+import { createWorkspaceViteResolveConfig, semioFaviconVitePlugin } from "../../../../../framework/module/ui/styling/vite-elements-assets.ts";
 // #endregion 🔌Adapters
 
 type CjsFacadeResolveOpts = {
@@ -199,7 +199,7 @@ export default defineConfig(async ({ mode }) => {
   const htmlParseStringifyEntry = path.resolve(__dirname, "../../node_modules/html-parse-stringify/dist/html-parse-stringify.js");
   const reactI18nextEntry = path.resolve(__dirname, "../../node_modules/react-i18next/dist/commonjs/index.js");
   const reactRouterEntry = path.resolve(__dirname, "../../node_modules/react-router/dist/development/index.js");
-  const repoRoot = path.resolve(__dirname, "../../../..");
+  const repoRoot = path.resolve(__dirname, "../../../../..");
   const workspaceResolve = createWorkspaceViteResolveConfig(repoRoot, [
     { find: /^use-sync-external-store\/shim\/with-selector(\.js)?$/, replacement: shimWithSelector },
     { find: /^use-sync-external-store\/shim(\/index\.js)?$/, replacement: shimMain },

@@ -11,4 +11,4 @@ workspace = true
 path = "lib.rs"
 
 [dependencies]
-trinity_ram = { path = "../../../ram/rs", package = "trinity_ram" }
+trinity_ram = { path = "../../../module/ram/rs", package = "trinity_ram" }

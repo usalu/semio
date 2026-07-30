@@ -5,7 +5,7 @@ emoji: 🏛️
 
 # Architect
 
-Headless architectural __KEEP_pluginming__ technology: [architect/plugin](plugin/rs/lib.rs) domain model and analysis (`architect_spine`), [architect/plugin](plugin/rs/lib.rs) s/OS DocumentApp for program editing with undirected adjacency-matrix UI.
+Headless architectural programming technology: [architect/plugin](plugin/rs/lib.rs) domain model and analysis (`architect_spine`), [architect/plugin](plugin/rs/lib.rs) s/OS DocumentApp for program editing with undirected adjacency-matrix UI.
 
 ## Program (`architect_spine`)
 

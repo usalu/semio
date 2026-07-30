@@ -12,11 +12,11 @@ path = "lib.rs"
 
 [dependencies]
 fem2d = { path = "../../rs", package = "semio-s-app-fem-2d" }
-dsl = { path = "../../../../../../../framework/os/kernel/dsl/rs", package = "semio-framework-os-kernel-dsl" }
-protocol = { path = "../../../../../../../framework/os/kernel/protocol/rs", package = "semio-framework-os-kernel-protocol" }
-store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
+dsl = { path = "../../../../../../../framework/product/os/module/dsl/rs", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../framework/product/os/module/protocol/rs", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 
 [dev-dependencies]
-vcs = { path = "../../../../../../../framework/os/kernel/vcs/rs", package = "semio-framework-os-kernel-vcs" }
+vcs = { path = "../../../../../../../framework/product/os/module/vcs/rs", package = "semio-framework-os-kernel-vcs" }

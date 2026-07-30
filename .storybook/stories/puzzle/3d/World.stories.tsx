@@ -9,14 +9,14 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 
-import { World3dHost } from "../../../../framework/os/renderer/js/react/index.tsx";
-import type { ActionDescriptor, UiComponentSceneNode } from "../../../../framework/os/renderer/js/react/index.tsx";
+import { World3dHost } from "../../../../framework/product/os/module/renderer/js/react/index.tsx";
+import type { ActionDescriptor, UiComponentSceneNode } from "../../../../framework/product/os/module/renderer/js/react/index.tsx";
 
-import concreteForestFixtureDsl from "../../../../s/plugin/puzzle/3d/example/concrete-forest.puzzle3d?raw";
-import nakaginCapsuleTowerFixtureDsl from "../../../../s/plugin/puzzle/3d/example/nakagin-capsule-tower.puzzle3d?raw";
+import concreteForestFixtureDsl from "../../../../s/plugin/puzzle/app/3d/example/concrete-forest.puzzle3d?raw";
+import nakaginCapsuleTowerFixtureDsl from "../../../../s/plugin/puzzle/app/3d/example/nakagin-capsule-tower.puzzle3d?raw";
 
-import abbauAufbauReferenceUrl from "../../../../infinite/fixture/abbau-aufbau-masterarbeit-grundriss.jpg";
-import rathausAhlenReferenceUrl from "../../../../infinite/fixture/rathaus-ahlen-grundriss.png";
+import abbauAufbauReferenceUrl from "../../../../framework/product/os/module/infinite/fixture/abbau-aufbau-masterarbeit-grundriss.jpg";
+import rathausAhlenReferenceUrl from "../../../../framework/product/os/module/infinite/fixture/rathaus-ahlen-grundriss.png";
 
 //#region StoryTypes
 type Vec3 = readonly [number, number, number];
@@ -77,7 +77,7 @@ const STORY_REFERENCE_URL_OVERRIDES: Record<string, string> = {
 //#endregion ReferenceAssetOverrides
 
 //#region WasmFixtureLoader
-/** @emoji 🧵 Lazily loads+inits `@semio-tech/puzzle-3d-rs`'s wasm module once (mirrors `framework/os/renderer/js/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle3dParseDslJson` free export. */
+/** @emoji 🧵 Lazily loads+inits `@semio-tech/puzzle-3d-rs`'s wasm module once (mirrors `framework/product/os/module/renderer/js/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle3dParseDslJson` free export. */
 type Puzzle3dWasmModule = { readonly default: (input?: unknown) => Promise<unknown>; readonly puzzle3dParseDslJson: (dslText: string) => string };
 let puzzle3dWasmModulePromise: Promise<Puzzle3dWasmModule> | null = null;
 function loadPuzzle3dWasm(): Promise<Puzzle3dWasmModule> {
@@ -103,7 +103,7 @@ const STORY_DEFAULT_RUNTIME: StoryWorld3dRuntime = {
   activeUtility: "select",
 };
 
-/** @emoji 🖱️ Story-local mirror of `instanceMergeArg`/`componentMergeArg` (`framework/os/renderer/js/react/index.tsx`) — applies a `worldPick`/`worldSelect`/`worldVortexSelect` merge mode to the current selection. */
+/** @emoji 🖱️ Story-local mirror of `instanceMergeArg`/`componentMergeArg` (`framework/product/os/module/renderer/js/react/index.tsx`) — applies a `worldPick`/`worldSelect`/`worldVortexSelect` merge mode to the current selection. */
 function applyStoryWorldMerge(current: readonly string[], id: string, merge: string): string[] {
   const set = new Set(current);
   if (merge === "replace") return [id];

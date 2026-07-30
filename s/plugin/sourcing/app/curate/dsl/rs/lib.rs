@@ -3,10 +3,10 @@
 use sourcing::CurateDocument;
 
 /// 📄 The demo-stock example, handcrafted in the `.curate` DSL.
-pub const DEMO_STOCK_TEXT: &str = include_str!("../../../../curate/example/demo-stock.curate");
+pub const DEMO_STOCK_TEXT: &str = include_str!("../../../../example/demo-stock.curate");
 
 /// 📄 The empty-curation example, handcrafted in the `.curate` DSL.
-pub const EMPTY_CURATION_TEXT: &str = include_str!("../../../../curate/example/empty-curation.curate");
+pub const EMPTY_CURATION_TEXT: &str = include_str!("../../../../example/empty-curation.curate");
 
 /// 📖 Parses `.curate` DSL text into a `CurateDocument`.
 pub fn parse_dsl(text: &str) -> Result<CurateDocument, store::TextError> {

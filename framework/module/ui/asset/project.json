@@ -1,0 +1,22 @@
+{
+  "name": "@semio-tech/ui-asset",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "framework/module/ui/asset",
+        "command": "bun --watch ./script.ts generate all",
+        "forwardAllArgs": true
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "framework/module/ui/asset",
+        "command": "bun ./script.ts generate all",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

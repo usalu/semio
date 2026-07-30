@@ -11,9 +11,9 @@ workspace = true
 path = "lib.rs"
 
 [dependencies]
-dsl = { path = "../../../../../../framework/os/kernel/dsl/rs", package = "semio-framework-os-kernel-dsl" }
-store = { path = "../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
-flow_core = { path = "../../../../../../framework/os/kernel/flow/core/rs", package = "semio-framework-os-kernel-flow-core" }
-playbook = { path = "../../../../../../framework/os/kernel/workflow/rs", package = "semio-framework-os-kernel-workflow" }
+dsl = { path = "../../../../../../framework/product/os/module/dsl/rs", package = "semio-framework-os-kernel-dsl" }
+store = { path = "../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }
+flow_core = { path = "../../../../../../framework/product/os/module/flow/core/rs", package = "semio-framework-os-kernel-flow-core" }
+playbook = { path = "../../../../../../framework/product/os/module/workflow/rs", package = "semio-framework-os-kernel-workflow" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

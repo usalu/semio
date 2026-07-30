@@ -9,10 +9,10 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { referenceMediaKindFromUrl, referenceMediaPort } from "@semio-tech/ui-react";
 import { useEffect, useRef, useState, type ReactElement } from "react";
 
-import sketchUrl from "../../../infinite/fixture/sketch.png";
-import abbauAufbauUrl from "../../../infinite/fixture/abbau-aufbau-masterarbeit-grundriss.jpg";
-import rathausAhlenUrl from "../../../infinite/fixture/rathaus-ahlen-grundriss.png";
-import sitePdfUrl from "../../../infinite/fixture/site.pdf?url";
+import sketchUrl from "../../../framework/product/os/module/infinite/fixture/sketch.png";
+import abbauAufbauUrl from "../../../framework/product/os/module/infinite/fixture/abbau-aufbau-masterarbeit-grundriss.jpg";
+import rathausAhlenUrl from "../../../framework/product/os/module/infinite/fixture/rathaus-ahlen-grundriss.png";
+import sitePdfUrl from "../../../framework/product/os/module/infinite/fixture/site.pdf?url";
 
 //#region StoryHost
 type StoryReferenceMediaStatus = "loading" | "loaded" | "error";

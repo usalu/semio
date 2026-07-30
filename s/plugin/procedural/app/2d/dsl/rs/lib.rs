@@ -5,7 +5,7 @@ use procedural_2d::Procedural2dDocument;
 /// 📦 The `procedural2d-play` "default" example, embedded at compile time as handcrafted `.procedural2d`
 /// DSL text — shared by the manifest's `.example(...)` registration, the `default_projection` fallback,
 /// and every test fixture.
-pub const PROCEDURAL2D_EXAMPLE_TEXT: &str = include_str!("../../../../2d/example/default.procedural2d");
+pub const PROCEDURAL2D_EXAMPLE_TEXT: &str = include_str!("../../example/default.procedural2d");
 
 /// 📖 Parses `.procedural2d` DSL text into a `Procedural2dDocument`.
 pub fn parse_dsl(text: &str) -> Result<Procedural2dDocument, store::TextError> {

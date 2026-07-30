@@ -1,0 +1,23 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@semio-tech/flow-module-core",
+  "version": "0.1.0",
+  "description": "flow \u00b7 module \u00b7 core",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": "./rs/pkg/flow_module_core.js",
+    "./pkg/flow_module_core.js": "./rs/pkg/flow_module_core.js",
+    "./pkg/flow_module_core_bg.wasm": "./rs/pkg/flow_module_core_bg.wasm"
+  },
+  "scripts": {
+    "wasm": "bun nx run @semio-tech/flow-module-core:wasm"
+  },
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "framework/product/os/module/flow/module/core"
+  },
+  "bundleKind": "library"
+}

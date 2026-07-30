@@ -3,10 +3,10 @@
 use process_3d::Process3dDocument;
 
 /// 🗄️ The timber-beam-joinery example fixture, handcrafted in `process_3d`'s DSL (`store::DocumentDsl`).
-pub const PROCESS_3D_TIMBER_EXAMPLE_TEXT: &str = include_str!("../../../../3d/example/timber-beam-joinery.process3d");
+pub const PROCESS_3D_TIMBER_EXAMPLE_TEXT: &str = include_str!("../../example/timber-beam-joinery.process3d");
 
 /// 🗄️ The drilled-plate example fixture, handcrafted in `process_3d`'s DSL (`store::DocumentDsl`).
-pub const PROCESS_3D_PLATE_EXAMPLE_TEXT: &str = include_str!("../../../../3d/example/drilled-plate.process3d");
+pub const PROCESS_3D_PLATE_EXAMPLE_TEXT: &str = include_str!("../../example/drilled-plate.process3d");
 
 /// 📖 Parses `.process3d` DSL text into a `Process3dDocument`.
 pub fn parse_dsl(text: &str) -> Result<Process3dDocument, store::TextError> {

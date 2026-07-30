@@ -12,7 +12,7 @@ path = "lib.rs"
 
 [dependencies]
 present = { path = "../../rs", package = "semio-s-app-animate-present" }
-store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }
 
 [dev-dependencies]
 present_engine = { path = "../../engine/rs", package = "semio-s-app-animate-present-engine" }

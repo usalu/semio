@@ -4,43 +4,53 @@ os is a cooperative pseudo operating system with version control, collaboration,
 
 [s](`s/AGENTS.md`) is one concrete os instance for the design domain.
 
+# Plugin
+
+A plugin is a manifest and a collection of apps.
+
 # App
 
-An app has a manifest, engine, 
+An app has a engine, 
 
 # Manifest
 
-A manifest for an app with schema, commands (along with cmd and cde), 
+A manifest defines schemas, commands (along with cmd and cde), 
 
 # Schema
 
-A schema for a document with entity definitions.
+A schema for an artifact with definitions.
 
-# EntityDefinition
+# Definition
+
+A definition for an entity.
 
 # Entity
 
-An entity inside a document.
+An entity inside a artifact.
+
+# Format
+
+A format is a schema for storing artifacts in a handcrafted domain specific language text.
+
+# Protocol
+
+A protocol is a binary schema for storing messages.
 
 # Engine
 
 A stateful headless computational engine with bidirectional streaming.
 
-The engine maintains a pack buffer for the document. Alternative versions of the document are computed on the fly by materializing it with operations.
+The engine maintains a pack buffer for the artifact. Alternative versions of the artifact are computed on the fly by materializing patches.
 
 # Command
 
 A command send to the engine.
 
-# Protocol
+# Cde
 
-A binary protocol optimized for app native transfer and storage of commands.
+A cde is a native binary representations for a commands.
 
-# Spk
-
-An spk is a native binary representations for commands.
-
-Protocols are used for communication and storage.
+Cdes are used for communication and storage.
 
 # Cmd
 
@@ -50,27 +60,27 @@ Cdes are used for logging and llms.
 
 # Operation
 
-An operation is a command that modifies a document.
+An operation is a command that modifies a artifact.
 
 # Patch
 
-A patch is a protocol that modifies a document.
+A patch is a protocol that modifies a artifact.
 
 # Op
 
-An op is protocol that modifies a document.
+An op is protocol that modifies a artifact.
 
 # Document
 
-A document is the data for an app.
+A artifact is the data for an app.
 
 # Pack
 
-A pack is a binary representation of a document.
+A pack is a binary representation of a artifact.
 
 # Dsl
 
-A dsl is a textual representation of a document.
+A dsl is a textual representation of a artifact.
 
 # Space
 
@@ -101,63 +111,71 @@ A spectator is a user with only read permission.
 ---
 
 ```
-framework
-    <language> # e.g. rs, js, etc for general framework
-    module
-        math
-            <language> # e.g. rs, js, …
-        2d
-            <language> # e.g. rs, js, …
-        3d
-            <language> # e.g. rs, js, …
-    product
-        os
-            <language> # e.g. rs, js, etc for general os code
-            module
-                dsl
-                    <language> # e.g. rs, js, …
-                vcs
-                    <language> # e.g. rs, js, …
-                protocol
-                    <language> # e.g. rs, js, …
-                neural
-                    <language> # e.g. rs, js, …
-                flow
-                    <language> # e.g. rs, js, …
-                workflow
-                    <language> # e.g. rs, js, …
+🔨 # framework
+    ⚡️ # implementation
+        <language> # e.g. 🦀 for rust, 🟦 for typescript, … for general framework
+            <package-tree> e.g. packages in rust, modules in python, …
+            <main-file> e.g. lib.rs, index.tsx, …
+    🧩
+        <module> e.g. math, ui, … for general framework modules that are used by all the products
+            ⚡️ # implementation
+                <language> # e.g. rs, js, …
+                    <package-tree> e.g. packages in rust, modules in python, …
+                    <main-file> e.g. lib.rs, index.tsx, …
+    🛍️ # product
+        💻 # os
+            ⚡️ # implementation
+                <language> # e.g. rs, js, … for general os code
+            🧩
+                <module> e.g. dsl, vcs, protocol, neural, flow, workflow, …
+                    ⚡️ # implementation
+                        <language> # e.g. rs, js, …
+                            <package-tree> e.g. packages in rust, modules in python, …
+                                <main-file> e.g. lib.rs, index.tsx, …
                 …
                 renderer
-                    <language> e.g. rs, js, …
-                        <framework> e.g. react, wpgu, …
-                            <main-file> e.g. lib.rs, index.tsx
-        server
+                    ⚡️ # implementation
+                        <language> e.g. rs, js, …
+                            engine
+                                <engine> # e.g. react, wpgu, … // single rust crate, npm package, …
+                                    <package-tree> e.g. packages in rust, modules in python, …
+                                    <main-file> e.g. lib.rs, index.tsx, …
+        🖥️ # server
             …
-        presentation
+        📽️ # presentation
             …
-        print
+        📓 # print
+            …
+        🦑 # repo
             …
     …
 s # os
+    🧩
+        <module> e.g. 2d, 3d, …
+            ⚡️ # implementation
+                <language> # e.g. rs, js, …
+                    <package-tree> e.g. packages in rust, modules in python, …
+                    <main-file> e.g. lib.rs, index.tsx, …
     plugin
         <plugin> # e.g. puzzle, draw, shooting, procedural, fem, energy, …
+            manifest
+                artifact
+                    ⚡️ # implementation
+                        <language> # e.g. rs, js, … for general app code
+                            <package-tree> e.g. packages in rust, modules in python, …
+                            <main-file> e.g. lib.rs, index.tsx, …
+            extension # some plugins have extensions such as procedural for new nodes, …
+                <extension>
+                    ⚡️ # implementation
+                        <language> # e.g. rs, js, … for general app code
+                            <package-tree> e.g. packages in rust, modules in python, …
+                            <main-file> e.g. lib.rs, index.tsx, …
             app
-                <app>
-                    engine
-                        rs
-
-
-                    rs # single crate for the complete
-                        engine.rs
-
-
-
-
-                        manifest
-                            document.rs
-                            pack.rs
-                            command
-                                <command>.rs # each cd
+                <app> e.g. engine, dsl, op, pack, protocol, ui, …
+                    ⚡️ # implementation
+                        <language> # e.g. rs, js, …
+                            <package-tree> e.g. packages in rust, modules in python, …
+                            <main-file> e.g. lib.rs, index.tsx, …
 hub # server
     …
 mit-bestand

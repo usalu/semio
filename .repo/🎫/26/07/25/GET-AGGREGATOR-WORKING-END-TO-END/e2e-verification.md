@@ -1,25 +1,24 @@
-# Aggregator end-to-end verification (2026-07-26)
+# Aggregator End-To-End After Restructure (2026-07-30)
 
 ## Result
 
-React mit-bestand Aggregator on `http://127.0.0.1:6023/` boots and renders the seeded Abbau Aufbau object mesh.
+`bun run dev:mit-bestand:aggregator` boots the React Aggregator on `http://127.0.0.1:6023/` with brand chrome, puzzle3d scene, and Abbau Aufbau mesh.
 
 ## Evidence
 
 - Title: `Entwerfen mit Bestand · Aggregator`
-- Scene: `instanceCount: 1`, `seed-left-001`, `revealIndex` **omitted** (not `null`)
-- Reveal cutoff: `puzzle3d-fill: 0`
-- Instance root: `visible: true`, `rootVisible: true`
+- Canvases: 2 (Top + Perspective)
+- Example label: `Abbau Aufbau`
 - GLB: `/mesh/hexagonal-cut-concrete-forest-left.glb` → 200, 86112 bytes, `model/gltf-binary`
-- `GlbInstanceMesh`: 57 meshes, `sceneVisible: true`, `rootVisible: true`
-- Screenshot: `aggregator-viewport.png` (Perspective pane shows the 3D object on the floorplan)
-- Full dump: `verify-aggregator-e2e.json`
+- Screenshot: `aggregator-viewport.png` (Perspective pane shows the seeded 3D object)
+- Verifier: `verify-aggregator-e2e.json` (`ok: true`)
 
-## Regression tests
+## Breakage Chain Fixed
 
-- `vitest … -t isRevealCutoffHidden`: 2 passed
-- `cargo test -p puzzle-plugin seeded_objects_omit_reveal_index…`: 1 passed
-
-## Root cause (already fixed in this ticket)
-
-JSON `revealIndex: null` + boot cutoff `0` hid every ordinary instance (`null < 0` → false). Plugin now omits the key; host uses nullish checks.
+1. Empty / broken `node_modules` after KEEP rename leftovers → restored package names + `bun install`
+2. Dev routed to compose-desktop / forwarded `aggregator` as a Vite path → framework-os-dev + consume variant before Vite
+3. Missing flow-core / surface wasm pkgs → unconditional flow-core build + wasm stub plugin in OS Vite config
+4. Broken CSS `@import`/`@source` after `framework/` move
+5. Missing `@testing-library/react` (vitest imports scanned by Vite)
+6. `program` ReferenceError in renderer `onAction` after incomplete rename
+7. Mesh roots still pointed at deleted `framework/asset/abbau-aufbau` → `mit-bestand/asset/abbau-aufbau`

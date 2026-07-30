@@ -12,4 +12,4 @@ path = "lib.rs"
 
 [dependencies]
 din16798 = { path = "../../rs", package = "semio-s-app-norm-din16798" }
-norm_core = { path = "../../../../core/rs", package = "norm_core" }
+norm_core = { path = "../../../../module/core/rs", package = "norm_core" }

@@ -11,7 +11,7 @@ workspace = true
 path = "lib.rs"
 
 [dependencies]
-mathematical_algebra = { path = "../../../../../framework/os/kernel/math/algebra/rs", package = "semio-framework-os-kernel-math-algebra" }
+mathematical_algebra = { path = "../../../../../framework/module/math/algebra/rs", package = "semio-framework-os-kernel-math-algebra" }
 serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]

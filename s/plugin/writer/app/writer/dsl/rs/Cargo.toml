@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-writer-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Writer app - textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+writer = { path = "../../rs", package = "semio-s-app-writer" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+writer_engine = { path = "../../engine/rs", package = "semio-s-app-writer-engine" }

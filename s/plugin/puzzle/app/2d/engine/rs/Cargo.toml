@@ -20,11 +20,11 @@ serde_json = "1.0.140"
 
 [dependencies]
 puzzle_2d = { path = "../../rs", package = "semio-s-app-puzzle-2d" }
-store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
-protocol = { path = "../../../../../../../framework/os/kernel/protocol/rs", package = "semio-framework-os-kernel-protocol" }
-mathematical_geometry = { path = "../../../../../../../framework/os/kernel/math/geometry/rs", package = "semio-framework-os-kernel-math-geometry" }
-infinite_board_port_directed_normal = { path = "../../../../../../../framework/os/kernel/infinite/board/port/directed/normal/rs", package = "semio-framework-os-kernel-infinite-board-port-directed-normal" }
-reasoning_mindmap = { path = "../../../../../reasoning/shared/rs", package = "reasoning_mindmap" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }
+protocol = { path = "../../../../../../../framework/product/os/module/protocol/rs", package = "semio-framework-os-kernel-protocol" }
+mathematical_geometry = { path = "../../../../../../../framework/module/math/geometry/rs", package = "semio-framework-os-kernel-math-geometry" }
+infinite_board_port_directed_normal = { path = "../../../../../../../framework/product/os/module/infinite/board/port/directed/normal/rs", package = "semio-framework-os-kernel-infinite-board-port-directed-normal" }
+reasoning_mindmap = { path = "../../../../../../module/mindmap/rs", package = "reasoning_mindmap" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 

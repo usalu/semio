@@ -14,8 +14,8 @@ path = "lib.rs"
 process_3d = { path = "../../rs", package = "semio-s-app-process-3d" }
 process_3d_engine = { path = "../../engine/rs", package = "semio-s-app-process-3d-engine" }
 process_3d_op = { path = "../../op/rs", package = "semio-s-app-process-3d-op" }
-protocol = { path = "../../../../../../../framework/os/kernel/protocol/rs", package = "semio-framework-os-kernel-protocol" }
-semio-framework-core = { path = "../../../../../../../framework/core/rs" }
-semio-framework-plugin = { path = "../../../../../../../framework/plugin/rs" }
+protocol = { path = "../../../../../../../framework/product/os/module/protocol/rs", package = "semio-framework-os-kernel-protocol" }
+semio-framework-core = { path = "../../../../../../../framework/rs", package = "semio-framework-core" }
+semio-framework-plugin = { path = "../../../../../../../framework/product/os/module/plugin/rs", package = "semio-framework-plugin" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

@@ -13,4 +13,4 @@ path = "lib.rs"
 [dependencies]
 home = { path = "../../rs", package = "semio-s-app-space-home" }
 home_dsl = { path = "../../dsl/rs", package = "semio-s-app-space-home-dsl" }
-store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }

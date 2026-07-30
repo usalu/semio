@@ -13,7 +13,7 @@ path = "lib.rs"
 [dependencies]
 gis2d = { path = "../../rs", package = "semio-s-app-gis-2d" }
 gis2d_dsl = { path = "../../dsl/rs", package = "semio-s-app-gis-2d-dsl" }
-store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
-semio-framework-plugin = { path = "../../../../../../../framework/plugin/rs" }
-semio-framework-os = { path = "../../../../../../../framework/os/core/rs", package = "semio-framework-os" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }
+semio-framework-plugin = { path = "../../../../../../../framework/product/os/module/plugin/rs", package = "semio-framework-plugin" }
+semio-framework-os = { path = "../../../../../../../framework/product/os/rs", package = "semio-framework-os" }
 serde_json = "1.0.140"

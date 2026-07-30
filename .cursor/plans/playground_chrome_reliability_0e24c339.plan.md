@@ -25,7 +25,7 @@ isProject: false
 
 ## Context
 
-The screenshot shows the `procedural3d` playground (`semio · procedural · 3d`) rendering its Flow graph and Inspection panel without any chrome: no top navbar, no window borders/tabs/options chips, and windows appear oversized. Per your clarification, this is a **window-chrome** bug, not a 3D-content bug, and the fix you want is architectural: a single **centralized** mechanism through which every __KEEP_plugin_registers__ its window kinds/tabs/layout, strict enough that a broken layout like this becomes structurally impossible — not new end-to-end browser tests.
+The screenshot shows the `procedural3d` playground (`semio · procedural · 3d`) rendering its Flow graph and Inspection panel without any chrome: no top navbar, no window borders/tabs/options chips, and windows appear oversized. Per your clarification, this is a **window-chrome** bug, not a 3D-content bug, and the fix you want is architectural: a single **centralized** mechanism through which every plugin-registers its window kinds/tabs/layout, strict enough that a broken layout like this becomes structurally impossible — not new end-to-end browser tests.
 
 Investigation of the renderer shows the chrome IS already drawn by one shared function per surface:
 

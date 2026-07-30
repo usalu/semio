@@ -14,9 +14,9 @@ path = "lib.rs"
 home = { path = "../../rs", package = "semio-s-app-space-home" }
 home_engine = { path = "../../engine/rs", package = "semio-s-app-space-home-engine" }
 home_op = { path = "../../op/rs", package = "semio-s-app-space-home-op" }
-space_shared = { path = "../../../../shared/rs", package = "semio-s-plugin-space-shared" }
-store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
-semio-framework-os = { path = "../../../../../../../framework/os/core/rs", package = "semio-framework-os" }
-semio-framework-plugin = { path = "../../../../../../../framework/plugin/rs" }
+space_shared = { path = "../../../../module/shared/rs", package = "semio-s-plugin-space-shared" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }
+semio-framework-os = { path = "../../../../../../../framework/product/os/rs", package = "semio-framework-os" }
+semio-framework-plugin = { path = "../../../../../../../framework/product/os/module/plugin/rs", package = "semio-framework-plugin" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

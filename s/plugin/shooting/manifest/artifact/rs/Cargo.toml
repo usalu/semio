@@ -1,0 +1,36 @@
+[package]
+name = "shooting-plugin"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[package.metadata.component]
+package = "semio:shooting"
+
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "shooting"
+ports = { react = 6019, wgpu = 6119 }
+
+[[package.metadata.semio.assets]]
+kind = "mesh-collection"
+route = "/mesh"
+roots = ["framework/module/asset/metabolism/representation", "mit-bestand/asset/abbau-aufbau"]
+placeholder = "framework/module/asset/mesh/placeholder.glb"
+filter_from_examples = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "lib.rs"
+
+[dependencies]
+semio-framework-os = { path = "../../../../../../framework/product/os/rs", package = "semio-framework-os" }
+semio-framework-plugin = { path = "../../../../../../framework/product/os/module/plugin/rs", features = ["component-guest"], package = "semio-framework-plugin" }
+shooting = { path = "../../../app/shooting/rs", package = "semio-s-app-shooting" }
+shooting_engine = { path = "../../../app/shooting/engine/rs", package = "semio-s-app-shooting-engine" }
+shooting_ui = { path = "../../../app/shooting/ui/rs", package = "semio-s-app-shooting-ui" }
+

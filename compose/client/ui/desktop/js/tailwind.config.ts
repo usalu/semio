@@ -12,7 +12,7 @@
 // Tailwind CSS configuration extending the shared compose preset for the desktop application.
 // Configuration MUST use the shared tailwindConfig preset from `@semio-tech/ui-styling`.
 
-import { tailwindConfig } from "../../../../../framework/ui/styling/js/tailwind.config";
+import { tailwindConfig } from "../../../../../framework/module/ui/styling/js/tailwind.config";
 import type { Config } from "tailwindcss";
 
 /**

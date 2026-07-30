@@ -6,8 +6,8 @@
 // #endregion 🧲Header
 
 import { useEffect, useMemo, useState } from "react";
-import { FrameworkOsShell, resolveShellLocks, type FrameworkOsLocks } from "../../../framework/os/renderer/js/react/index.tsx";
-import { PLUGIN_BUILD_TARGETS, pluginModuleUrl, type PluginBuildTarget } from "../../../framework/plugin/registry/generated/plugins.ts";
+import { FrameworkOsShell, resolveShellLocks, type FrameworkOsLocks } from "../../../framework/product/os/module/renderer/js/react/index.tsx";
+import { PLUGIN_BUILD_TARGETS, pluginModuleUrl, type PluginBuildTarget } from "../../../framework/product/os/module/plugin/registry/generated/plugins.ts";
 import { bootstrapElementsSurfaceChromeDocument, readStoredUiChromeAppearance } from "@semio-tech/ui-react";
 
 export { PLUGIN_BUILD_TARGETS };

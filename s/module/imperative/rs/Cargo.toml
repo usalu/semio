@@ -1,0 +1,32 @@
+[package]
+name = "imperative_engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+neural_engine = { path = "../../../../framework/product/os/module/neural/engine/rs", package = "semio-framework-os-kernel-neural-engine" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+vcs = { path = "../../../../framework/product/os/module/vcs/rs", package = "semio-framework-os-kernel-vcs" }
+store = { path = "../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }
+protocol = { path = "../../../../framework/product/os/module/protocol/rs", package = "semio-framework-os-kernel-protocol" }
+imperative_module_core = { path = "../../../plugin/imperative/extension/core/rs", package = "imperative_module_core" }
+imperative_module_text = { path = "../../../plugin/imperative/extension/text/rs", package = "imperative_module_text" }
+imperative_module_math = { path = "../../../plugin/imperative/extension/math/rs", package = "imperative_module_math" }
+imperative_module_logic = { path = "../../../plugin/imperative/extension/logic/rs", package = "imperative_module_logic" }
+imperative_module_control = { path = "../../../plugin/imperative/extension/control/rs", package = "imperative_module_control" }
+
+[dev-dependencies]
+imperative_module_core = { path = "../../../plugin/imperative/extension/core/rs", package = "imperative_module_core" }
+imperative_module_text = { path = "../../../plugin/imperative/extension/text/rs", package = "imperative_module_text" }
+imperative_module_math = { path = "../../../plugin/imperative/extension/math/rs", package = "imperative_module_math" }
+imperative_module_logic = { path = "../../../plugin/imperative/extension/logic/rs", package = "imperative_module_logic" }
+imperative_module_control = { path = "../../../plugin/imperative/extension/control/rs", package = "imperative_module_control" }

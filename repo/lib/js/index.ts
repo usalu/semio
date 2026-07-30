@@ -6,12 +6,13 @@
 //#region 🔌Adapters
 import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { devNull, homedir } from "node:os";
 import { basename, dirname, join, normalize, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 //#endregion 🔌Adapters
 
-import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../framework/plugin/registry/generated/playgrounds.ts";
+import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../framework/product/os/module/plugin/registry/generated/playgrounds.ts";
 
 export type PlaygroundHostKind = string;
 
@@ -1274,7 +1275,7 @@ export function coverageSlug(bundleRoot: string): string {
  */
 export const COVERAGE_EXCLUDE_GLOBS: readonly string[] = [
   "**/generated/**",
-  "framework/asset/metabolism/icon/generated/**",
+  "framework/module/asset/metabolism/icon/generated/**",
   "**/pkg/**",
   ".storybook/**",
   "**/*.stories.*",
@@ -1284,8 +1285,8 @@ export const COVERAGE_EXCLUDE_GLOBS: readonly string[] = [
   "**/*.wgsl",
   "**/*.svg",
   "elements/client/lib/geometry/topologic/**",
-  "framework/os/renderer/wgpu/**",
-  "framework/ui/wgpu/**",
+  "framework/product/os/module/renderer/wgpu/**",
+  "framework/module/ui/wgpu/**",
   "**/dist/**",
   "**/node_modules/**",
   "**/target/**",
@@ -1294,7 +1295,7 @@ export const COVERAGE_EXCLUDE_GLOBS: readonly string[] = [
 /** 📊One-line rationale per [[COVERAGE_EXCLUDE_GLOBS]] entry — printed alongside the coverage summary. */
 export const COVERAGE_EXCLUDE_REASONS: Readonly<Record<string, string>> = {
   "**/generated/**": "Emitted lookup tables/codegen output, not hand-authored logic.",
-  "framework/asset/metabolism/icon/generated/**": "~22k LOC generated icon table.",
+  "framework/module/asset/metabolism/icon/generated/**": "~22k LOC generated icon table.",
   "**/pkg/**": "wasm-bindgen build output.",
   ".storybook/**": "Covered by Playwright specs, not unit line coverage.",
   "**/*.stories.*": "Storybook fixtures, exercised visually not via line coverage.",
@@ -1304,8 +1305,8 @@ export const COVERAGE_EXCLUDE_REASONS: Readonly<Record<string, string>> = {
   "**/*.wgsl": "GPU shader source — not measurable by CPU line coverage.",
   "**/*.svg": "Vector assets — not executable.",
   "elements/client/lib/geometry/topologic/**": "Vendored third-party C++.",
-  "framework/os/renderer/wgpu/**": "GPU rendering internals — smoke-testable only; a headless-GPU harness is out of scope here.",
-  "framework/ui/wgpu/**": "GPU rendering internals — smoke-testable only; a headless-GPU harness is out of scope here.",
+  "framework/product/os/module/renderer/wgpu/**": "GPU rendering internals — smoke-testable only; a headless-GPU harness is out of scope here.",
+  "framework/module/ui/wgpu/**": "GPU rendering internals — smoke-testable only; a headless-GPU harness is out of scope here.",
   "**/dist/**": "Build output.",
   "**/node_modules/**": "Third-party dependency code.",
   "**/target/**": "Cargo build output.",
@@ -1742,13 +1743,13 @@ export function playgroundEmbedUrl(kind: PlaygroundSiteKind, isDev: boolean): st
 //#region 🖥️FrameworkOsPlaygroundDev
 /**
  * 📚 Loads the generated framework OS playground catalog (variant/plugin/aliases/ports rows).
- * Reads `framework/plugin/registry/generated/playgrounds.json` directly (rather than a static
+ * Reads `framework/product/os/module/plugin/registry/generated/playgrounds.json` directly (rather than a static
  * TS import of the gitignored generated module) so this shared kernel never fails to load on a
  * fresh clone before `bun nx run @semio-tech/plugin-registry:generate` has ever run — callers get
  * an empty catalog in that case instead of a hard module-resolution error.
  */
 export function loadFrameworkOsPlaygroundCatalog(): readonly PlaygroundVariant[] {
-  const catalogPath = join(getWorkspaceRoot(), "framework", "plugin", "registry", "generated", "playgrounds.json");
+  const catalogPath = join(getWorkspaceRoot(), "framework", "product", "os", "module", "plugin", "registry", "generated", "playgrounds.json");
   if (!existsSync(catalogPath)) return [];
   return JSON.parse(readFileSync(catalogPath, "utf8")) as readonly PlaygroundVariant[];
 }
@@ -1783,11 +1784,11 @@ export function resolveFrameworkOsPlaygroundPlugin(catalog: readonly PlaygroundV
 
 /** @emoji 🧊 Env for `@semio-tech/framework-os-dev:dev` with wgpu renderer and plugin filter. */
 export function frameworkOsPlaygroundDevEnv(catalog: readonly PlaygroundVariant[], plugin: string, extra: NodeJS.ProcessEnv = {}, env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
-  const renderer = env.SEMIO_RENDERER ?? "wgpu";
-  const defaultPort = frameworkOsPlaygroundDefaultPort(catalog, program, renderer);
+  const renderer = env.SEMIO_RENDERER ?? "react";
+  const defaultPort = frameworkOsPlaygroundDefaultPort(catalog, plugin, renderer);
   const portVal = env.S_OS_PORT || String(defaultPort);
   return devToolingEnv({
-    SEMIO_PLUGIN: program,
+    SEMIO_PLUGIN: plugin,
     SEMIO_RENDERER: renderer,
     S_OS_PORT: portVal,
     ...extra,
@@ -2364,7 +2365,7 @@ export function gitRepoRoot(start: string): string {
 
 function gitTrackedPaths(root: string): string[] {
   const repoRoot = gitRepoRoot(root);
-  const r = spawnSync("git", ["ls-files", "-z"], { cwd: repoRoot, maxBuffer: 64 * 1024 * 1024 });
+  const r = spawnSync("git", ["ls-files", "-z"], { cwd: repoRoot, maxBuffer: 64 * 1024 * 1024, env: safeGitEnv() });
   if (r.status !== 0) return [];
   return (r.stdout ?? Buffer.alloc(0)).toString("utf8").split("\0").filter(Boolean);
 }
@@ -2414,7 +2415,7 @@ export function countUnifiedLocForFile(rel: string, data: string): number {
 
 function gitDir(root: string): string {
   const repoRoot = gitRepoRoot(root);
-  const r = spawnSync("git", ["rev-parse", "--git-dir"], { cwd: repoRoot, encoding: "utf8" });
+  const r = spawnSync("git", ["rev-parse", "--git-dir"], { cwd: repoRoot, encoding: "utf8", env: safeGitEnv() });
   if (r.status !== 0) return join(repoRoot, ".git");
   const dir = (r.stdout ?? "").trim();
   return dir.startsWith("/") ? dir : join(repoRoot, dir);
@@ -2460,7 +2461,7 @@ export function isUlocCachePlausible(root: string, counts: UlocByLanguage): bool
 }
 
 function readUlocCache(root: string): UlocByLanguage | null {
-  const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" });
+  const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8", env: safeGitEnv() });
   if (head.status !== 0) return null;
   const h = (head.stdout ?? "").trim();
   if (!h) return null;
@@ -2482,7 +2483,7 @@ function readUlocCache(root: string): UlocByLanguage | null {
 }
 
 function writeUlocCache(root: string, counts: UlocByLanguage): void {
-  const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" });
+  const head = spawnSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8", env: safeGitEnv() });
   if (head.status !== 0) return;
   const h = (head.stdout ?? "").trim();
   if (!h) return;
@@ -2569,7 +2570,7 @@ function parseGitNumstatZ(stdout: Buffer | string): { path: string; added: numbe
 }
 
 function gitCachedNumstat(root: string): { path: string; added: number; removed: number }[] {
-  const r = spawnSync("git", ["diff", "--cached", "--numstat", "-z"], { cwd: gitRepoRoot(root), maxBuffer: 64 * 1024 * 1024 });
+  const r = spawnSync("git", ["diff", "--cached", "--numstat", "-z"], { cwd: gitRepoRoot(root), maxBuffer: 64 * 1024 * 1024, env: safeGitEnv() });
   if (r.status !== 0) return [];
   return parseGitNumstatZ(r.stdout ?? Buffer.alloc(0));
 }
@@ -2592,6 +2593,7 @@ export function gitRangeNumstat(root: string, base: string, head: string): { pat
   const r = spawnSync("git", ["diff", "--numstat", "-z", `${base}..${head}`], {
     cwd: repoRoot,
     maxBuffer: 64 * 1024 * 1024,
+    env: safeGitEnv(),
   });
   if (r.status !== 0) return [];
   return parseGitNumstatZ(r.stdout ?? Buffer.alloc(0));
@@ -2808,17 +2810,19 @@ const GK_COMMIT_TEMPLATE_FILE = `${GK_TEMPLATE_BASENAME}.txt`;
 
 const MICRO_COMMIT_POST_WIPE_HOOKS = ["post-commit", "post-checkout", "post-merge", "post-rewrite"] as const;
 
-function safeGitEnv(extraEnv?: Record<string, string>): Record<string, string> {
-  const env: Record<string, string> = { ...process.env, ...extraEnv };
-  if (!env.GIT_CONFIG_GLOBAL) {
-    try {
-      const globalConfig = join(homedir(), ".gitconfig");
-      if (existsSync(globalConfig)) {
-        readFileSync(globalConfig, "utf8");
-      }
-    } catch {
-      env.GIT_CONFIG_GLOBAL = "/dev/null";
-    }
+export function safeGitEnv(extraEnv?: Record<string, string>): Record<string, string> {
+  const env: Record<string, string> = {};
+  for (const [key, value] of Object.entries(process.env)) {
+    if (value !== undefined) env[key] = value;
+  }
+  Object.assign(env, extraEnv);
+  const configuredGlobal = env.GIT_CONFIG_GLOBAL?.trim();
+  const globalConfig = configuredGlobal || join(homedir(), ".gitconfig");
+  try {
+    if (configuredGlobal && !existsSync(globalConfig)) throw new Error("missing configured global Git config");
+    if (existsSync(globalConfig)) readFileSync(globalConfig, "utf8");
+  } catch {
+    env.GIT_CONFIG_GLOBAL = devNull;
   }
   return env;
 }
@@ -2837,9 +2841,25 @@ function gitCachedNames(root: string, extra: string[] = []): string[] {
   return raw.split("\0").filter(Boolean);
 }
 
+export type CurrentBranch = { ok: true; name: string } | { ok: false; error: string };
+
+export function currentBranch(root: string): CurrentBranch {
+  const result = git(root, ["branch", "--show-current"]);
+  if (!result.ok) return { ok: false, error: result.out || "git branch --show-current failed" };
+  return { ok: true, name: result.out };
+}
+
+export function branchValidationError(command: "micro-commit" | "commit", branch: CurrentBranch): string | null {
+  if (!branch.ok) return `${command}: cannot read current branch: ${branch.error}`;
+  if (!branch.name) return `${command}: detached HEAD; switch to a branch containing ⛳wip or 🏗️dev`;
+  if (!branch.name.includes("⛳wip") && !branch.name.includes("🏗️dev")) {
+    return `${command}: current branch "${branch.name}" must contain ⛳wip or 🏗️dev`;
+  }
+  return null;
+}
+
 function branchAllowed(root: string): boolean {
-  const b = git(root, ["branch", "--show-current"]).out;
-  return b.includes("⛳wip") || b.includes("🏗️dev");
+  return branchValidationError("micro-commit", currentBranch(root)) === null;
 }
 
 function gitEmail(root: string): string {
@@ -3181,9 +3201,14 @@ export function buildMicroCommitMessage(root: string, contributor: Contributor, 
   if (bullets.length === 0) {
     throw new Error("micro-commit: at least one description bullet is required");
   }
-  const metrics = formatMicroCommitMetricsLines(buildMicroCommitMetrics(root, ulocRunner));
+  const metricRows = buildMicroCommitMetrics(root, ulocRunner);
+  if (metricRows.length === 0) {
+    throw new Error("micro-commit: required 📊uloc footer could not be built because no language metrics were collected");
+  }
+  validateMicroCommitLangMetricsDeltaSum(metricRows);
+  const metrics = formatMicroCommitMetricsLines(metricRows);
   const lines = [`${line1Base}🚩${nnn}`, formatSecond(now), ...bullets];
-  if (metrics.length > 0) lines.push("", ...metrics);
+  lines.push("", ...metrics);
   lines.push("", `Signed-off-by: ${contributor.name} <${contributor.email}>`);
   return `${lines.join("\n")}\n`;
 }
@@ -3447,8 +3472,9 @@ export function runMicroCommit(root: string, segments: string[]): void {
     handlePrepareCommitMsg(root, msgFile, segments[2] ?? "");
     process.exit(0);
   }
-  if (!branchAllowed(root)) {
-    console.error("micro-commit: branch must contain ⛳wip or 🏗️dev");
+  const branchError = branchValidationError("micro-commit", currentBranch(root));
+  if (branchError) {
+    console.error(branchError);
     process.exit(1);
   }
   const contributor = findContributor(root);
@@ -4339,8 +4365,9 @@ function emitCommitAnalysis(root: string): void {
 export function runCommit(root: string, segments: string[]): void {
   root = gitRepoRoot(root);
   const cmd = segments[0] ?? "prepare";
-  if (!branchAllowed(root)) {
-    console.error("commit: branch must contain ⛳wip or 🏗️dev");
+  const branchError = branchValidationError("commit", currentBranch(root));
+  if (branchError) {
+    console.error(branchError);
     process.exit(1);
   }
   const contributor = findContributor(root);

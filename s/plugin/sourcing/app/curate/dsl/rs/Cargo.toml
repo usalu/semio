@@ -12,4 +12,4 @@ path = "lib.rs"
 
 [dependencies]
 sourcing = { path = "../../rs", package = "semio-s-app-sourcing-curate" }
-store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }

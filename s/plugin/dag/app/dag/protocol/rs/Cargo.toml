@@ -1,0 +1,16 @@
+[package]
+name = "semio-s-app-dag-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "DAG app - binary command protocol surface + laws (constitutional: protocol)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+dag_op = { path = "../../op/rs", package = "semio-s-app-dag-op" }
+protocol = { path = "../../../../../../../framework/product/os/module/protocol/rs", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }

@@ -1,0 +1,21 @@
+[package]
+name = "semio-s-app-block-5d-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Block 5D app — binary command protocol surface + laws (constitutional: protocol)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+block_5d = { path = "../../rs", package = "semio-s-app-block-5d" }
+block_5d_op = { path = "../../op/rs", package = "semio-s-app-block-5d-op" }
+protocol = { path = "../../../../../../../framework/product/os/module/protocol/rs", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+block_5d_engine = { path = "../../engine/rs", package = "semio-s-app-block-5d-engine" }
+block_shared = { path = "../../../../module/shared/rs", package = "semio-s-plugin-block-shared" }

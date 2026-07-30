@@ -1,6 +1,6 @@
 ---
 name: Architect Technology
-overview: "Create the `architect` technology: headless `architect_spine` covering all 65 architectural-__KEEP_pluginming__ feature areas end-to-end, plus a full s/OS `DocumentApp` at `architect/plugin` with triangular undirected adjacency-matrix editing as the signature surface."
+overview: "Create the `architect` technology: headless `architect_spine` covering all 65 architectural-programming feature areas end-to-end, plus a full s/OS `DocumentApp` at `architect/plugin` with triangular undirected adjacency-matrix editing as the signature surface."
 todos:
   - id: goal-ticket
     content: Open goal architect; ticket_open with plan_id; feature checklist in ticket folder
@@ -33,7 +33,7 @@ isProject: false
 - **Paths:** [`architect/plugin`](architect/plugin) (headless) + [`architect/plugin`](architect/plugin) (standard program path; not `architect/constrain`).
 - **Depth:** Option 2A — full domain for all 65 feature areas + complete program (CRUD, analysis, exchange, reports, adjacency UI). No stubs, no empty registers.
 - **Goal:** Approving this plan authorizes opening goal `architect` (title “Architect”, due `2026-12-31`). Ticket binds to `🎯architect`.
-- **No mixing:** Do not depend on `coda`, `compose`, `puzzle`, or `mit-bestand`. Adjacency concepts may be reimplemented cleanly; prior art in [`coda/client/lib/__KEEP_pluginming__`](coda/client/lib/__KEEP_pluginming__/go/main.go) is reference only.
+- **No mixing:** Do not depend on `coda`, `compose`, `puzzle`, or `mit-bestand`. Adjacency concepts may be reimplemented cleanly; prior art in [`coda/client/lib/programming`](coda/client/lib/programming/go/main.go) is reference only.
 - **Undirected adjacency:** Store only canonical pairs `(a, b)` with `a < b`; UI edits the lower triangle; graph view is undirected. Depend on [`mathematical_graph`](mathematical/graph/rs) for topology helpers (`normalize_undirected`, `Adjacency`).
 
 ## Architecture

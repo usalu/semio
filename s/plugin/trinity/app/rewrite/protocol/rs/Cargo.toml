@@ -12,9 +12,9 @@ path = "lib.rs"
 
 [dependencies]
 rewrite_op = { path = "../../op/rs", package = "semio-s-app-trinity-rewrite-op" }
-protocol = { path = "../../../../../../../framework/os/kernel/protocol/rs", package = "semio-framework-os-kernel-protocol" }
-store = { path = "../../../../../../../framework/os/kernel/store/rs", package = "semio-framework-os-kernel-store" }
+protocol = { path = "../../../../../../../framework/product/os/module/protocol/rs", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../framework/product/os/module/store/rs", package = "semio-framework-os-kernel-store" }
 
 [dev-dependencies]
 rewrite = { path = "../../rs", package = "semio-s-app-trinity-rewrite" }
-trinity_ram = { path = "../../../../ram/rs", package = "trinity_ram" }
+trinity_ram = { path = "../../../../module/ram/rs", package = "trinity_ram" }

@@ -7,7 +7,7 @@
 
 import { expect, test, type Page } from "@playwright/test";
 
-import { PLUGIN_BUILD_TARGETS, pluginModuleUrl, type PluginBuildTarget } from "../framework/plugin/registry/generated/plugins.ts";
+import { PLUGIN_BUILD_TARGETS, pluginModuleUrl, type PluginBuildTarget } from "../framework/product/os/module/plugin/registry/generated/plugins.ts";
 
 const PLUGINS_STORY_TITLE_ID = "🛠️framework🖥️os-plugins";
 const READY_TIMEOUT_MS = 60_000;

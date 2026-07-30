@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/story/infinite/WorldR3f.stories.tsx
 // Specs: Compose the raw `@semio-tech/infinite-world-r3f` layer primitives (`WorldChunks`/`ViewRadiusLayer`/`WorldLodGridHelper`/`GridLayer`/`WorldLayer`/`WorldLayerStack`) inside a plain `@react-three/fiber` `Canvas`, independent of `World3dHost`'s full componentScene wiring (that's `../puzzle/3d/World.stories.tsx`'s job).
-// Summary: `WorldChunks`/`ViewRadiusLayer` bucket-and-cull their children by an `origin` prop read straight off each child element (see `chunkKey`/`useVisibleChunkKeys` in `framework/os/kernel/infinite/world/r3f/index.tsx`), so a grid of plain `<mesh>` boxes tagged with `origin` is enough to exercise real chunk visibility culling with zero fixtures/WASM. `WorldLodGridHelper`/`GridLayer` need the `useLod()` context that only `WorldLodBridge` provides — wired here exactly as `World3dHost` wires it.
+// Summary: `WorldChunks`/`ViewRadiusLayer` bucket-and-cull their children by an `origin` prop read straight off each child element (see `chunkKey`/`useVisibleChunkKeys` in `framework/product/os/module/infinite/world/r3f/index.tsx`), so a grid of plain `<mesh>` boxes tagged with `origin` is enough to exercise real chunk visibility culling with zero fixtures/WASM. `WorldLodGridHelper`/`GridLayer` need the `useLod()` context that only `WorldLodBridge` provides — wired here exactly as `World3dHost` wires it.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -20,7 +20,7 @@ import {
   WorldOrbitGated,
   WorldOrbitViewSnapGateProvider,
   type Vec3,
-} from "../../../framework/os/kernel/infinite/world/r3f/index.tsx";
+} from "../../../framework/product/os/module/infinite/world/r3f/index.tsx";
 
 //#region ChunkField
 const STORY_CHUNK_GRID_EXTENT = 3;

@@ -1,0 +1,22 @@
+[package]
+name = "semio-s-app-note-ui"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Note app - DocumentApp impl, render, manifest (constitutional: ui)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+note = { path = "../../rs", package = "semio-s-app-note" }
+note_engine = { path = "../../engine/rs", package = "semio-s-app-note-engine" }
+note_op = { path = "../../op/rs", package = "semio-s-app-note-op" }
+semio-framework-plugin = { path = "../../../../../../../framework/product/os/module/plugin/rs", package = "semio-framework-plugin" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+
+[dev-dependencies]
+note_dsl = { path = "../../dsl/rs", package = "semio-s-app-note-dsl" }
