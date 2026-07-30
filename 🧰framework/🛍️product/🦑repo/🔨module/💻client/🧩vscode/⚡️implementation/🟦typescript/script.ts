@@ -8,7 +8,7 @@ class DevScript extends BundleScript {
   }
 }
 
-/** ⏱️The extension-host Mocha suite (`js/extension.test.ts`) can only run inside the VSCode test harness — no fast in-repo unit split without a second test file (disallowed). Runs only at `long` and above. */
+/** ⏱️The extension-host Mocha suite (`js/🟦🟦extension.test.ts`) can only run inside the VSCode test harness — no fast in-repo unit split without a second test file (disallowed). Runs only at `long` and above. */
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { level } = resolveTestLevel(segments);
@@ -23,20 +23,20 @@ class TestScript extends BundleScript {
 class BuildScript extends BundleScript {
   run(): void {
     runBunx(["vite", "build"], this.root);
-    runBunx(["vite", "build", "--config", "vite.test.config.ts"], this.root);
+    runBunx(["vite", "build", "--config", "🟦🟦vite.test.config.ts"], this.root);
   }
 }
 
 class LintScript extends BundleScript {
   run(): void {
-    runBunx(["eslint", "--max-warnings", "0", "--config", "eslint.config.ts", "."], this.root);
+    runBunx(["eslint", "--max-warnings", "0", "--config", "🟦🟦eslint.config.ts", "."], this.root);
   }
 }
 
 /** 📦Packages the VSIX; nx's `dependsOn: ["build"]` runs the build target first. */
 class BuildVsixScript extends BundleScript {
   run(): void {
-    runBunx(["vsce", "package", "--no-dependencies", "--out", "repo.vsix"], this.root);
+    runBunx(["vsce", "package", "--no-dependencies", "--out", "🧩🧩repo.vsix"], this.root);
   }
 }
 

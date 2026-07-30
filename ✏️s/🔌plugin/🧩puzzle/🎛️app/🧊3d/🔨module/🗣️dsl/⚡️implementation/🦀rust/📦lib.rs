@@ -3,9 +3,9 @@
 use puzzle_3d::Puzzle3dProjection;
 
 /// 📄 The `concrete-forest` example fixture, handcrafted in the `.puzzle3d` DSL.
-pub const PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🧩puzzle/🎛️app/🧊3d/⚡️implementation/🦀rust/📚example/concrete-forest.puzzle3d");
+pub const PUZZLE3D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🧩puzzle/🎛️app/🧊3d/⚡️implementation/🦀rust/📚example/🧩concrete-forest.puzzle3d");
 /// 📄 The `nakagin-capsule-tower` example fixture, handcrafted in the `.puzzle3d` DSL.
-pub const PUZZLE3D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🧩puzzle/🎛️app/🧊3d/⚡️implementation/🦀rust/📚example/nakagin-capsule-tower.puzzle3d");
+pub const PUZZLE3D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🧩puzzle/🎛️app/🧊3d/⚡️implementation/🦀rust/📚example/🧩nakagin-capsule-tower.puzzle3d");
 
 /// 📖 Parses `.puzzle3d` DSL text into a `Puzzle3dProjection`.
 pub fn parse_dsl(text: &str) -> Result<Puzzle3dProjection, store::TextError> {
@@ -52,7 +52,7 @@ mod tests {
             origin: [0.0, 0.0, 0.0],
             orientation: Some([0.0, 0.0, 0.0, 1.0]),
             scale: None,
-            mesh_url: Some("/mesh/hexagonal-cut-concrete-forest-left.glb".into()),
+            mesh_url: Some("/mesh/🧊hexagonal-cut-concrete-forest-left.glb".into()),
             vortices: vec![
                 Puzzle3dVortex { id: "seed-left-001:v0".into(), vortex_kind: Some("b-l".into()), label: Some("v0".into()), position: [0.36, 0.0, 0.0], direction: Some([1.0, 0.0, 0.0]), radius: Some(0.36), hidden: false, locked: false },
                 Puzzle3dVortex { id: "seed-left-001:v1".into(), vortex_kind: Some("b-l-m".into()), label: Some("v1".into()), position: [0.0, 0.36, 0.0], direction: None, radius: None, hidden: true, locked: true },

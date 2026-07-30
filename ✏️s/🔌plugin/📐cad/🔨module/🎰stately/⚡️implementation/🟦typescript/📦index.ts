@@ -76,7 +76,7 @@ function buildStatelyMachine(spec: InteractionSpec, initial: string) {
   });
 }
 
-/** @emoji 📊 One transition row for `machine.json` / Mermaid (matches `__advance` branch order). */
+/** @emoji 📊 One transition row for `🔣machine.json` / Mermaid (matches `__advance` branch order). */
 export interface SpatialStatelyMachineTransitionView {
   readonly from: string;
   readonly to: string;
@@ -108,7 +108,7 @@ export interface SpatialStatelyMachineView {
   readonly statelyRoutingNote: string;
 }
 
-/** @emoji 📊 Catalog of model-definition interactions for Stately/Mermaid viewers (`machine.json`). */
+/** @emoji 📊 Catalog of model-definition interactions for Stately/Mermaid viewers (`🔣machine.json`). */
 export interface SpatialStatelyMachineCatalogView {
   readonly kind: "spatial.stately-machine-view/v1";
   readonly schemaVersion: "1.0";

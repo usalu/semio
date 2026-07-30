@@ -2734,7 +2734,7 @@ func TestKitKind(t *testing.T) {
 		}
 		tmpDir := t.TempDir()
 		dbPath := filepath.Join(tmpDir, "kit.db")
-		schemaPath := "../sqlite/schema.sql"
+		schemaPath := "../sqlite/🛢️schema.sql"
 		schemaBytes, err := os.ReadFile(schemaPath)
 		if err != nil {
 			t.Fatalf("Failed to read schema: %v", err)
@@ -2769,7 +2769,7 @@ func TestKitKind(t *testing.T) {
 		}
 		tmpDir := t.TempDir()
 		zipPath := filepath.Join(tmpDir, "kit.zip")
-		schemaPath := "../sqlite/schema.sql"
+		schemaPath := "../sqlite/🛢️schema.sql"
 		schemaBytes, err := os.ReadFile(schemaPath)
 		if err != nil {
 			t.Fatalf("Failed to read schema: %v", err)
@@ -2796,7 +2796,7 @@ func TestKitKind(t *testing.T) {
 	})
 
 	t.Run("Kit/Postgres schema: includes normalized snapshots and VCS tables", func(t *testing.T) {
-		schemaPath := filepath.Join("..", "postgres", "schema.sql")
+		schemaPath := filepath.Join("..", "postgres", "🛢️schema.sql")
 		schemaBytes, err := os.ReadFile(schemaPath)
 		if err != nil {
 			t.Fatalf("Failed to read postgres schema: %v", err)

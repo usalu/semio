@@ -5995,7 +5995,7 @@ pub mod kit {
                         *design.description.write().await = sc.description.clone();
                     }
                     if sc.icon.is_some() {
-                        *design.icon.write().await = sc.icon.clone();
+                        *🖼️design.icon.write().await = sc.icon.clone();
                     }
                     if sc.image.is_some() {
                         *design.image.write().await = sc.image.clone();
@@ -6136,7 +6136,7 @@ pub mod kit {
                     *quality.description.write().await = m.diff.description.clone();
                 }
                 if m.diff.icon.is_some() {
-                    *quality.icon.write().await = m.diff.icon.clone();
+                    *🖼️quality.icon.write().await = m.diff.icon.clone();
                 }
                 if let Some(s) = &m.diff.key {
                     *quality.key.write().await = s.clone();
@@ -6250,7 +6250,7 @@ pub mod kit {
             let design = self.ensure_design(design_id).await;
             *design.name.write().await = name;
             *design.description.write().await = description;
-            *design.icon.write().await = icon;
+            *🖼️design.icon.write().await = icon;
             *design.image.write().await = image;
             *design.unit.write().await = unit;
             Ok(())
@@ -10539,7 +10539,7 @@ pub mod operation {
     }
 
     async fn entity_scalars_from_design(design: &Arc<crate::kit::design::Design>) -> Input {
-        Input::EntityScalars { name: design.name.read().await.clone(), description: design.description.read().await.clone(), icon: design.icon.read().await.clone(), image: design.image.read().await.clone(), unit: design.unit.read().await.clone() }
+        Input::EntityScalars { name: design.name.read().await.clone(), description: design.description.read().await.clone(), icon: 🖼️design.icon.read().await.clone(), image: design.image.read().await.clone(), unit: design.unit.read().await.clone() }
     }
 
     async fn entity_scalars_from_type(ty: &Arc<crate::kit::r#type::Type>) -> Input {
@@ -10583,7 +10583,7 @@ pub mod operation {
     async fn entity_icon(kit: &Arc<crate::kit::Kit>, entity_id: &Id) -> Result<Option<String>, ComposeError> {
         let kid = kit.workspace_kit_id().await;
         if entity_id == &kid || entity_id == &kit.id {
-            return Ok(kit.icon.read().await.clone());
+            return Ok(🖼️kit.icon.read().await.clone());
         }
         if let Some(tag) = kit.find_tag(entity_id).await {
             return Ok(tag.icon.read().await.clone());
@@ -10592,13 +10592,13 @@ pub mod operation {
             return Ok(concept.icon.read().await.clone());
         }
         if let Some(quality) = kit.find_quality(entity_id).await {
-            return Ok(quality.icon.read().await.clone());
+            return Ok(🖼️quality.icon.read().await.clone());
         }
         if let Some(ty) = kit.type_by_external_id(entity_id).await {
             return Ok(Some(ty.icon.read().await.clone()));
         }
         if let Some(design) = kit.design_by_external_id(entity_id).await {
-            return Ok(design.icon.read().await.clone());
+            return Ok(🖼️design.icon.read().await.clone());
         }
         Err(ComposeError::not_found("IconEntity", entity_id.as_str()))
     }
@@ -10656,7 +10656,7 @@ pub mod operation {
             unit: quality.unit.read().await.clone(),
             definition: quality.definition.read().await.clone(),
             description: quality.description.read().await.clone(),
-            icon: quality.icon.read().await.clone(),
+            icon: 🖼️quality.icon.read().await.clone(),
             attributes: Some(quality.attributes.read().await.iter().map(|attribute| crate::meta::AttributeInput { key: attribute.key.clone(), value: Some(attribute.value.clone()), definition: attribute.definition.clone() }).collect()),
         }
     }
@@ -12218,7 +12218,7 @@ pub mod kit_backbone {
                         "unit": quality.unit,
                         "definition": quality.definition,
                         "description": quality.description,
-                        "icon": quality.icon,
+                        "icon": 🖼️quality.icon,
                         "attributes": quality.attributes.as_ref().map(|v| v.iter().map(kit_attribute_input_json).collect::<Vec<_>>()),
                     }
                 }
@@ -12920,7 +12920,7 @@ pub mod kit_backbone {
         if let Some(v) = kit.description.read().await.clone() {
             root.insert("description".into(), crate::external_adapters::serde_json::Value::String(v));
         }
-        if let Some(v) = kit.icon.read().await.clone() {
+        if let Some(v) = 🖼️kit.icon.read().await.clone() {
             root.insert("icon".into(), crate::external_adapters::serde_json::Value::String(v));
         }
         if let Some(v) = kit.image.read().await.clone() {
@@ -13276,7 +13276,7 @@ pub mod kit_backbone {
             *kit.description.write().await = Some(s.to_string());
         }
         if let Some(s) = json.get("icon").and_then(|v| v.as_str()) {
-            *kit.icon.write().await = Some(s.to_string());
+            *🖼️kit.icon.write().await = Some(s.to_string());
         }
         if let Some(s) = json.get("image").and_then(|v| v.as_str()) {
             *kit.image.write().await = Some(s.to_string());

@@ -1,0 +1,28 @@
+$ bun ./script.ts nx show projects
+2213 |   🐳Dockerfile: "🐳",
+         ^
+error: Expected identifier but found "🐳"
+    at /Users/ueli/Documents/semio/🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/📦index.ts:2213:3
+
+2213 |   🐳Dockerfile: "🐳",
+         ^
+error: Unexpected "Shell"
+    at /Users/ueli/Documents/semio/🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/📦index.ts:2213:3
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1
+$ bun ./script.ts nx show projects
+
+ NX   Could not load plugin ./🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/🟨🟨nx-plugin.mjs
+
+Pass --verbose to see the stacktrace.
+
+1167 |  * throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1168 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1169 |  */
+1170 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1171 |   const status = runCmdInternal(cmd, args, opts);
+1172 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js show projects exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/📦index.ts:1172:31)

@@ -441,9 +441,9 @@ fn build_document_tree(fixture: &ShootingFixture, labels: &ShootingLabels) -> Ui
 
 fn build_catalogue_tree(labels: &ShootingLabels) -> UiNode {
     let shot_items = vec![
-        catalog_shot_item("svg-rect", labels.svg_rectangle, "svg", "rectangle"),
+        catalog_shot_item("svg-rect", label🔣s.svg_rectangle, "svg", "rectangle"),
         catalog_shot_item("png-rect", labels.png_rectangle, "png", "rectangle"),
-        catalog_shot_item("svg-ellipse", labels.svg_ellipse, "svg", "ellipse"),
+        catalog_shot_item("svg-ellipse", label🔣s.svg_ellipse, "svg", "ellipse"),
         catalog_shot_item("png-ellipse", labels.png_ellipse, "png", "ellipse"),
     ];
     let asset_items = vec![tree_item_with_icon(
@@ -1088,7 +1088,7 @@ impl DocumentApp for ShootingPlayApp {
             "resetFixture" => ActionEmit::operations(vec![ShootingOperation::SetFixture { fixture: default_fixture() }]),
             "saveDownload" => match serde_json::to_string_pretty(fixture) {
                 Ok(fixture_json) => ActionEmit::effect(HostEffect::DownloadMediaExport {
-                    filename: "shooting.fixture.json".into(),
+                    filename: "shooting.🔣fixture.json".into(),
                     mime_type: "application/json".into(),
                     data: fixture_json,
                     encoding: None,
@@ -1525,7 +1525,7 @@ mod tests {
         assert!(json.contains("icon-render"));
         let payload: Value = serde_json::from_str(&json).unwrap();
         let request: Value = serde_json::from_str(payload["iconRender"]["requestJson"].as_str().unwrap()).unwrap();
-        assert_eq!(request["assetUrl"], json!("/mesh/base.glb"));
+        assert_eq!(request["assetUrl"], json!("/mesh/🧊base.glb"));
         assert_eq!(request["format"], json!("svg"));
         assert_eq!(request["shape"], json!("rectangle"));
         assert!(request.get("background").is_none(), "transparent default fixture background is omitted");
@@ -1626,7 +1626,7 @@ mod tests {
             HostEffect::IconRenderExport { items } => {
                 assert_eq!(items.len(), 1);
                 assert_eq!(items[0].filename, "overview-svg.svg");
-                assert_eq!(items[0].request["assetUrl"], json!("/mesh/base.glb"));
+                assert_eq!(items[0].request["assetUrl"], json!("/mesh/🧊base.glb"));
             }
             other => panic!("expected IconRenderExport, got {other:?}"),
         }
@@ -1638,7 +1638,7 @@ mod tests {
         let result = app.handle_action("saveDownload", None, &ViewState::default(), &testkit::meta("local")).expect("save download");
         match &result.requested_effects[0] {
             HostEffect::DownloadMediaExport { filename, data, .. } => {
-                assert_eq!(filename, "shooting.fixture.json");
+                assert_eq!(filename, "shooting.🔣fixture.json");
                 let round_trip: ShootingFixture = serde_json::from_str(data).unwrap();
                 assert_eq!(round_trip.schema, SHOOTING_FIXTURE_SCHEMA);
             }
@@ -1765,7 +1765,7 @@ mod tests {
         let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("mesh:base"));
-        assert!(json.contains("/mesh/base.glb"));
+        assert!(json.contains("/mesh/🧊base.glb"));
     }
 
     #[test]

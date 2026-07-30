@@ -27,19 +27,19 @@ mod tests {
 
     #[test]
     fn dsl_pack_equivalence_hexagonal_mushroom_column_fixture() {
-        let projection = Procedural3dDocument::parse_dsl(procedural_3d_dsl::PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT).expect("parse hexagonal-mushroom-column.procedural3d fixture");
+        let projection = Procedural3dDocument::parse_dsl(procedural_3d_dsl::PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT).expect("parse 🌀hexagonal-mushroom-column.procedural3d fixture");
         test_support::assert_dsl_pack_equivalence(&projection);
     }
 
     #[test]
     fn dsl_pack_equivalence_rectangle_extrude_volume_fixture() {
-        let projection = Procedural3dDocument::parse_dsl(procedural_3d_dsl::PROCEDURAL3D_EXAMPLE_RECT_EXTRUDE_TEXT).expect("parse rectangle-extrude-volume.procedural3d fixture");
+        let projection = Procedural3dDocument::parse_dsl(procedural_3d_dsl::PROCEDURAL3D_EXAMPLE_RECT_EXTRUDE_TEXT).expect("parse 🌀rectangle-extrude-volume.procedural3d fixture");
         test_support::assert_dsl_pack_equivalence(&projection);
     }
 
     #[test]
     fn dsl_pack_equivalence_sphere_cut_with_torus_fixture() {
-        let projection = Procedural3dDocument::parse_dsl(procedural_3d_dsl::PROCEDURAL3D_EXAMPLE_SPHERE_TORUS_TEXT).expect("parse sphere-cut-with-torus.procedural3d fixture");
+        let projection = Procedural3dDocument::parse_dsl(procedural_3d_dsl::PROCEDURAL3D_EXAMPLE_SPHERE_TORUS_TEXT).expect("parse 🌀sphere-cut-with-torus.procedural3d fixture");
         test_support::assert_dsl_pack_equivalence(&projection);
     }
 

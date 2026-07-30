@@ -1202,7 +1202,7 @@ impl DocumentApp for NotePlayApp {
             "saveDownload" => {
                 let data = serde_json::to_string_pretty(document).unwrap_or_else(|_| "{}".into());
                 ActionEmit::effect(HostEffect::DownloadMediaExport {
-                    filename: "semio.note.json".into(),
+                    filename: "🗒️semio.note.json".into(),
                     mime_type: "application/json".into(),
                     data,
                     encoding: None,
@@ -1790,7 +1790,7 @@ mod tests {
         let save = app.handle_action("saveDownload", None, &ViewState::default(), &meta("local")).expect("save");
         assert!(save.operations.is_empty());
         assert!(
-            matches!(save.requested_effects.first(), Some(HostEffect::DownloadMediaExport { filename, .. }) if filename == "semio.note.json"),
+            matches!(save.requested_effects.first(), Some(HostEffect::DownloadMediaExport { filename, .. }) if filename == "🗒️semio.note.json"),
             "saveDownload must request a media export: {:?}",
             save.requested_effects
         );

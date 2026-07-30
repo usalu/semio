@@ -26,7 +26,7 @@ import { fileURLToPath } from "url";
 import { defineConfig, type Plugin } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
-import { meshCollectionVitePlugin, semioFaviconVitePlugin, uiAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, type PlaygroundAssetSpec } from "../../../../../framework/module/ui/styling/vite-elements-assets.ts";
+import { meshCollectionVitePlugin, semioFaviconVitePlugin, uiAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, type PlaygroundAssetSpec } from "../../../../../framework/module/ui/styling/🟦vite-elements-assets.ts";
 import { readInitialKitFixtureFromPath } from "../../../../fixture/script.ts";
 // #endregion 🔌Adapters
 
@@ -36,7 +36,7 @@ const PUZZLE_3D_MESH_ASSET_SPEC: Extract<PlaygroundAssetSpec, { kind: "mesh-coll
   kind: "mesh-collection",
   route: "/mesh",
   roots: ["framework/asset/metabolism/representation", "mit-bestand/asset/abbau-aufbau"],
-  placeholder: "framework/asset/mesh/placeholder.glb",
+  placeholder: "framework/asset/mesh/🧊placeholder.glb",
   filterFromExamples: true,
 };
 

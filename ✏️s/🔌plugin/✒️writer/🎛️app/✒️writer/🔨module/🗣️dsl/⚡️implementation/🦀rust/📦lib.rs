@@ -5,9 +5,9 @@ use writer::WriterProjection;
 /// 📄 The `jack` example document, handcrafted in the `.writer` DSL (see `store::DocumentDsl`) instead
 /// of JSON — {@link writer_engine::jack_example_document}/{@link writer_engine::jack_example_json} are
 /// the only ways it should be consumed.
-pub const JACK_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/✒️writer/📚example/jack.writer");
+pub const JACK_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/✒️writer/📚example/✒️jack.writer");
 /// 📄 The `dag.jack` example document, handcrafted in the `.writer` DSL — see {@link JACK_EXAMPLE_TEXT}.
-pub const DAG_JACK_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/✒️writer/📚example/dag.jack.writer");
+pub const DAG_JACK_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/✒️writer/📚example/✒️dag.✒️jack.writer");
 
 /// 📖 Parses `.writer` DSL text into a `WriterProjection`.
 pub fn parse_dsl(text: &str) -> Result<WriterProjection, store::TextError> {

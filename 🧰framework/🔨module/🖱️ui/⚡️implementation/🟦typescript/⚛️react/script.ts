@@ -43,14 +43,14 @@ class BuildScript extends BundleScript {
 
 class LintScript extends BundleScript {
   run(segments: string[]): void {
-    runBunx(["eslint", "--max-warnings", "0", "--config", "eslint.config.ts", ".", ...segments], this.root, storybookEnv());
+    runBunx(["eslint", "--max-warnings", "0", "--config", "🟦eslint.config.ts", ".", ...segments], this.root, storybookEnv());
   }
 }
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
-    runVitest(this.root, rest, "vitest.config.ts");
+    runVitest(this.root, rest, "🧪vitest.config.ts");
   }
 }
 
@@ -87,7 +87,7 @@ export const UI_PRIMITIVES_ALLOWLIST: readonly string[] = [
   "s/plugin/cad/module/renderer/js/index.tsx",
   "compose/client/bin/engine/js/mcp-app.tsx",
   "compose/client/ui/desktop/js/renderer.tsx",
-  "compose/client/lib/sketchpad/js/boot.tsx",
+  "compose/client/lib/sketchpad/js/🟦boot.tsx",
   "compose/client/ui/3dm/ui/js/index.tsx",
   "framework/product/os/module/infinite/world/r3f/index.tsx",
 ] as const;

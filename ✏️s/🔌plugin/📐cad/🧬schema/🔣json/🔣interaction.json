@@ -1,0 +1,534 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "spatial://schema/json/interaction",
+  "title": "SpatialInteractionSpec",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "id", "version", "machine", "commit"],
+  "properties": {
+    "schema": { "const": "spatial.interaction" },
+    "id": { "type": "string" },
+    "version": { "type": "string" },
+    "label": { "type": "string" },
+    "context": { "$ref": "#/$defs/contextDecl" },
+    "produces": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "typology": { "type": "string", "minLength": 1 }
+      }
+    },
+    "requires": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "typologies": { "type": "array", "items": { "type": "string" } },
+        "kernel": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "operations": { "type": "array", "items": { "type": "string" } },
+            "geometryEntities": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["vertex", "edge", "wire", "face", "solid", "anchor"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "guards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "expr"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "expr": { "$ref": "🔣expression.json" }
+        }
+      }
+    },
+    "machine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["initial", "states"],
+      "properties": {
+        "initial": { "type": "string" },
+        "states": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/stateDef" }
+        }
+      }
+    },
+    "display": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "states": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["state", "items"],
+            "properties": {
+              "state": { "type": "string" },
+              "items": { "type": "array", "items": { "$ref": "#/$defs/displayItem" } }
+            }
+          }
+        }
+      }
+    },
+    "interaction": { "$ref": "#/$defs/spatialInteraction" },
+    "commit": { "$ref": "#/$defs/commitSpec" }
+  },
+  "$defs": {
+    "pathRoot": { "type": "string", "enum": ["context", "event"] },
+    "pathSegment": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "name"],
+          "properties": {
+            "kind": { "const": "field" },
+            "name": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "index"],
+          "properties": {
+            "kind": { "const": "index" },
+            "index": { "type": "integer", "minimum": 0 }
+          }
+        }
+      ]
+    },
+    "pathTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["root", "segments"],
+      "properties": {
+        "root": { "$ref": "#/$defs/pathRoot" },
+        "segments": { "type": "array", "items": { "$ref": "#/$defs/pathSegment" } }
+      }
+    },
+    "contextDecl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fields"],
+      "properties": {
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "kind"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "kind": {
+                "type": "string",
+                "enum": ["string", "number", "boolean", "vec3", "stringArray", "unknown"]
+              },
+              "enumValues": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    "spatialInteraction": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "spatialGroundPick": { "type": "boolean" },
+        "pickDisabledStates": { "type": "array", "items": { "type": "string" } },
+        "groundPointerMoveStates": { "type": "array", "items": { "type": "string" } },
+        "heightDragStates": { "type": "array", "items": { "type": "string" } },
+        "verticalRodStates": { "type": "array", "items": { "type": "string" } },
+        "heightConfirmState": { "type": ["string", "null"] },
+        "lengthEntry": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["state", "anchor", "field"],
+            "properties": {
+              "state": { "type": "string", "minLength": 1 },
+              "anchor": { "type": "string", "minLength": 1 },
+              "field": { "type": "string", "minLength": 1 },
+              "commit": { "type": "string", "enum": ["pointer.down", "confirm"] },
+              "control": { "type": "string", "enum": ["slider", "stepper", "ring"] },
+              "min": { "type": "number" },
+              "max": { "type": "number" },
+              "step": { "type": "number" },
+              "unit": { "type": "string", "minLength": 1 },
+              "default": { "type": "number" }
+            }
+          }
+        },
+        "scalarEntry": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["state", "event", "field"],
+            "properties": {
+              "state": { "type": "string", "minLength": 1 },
+              "event": { "type": "string", "minLength": 1 },
+              "field": { "type": "string", "minLength": 1 },
+              "commit": { "type": "string", "enum": ["pointer.down", "confirm"] },
+              "axisAnchor": { "type": "string", "minLength": 1 },
+              "axisFloor": { "type": "string", "minLength": 1 },
+              "axis": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": { "type": "number" }
+              },
+              "control": { "type": "string", "enum": ["slider", "stepper", "ring"] },
+              "min": { "type": "number" },
+              "max": { "type": "number" },
+              "step": { "type": "number" },
+              "unit": { "type": "string", "minLength": 1 },
+              "default": { "type": "number" }
+            }
+          }
+        }
+      }
+    },
+    "selectionSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["accept"],
+      "properties": {
+        "accept": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["object", "attribute", "property"]
+          }
+        },
+        "multiple": { "type": "boolean" },
+        "prompt": { "type": "string" }
+      }
+    },
+    "transitionSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "target": { "type": "string" },
+        "guard": { "type": "string" },
+        "transient": { "type": "boolean" },
+        "key": { "type": "string" },
+        "label": { "type": "string" },
+        "effects": { "type": "array", "items": { "$ref": "#/$defs/effect" } }
+      }
+    },
+    "eventHandler": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["event", "transitions"],
+      "properties": {
+        "event": { "type": "string", "minLength": 1 },
+        "transitions": { "type": "array", "items": { "$ref": "#/$defs/transitionSpec" } }
+      }
+    },
+    "stateDef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "final": { "type": "boolean" },
+        "selection": { "$ref": "#/$defs/selectionSpec" },
+        "on": { "type": "array", "items": { "$ref": "#/$defs/eventHandler" } }
+      }
+    },
+    "kernelQueryParams": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "surfaceId"],
+          "properties": {
+            "kind": { "const": "surface.resolveFaces" },
+            "surfaceId": { "$ref": "🔣expression.json" }
+          }
+        }
+      ]
+    },
+    "effect": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation", "target", "value"],
+          "properties": {
+            "operation": { "const": "assign" },
+            "target": { "$ref": "#/$defs/pathTarget" },
+            "value": { "$ref": "🔣expression.json" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation", "target"],
+          "properties": {
+            "operation": { "const": "clear" },
+            "target": { "$ref": "#/$defs/pathTarget" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation", "target", "value"],
+          "properties": {
+            "operation": { "const": "append" },
+            "target": { "$ref": "#/$defs/pathTarget" },
+            "value": { "$ref": "🔣expression.json" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation", "event"],
+          "properties": {
+            "operation": { "const": "emit" },
+            "event": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind"],
+              "properties": { "kind": { "type": "string" } }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation", "event"],
+          "properties": {
+            "operation": { "const": "raise" },
+            "event": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation"],
+          "properties": {
+            "operation": { "const": "openTransaction" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation"],
+          "properties": {
+            "operation": { "const": "commitTransaction" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation"],
+          "properties": {
+            "operation": { "const": "rollbackTransaction" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation"],
+          "properties": {
+            "operation": { "const": "requestPreview" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation", "query", "assignTo", "params"],
+          "properties": {
+            "operation": { "const": "kernel.query" },
+            "query": { "type": "string" },
+            "assignTo": { "$ref": "#/$defs/pathTarget" },
+            "params": { "$ref": "#/$defs/kernelQueryParams" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation"],
+          "properties": {
+            "operation": { "const": "resolveEditable" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation", "severity", "code", "message"],
+          "properties": {
+            "operation": { "const": "setDiagnostic" },
+            "severity": { "type": "string", "enum": ["info", "warning", "error"] },
+            "code": { "type": "string" },
+            "message": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation", "code"],
+          "properties": {
+            "operation": { "const": "clearDiagnostic" },
+            "code": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operation", "action"],
+          "properties": {
+            "operation": { "const": "action" },
+            "action": { "type": "string", "minLength": 1 },
+            "params": {
+              "type": "object",
+              "additionalProperties": { "$ref": "🔣expression.json" }
+            },
+            "assignTo": { "$ref": "#/$defs/pathTarget" }
+          }
+        }
+      ]
+    },
+    "commitSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["operation"],
+      "properties": {
+        "when": { "type": "string" },
+        "fromStates": { "type": "array", "items": { "type": "string" } },
+        "outputDataPath": { "$ref": "#/$defs/pathTarget" },
+        "operation": { "$ref": "#/$defs/commitOperation" }
+      }
+    },
+    "commitOperation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "action"],
+      "properties": {
+        "kind": { "const": "action" },
+        "action": { "type": "string", "minLength": 1 },
+        "params": {
+          "type": "object",
+          "additionalProperties": { "$ref": "🔣expression.json" }
+        }
+      }
+    },
+    "displayItem": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id", "position"],
+          "properties": {
+            "kind": { "const": "point" },
+            "id": { "type": "string" },
+            "role": { "type": "string" },
+            "position": { "$ref": "🔣expression.json" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id", "text", "position"],
+          "properties": {
+            "kind": { "const": "label" },
+            "id": { "type": "string" },
+            "role": { "type": "string" },
+            "text": { "type": "string" },
+            "position": { "$ref": "🔣expression.json" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id", "from", "to"],
+          "properties": {
+            "kind": { "const": "segment" },
+            "id": { "type": "string" },
+            "role": { "type": "string" },
+            "from": { "$ref": "🔣expression.json" },
+            "to": { "$ref": "🔣expression.json" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id", "axis", "origin"],
+          "properties": {
+            "kind": { "const": "linear-handle" },
+            "id": { "type": "string" },
+            "role": { "type": "string" },
+            "axis": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": { "type": "number" }
+            },
+            "origin": { "$ref": "🔣expression.json" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id", "cornerA", "cornerB", "height"],
+          "properties": {
+            "kind": { "const": "box-preview" },
+            "id": { "type": "string" },
+            "role": { "type": "string" },
+            "cornerA": { "$ref": "🔣expression.json" },
+            "cornerB": { "$ref": "🔣expression.json" },
+            "height": { "$ref": "🔣expression.json" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id", "geometryEntityKind", "entityId"],
+          "properties": {
+            "kind": { "const": "entity-highlight" },
+            "id": { "type": "string" },
+            "role": { "type": "string" },
+            "geometryEntityKind": {
+              "type": "string",
+              "enum": ["anchor", "vertex", "edge", "wire", "face", "shell", "solid"]
+            },
+            "entityId": { "$ref": "🔣expression.json" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id"],
+          "properties": {
+            "kind": { "const": "curve" },
+            "id": { "type": "string" },
+            "role": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "id"],
+          "properties": {
+            "kind": { "const": "mesh" },
+            "id": { "type": "string" },
+            "role": { "type": "string" }
+          }
+        }
+      ]
+    }
+  }
+}

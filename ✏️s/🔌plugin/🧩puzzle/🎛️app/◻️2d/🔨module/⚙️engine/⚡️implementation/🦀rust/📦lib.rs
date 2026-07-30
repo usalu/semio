@@ -779,7 +779,7 @@ mod host_tests {
     /// 🔗 Keeps the runtime kind-catalog JSON shape in sync with the compile-time `puzzle2d-default` manifest.
     #[test]
     fn puzzle2d_default_manifest_satisfies_board_host_validation() {
-        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../✏️s/🔌plugin/🧩puzzle/🎛️app/◻️2d/⚡️implementation/🦀rust/🛂manifest/default.manifest.json")).unwrap();
+        let manifest: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../✏️s/🔌plugin/🧩puzzle/🎛️app/◻️2d/⚡️implementation/🦀rust/🛂manifest/🛂manifest.jsondefault.manifest.json")).unwrap();
         let handle_kinds: Vec<serde_json::Value> = manifest["portKinds"]
             .as_array()
             .unwrap()
@@ -3333,7 +3333,7 @@ mod host_tests {
         h.set_suggestion_offset(80.0);
         h.set_brush_node_size(40.0);
         use store::DocumentDsl;
-        let fixture: serde_json::Value = serde_json::to_value(<puzzle_2d::Puzzle2dProjection as store::DocumentDsl>::parse_dsl(include_str!("../../../../../../../../../✏️s/🔌plugin/🧩puzzle/🎛️app/◻️2d/⚡️implementation/🦀rust/📚example/nakagin-capsule-tower.puzzle2d")).unwrap()).unwrap();
+        let fixture: serde_json::Value = serde_json::to_value(<puzzle_2d::Puzzle2dProjection as store::DocumentDsl>::parse_dsl(include_str!("../../../../../../../../../✏️s/🔌plugin/🧩puzzle/🎛️app/◻️2d/⚡️implementation/🦀rust/📚example/🧩nakagin-capsule-tower.puzzle2d")).unwrap()).unwrap();
         let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map(|v| v.to_string()).unwrap_or_else(|| "[]".to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
         let catalogs_str = fixture
@@ -3425,7 +3425,7 @@ mod host_tests {
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
         use store::DocumentDsl;
-        let fixture: serde_json::Value = serde_json::to_value(<puzzle_2d::Puzzle2dProjection as store::DocumentDsl>::parse_dsl(include_str!("../../../../../../../../../✏️s/🔌plugin/🧩puzzle/🎛️app/◻️2d/⚡️implementation/🦀rust/📚example/nakagin-capsule-tower.puzzle2d")).unwrap()).unwrap();
+        let fixture: serde_json::Value = serde_json::to_value(<puzzle_2d::Puzzle2dProjection as store::DocumentDsl>::parse_dsl(include_str!("../../../../../../../../../✏️s/🔌plugin/🧩puzzle/🎛️app/◻️2d/⚡️implementation/🦀rust/📚example/🧩nakagin-capsule-tower.puzzle2d")).unwrap()).unwrap();
         let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map(|v| v.to_string()).unwrap_or_else(|| "[]".to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
         let catalogs_str = fixture

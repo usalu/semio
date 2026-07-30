@@ -19,7 +19,7 @@ pub enum SchemaError {
 //#endregion 🔖Errors
 
 //#region 🔖EntityCatalog
-include!("generated.rs");
+include!("🤖generated.rs");
 //#endregion 🔖EntityCatalog
 
 //#region 🔖SchemaRegistry

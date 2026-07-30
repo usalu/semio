@@ -27,7 +27,7 @@ pub enum ImperativeCoreError {
 /// should be consumed.
 pub fn default_document() -> ImperativeDocument {
     <ImperativeDocument as store::DocumentDsl>::parse_dsl(imperative_dsl::IMPERATIVE_EXAMPLE_TEXT)
-        .expect("default.imperative is a static, hand-authored fixture that must always parse")
+        .expect("📜default.imperative is a static, hand-authored fixture that must always parse")
 }
 
 // #region 🔖Host

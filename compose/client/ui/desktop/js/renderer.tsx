@@ -14,7 +14,7 @@ import { configureSketchpadKitFactories, createComposeKitStoreFromJsStore, ensur
 import { createRoot } from "react-dom/client";
 // #endregion 🔌Adapters
 
-import "./globals.css";
+import "./🎨globals.css";
 
 declare global {
   interface Window {

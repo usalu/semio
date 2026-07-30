@@ -8,7 +8,7 @@ Python engine serving hand-written OpenAPI and GraphQL schemas with validation a
 
 - `main.py` - Main engine module with Kit parsing, validation, transformation, dev-mode startup flag, and stdio MCP startup flag
 - `engine.test.py` - Unit tests for engine functionality
-- `schema.graphql` - Hand-written GraphQL SDL for the engine HTTP API (sibling bundles hold domain GraphQL, OpenAPI, and JSON Schema assets)
+- `🔗schema.graphql` - Hand-written GraphQL SDL for the engine HTTP API (sibling bundles hold domain GraphQL, OpenAPI, and JSON Schema assets)
 
 # 💯Requirements
 

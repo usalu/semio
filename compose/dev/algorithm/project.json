@@ -25,7 +25,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "compose/dev/algorithm",
-        "command": "bunx eslint --max-warnings 0 --config eslint.config.ts .",
+        "command": "bunx eslint --max-warnings 0 --config 🟦eslint.config.ts .",
         "forwardAllArgs": true
       }
     },

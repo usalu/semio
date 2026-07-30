@@ -1,6 +1,6 @@
 //! 🖱️ Declarative UI components (default) and retained-mode wgpu engine (feature "engine").
 
-#[path = "../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔣icon/🤖generated/icon_name.rs"]
+#[path = "../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔣icon/🤖generated/🦀icon_name.rs"]
 mod icon_name_gen;
 
 pub use icon_name_gen::IconName;
@@ -5948,53 +5948,53 @@ pub fn resolve_semio_cursor_from_tree(tree: &UiTree, hovered: Option<NodeId>, ca
 
 pub fn semio_cursor_css(cursor: SemioCursor, dark: bool) -> &'static str {
     match (cursor, dark) {
-        (SemioCursor::Default, false) => "url(/asset/cursor/cursor.svg) 0 0, default",
-        (SemioCursor::Default, true) => "url(/asset/cursor/cursor_dark.svg) 0 0, default",
-        (SemioCursor::Pointer, false) => "url(/asset/cursor/cursor_pointer.svg) 0 0, pointer",
+        (SemioCursor::Default, false) => "url(/asset/cursor/🔣cursor.svg) 0 0, default",
+        (SemioCursor::Default, true) => "url(/asset/cursor/🔣cursor_dark.svg) 0 0, default",
+        (SemioCursor::Pointer, false) => "url(/asset/cursor/🔣cursor_pointer.svg) 0 0, pointer",
         (SemioCursor::Pointer, true) => {
-            "url(/asset/cursor/cursor_pointer_dark_inkscape.svg) 0 0, pointer"
+            "url(/asset/cursor/🔣cursor_pointer_dark_inkscape.svg) 0 0, pointer"
         }
-        (SemioCursor::Selectable, false) => "url(/asset/cursor/cursor_selectable.svg) 0 0, pointer",
+        (SemioCursor::Selectable, false) => "url(/asset/cursor/🔣cursor_selectable.svg) 0 0, pointer",
         (SemioCursor::Selectable, true) => {
-            "url(/asset/cursor/cursor_selectable_dark.svg) 0 0, pointer"
+            "url(/asset/cursor/🔣cursor_selectable_dark.svg) 0 0, pointer"
         }
-        (SemioCursor::Foldable, false) => "url(/asset/cursor/cursor_foldable.svg) 0 0, pointer",
-        (SemioCursor::Foldable, true) => "url(/asset/cursor/cursor_foldable_dark.svg) 0 0, pointer",
-        (SemioCursor::Grab, false) => "url(/asset/cursor/cursor_grab.svg) 0 0, grab",
-        (SemioCursor::Grab, true) => "url(/asset/cursor/cursor_grab_dark.svg) 0 0, grab",
-        (SemioCursor::Grabbing, _) => "url(/asset/cursor/cursor_grabbing.svg) 0 0, grabbing",
+        (SemioCursor::Foldable, false) => "url(/asset/cursor/🔣cursor_foldable.svg) 0 0, pointer",
+        (SemioCursor::Foldable, true) => "url(/asset/cursor/🔣cursor_foldable_dark.svg) 0 0, pointer",
+        (SemioCursor::Grab, false) => "url(/asset/cursor/🔣cursor_grab.svg) 0 0, grab",
+        (SemioCursor::Grab, true) => "url(/asset/cursor/🔣cursor_grab_dark.svg) 0 0, grab",
+        (SemioCursor::Grabbing, _) => "url(/asset/cursor/🔣cursor_grabbing.svg) 0 0, grabbing",
         (SemioCursor::Text, _) => "text",
-        (SemioCursor::EwResize, false) => "url(/asset/cursor/cursor_ew-resize.svg) 16 2, ew-resize",
+        (SemioCursor::EwResize, false) => "url(/asset/cursor/🔣cursor_ew-resize.svg) 16 2, ew-resize",
         (SemioCursor::EwResize, true) => {
-            "url(/asset/cursor/cursor_ew-resize_dark.svg) 16 2, ew-resize"
+            "url(/asset/cursor/🔣cursor_ew-resize_dark.svg) 16 2, ew-resize"
         }
-        (SemioCursor::NsResize, false) => "url(/asset/cursor/cursor_ns-resize.svg) 2 16, ns-resize",
+        (SemioCursor::NsResize, false) => "url(/asset/cursor/🔣cursor_ns-resize.svg) 2 16, ns-resize",
         (SemioCursor::NsResize, true) => {
-            "url(/asset/cursor/cursor_ns-resize_dark.svg) 2 16, ns-resize"
+            "url(/asset/cursor/🔣cursor_ns-resize_dark.svg) 2 16, ns-resize"
         }
         (SemioCursor::NwseResize, false) => {
-            "url(/asset/cursor/cursor_nwse-resize.svg) 16 16, nwse-resize"
+            "url(/asset/cursor/🔣cursor_nwse-resize.svg) 16 16, nwse-resize"
         }
         (SemioCursor::NwseResize, true) => {
-            "url(/asset/cursor/cursor_nwse-resize_dark.svg) 16 16, nwse-resize"
+            "url(/asset/cursor/🔣cursor_nwse-resize_dark.svg) 16 16, nwse-resize"
         }
         (SemioCursor::NeswResize, false) => {
-            "url(/asset/cursor/cursor_nesw-resize_dark.svg) 16 16, nesw-resize"
+            "url(/asset/cursor/🔣cursor_nesw-resize_dark.svg) 16 16, nesw-resize"
         }
         (SemioCursor::NeswResize, true) => {
-            "url(/asset/cursor/cursor_nesw-resize_dark.svg) 16 16, nesw-resize"
+            "url(/asset/cursor/🔣cursor_nesw-resize_dark.svg) 16 16, nesw-resize"
         }
-        (SemioCursor::Move, false) => "url(/asset/cursor/cursor_move_inkscape.svg) 16 16, move",
-        (SemioCursor::Move, true) => "url(/asset/cursor/cursor_move_dark.svg) 16 16, move",
-        (SemioCursor::Crosshair, false) => "url(/asset/cursor/cursor_crosshair.svg) 16 16, crosshair",
+        (SemioCursor::Move, false) => "url(/asset/cursor/🔣cursor_move_inkscape.svg) 16 16, move",
+        (SemioCursor::Move, true) => "url(/asset/cursor/🔣cursor_move_dark.svg) 16 16, move",
+        (SemioCursor::Crosshair, false) => "url(/asset/cursor/🔣cursor_🔣crosshair.svg) 16 16, crosshair",
         (SemioCursor::Crosshair, true) => {
-            "url(/asset/cursor/cursor_crosshair_dark.svg) 16 16, crosshair"
+            "url(/asset/cursor/🔣cursor_crosshair_dark.svg) 16 16, crosshair"
         }
         (SemioCursor::NotAllowed, false) => {
-            "url(/asset/cursor/cursor_not-allowed.svg) 0 0, not-allowed"
+            "url(/asset/cursor/🔣cursor_not-allowed.svg) 0 0, not-allowed"
         }
         (SemioCursor::NotAllowed, true) => {
-            "url(/asset/cursor/cursor_not-allowed_dark.svg) 0 0, not-allowed"
+            "url(/asset/cursor/🔣cursor_not-allowed_dark.svg) 0 0, not-allowed"
         }
     }
 }
@@ -6123,8 +6123,8 @@ mod tests {
 
     #[test]
     fn dark_theme_cursor_urls_use_dark_assets() {
-        assert!(semio_cursor_css(SemioCursor::Default, true).contains("cursor_dark.svg"));
-        assert!(semio_cursor_css(SemioCursor::Selectable, false).contains("cursor_selectable.svg"));
+        assert!(semio_cursor_css(SemioCursor::Default, true).contains("🔣cursor_dark.svg"));
+        assert!(semio_cursor_css(SemioCursor::Selectable, false).contains("🔣cursor_selectable.svg"));
     }
 
     //#region 🔖RetainedTreeCursorTests
@@ -11628,22 +11628,22 @@ const FAMILY_SERIF: &str = "Kelly Slab";
 const FAMILY_MONO: &str = "Share Tech Mono";
 const FAMILY_EMOJI: &str = "Noto Emoji";
 
-static ANTA_LATIN: &[u8] = include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/🔤anta/latin.ttf");
-static KELLY_SLAB_LATIN: &[u8] = include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/🔤kelly-slab/latin.ttf");
-static SHARE_TECH_MONO_LATIN: &[u8] = include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/🔤share-tech-mono/latin.ttf");
+static ANTA_LATIN: &[u8] = include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/🔤anta/🔤latin.ttf");
+static KELLY_SLAB_LATIN: &[u8] = include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/🔤kelly-slab/🔤latin.ttf");
+static SHARE_TECH_MONO_LATIN: &[u8] = include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/🔤share-tech-mono/🔤latin.ttf");
 static NOTO_EMOJI_BUCKETS: [&[u8]; 12] = [
-    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/0-400.ttf"),
-    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/1-400.ttf"),
-    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/2-400.ttf"),
-    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/3-400.ttf"),
-    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/4-400.ttf"),
-    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/5-400.ttf"),
-    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/6-400.ttf"),
-    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/7-400.ttf"),
-    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/8-400.ttf"),
-    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/9-400.ttf"),
-    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/10-400.ttf"),
-    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/11-400.ttf"),
+    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/🔤0-400.ttf"),
+    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/🔤1-400.ttf"),
+    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/🔤2-400.ttf"),
+    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/🔤3-400.ttf"),
+    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/🔤4-400.ttf"),
+    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/🔤5-400.ttf"),
+    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/🔤6-400.ttf"),
+    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/🔤7-400.ttf"),
+    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/🔤8-400.ttf"),
+    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/🔤9-400.ttf"),
+    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/🔤1🔤0-400.ttf"),
+    include_bytes!("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/😀noto-emoji/🔤1🔤1-400.ttf"),
 ];
 
 const BITMAP_GLYPH_W: u32 = 8;
@@ -12297,7 +12297,7 @@ impl Rgba {
 
 //#region 🔖Level
 /// 🪜 The unified 6-level UI surface axis (base..menu, both z-order and glass/shade formula input)
-/// — see `ui/styling/tokens.json`'s `levels` block and `.repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`.
+/// — see `ui/styling/🔣tokens.json`'s `levels` block and `.repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`.
 /// Replaces the old unlinked level-name axis (canvas/window/panel/overlay/temporary) plus a
 /// separate glass-tier axis (panel/ribbon/menu/windowOptions) with one formula-derived enum.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -12312,7 +12312,7 @@ pub enum Level {
 
 impl Level {
     /// 🔢 Ordinal step `k` (0..=5) every formula-derived value (`Theme::surface`/`glass`)
-    /// is computed from — mirrors `ui/styling/rs/generated.rs`'s `levels::NAMES` ordering.
+    /// is computed from — mirrors `ui/styling/rs/🤖generated.rs`'s `levels::NAMES` ordering.
     pub const fn index(self) -> usize {
         match self {
             Level::Base => 0,
@@ -12486,7 +12486,7 @@ impl Theme {
     }
 
     /// 🧊 Formula-derived glass style for `level` — `ui-glass`'s wgpu counterpart. Alpha steps down
-    /// and blur steps up per level index (`ui/styling/tokens.json`'s `levels` block:
+    /// and blur steps up per level index (`ui/styling/🔣tokens.json`'s `levels` block:
     /// `alpha(k) = 1 - k * glassAlphaStep`, `blur(k) = k * glassBlurStepPx`), read from
     /// `ui_styling::levels` constants — never a per-tier lookup table.
     pub fn glass(&self, level: Level) -> GlassStyle {

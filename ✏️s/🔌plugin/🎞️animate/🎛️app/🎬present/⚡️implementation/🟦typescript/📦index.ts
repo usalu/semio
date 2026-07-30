@@ -2073,7 +2073,7 @@ if (import.meta.vitest) {
 							},
 						},
 					},
-					"./slide/Hauptteil/Einführung/Medien/Bauteilkatalog.ts": {
+					"./slide/Hauptteil/Einführung/Medien/🟦Bauteilkatalog.ts": {
 						default: {
 							order: 0,
 							arrangement: {
@@ -2122,7 +2122,7 @@ if (import.meta.vitest) {
 	describe("parsePresentationThoughtFilePath", () => {
 		it("round-trips canonical thought template paths", () => {
 			const path = presentationThoughtFilePath("Hauptteil", "Einführung", "Einleitung");
-			expect(path).toBe("slide/Hauptteil/Einführung/Einleitung.ts");
+			expect(path).toBe("slide/Hauptteil/Einführung/🟦Einleitung.ts");
 			expect(parsePresentationThoughtFilePath(`./${path}`)).toEqual({
 				chapter: "Hauptteil",
 				sequence: "Einführung",
@@ -2137,7 +2137,7 @@ if (import.meta.vitest) {
 			const deck = loadPresentationFromSlideGlob(
 				{ id: "deck", name: "Deck", language: "de" },
 				{
-					"./slide/Hauptteil/Einführung/Einleitung.ts": {
+					"./slide/Hauptteil/Einführung/🟦Einleitung.ts": {
 						default: introThoughtFile({
 							language: "de",
 							title: { full: ["T"], short: "T" },

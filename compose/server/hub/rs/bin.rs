@@ -1274,7 +1274,7 @@ mod store {
         serde_json::json!({
             "id": state.kit.kit_id, "name": state.kit.name,
             "version": state.kit.version, "description": state.kit.description,
-            "icon": state.kit.icon, "image": state.kit.image,
+            "icon": state.🖼️kit.icon, "image": state.kit.image,
             "preview": state.kit.preview, "remote": state.kit.remote,
             "homepage": state.kit.homepage, "license": state.kit.license,
             "types": types, "designs": designs, "authors": authors, "tags": tags,

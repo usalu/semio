@@ -2520,7 +2520,7 @@ mod tests {
     /// 🏙️ Puzzle GLBs may start with non-triangle guide geometry before their renderable surfaces.
     #[test]
     fn glb_import_collects_triangle_primitives_after_guides() {
-        let decoded = mesh_from_glb(include_bytes!("../../../🧰framework/🔨module/🖼️asset/⚡️implementation/🟦typescript/🌱metabolism/🎨representation/capsule_J.glb")).expect("decode Puzzle GLB");
+        let decoded = mesh_from_glb(include_bytes!("../../../🧰framework/🔨module/🖼️asset/⚡️implementation/🟦typescript/🌱metabolism/🎨representation/🧊capsule_J.glb")).expect("decode Puzzle GLB");
         assert_eq!(decoded.vertex_count(), 1472);
         assert_eq!(decoded.triangle_count(), 1750);
         assert!(decoded.indices.iter().all(|index| (*index as usize) < decoded.vertex_count()));
@@ -4263,7 +4263,7 @@ fn introduction_orbit_modifiers_is_default(modifiers: &[IntroductionKeyModifier]
     modifiers == [IntroductionKeyModifier::Alt]
 }
 
-/// @emoji 🖱️ Ghost-cursor glyph, mirroring `ui.css`'s `--cursor-*` custom cursors.
+/// @emoji 🖱️ Ghost-cursor glyph, mirroring `🎨ui.css`'s `--cursor-*` custom cursors.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]

@@ -35,12 +35,12 @@ import pixelmatch from "pixelmatch";
 
 const repoRoot = getWorkspaceRoot();
 const pluginOutRoot = join(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/🧑‍💻dev/⚡️implementation/🟦typescript/🔌plugin-modules");
-const playgroundSessionPath = join(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/🧑‍💻dev/⚡️implementation/🟦typescript/🤖generated/session.ts");
+const playgroundSessionPath = join(repoRoot, "./🧰framework/🛍️product/💻os/🔨module/🧑‍💻dev/⚡️implementation/🟦typescript/🤖generated/🟦🟦session.ts");
 
 const PLUGIN_WASM_TARGET = "wasm32-wasip2";
 
 //#region 🔖PlaygroundVariantResolution
-/** @emoji 📚 Generated playground catalog (variant -> crate pluginId + optional app id), loaded once for this process via `@semio-tech/repo-lib`'s `loadFrameworkOsPlaygroundCatalog` (backed by `framework/plugin/registry/generated/playgrounds.ts`). */
+/** @emoji 📚 Generated playground catalog (variant -> crate pluginId + optional app id), loaded once for this process via `@semio-tech/repo-lib`'s `loadFrameworkOsPlaygroundCatalog` (backed by `framework/plugin/registry/generated/🟦🟦playgrounds.ts`). */
 const playgroundCatalog = loadFrameworkOsPlaygroundCatalog();
 
 /** @emoji 🧭 A resolved playground filter: the crate pluginId to build/load, plus the app id and shell brand id to inject when the filter matched a catalog variant row. */
@@ -166,7 +166,7 @@ type BackboneServerResponse = { statusCode: number; setHeader: (name: string, va
 
 /** @emoji 💾 Vite middleware for browser file/folder backbone IO: `GET|PUT ${BACKBONE_ENDPOINT_PATH}?uri=&documentId=&schema=`
  * for read/write, plus `GET ${BACKBONE_ENDPOINT_PATH}/watch?uri=` (SSE) for external-edit notification —
- * `backbone-worker.ts`'s folder transport degrades to polling if this endpoint isn't reachable. */
+ * `🟦🟦backbone-🟦worker.ts`'s folder transport degrades to polling if this endpoint isn't reachable. */
 export function semioBackboneVitePlugin() {
   return {
     name: "semio-backbone",
@@ -479,7 +479,7 @@ type BlobServerResponse = { statusCode: number; setHeader: (name: string, value:
 /** @emoji 📦 Vite middleware for the dev-only content-addressed blob store: `PUT ${BLOB_ENDPOINT_PATH}?mediaType=`
  * (raw bytes body, BLAKE3-hashed above, returns `{"hash":...}`, idempotent via `INSERT OR IGNORE`) and
  * `GET ${BLOB_ENDPOINT_PATH}/:hash` (raw bytes response, 404 if absent). The browser host-shim's
- * `writeBlob`/`readBlob` (see `hostShimSource`) and `backbone-worker.ts`'s IndexedDB cache both talk to
+ * `writeBlob`/`readBlob` (see `hostShimSource`) and `🟦🟦backbone-🟦worker.ts`'s IndexedDB cache both talk to
  * this. Mirrors `vcs::FolderSqliteStorage`'s `blobs(hash, media_type, size, bytes)` table/shape. */
 export function semioBlobVitePlugin() {
   return {
@@ -568,7 +568,7 @@ self.addEventListener("message", async (event) => {
   const msg = event.data ?? {};
   const { type, requestId } = msg;
   // 🔗 Backbone relay passthrough (main thread ⇄ host-shim): inbound messages from the sync actor
-  // (\`backbone-worker.ts\`) land in the shared queue the host-shim's \`backbonePoll\` drains; the shim's
+  // (\`🟦backbone-🟦worker.ts\`) land in the shared queue the host-shim's \`backbonePoll\` drains; the shim's
   // \`backboneSend\` posts \`backboneOutbound\` straight up to the main thread, so there is nothing to do
   // for it here. These carry no requestId, so they must be handled before the request/response guard.
   if (type === "backboneInbound") {
@@ -837,7 +837,7 @@ function rewriteExistingPluginShimImports(): void {
 }
 
 function transpilePluginComponent(artifact: string, outDir: string, componentBase: string): void {
-  if (runCmdStatus("bunx", ["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/host=./host-shim.js"], { cwd: repoRoot }) !== 0) {
+  if (runCmdStatus("bunx", ["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/host=./🟨host-shim.js"], { cwd: repoRoot }) !== 0) {
     throw new Error(`jco transpile failed for ${artifact}`);
   }
   rewritePreview2ShimImports(join(outDir, `${componentBase}.js`));
@@ -845,7 +845,7 @@ function transpilePluginComponent(artifact: string, outDir: string, componentBas
 
 /** @emoji 🗄️ JS implementation of the `semio:framework/host` component import. The backbone imports are
  * a pure in-memory queue exchange: `backbone-send` posts an outbound message up to the plugin worker's
- * parent (the main thread) which relays it into `backbone-worker.ts` (the real sync actor), and
+ * parent (the main thread) which relays it into `🟦🟦backbone-🟦worker.ts` (the real sync actor), and
  * `backbone-poll` drains an inbound queue the worker fills from `backboneInbound` postMessages. A
  * WASI-P2 program worker never owns a socket/fetch itself (WS-B design), so there is no localStorage or
  * synchronous XHR here anymore. */
@@ -920,7 +920,7 @@ function backboneInboundQueues() {
 }
 const backboneAttached = new Set();
 
-/** @emoji 📤 Enqueues an outbound message to the main thread, which relays it into \`backbone-worker.ts\`
+/** @emoji 📤 Enqueues an outbound message to the main thread, which relays it into \`🟦backbone-🟦worker.ts\`
  * (the sync actor). Inside a dedicated worker this is postMessage-only (a worker can't own the
  * socket/fetch itself); when this component is instead loaded directly on the main thread (the
  * no-\`Worker\`/component-model-load fallback in \`framework/core/js/index.ts\`), it reaches the same
@@ -946,7 +946,7 @@ export function backbonePoll(uri) {
 }
 
 /** @emoji 📶 Reports whether this shim has seen traffic for a uri (the real transport health lives in
- * \`backbone-worker.ts\`; the sandboxed plugin only needs attached/detached). */
+ * \`🟦backbone-🟦worker.ts\`; the sandboxed plugin only needs attached/detached). */
 export function backboneStatus(uri) {
   return backboneAttached.has(uri) ? "attached" : "detached";
 }
@@ -972,11 +972,11 @@ async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
   const wasmOut = join(outDir, target.wasmOut);
   const componentBase = `${jsBase}_component`;
   copyFileSync(artifact, wasmOut);
-  writeFileSync(join(outDir, "host-shim.js"), hostShimSource());
+  writeFileSync(join(outDir, "🟨host-shim.js"), hostShimSource());
   transpilePluginComponent(wasmOut, outDir, componentBase);
   const jsOut = join(outDir, `${jsBase}.js`);
   writeFileSync(jsOut, pluginComponentBridgeSource(componentBase, target.wasmOut));
-  writeFileSync(join(outDir, "plugin-worker.js"), pluginWorkerSource());
+  writeFileSync(join(outDir, "🟨plugin-worker.js"), pluginWorkerSource());
   const hotSwapMarker = join(pluginOutRoot, ".hot-swap");
   writeFileSync(hotSwapMarker, `${JSON.stringify({ pluginId: target.pluginId, rebuiltAt: Date.now() })}\n`);
   console.log(`[DEBUG] built program ${target.pluginId} (${PLUGIN_WASM_TARGET}) -> ${outDir}`);
@@ -1191,7 +1191,7 @@ class BuildScript extends BundleScript {
     }
     await buildEngineWasm(plugin, renderer);
     const resolvedFilter = resolvePlaygroundFilter(plugin);
-    runCmdStatus("bun", ["run", "vite", "build", "--config", "vite.config.ts", ...viteSegments], {
+    runCmdStatus("bun", ["run", "vite", "build", "--config", "⚙️⚙️vite.config.ts", ...viteSegments], {
       cwd: this.root,
       env: {
         ...process.env,
@@ -1304,7 +1304,7 @@ class PluginCapabilityLintScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runVitest(this.root, rest, "vitest.config.ts");
+    await runVitest(this.root, rest, "🧪vitest.config.ts");
   }
 }
 
@@ -1618,7 +1618,7 @@ async function dumpReactStructure(page: import("playwright").Page): Promise<Pari
 
 /** 🧊Calls the wasm-bindgen introspection hooks exposed by `framework/os/renderer/wgpu/rs/lib.rs` region
  * `🔬Introspection`. Reachable at `window.wasmBindings.dumpStructure()`/`dumpFrameStats()` — Trunk's
- * dev-server boot glue (`framework/os/renderer/wgpu/js/boot.ts`) attaches the wasm module's exports there
+ * dev-server boot glue (`framework/os/renderer/wgpu/js/🟦🟦boot.ts`) attaches the wasm module's exports there
  * (the same path `semioRendererBoot`/`uploadIconAtlas` already use), NOT a bespoke global. Returns an
  * empty dump (never throws) when the hooks aren't present yet, so triage can distinguish "not booted"
  * from "no hooks" via `DUMP-EMPTY`. */

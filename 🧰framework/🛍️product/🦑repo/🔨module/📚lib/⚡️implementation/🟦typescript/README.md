@@ -23,7 +23,7 @@ await runBundleScriptMain(router, import.meta.url);
 - **`runBundleScriptMain(router, import.meta.url)`**: runs `policy` when `export const policy` is present, then dispatches argv.
 - **`runPolicyOnlyMain(import.meta.url)`**: policy-only bundles (no subcommands).
 - **Workspace root** (`/script.ts`): same `Script` base class with `ScriptRouter` over workspace verbs (see root `script.ts`).
-- **Native bootstrap**: `repo/native/bootstrap/script.ps1` / `script.sh` (invoked via `bun ./script.ts setup native` / `start`).
+- **Native bootstrap**: `repo/native/bootstrap/⌨️⌨️script.ps1` / `⌨️⌨️script.sh` (invoked via `bun ./script.ts setup native` / `start`).
 - **Neo4j export**: `bun ./script.ts generate neo4j …` (live graph → `.repo/🛂` bundles; greenfield, no migration runner).
 - Helpers: `runCmd`, `runBun`, `runBunx`, `runViteDev`, `runViteBuild`, `runVitest`, `runWasmPackWebBuild`, `playPollingEnv`, `dispatchSubcommand`, `runWorkspaceScriptMain`, `devToolingEnv`, `spawnBunx`.
 - Nested verbs inside a command class use `dispatchSubcommand(segments, { … }, usage, defaultKey?)`.
@@ -40,4 +40,4 @@ bun path/to/script.ts policy
 bun repo/lib/js/bin/lint.ts path/to/script.ts
 ```
 
-Nx registers `./repo/lib/js/nx-plugin.mjs`, which matches `**/script.ts` that export `policy` and adds cacheable `breach-*` targets (`bun "<script.ts>" policy`).
+Nx registers `./repo/lib/js/🟨nx-plugin.mjs`, which matches `**/script.ts` that export `policy` and adds cacheable `breach-*` targets (`bun "<script.ts>" policy`).

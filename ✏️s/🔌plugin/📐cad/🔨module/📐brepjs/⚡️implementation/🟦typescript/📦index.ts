@@ -4031,11 +4031,11 @@ if (import.meta.vitest) {
     const composeStepFixtures = [
       {
         name: "hexagonal-cut-concrete-forest-left",
-        file: "hexagonal-cut-concrete-forest-left.stp",
+        file: "📐hexagonal-cut-concrete-forest-left.stp",
       },
       {
         name: "hexagonal-cut-concrete-forest-right",
-        file: "hexagonal-cut-concrete-forest-right.stp",
+        file: "📐hexagonal-cut-concrete-forest-right.stp",
       },
     ] as const;
 
@@ -4070,7 +4070,7 @@ if (import.meta.vitest) {
     it("stepPresentationLayers reads BIM layer assignments from concrete forest left", async () => {
       const { readFile } = await import("node:fs/promises");
       const { resolve } = await import("node:path");
-      const stepPath = resolve(import.meta.dirname, "../../../../asset/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp");
+      const stepPath = resolve(import.meta.dirname, "../../../../asset/abbau-aufbau/📐hexagonal-cut-concrete-forest-left-bim.stp");
       const stepText = await readFile(stepPath, "utf8");
       const { solidOrder, layerBySolidEntity } = stepPresentationLayers(stepText);
       expect(solidOrder).toHaveLength(12);
@@ -4084,7 +4084,7 @@ if (import.meta.vitest) {
     it("imports BIM STEP with presentation-layer typologies for concrete forest left", async () => {
       const { readFile } = await import("node:fs/promises");
       const { resolve } = await import("node:path");
-      const stepPath = resolve(import.meta.dirname, "../../../../asset/abbau-aufbau/hexagonal-cut-concrete-forest-left-bim.stp");
+      const stepPath = resolve(import.meta.dirname, "../../../../asset/abbau-aufbau/📐hexagonal-cut-concrete-forest-left-bim.stp");
       const stepText = await readFile(stepPath, "utf8");
       const space = await kernel.importStepBimToModelSpace(stepText, {
         prefix: "hexagonal-cut-concrete-forest-left-bim",
@@ -4111,7 +4111,7 @@ if (import.meta.vitest) {
     it("concrete forest left play fixture roundtrips shape, building, energy, and structure models", async () => {
       const { readFile } = await import("node:fs/promises");
       const { resolve } = await import("node:path");
-      const fixturePath = resolve(import.meta.dirname, "../../../asset/play/hexagonal-cut-concrete-forest-left.model.json");
+      const fixturePath = resolve(import.meta.dirname, "../../../asset/play/🔣hexagonal-cut-concrete-forest-left.🔣model.json");
       const fixtureJson = JSON.parse(await readFile(fixturePath, "utf8")) as ModelSpaceJson;
       const space = ModelSpace.fromJSON(fixtureJson);
       const shape = space.models[defaultModelDefinitionId()]!;
@@ -4134,8 +4134,8 @@ if (import.meta.vitest) {
       const { readFile } = await import("node:fs/promises");
       const { resolve } = await import("node:path");
       const fixtureRoot = resolve(import.meta.dirname, "../../../../asset/abbau-aufbau");
-      const energyText = await readFile(resolve(fixtureRoot, "hexagonal-cut-concrete-forest-left-energy.stp"), "utf8");
-      const structureText = await readFile(resolve(fixtureRoot, "hexagonal-cut-concrete-forest-left-classic-structure.stp"), "utf8");
+      const energyText = await readFile(resolve(fixtureRoot, "📐hexagonal-cut-concrete-forest-left-energy.stp"), "utf8");
+      const structureText = await readFile(resolve(fixtureRoot, "📐hexagonal-cut-concrete-forest-left-classic-structure.stp"), "utf8");
       const energySpace = await kernel.importStepBimToModelSpace(energyText, {
         prefix: "hexagonal-cut-concrete-forest-left-energy",
         modelDefinitionId: AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID,
@@ -4178,20 +4178,20 @@ if (import.meta.vitest) {
         const stepText = await readFile(stepPath, "utf8");
         const shapeSpace = await kernel.importStepBrepToModelSpace(stepText, { prefix: fixture.name });
         if (fixture.name === "hexagonal-cut-concrete-forest-left") {
-          const bimPath = resolve(fixtureRoot, "hexagonal-cut-concrete-forest-left-bim.stp");
+          const bimPath = resolve(fixtureRoot, "📐hexagonal-cut-concrete-forest-left-bim.stp");
           const bimText = await readFile(bimPath, "utf8");
           const bimSpace = await kernel.importStepBimToModelSpace(bimText, {
             prefix: "hexagonal-cut-concrete-forest-left-bim",
             modelDefinitionId: AEC_BUILDING_MODEL_DEFINITION_ID,
           });
-          const energyPath = resolve(fixtureRoot, "hexagonal-cut-concrete-forest-left-energy.stp");
+          const energyPath = resolve(fixtureRoot, "📐hexagonal-cut-concrete-forest-left-energy.stp");
           const energyText = await readFile(energyPath, "utf8");
           const energySpace = await kernel.importStepBimToModelSpace(energyText, {
             prefix: "hexagonal-cut-concrete-forest-left-energy",
             modelDefinitionId: AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID,
             lengthScale: 1,
           });
-          const structurePath = resolve(fixtureRoot, "hexagonal-cut-concrete-forest-left-classic-structure.stp");
+          const structurePath = resolve(fixtureRoot, "📐hexagonal-cut-concrete-forest-left-classic-structure.stp");
           const structureText = await readFile(structurePath, "utf8");
           const structureSpace = await kernel.importStepBimToModelSpace(structureText, {
             prefix: "hexagonal-cut-concrete-forest-left-classic-structure",
@@ -4207,7 +4207,7 @@ if (import.meta.vitest) {
           combined.link(AEC_BUILDING_ENERGY_MODEL_DEFINITION_ID, energyModel);
           const structureModel = structureSpace.models[AEC_BUILDING_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID]!;
           combined.link(AEC_BUILDING_STRUCTURE_CLASSIC_MODEL_DEFINITION_ID, structureModel);
-          const outPath = resolve(playRoot, `${fixture.name}.model.json`);
+          const outPath = resolve(playRoot, `${fixture.name}.🔣model.json`);
           await writeFile(outPath, `${JSON.stringify(combined.toJSON(), null, 2)}\n`, "utf8");
           continue;
         }
@@ -4215,7 +4215,7 @@ if (import.meta.vitest) {
         const model = shapeSpace.models[modelId]!;
         const objectId = Object.keys(model.objects)[0]!;
         const fixtureJson = inlineModelSpaceFixtureJson(model, modelId, objectId);
-        const outPath = resolve(playRoot, `${fixture.name}.model.json`);
+        const outPath = resolve(playRoot, `${fixture.name}.🔣model.json`);
         await writeFile(outPath, `${JSON.stringify(fixtureJson, null, 2)}\n`, "utf8");
       }
     });

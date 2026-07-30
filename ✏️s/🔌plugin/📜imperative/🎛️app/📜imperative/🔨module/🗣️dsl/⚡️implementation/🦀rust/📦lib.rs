@@ -3,7 +3,7 @@
 use imperative::ImperativeDocument;
 
 /// 📄 The default `imperative` document, handcrafted in the `.imperative` DSL.
-pub const IMPERATIVE_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/📜imperative/📚example/default.imperative");
+pub const IMPERATIVE_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/📜imperative/📚example/📜default.imperative");
 
 /// 📖 Parses `.imperative` DSL text into an `ImperativeDocument`.
 pub fn parse_dsl(text: &str) -> Result<ImperativeDocument, store::TextError> {
@@ -28,7 +28,7 @@ mod tests {
 
     #[test]
     fn default_document_dsl_round_trips() {
-        let document = parse_dsl(IMPERATIVE_EXAMPLE_TEXT).expect("parse default.imperative");
+        let document = parse_dsl(IMPERATIVE_EXAMPLE_TEXT).expect("parse 📜default.imperative");
         store::test_support::assert_dsl_round_trip(&document);
     }
 
@@ -42,7 +42,7 @@ mod tests {
     #[test]
     fn dsl_parses_seed_and_nested_control_bodies() {
         use neural_engine::{Atom, Value};
-        let mut document = parse_dsl(IMPERATIVE_EXAMPLE_TEXT).expect("parse default.imperative");
+        let mut document = parse_dsl(IMPERATIVE_EXAMPLE_TEXT).expect("parse 📜default.imperative");
         document.seed = Dictionary::new().insert("counter", Value::Atom(Atom::Integer(1))).insert("label", Value::Atom(Atom::String("x".into())));
         let inner = step("step-inner", "log.print");
         let mut owner = step("step-if", "control.if");
@@ -59,7 +59,7 @@ mod tests {
     #[test]
     fn dsl_parses_dictionary_and_atom_variants() {
         use neural_engine::{Atom, Value};
-        let mut document = parse_dsl(IMPERATIVE_EXAMPLE_TEXT).expect("parse default.imperative");
+        let mut document = parse_dsl(IMPERATIVE_EXAMPLE_TEXT).expect("parse 📜default.imperative");
         document.seed = Dictionary::new()
             .insert("a", Value::Atom(Atom::Null))
             .insert("b", Value::Atom(Atom::Boolean(true)))

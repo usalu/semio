@@ -53,7 +53,7 @@ you’re building a **semantic system** that adapts, scales, and speaks your des
 Let’s begin by representationing the mold shown in the sketch  
 This will serve as the base for generating its **Variants** 🧩
 
-![📤 sketch drawing](/asset/image/sketch-drawing-mold.png)
+![📤 sketch drawing](/asset/image/🖼️sketch-drawing-mold.png)
 
 Before we start building, let’s go over the essential elements that define a **Type** 🧱:
 
@@ -167,7 +167,7 @@ This is useful because it lets us generate **all the different Variants** of thi
 using a single logic controlled by the parameters `n` and `W`  
 which define the brick’s length and width 📏
 
-![📁 Geometry Generation](/asset/image/attach-geometry-crop.gif)
+![📁 Geometry Generation](/asset/image/🖼️attach-geometry-crop.gif)
 
 ---
 
@@ -183,7 +183,7 @@ You can place it **directly after** your geometry generation step in Grasshopper
 
 🔁 The Export Workflow Looks Like This:
 
-![📤 Export Geometry](/asset/image/export-geometry.png)
+![📤 Export Geometry](/asset/image/🖼️export-geometry.png)
 
 ---
 
@@ -212,7 +212,7 @@ Another `Concat` merges directory + file name:
 
 Your file directory should now look like this:
 
-![📤 Exported file](/asset/image/file-export-Profile-2-.png)
+![📤 Exported file](/asset/image/🖼️file-export-Profile-2-.png)
 
 ---
 
@@ -233,7 +233,7 @@ This tells compose **where to find the geometry** that represents your Type.
 - 🔗 This Representation is later connected to the **`Typ` (Representation Type)** component —  
   so that your Type is linked to its visual form
 
-![📁 Reference Geometry](/asset/image/reference-geometry.png)
+![📁 Reference Geometry](/asset/image/🖼️reference-geometry.png)
 
 ---
 
@@ -307,8 +307,8 @@ This version uses the **fully detailed geometry** of the piece 🪵
 A rectangle cut at an angle and extruded into a realistic wooden profile ✏️  
 It includes every visible detail in 3D: full depth, edges, and joinery-ready shapes 🔍
 
-![📁 Switch Representation](/asset/image/Switch-Representation.png)  
-![📁 Filename](/asset/image/Profile-2-detailed.png)
+![📁 Switch Representation](/asset/image/🖼️Switch-Representation.png)  
+![📁 Filename](/asset/image/🖼️Profile-2-detailed.png)
 
 Best for:
 
@@ -324,8 +324,8 @@ This version is a **flat sheet simplification** 📄
 A single-surface geometry that represents the general size of the piece 📐  
 It captures only **one dimension** and skips all 3D detail 🚫
 
-![📁 Switch Representation](/asset/image/switch-representation-sheet.png)  
-![📁 Filename](/asset/image/Profile-2-simplified.png)
+![📁 Switch Representation](/asset/image/🖼️switch-representation-sheet.png)  
+![📁 Filename](/asset/image/🖼️Profile-2-simplified.png)
 
 Use this when:
 
@@ -341,8 +341,8 @@ This version is a **bounding box simplification** 📦
 A simple block that approximates the piece's volume ➕  
 It includes **two dimensions** but omits exact geometry 🧊
 
-![📁 Switch Representation](/asset/image/switch-representation-Block.png)  
-![📁 Filename](/asset/image/Profile-2-simplified.png)
+![📁 Switch Representation](/asset/image/🖼️switch-representation-Block.png)  
+![📁 Filename](/asset/image/🖼️Profile-2-simplified.png)
 
 Best for:
 
@@ -398,7 +398,7 @@ In the compose Grasshopper plugin, each Connector is defined with three main inp
   The direction the Connector faces — telling compose which way the brick will connect 🔁  
   It’s what lets compose rotate and align the bricks correctly when snapping them together
 
-![📁 Connectors](/asset/image/representation-port-alpha.png)
+![📁 Connectors](/asset/image/🖼️representation-port-alpha.png)
 
 ---
 
@@ -500,8 +500,8 @@ Here's what you plug in:
 - 🧲 **Connectors** — the snapping points and directions (e.g. `n`, `s`, `e`, `w`)
 - 🧊 **Representation** — the geometry that defines the brick's shape
 
-![📁 Representation Type](/asset/image/representation-type.png)  
-![📁 Representation Type](/asset/image/representation-type-geo.png)
+![📁 Representation Type](/asset/image/🖼️representation-type.png)  
+![📁 Representation Type](/asset/image/🖼️representation-type-geo.png)
 
 ---
 
@@ -520,7 +520,7 @@ a 2-unit-long brick ready to be placed in your Design 🧱
 
 ## 🧬 Create Mold Versions (Variants of [Type](/think-in-compose/#type))
 
-![📤 sketch drawing](/asset/image/sketch-drawing-variant.png)
+![📤 sketch drawing](/asset/image/🖼️sketch-drawing-variant.png)
 
 Now that you've created your base **Type**, it's time to generate **Variants** — based on the **unit count `n`** shown in the sketch 🔢
 
@@ -578,7 +578,7 @@ Since most Variants share the same logic and differ by only one or two parameter
 - ⚡ Generate all Variants **efficiently**
 - 🧼 Keep your script **clean and modular**
 
-![📁 Variant GIF](/asset/image/Type-1-to-5-crop.gif)
+![📁 Variant GIF](/asset/image/🖼️Type-1-to-5-crop.gif)
 
 <Tabs defaultValue="file">
 <TabsList>
@@ -597,7 +597,7 @@ You define the full logic:
 - 🧲 Place Connectors using `Representation Connector`
 - 🧱 Create the Variant using `Representation Type`
 
-![📁 Cluster](/asset/image/cluster-type-inside-ALpha.png)
+![📁 Cluster](/asset/image/🖼️cluster-type-inside-ALpha.png)
 
 **Outside the Cluster:**
 
@@ -608,8 +608,8 @@ You only feed in the changing inputs:
 - 📁 Directory of the GH file
 - 🔘 Export toggle
 
-![📁 Cluster](/asset/image/type-cluster-file-reference-Alpha.png)  
-![📁 Cluster](/asset/image/file-export.png)
+![📁 Cluster](/asset/image/🖼️type-cluster-file-reference-Alpha.png)  
+![📁 Cluster](/asset/image/🖼️file-export.png)
 
 </TabsContent>
 
@@ -623,7 +623,7 @@ You define the full representationing logic directly, without saving external fi
 - 🧲 Place Connectors using `Representation Connector`
 - 🧱 Create the Variant using `Representation Type`
 
-![📁 Cluster](/asset/image/cluster-type-inside-direct.rfrc.png)
+![📁 Cluster](/asset/image/🖼️cluster-type-inside-direct.rfrc.png)
 
 **Outside the Cluster:**
 
@@ -632,7 +632,7 @@ Only the changing parameters are connected:
 - 📏 `n` → the unit count (e.g. 2, 4, 5)
 - 🏷️ Variant name → often also `n`
 
-![📁 Cluster](/asset/image/type-cluster-direct-reference-Alpha.png)
+![📁 Cluster](/asset/image/🖼️type-cluster-direct-reference-Alpha.png)
 
 </TabsContent>
 </Tabs>

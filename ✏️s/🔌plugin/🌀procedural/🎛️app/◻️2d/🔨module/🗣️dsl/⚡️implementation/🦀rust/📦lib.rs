@@ -5,7 +5,7 @@ use procedural_2d::Procedural2dDocument;
 /// 📦 The `procedural2d-play` "default" example, embedded at compile time as handcrafted `.procedural2d`
 /// DSL text — shared by the manifest's `.example(...)` registration, the `default_projection` fallback,
 /// and every test fixture.
-pub const PROCEDURAL2D_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🌀procedural/🎛️app/◻️2d/⚡️implementation/🦀rust/📚example/default.procedural2d");
+pub const PROCEDURAL2D_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🌀procedural/🎛️app/◻️2d/⚡️implementation/🦀rust/📚example/🌀default.procedural2d");
 
 /// 📖 Parses `.procedural2d` DSL text into a `Procedural2dDocument`.
 pub fn parse_dsl(text: &str) -> Result<Procedural2dDocument, store::TextError> {
@@ -33,7 +33,7 @@ mod tests {
 
     #[test]
     fn dsl_round_trip_example_fixture() {
-        let projection = Procedural2dDocument::parse_dsl(PROCEDURAL2D_EXAMPLE_TEXT).expect("parse default.procedural2d fixture");
+        let projection = Procedural2dDocument::parse_dsl(PROCEDURAL2D_EXAMPLE_TEXT).expect("parse 🌀default.procedural2d fixture");
         test_support::assert_dsl_round_trip(&projection);
         test_support::assert_dsl_pack_equivalence(&projection);
     }

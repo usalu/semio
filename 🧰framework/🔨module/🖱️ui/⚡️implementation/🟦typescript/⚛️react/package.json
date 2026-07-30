@@ -7,17 +7,17 @@
   "type": "module",
   "exports": {
     ".": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/📦index.tsx",
-    "./components.json": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/components.json",
-    "./globals.css": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/globals.css",
-    "./globals-ui.css": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/globals-ui.css",
-    "./theme.css": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/theme.css",
-    "./tailwind.config": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/tailwind.config.ts",
-    "./postcss.config": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/postcss.config.ts",
-    "./eslint.config": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/eslint.config.ts"
+    "./🔣components.json": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/🔣components.json",
+    "./🎨globals.css": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/🎨globals.css",
+    "./🎨globals-🎨ui.css": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/🎨globals-🎨ui.css",
+    "./🎨theme.css": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/🎨theme.css",
+    "./tailwind.config": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/🎨tailwind.config.ts",
+    "./postcss.config": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/🎨postcss.config.ts",
+    "./eslint.config": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/⚛️react/🟦eslint.config.ts"
   },
   "targets": {
     "lint": {
-      "command": "bunx eslint --max-warnings 0 --config eslint.config.ts .",
+      "command": "bunx eslint --max-warnings 0 --config 🟦eslint.config.ts .",
       "cwd": "."
     }
   },

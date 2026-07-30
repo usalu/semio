@@ -39,6 +39,7 @@ serde_json = "1"
 
 [[bench]]
 name = "db"
+path = "benches/🦀db.rs"
 harness = false
 
 [dev-dependencies]

@@ -1,6 +1,6 @@
 //! 📜 EN 1990 basis of structural design — textual document grammar surface + laws (constitutional: dsl).
 //!
-//! 📄 No handcrafted `.en1990` DSL fixture exists for this app (unlike e.g. `note`'s `semio.note`) —
+//! 📄 No handcrafted `.en1990` DSL fixture exists for this app (unlike e.g. `note`'s `🗒️semio.note`) —
 //! the original monolith's own DSL law test exercised only `Document::default()`, so that is the
 //! representative document here too.
 

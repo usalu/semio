@@ -24,7 +24,7 @@ import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
 import { fileURLToPath } from "url";
 import { defineConfig, type Plugin } from "vite";
-import { createWorkspaceViteResolveConfig, meshCollectionVitePlugin, playgroundIframeEmbedHeadersPlugin, semioFaviconVitePlugin, type PlaygroundAssetSpec } from "../../../../../../framework/module/ui/styling/vite-elements-assets.ts";
+import { createWorkspaceViteResolveConfig, meshCollectionVitePlugin, playgroundIframeEmbedHeadersPlugin, semioFaviconVitePlugin, type PlaygroundAssetSpec } from "../../../../../../framework/module/ui/styling/🟦vite-elements-assets.ts";
 import { readInitialKitFixtureFromPath } from "../../../../fixture/script.ts";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
@@ -47,7 +47,7 @@ const PUZZLE_3D_MESH_ASSET_SPEC: Extract<PlaygroundAssetSpec, { kind: "mesh-coll
   kind: "mesh-collection",
   route: "/mesh",
   roots: ["framework/asset/metabolism/representation", "mit-bestand/asset/abbau-aufbau"],
-  placeholder: "framework/asset/mesh/placeholder.glb",
+  placeholder: "framework/asset/mesh/🧊placeholder.glb",
   filterFromExamples: true,
 };
 

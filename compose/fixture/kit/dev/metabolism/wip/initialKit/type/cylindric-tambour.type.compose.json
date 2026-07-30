@@ -552,8 +552,8 @@
       }
     ]
   },
-  "icon": "icons/cylindric-tambour.svg",
-  "image": "images/cylindric-tambour.svg",
+  "icon": "icons/🔣cylindric-🔣tambour.svg",
+  "image": "images/🔣cylindric-🔣tambour.svg",
   "description": "🛏 An efficient 1 storey core with an elevator in the center, the main platform on the north, and on the other corners sides platforms with two doors. There is a stair between \r\nevery platform. Hence the doors are spiraling around.",
   "families": {
     "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262",

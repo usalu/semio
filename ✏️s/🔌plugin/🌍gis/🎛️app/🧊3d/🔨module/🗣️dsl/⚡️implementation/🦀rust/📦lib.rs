@@ -3,7 +3,7 @@
 use gis3d::Gis3dTerrainDocument;
 
 /// 🏔️ The bundled "reuse terrain" example document, handcrafted in the `.gisterrain` DSL.
-pub const REUSE_TERRAIN_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🌍gis/🎛️app/🧊3d/⚡️implementation/🦀rust/📚example/reuse.terrain.gisterrain");
+pub const REUSE_TERRAIN_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🌍gis/🎛️app/🧊3d/⚡️implementation/🦀rust/📚example/🌍reuse.terrain.gisterrain");
 
 /// 📖 Parses `.gisterrain` DSL text into a `Gis3dTerrainDocument`.
 pub fn parse_dsl(text: &str) -> Result<Gis3dTerrainDocument, store::TextError> {

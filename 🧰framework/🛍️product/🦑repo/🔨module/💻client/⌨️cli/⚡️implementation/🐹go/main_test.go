@@ -2114,14 +2114,14 @@ func TestFileHeaderId(t *testing.T) {
 		{"code go", "repo/client/client.go", "🧰repo⌨️client" + emojiText(EmojiFileCode) + "client"},
 		{"code cs", "compose/gh/Compose.cs", "🏘️compose🐙gh" + emojiText(EmojiFileCode) + "compose"},
 		{"code py", "compose/engine/main.py", "🏘️compose⚙️engine" + emojiText(EmojiFileCode) + "main"},
-		{"test ts", "compose/js/src/index.test.ts", "🏘️compose📜js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileLab) + "indextest"},
+		{"test ts", "compose/js/src/🧪index.test.ts", "🏘️compose📜js" + emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFileLab) + "indextest"},
 		{"test go", "repo/client/client_test.go", "🧰repo⌨️client" + emojiText(EmojiFileLab) + "clienttest"},
 		{"config json", "tsconfig.json", emojiText(EmojiFileConfig) + "tsconfig"},
 		{"docs md", "README.md", emojiText(EmojiFileDocs) + "readme"},
 		{"script sh", "build.sh", emojiText(EmojiFileScript) + "build"},
 		{"script bash", "deploy.bash", emojiText(EmojiFileScript) + "deploy"},
 		{"script ps1", "setup.ps1", emojiText(EmojiFileScript) + "setup"},
-		{"resource png", "logo.png", emojiText(EmojiFileResource) + "logo"},
+		{"resource png", "🖼️🖼️logo.png", emojiText(EmojiFileResource) + "logo"},
 		{"license", "LICENSE.md", emojiText(EmojiFileLicense) + "license"},
 	}
 	for _, tt := range tests {
@@ -2220,7 +2220,7 @@ func TestDeriveFileKind(t *testing.T) {
 		{"cmd script", "build.cmd", FileKindScript},
 		{"ps1 script", "setup.ps1", FileKindScript},
 		{"psm1 script", "module.psm1", FileKindScript},
-		{"test ts", "index.test.ts", FileKindLab},
+		{"test ts", "🧪index.test.ts", FileKindLab},
 		{"test go", "main_test.go", FileKindLab},
 		{"spec ts", "app.spec.ts", FileKindLab},
 		{"benchmark go", "compose_benchmark.go", FileKindLab},
@@ -2231,7 +2231,7 @@ func TestDeriveFileKind(t *testing.T) {
 		{"env config", ".env", FileKindConfig},
 		{"md docs", "README.md", FileKindDocs},
 		{"txt docs", "notes.txt", FileKindDocs},
-		{"png resource", "logo.png", FileKindResource},
+		{"png resource", "🖼️🖼️logo.png", FileKindResource},
 		{"svg resource", "icon.svg", FileKindResource},
 		{"wasm resource", "module.wasm", FileKindResource},
 		{"tpl template", "layout.tpl", FileKindTemplate},
@@ -2247,9 +2247,9 @@ func TestDeriveFileKind(t *testing.T) {
 		{"license md", "LICENSE.md", FileKindLicense},
 		{"licence txt", "LICENCE.txt", FileKindLicense},
 		{"gitignore config", ".gitignore", FileKindConfig},
-		{"dockerfile config", "Dockerfile", FileKindConfig},
+		{"dockerfile config", "🐳🐳Dockerfile", FileKindConfig},
 		{"makefile config", "Makefile", FileKindConfig},
-		{"config suffix", "vite.config.ts", FileKindConfig},
+		{"config suffix", "⚙️⚙️vite.config.ts", FileKindConfig},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -2295,8 +2295,8 @@ func TestFixApplyAutofixes(t *testing.T) {
 	rootDir = findTestRepoRoot(cwd)
 	defer func() { rootDir = oldRoot }()
 
-	fixtureSrc := "repo/asset/fixture/some/folder/file_fixable.tsx"
-	expectedSrc := "repo/asset/fixture/some/folder/file_fixable_expected.tsx"
+	fixtureSrc := "repo/asset/fixture/some/folder/⚛️⚛️file_fixable.tsx"
+	expectedSrc := "repo/asset/fixture/some/folder/⚛️⚛️file_fixable_expected.tsx"
 
 	srcAbs := filepath.Join(rootDir, fixtureSrc)
 	expectedAbs := filepath.Join(rootDir, expectedSrc)
@@ -3467,7 +3467,7 @@ func TestFixNonAutofixableNotFixed(t *testing.T) {
 	defer func() { rootDir = oldRoot }()
 
 	bundles := LoadBundles()
-	path := "repo/asset/fixture/some/folder/file_invalid.tsx"
+	path := "repo/asset/fixture/some/folder/⚛️⚛️file_invalid.tsx"
 	scope := Scope{Kind: ScopeFile, FilePath: path}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
 	breachs, err := CheckPoliciesWithContext(ctx, nil)
@@ -4269,7 +4269,7 @@ export function doWork(): void {}
 
 func TestPostgresSchemaIncludesKitVersionControlTables(t *testing.T) {
 	rootDir := findTestRepoRoot(".")
-	schemaPath := filepath.Join(rootDir, "repo", "postgres", "schema.sql")
+	schemaPath := filepath.Join(rootDir, "repo", "postgres", "🛢️🛢️schema.sql")
 	data, err := os.ReadFile(schemaPath)
 	if err != nil {
 		t.Fatalf("failed to read postgres schema: %v", err)
@@ -4566,7 +4566,7 @@ func TestExhaustivePolicyBreachListCommand(t *testing.T) {
 }
 
 func TestFixtureBreachsGroupedInline(t *testing.T) {
-	path := "repo/asset/fixture/some/folder/file_invalid.tsx"
+	path := "repo/asset/fixture/some/folder/⚛️⚛️file_invalid.tsx"
 	bundles := LoadBundles()
 	scope := Scope{Kind: ScopeFile, FilePath: path}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
@@ -4599,15 +4599,15 @@ func TestFixtureBreachsByLanguage(t *testing.T) {
 		requiredKinds []Statute
 	}{
 		{
-			path:          "repo/asset/fixture/some/folder/file_invalid.py",
+			path:          "repo/asset/fixture/some/folder/🐍🐍file_invalid.py",
 			requiredKinds: []Statute{BreachCodeDefMissingSummary},
 		},
 		{
-			path:          "repo/asset/fixture/some/folder/file_invalid.cs",
+			path:          "repo/asset/fixture/some/folder/🔷🔷file_invalid.cs",
 			requiredKinds: []Statute{BreachCodeSectionMissingSummary},
 		},
 		{
-			path:          "repo/asset/fixture/some/folder/file_invalid.go",
+			path:          "repo/asset/fixture/some/folder/🐹🐹file_invalid.go",
 			requiredKinds: []Statute{BreachCodeSectionMissingSummary},
 		},
 	}
@@ -4632,10 +4632,10 @@ func TestFixtureBreachsByLanguage(t *testing.T) {
 		}
 	}
 	clean := []string{
-		"repo/asset/fixture/some/folder/file_fixed.tsx",
-		"repo/asset/fixture/some/folder/file_fixed.py",
-		"repo/asset/fixture/some/folder/file_fixed.cs",
-		"repo/asset/fixture/some/folder/file_fixed.go",
+		"repo/asset/fixture/some/folder/⚛️⚛️file_fixed.tsx",
+		"repo/asset/fixture/some/folder/🐍🐍file_fixed.py",
+		"repo/asset/fixture/some/folder/🔷🔷file_fixed.cs",
+		"repo/asset/fixture/some/folder/🐹🐹file_fixed.go",
 	}
 	for _, path := range clean {
 		scope := Scope{Kind: ScopeFile, FilePath: path}
@@ -8640,7 +8640,7 @@ func TestExhaustiveGraphQLAnalyzeQuery(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow analyze query test in short mode")
 	}
-	result, err := executor.ExecuteJSON(context.Background(), `{ analyze(scope: "repo/asset/fixture/some/folder/file_fixed.go") { metrics { total } } }`, nil)
+	result, err := executor.ExecuteJSON(context.Background(), `{ analyze(scope: "repo/asset/fixture/some/folder/🐹🐹file_fixed.go") { metrics { total } } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL analyze returned error: %v", err)
 	}
@@ -11243,7 +11243,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 		{
 			name:    "file test",
 			kind:    "file",
-			data:    map[string]interface{}{"path": "compose/js/src/index.test.ts", "kind": "lab"},
+			data:    map[string]interface{}{"path": "compose/js/src/🧪index.test.ts", "kind": "lab"},
 			wantID:  emojiText(EmojiFileLab) + "indextest",
 			wantURI: "repo://file/" + emojiText(EmojiFileLab) + "indextest",
 		},
@@ -11264,7 +11264,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 		{
 			name:    "file resource",
 			kind:    "file",
-			data:    map[string]interface{}{"path": "logo.png", "kind": "resource"},
+			data:    map[string]interface{}{"path": "🖼️🖼️logo.png", "kind": "resource"},
 			wantID:  emojiText(EmojiFileResource) + "logo",
 			wantURI: "repo://file/" + emojiText(EmojiFileResource) + "logo",
 		},
@@ -22217,7 +22217,7 @@ func TestIsHeaderMetaLine(t *testing.T) {
 	if !isHeaderMetaLine("2025 Ueli Saluz <ueli@semio-tech.com>") {
 		t.Error("should detect contributor line starting with year")
 	}
-	if !isHeaderMetaLine("💻repo/asset/fixture/some/folder/file.py") {
+	if !isHeaderMetaLine("💻repo/asset/fixture/some/folder/🐍🐍file.py") {
 		t.Error("should detect file ID emoji prefix")
 	}
 	if isHeaderMetaLine("This function handles parsing.") {
@@ -22246,7 +22246,7 @@ func TestExtractMarkdownSection(t *testing.T) {
 }
 
 func TestExtractFileHeaderSummary(t *testing.T) {
-	summary := ExtractFileHeaderSummary("repo/asset/fixture/some/folder/file_empty_region.tsx")
+	summary := ExtractFileHeaderSummary("repo/asset/fixture/some/folder/⚛️⚛️file_empty_region.tsx")
 	if strings.Contains(summary, "GNU") || strings.Contains(summary, "license") || strings.Contains(summary, "redistribute") {
 		t.Errorf("should not contain license text, got: %q", summary)
 	}
@@ -22256,14 +22256,14 @@ func TestExtractFileHeaderSummary(t *testing.T) {
 }
 
 func TestExtractFileHeaderSummaryReturnsActualSummary(t *testing.T) {
-	summary := ExtractFileHeaderSummary("repo/asset/fixture/some/folder/file_empty_region.tsx")
+	summary := ExtractFileHeaderSummary("repo/asset/fixture/some/folder/⚛️⚛️file_empty_region.tsx")
 	if strings.Contains(summary, "free software") {
 		t.Errorf("should not return license as summary, got: %q", summary)
 	}
 }
 
 func TestExtractFileHeaderRequirementsNoLicense(t *testing.T) {
-	requirements := ExtractFileHeaderRequirements("repo/asset/fixture/some/folder/file.py")
+	requirements := ExtractFileHeaderRequirements("repo/asset/fixture/some/folder/🐍🐍file.py")
 	if strings.Contains(requirements, "GNU") || strings.Contains(requirements, "license") || strings.Contains(requirements, "redistribute") {
 		t.Errorf("should not contain license text, got: %q", requirements)
 	}

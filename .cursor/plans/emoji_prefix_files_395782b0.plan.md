@@ -4,19 +4,19 @@ overview: Prefix every renamable basename under the four emoji product roots wit
 todos:
   - id: ticket-goals
     content: Auth repo MCP, read repo://goals, open ticket, bind plan id
-    status: in_progress
+    status: completed
   - id: file-vocab
     content: Build FILE_VOCAB + EXT_EMOJI + NEVER_RENAME_FILES; fail on gaps; write file-rename-map.json
-    status: pending
+    status: completed
   - id: apply-renames
     content: Apply file (and leftover dir) renames deepest-first under the four emoji roots
-    status: pending
+    status: completed
   - id: rewrite-refs
     content: Rewrite Cargo/TS/asset/policy refs; reconfigure build/bench/vitest paths
-    status: pending
+    status: completed
   - id: verify
     content: Verify cargo metadata, nx graph, sample vitest/asset paths; close ticket with summary + files
-    status: pending
+    status: completed
 isProject: false
 ---
 

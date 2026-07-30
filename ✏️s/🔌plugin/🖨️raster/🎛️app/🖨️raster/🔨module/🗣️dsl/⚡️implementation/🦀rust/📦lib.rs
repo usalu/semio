@@ -4,7 +4,7 @@ use raster::{RasterCamera, RasterImageAsset, RasterLayerMask, RasterLayerNode, R
 use std::collections::BTreeMap;
 
 /// 📄 The `semio` example document, handcrafted in the `.raster` DSL.
-pub const SEMIO_RASTER_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🖨️raster/📚example/semio.raster");
+pub const SEMIO_RASTER_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🖨️raster/📚example/🖨️semio.raster");
 
 /// 📖 Parses `.raster` DSL text into a `RasterProjection`.
 pub fn parse_dsl(text: &str) -> Result<RasterProjection, store::TextError> {

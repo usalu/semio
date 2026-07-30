@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 compose/algorithm/eslint.config.ts
+// 💻 compose/algorithm/🟦eslint.config.ts
 // Specs: Provide a minimal flat ESLint config for this bundle.
 // Summary: Enables TS/TSX linting for the algorithms Storybook bundle.
 // 2026 Ueli Saluz <ueli@semio-tech.com>

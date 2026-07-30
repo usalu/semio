@@ -5,7 +5,7 @@
   "type": "module",
   "exports": {
     ".": "../../../../../../../🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/📦index.ts",
-    "./nx-plugin": "../../../../../../../🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/nx-plugin.mjs"
+    "./nx-plugin": "../../../../../../../🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/🟨nx-plugin.mjs"
   },
   "scripts": {
     "lint": "bun ./script.ts lint",

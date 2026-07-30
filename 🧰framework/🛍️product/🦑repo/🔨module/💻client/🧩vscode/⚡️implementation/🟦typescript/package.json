@@ -4,7 +4,7 @@
   "name": "repo-vscode",
   "displayName": "repo",
   "description": "compose devtools for VS Code 🧑‍💻",
-  "icon": "compose.png",
+  "icon": "🖼️🖼️compose.png",
   "version": "0.0.1",
   "publisher": "usalu",
   "engines": {
@@ -31,7 +31,7 @@
         {
           "id": "repo",
           "title": "repo",
-          "icon": "./compose_codeicon.svg"
+          "icon": "./🔣🔣compose_🔣codeicon.svg"
         }
       ]
     },

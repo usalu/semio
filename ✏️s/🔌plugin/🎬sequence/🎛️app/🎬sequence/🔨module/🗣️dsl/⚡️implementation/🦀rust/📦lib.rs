@@ -5,7 +5,7 @@ use sequence::SequenceFixture;
 /// 📄 The handcrafted `.sequence` DSL-text fixture (regenerated from `default_fixture()`'s canonical
 /// print form) — the permanent proof that the checked-in fixture still parses and round trips, not a
 /// one-time migration script.
-pub const SEQUENCE_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🎬sequence/📚example/default.sequence");
+pub const SEQUENCE_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🎬sequence/📚example/🎬default.sequence");
 
 /// 📖 Parses `.sequence` DSL text into a `SequenceFixture`.
 pub fn parse_dsl(text: &str) -> Result<SequenceFixture, store::TextError> {
@@ -31,7 +31,7 @@ mod tests {
 
     #[test]
     fn default_sequence_example_dsl_round_trips() {
-        let fixture = parse_dsl(SEQUENCE_EXAMPLE_TEXT).expect("default.sequence must parse");
+        let fixture = parse_dsl(SEQUENCE_EXAMPLE_TEXT).expect("🎬default.sequence must parse");
         store::test_support::assert_dsl_round_trip(&fixture);
     }
 

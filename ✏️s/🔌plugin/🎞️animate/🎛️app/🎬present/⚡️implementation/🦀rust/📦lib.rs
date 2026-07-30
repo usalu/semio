@@ -53,7 +53,7 @@ pub struct PresentDeck {
 pub const PRESENT_DECK_SCHEMA: &str = "animate.present.deck";
 
 pub fn default_figure_tile_source() -> FigureTileSource {
-    FigureTileSource { src: "/bauteilbörse.png".into(), kind: "figure".into(), frame: FigureTileFrame { x: 0.127, y: 0.1, width: 0.746, height: 0.75 }, source_aspect: Some(1222.0 / 896.0), pdf_page: None }
+    FigureTileSource { src: "/🖼️bauteilbörse.png".into(), kind: "figure".into(), frame: FigureTileFrame { x: 0.127, y: 0.1, width: 0.746, height: 0.75 }, source_aspect: Some(1222.0 / 896.0), pdf_page: None }
 }
 
 pub fn default_present_deck() -> PresentDeck {

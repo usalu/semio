@@ -16468,7 +16468,7 @@ const ComposeKitSqliteSchemaVersion = "2026-04-23-kit-vcs-sqlite-roundtrip"
 // ComposeKitSqliteSchemaEngine matches [`compose::io::sqlite::SCHEMA_ENGINE`] in `compose/rs/lib.rs`.
 const ComposeKitSqliteSchemaEngine = "compose-rs"
 
-// 🗄️KitFromSqlite reads a Kit from a SQLite database file (normalized `compose/sqlite/schema.sql`).
+// 🗄️KitFromSqlite reads a Kit from a SQLite database file (normalized `compose/sqlite/🛢️schema.sql`).
 func KitFromSqlite(dbPath string) (*Kit, error) {
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
@@ -17708,19 +17708,19 @@ func hydrateKitFiles(kit *Kit, files map[string][]byte) {
 
 func mustReadKitSchemaSQL() string {
 	candidatePaths := []string{
-		"../schema/sqlite/schema.sql",
-		"../../schema/sqlite/schema.sql",
-		"../../../schema/sqlite/schema.sql",
-		"../sqlite/schema.sql",
-		"../../sqlite/schema.sql",
-		"sqlite/schema.sql",
+		"../schema/sqlite/🛢️schema.sql",
+		"../../schema/sqlite/🛢️schema.sql",
+		"../../../schema/sqlite/🛢️schema.sql",
+		"../sqlite/🛢️schema.sql",
+		"../../sqlite/🛢️schema.sql",
+		"sqlite/🛢️schema.sql",
 	}
 	for _, candidate := range candidatePaths {
 		if data, err := os.ReadFile(candidate); err == nil {
 			return string(data)
 		}
 	}
-	panic("failed to locate sqlite/schema.sql for kit workflow operations")
+	panic("failed to locate sqlite/🛢️schema.sql for kit workflow operations")
 }
 
 // #endregion 🔄Kit Workflow

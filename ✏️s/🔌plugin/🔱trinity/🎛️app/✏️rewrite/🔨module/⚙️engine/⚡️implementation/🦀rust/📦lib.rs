@@ -972,7 +972,7 @@ mod wasm_session {
     impl TrinitySession {
         #[wasm_bindgen(constructor)]
         pub fn new() -> Self {
-            let dsl = include_str!("../../../../../../../../../✏️s/🔌plugin/🔱trinity/📚example/nakagin-capsule-tower.trinity");
+            let dsl = include_str!("../../../../../../../../../✏️s/🔌plugin/🔱trinity/📚example/🔱nakagin-capsule-tower.trinity");
             let host = GraphFixture::parse_dsl(dsl)
                 .ok()
                 .and_then(|fixture| Graph::from_fixture(fixture).ok())
@@ -1181,7 +1181,7 @@ mod tests {
     use super::*;
 
     fn nakagin_graph() -> Graph {
-        let dsl = include_str!("../../../../../../../../../✏️s/🔌plugin/🔱trinity/📚example/nakagin-capsule-tower.trinity");
+        let dsl = include_str!("../../../../../../../../../✏️s/🔌plugin/🔱trinity/📚example/🔱nakagin-capsule-tower.trinity");
         let mut g = Graph::from_fixture(GraphFixture::parse_dsl(dsl).unwrap()).unwrap();
         g.recompute_derived();
         g
@@ -1256,7 +1256,7 @@ mod tests {
 
     #[test]
     fn rewrite_labeled_fixture_reloads() {
-        let dsl = include_str!("../../../../../../../../../✏️s/🔌plugin/🔱trinity/📚example/nakagin-capsule-tower.trinity");
+        let dsl = include_str!("../../../../../../../../../✏️s/🔌plugin/🔱trinity/📚example/🔱nakagin-capsule-tower.trinity");
         let mut g = Graph::from_fixture(GraphFixture::parse_dsl(dsl).unwrap()).unwrap();
         let rule = Rule {
             name: "label-core".into(),

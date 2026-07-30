@@ -7367,7 +7367,7 @@ fn build_frame_stats(engine: &ui_wgpu::Ui) -> DumpFrameStats {
 //#region 🔬IntrospectionExports
 /// 📤 `dumpStructure()`/`dumpFrameStats()` — reachable exactly like `semioRendererBoot`/
 /// `uploadIconAtlas` already are: Trunk's dev-server boot glue (`framework/renderer/wgpu/js/
-/// boot.ts`) waits for `window.wasmBindings` then calls exports straight off it, so these land at
+/// 🟦boot.ts`) waits for `window.wasmBindings` then calls exports straight off it, so these land at
 /// `window.wasmBindings.dumpStructure()`/`window.wasmBindings.dumpFrameStats()` there; the library
 /// boot path (`framework/renderer/wgpu/index.ts`'s `bootFrameworkOsWgpu`) instead calls them on its
 /// own dynamically-imported module object. No new loading path invented for either.
@@ -7953,8 +7953,8 @@ pub fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) ->
 //#region 🏠🧳PluginHostConfig
 // 🐛 Lives at the crate root, not inside `program_bridge` above (see that module's own `PluginHostConfig`
 // region for why) — this is the file's real directory, so the 3-`..` climb to
-// `framework/plugin/registry/generated/hosts.rs` actually resolves.
-#[path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/🤖generated/hosts.rs"]
+// `framework/plugin/registry/generated/🦀hosts.rs` actually resolves.
+#[path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/🤖generated/🦀hosts.rs"]
 mod generated_plugin_hosts;
 //#endregion 🏠🧳PluginHostConfig
 
@@ -16386,7 +16386,7 @@ pub struct ShellState {
     pub sync_card_anchor: Option<(f32, f32)>,
     pub last_envelope_json: Option<String>,
     /// @emoji 🏛️ Shell-lifetime document-host actor registry (native only); the browser wgpu build
-    /// has no native `DocumentHost` — its sync flows through the React shell's `backbone-worker.ts`.
+    /// has no native `DocumentHost` — its sync flows through the React shell's `🟦🟦backbone-🟦worker.ts`.
     #[cfg(not(target_arch = "wasm32"))]
     pub document_host: DocumentHost,
     /// @emoji 🧵 The currently attached document's live actor channel (native only).
@@ -22900,7 +22900,7 @@ fn introduction_veil_bands(width: f32, height: f32, cutouts: &[Rect]) -> Vec<Rec
 const INTRODUCED_PULSE_PERIOD_MS: f64 = 1600.0;
 
 /// 🎓 Raised-cosine breathing thickness for the introduced-element pulse ring — mirrors the
-/// `data-introduced` CSS keyframes (`ui/styling/js/ui.css`: hairline → focus → hairline over 1.6s,
+/// `data-introduced` CSS keyframes (`ui/styling/js/🎨🎨ui.css`: hairline → focus → hairline over 1.6s,
 /// ease-in-out), which are exactly a raised cosine.
 fn introduced_pulse_thickness(now_ms: f64, hairline: f32, focus: f32) -> f32 {
     let phase = (now_ms.rem_euclid(INTRODUCED_PULSE_PERIOD_MS) / INTRODUCED_PULSE_PERIOD_MS) as f32;
@@ -28236,7 +28236,7 @@ fn apply_chrome_color_overrides(base: &Theme, overrides: &ChromeColorOverrides) 
     theme
 }
 
-/// 🎨 The "mono" premade's real chrome palette (`ui/styling/theme/mono.theme.json`), resolved once
+/// 🎨 The "mono" premade's real chrome palette (`ui/styling/theme/🔣🔣mono.theme.json`), resolved once
 /// via `ui/styling/js/theme.ts`'s own `resolveThemeAppearancePalettes` (ticket scratchpad
 /// `resolve-mono-chrome.ts`) and hand-ported here as `Rgba::from_srgb8` calls: this crate has no
 /// dependency on the `ui_styling` Rust codegen crate (only `ui_wgpu` does, and its `ChromePalette`/
@@ -29675,7 +29675,7 @@ const ICON_SIZE: u32 = 24;
 const ATLAS_COLS: u32 = 16;
 const ICON_ATLAS_TEXTURE_SIZE: u32 = 2048;
 
-include!(concat!(env!("OUT_DIR"), "/icons_generated.rs"));
+include!(concat!(env!("OUT_DIR"), "/icons_🤖generated.rs"));
 
 fn rasterize_svg(svg: &str, tint_mask: bool) -> Option<Vec<u8>> {
     let mut options = usvg::Options::default();
@@ -30842,8 +30842,8 @@ async fn boot_runtime(
     #[cfg(not(target_arch = "wasm32"))]
     let css_height = size.height as f32 / dpr;
 
-    const ANTA_LATIN: &[u8] = include_bytes!("../../../../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/🔤anta/latin.ttf");
-    let font_bytes = match fetch_font_bytes("/asset/font/anta/latin.ttf").await {
+    const ANTA_LATIN: &[u8] = include_bytes!("../../../../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔤font/🔤anta/🔤🔤latin.ttf");
+    let font_bytes = match fetch_font_bytes("/asset/font/anta/🔤🔤latin.ttf").await {
         Ok(bytes) if bytes.len() > 256 => bytes,
         _ => ANTA_LATIN.to_vec(),
     };

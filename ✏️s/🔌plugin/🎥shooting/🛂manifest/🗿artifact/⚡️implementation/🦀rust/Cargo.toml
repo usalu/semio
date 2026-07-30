@@ -20,7 +20,7 @@ ports = { react = 6019, wgpu = 6119 }
 kind = "mesh-collection"
 route = "/mesh"
 roots = ["🧰framework/🔨module/🖼️asset/⚡️implementation/🟦typescript/🌱metabolism/🎨representation", "♻️mit-bestand/🖼️asset/🏚️abbau-aufbau"]
-placeholder = "🧰framework/🔨module/🖼️asset/⚡️implementation/🟦typescript/🥽mesh/placeholder.glb"
+placeholder = "🧰framework/🔨module/🖼️asset/⚡️implementation/🟦typescript/🥽mesh/🧊placeholder.glb"
 filter_from_examples = true
 
 [lib]

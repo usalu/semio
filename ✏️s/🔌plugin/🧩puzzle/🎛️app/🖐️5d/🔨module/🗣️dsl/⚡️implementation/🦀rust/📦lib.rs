@@ -3,9 +3,9 @@
 use puzzle_5d::Puzzle5dProjection;
 
 /// 📄 The `concrete-forest` example fixture, handcrafted in the `.puzzle5d` DSL.
-pub const PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🧩puzzle/🎛️app/🖐️5d/⚡️implementation/🦀rust/📚example/concrete-forest.puzzle5d");
+pub const PUZZLE5D_CONCRETE_FOREST_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🧩puzzle/🎛️app/🖐️5d/⚡️implementation/🦀rust/📚example/🧩concrete-forest.puzzle5d");
 /// 📄 The `nakagin-capsule-tower` example fixture, handcrafted in the `.puzzle5d` DSL.
-pub const PUZZLE5D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🧩puzzle/🎛️app/🖐️5d/⚡️implementation/🦀rust/📚example/nakagin-capsule-tower.puzzle5d");
+pub const PUZZLE5D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🧩puzzle/🎛️app/🖐️5d/⚡️implementation/🦀rust/📚example/🧩nakagin-capsule-tower.puzzle5d");
 
 /// 📖 Parses `.puzzle5d` DSL text into a `Puzzle5dProjection`.
 pub fn parse_dsl(text: &str) -> Result<Puzzle5dProjection, store::TextError> {
@@ -37,7 +37,7 @@ mod tests {
             id: "seed-left-001".into(),
             part_kind: Some("Hexagonal Cut Concrete Forest Left".into()),
             part_2d: Puzzle5dPart2d { x: 230.7, y: 93.5, shape: Some("circle".into()), radius: Some(20.0), width: None, height: None, text: Some("Hexagonal Cut Concrete Forest Left".into()), icon_kind: None, hidden: None, locked: None },
-            part_3d: Puzzle5dPart3d { origin: [0.0, 0.0, 0.0], mesh_url: Some("/mesh/hexagonal-cut-concrete-forest-left.glb".into()), orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, label: Some("Hexagonal Cut Concrete Forest Left".into()) },
+            part_3d: Puzzle5dPart3d { origin: [0.0, 0.0, 0.0], mesh_url: Some("/mesh/🧊hexagonal-cut-concrete-forest-left.glb".into()), orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, label: Some("Hexagonal Cut Concrete Forest Left".into()) },
             grips: vec![Puzzle5dGrip {
                 id: "v0".into(),
                 grip_kind: Some("b-l".into()),
@@ -63,7 +63,7 @@ mod tests {
             // `pack/value/rs` table-column bug as `puzzle5d_projection_dsl_round_trips` above
             // (this fixture's `parts` rows have the identical shape). NOTE: as of this writing
             // this whole test is ALREADY failing before reaching this line, at the `parse_dsl`
-            // call above ("expected LBrace, found Ident 'x'", `concrete-forest.puzzle5d:50:54``)
+            // call above ("expected LBrace, found Ident 'x'", `🧩concrete-forest.puzzle5d:50:54``)
             // — a pre-existing DSL-text/fixture staleness issue unrelated to pack (confirmed via
             // `git status`: neither this fixture nor `dsl/core`/`dsl/derive` have any pending
             // changes in this session; likely fallout of concurrent syntax-convergence work per

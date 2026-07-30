@@ -15,7 +15,7 @@ import React, { useCallback, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { Kit, type Type as ComposeType, type Design, type Representation } from "@semio-tech/compose-react";
 import { ChevronDownIcon, ChevronRightIcon, AddIcon, TypeIcon, LayoutIcon } from "@semio-tech/semio-asset";
-import "../globals.css";
+import "../🎨globals.css";
 
 // #endregion 🔌Adapters
 

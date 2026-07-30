@@ -14,7 +14,7 @@ export type EntityKindSpec = {
 };
 
 function readEntityKinds(repoRoot: string): EntityKindSpec[] {
-  const path = join(repoRoot, "framework/module/schema/entity-kinds.json");
+  const path = join(repoRoot, "framework/module/schema/🔣entity-kinds.json");
   return JSON.parse(readFileSync(path, "utf8")) as EntityKindSpec[];
 }
 //#endregion 🔖EntityKindSpec
@@ -105,8 +105,8 @@ type GeneratedTarget = { readonly path: string; readonly content: string };
 function generatedTargets(repoRoot: string, kinds: EntityKindSpec[]): GeneratedTarget[] {
   return [
     { path: join(repoRoot, "framework/module/schema/generated/entity-kinds.ts"), content: emitTypeScript(kinds) },
-    { path: join(repoRoot, "repo/client/cli/go/entity_kinds.g.go"), content: emitGo(kinds) },
-    { path: join(repoRoot, "framework/module/schema/rs/generated.rs"), content: emitRust(kinds) },
+    { path: join(repoRoot, "repo/client/cli/go/🐹entity_kinds.g.go"), content: emitGo(kinds) },
+    { path: join(repoRoot, "framework/module/schema/rs/🤖generated.rs"), content: emitRust(kinds) },
   ];
 }
 //#endregion 🔖targets
@@ -120,7 +120,7 @@ class GenerateScript extends BundleScript {
       mkdirSync(dirname(target.path), { recursive: true });
       writeFileSync(target.path, target.content);
     }
-    console.log(`entity catalog refreshed (${kinds.length} entity kinds) -> generated/entity-kinds.ts, repo/client/cli/go/entity_kinds.g.go, rs/generated.rs`);
+    console.log(`entity catalog refreshed (${kinds.length} entity kinds) -> generated/entity-kinds.ts, repo/client/cli/go/🐹entity_kinds.g.go, rs/🤖generated.rs`);
   }
 }
 //#endregion 🔖generate

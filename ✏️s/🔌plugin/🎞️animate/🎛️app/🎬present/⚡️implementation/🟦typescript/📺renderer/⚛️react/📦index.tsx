@@ -82,7 +82,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { Document, Page, pdfjs } from "react-pdf";
 import Reveal from "reveal.js";
 import "reveal.js/dist/reveal.css";
-import "./globals.css";
+import "./🎨globals.css";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
@@ -6545,7 +6545,7 @@ if (import.meta.vitest) {
 	const { dirname, join } = await import("node:path");
 	const { fileURLToPath } = await import("node:url");
 	const globalsCssSource = readFileSync(
-		join(dirname(fileURLToPath(import.meta.url)), "globals.css"),
+		join(dirname(fileURLToPath(import.meta.url)), "🎨globals.css"),
 		"utf8",
 	);
 
@@ -7437,7 +7437,7 @@ if (import.meta.vitest) {
 			const { readFileSync } = await import("node:fs");
 			const { dirname, resolve } = await import("node:path");
 			const { fileURLToPath } = await import("node:url");
-			const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "globals.css"), "utf8");
+			const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "🎨globals.css"), "utf8");
 			expect(css).toContain("presentation-figure-crop-morph-from-rest");
 			expect(css).toContain("presentation-figure-crop-morph-grid-to-focus");
 			expect(
@@ -7457,7 +7457,7 @@ if (import.meta.vitest) {
 			const { readFileSync } = await import("node:fs");
 			const { dirname, resolve } = await import("node:path");
 			const { fileURLToPath } = await import("node:url");
-			const cssPath = resolve(dirname(fileURLToPath(import.meta.url)), "globals.css");
+			const cssPath = resolve(dirname(fileURLToPath(import.meta.url)), "🎨globals.css");
 			const css = readFileSync(cssPath, "utf8");
 			const restRule =
 				css.match(
@@ -7480,15 +7480,15 @@ if (import.meta.vitest) {
 		});
 
 		it("resolvePresentationAssetUrl maps deck-relative paths through the Vite base", () => {
-			expect(resolvePresentationAssetUrl("/bauteilbörse.png")).toBe("/bauteilbörse.png");
-			expect(resolvePresentationAssetUrl("./bauteilbörse.png")).toBe("/bauteilbörse.png");
+			expect(resolvePresentationAssetUrl("/🖼️bauteilbörse.png")).toBe("/🖼️bauteilbörse.png");
+			expect(resolvePresentationAssetUrl("./🖼️bauteilbörse.png")).toBe("/🖼️bauteilbörse.png");
 		});
 
 		it("keeps figure selection chrome as a translucent overlay, not a solid fill", async () => {
 			const { readFileSync } = await import("node:fs");
 			const { dirname, resolve } = await import("node:path");
 			const { fileURLToPath } = await import("node:url");
-			const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "globals.css"), "utf8");
+			const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "🎨globals.css"), "utf8");
 			expect(css).toContain(
 				".presentation-interactive-disposition--kind-figure.presentation-interactive-disposition--selected",
 			);
@@ -7671,7 +7671,7 @@ if (import.meta.vitest) {
 			const { readFileSync } = await import("node:fs");
 			const { dirname, resolve } = await import("node:path");
 			const { fileURLToPath } = await import("node:url");
-			const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "globals.css"), "utf8");
+			const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "🎨globals.css"), "utf8");
 			expect(css).toContain(".presentation-figure-scroll-viewport--axis-x");
 			expect(css).toContain(".presentation-figure-scroll-viewport--axis-y");
 			expect(css).toContain(".presentation-figure-scroll-scroller--axis-x");
@@ -7715,7 +7715,7 @@ if (import.meta.vitest) {
 			const crop = { x: 0, y: 0, width: 1, height: 1 };
 			const frame = { x: 0.127, y: 0.1, width: 0.746, height: 0.75 };
 			const vars = figureCropBackgroundVars(
-				{ kind: "figure", src: "/bauteilbörse.png", crop, sourceAspect },
+				{ kind: "figure", src: "/🖼️bauteilbörse.png", crop, sourceAspect },
 				crop,
 				frame,
 			);
@@ -7748,7 +7748,7 @@ if (import.meta.vitest) {
 				{
 					kind: "figure",
 					id: "tile-figure",
-					src: "/bauteilbörse.png",
+					src: "/🖼️bauteilbörse.png",
 					crop,
 					sourceAspect,
 					mosaic,
@@ -8936,7 +8936,7 @@ if (import.meta.vitest) {
 			const { readFileSync } = await import("node:fs");
 			const { dirname, resolve } = await import("node:path");
 			const { fileURLToPath } = await import("node:url");
-			const cssPath = resolve(dirname(fileURLToPath(import.meta.url)), "globals.css");
+			const cssPath = resolve(dirname(fileURLToPath(import.meta.url)), "🎨globals.css");
 			const css = readFileSync(cssPath, "utf8");
 			expect(css).toContain(".reveal .presentation-source-ghost");
 			expect(css).toContain(

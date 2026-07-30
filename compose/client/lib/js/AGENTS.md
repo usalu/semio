@@ -19,7 +19,7 @@ You MUST NOT cache kit graph data locally (DTO snapshots returned from `snapshot
 ## Strict layering
 
 - **Up** (toward UI): `compose/react` imports this package for `KitStore` + wire types.
-- **Down** (toward domain): this package speaks **only GraphQL** into `compose/rs` (wire + WASM in `index.ts` regions `GraphqlContract` / `RsWasmTransport`; `kit-store.worker.ts` with `dev://empty` only). Kit JSON enters via `Store.installProjection`, never `Session.open` URIs. No imports from `compose/react` or `compose/sketchpad`. CI: `npm run depcruise:layers` (`.dependency-cruiser.cjs`).
+- **Down** (toward domain): this package speaks **only GraphQL** into `compose/rs` (wire + WASM in `index.ts` regions `GraphqlContract` / `RsWasmTransport`; `kit-store.🟦worker.ts` with `dev://empty` only). Kit JSON enters via `Store.installProjection`, never `Session.open` URIs. No imports from `compose/react` or `compose/sketchpad`. CI: `npm run depcruise:layers` (`.dependency-cruiser.cjs`).
 
 ## Bidirectional actor model
 

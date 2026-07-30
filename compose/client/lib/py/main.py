@@ -15506,7 +15506,7 @@ def _parse_type_from_sqlite(
 
 
 def _parse_piece_from_sqlite(row: dict) -> dict:
-    """🔖Build a piece dict from a SQLite row aligned with ``compose/sqlite/schema.sql`` (``pose_*`` columns, ``design_ref_id``, ``hidden`` / ``locked``)."""
+    """🔖Build a piece dict from a SQLite row aligned with ``compose/sqlite/🛢️schema.sql`` (``pose_*`` columns, ``design_ref_id``, ``hidden`` / ``locked``)."""
     _pose_plane_keys = (
         "pose_plane_origin_x",
         "pose_plane_origin_y",

@@ -45,7 +45,7 @@ pub mod component {
             context: InvocationContextJson,
         ) -> Result<InvocationResponseJson, PluginError> {
             ensure_plugin_initialized();
-            let result = plugin_handle_action(instance_id, &action.json, &context.json)
+            let result = plugin_handle_action(instance_id, &🔣action.json, &context.json)
                 .map_err(PluginError::Message)?;
             Ok(InvocationResponseJson {
                 json: serde_json::to_string(&result).unwrap_or_else(|_| "{}".into()),
@@ -3362,7 +3362,7 @@ pub trait DocumentApp: Send + 'static {
     }
 }
 
-/// 🎞️ Rust mirror of WIT's `media-artifact` record (`framework/wit/world.wit`): `descriptor` is the
+/// 🎞️ Rust mirror of WIT's `media-artifact` record (`framework/wit/📜📜world.wit`): `descriptor` is the
 /// parsed `descriptor-json`, `data` the sibling raw-bytes field. Deliberately separate from
 /// `mesh::Media` (which pairs a `MediaType` with a `MediaPayload` for the declared-port workflow
 /// via `export_media`/`import_media`) — `consume-media`/`produce-media` operate at the whole-document
@@ -3491,7 +3491,7 @@ pub trait PluginApp: Send {
     fn media_fingerprint(&mut self, _port: &str) -> Result<MediaFingerprint, MediaError> {
         Err(MediaError::NotImplemented)
     }
-    /// 🎞️ ABI-level media artifact request for one port (`framework/wit/world.wit`'s `produce-media`).
+    /// 🎞️ ABI-level media artifact request for one port (`framework/wit/📜📜world.wit`'s `produce-media`).
     /// Default: a whole-document passthrough (`wire: Document{schema: document_schema()}` wrapping
     /// `document_pack()`'s pack+spr bytes via `store::encode_document_pack_bytes`) — the fallback every
     /// `PluginApp` gets for free without declaring any `media_ports()`. Apps whose media output isn't
@@ -3512,7 +3512,7 @@ pub trait PluginApp: Send {
             data: store::encode_document_pack_bytes(&files.pack, &files.spr),
         })
     }
-    /// 🎞️ ABI-level media artifact delivery for one port (`framework/wit/world.wit`'s `consume-media`).
+    /// 🎞️ ABI-level media artifact delivery for one port (`framework/wit/📜📜world.wit`'s `consume-media`).
     /// Default: a `Document{schema}` wire matching this app's own `document_schema()` loads straight
     /// through `load_document_pack` — the same pack+spr bytes `read-app-document-pack`/
     /// `load-app-document-pack` already round-trip. Anything else (a foreign document schema, or a

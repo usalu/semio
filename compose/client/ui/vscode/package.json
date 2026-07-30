@@ -4,7 +4,7 @@
   "name": "compose-vscode",
   "displayName": "compose",
   "description": "compose sketchpad for VS Code ✏️",
-  "icon": "compose.png",
+  "icon": "🖼️compose.png",
   "version": "0.0.1",
   "publisher": "usalu",
   "engines": {

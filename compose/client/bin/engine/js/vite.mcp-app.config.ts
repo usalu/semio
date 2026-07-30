@@ -14,7 +14,7 @@ import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import { defineConfig, type Plugin } from "vite";
 import { viteSingleFile } from "vite-plugin-singlefile";
-import { createWorkspaceViteResolveConfig } from "../../../../../framework/module/ui/styling/vite-elements-assets.ts";
+import { createWorkspaceViteResolveConfig } from "../../../../../framework/module/ui/styling/🟦vite-elements-assets.ts";
 // #endregion 🔌Adapters
 
 const repoRoot = path.resolve(__dirname, "../../../../../");

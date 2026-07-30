@@ -1,5 +1,5 @@
 // #region 🧲Header
-// 💻 compose/dev/algorithm/vitest.config.ts
+// 💻 compose/dev/algorithm/🧪vitest.config.ts
 // Specs: Vitest for @semio-tech/compose-algorithm index (embedded tests + WASM-backed runner smoke).
 // Summary: Mirrors compose/js wasm resolution; `@semio-tech/semio-asset` and `@semio-tech/compose-fixture` aliases.
 // #endregion 🧲Header

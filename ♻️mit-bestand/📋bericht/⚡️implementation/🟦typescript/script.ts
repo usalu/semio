@@ -6,7 +6,7 @@ import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../�
 import { buildPrintDocument, fetchPrintFonts } from "../../../../🧰framework/🛍️product/📓print/⚡️implementation/🟦typescript/script.ts";
 
 const berichtRoot = import.meta.dir;
-const defaultTex = join(berichtRoot, "zwischenbericht/zwischenbericht.tex");
+const defaultTex = join(berichtRoot, "zwischenbericht/🖋️zwischenbericht.tex");
 
 function resolveTexPath(segments: string[]): string {
   const raw = segments[0] ?? defaultTex;

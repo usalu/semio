@@ -11,7 +11,7 @@ pub const DEMO_STUDIO_ID: &str = "demo-studio";
 pub const DEMO_STUDIO_NAME: &str = "Demo Studio";
 /// 📜 the demo studio is handcrafted `.s` DSL text (an `OsProjection`, see `🔖DocumentHelpers`), not
 /// JSON — it is compiled into the binary, so a parse failure here is a bug in the bundled fixture.
-pub const DEMO_STUDIO_DSL: &str = include_str!("../../../../../../../✏️s/🔌plugin/🪐space/📚example/demo.s");
+pub const DEMO_STUDIO_DSL: &str = include_str!("../../../../../../../✏️s/🔌plugin/🪐space/📚example/✏️demo.s");
 //#endregion 🔖Constants
 
 //#region 🔖DocumentHelpers
@@ -26,8 +26,8 @@ pub fn ensure_space_fixtures_registered() {
         // the Wave 6 lock step), so `materialize_os_app_instance_document_json`'s `serde_json::from_str`
         // will fall back to `json!({})` for these two slugs until then. Non-fatal: seed content is a
         // convenience default, not required for correctness.
-        register_os_fixture_json("semio.draw.json", include_str!("../../../../../../../✏️s/🔌plugin/🖍️draw/📚example/semio.draw"));
-        register_os_fixture_json("jack.writer.json", include_str!("../../../../../../../✏️s/🔌plugin/✒️writer/📚example/jack.writer"));
+        register_os_fixture_json("🖍️semio.draw.json", include_str!("../../../../../../../✏️s/🔌plugin/🖍️draw/📚example/🖍️semio.draw"));
+        register_os_fixture_json("✒️jack.writer.json", include_str!("../../../../../../../✏️s/🔌plugin/✒️writer/📚example/✒️jack.writer"));
     });
     let _ = &*FIXTURES;
 }
@@ -38,7 +38,7 @@ pub fn ensure_space_fixtures_registered() {
 /// metadata (schema/id/name, freshly-minted history) is built the same way `create_empty_os_document`
 /// builds a blank one.
 pub fn parse_demo_space_document() -> OsDocument {
-    let initial_projection = <OsProjection as store::DocumentDsl>::parse_dsl(DEMO_STUDIO_DSL).expect("bundled example/demo.s is valid OsProjection DSL text");
+    let initial_projection = <OsProjection as store::DocumentDsl>::parse_dsl(DEMO_STUDIO_DSL).expect("bundled example/✏️demo.s is valid OsProjection DSL text");
     let envelope = create_document_envelope(OS_SPACE_SCHEMA, DEMO_STUDIO_ID, initial_projection, None);
     OsDocument {
         schema: OS_SPACE_SCHEMA.into(),

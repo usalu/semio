@@ -1865,7 +1865,7 @@ impl Default for DagFixture {
     fn default() -> Self {
         // 📜 the demo board is handcrafted `.dag` DSL text (see `//#region 🔖Dsl`), not JSON — it is
         // compiled into the binary, so a parse failure here is a bug in the bundled fixture itself.
-        let document = <DagDocument as store::DocumentDsl>::parse_dsl(include_str!("../../../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/♾️infinite/⚡️implementation/🦀rust/🎲board/🔌port/➡️directed/🕸️dag/📚example/demo.dag")).expect("bundled example/demo.dag is valid DagDocument DSL text");
+        let document = <DagDocument as store::DocumentDsl>::parse_dsl(include_str!("../../../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/♾️infinite/⚡️implementation/🦀rust/🎲board/🔌port/➡️directed/🕸️dag/📚example/🕸️🕸️demo.dag")).expect("bundled example/🕸️demo.dag is valid DagDocument DSL text");
         Self { schema: document.schema, camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: document.nodes, edges: document.edges }
     }
 }
@@ -6912,7 +6912,7 @@ pub fn empty_dag_document() -> DagDocument {
     DagDocument { schema: DAG_DOCUMENT_SCHEMA.into(), nodes: Vec::new(), edges: Vec::new() }
 }
 
-/// 🌱 The demo document seed (nodes/edges from `demo.dag`), sharing the fixture's example.
+/// 🌱 The demo document seed (nodes/edges from `🕸️🕸️demo.dag`), sharing the fixture's example.
 pub fn default_dag_document() -> DagDocument {
     dag_document_from_fixture(&DagFixture::default())
 }

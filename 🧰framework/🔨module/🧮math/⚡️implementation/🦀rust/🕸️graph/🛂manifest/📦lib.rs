@@ -4,7 +4,7 @@ use neural_engine::{Value, ValueType};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 pub mod generated {
-    include!("🤖generated/registry.rs");
+    include!("🤖generated/🦀registry.rs");
 }
 
 pub use generated::*;

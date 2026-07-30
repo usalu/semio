@@ -50,7 +50,7 @@ const TRINITY_REWRITE_PLAY_WINDOW_JACK: &str = "trinity-rewrite-jack";
 const TRINITY_REWRITE_PLAY_WINDOW_PARAMETERS: &str = "trinity-rewrite-parameters";
 const TRINITY_REWRITE_PLAY_RULE_NAME: &str = "label-core";
 
-const NAKAGIN_FIXTURE_DSL: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🔱trinity/📚example/nakagin-capsule-tower.trinity");
+const NAKAGIN_FIXTURE_DSL: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🔱trinity/📚example/🔱nakagin-capsule-tower.trinity");
 
 const DEFAULT_LHS_JSON: &str = r#"{
   "pattern": {

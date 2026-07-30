@@ -11583,7 +11583,7 @@ export function sketchpadFixtureUrlFromKitRelativePath(relativePath: string, bas
   return `/${segments.join("/")}`;
 }
 
-/** @emoji 🧊 Maps representation GLBs to puzzle 3d `/mesh/*` URLs (see `meshCollectionVitePlugin` in `framework/ui/styling/vite-elements-assets.ts`). */
+/** @emoji 🧊 Maps representation GLBs to puzzle 3d `/mesh/*` URLs (see `meshCollectionVitePlugin` in `framework/ui/styling/🟦vite-elements-assets.ts`). */
 export function sketchpadPuzzle3dMeshUrlForKitFile(row: { readonly name?: string; readonly path?: string }): string | undefined {
   const path = row.path?.replace(/^\.\//, "") ?? "";
   if (path.includes("representations/") || path.includes("representation/")) {
@@ -16132,10 +16132,10 @@ if (import.meta.vitest) {
             },
           ],
         },
-        files: [{ id: bridgeFileId, name: "bridge.glb" }],
+        files: [{ id: bridgeFileId, name: "🧊bridge.glb" }],
       } as Kit;
       expect(findTypeInKit(kit, bridgeTypeId)?.name).toBe("Bridge");
-      expect(sketchpadResolvePieceMeshUrl({ type: { id: bridgeTypeId } }, kit)).toBe("/mesh/bridge.glb");
+      expect(sketchpadResolvePieceMeshUrl({ type: { id: bridgeTypeId } }, kit)).toBe("/mesh/🧊bridge.glb");
     });
   });
 
@@ -16181,9 +16181,9 @@ if (import.meta.vitest) {
       const kit = {
         id: kitId,
         name: "K",
-        icon: "icons/metabolism.svg",
+        icon: "icons/🔣metabolism.svg",
         types: [
-          { id: typeId, name: "Beam", icon: "icons/base.svg" },
+          { id: typeId, name: "Beam", icon: "icons/🔣base.svg" },
           { id: plainTypeId, name: "Plain" },
         ],
         designs: [],
@@ -16331,33 +16331,33 @@ if (import.meta.vitest) {
     it("resolves metabolism glbs by file name for puzzle 3d even without url", () => {
       const kit = {
         id: "k",
-        files: [{ id: "60ace9d9-441d-412a-8c91-69e7993fafee", name: "bridge.glb" }],
+        files: [{ id: "60ace9d9-441d-412a-8c91-69e7993fafee", name: "🧊bridge.glb" }],
       } as Kit;
-      expect(sketchpadKitFileUrlById(kit).get("60ace9d9-441d-412a-8c91-69e7993fafee")).toBe("/mesh/bridge.glb");
+      expect(sketchpadKitFileUrlById(kit).get("60ace9d9-441d-412a-8c91-69e7993fafee")).toBe("/mesh/🧊bridge.glb");
     });
 
     it("prefers fixture /meshes over inline blobs for metabolism glb names", () => {
       const kit = {
         id: "k",
-        files: [{ id: "f1", name: "bridge.glb", blob: "data:model/gltf-binary;base64,AAAA" }],
+        files: [{ id: "f1", name: "🧊bridge.glb", blob: "data:model/gltf-binary;base64,AAAA" }],
       } as Kit;
-      expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/mesh/bridge.glb");
+      expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/mesh/🧊bridge.glb");
     });
 
     it("resolves metabolism representation glbs for puzzle 3d via /meshes", () => {
       const kit = {
         id: "k",
-        files: [{ id: "60ace9d9-441d-412a-8c91-69e7993fafee", name: "bridge.glb" }],
+        files: [{ id: "60ace9d9-441d-412a-8c91-69e7993fafee", name: "🧊bridge.glb" }],
       } as Kit;
-      expect(sketchpadKitFileUrlById(kit).get("60ace9d9-441d-412a-8c91-69e7993fafee")).toBe("/mesh/bridge.glb");
+      expect(sketchpadKitFileUrlById(kit).get("60ace9d9-441d-412a-8c91-69e7993fafee")).toBe("/mesh/🧊bridge.glb");
     });
 
     it("resolves capsule-with-balcony representation glbs for puzzle 3d via /meshes", () => {
       const kit = {
         id: "k",
-        files: [{ id: "f-slash", path: "representations/capsule-with-balcony_slash.glb", name: "capsule-with-balcony_slash.glb" }],
+        files: [{ id: "f-slash", path: "representations/🧊capsule-with-balcony_slash.glb", name: "🧊capsule-with-balcony_slash.glb" }],
       } as Kit;
-      expect(sketchpadKitFileUrlById(kit).get("f-slash")).toBe("/mesh/capsule-with-balcony_slash.glb");
+      expect(sketchpadKitFileUrlById(kit).get("f-slash")).toBe("/mesh/🧊capsule-with-balcony_slash.glb");
     });
   });
 
@@ -16958,9 +16958,9 @@ if (import.meta.vitest) {
     it("maps parent-relative representation paths to /meshes", () => {
       const kit = {
         id: "k",
-        files: [{ id: "f1", path: "../../representation/bridge.glb" }],
+        files: [{ id: "f1", path: "../../representation/🧊bridge.glb" }],
       } as Kit;
-      expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/mesh/bridge.glb");
+      expect(sketchpadKitFileUrlById(kit).get("f1")).toBe("/mesh/🧊bridge.glb");
     });
   });
 

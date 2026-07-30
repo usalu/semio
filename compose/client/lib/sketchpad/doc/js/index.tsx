@@ -15,7 +15,7 @@ import { mountPlatform } from "@semio-tech/framework-platform-renderer-react";
 import { ensureSketchpadPlatform } from "@semio-tech/compose-sketchpad";
 // #endregion 🔌Adapters
 
-import "../globals.css";
+import "../🎨globals.css";
 
 void mountPlatform(ensureSketchpadPlatform).catch((err) => {
   console.error("[compose.sketchpad.docs]", err);

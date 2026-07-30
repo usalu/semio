@@ -5050,7 +5050,7 @@ if (import.meta.vitest) {
     it("writes gumball pose onto reference props", () => {
       const base: WorldReferenceProps = {
         id: "ref-a",
-        source: { url: "/infinite-fixture/sketch.png", mediaKind: "image" },
+        source: { url: "/infinite-fixture/🖼️🖼️sketch.png", mediaKind: "image" },
         origin: [0, 0, 0],
       };
       const next = applyWorldReferenceTransform(base, {

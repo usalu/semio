@@ -484,7 +484,7 @@ impl<H: MediaNodeHost> SpaceRunner<H> {
 //#region 🔖WasmtimeNodeHost
 /// 🧩 Native `MediaNodeHost` over `semio-framework-plugin-host`'s wasmtime runtime. `instantiate` /
 /// `load_document` / `read_document` are real today. `import_media`/`export_media`/
-/// `media_fingerprint` are **not yet wired** — `world.wit` and both plugin hosts don't expose those
+/// `media_fingerprint` are **not yet wired** — `📜📜world.wit` and both plugin hosts don't expose those
 /// three calls on the wire yet (a deliberately separate, follow-up ticket once the concurrently
 /// in-flight media-lattice/reconcile tickets land); they return `RunError::Host` naming the gap
 /// rather than silently doing nothing.

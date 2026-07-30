@@ -12,7 +12,7 @@ export default {
     {
       kind: "figure",
       id: EMBODIMENT,
-      src: "/recherche-schweiz-überblick.png",
+      src: "/🖼️recherche-schweiz-überblick.png",
       alt: "Recherche Schweiz Überblick",
       sourceAspect: SOURCE_ASPECT,
     },

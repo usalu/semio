@@ -7,7 +7,7 @@
   "private": true,
   "exports": {
     ".": "../../../../../../../../../✏️s/🔌plugin/🎞️animate/🎛️app/🎬present/⚡️implementation/🟦typescript/📺renderer/⚛️react/📦index.tsx",
-    "./globals.css": "../../../../../../../../../✏️s/🔌plugin/🎞️animate/🎛️app/🎬present/⚡️implementation/🟦typescript/📺renderer/⚛️react/globals.css"
+    "./🎨globals.css": "../../../../../../../../../✏️s/🔌plugin/🎞️animate/🎛️app/🎬present/⚡️implementation/🟦typescript/📺renderer/⚛️react/🎨globals.css"
   },
   "dependencies": {
     "@semio-tech/animate-present-core": "workspace:*",

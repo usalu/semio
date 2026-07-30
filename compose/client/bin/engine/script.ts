@@ -71,7 +71,7 @@ class BuildScript extends BundleScript {
       "loguru",
       "--hidden-import=loguru",
       "--add-data",
-      `schema.graphql${addDataSep}.`,
+      `🔗schema.graphql${addDataSep}.`,
       "--add-data",
       `../openapi/schema.json${addDataSep}openapi/`,
       "--add-data",
@@ -97,7 +97,7 @@ class TestScript extends BundleScript {
     const assertSchema = (condition: boolean, message: string): void => {
       if (!condition) throw new Error(message);
     };
-    const graphqlSchema = readFileSync(join(this.root, "..", "graphql", "schema.graphql"), "utf8");
+    const graphqlSchema = readFileSync(join(this.root, "..", "graphql", "🔗schema.graphql"), "utf8");
     const definitionBody = (definition: string): string => {
       const escapedDefinition = definition.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const match = graphqlSchema.match(new RegExp(`${escapedDefinition}\\s*\\{([\\s\\S]*?)\\n\\}`));
@@ -120,7 +120,7 @@ class TestScript extends BundleScript {
     assertSchema(mutationBody.includes("addFixedPieceToDesign(") && mutationBody.includes("dragPieceInDesign("), "Mutation MUST expose flat draft/transaction-scoped kit mutators");
     const subscriptionBody = definitionBody("type Subscription");
     assertSchema(subscriptionBody.includes("commandSucceeded: Command!") && subscriptionBody.includes("operationSucceeded: OperationKind!"), "Subscription MUST expose Rust command/operation streams");
-    await runTestBudgeted(pythonCommand, ["-c", "from pathlib import Path; from ariadne import gql, make_executable_schema; s=Path('../graphql/schema.graphql').read_text(encoding='utf-8'); make_executable_schema(gql(s))"], {
+    await runTestBudgeted(pythonCommand, ["-c", "from pathlib import Path; from ariadne import gql, make_executable_schema; s=Path('../graphql/🔗schema.graphql').read_text(encoding='utf-8'); make_executable_schema(gql(s))"], {
       cwd: this.root,
       env,
     });

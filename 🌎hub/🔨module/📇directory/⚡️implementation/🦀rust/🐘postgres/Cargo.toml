@@ -3,7 +3,7 @@
 # AGPL-3.0
 # HubDirectory implementation over PostgreSQL — direct `sqlx-postgres`/`sqlx-core` (not the `sqlx`
 # facade), matching the exact precedent in `compose/server/hub/rs/bin.rs`. The scale-out backend for
-# multi-node self-hosted deployments; schema bootstrap is `directory/postgres/schema.sql`.
+# multi-node self-hosted deployments; schema bootstrap is `directory/postgres/🛢️schema.sql`.
 # #endregion 🔖Header
 
 [package]

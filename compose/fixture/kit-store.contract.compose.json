@@ -27,7 +27,7 @@
     "requiredTopLevel": ["kind", "schema", "rootSnapshot", "semanticOpLog", "histories", "backbonePointers"]
   },
   "graphqlSurface": {
-    "summary": "🌐 `compose/graphql/schema.graphql` (SDL emitted from `compose/rs` async-graphql) exposes `Query.readableKitGraph(selector)` companion `wip`/`authoritative` shorthands, `Graph.{semanticOpLog,projectionFingerprint,rootSnapshotHash}`, lifecycle `semanticOpRecordIds` / `orderedTransactionIds` on checkpoint/draft/transaction/change, `Mutation.{*,backboneAttach,backboneDetach}` returning `Command` plus `SubscriptionRoot.commandSucceeded`, and `BackboneCapabilitySet` for dev JSON vs `.compose/` without SQL."
+    "summary": "🌐 `compose/graphql/🔗schema.graphql` (SDL emitted from `compose/rs` async-graphql) exposes `Query.readableKitGraph(selector)` companion `wip`/`authoritative` shorthands, `Graph.{semanticOpLog,projectionFingerprint,rootSnapshotHash}`, lifecycle `semanticOpRecordIds` / `orderedTransactionIds` on checkpoint/draft/transaction/change, `Mutation.{*,backboneAttach,backboneDetach}` returning `Command` plus `SubscriptionRoot.commandSucceeded`, and `BackboneCapabilitySet` for dev JSON vs `.compose/` without SQL."
   },
   "kitGraphEngine": {
     "summary": "🧩 RS `crate::kit_graph_engine`: external design [`Id`] maps once via `Kit.bind_external_design_id` → `DesignHandle` + `Arc<Design>`; pieces registered in `Design.piece_weak_by_external_id` (write-side `Id`→`Weak<Piece>` beside the `Vec`); `projection_fingerprint_for_kit` matches golden sorted-centers hash; `deterministic_semantic_diff` + async `apply_semantic_op_json` compute ephemeral diffs (not persisted); each `vcs::Graph` is a separate readable/writable state (e.g. wip vs authoritative)."

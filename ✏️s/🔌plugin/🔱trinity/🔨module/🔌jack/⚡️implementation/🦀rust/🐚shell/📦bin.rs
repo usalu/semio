@@ -33,7 +33,7 @@ fn main() {
 
 fn run_main() -> Result<(), TrinityJackShellError> {
     let args: Vec<String> = env::args().collect();
-    let fixture_path = args.get(1).map(String::as_str).unwrap_or("trinity/example/nakagin-capsule-tower.trinity");
+    let fixture_path = args.get(1).map(String::as_str).unwrap_or("trinity/example/🔱nakagin-capsule-tower.trinity");
     let text = fs::read_to_string(fixture_path).map_err(|source| TrinityJackShellError::ReadFixture { path: fixture_path.to_string(), source })?;
     let fixture = GraphFixture::parse_dsl(&text).map_err(|source| TrinityJackShellError::Dsl { path: fixture_path.to_string(), source })?;
     let mut graph = Graph::from_fixture(fixture)?;

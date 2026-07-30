@@ -3,7 +3,7 @@
 use forms::FormSpec;
 
 /// 📄 The building-component fixture, handcrafted in the `.forms` DSL.
-pub const BUILDING_COMPONENT_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/📋forms/📚example/building-component.forms");
+pub const BUILDING_COMPONENT_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/📋forms/📚example/📋building-component.forms");
 
 /// 📖 Parses `.forms` DSL text into a `FormSpec`.
 pub fn parse_dsl(text: &str) -> Result<FormSpec, store::TextError> {
@@ -23,7 +23,7 @@ mod tests {
 
     #[test]
     fn building_component_fixture_dsl_round_trips() {
-        let spec = parse_dsl(BUILDING_COMPONENT_EXAMPLE_TEXT).expect("building-component.forms parses");
+        let spec = parse_dsl(BUILDING_COMPONENT_EXAMPLE_TEXT).expect("📋building-component.forms parses");
         assert_eq!(spec.id, "building-component");
         assert_eq!(spec.steps.len(), 2);
         assert_dsl_round_trip(&spec);

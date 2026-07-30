@@ -8,7 +8,7 @@
 //!   hub WebSocket, a `notify` file watcher, and reconnect/debounce timers.
 //! - **Browser wgpu build** (`wasm32-unknown-unknown`): the actor runs on `wasm_bindgen_futures::
 //!   spawn_local` with a `web_sys::WebSocket` hub transport (no threads, no filesystem). The
-//!   production browser shell instead uses a TS twin (`backbone-worker.ts`, WS-E); this wasm actor
+//!   production browser shell instead uses a TS twin (`🟦🟦backbone-🟦worker.ts`, WS-E); this wasm actor
 //!   keeps the crate coherent for a future in-wasm host.
 //! - **WASI-P2 plugins never link this crate** — inside the sandbox a store attaches vcs's pure
 //!   `PortBackbone` (an in-memory queue relayed to the host). This actor is a host-side concern only.
@@ -1510,7 +1510,7 @@ pub enum FixtureInbound {
     /// @emoji 📬 A raw `protocol_wire::ServerFrame`'s encoded bytes (`protocol::encode_server_frame`
     /// output, `lane` byte included), delivered as if received over the hub WebSocket — already
     /// real binary, not document/op content, so it stays inline in the manifest as a JSON number
-    /// array. Driven by `backbone-worker.ts`'s TS fallback vitest harness (which decodes these
+    /// array. Driven by `🟦🟦backbone-🟦worker.ts`'s TS fallback vitest harness (which decodes these
     /// bytes with its own binary decoder); the folder-only Rust harness skips these.
     HubFrame { frame_bytes: Vec<u8> },
     /// @emoji 📁 An external folder edit: `.ops`-grammar text (one or more `edit ...` blocks) to
@@ -1543,7 +1543,7 @@ struct FixtureManifest {
     expected_edit_ids: Vec<String>,
 }
 
-/// @emoji 📂 Loads every `<name>/fixture.json` manifest directory under `dir`, resolving each
+/// @emoji 📂 Loads every `<name>/🔣🔣fixture.json` manifest directory under `dir`, resolving each
 /// content-bearing `RawFixtureInbound` against its sibling text file. A fixture whose manifest or
 /// any referenced file is missing/unreadable is skipped (never a partial/silently-wrong fixture).
 #[cfg(not(target_arch = "wasm32"))]
@@ -1553,7 +1553,7 @@ pub fn load_fixtures(dir: &std::path::Path) -> Vec<ActorFixture> {
     let mut fixture_dirs: Vec<std::path::PathBuf> = entries.filter_map(|entry| entry.ok().map(|entry| entry.path())).filter(|path| path.is_dir()).collect();
     fixture_dirs.sort();
     for fixture_dir in fixture_dirs {
-        let Ok(manifest_text) = std::fs::read_to_string(fixture_dir.join("fixture.json")) else { continue };
+        let Ok(manifest_text) = std::fs::read_to_string(fixture_dir.join("🔣🔣fixture.json")) else { continue };
         let Ok(manifest) = serde_json::from_str::<FixtureManifest>(&manifest_text) else { continue };
         let mut inbound = Vec::with_capacity(manifest.inbound.len());
         let mut all_resolved = true;
@@ -1980,8 +1980,8 @@ mod tests {
         assert_ne!(rollback.operation_id, envelope.operation_id, "the undo gets its own operation id");
     }
 
-    /// @emoji 🎬 Canonical wire-frame byte fixtures shared with `backbone-worker.ts`'s vitest suite
-    /// (`framework/product/os/core/js/backbone-worker.ts` `WireBridge` region / `index.ts`'s
+    /// @emoji 🎬 Canonical wire-frame byte fixtures shared with `🟦🟦backbone-🟦worker.ts`'s vitest suite
+    /// (`framework/product/os/core/js/🟦🟦backbone-🟦worker.ts` `WireBridge` region / `index.ts`'s
     /// `encodeClientFrame`/`decodeServerFrame` twins) — both sides decode the exact same committed
     /// bytes under `store/sync/fixtures/wire/`, proving `protocol_wire`'s binary lane+tag codec
     /// round-trips identically across Rust and TS. Regenerated deterministically by this test (every
@@ -2030,7 +2030,7 @@ mod tests {
         //#region 🔖ClientFrame
         write_client(
             &fixtures_dir,
-            "client-hello.bin",
+            "📦client-hello.bin",
             &ClientFrame::Hello {
                 wire_version: 1,
                 protocol_version: 1,
@@ -2043,24 +2043,24 @@ mod tests {
             },
             Lane::Command,
         );
-        write_client(&fixtures_dir, "client-commands.bin", &ClientFrame::Commands { batch_id: 1, envelopes: vec![wire_envelope.clone()] }, Lane::Command);
-        write_client(&fixtures_dir, "client-frontier-advertise.bin", &ClientFrame::FrontierAdvertise { frontier: frontier.clone() }, Lane::Command);
-        write_client(&fixtures_dir, "client-preview-publish.bin", &ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, Lane::Preview);
-        write_client(&fixtures_dir, "client-presence.bin", &ClientFrame::Presence { peer: b"{\"cursor\":[1,2]}".to_vec() }, Lane::Preview);
-        write_client(&fixtures_dir, "client-credit-grant.bin", &ClientFrame::CreditGrant { n: 16 }, Lane::Command);
-        write_client(&fixtures_dir, "client-bye.bin", &ClientFrame::Bye, Lane::Command);
+        write_client(&fixtures_dir, "📦client-commands.bin", &ClientFrame::Commands { batch_id: 1, envelopes: vec![wire_envelope.clone()] }, Lane::Command);
+        write_client(&fixtures_dir, "📦client-frontier-advertise.bin", &ClientFrame::FrontierAdvertise { frontier: frontier.clone() }, Lane::Command);
+        write_client(&fixtures_dir, "📦client-preview-publish.bin", &ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, Lane::Preview);
+        write_client(&fixtures_dir, "📦client-presence.bin", &ClientFrame::Presence { peer: b"{\"cursor\":[1,2]}".to_vec() }, Lane::Preview);
+        write_client(&fixtures_dir, "📦client-credit-grant.bin", &ClientFrame::CreditGrant { n: 16 }, Lane::Command);
+        write_client(&fixtures_dir, "📦client-bye.bin", &ClientFrame::Bye, Lane::Command);
         //#endregion 🔖ClientFrame
 
         //#region 🔖ServerFrame
         write_server(
             &fixtures_dir,
-            "server-welcome-tail.bin",
+            "📦server-welcome-tail.bin",
             &ServerFrame::Welcome { session_id: "session-1".to_string(), resume_token: "resume-1".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Tail },
             Lane::Command,
         );
         write_server(
             &fixtures_dir,
-            "server-welcome-snapshot-inline.bin",
+            "📦server-welcome-snapshot-inline.bin",
             &ServerFrame::Welcome {
                 session_id: "session-2".to_string(),
                 resume_token: "resume-2".to_string(),
@@ -2069,23 +2069,23 @@ mod tests {
             },
             Lane::Command,
         );
-        write_server(&fixtures_dir, "server-snapshot-chunk.bin", &ServerFrame::SnapshotChunk { seq: 0, bytes: vec![1, 2, 3, 4] }, Lane::Command);
-        write_server(&fixtures_dir, "server-snapshot-done.bin", &ServerFrame::SnapshotDone { seq_count: 4 }, Lane::Command);
+        write_server(&fixtures_dir, "📦server-snapshot-chunk.bin", &ServerFrame::SnapshotChunk { seq: 0, bytes: vec![1, 2, 3, 4] }, Lane::Command);
+        write_server(&fixtures_dir, "📦server-snapshot-done.bin", &ServerFrame::SnapshotDone { seq_count: 4 }, Lane::Command);
         write_server(
             &fixtures_dir,
-            "server-commands.bin",
+            "📦server-commands.bin",
             &ServerFrame::Commands { envelopes: vec![wire_envelope], origin: protocol::ActorId("actor-1".to_string()), frontier: frontier.clone() },
             Lane::Command,
         );
         write_server(
             &fixtures_dir,
-            "server-ack-accepted.bin",
+            "📦server-ack-accepted.bin",
             &ServerFrame::Ack { batch_id: 1, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }], frontier: frontier.clone() },
             Lane::Command,
         );
         write_server(
             &fixtures_dir,
-            "server-ack-transformed.bin",
+            "📦server-ack-transformed.bin",
             &ServerFrame::Ack {
                 batch_id: 2,
                 stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Transformed { envelope: Box::new(sample_wire_envelope_for_fixtures()) }) }],
@@ -2095,18 +2095,18 @@ mod tests {
         );
         write_server(
             &fixtures_dir,
-            "server-ack-rejected.bin",
+            "📦server-ack-rejected.bin",
             &ServerFrame::Ack { batch_id: 3, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "conflict".to_string() }) }], frontier: frontier.clone() },
             Lane::Command,
         );
-        write_server(&fixtures_dir, "server-preview.bin", &ServerFrame::Preview { actor: protocol::ActorId("actor-1".to_string()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview);
-        write_server(&fixtures_dir, "server-presence.bin", &ServerFrame::Presence { peers: vec![b"{\"id\":\"a\"}".to_vec(), b"{\"id\":\"b\"}".to_vec()] }, Lane::Preview);
-        write_server(&fixtures_dir, "server-credit-grant.bin", &ServerFrame::CreditGrant { n: 32 }, Lane::Command);
-        write_server(&fixtures_dir, "server-error.bin", &ServerFrame::Error { code: "rejected".to_string(), message: "bad batch".to_string() }, Lane::Command);
+        write_server(&fixtures_dir, "📦server-preview.bin", &ServerFrame::Preview { actor: protocol::ActorId("actor-1".to_string()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview);
+        write_server(&fixtures_dir, "📦server-presence.bin", &ServerFrame::Presence { peers: vec![b"{\"id\":\"a\"}".to_vec(), b"{\"id\":\"b\"}".to_vec()] }, Lane::Preview);
+        write_server(&fixtures_dir, "📦server-credit-grant.bin", &ServerFrame::CreditGrant { n: 32 }, Lane::Command);
+        write_server(&fixtures_dir, "📦server-error.bin", &ServerFrame::Error { code: "rejected".to_string(), message: "bad batch".to_string() }, Lane::Command);
         //#endregion 🔖ServerFrame
     }
 
-    /// @emoji 🧸 A second, distinct `OperationEnvelope` for `server-ack-transformed.bin`'s
+    /// @emoji 🧸 A second, distinct `OperationEnvelope` for `📦server-ack-transformed.bin`'s
     /// `ApplyOutcome::Transformed` payload — must differ from the primary `wire_envelope` fixture so
     /// the vitest canary can assert it decodes as its own value, not an accidental copy.
     fn sample_wire_envelope_for_fixtures() -> protocol::OperationEnvelope {

@@ -3,7 +3,7 @@
 use draw::DrawDocument;
 
 /// 🗄️ The Semio emblem example fixture, handcrafted in `draw`'s DSL (`store::DocumentDsl`).
-pub const SEMIO_DRAW_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🖍️draw/📚example/semio.draw");
+pub const SEMIO_DRAW_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🖍️draw/📚example/🖍️semio.draw");
 
 /// 📖 Parses `.draw` DSL text into a `DrawDocument`.
 pub fn parse_dsl(text: &str) -> Result<DrawDocument, store::TextError> {

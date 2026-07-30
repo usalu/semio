@@ -20,7 +20,7 @@ class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
     process.env["COMPOSE_JS_RUN_EMBEDDED_TESTS"] = "1";
-    runVitest(this.root, rest, "vite.config.ts");
+    runVitest(this.root, rest, "⚙️vite.config.ts");
   }
 }
 

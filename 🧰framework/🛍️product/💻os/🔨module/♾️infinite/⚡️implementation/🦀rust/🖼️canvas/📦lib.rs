@@ -357,9 +357,9 @@ pub mod theme {
 pub mod icon_assets {
     //! @emoji 📎 Static bytes for icon rendering; `include_bytes!` paths are relative to this `lib.rs` file.
 
-    pub static NOTO_COLOR_EMOJI_SUBSET_TTF: &[u8] = include_bytes!("../../../../../../../../🧰framework/🛍️product/💻os/🔨module/♾️infinite/⚡️implementation/🦀rust/🖼️canvas/🖼️asset/NotoColorEmoji-subset.ttf");
+    pub static NOTO_COLOR_EMOJI_SUBSET_TTF: &[u8] = include_bytes!("../../../../../../../../🧰framework/🛍️product/💻os/🔨module/♾️infinite/⚡️implementation/🦀rust/🖼️canvas/🖼️asset/🔤🔤NotoColorEmoji-subset.ttf");
 
-    pub static MAP_LABEL_SANS_TTF: &[u8] = include_bytes!("../../../../../../../../🧰framework/🛍️product/💻os/🔨module/♾️infinite/⚡️implementation/🦀rust/🖼️canvas/🖼️asset/MapLabelSans.ttf");
+    pub static MAP_LABEL_SANS_TTF: &[u8] = include_bytes!("../../../../../../../../🧰framework/🛍️product/💻os/🔨module/♾️infinite/⚡️implementation/🦀rust/🖼️canvas/🖼️asset/🔤🔤MapLabelSans.ttf");
 }
 
 // #endregion 🏷️IconAssets
@@ -1212,10 +1212,10 @@ pub mod gpu_session {
 // #endregion 🔖GpuSession
 
 // #region 🔖IconCodec
-#[path = "../../../../../../../../🧰framework/🔨module/🖼️asset/⚡️implementation/🟦typescript/🌱metabolism/🔣icon/🤖generated/metabolism_icon_name.rs"]
+#[path = "../../../../../../../../🧰framework/🔨module/🖼️asset/⚡️implementation/🟦typescript/🌱metabolism/🔣icon/🤖generated/🦀metabolism_icon_name.rs"]
 mod metabolism_icon_name_gen;
 
-#[path = "../../../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔣icon/🤖generated/icon_name.rs"]
+#[path = "../../../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🔣icon/🤖generated/🦀icon_name.rs"]
 mod catalog_icon_name_gen;
 
 pub use metabolism_icon_name_gen::MetabolismIconName;

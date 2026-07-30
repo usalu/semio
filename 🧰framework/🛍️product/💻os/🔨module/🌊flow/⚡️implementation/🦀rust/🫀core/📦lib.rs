@@ -5223,13 +5223,13 @@ mod flow_vcs_tests {
         store::test_support::assert_store_roundtrip(document, operation);
     }
 
-    /// 📜 `flow/example/default.flow` is the handcrafted `.flow` DSL-text migration of what used to
-    /// be `default.flow.json` (see this crate's ticket history) — this is the permanent proof that
+    /// 📜 `flow/example/🌊🌊default.flow` is the handcrafted `.flow` DSL-text migration of what used to
+    /// be `🌊default.flow.json` (see this crate's ticket history) — this is the permanent proof that
     /// the checked-in fixture still parses and round trips, not a one-time migration script.
     #[test]
     fn default_flow_example_dsl_round_trips() {
-        let text = include_str!("../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/📚example/default.flow");
-        let fixture = <FlowFixture as store::DocumentDsl>::parse_dsl(text).expect("default.flow must parse");
+        let text = include_str!("../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/📚example/🌊🌊default.flow");
+        let fixture = <FlowFixture as store::DocumentDsl>::parse_dsl(text).expect("🌊default.flow must parse");
         store::test_support::assert_dsl_round_trip(&fixture);
         store::test_support::assert_dsl_pack_equivalence(&fixture);
     }
@@ -5941,7 +5941,7 @@ mod tests {
     fn flow_fixture_with_synapses_builds_dag_edges_and_ports() {
         let mut host = host_with_test_bridge();
         host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
-        host.replace_fixture(<FlowFixture as store::DocumentDsl>::parse_dsl(include_str!("../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/📚example/default.flow")).expect("fixture"));
+        host.replace_fixture(<FlowFixture as store::DocumentDsl>::parse_dsl(include_str!("../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌊flow/📚example/🌊🌊default.flow")).expect("fixture"));
         assert!(!host.dag.fixture.edges.is_empty(), "synapses should become dag edges");
         let add = host.dag.fixture.nodes.iter().find(|node| node.id == "add").expect("add node");
         assert_eq!(add.inputs().len(), 2);

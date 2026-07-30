@@ -43,7 +43,7 @@ kind = "mesh-collection"
 route = "/mesh"
 app = "puzzle3d-play"
 roots = ["🧰framework/🔨module/🖼️asset/⚡️implementation/🟦typescript/🌱metabolism/🎨representation", "♻️mit-bestand/🖼️asset/🏚️abbau-aufbau"]
-placeholder = "🧰framework/🔨module/🖼️asset/⚡️implementation/🟦typescript/🥽mesh/placeholder.glb"
+placeholder = "🧰framework/🔨module/🖼️asset/⚡️implementation/🟦typescript/🥽mesh/🧊placeholder.glb"
 filter_from_examples = true
 
 [[package.metadata.semio.assets]]

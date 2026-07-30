@@ -47,12 +47,12 @@ pub mod compiler {
         Ok(SceneAssetBundle { scene_hash: scene_hash.into(), mp4: outputs.mp4, last_frame: outputs.last_frame, subtitles: Some(scene_dir.join("scene.srt")), sections: outputs.sections })
     }
 
-    /// 📦 Writes `index.html`, `styles.css`, `manifest.json`, and embedded deck JSON for a wgpu-ready site.
+    /// 📦 Writes `🌐index.html`, `styles.css`, `manifest.json`, and embedded deck JSON for a wgpu-ready site.
     pub fn compile_present_site(deck: &PresentDeck, output_dir: &Path) -> Result<()> {
         fs::create_dir_all(output_dir).map_err(|error| PresentCompileError::new(error.to_string()))?;
         let deck_json = serde_json::to_string_pretty(deck).map_err(|error| PresentCompileError::new(format!("deck json: {error}")))?;
         fs::write(output_dir.join("deck.json"), &deck_json).map_err(|error| PresentCompileError::new(error.to_string()))?;
-        fs::write(output_dir.join("index.html"), index_html(&deck_json)).map_err(|error| PresentCompileError::new(error.to_string()))?;
+        fs::write(output_dir.join("🌐index.html"), index_html(&deck_json)).map_err(|error| PresentCompileError::new(error.to_string()))?;
         fs::write(output_dir.join("styles.css"), styles_css()).map_err(|error| PresentCompileError::new(error.to_string()))?;
         fs::write(output_dir.join("manifest.json"), serde_json::to_string_pretty(&site_manifest(deck)).map_err(|error| PresentCompileError::new(error.to_string()))?).map_err(|error| PresentCompileError::new(error.to_string()))?;
         fs::write(output_dir.join("player.js"), player_boot_js()).map_err(|error| PresentCompileError::new(error.to_string()))?;
@@ -69,7 +69,7 @@ pub mod compiler {
                 "kind": "wgpu",
                 "wasm": "/animate/plugin/wasm/animate_plugin_bg.wasm",
                 "js": "/animate/plugin/wasm/animate_plugin.js",
-                "boot": "/animate/plugin/wasm/boot.js"
+                "boot": "/animate/plugin/wasm/🟨boot.js"
             },
             "assets": {
                 "deck": "deck.json",
@@ -210,7 +210,7 @@ pub mod compiler {
             let output = std::env::temp_dir().join(format!("animate-present-{}", std::process::id()));
             let _ = std::fs::remove_dir_all(&output);
             compile_present_site(&deck, &output).expect("compile site");
-            let index = std::fs::read_to_string(output.join("index.html")).expect("index.html");
+            let index = std::fs::read_to_string(output.join("🌐index.html")).expect("🌐index.html");
             assert!(index.contains("animate.present.deck"));
             assert!(index.contains("animate_plugin.js"));
             let player = std::fs::read_to_string(output.join("player.js")).expect("player.js");

@@ -309,7 +309,7 @@
       }
     ]
   },
-  "icon": "icons/capital.svg",
+  "icon": "icons/🔣capital.svg",
   "image": "images/capital.png",
   "description": "🏗 A roof that has the skin of a cut extruded cuboid.",
   "families": {

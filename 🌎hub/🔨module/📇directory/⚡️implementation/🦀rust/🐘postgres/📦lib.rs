@@ -2,7 +2,7 @@ mod header {
     // 🧲Header
     // HubDirectory over PostgreSQL — direct `sqlx-postgres`/`sqlx-core` (not the `sqlx` facade),
     // matching the exact precedent in `compose/server/hub/rs/bin.rs`. The scale-out backend for
-    // multi-node self-hosted deployments; schema bootstrap is `directory/postgres/schema.sql`.
+    // multi-node self-hosted deployments; schema bootstrap is `directory/postgres/🛢️schema.sql`.
 }
 
 use async_trait::async_trait;
@@ -13,7 +13,7 @@ pub use sqlx_core::row::Row;
 pub use sqlx_postgres::{PgPool, PgPoolOptions};
 use uuid::Uuid;
 
-const SCHEMA: &str = include_str!("../../../../../../🌎hub/🔨module/📇directory/⚡️implementation/🦀rust/🐘postgres/schema.sql");
+const SCHEMA: &str = include_str!("../../../../../../🌎hub/🔨module/📇directory/⚡️implementation/🦀rust/🐘postgres/🛢️schema.sql");
 
 fn now_ms() -> i64 {
     use std::time::{SystemTime, UNIX_EPOCH};

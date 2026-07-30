@@ -3096,7 +3096,7 @@ mod tests {
         assert!(json.contains("object-hexagonal-cut-concrete-forest-left-bim-10"));
         let meshes = world_meshes_json(&scene.building_objects, scene.building_geometry.as_ref());
         assert!(meshes.contains("object-hexagonal-cut-concrete-forest-left-bim-10"));
-        assert!(!meshes.contains("hexagonal-cut-concrete-forest-left.glb"));
+        assert!(!meshes.contains("🧊hexagonal-cut-concrete-forest-left.glb"));
         assert!(scene.building_objects.len() > 5);
         assert!(scene.building_objects.iter().all(|object| object.solid_handle.is_some()));
     }
@@ -3894,7 +3894,7 @@ mod tests {
         drive(&mut app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })));
         assert!(app.runtime.engagement_session.is_some());
 
-        // box.json's default boxMode is "point" (length/width prompt); select diagonal mode (key
+        // 🔣box.json's default boxMode is "point" (length/width prompt); select diagonal mode (key
         // "d") to reach the classic two-corner-click flow.
         app.runtime.engagement_input = "d".into();
         drive(&mut app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })));
@@ -3907,7 +3907,7 @@ mod tests {
         app.runtime.engagement_input = "SetHeight2.5".into();
         drive(&mut app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })));
 
-        // box.json's `set.height` only records the height (state stays first_corner_height); an
+        // 🔣box.json's `set.height` only records the height (state stays first_corner_height); an
         // explicit `confirm` (Enter) is needed to reach `ready`, box's commit.fromStates.
         app.runtime.engagement_input = "Confirm".into();
         let emit = drive(&mut app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })));

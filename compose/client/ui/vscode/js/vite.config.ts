@@ -104,7 +104,7 @@ export default defineConfig(async ({ mode }) => {
   return {
     build: {
       lib: {
-        entry: path.resolve(__dirname, "extension.ts"),
+        entry: path.resolve(__dirname, "🟦extension.ts"),
         formats: ["cjs"],
         fileName: () => "extension",
       },

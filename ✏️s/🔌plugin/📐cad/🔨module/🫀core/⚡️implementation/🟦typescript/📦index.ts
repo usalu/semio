@@ -485,7 +485,7 @@ export interface ModelEntityRef {
 // #endregion 🏷️Metadata
 
 // #region 🗺️Expr
-/** @emoji 🗺️ Tagged declarative expression evaluated by `evalExpr` (`spatial/schema/json/expression.json`). */
+/** @emoji 🗺️ Tagged declarative expression evaluated by `evalExpr` (`spatial/schema/json/🔣expression.json`). */
 export type Expr = ExprPath | ExprConst | ExprVar | ExprField | ExprLet | ExprExists | ExprNotEmpty | ExprAll | ExprAny | ExprNot | ExprAbs | ExprDistance | ExprKernelCall | ExprBinop | ExprFold;
 
 export interface ExprPath {
@@ -1886,7 +1886,7 @@ export function listModelDefinitionManifests(): readonly ModelDefinitionManifest
 /** @emoji 🎨 Surface pattern kind for typology display styling. */
 export type TypologyStylePatternKind = "none" | "hatch" | "crosshatch" | "dots";
 
-/** @emoji 🎨 Authored surface pattern on a typology (`cad/schema/json/typology.json`). */
+/** @emoji 🎨 Authored surface pattern on a typology (`cad/schema/json/🔣typology.json`). */
 export interface TypologyStylePatternSpec {
   readonly kind: TypologyStylePatternKind;
   readonly direction?: number;
@@ -7065,7 +7065,7 @@ if (import.meta.vitest) {
     it("listModelObjectsForModelDefinition lists BIM class objects for aec.building", async () => {
       const { readFile } = await import("node:fs/promises");
       const { resolve } = await import("node:path");
-      const fixturePath = resolve(import.meta.dirname, "../../asset/play/hexagonal-cut-concrete-forest-left.model.json");
+      const fixturePath = resolve(import.meta.dirname, "../../asset/play/🔣hexagonal-cut-concrete-forest-left.🔣model.json");
       const fixtureJson = JSON.parse(await readFile(fixturePath, "utf8")) as ModelSpaceJson;
       const space = ModelSpace.fromJSON(fixtureJson);
       const building = space.models["aec.building"]!;

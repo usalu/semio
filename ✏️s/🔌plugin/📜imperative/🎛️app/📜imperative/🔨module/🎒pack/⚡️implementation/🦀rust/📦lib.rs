@@ -20,7 +20,7 @@ mod tests {
 
     #[test]
     fn pack_round_trips_and_agrees_with_dsl() {
-        let document = imperative_dsl::parse_dsl(imperative_dsl::IMPERATIVE_EXAMPLE_TEXT).expect("parse default.imperative");
+        let document = imperative_dsl::parse_dsl(imperative_dsl::IMPERATIVE_EXAMPLE_TEXT).expect("parse 📜default.imperative");
         store::test_support::assert_dsl_pack_equivalence(&document);
         let bytes = encode(&document);
         assert_eq!(decode(&bytes).expect("decode"), document);
@@ -31,7 +31,7 @@ mod tests {
         use imperative::{Dictionary, Path, Step};
         use std::collections::BTreeMap;
 
-        let mut document = imperative_dsl::parse_dsl(imperative_dsl::IMPERATIVE_EXAMPLE_TEXT).expect("parse default.imperative");
+        let mut document = imperative_dsl::parse_dsl(imperative_dsl::IMPERATIVE_EXAMPLE_TEXT).expect("parse 📜default.imperative");
         let inner = Step { id: "step-inner".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: BTreeMap::new() };
         let mut owner = Step { id: "step-if".into(), kind: "control.if".into(), params: Dictionary::new(), bodies: BTreeMap::new() };
         owner.bodies.insert("then".to_string(), Path { steps: vec![inner] });

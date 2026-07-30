@@ -31,14 +31,14 @@ function shippedModelDefinitionAssets(): ModelDefinitionAssetModules {
     return shippedModelDefinitionAssetsCache;
   }
   shippedModelDefinitionAssetsCache = {
-    typologies: import.meta.glob(["../../asset/modelDefinition/**/typology.json", "../../asset/modelDefinition/**/typology/*.json"], {
+    typologies: import.meta.glob(["../../asset/modelDefinition/**/🔣typology.json", "../../asset/modelDefinition/**/typology/*.json"], {
       eager: true,
       import: "default",
     }) as Record<string, unknown>,
     actions: import.meta.glob("../../asset/modelDefinition/**/action/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
     interactions: import.meta.glob("../../asset/modelDefinition/**/interaction/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
-    manifests: import.meta.glob("../../asset/modelDefinition/**/modelDefinition.json", { eager: true, import: "default" }) as Record<string, unknown>,
-    extensions: import.meta.glob("../../asset/modelDefinition/**/extension.json", { eager: true, import: "default" }) as Record<string, unknown>,
+    manifests: import.meta.glob("../../asset/modelDefinition/**/🔣modelDefinition.json", { eager: true, import: "default" }) as Record<string, unknown>,
+    extensions: import.meta.glob("../../asset/modelDefinition/**/🔣extension.json", { eager: true, import: "default" }) as Record<string, unknown>,
     attributes: import.meta.glob("../../asset/modelDefinition/**/attributeDefinition/*.json", { eager: true, import: "default" }) as Record<string, unknown>,
     propertyDefinitions: import.meta.glob(["../../asset/modelDefinition/**/propertyDefinition/*.json", "../../asset/modelDefinition/**/propertyKind/*.json"], { eager: true, import: "default" }) as Record<string, unknown>,
     properties: import.meta.glob("../../asset/modelDefinition/**/property/*.json", { eager: true, import: "default" }) as Record<string, unknown>,

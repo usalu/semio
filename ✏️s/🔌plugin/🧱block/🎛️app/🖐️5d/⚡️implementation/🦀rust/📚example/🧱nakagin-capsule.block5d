@@ -1,0 +1,34 @@
+schema=block.5d
+part-kind {
+  id="Capsule J" name="Capsule J" label="Capsule J" description=""
+}
+part-2d {
+  shape=circle radius=20
+}
+part-3d {
+  orientation=0,0,0,1
+}
+camera2d {
+  x=121.195 y=245.063 zoom=1
+}
+camera3d {
+  position=10,-10,6 target=0,0,1 zoom=1
+}
+meta {
+  description=""
+}
+representations [id:TEXT name:TEXT mesh-url:TEXT tags:LIST lod:TEXT description:TEXT attributes:TABLE] {
+  r0 "Full Detail" "/mesh/🧊capsule_J.glb" [ full ] full "" [ ]
+}
+grip-kinds [id:TEXT name:TEXT label:TEXT color:TEXT default-rope-kind:TEXT] {
+  door door Door "hsl(206 52% 48%)" rope.link
+}
+grips [id:TEXT grip-kind:TEXT angle:NUM radius-2d:NUM position:TUPLE direction:TUPLE radius-3d:NUM] {
+  g0 door -1.5707963267948966 3 0,-1.6,1.2 0,-1,0 0.3
+}
+compatibility [id:TEXT source:TEXT target:TEXT bidirectional:BOOL] {
+}
+attributes [key:TEXT value:TEXT definition:TEXT] {
+}
+authors [id:TEXT name:TEXT email:TEXT] {
+}

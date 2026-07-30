@@ -603,7 +603,7 @@ pub mod geometry_import {
 
         #[test]
         fn forest_wire_chains_reversed_edges_by_vertex_id() {
-            let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/hexagonal-cut-concrete-forest-left.model.json");
+            let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/🔣hexagonal-cut-concrete-forest-left.🔣model.json");
             let root: Value = serde_json::from_str(source).expect("fixture");
             let geometry = parse_geometry(root.pointer("/models/0/model/geometry"));
             let edges = edge_map(&geometry);
@@ -627,7 +627,7 @@ pub mod geometry_import {
 
         #[test]
         fn forest_shape_geometry_imports_solid_handle() {
-            let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/hexagonal-cut-concrete-forest-left.model.json");
+            let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/🔣hexagonal-cut-concrete-forest-left.🔣model.json");
             let root: Value = serde_json::from_str(source).expect("fixture");
             let geometry = parse_geometry(root.pointer("/models/0/model/geometry"));
             let objects = root
@@ -658,7 +658,7 @@ pub mod geometry_import {
 
         #[test]
         fn forest_energy_surface_tessellates_at_authored_height() {
-            let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/hexagonal-cut-concrete-forest-left.model.json");
+            let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/🔣hexagonal-cut-concrete-forest-left.🔣model.json");
             let root: Value = serde_json::from_str(source).expect("fixture");
             let geometry = parse_geometry(root.pointer("/models/2/model/geometry"));
             let objects = root
@@ -688,7 +688,7 @@ pub mod geometry_import {
 
         #[test]
         fn forest_structure_surface_tessellates_at_authored_height() {
-            let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/hexagonal-cut-concrete-forest-left.model.json");
+            let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/🔣hexagonal-cut-concrete-forest-left.🔣model.json");
             let root: Value = serde_json::from_str(source).expect("fixture");
             let geometry = parse_geometry(root.pointer("/models/3/model/geometry"));
             let objects = root
@@ -718,7 +718,7 @@ pub mod geometry_import {
 
         #[test]
         fn forest_structure_curve_wires_tessellate_as_centerlines() {
-            let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/hexagonal-cut-concrete-forest-left.model.json");
+            let source = include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/🔣hexagonal-cut-concrete-forest-left.🔣model.json");
             let root: Value = serde_json::from_str(source).expect("fixture");
             let geometry = parse_geometry(root.pointer("/models/3/model/geometry"));
             let objects = root
@@ -1238,7 +1238,7 @@ pub mod transformation {
 
 pub mod interaction {
     //! 🎮 CAD interaction statechart — a generic interpreter over `spatial.interaction` JSON assets
-    //! (`cad/asset/modelDefinition/*/interaction/*.json`, mirroring `cad/schema/json/interaction.json`),
+    //! (`cad/asset/modelDefinition/*/interaction/*.json`, mirroring `cad/schema/json/🔣inter🔣action.json`),
     //! plus a small commit-action runner mapping each spec's `commit.operation.action` onto real
     //! `kernel_3d_brepkit` calls. Four "building.building.*" ids have no JSON asset (aec.building has
     //! no interaction directory) and keep a bespoke hand-written statechart (`legacy_*` functions)
@@ -1288,75 +1288,75 @@ pub mod interaction {
     /// `(modelDefinitionId, raw JSON)` for every `interaction/*.json` asset embedded at build time.
     /// `aec.building` has no interaction assets of its own — see `LEGACY_BUILDING_INTERACTION_IDS`.
     const RAW_INTERACTION_ASSETS: &[(&str, &str)] = &[
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/arc.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/area.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/booleanDifference.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/booleanIntersection.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/booleanUnion.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/box.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/chamfer.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/circle.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/constructCurve.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/constructSurface.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/controlPointCurve.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/copy.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/createAnchor.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/cylinder.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/explode.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/extrudeCrv.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/extrudeWire.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/fillet.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/interpolateCurve.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/join.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/length.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/line.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/loft.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/mirror.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/move.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/networkSrf.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/offsetSurface.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/plane.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/polyline.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/rotate.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/scale1d.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/scale3d.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/sphere.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/split.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/sweep1.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/sweep2.json")),
-        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/trim.json")),
-        ("aec.building.energy", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/constructBasePlate.json")),
-        ("aec.building.energy", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/constructExternalWall.json")),
-        ("aec.building.energy", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/constructHull.json")),
-        ("aec.building.energy", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/constructRoof.json")),
-        ("aec.building.energy", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/constructWindows.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣arc.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣area.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣booleanDifference.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣booleanIntersection.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣booleanUnion.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣box.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣chamfer.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣circle.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣constructCurve.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣constructSurface.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣controlPointCurve.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣copy.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣createAnchor.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣cylinder.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣explode.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣extrudeCrv.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣extrudeWire.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣fillet.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣interpolateCurve.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣join.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣length.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣line.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣loft.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣mirror.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣move.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣networkSrf.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣offsetSurface.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣plane.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣poly🔣line.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣rotate.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣scale1d.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣scale3d.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣sphere.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣split.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣sweep1.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣sweep2.json")),
+        ("spatial.shape", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣trim.json")),
+        ("aec.building.energy", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/🔣constructBasePlate.json")),
+        ("aec.building.energy", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/🔣constructExternalWall.json")),
+        ("aec.building.energy", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/🔣constructHull.json")),
+        ("aec.building.energy", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/🔣constructRoof.json")),
+        ("aec.building.energy", include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/🔣constructWindows.json")),
         (
             "aec.building.structure.classic",
-            include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬interaction/constructOneWayReinforcedConcreteSlab.json"),
+            include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬interaction/🔣constructOneWayReinforcedConcreteSlab.json"),
         ),
         (
             "aec.building.structure.classic",
-            include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬interaction/constructReinforcedConcreteColumn.json"),
+            include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬interaction/🔣constructReinforcedConcreteColumn.json"),
         ),
         (
             "aec.building.structure.classic",
-            include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬interaction/constructReinforcedConcreteExternalWall.json"),
+            include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬interaction/🔣constructReinforcedConcreteExternalWall.json"),
         ),
         (
             "aec.building.structure.classic",
-            include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬interaction/constructReinforcedConcreteInternalWall.json"),
+            include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬interaction/🔣constructReinforcedConcreteInternalWall.json"),
         ),
         (
             "aec.building.structure.fem.line",
-            include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📏aec.building.structure.fem.line/🎬interaction/constructLineElement.json"),
+            include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📏aec.building.structure.fem.line/🎬interaction/🔣constructLineElement.json"),
         ),
         (
             "aec.building.structure.fem.solid",
-            include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🧊aec.building.structure.fem.solid/🎬interaction/constructSolidElement.json"),
+            include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🧊aec.building.structure.fem.solid/🎬interaction/🔣constructSolidElement.json"),
         ),
         (
             "aec.building.structure.fem.surface",
-            include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🗺️aec.building.structure.fem.surface/🎬interaction/constructSurfaceElement.json"),
+            include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🗺️aec.building.structure.fem.surface/🎬interaction/🔣constructSurfaceElement.json"),
         ),
     ];
 
@@ -2183,7 +2183,7 @@ pub mod interaction {
 
         #[test]
         fn box_interaction_default_mode_is_point_and_requires_length_prompt() {
-            // box.json's default `boxMode` (set by the `start` transition) is "point", not "diagonal" —
+            // 🔣box.json's default `boxMode` (set by the `start` transition) is "point", not "diagonal" —
             // a plain pointer.down after start does NOT reach diagonal_rubber.
             let mut session = start_session("primitive.box", CadPaneId::Shape).expect("session");
             assert!(apply_event(&mut session, "start", None));
@@ -2360,7 +2360,7 @@ const CAD_MODEL_INDEX_STRUCTURE_CLASSIC: usize = 3;
 static CAD_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 const FOREST_LEFT_MODEL_JSON: &str =
-    include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/hexagonal-cut-concrete-forest-left.model.json");
+    include_str!("../../../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🎮play/🔣hexagonal-cut-concrete-forest-left.🔣model.json");
 
 pub const CAD_MODEL_DEFINITION_SHAPE: &str = "spatial.shape";
 
@@ -2370,7 +2370,7 @@ pub const CAD_MODEL_DEFINITION_ENERGY: &str = "aec.building.energy";
 
 pub const CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC: &str = "aec.building.structure.classic";
 
-const CAD_CONCRETE_FOREST_REFERENCE_URL: &str = "/cad-fixture/concrete-forest-reference.png";
+const CAD_CONCRETE_FOREST_REFERENCE_URL: &str = "/cad-fixture/🖼️concrete-forest-reference.png";
 
 pub const CAD_FOREST_REFERENCE_WIDTH_WORLD: f64 = 22.0;
 

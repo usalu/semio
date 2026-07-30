@@ -7,7 +7,7 @@
   "private": true,
   "exports": {
     ".": "../../../../../🧰framework/🛍️product/💻os/⚡️implementation/🟦typescript/📦index.ts",
-    "./backbone-worker": "../../../../../🧰framework/🛍️product/💻os/⚡️implementation/🟦typescript/backbone-worker.ts"
+    "./backbone-worker": "../../../../../🧰framework/🛍️product/💻os/⚡️implementation/🟦typescript/🟦🟦backbone-🟦worker.ts"
   },
   "dependencies": {
     "@semio-tech/framework-core": "workspace:*",

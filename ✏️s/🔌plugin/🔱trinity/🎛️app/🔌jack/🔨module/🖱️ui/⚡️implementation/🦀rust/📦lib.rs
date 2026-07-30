@@ -35,8 +35,8 @@ const TRINITY_JACK_PLAY_WINDOW_GRAPH: &str = "trinity-jack-graph";
 const TRINITY_JACK_PLAY_WINDOW_EDITOR: &str = "trinity-jack-editor";
 const TRINITY_JACK_PLAY_WINDOW_RESULTS: &str = "trinity-jack-results";
 
-const NAKAGIN_FIXTURE_DSL: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🔱trinity/📚example/nakagin-capsule-tower.trinity");
-const BRANCH_FIXTURE_DSL: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🔱trinity/📚example/branch-chain.trinity");
+const NAKAGIN_FIXTURE_DSL: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🔱trinity/📚example/🔱nakagin-capsule-tower.trinity");
+const BRANCH_FIXTURE_DSL: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🔱trinity/📚example/🔱branch-chain.trinity");
 
 const TRINITY_JACK_DEFAULT_QUERY: &str =
     "MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' AND b.name != 'b' RETURN a.name, b.name, b.label";

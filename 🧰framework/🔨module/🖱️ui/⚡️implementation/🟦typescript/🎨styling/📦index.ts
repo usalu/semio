@@ -2,7 +2,7 @@
 /** @emoji 🎨 `@semio-tech/ui-styling` centralizes palette CSS, Tailwind entry, and the shared typography preset for ui consumers. */
 // #endregion 🧲Header
 
-export { tailwindConfig, tailwindConfig as default } from "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🦀rust/🎨styling/🎨tailwind/tailwind.config.ts";
+export { tailwindConfig, tailwindConfig as default } from "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🦀rust/🎨styling/🎨tailwind/🎨tailwind.config.ts";
 export {
   STYLING_BOARD_PALETTES,
   STYLING_CANVAS_FONTS,
@@ -16,11 +16,11 @@ export {
   STYLING_TOKENS,
   type StylingAppearanceName,
   type StylingTokenKey,
-} from "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/🎨styling/tokens.generated.ts";
-import { STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_SEMIO_THEME, STYLING_TOKENS, type StylingAppearanceName, type StylingTokenKey } from "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/🎨styling/tokens.generated.ts";
+} from "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/🎨styling/🟦tokens.generated.ts";
+import { STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_SEMIO_THEME, STYLING_TOKENS, type StylingAppearanceName, type StylingTokenKey } from "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/🎨styling/🟦tokens.generated.ts";
 
 //#region 🔖ThemeModel
-/** @emoji 🎨 `UiTheme` model: paint-ref resolver, parse/serialize, shared by the token generator and the runtime theme engine. MUST stay dependency-free from `tokens.generated.ts` (the generator produces that file; importing it here would create a cycle). */
+/** @emoji 🎨 `UiTheme` model: paint-ref resolver, parse/serialize, shared by the token generator and the runtime theme engine. MUST stay dependency-free from `🟦tokens.generated.ts` (the generator produces that file; importing it here would create a cycle). */
 //#region 🔖types
 /** @emoji 🖌️ A single paint reference: a primitive token, a literal hex, or a blend of two tokens. */
 export interface ThemePaintRef {
@@ -118,7 +118,7 @@ export function resolveThemePaint(colors: Record<string, string>, ref: ThemePain
   return [r, g, b, Math.round(alpha * 255)];
 }
 
-/** @emoji 📏 Derives dag component width as twice the IO channel column width (mirrors the tokens.json authoring shortcut). */
+/** @emoji 📏 Derives dag component width as twice the IO channel column width (mirrors the 🔣tokens.json authoring shortcut). */
 export function resolveThemeMetrics(metrics: UiTheme["metrics"]): UiTheme["metrics"] {
   const out = structuredClone(metrics ?? {});
   const dag = out.dag;
@@ -443,7 +443,7 @@ export function uiSpacingPx(multiplier: number, rootPx = STYLING_COMPACT_ROOT_PX
   return multiplier * COMPACT_UI_SPACING_REM * rootPx;
 }
 
-/** @emoji 📐 DOM layout multipliers (multiples of `--ui-spacing`) from tokens.json. */
+/** @emoji 📐 DOM layout multipliers (multiples of `--ui-spacing`) from 🔣tokens.json. */
 export const STYLING_DOM = STYLING_METRICS.dom;
 
 /** @emoji 📐 Resolves a DOM metric key to px at the compact reference root. */
@@ -897,7 +897,7 @@ if (import.meta.vitest) {
 
 //#region 🔖theme
 //#region 🔑Premades
-/** @emoji 🎨 The default "semio" theme, built from tokens.json at generate time. */
+/** @emoji 🎨 The default "semio" theme, built from 🔣tokens.json at generate time. */
 export function semioTheme(): UiTheme {
   return STYLING_SEMIO_THEME as unknown as UiTheme;
 }
@@ -1147,7 +1147,7 @@ export function elementStateHidden(s: Pick<UiElementState, "state">): boolean {
  * `introducing` also stamps `data-introduced="true"` — the exact attribute `UIIntroduction`'s
  * tour-driven reveal already stamps imperatively (see `framework/ui/js/react/index.tsx`), so an authored
  * `state: "introducing"` and a live tour step converge on the identical CSS rule
- * (`[data-introduced="true"]` in `ui.css`) with no duplicate styling to maintain. `celebrating`
+ * (`[data-introduced="true"]` in `🎨ui.css`) with no duplicate styling to maintain. `celebrating`
  * mirrors this exactly with `data-celebrated="true"`, converging with `celebrateElements()`'s
  * transient imperative stamp on the same `[data-celebrated="true"]` rule. All axes are omitted at
  * their default value — the DOM stays clean when nothing is going on. A hidden element gets `{}`:

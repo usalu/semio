@@ -7,7 +7,7 @@ import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest, runWasmPack
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runVitest(this.root, rest, "js/vitest.config.ts");
+    await runVitest(this.root, rest, "js/🧪vitest.config.ts");
   }
 }
 

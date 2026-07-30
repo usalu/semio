@@ -3,7 +3,7 @@
 use trinity_ram::GraphFixture;
 
 /// 📄 The Nakagin Capsule Tower example fixture, handcrafted in the `.trinity` DSL.
-pub const NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🔱trinity/📚example/nakagin-capsule-tower.trinity");
+pub const NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🔱trinity/📚example/🔱nakagin-capsule-tower.trinity");
 
 /// 📖 Parses `.trinity` DSL text into a `GraphFixture`.
 pub fn parse_dsl(text: &str) -> Result<GraphFixture, store::TextError> {

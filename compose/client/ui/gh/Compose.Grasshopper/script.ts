@@ -30,19 +30,19 @@ function runGenerateValueList(root: string): void {
     const lines = records.map((record: Record<string, string>) => `${record[keyColumn]} = "${record[valueColumn]}"`);
     writeFileSync(outputPath, lines.join("\n"), "utf-8");
   }
-  convertCsvToValueList(join(root, "..", "..", "..", "..", "..", "elements", "assets", "lists", "mimes.csv"), join(buildDir, "mimes.txt"), "Extension", "MIME");
-  convertCsvToValueList(join(root, "..", "..", "..", "..", "..", "elements", "assets", "lists", "licenses.csv"), join(buildDir, "licenses.txt"), "Name", "SPDX");
+  convertCsvToValueList(join(root, "..", "..", "..", "..", "..", "elements", "assets", "lists", "📋mimes.csv"), join(buildDir, "mimes.txt"), "Extension", "MIME");
+  convertCsvToValueList(join(root, "..", "..", "..", "..", "..", "elements", "assets", "lists", "📋licenses.csv"), join(buildDir, "licenses.txt"), "Name", "SPDX");
   console.log("✅ Value lists generated");
 }
 
 function runYakBuild(root: string): void {
   const yakRoot = join(root, "yak");
   const distDir = join(yakRoot, "dist");
-  for (const f of [join(distDir, "compose_512x512.png"), join(distDir, "manifest.yml")]) {
+  for (const f of [join(distDir, "🖼️compose_512x512.png"), join(distDir, "manifest.yml")]) {
     if (existsSync(f)) rmSync(f);
   }
   if (!existsSync(distDir)) mkdirSync(distDir);
-  copyFileSync(join(root, "..", "..", "..", "..", "..", "assets", "icons", "compose_512x512.png"), join(distDir, "compose_512x512.png"));
+  copyFileSync(join(root, "..", "..", "..", "..", "..", "assets", "icons", "🖼️compose_512x512.png"), join(distDir, "🖼️compose_512x512.png"));
   copyFileSync(join(yakRoot, "manifest.yml"), join(distDir, "manifest.yml"));
   runCmd(yakExecutable(), ["build", "--platform", "win"], { cwd: distDir });
   console.log("✅ Yak package built");

@@ -22,8 +22,8 @@ import {
   frameworkOsPlaygroundDefaultPort,
   loadFrameworkOsPlaygroundCatalog,
 } from "../../../../../../../../../🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/📦index.ts";
-import { startAssetServer } from "../../../../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🦀rust/🎨styling/vite-elements-assets.ts";
-import type { PlaygroundAssetSpec } from "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/🤖generated/playgrounds.ts";
+import { startAssetServer } from "../../../../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🦀rust/🎨styling/🟦🟦vite-elements-assets.ts";
+import type { PlaygroundAssetSpec } from "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/🤖generated/🟦🟦playgrounds.ts";
 import { writePlaygroundSession } from "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/script.ts";
 
 const repoRoot = getWorkspaceRoot();
@@ -107,12 +107,12 @@ function resolveNativeAppArgs(catalog: ReturnType<typeof loadFrameworkOsPlaygrou
 }
 
 function buildBootScript(bundleRoot: string): void {
-  const bootTs = join(bundleRoot, "js/boot.ts");
-  const bootJs = join(bundleRoot, "js/boot.js");
+  const bootTs = join(bundleRoot, "js/🟦🟦boot.ts");
+  const bootJs = join(bundleRoot, "js/🟨boot.js");
   const variant = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
-  const sessionPath = join(repoRoot, "framework/product/os/module/dev/js/generated/session.ts");
+  const sessionPath = join(repoRoot, "framework/product/os/module/dev/js/generated/🟦🟦session.ts");
   writePlaygroundSession(variant, sessionPath, repoRoot);
-  if (runCmdStatus("bun", ["build", bootTs, "--outfile", bootJs, "--target", "browser", "--format", "esm"], { cwd: bundleRoot }) !== 0) throw new Error("boot.js build failed");
+  if (runCmdStatus("bun", ["build", bootTs, "--outfile", bootJs, "--target", "browser", "--format", "esm"], { cwd: bundleRoot }) !== 0) throw new Error("🟨boot.js build failed");
 }
 
 class TrunkBuildScript extends BundleScript {
@@ -190,7 +190,7 @@ class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
     await runCargoTestBudgeted([crateName], this.repoRoot, rest);
-    await runVitest(this.root, rest, "vitest.config.ts");
+    await runVitest(this.root, rest, "🧪vitest.config.ts");
   }
 }
 

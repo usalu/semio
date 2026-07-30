@@ -451,8 +451,8 @@
                       }
                     ]
                   },
-                  "icon": "icons/base.svg",
-                  "image": "images/base.png",
+                  "icon": "icons/🔣base.svg",
+                  "image": "images/🖼️base.png",
                   "description": "🏠 A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms.",
                   "typology": {
                     "id": "typology-base"
@@ -1071,8 +1071,8 @@
                 }
               ]
             },
-            "icon": "icons/base.svg",
-            "image": "images/base.png",
+            "icon": "icons/🔣base.svg",
+            "image": "images/🖼️base.png",
             "description": "🏠 A polygonal two storey office building with an entrance hall and access to the staircases and elevators of the rectangular cores on the groundfloor. It has a setback and a colonade towards the street. On the second floor are the office rooms."
           }
         ]

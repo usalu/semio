@@ -9,7 +9,7 @@
     <DebugSymbols>false</DebugSymbols>
     <RootNamespace>Elements.Styling</RootNamespace>
     <AssemblyName>Elements.Styling</AssemblyName>
-    <Description>Generated from elements/core/styling (adapters.manifest.json); Palette hex strings from tokens.json colors.</Description>
+    <Description>Generated from elements/core/styling (🛂manifest.jsonadapters.manifest.json); Palette hex strings from 🔣tokens.json colors.</Description>
   </PropertyGroup>
 
 </Project>

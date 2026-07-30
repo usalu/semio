@@ -17,7 +17,7 @@ bundle:
 
 ## 📛 Entities
 
-Normalized kit persistence (`schema.sql`) includes:
+Normalized kit persistence (`🛢️schema.sql`) includes:
 
 - **`family`** — kit-scoped family metadata; nested ports are rows in **`port`** with `parent_family_id` set.
 - **`type_family`** / **`design_family`** — ordered many-to-many links for `TypeFullDto.families` and `DesignFullDto.families`.

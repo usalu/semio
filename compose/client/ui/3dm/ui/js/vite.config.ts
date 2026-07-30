@@ -25,7 +25,7 @@ import { fileURLToPath } from "url";
 import { defineConfig } from "vite";
 import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
-import { semioFaviconVitePlugin } from "../../../../../../framework/module/ui/styling/vite-elements-assets.ts";
+import { semioFaviconVitePlugin } from "../../../../../../framework/module/ui/styling/🟦vite-elements-assets.ts";
 // #endregion 🔌Adapters
 
 const __filename = fileURLToPath(import.meta.url);

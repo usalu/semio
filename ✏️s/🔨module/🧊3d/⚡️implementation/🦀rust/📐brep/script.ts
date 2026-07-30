@@ -9,7 +9,7 @@ class TestScript extends BundleScript {
   }
 }
 
-/** 📈 Runs the criterion benchmark suite (`benches/kernel.rs`). */
+/** 📈 Runs the criterion benchmark suite (`benches/🦀kernel.rs`). */
 class BenchScript extends BundleScript {
   run(): void {
     runCmd("cargo", ["bench", "-p", "kernel_3d_brepkit"], { cwd: this.root, budgetMs: buildBudgetMs() });

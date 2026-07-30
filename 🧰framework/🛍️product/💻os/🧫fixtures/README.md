@@ -40,7 +40,7 @@ expected-deliveries [edge-id:TEXT producer-instance-id:TEXT producer-port-id:TEX
 
 Field grammar mirrors `OsWorkflow`/`OsWorkflowNode`/`OsWorkflowEdge`/`OsMediaPort`/`WorkflowDelivery`'s
 `dsl::DslRecord` derives; `contract` uses `MediaContract`'s hand-written `dsl::DslField` (see
-`🔖MediaContractDsl` in `lib.rs`) — the same grammar as `s/plugin/space/example/demo.s`'s `workflow` block.
+`🔖MediaContractDsl` in `lib.rs`) — the same grammar as `s/plugin/space/example/✏️demo.s`'s `workflow` block.
 
 Regenerating a fixture (e.g. after a grammar change) means constructing the `WorkflowFixture` value in Rust
 and writing `store::DocumentDsl::print_dsl`/`store::DocumentPack::encode_pack` back to disk — never hand-edit

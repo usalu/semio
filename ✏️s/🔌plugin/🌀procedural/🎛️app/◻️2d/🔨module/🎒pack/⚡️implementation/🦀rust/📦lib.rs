@@ -27,7 +27,7 @@ mod tests {
 
     #[test]
     fn dsl_pack_equivalence_example_fixture() {
-        let projection = procedural_2d_dsl::parse_dsl(procedural_2d_dsl::PROCEDURAL2D_EXAMPLE_TEXT).expect("parse default.procedural2d fixture");
+        let projection = procedural_2d_dsl::parse_dsl(procedural_2d_dsl::PROCEDURAL2D_EXAMPLE_TEXT).expect("parse 🌀default.procedural2d fixture");
         test_support::assert_dsl_pack_equivalence(&projection);
     }
 

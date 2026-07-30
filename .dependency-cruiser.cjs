@@ -104,7 +104,7 @@ module.exports = {
     {
       name: "no-generated-edits-upstream",
       severity: "error",
-      comment: "only the plugin registry itself may import its generated plugin catalog directly — other consumers must go through generated/plugins.ts",
+      comment: "only the plugin registry itself may import its generated plugin catalog directly — other consumers must go through generated/🟦plugins.ts",
       from: { pathNot: "^🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/" },
       to: { path: "^🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/🤖generated/plugins\\.json$" },
     },

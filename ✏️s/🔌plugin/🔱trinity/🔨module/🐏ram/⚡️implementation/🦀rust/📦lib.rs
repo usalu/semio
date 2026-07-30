@@ -1563,14 +1563,14 @@ mod tests {
 
     #[test]
     fn dsl_round_trip_nakagin_fixture() {
-        let fixture = GraphFixture::parse_dsl(include_str!("../../../../../../../✏️s/🔌plugin/🔱trinity/📚example/nakagin-capsule-tower.trinity")).expect("nakagin fixture parses");
+        let fixture = GraphFixture::parse_dsl(include_str!("../../../../../../../✏️s/🔌plugin/🔱trinity/📚example/🔱nakagin-capsule-tower.trinity")).expect("nakagin fixture parses");
         assert_dsl_round_trip(&fixture);
         assert_dsl_pack_equivalence(&fixture);
     }
 
     #[test]
     fn dsl_round_trip_branch_chain_fixture() {
-        let fixture = GraphFixture::parse_dsl(include_str!("../../../../../../../✏️s/🔌plugin/🔱trinity/📚example/branch-chain.trinity")).expect("branch-chain fixture parses");
+        let fixture = GraphFixture::parse_dsl(include_str!("../../../../../../../✏️s/🔌plugin/🔱trinity/📚example/🔱branch-chain.trinity")).expect("branch-chain fixture parses");
         assert_dsl_round_trip(&fixture);
         assert_dsl_pack_equivalence(&fixture);
     }

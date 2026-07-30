@@ -18129,13 +18129,13 @@ var policies = []PolicyDef{
 		ID:          "repo",
 		Name:        "Repo",
 		Description: "Validates strict repo command implementation parity and ticket tracking",
-		Scopes:      []string{"go/repo/main.go", "js/vscode/package.json", "graphql/repo/schema.graphql"},
+		Scopes:      []string{"go/repo/main.go", "js/vscode/package.json", "graphql/repo/🔗🔗schema.graphql"},
 		Priority:    BreachPriorityHigh,
 		Groups: []Territory{
 			{
 				Name:        "Parity",
 				Description: "Command parity breachs",
-				Scopes:      []string{"go/repo/main.go", "js/vscode/package.json", "graphql/repo/schema.graphql"},
+				Scopes:      []string{"go/repo/main.go", "js/vscode/package.json", "graphql/repo/🔗🔗schema.graphql"},
 				Kinds: []Statute{
 					BreachRepoMissingCommand,
 					BreachRepoMissingTicketTracking,
@@ -20464,7 +20464,7 @@ func dependencyBoundaryFileIsAdapter(file, content string) bool {
 	if strings.Contains(n, "/external_adapters") || strings.HasSuffix(n, "external_adapters.rs") {
 		return true
 	}
-	if strings.Contains(n, "-transport.") || strings.HasSuffix(n, ".worker.ts") || strings.Contains(n, "kit-store.worker") {
+	if strings.Contains(n, "-transport.") || strings.HasSuffix(n, ".🟦worker.ts") || strings.Contains(n, "kit-store.worker") {
 		return true
 	}
 	base := strings.ToLower(filepath.Base(n))
@@ -26250,9 +26250,9 @@ func ToolUpdateMetabolism() ToolResult {
 }
 
 // #region 🕰️SQLite Export
-// SQLite export functions for persisting repository data to the normalized schema defined in repo/sqlite/schema.sql.
+// SQLite export functions for persisting repository data to the normalized schema defined in repo/sqlite/🛢️schema.sql.
 
-// 📤exportSchemaSQL is the embedded SQLite schema for repo export, matching repo/sqlite/schema.sql exactly.
+// 📤exportSchemaSQL is the embedded SQLite schema for repo export, matching repo/sqlite/🛢️schema.sql exactly.
 const exportSchemaSQL = `
 CREATE TABLE IF NOT EXISTS contributor (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26648,7 +26648,7 @@ func seedKindTables(tx *sql.Tx) error {
 	return nil
 }
 
-// ✏️ExportToSQLite MUST write the complete output to the target using exactly the schema defined in repo/sqlite/schema.sql.
+// ✏️ExportToSQLite MUST write the complete output to the target using exactly the schema defined in repo/sqlite/🛢️schema.sql.
 // ✔️ExportToSQLite exports repo data to a SQLite database using the normalized schema with FK-based kind references and a synthetic snapshot checkpoint.
 func ExportToSQLite(outputPath string, ctx RepoContext) (*ExportResult, error) {
 	if outputPath == "" {

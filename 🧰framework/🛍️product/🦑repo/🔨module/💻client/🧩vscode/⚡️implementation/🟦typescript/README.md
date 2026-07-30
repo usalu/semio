@@ -8,11 +8,11 @@ VS Code extension source for repo tooling workflows.
 
 VS Code test-cli configuration entrypoint that defines the compiled test glob and Electron launch arguments for extension tests.
 
-## extension.test.ts
+## 🟦extension.test.ts
 
 VS Code extension integration tests covering command registration, diagnostics, sidebar view contributions, filter state behavior, and monorepo tree provider roots.
 
-## extension.ts
+## 🟦extension.ts
 
 Extension activation entrypoint that registers the two sidebar views (Monorepo and Filter) backed by tree data providers wired to a shared filter state source.
 The Filter view exposes one item per filter kind with emoji + name labels, tooltip descriptions, and emoji-only menu actions for option toggles.

@@ -1843,7 +1843,7 @@ mod tests {
     #[test]
     fn concrete_forest_kind_catalog_matches_puzzle3d_default_manifest() {
         use store::DocumentDsl;
-        let fixture = Puzzle3dProjection::parse_dsl(include_str!("../../../../../../../../../✏️s/🔌plugin/🧩puzzle/🎛️app/🧊3d/⚡️implementation/🦀rust/📚example/concrete-forest.puzzle3d")).unwrap();
+        let fixture = Puzzle3dProjection::parse_dsl(include_str!("../../../../../../../../../✏️s/🔌plugin/🧩puzzle/🎛️app/🧊3d/⚡️implementation/🦀rust/📚example/🧩concrete-forest.puzzle3d")).unwrap();
         let catalogs: KindCatalogBundle = serde_json::from_value(serde_json::to_value(&fixture.meta.kind_catalogs).unwrap()).unwrap();
         let manifest = mathematical_graph_manifest::manifest_by_id("puzzle3d-default").expect("puzzle3d-default manifest must be registered");
         let wire_kind_ids: std::collections::BTreeSet<_> = manifest.wire_kinds.iter().map(|row| row.id.as_str()).collect();

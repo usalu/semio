@@ -30,7 +30,7 @@ mod tests {
 
     #[test]
     fn default_sequence_example_pack_round_trips() {
-        let fixture = sequence_dsl::parse_dsl(sequence_dsl::SEQUENCE_EXAMPLE_TEXT).expect("default.sequence must parse");
+        let fixture = sequence_dsl::parse_dsl(sequence_dsl::SEQUENCE_EXAMPLE_TEXT).expect("🎬default.sequence must parse");
         store::test_support::assert_dsl_pack_equivalence(&fixture);
     }
 

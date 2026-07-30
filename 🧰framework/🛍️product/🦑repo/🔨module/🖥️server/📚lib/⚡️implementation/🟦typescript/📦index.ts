@@ -431,13 +431,13 @@ export async function markDiscordDeliveryFailed(id: string, error: string, attem
 // #endregion 🔷Discord
 
 // #region 🎞️Schema
-// Run schema migration from schema.sql.
+// Run schema migration from 🛢️schema.sql.
 import { readFileSync } from "fs";
 import { join } from "path";
 
 export async function runSchema(): Promise<void> {
   const p = getPool();
-  const schemaPath = join(__dirname, "../../postgres/schema.sql");
+  const schemaPath = join(__dirname, "../../postgres/🛢️🛢️schema.sql");
   const schema = readFileSync(schemaPath, "utf-8");
   await p.query(schema);
 }
@@ -876,7 +876,7 @@ async function handleReindex(jobs: PgBoss.Job<ReindexJob>[]) {
 // #endregion 🌊Jobs
 
 // #region 🌩️Main
-/** @emoji 🌩️ Starts pg-boss workers (separate process entry via `worker.ts`). */
+/** @emoji 🌩️ Starts pg-boss workers (separate process entry via `🟦🟦worker.ts`). */
 export async function runRepoServerWorker(): Promise<void> {
   const boss = new PgBoss(DATABASE_URL);
 

@@ -2135,7 +2135,7 @@ pub mod host_runtime {
     //! 🧵 Canonical native document-open sequencing shared by every native host that links this crate
     //! (currently the wgpu shell). Native-only: it depends on `framework/sync`'s `DocumentHost`, whose
     //! actor is a native-thread (or wasm `spawn_local`) concern — WASI-P2 plugins never see it, and the
-    //! browser React shell talks to its own TS twin (`framework/product/os/core/js/backbone-worker.ts`)
+    //! browser React shell talks to its own TS twin (`framework/product/os/core/js/🟦🟦backbone-🟦worker.ts`)
     //! through a different FFI boundary (the WIT program sandbox), not through this Rust module. Keeping
     //! this doc-comment as the single canonical description of the sequence — referenced from both
     //! `os-shell.tsx`'s `openDocument` and `framework/renderer/wgpu/rs/lib.rs` — is how the two stay in
@@ -2669,8 +2669,8 @@ pub mod instance {
 
         #[test]
         fn resolves_fixture_json_by_slug() {
-            register_os_fixture_json("semio.draw.json", r#"{"schema":"draw.document","id":"semio"}"#);
-            let json = os_fixture_json("semio.draw.json").expect("registered fixture");
+            register_os_fixture_json("🖍️semio.draw.json", r#"{"schema":"draw.document","id":"semio"}"#);
+            let json = os_fixture_json("🖍️semio.draw.json").expect("registered fixture");
             let parsed: Value = serde_json::from_str(&json).expect("json");
             assert_eq!(parsed["schema"], "draw.document");
             assert_eq!(parsed["id"], "semio");

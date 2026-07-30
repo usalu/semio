@@ -1482,7 +1482,7 @@ pub mod widget {
 
     /// 🗂️ A semio-styled table: bold muted header with a hairline underline, hairline row
     /// separators, no vertical rules, no striping — mirrors `ui/js/react`'s `Table` and
-    /// `print/tex/semio-table.sty`. Tree rows are plain indented rows in the same table.
+    /// `print/tex/🖋️semio-table.sty`. Tree rows are plain indented rows in the same table.
     pub struct TableState {
         pub columns: Vec<TableColumn>,
         pub rows: Vec<TableRow>,
@@ -2107,7 +2107,7 @@ pub mod chrome {
 
     /// 🖌️ Paints a window whose title/control tabs are recessed into its top corners: each is a real
     /// 2-row box sharing the window's own left/right wall, with its short inner wall bending down
-    /// into the main body's top edge — the semio-window.sty "flowing" tab look, not text cut into a
+    /// into the main body's top edge — the 🖋️semio-window.sty "flowing" tab look, not text cut into a
     /// flat border line. A side with no tab (controls not wanted, or too narrow to fit) simply stays
     /// flat, its corner sitting at the main body's top row instead of rising two rows like a tab.
     fn paint_window(w: &WindowState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {

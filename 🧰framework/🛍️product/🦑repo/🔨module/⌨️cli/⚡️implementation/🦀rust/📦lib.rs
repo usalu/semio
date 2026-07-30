@@ -619,10 +619,10 @@ pub mod catalog {
         let playgrounds = generate_playground_registry(root);
         let out_dir = generated_dir(root);
         fs::create_dir_all(&out_dir)?;
-        fs::write(out_dir.join("plugins.json"), emit_plugins_json(&entries))?;
-        fs::write(out_dir.join("plugins.ts"), emit_plugins_ts(&entries))?;
-        fs::write(out_dir.join("playgrounds.json"), emit_playgrounds_json(&playgrounds))?;
-        fs::write(out_dir.join("playgrounds.ts"), emit_playgrounds_ts(&playgrounds))?;
+        fs::write(out_dir.join("🔣🔣plugins.json"), emit_plugins_json(&entries))?;
+        fs::write(out_dir.join("🟦🟦plugins.ts"), emit_plugins_ts(&entries))?;
+        fs::write(out_dir.join("🔣🔣playgrounds.json"), emit_playgrounds_json(&playgrounds))?;
+        fs::write(out_dir.join("🟦🟦playgrounds.ts"), emit_playgrounds_ts(&playgrounds))?;
         Ok((entries.len(), playgrounds.len()))
     }
 
@@ -632,10 +632,10 @@ pub mod catalog {
         let playgrounds = generate_playground_registry(root);
         let out_dir = generated_dir(root);
         let expected = [
-            ("plugins.json", emit_plugins_json(&entries)),
-            ("plugins.ts", emit_plugins_ts(&entries)),
-            ("playgrounds.json", emit_playgrounds_json(&playgrounds)),
-            ("playgrounds.ts", emit_playgrounds_ts(&playgrounds)),
+            ("🔣🔣plugins.json", emit_plugins_json(&entries)),
+            ("🟦🟦plugins.ts", emit_plugins_ts(&entries)),
+            ("🔣🔣playgrounds.json", emit_playgrounds_json(&playgrounds)),
+            ("🟦🟦playgrounds.ts", emit_playgrounds_ts(&playgrounds)),
         ];
         let mut problems: Vec<String> = expected
             .iter()
@@ -648,7 +648,7 @@ pub mod catalog {
 
     /// 📖 Reads the committed catalog (empty if it has never been generated).
     pub fn load_playground_catalog(root: &Path) -> Vec<PlaygroundEntry> {
-        let path = generated_dir(root).join("playgrounds.json");
+        let path = generated_dir(root).join("🔣🔣playgrounds.json");
         let Ok(text) = fs::read_to_string(path) else { return Vec::new() };
         let Ok(raw) = serde_json::from_str::<Vec<serde_json::Value>>(&text) else { return Vec::new() };
         raw.into_iter()
@@ -1297,7 +1297,7 @@ root = "cad/fixture"
 kind = "mesh-collection"
 route = "/mesh"
 roots = ["framework/asset/metabolism/representation", "framework/asset/abbau-aufbau"]
-placeholder = "framework/asset/mesh/placeholder.glb"
+placeholder = "framework/asset/mesh/🧊🧊placeholder.glb"
 filter_from_examples = true
 app = "puzzle3d"
 "#;
@@ -1310,7 +1310,7 @@ app = "puzzle3d"
         assert_eq!(assets[1].root.as_deref(), Some("cad/fixture"));
         assert_eq!(assets[2].kind, "mesh-collection");
         assert_eq!(assets[2].roots, vec!["framework/asset/metabolism/representation", "framework/asset/abbau-aufbau"]);
-        assert_eq!(assets[2].placeholder.as_deref(), Some("framework/asset/mesh/placeholder.glb"));
+        assert_eq!(assets[2].placeholder.as_deref(), Some("framework/asset/mesh/🧊🧊placeholder.glb"));
         assert!(assets[2].filter_from_examples);
         assert_eq!(assets[2].app.as_deref(), Some("puzzle3d"));
     }

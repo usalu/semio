@@ -992,8 +992,8 @@ mod tests {
 
     #[test]
     fn interaction_spec_parses_box_asset() {
-        let raw = include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/box.json");
-        let spec: InteractionSpec = serde_json::from_str(raw).expect("box.json parses as InteractionSpec");
+        let raw = include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣box.json");
+        let spec: InteractionSpec = serde_json::from_str(raw).expect("🔣box.json parses as InteractionSpec");
         assert_eq!(spec.id, "primitive.box");
         assert_eq!(spec.machine.initial, "idle");
         assert!(spec.state("first_corner").is_some());
@@ -1007,8 +1007,8 @@ mod tests {
 
     #[test]
     fn interaction_spec_parses_sphere_asset_with_command_finish() {
-        let raw = include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/sphere.json");
-        let spec: InteractionSpec = serde_json::from_str(raw).expect("sphere.json parses as InteractionSpec");
+        let raw = include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/📐spatial.shape/🎬interaction/🔣sphere.json");
+        let spec: InteractionSpec = serde_json::from_str(raw).expect("🔣sphere.json parses as InteractionSpec");
         assert_eq!(spec.id, "solid.sphere");
         assert_eq!(spec.commit.operation.action, "command.finish");
         assert!(spec.display.states.iter().any(|s| s.state == "radius"));
@@ -1017,15 +1017,15 @@ mod tests {
     #[test]
     fn interaction_spec_parses_all_energy_and_structure_classic_assets() {
         let sources = [
-            include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/constructBasePlate.json"),
-            include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/constructExternalWall.json"),
-            include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/constructHull.json"),
-            include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/constructRoof.json"),
-            include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/constructWindows.json"),
-            include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬interaction/constructOneWayReinforcedConcreteSlab.json"),
-            include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬interaction/constructReinforcedConcreteColumn.json"),
-            include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬interaction/constructReinforcedConcreteExternalWall.json"),
-            include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬interaction/constructReinforcedConcreteInternalWall.json"),
+            include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/🔣constructBasePlate.json"),
+            include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/🔣constructExternalWall.json"),
+            include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/🔣constructHull.json"),
+            include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/🔣constructRoof.json"),
+            include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/🔣constructWindows.json"),
+            include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬interaction/🔣constructOneWayReinforcedConcreteSlab.json"),
+            include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬interaction/🔣constructReinforcedConcreteColumn.json"),
+            include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬interaction/🔣constructReinforcedConcreteExternalWall.json"),
+            include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🏛️aec.building.structure.classic/🎬interaction/🔣constructReinforcedConcreteInternalWall.json"),
         ];
         for raw in sources {
             let spec: InteractionSpec = serde_json::from_str(raw).expect("asset parses as InteractionSpec");
@@ -1098,7 +1098,7 @@ mod tests {
 
     #[test]
     fn interaction_spec_guard_evaluates_against_context() {
-        let raw = include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/constructExternalWall.json");
+        let raw = include_str!("../../../../../../../✏️s/🔌plugin/📐cad/🖼️asset/🏗️modelDefinition/🔥aec.building.energy/🎬interaction/🔣constructExternalWall.json");
         let spec: InteractionSpec = serde_json::from_str(raw).expect("parses");
         let mut context = std::collections::HashMap::new();
         let env_without = ExprEnv { context: &context, event: None };

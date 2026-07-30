@@ -5,11 +5,11 @@ use procedural_3d::Procedural3dDocument;
 /// 📦 The `procedural3d-play` "hexagonal mushroom column" example, embedded at compile time as
 /// handcrafted `.procedural3d` DSL text — shared by the manifest's `.example(...)` registration, the
 /// `default_projection`/`example_projection` fallbacks, and every test fixture.
-pub const PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🌀procedural/🎛️app/🧊3d/⚡️implementation/🦀rust/📚example/hexagonal-mushroom-column.procedural3d");
+pub const PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🌀procedural/🎛️app/🧊3d/⚡️implementation/🦀rust/📚example/🌀hexagonal-mushroom-column.procedural3d");
 /// 📦 The `procedural3d-play` "rectangle extrude volume" example.
-pub const PROCEDURAL3D_EXAMPLE_RECT_EXTRUDE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🌀procedural/🎛️app/🧊3d/⚡️implementation/🦀rust/📚example/rectangle-extrude-volume.procedural3d");
+pub const PROCEDURAL3D_EXAMPLE_RECT_EXTRUDE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🌀procedural/🎛️app/🧊3d/⚡️implementation/🦀rust/📚example/🌀rectangle-extrude-volume.procedural3d");
 /// 📦 The `procedural3d-play` "sphere cut with torus" example.
-pub const PROCEDURAL3D_EXAMPLE_SPHERE_TORUS_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🌀procedural/🎛️app/🧊3d/⚡️implementation/🦀rust/📚example/sphere-cut-with-torus.procedural3d");
+pub const PROCEDURAL3D_EXAMPLE_SPHERE_TORUS_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🌀procedural/🎛️app/🧊3d/⚡️implementation/🦀rust/📚example/🌀sphere-cut-with-torus.procedural3d");
 
 /// 📖 Parses `.procedural3d` DSL text into a `Procedural3dDocument`.
 pub fn parse_dsl(text: &str) -> Result<Procedural3dDocument, store::TextError> {
@@ -36,21 +36,21 @@ mod tests {
 
     #[test]
     fn dsl_round_trip_hexagonal_mushroom_column_fixture() {
-        let projection = Procedural3dDocument::parse_dsl(PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT).expect("parse hexagonal-mushroom-column.procedural3d fixture");
+        let projection = Procedural3dDocument::parse_dsl(PROCEDURAL3D_EXAMPLE_HEX_COLUMN_TEXT).expect("parse 🌀hexagonal-mushroom-column.procedural3d fixture");
         test_support::assert_dsl_round_trip(&projection);
         test_support::assert_dsl_pack_equivalence(&projection);
     }
 
     #[test]
     fn dsl_round_trip_rectangle_extrude_volume_fixture() {
-        let projection = Procedural3dDocument::parse_dsl(PROCEDURAL3D_EXAMPLE_RECT_EXTRUDE_TEXT).expect("parse rectangle-extrude-volume.procedural3d fixture");
+        let projection = Procedural3dDocument::parse_dsl(PROCEDURAL3D_EXAMPLE_RECT_EXTRUDE_TEXT).expect("parse 🌀rectangle-extrude-volume.procedural3d fixture");
         test_support::assert_dsl_round_trip(&projection);
         test_support::assert_dsl_pack_equivalence(&projection);
     }
 
     #[test]
     fn dsl_round_trip_sphere_cut_with_torus_fixture() {
-        let projection = Procedural3dDocument::parse_dsl(PROCEDURAL3D_EXAMPLE_SPHERE_TORUS_TEXT).expect("parse sphere-cut-with-torus.procedural3d fixture");
+        let projection = Procedural3dDocument::parse_dsl(PROCEDURAL3D_EXAMPLE_SPHERE_TORUS_TEXT).expect("parse 🌀sphere-cut-with-torus.procedural3d fixture");
         test_support::assert_dsl_round_trip(&projection);
         test_support::assert_dsl_pack_equivalence(&projection);
     }

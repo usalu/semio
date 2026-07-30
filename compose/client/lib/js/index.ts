@@ -5272,7 +5272,7 @@ if (typeof process !== "undefined" && !!process.env && process.env["COMPOSE_JS_R
           (rows) => rows.some((row) => row.kind === "FOLDER" && row.name === "representations"),
           30_000,
         );
-        expect(kitRoot.some((row) => row.kind === "FILE" && row.name === "base.glb")).toBe(false);
+        expect(kitRoot.some((row) => row.kind === "FILE" && row.name === "🧊base.glb")).toBe(false);
         expect(kitRoot.some((row) => row.kind === "FILE" && row.name === "e5267da44d")).toBe(false);
         expect(kitRoot.filter((row) => row.kind === "FILE")).toHaveLength(0);
         expect(kitRoot.some((row) => row.kind === "FOLDER" && row.name === "representations")).toBe(true);
@@ -5280,10 +5280,10 @@ if (typeof process !== "undefined" && !!process.env && process.env["COMPOSE_JS_R
         expect(repFolder).toBeDefined();
         const repChildren = await eventually(
           () => fetchComposeFileSystemChildren(store, { kind: "FOLDER", id: representationsFolderId }),
-          (rows) => rows.some((row) => row.kind === "FILE" && row.name === "base.glb"),
+          (rows) => rows.some((row) => row.kind === "FILE" && row.name === "🧊base.glb"),
           30_000,
         );
-        const baseGlb = repChildren.find((row) => row.kind === "FILE" && row.name === "base.glb");
+        const baseGlb = repChildren.find((row) => row.kind === "FILE" && row.name === "🧊base.glb");
         expect(baseGlb).toBeDefined();
         expect(baseGlb!.id).toBe("457d2061-ac4b-4317-8563-ba41afffd149");
       } finally {

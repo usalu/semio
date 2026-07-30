@@ -18,7 +18,7 @@ To actually build a design, you need to create **Pieces** — the bricks made fr
 Now it’s time to **turn your molds into actual bricks** — called **Pieces** 🧩  
 These are the elements you’ll place, move, and connect in your design 🎯
 
-![📤 sketch drawing](/asset/image/sketch-drawing-piece.png)
+![📤 sketch drawing](/asset/image/🖼️sketch-drawing-piece.png)
 
 When you create a Piece, you're telling Compose:  
 _"Take this specific mold (Type + Variant) and make a real, usable brick from it."_ 🧱
@@ -103,11 +103,11 @@ each one inherits geometry, connectors, and semantic logic from its **Type** and
 
 🧱 Let’s start by representationing the first two Pieces from the sketch
 
-![Representation Piece Component](/asset/image/representation-piece-10Alpha.png)
+![Representation Piece Component](/asset/image/🖼️representation-piece-10Alpha.png)
 
 Once all five Pieces are created, your representation will look like this:
 
-![Representation Piece Component](/asset/image/representation-5pieces-10Alpha-V2.png)
+![Representation Piece Component](/asset/image/🖼️representation-5pieces-10Alpha-V2.png)
 
 > ✅ Your bricks are now cast and ready  
 > Next step: **placing and connecting them** to build your final representation 🔗
@@ -124,7 +124,7 @@ Each **Connection** says:
 
 <br />
 
-![📤 sketch drawing](/asset/image/sketch-drawing-connections.png)
+![📤 sketch drawing](/asset/image/🖼️sketch-drawing-connections.png)
 
 ### 🧭 Set the Connection
 
@@ -155,16 +155,16 @@ From the sketch, we can tell:
 So the connection looks like this:
 `Con(Yel:w → Red-T:w)`
 
-![Connection Example](/asset/image/mode-connection-grasshopper.png)
+![Connection Example](/asset/image/🖼️mode-connection-grasshopper.png)
 
 This tells Compose:  
 **Snap the west Connector of `Yel` to the west Connector of `Red-T`**
 
-![Set Connection](/asset/image/set-connection-2pcs-alpha.png)
+![Set Connection](/asset/image/🖼️set-connection-2pcs-alpha.png)
 
 Once this first connection is in place, you can continue snapping all remaining bricks together using similar logic 🧩
 
-![Set Connection](/asset/image/mode-connection-5pcs-grasshopper.png)
+![Set Connection](/asset/image/🖼️mode-connection-5pcs-grasshopper.png)
 
 🔗 This Tells Compose:
 
@@ -182,7 +182,7 @@ Once this first connection is in place, you can continue snapping all remaining 
 
 ---
 
-![Set Connection](/asset/image/set-connection-all-pcs-alpha.png)
+![Set Connection](/asset/image/🖼️set-connection-all-pcs-alpha.png)
 
 ### 🎯 Adjust Snap _(Optional Step)_
 
@@ -208,7 +208,7 @@ You can move the geometry in three local directions:
 - **Rise** ⬆️⬇️ → Lifts or lowers the Piece vertically, perpendicular to the face it connects to  
   🪜 Like lifting a brick slightly higher or lowering it onto the studs
 
-  ![Connection Adjustment](/asset/image/translation-parameter.gif)
+  ![Connection Adjustment](/asset/image/🖼️translation-parameter.gif)
 
 ---
 
@@ -221,14 +221,14 @@ You can move the geometry in three local directions:
 - **Tilt** 🤸 → Tilts the Piece forward or backward, around a vertical axis
   🎢 Like tilting a ramp or slope brick up or down
 
-  ![Connection Adjustment](/asset/image/Rotation-parameter.gif)
+  ![Connection Adjustment](/asset/image/🖼️Rotation-parameter.gif)
 
 ---
 
 As we can see, the two Pieces we connected earlier don’t align exactly as shown in the sketch 🧩
 
 <br />
-![📤 sketch drawing](/asset/image/sketch-drawing-45.png)
+![📤 sketch drawing](/asset/image/🖼️sketch-drawing-45.png)
 <br />
 This is where the optional step of adjusting the snap comes in 🛠️
 
@@ -237,7 +237,7 @@ You’re not changing the Connector itself ⚓
 Instead, you're offsetting the **geometry** that comes with it 📐
 
 <br />
-![Set Connection](/asset/image/set-connection-2pcs.gif)
+![Set Connection](/asset/image/🖼️set-connection-2pcs.gif)
 
 ---
 
@@ -256,9 +256,9 @@ you can **rotate it individually** — compose allows per-piece rotation without
 🔗 And thanks to Compose’s **chain behavior**,  
 when you move or rotate one Piece, all the connected Pieces after it will **update automatically** 💫
 
-![Set Connection](/asset/image/set-connection-3pcs.gif)
+![Set Connection](/asset/image/🖼️set-connection-3pcs.gif)
 
-![Set Connection](/asset/image/set-connection-5pcs.gif)
+![Set Connection](/asset/image/🖼️set-connection-5pcs.gif)
 
 ---
 
@@ -302,7 +302,7 @@ You’ll provide three main inputs:
 
 **Example:**
 
-![Representation Design Example](/asset/image/representation-design.png)
+![Representation Design Example](/asset/image/🖼️representation-design.png)
 
 ---
 
@@ -393,9 +393,9 @@ compose will only override the inputs you change — everything else stays exact
 > _E.g. In the "Hello Compose" logo example, rotating the first Piece flips all connected Pieces as well — because they’re linked logically_  
 > \_
 
-![Reconstruct Piece](/asset/image/reconruct-piece-2.png)
+![Reconstruct Piece](/asset/image/🖼️reconruct-piece-2.png)
 
-![Reconstruct Piece](/asset/image/reconruct-piece.png)
+![Reconstruct Piece](/asset/image/🖼️reconruct-piece.png)
 
 #### 🔗 Adjust a Connection
 
@@ -407,9 +407,9 @@ This makes it easy to fine-tune how two Pieces are connected without rebuilding 
 
 > _E.g. You can change the gap, shift, or rotation of an existing Connection, and all downstream geometry will update automatically._
 
-![Reconstruct Con](/asset/image/reconstruct-connection.png)
-![Reconstruct Con](/asset/image/reconstruct-connection-2.png)
-![Reconstruct Con](/asset/image/reconstruct-connection-3.png)
+![Reconstruct Con](/asset/image/🖼️reconstruct-connection.png)
+![Reconstruct Con](/asset/image/🖼️reconstruct-connection-2.png)
+![Reconstruct Con](/asset/image/🖼️reconstruct-connection-3.png)
 
 #### 🧱 Update a Type
 

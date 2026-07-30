@@ -1330,19 +1330,19 @@ def predictDesign(description: str, types: list[TypeContext], design: DesignInpu
 # #endregion 🎗️Assistant
 
 # #region 🎬Graphql
-# Graphql MUST serve the hand-written SDL next to this module (compose/engine/schema.graphql) with bound resolvers (schema-first).
+# Graphql MUST serve the hand-written SDL next to this module (compose/engine/🔗schema.graphql) with bound resolvers (schema-first).
 
 
 def _engine_bundle_dir() -> pathlib.Path:
-    # Directory containing engine entrypoint and bundled schema.graphql (source tree).
+    # Directory containing engine entrypoint and bundled 🔗schema.graphql (source tree).
     return pathlib.Path(__file__).resolve().parent
 
 
 def _graphql_schema_file() -> pathlib.Path:
-    # Path to the engine HTTP GraphQL SDL (PyInstaller places schema.graphql at bundle root).
+    # Path to the engine HTTP GraphQL SDL (PyInstaller places 🔗schema.graphql at bundle root).
     if getattr(sys, "frozen", False):
-        return pathlib.Path(sys._MEIPASS) / "schema.graphql"
-    return _engine_bundle_dir() / "schema.graphql"
+        return pathlib.Path(sys._MEIPASS) / "🔗schema.graphql"
+    return _engine_bundle_dir() / "🔗schema.graphql"
 
 
 def _openapi_schema_file() -> pathlib.Path:
@@ -4528,7 +4528,7 @@ class TestMcp:
         assert flat_variant.get("parent") == {"id": "9a890dd4-0a9c-48ac-920a-9e62666465ef"}
         root_design = next(design for design in payload["kitArtifacts"]["designs"] if design.get("id") == "9a890dd4-0a9c-48ac-920a-9e62666465ef")
         assert "Japanese Metabolism" in root_design.get("description", "")
-        assert root_design.get("image") == "images/nakagin-capsule-tower.png"
+        assert root_design.get("image") == "images/🖼️nakagin-capsule-tower.png"
         ellipsoid = next(kind for kind in payload["kitArtifacts"]["types"] if kind.get("id") == "4ca3b87b-cd76-4228-9f7e-1459b711f0ab")
         assert ellipsoid.get("parent") == {"id": "71749140-9db9-43f6-bd81-d89011667b80"}
         assert ellipsoid.get("name") == "Ellipsoid"

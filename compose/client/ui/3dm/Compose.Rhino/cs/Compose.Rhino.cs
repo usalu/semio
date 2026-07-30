@@ -67,7 +67,7 @@ public interface IWebViewHost
 [assembly: PlugInDescription(DescriptionType.Organization, "compose")]
 [assembly: PlugInDescription(DescriptionType.UpdateUrl, "")]
 [assembly: PlugInDescription(DescriptionType.WebSite, "https://compose.tech")]
-[assembly: PlugInDescription(DescriptionType.Icon, "Compose.Rhino.compose_32x32.ico")]
+[assembly: PlugInDescription(DescriptionType.Icon, "Compose.Rhino.🖼️compose_32x32.ico")]
 #endif
 #endregion ⭐AssemblyAttributes
 
@@ -478,7 +478,7 @@ public class ComposeRhinoPlugin : PlugIn
         Bridge.Register(new DocumentBinding());
         Bridge.Register(new ImportBinding());
 
-        RhinoApp.WriteLine("compose.3dm program loaded.");
+        RhinoApp.WriteLine("📐compose.3dm program loaded.");
         return LoadReturnCode.Success;
     }
 }
@@ -553,7 +553,7 @@ public class ComposeWebViewControl : System.Windows.Controls.UserControl
 #endif
         // Look for local built UI assets
         var pluginDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "";
-        var indexPath = Path.Combine(pluginDir, "ui", "dist", "index.html");
+        var indexPath = Path.Combine(pluginDir, "ui", "dist", "🌐index.html");
         if (System.IO.File.Exists(indexPath))
             return new Uri(indexPath).AbsoluteUri;
 
@@ -578,7 +578,7 @@ public class ComposeWebViewControl : System.Windows.Controls.UserControl
         }
         catch (Exception ex)
         {
-            RhinoApp.WriteLine($"[compose.3dm] Bridge error: {ex.Message}");
+            RhinoApp.WriteLine($"[📐compose.3dm] Bridge error: {ex.Message}");
         }
     }
 
@@ -675,7 +675,7 @@ public class ShowComposeCommand : Command
     {
         Instance = this;
 
-        var sysIcon = LoadEmbeddedIcon("Compose.Rhino.compose_32x32.ico")
+        var sysIcon = LoadEmbeddedIcon("Compose.Rhino.🖼️compose_32x32.ico")
             ?? System.Drawing.SystemIcons.Application;
 
         Panels.RegisterPanel(

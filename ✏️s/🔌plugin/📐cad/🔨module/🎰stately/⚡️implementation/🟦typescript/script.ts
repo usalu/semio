@@ -18,7 +18,7 @@ export const policy = defineLint("@semio-tech/cad-js-machine-stately-index", (l:
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
-    runVitest(this.root, rest, "js/vitest.config.ts");
+    runVitest(this.root, rest, "js/🧪vitest.config.ts");
   }
 }
 
@@ -28,7 +28,7 @@ class GenerateScript extends BundleScript {
     const { defaultModelDefinitionId } = await import("@semio-tech/cad-js-core");
     const { buildSpatialStatelyMachineCatalogView } = await import("../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🟦typescript/🕸️graph/🗣️dsl/🫀core/🟦typescript/📦index.ts");
     bootstrapCadModules();
-    let outPath = join(this.root, "machine.json");
+    let outPath = join(this.root, "🔣machine.json");
     let modelDefinitionId = defaultModelDefinitionId();
     const interactionIds: string[] = [];
     for (let i = 0; i < extra.length; i++) {

@@ -2,8 +2,8 @@
 export * from "../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🕸️graph/🛂manifest/🤖generated/📦index.ts";
 //#region 🔖validate
 /** @emoji 🛡️ Runtime validation helpers for graph manifest documents. */
-import type { GraphManifestDocument } from "../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🕸️graph/🛂manifest/🤖generated/types.ts";
-import manifestSchema from "../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🕸️graph/🛂manifest/🤖generated/manifest.schema.json";
+import type { GraphManifestDocument } from "../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🕸️graph/🛂manifest/🤖generated/🟦types.ts";
+import manifestSchema from "../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🕸️graph/🛂manifest/🤖generated/🔣manifest.schema.json";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);

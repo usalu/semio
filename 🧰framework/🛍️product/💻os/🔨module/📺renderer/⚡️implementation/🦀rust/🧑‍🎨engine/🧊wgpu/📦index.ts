@@ -98,7 +98,7 @@ export async function buildIconAtlas(): Promise<{
 }
 
 /**
- * 🧊 Boots the real wgpu renderer WASM, mirroring `framework/os/renderer/wgpu/js/boot.ts` (the Trunk dev
+ * 🧊 Boots the real wgpu renderer WASM, mirroring `framework/os/renderer/wgpu/js/🟦🟦boot.ts` (the Trunk dev
  * entry) exactly: `semioRendererBoot(handles, pluginFilter)` takes no canvas — the Rust side
  * (`#[wasm_bindgen(js_name = semioRendererBoot)]` in `framework/os/renderer/wgpu/rs/lib.rs`) always looks up
  * `document.getElementById("root")` itself, clears it, and creates+appends its own `#semio-wgpu-canvas`.

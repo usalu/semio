@@ -5254,7 +5254,7 @@ type IntroductionRect = { readonly top: number; readonly left: number; readonly 
 
 /** @emoji 🎓 Live-tracks the union DOM rect of an introduction step's `introduce` element(s) (via
  * {@link elementIdSelector}), stamping every match `data-introduced="true"` (pulsing the introduced border, see
- * `framework/ui/styling/js/ui.css`) for as long as they stay attached — cleared on unmount/selector change. A kind-level
+ * `framework/ui/styling/js/🎨ui.css`) for as long as they stay attached — cleared on unmount/selector change. A kind-level
  * window id that aliases every open instance (Top + Perspective) therefore pulses and anchors against the
  * union of all matches, not only the first. Waits for the element(s) to mount (a folded panel/utility bar the
  * shell is in the middle of revealing) instead of failing closed; a `null` selector or a never-found element
@@ -5345,7 +5345,7 @@ function useIntroductionAnchorRect(selector: string | null): IntroductionRect | 
 }
 
 /** @emoji 🎓 Elevates the chrome unit containing each of `ids` above the single fullscreen introduction
- * veil, by stamping `data-introduction-elevated` (see `framework/ui/styling/js/ui.css`) on its nearest
+ * veil, by stamping `data-introduction-elevated` (see `framework/ui/styling/js/🎨ui.css`) on its nearest
  * `[data-slot="mode-dock-stack"]` (full window silhouette: tabs + gap + controls + body) or else its
  * nearest `[data-elevation-root]` ancestor — the panel/window/navbar/footer that owns a real, root-level
  * stacking context (a deeply-nested target such as a tree row can't be raised on its own; CSS stacking
@@ -5871,7 +5871,7 @@ const INTRODUCTION_DEMO_APPEAR_OFFSET = { x: -32, y: -32 } as const;
  * whenever it has one or more effective demonstrations. Plays them in order, one full gesture-loop each,
  * then wraps back to the first — e.g. a viewport step showing zoom, then pan, then orbit, repeating.
  * Plays only while {@link useIntroductionPointerIdle} is true — any real pointer movement hides it and
- * restores the real cursor instantly (`data-introduction-demonstrating` cleared, see `ui.css`); going
+ * restores the real cursor instantly (`data-introduction-demonstrating` cleared, see `🎨ui.css`); going
  * idle again restarts the sequence from its first demonstration's `appear` phase. Never dispatches real
  * pointer events — purely visual, driven by an imperative rAF loop (no per-frame React state) that
  * re-resolves its `IntroductionPoint` endpoints every frame via {@link resolveIntroductionPoint} so it
@@ -6256,7 +6256,7 @@ function IntroductionLogoRow({ logos }: { readonly logos: readonly IntroductionL
  * follows the shared surface-active lifecycle — click activates (primary stroke), click outside returns
  * to normal and never re-enters the introduced pulse for this step; each blank-line body paragraph
  * emphasizes only while the pointer is on that paragraph — see `[data-slot="introduction-body-paragraph"]:hover`
- * in `ui.css`).
+ * in `🎨ui.css`).
  * Renders the declarative `IntroductionDefinition`/`IntroductionStepDefinition` contract. Every step
  * plays a ghost-cursor `IntroductionDemonstrationOverlay`: the step's own declared `demonstration` if
  * it has one, otherwise — for a purely informational step whose only way forward is the Next/Done
@@ -6347,7 +6347,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   const advanceByButton = interactions.length === 0;
 
   // 🎉 Celebrates a checklist row's own label text (conic-gradient ring, see `[data-celebrated="true"]`
-  // in `ui.css`) the instant its interaction flips from pending to done — on top of whatever app element
+  // in `🎨ui.css`) the instant its interaction flips from pending to done — on top of whatever app element
   // `interaction.celebrate`/`step.introduce` celebrates, so the completed line item itself visibly glows.
   const interactionLabelRefs = reactHostPort.useRef<Map<number, HTMLSpanElement>>(new Map());
   const prevCompletedRef = reactHostPort.useRef<{ stepIndex: number; indices: readonly number[] }>({ stepIndex, indices: [] });
@@ -7140,7 +7140,7 @@ export function getLevelZClass(level: Level): string {
   }
 }
 
-/** @emoji 🎨 Opaque per-level fill — background-color only, no blur (see `[data-level]` cascade in ui.css). */
+/** @emoji 🎨 Opaque per-level fill — background-color only, no blur (see `[data-level]` cascade in 🎨ui.css). */
 export const surfaceClass = "ui-surface";
 
 /** @emoji 🎨 Whether a base-floor chrome row (navbar/footer/canvas/mode-body) must paint its own
@@ -7398,7 +7398,7 @@ export const panelAnchorTabButtonClass = cn(panelTabButtonClass, "px-tiny");
 /**
  * @emoji 🫳 Universal grip that starts a drag — pass `onPointerDown` for pointer-capture drags (and optionally the rest of {@link usePointerDrag}'s handlers), spread dnd-kit `attributes`/`listeners`, or use as a pure affordance on whole-surface draggables.
  * `emphasized` mirrors the ambient active/ready state of the element it belongs to.
- * Parent hover emphasis is CSS: `[data-hover-scope]:hover [data-slot="drag-handle"]` in `ui.css` — the grip paints its own muted color at rest and cannot inherit `hover:text-emphasized` from the label/icon beside it.
+ * Parent hover emphasis is CSS: `[data-hover-scope]:hover [data-slot="drag-handle"]` in `🎨ui.css` — the grip paints its own muted color at rest and cannot inherit `hover:text-emphasized` from the label/icon beside it.
  */
 export const DragHandle: React.FC<{
   readonly onPointerDown?: React.PointerEventHandler<HTMLSpanElement>;
@@ -28149,7 +28149,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/🎨ui.css"), "utf8");
       expect(css).toMatch(/@property --celebrate-border-angle[\s\S]*?inherits:\s*true/);
       expect(css).toMatch(/\[data-celebrated="true"\][\s\S]*?--celebrate-conic:/);
       expect(css).not.toMatch(/\[data-celebrated="true"\][\s\S]*?animation:\s*celebrate-border-spin/);
@@ -28177,7 +28177,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/🎨ui.css"), "utf8");
       const unlayeredRoot = css.match(/^:root \{[\s\S]*?\n\}/m)?.[0] ?? "";
       expect(unlayeredRoot).toMatch(/animation:[\s\S]*?loading-border-spin/);
       expect(unlayeredRoot).toMatch(/animation:[\s\S]*?waiting-border-spin/);
@@ -28960,7 +28960,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/🎨ui.css"), "utf8");
       expect(css).toContain('[data-slot="introduction-info-box"]');
       expect(css).toContain('[data-slot="dialog-box"]');
       expect(css).toContain("data-window-silhouette-border");
@@ -29082,7 +29082,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/🎨ui.css"), "utf8");
       expect(css).toMatch(/\[data-slot="introduction-info-box"\]\s*\[data-slot="introduction-body-paragraph"\]:hover\s*\{\s*color:\s*var\(--border-emphasized-color\);/);
       expect(css).not.toMatch(/\[data-slot="introduction-info-box"\]\s*\[data-slot="window-chrome-body"\]:hover/);
       expect(css).toMatch(
@@ -29135,8 +29135,8 @@ if (import.meta.vitest) {
                 interactions: [],
                 ordered: false,
                 logos: [
-                  { src: "/asset/logo/bbsr.png", darkSrc: "/asset/logo/bbsr-dark.png", alt: "BBSR", href: "https://www.bbsr.bund.de" },
-                  { src: "/asset/logo/zukunft-bau.png", darkSrc: null, alt: "Zukunft Bau", href: null },
+                  { src: "/asset/logo/🖼️bbsr.png", darkSrc: "/asset/logo/🖼️bbsr-dark.png", alt: "BBSR", href: "https://www.bbsr.bund.de" },
+                  { src: "/asset/logo/🖼️zukunft-bau.png", darkSrc: null, alt: "Zukunft Bau", href: null },
                 ],
                 demonstrations: [],
               },
@@ -29153,7 +29153,7 @@ if (import.meta.vitest) {
       expect(links?.[0].getAttribute("href")).toBe("https://www.bbsr.bund.de");
       const images = box?.querySelectorAll("img");
       expect(images).toHaveLength(3);
-      expect(Array.from(images ?? []).map((img) => img.getAttribute("src"))).toEqual(["/asset/logo/bbsr.png", "/asset/logo/bbsr-dark.png", "/asset/logo/zukunft-bau.png"]);
+      expect(Array.from(images ?? []).map((img) => img.getAttribute("src"))).toEqual(["/asset/logo/🖼️bbsr.png", "/asset/logo/🖼️bbsr-dark.png", "/asset/logo/🖼️zukunft-bau.png"]);
     });
 
     it("renders an interaction checklist instead of the Next button, ticking off completed rows", () => {
@@ -29486,13 +29486,13 @@ if (import.meta.vitest) {
     });
 
     it("resolves a scene point through its registered resolver, and null once off-camera or unregistered", () => {
-      const unregister = registerIntroductionSurfaceResolver("demo.scene", {
+      const unregister = registerIntroductionSurfaceResolver("✏️demo.scene", {
         scenePoint: (position) => (position[0] > 0 ? { x: 42, y: 84, visible: true } : { x: 0, y: 0, visible: false }),
       });
-      expect(resolveIntroductionPoint({ kind: "scene", id: "demo.scene", position: [1, 0, 0] })).toEqual({ x: 42, y: 84 });
-      expect(resolveIntroductionPoint({ kind: "scene", id: "demo.scene", position: [-1, 0, 0] })).toBeNull();
+      expect(resolveIntroductionPoint({ kind: "scene", id: "✏️demo.scene", position: [1, 0, 0] })).toEqual({ x: 42, y: 84 });
+      expect(resolveIntroductionPoint({ kind: "scene", id: "✏️demo.scene", position: [-1, 0, 0] })).toBeNull();
       unregister();
-      expect(resolveIntroductionPoint({ kind: "scene", id: "demo.scene", position: [1, 0, 0] })).toBeNull();
+      expect(resolveIntroductionPoint({ kind: "scene", id: "✏️demo.scene", position: [1, 0, 0] })).toBeNull();
     });
 
     it("resolves a canvas (2D world) point through its registered resolver", () => {
@@ -29994,9 +29994,9 @@ if (import.meta.vitest) {
 
   describe("referenceMediaKindFromUrl", () => {
     it("infers image, svg, and pdf kinds from paths", () => {
-      expect(referenceMediaKindFromUrl("/infinite-fixture/sketch.png")).toBe("image");
+      expect(referenceMediaKindFromUrl("/infinite-fixture/🖼️sketch.png")).toBe("image");
       expect(referenceMediaKindFromUrl("/infinite-fixture/icon.svg")).toBe("svg");
-      expect(referenceMediaKindFromUrl("/infinite-fixture/site.pdf")).toBe("pdf");
+      expect(referenceMediaKindFromUrl("/infinite-fixture/📄site.pdf")).toBe("pdf");
       expect(referenceMediaKindFromUrl("/unknown.bin")).toBeNull();
     });
   });
@@ -30402,7 +30402,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      return readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/ui.css"), "utf8");
+      return readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/🎨ui.css"), "utf8");
     }
 
     it("gives every vendored icon id and non-catalog kind a hover keyframes block and animation assignment", async () => {
@@ -30764,7 +30764,7 @@ if (import.meta.vitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/🎨ui.css"), "utf8");
       expect(css).toContain('[data-window-silhouette-gap]');
       expect(css).toMatch(/\[data-window-silhouette-gap\][\s\S]*backdrop-filter:\s*none/);
       render(
@@ -36951,7 +36951,7 @@ if (treeVitest) {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
-      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/ui.css"), "utf8");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/🎨ui.css"), "utf8");
       expect(css).toContain('[data-slot="navbar"]::after');
       expect(css).toContain('[data-slot="footer"]::before');
       expect(css).toMatch(/\[data-slot="navbar"\]:hover::after/);

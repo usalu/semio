@@ -4,7 +4,7 @@
 
 export type { ActionDescriptor, UiComponentSceneNode, UiNode } from "@semio-tech/framework-core";
 
-import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../../../../../../../♻️mit-bestand/🧺aggregator/footer.tsx";
+import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../../../../../../../♻️mit-bestand/🧺aggregator/⚛️footer.tsx";
 
 import React, {
   lazy,
@@ -1507,7 +1507,7 @@ type SyncState = {
   readonly syncBackboneUri: string | null;
   readonly syncCardKind: SyncCardKind | null;
   readonly syncDraftPath: string;
-  /** 🚦 Per-document sync health fed by `backbone-worker.ts`'s `DocumentEvent::Status` events, keyed by `documentId`. */
+  /** 🚦 Per-document sync health fed by `🟦backbone-🟦worker.ts`'s `DocumentEvent::Status` events, keyed by `documentId`. */
   readonly syncStatusByDocumentId: Readonly<Record<string, DocumentSyncStatus>>;
 };
 
@@ -5192,7 +5192,7 @@ export function FrameworkOsShell({
     return found ?? (ephemeral ? undefined : readStoredUiChromeThemeSnapshot()) ?? semioTheme();
   }, [uiThemeId, uiCustomThemes, uiThemeDraft, ephemeral]);
   const uiDriver: UiDriver = useMemo(() => uiDriverDraft ?? resolveUiDriver(uiDriverId, uiCustomDrivers), [uiDriverId, uiCustomDrivers, uiDriverDraft]);
-  /** 🧵 Lazily-created worker running `backbone-worker.ts` — one per shell instance, reused across `openDocument` calls. */
+  /** 🧵 Lazily-created worker running `🟦backbone-🟦worker.ts` — one per shell instance, reused across `openDocument` calls. */
   const backboneWorkerRef = useRef<Worker | null>(null);
   /** 🖋️ Stable per-tab actor id for hub `Hello`/presence frames and operation-origin filtering. */
   const shellActorIdRef = useRef<string>(`client-${Math.random().toString(36).slice(2)}`);
@@ -5201,7 +5201,7 @@ export function FrameworkOsShell({
 
   const ensureBackboneWorker = useCallback((): Worker => {
     if (backboneWorkerRef.current) return backboneWorkerRef.current;
-    const worker = new Worker(new URL("../../product/os/core/js/backbone-worker.ts", import.meta.url), { type: "module" });
+    const worker = new Worker(new URL("../../product/os/core/js/🟦backbone-🟦worker.ts", import.meta.url), { type: "module" });
     worker.onmessage = (messageEvent: MessageEvent<BackboneWorkerResponse>) => {
       const message = messageEvent.data;
       if (message.kind !== "event") return;
@@ -6139,14 +6139,14 @@ export function FrameworkOsShell({
 
   /**
    * 🧵 `openDocument(ref, bindings)` — replaces `attachSyncBackbone`'s URI-string mirror. Spins up (or
-   * reuses) `backbone-worker.ts`, tells it to open the document, subscribes to its postMessage events,
+   * reuses) `🟦backbone-🟦worker.ts`, tells it to open the document, subscribes to its postMessage events,
    * and calls the plugin instance's `attachBackbone`/`loadAppDocument` WIT-exported methods (WS-D) so
    * the plugin-side store starts pumping through the same logical channel. The `actor://<documentId>`
    * uri mirrors `framework/sync`'s `ChannelBackbone::pair` convention on the Rust side.
    *
    * Full loop note: this wires the main-thread half of the contract. The remaining hop — the
    * sandboxed plugin's own `backbone-send`/`backbone-poll` WIT host-import calls relaying through its
-   * dedicated program worker, through this main thread, into `backbone-worker.ts` — is
+   * dedicated program worker, through this main thread, into `🟦backbone-🟦worker.ts` — is
    * `framework/os/dev/script.ts`'s `pluginWorkerSource` responsibility (dev workflow, deferred
    * per this session's priority order if not otherwise completed); see that file's own notes.
    */
@@ -14409,7 +14409,7 @@ function CameraRefBridge({ cameraRef }: { readonly cameraRef: React.MutableRefOb
 
 /** @emoji 🧭 Registers this window's live camera and entity data as the introduction demonstration
  * engine's resolver for `windowElementId(windowInstanceId)` — the same element id `windowElementId(kind.id)`
- * builds for authoring (see `mit-bestand/aggregator/brand.ts`). Only the base (non-split) window instance
+ * builds for authoring (see `mit-bestand/aggregator/🟦brand.ts`). Only the base (non-split) window instance
  * registers under its exact kind id this way, since `windowInstanceId` equals `kind.id` verbatim for it;
  * a split/spawned extra instance registers under its own instance id instead (last-write-wins if multiple
  * instances of a kind are open — acceptable for a single demonstration target, not a general

@@ -1,23 +1,23 @@
 <p align="center">
     <a href="https://github.com/usalu/semio">
         <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/compose/refs/heads/main/asset/logo/kit_horizontal_dark.svg">
-            <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/compose/refs/heads/main/asset/logo/kit_horizontal.svg">
-            <img alt="compose kit" href="https://github.com/usalu/semio/" src="https://raw.githubusercontent.com/usalu/compose/refs/heads/main/asset/logo/kit_horizontal.svg">
+            <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/compose/refs/heads/main/asset/logo/🔣kit_horizontal_dark.svg">
+            <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/compose/refs/heads/main/asset/logo/🔣kit_horizontal.svg">
+            <img alt="compose kit" href="https://github.com/usalu/semio/" src="https://raw.githubusercontent.com/usalu/compose/refs/heads/main/asset/logo/🔣kit_horizontal.svg">
         </picture>
     </a>
     <br/>
-    <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badge/designs.svg" alt="Designs"></a>
-    <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badge/pieces.svg" alt="Pieces"></a>
-    <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badge/connections.svg" alt="Connections"></a>
+    <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badge/design🔣s.svg" alt="Designs"></a>
+    <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badge/piece🔣s.svg" alt="Pieces"></a>
+    <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badge/connection🔣s.svg" alt="Connections"></a>
     <br/>
-    <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badge/types.svg" alt="Types"></a>
-    <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badge/ports.svg" alt="Ports"></a>
-    <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badge/attributes.svg" alt="Attributes"></a>
+    <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badge/type🔣s.svg" alt="Types"></a>
+    <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badge/port🔣s.svg" alt="Ports"></a>
+    <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badge/attribute🔣s.svg" alt="Attributes"></a>
     <br/>
-    <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badge/representations.svg" alt="Representations"></a>
-    <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badge/lods.svg" alt="LoDs"></a>
-    <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badge/tags.svg" alt="Tags"></a>
+    <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badge/representation🔣s.svg" alt="Representations"></a>
+    <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badge/lod🔣s.svg" alt="LoDs"></a>
+    <a><img src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/badge/🔣tag🔣s.svg" alt="Tags"></a>
     <br/>
     <i>🫀 Metabolism</i>
 </p>
@@ -27,7 +27,7 @@ While [metabolists](<https://en.wikipedia.org/wiki/Metabolism_(architecture)>) s
 
 Let me demonstrate metametabolism on metabolism 🤯
 
-![Design Variants](https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/doc/design-variants.png)
+![Design Variants](https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/doc/🖼️design-variants.png)
 
 # 🗼 Nakagin Capsule Tower
 
@@ -40,8 +40,8 @@ Assuming I would have been Kisho Kurokawa and used compose I would chosen the fo
 <p align="center">
     <picture>
         <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/doc/artifacts-dark.svg">
-        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/doc/artifacts.svg">
-        <img alt="Capsule Tower Artifacts" src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/doc/artifacts.svg">
+        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/doc/artifact🔣s.svg">
+        <img alt="Capsule Tower Artifacts" src="https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/doc/artifact🔣s.svg">
     </picture>
 </p>
 
@@ -61,7 +61,7 @@ A bit overwhelmed? Just take a look at the source files 💡
 
 ### ✏️ sketchpad
 
-![Sketchpad Overview](https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/doc/sketchpad-demo.gif)
+![Sketchpad Overview](https://raw.githubusercontent.com/usalu/metabolism/refs/heads/main/doc/🖼️sketchpad-demo.gif)
 
 ### 🦗 Grasshopper
 

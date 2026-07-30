@@ -10,7 +10,7 @@ class DevScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   run(segments: string[]): void {
-    runViteBuild(this.root, segments, "vite.config.ts");
+    runViteBuild(this.root, segments, "⚙️vite.config.ts");
   }
 }
 

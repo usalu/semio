@@ -79,18 +79,18 @@ export class NativeOsScript extends Script {
     const cmd = segments[0] ?? "setup";
     const env = { ...process.env, COMPOSE_REPO_ROOT: this.root };
     if (process.platform === "win32") {
-      const ps1 = join(NATIVE_BOOTSTRAP_DIR, "script.ps1");
+      const ps1 = join(NATIVE_BOOTSTRAP_DIR, "⌨️⌨️script.ps1");
       if (!existsSync(ps1)) {
-        console.error(`[native] missing ${ps1}; expected repo/native/bootstrap/script.ps1.`);
+        console.error(`[native] missing ${ps1}; expected repo/native/bootstrap/⌨️script.ps1.`);
         process.exit(1);
       }
       runCmd("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ps1, cmd], { cwd: this.root, env });
       return;
     }
     if (process.platform === "darwin" || process.platform === "linux") {
-      const sh = join(NATIVE_BOOTSTRAP_DIR, "script.sh");
+      const sh = join(NATIVE_BOOTSTRAP_DIR, "⌨️⌨️script.sh");
       if (!existsSync(sh)) {
-        console.error(`[native] missing ${sh}; expected repo/native/bootstrap/script.sh.`);
+        console.error(`[native] missing ${sh}; expected repo/native/bootstrap/⌨️script.sh.`);
         process.exit(1);
       }
       runCmd("bash", [sh, cmd], { cwd: this.root, env });
@@ -428,10 +428,10 @@ export class DevScript extends Script {
         const filePath = await (async () => {
           try {
             const fileInfo = await stat(candidatePath);
-            if (fileInfo.isDirectory()) return resolve(candidatePath, "index.html");
+            if (fileInfo.isDirectory()) return resolve(candidatePath, "🌐🌐index.html");
             return candidatePath;
           } catch {
-            if (extname(candidatePath) === "") return resolve(candidatePath, "index.html");
+            if (extname(candidatePath) === "") return resolve(candidatePath, "🌐🌐index.html");
             return candidatePath;
           }
         })();
@@ -771,7 +771,7 @@ export class TestScript extends Script {
       env: { ...process.env, STORYBOOK_PORT: storybookPort },
     });
     try {
-      await this.waitForUrl(new URL("index.html", baseUrl).href, 120000);
+      await this.waitForUrl(new URL("🌐🌐index.html", baseUrl).href, 120000);
       runCmd("bunx", ["playwright", "test", ".storybook/puzzle-2d.spec.ts", "--config", ".storybook/playwright.config.ts"], {
         cwd: this.root,
         env: {
@@ -1331,7 +1331,7 @@ export class Neo4jCypherExport {
 /**
  * ⚖️ Wave 4 app-plugin consistency policy — the machine-checkable subset of the Wave 4 V1 (duplication),
  * V2 (structure), V3 (coupling) audit findings under `.repo/🎫/26/07/18/WAVE-4-*-AUDIT`, wired via
- * `repo/lib/js/nx-plugin.mjs` into the synthetic `breach-script_ts` nx lint target (`bun ./script.ts policy`).
+ * `repo/lib/js/🟨nx-plugin.mjs` into the synthetic `breach-script_ts` nx lint target (`bun ./script.ts policy`).
  * Judgment-call findings (a real SDK/primitive gap, e.g. the terminology native/reuse Labels axis, or
  * puzzle's icon-based `tree_item_with_action`) are encoded as explicit low-priority allowlisted/tracked
  * breaches, never as a hard `policy` failure — see `POLICY_SDK_GAP_ALLOWLIST` below.

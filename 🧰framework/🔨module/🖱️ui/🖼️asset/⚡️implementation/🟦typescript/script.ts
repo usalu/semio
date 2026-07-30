@@ -108,7 +108,7 @@ export function isIconName(key: string): key is IconName {
   return key in ICONS;
 }
 `;
-  writeFileSync(join(generatedDir, "icons.ts"), body, "utf8");
+  writeFileSync(join(generatedDir, "🟦icons.ts"), body, "utf8");
 }
 
 function generateCs(icons: Record<string, string>, generatedDir: string): void {
@@ -133,7 +133,7 @@ ${dictEntries}
     };
 }
 `;
-  writeFileSync(join(generatedDir, "Icons.cs"), body, "utf8");
+  writeFileSync(join(generatedDir, "🔷Icons.cs"), body, "utf8");
 }
 
 function generateRust(icons: Record<string, string>, generatedDir: string): void {
@@ -209,7 +209,7 @@ ${ids.map((id) => `    (${JSON.stringify(id)}) => { $crate::IconName::${iconIdTo
     };
 }
 `;
-  writeFileSync(join(generatedDir, "icon_name.rs"), body, "utf8");
+  writeFileSync(join(generatedDir, "🦀icon_name.rs"), body, "utf8");
 }
 
 function generatePy(icons: Record<string, string>, generatedDir: string): void {
@@ -234,7 +234,7 @@ ICONS: Final[dict[str, str]] = {
 ${literals}
 }
 `;
-  writeFileSync(join(generatedDir, "icons.py"), body, "utf8");
+  writeFileSync(join(generatedDir, "🐍icons.py"), body, "utf8");
 }
 
 function writeCatalogReadme(assetsDir: string, ids: readonly string[]): void {
@@ -287,7 +287,7 @@ async function generateShortcodes(icons: Record<string, string>): Promise<void> 
     }
   } catch (err) {
     console.warn("[framework/ui/asset] gemoji fetch failed; keeping existing emoji shortcodes if present", err);
-    const existingPath = join(generatedDir, "shortcodes.json");
+    const existingPath = join(generatedDir, "🔣shortcodes.json");
     if (existsSync(existingPath)) {
       const existing = JSON.parse(readFileSync(existingPath, "utf8")) as { emoji?: Record<string, string> };
       Object.assign(emoji, existing.emoji ?? {});
@@ -302,7 +302,7 @@ async function generateShortcodes(icons: Record<string, string>): Promise<void> 
   }
 
   const payload = { emoji, catalog };
-  writeFileSync(join(generatedDir, "shortcodes.json"), `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+  writeFileSync(join(generatedDir, "🔣shortcodes.json"), `${JSON.stringify(payload, null, 2)}\n`, "utf8");
 
   const emojiEntries = Object.keys(emoji)
     .sort()
@@ -334,7 +334,7 @@ export function shortcodeCatalogKey(code: string): ShortcodeCatalogName | undefi
   return (SHORTCODE_CATALOG as readonly string[]).includes(key) ? (key as ShortcodeCatalogName) : undefined;
 }
 `;
-  writeFileSync(join(generatedDir, "shortcodes.ts"), tsBody, "utf8");
+  writeFileSync(join(generatedDir, "🟦shortcodes.ts"), tsBody, "utf8");
   console.log(`[framework/ui/asset] generated ${Object.keys(emoji).length} emoji + ${catalog.length} catalog shortcodes`);
 }
 //#endregion 🧬Codegen
@@ -417,7 +417,7 @@ if (import.meta.vitest) {
   });
   describe("resolveCatalogIconSvgFromTheme", () => {
     it("prefers theme variants over catalog defaults", async () => {
-      const { resolveCatalogIconSvgFromTheme } = await import("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/icon_resolver.ts");
+      const { resolveCatalogIconSvgFromTheme } = await import("../../../../../../🧰framework/🔨module/🖱️ui/🖼️asset/⚡️implementation/🟦typescript/🟦icon_resolver.ts");
       const svg = resolveCatalogIconSvgFromTheme("search", { variants: { search: "<svg data-variant></svg>" } });
       expect(svg).toContain("data-variant");
     });

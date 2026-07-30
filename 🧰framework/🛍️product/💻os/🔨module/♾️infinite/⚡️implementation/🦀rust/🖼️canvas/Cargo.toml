@@ -3,13 +3,13 @@ name = "semio-framework-os-kernel-infinite-canvas"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-build = "build.rs"
+build = "📦build.rs"
 
 
 [lints]
 workspace = true
 [features]
-# 🧬 Declared (never enabled here) so the shared `ui/asset/icon/generated/icon_name.rs` module's
+# 🧬 Declared (never enabled here) so the shared `ui/asset/icon/generated/🦀icon_name.rs` module's
 # `#[cfg_attr(feature = "typegen", ...)]` on `IconName` doesn't trip `unexpected_cfgs`; the TS
 # mirror for `IconName` is exported from `ui_wgpu`, not from here.
 typegen = []

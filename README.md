@@ -1,33 +1,33 @@
 <p align="center">
     <a href="https://docs.semio-tech.com">
       <picture>
-          <source media="(prefers-color-scheme: dark)" srcset="compose/asset/logo/logo_dark.svg">
-          <source media="(prefers-color-scheme: light)" srcset="compose/asset/logo/logo.svg">
-          <img alt="compose" href="https://github.com/usalu/semio/" src="compose/asset/logo/logo.svg">
+          <source media="(prefers-color-scheme: dark)" srcset="compose/asset/logo/🔣logo_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="compose/asset/logo/🔣logo.svg">
+          <img alt="compose" href="https://github.com/usalu/semio/" src="compose/asset/logo/🔣logo.svg">
       </picture>
     </a>
     <br/>
-    <a href="https://play.semio-tech.com"><img src="compose/asset/badge/site-play.svg" alt="A free online playground to toy with compose without login."></a>
-    <a href="https://docs.semio-tech.com"><img src="compose/asset/badge/site-docs.svg" alt="The documentation page to learn compose."></a>
-    <a href="https://js.semio-tech.com"><img src="compose/asset/badge/dev-js.svg" alt="The elements Storybook for shared javascript UI elements."></a>
+    <a href="https://play.semio-tech.com"><img src="compose/asset/badge/🔣site-🔣play.svg" alt="A free online playground to toy with compose without login."></a>
+    <a href="https://docs.semio-tech.com"><img src="compose/asset/badge/🔣site-doc🔣s.svg" alt="The documentation page to learn compose."></a>
+    <a href="https://js.semio-tech.com"><img src="compose/asset/badge/🔣dev-j🔣s.svg" alt="The elements Storybook for shared javascript UI elements."></a>
     <a href="https://discord.gg/m6nnf6pQRc"><img src="https://img.shields.io/discord/1338232508264747130?style=flat-square&color=ff344f" alt="Discord"></a>
     <br/>
      <a href="https://github.com/usalu/semio"><img src="compose/asset/badge/repo-compose.svg" alt="The repository."></a>
-    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="compose/asset/badge/cite-zenodo.svg" alt="Cite"></a>
-    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="compose/asset/badge/license-agpl-v3.svg" alt="Affero General Public License v3.0 or later"></a>
+    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="compose/asset/badge/🔣cite-zenodo.svg" alt="Cite"></a>
+    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="compose/asset/badge/🔣license-agpl-v3.svg" alt="Affero General Public License v3.0 or later"></a>
     <br/>
-    <a href="https://eg-ice-25.semio-tech.com"><img src="compose/asset/badge/presentation-egice25.svg" alt="The presentation of our latest research paper on LLMs with compose."></a>
-    <a href="https://doi.org/10.17868/strath.00093288"><img src="compose/asset/badge/latest-research.svg" alt="The latest research paper on LLMs with compose."></a>
-    <a href="https://eg-ice-23.semio-tech.com"><img src="compose/asset/badge/presentation-egice23.svg" alt="The presentation of our previous research paper on formalizing architecture."></a>
+    <a href="https://eg-ice-25.semio-tech.com"><img src="compose/asset/badge/🔣presentation-egice25.svg" alt="The presentation of our latest research paper on LLMs with compose."></a>
+    <a href="https://doi.org/10.17868/strath.00093288"><img src="compose/asset/badge/🔣latest-re🔣search.svg" alt="The latest research paper on LLMs with compose."></a>
+    <a href="https://eg-ice-23.semio-tech.com"><img src="compose/asset/badge/🔣presentation-egice23.svg" alt="The presentation of our previous research paper on formalizing architecture."></a>
     <br/>
-    <a href="https://play.semio-tech.com"><img src="compose/asset/badge/ui-browser.svg" alt="Browser"></a>
-    <a href="https://www.grasshopper3d.com/"><img src="compose/asset/badge/ui-grasshopper.svg" alt="Grasshopper"></a>
-    <a href="https://www.microsoft.com/windows/windows-11"><img src="compose/asset/badge/ui-windows.svg" alt="Windows"></a>
-    <a href="https://apple.com/macos"><img src="compose/asset/badge/ui-macos.svg" alt="macOS"></a>
+    <a href="https://play.semio-tech.com"><img src="compose/asset/badge/🔣ui-browser.svg" alt="Browser"></a>
+    <a href="https://www.grasshopper3d.com/"><img src="compose/asset/badge/🔣ui-grasshopper.svg" alt="Grasshopper"></a>
+    <a href="https://www.microsoft.com/windows/windows-11"><img src="compose/asset/badge/🔣ui-window🔣s.svg" alt="Windows"></a>
+    <a href="https://apple.com/macos"><img src="compose/asset/badge/🔣ui-maco🔣s.svg" alt="macOS"></a>
     <br/>
-    <a href="https://www.typescriptlang.org/"><img src="compose/asset/badge/powered-by-typescript.svg" alt="Typescript"></a>
-    <a href="https://www.python.org/"><img src="compose/asset/badge/powered-by-python.svg" alt="Python"></a>
-    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="compose/asset/badge/powered-by-csharp.svg" alt="C#"></a>
+    <a href="https://www.typescriptlang.org/"><img src="compose/asset/badge/🔣powered-by-typescript.svg" alt="Typescript"></a>
+    <a href="https://www.python.org/"><img src="compose/asset/badge/🔣powered-by-python.svg" alt="Python"></a>
+    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="compose/asset/badge/🔣powered-by-csharp.svg" alt="C#"></a>
     <br/>
     <br/>
     <i>🧩 Design-Information-Modeling for Kit-of-Parts 🏘 </i>
@@ -52,8 +52,8 @@ Let me walk you through 🚶
    - [👥 studio](#-studio-)
    - [☁ cloud](#%EF%B8%8F-cloud-)
    - [🤖 assistant](#-assistant-)
-   - [🦗 compose.gh](#-composegh-)
-   - [🦏 compose.3dm](#-compose3dm-)
+   - [🦗 🦗compose.gh](#-composegh-)
+   - [🦏 📐compose.3dm](#-compose3dm-)
    - [🐝 compose.wasp](#-composewasp-)
    - [🦌 compose.monoceros](#-composemonoceros-)
    - [🐞 compose.ladybug](#-composeladybug-)
@@ -131,33 +131,33 @@ Let me walk you through 🚶
 
 It is the digital pencil for sketching plans and digital scalpel for building models in compose ✍
 
-![sketchpad demo](compose/asset/image/sketchpad-demo.gif)
+![sketchpad demo](compose/asset/image/🖼️sketchpad-demo.gif)
 
 ## 👥 studio [↑](#%EF%B8%8F-products-)
 
 A studio is a synchronous collaboriation environment for teams to work together in compose 🤝
 
-![compose studio Demo](compose/asset/image/studio-demo.png)
+![compose studio Demo](compose/asset/image/🖼️studio-demo.png)
 
 ## ☁ cloud [↑](#%EF%B8%8F-products-)
 
 Use any file-hosting platform as an asynchronous Common-Data-Environment 📁
 
-![Cloud Demo](compose/asset/image/cloud-demo.png)
+![Cloud Demo](compose/asset/image/🖼️cloud-demo.png)
 
 ## 🤖 assistant [↑](#%EF%B8%8F-products-)
 
 The assistant helps you on every step in the design process with compose ✍
 
-![compose assistant Demo](compose/asset/image/assistant-demo.png)
+![compose assistant Demo](compose/asset/image/🖼️assistant-demo.png)
 
-## 🦗 [compose.gh](https://docs.semio-tech.com/manual/grasshopper) [↑](#%EF%B8%8F-products-)
+## 🦗 [🦗compose.gh](https://docs.semio-tech.com/manual/grasshopper) [↑](#%EF%B8%8F-products-)
 
 A batteries-included [Grasshopper](https://www.grasshopper3d.com) program for compose ⚡
 
-![compose Grasshopper Demo](compose/asset/image/grasshopper-demo.png)
+![compose Grasshopper Demo](compose/asset/image/🖼️grasshopper-demo.png)
 
-## 🦏 compose.3dm [↑](#%EF%B8%8F-products-)
+## 🦏 📐compose.3dm [↑](#%EF%B8%8F-products-)
 
 A Grasshopper-based integration of [Rhino](https://www.rhino3d.com) and compose 🔀
 
@@ -165,13 +165,13 @@ A Grasshopper-based integration of [Rhino](https://www.rhino3d.com) and compose 
 
 A Grasshopper-based integration of [Wasp](https://www.food4rhino.com/en/app/wasp) and compose 🔀
 
-![Wasp Demo](compose/asset/image/wasp-demo.png)
+![Wasp Demo](compose/asset/image/🖼️wasp-demo.png)
 
 ## 🦌 compose.monoceros [↑](#%EF%B8%8F-products-)
 
 A Grasshopper-based integration of [Monoceros](https://monoceros.sub.digital) and compose 🔀
 
-![Monoceros Demo](compose/asset/image/monoceros-demo.png)
+![Monoceros Demo](compose/asset/image/🖼️monoceros-demo.png)
 
 ## 🐞 compose.ladybug [↑](#%EF%B8%8F-products-)
 
@@ -742,7 +742,7 @@ Git hooks are not installed by this repo; run `bun run lint`, `bun run format`, 
 
 ## 🌈 Colors [↑](#-brand-)
 
-![Palette](compose/asset/list/palette.png)
+![Palette](compose/asset/list/🖼️palette.png)
 
 | Name                                   | Hex     | RGB         | HSL              | HSV (or HSB)     | CMYK          | Color            |
 | -------------------------------------- | ------- | ----------- | ---------------- | ---------------- | ------------- | ---------------- |
@@ -804,7 +804,7 @@ We use it e.g. for:
 
 Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can come together for an invertible theme in a semantically meaningfull way? Well, here is how you achieve it with 33 colors 🤯
 
-![Grayscale](compose/asset/list/grayscale.png)
+![Grayscale](compose/asset/list/🖼️grayscale.png)
 
 ## 📄 Typography [↑](#-brand-)
 
@@ -883,7 +883,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-composeassets-" title="🛍compose/asset"><sub>🛍<sub></a>
         <a href="#-brand-" title="💯Brand"><sub>💯<sub></a>
         <br />
-        <a href="#-compose.3dm-" title="🦏Rhino"><sub>🦏<sub></a>
+        <a href="#-📐compose.3dm-" title="🦏Rhino"><sub>🦏<sub></a>
         <a href="#-composewasp-" title="🐝Wasp"><sub>🐝<sub></a>
         <a href="#-composemonoceros-" title="🦌Monoceros"><sub>🦌<sub></a>
         <a href="#-composeladybug-" title="🐞Ladybug"><sub>🐞<sub></a>

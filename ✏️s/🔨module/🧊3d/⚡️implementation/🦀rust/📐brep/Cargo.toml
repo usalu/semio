@@ -33,4 +33,5 @@ mathematical_random = { path = "../../../../../../🧰framework/🔨module/🧮m
 
 [[bench]]
 name = "kernel"
+path = "benches/🦀kernel.rs"
 harness = false

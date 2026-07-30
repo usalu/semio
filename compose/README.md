@@ -12,8 +12,8 @@ summary: ✏️ Design-Information-Representationing for Kit-of-Parts 🧩
    - [👥 studio](#-studio-)
    - [☁ cloud](#%EF%B8%8F-cloud-)
    - [🤖 assistant](#-assistant-)
-   - [🦗 compose.gh](#-composegh-)
-   - [🦏 compose.3dm](#-compose3dm-)
+   - [🦗 🦗compose.gh](#-composegh-)
+   - [🦏 📐compose.3dm](#-compose3dm-)
    - [🐝 compose.wasp](#-composewasp-)
    - [🦌 compose.monoceros](#-composemonoceros-)
    - [🐞 compose.ladybug](#-composeladybug-)
@@ -38,7 +38,7 @@ summary: ✏️ Design-Information-Representationing for Kit-of-Parts 🧩
 
 A [`kit`](#-kit-) is a collection of [`types`](#-type-), [`designs`](#%EF%B8%8F-design-), [`authors`](#-author-), [`qualities`](#-quality-), [`attributes`](#%EF%B8%8F-attribute-), and [`concepts`](#%EF%B8%8F-concept-) 📦
 
-The SQL-schema of `kit.db` is found in [`./compose/sqlite/schema.sql`](./compose/sqlite/schema.sql) 📄
+The SQL-schema of `kit.db` is found in [`./compose/sqlite/🛢️schema.sql`](./compose/sqlite/🛢️schema.sql) 📄
 
 For Inter-Process-Communication (IPC) the JSON-schema in [`./compose/jsonschema/kit.json`](./compose/jsonschema/kit.json) is used 📄
 

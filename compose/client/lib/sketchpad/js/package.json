@@ -7,7 +7,7 @@
   "description": "compose ⋅ sketchpad",
   "exports": {
     ".": "./index.ts",
-    "./boot": "./boot.tsx"
+    "./boot": "./🟦boot.tsx"
   },
   "dependencies": {
     "@semio-tech/framework-os-core": "workspace:*",

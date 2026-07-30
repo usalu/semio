@@ -5,7 +5,7 @@ import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest, resolveTest
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
-    runVitest(this.root, rest, "js/vitest.config.ts");
+    runVitest(this.root, rest, "js/🧪vitest.config.ts");
   }
 }
 
@@ -13,7 +13,7 @@ class FixtureScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
     process.env.CAD_GENERATE_STEP_FIXTURES = "1";
-    runVitest(this.root, rest, "js/vitest.config.ts");
+    runVitest(this.root, rest, "js/🧪vitest.config.ts");
   }
 }
 

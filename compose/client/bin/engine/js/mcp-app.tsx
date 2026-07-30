@@ -7,7 +7,7 @@
 
 // #endregion 🧲Header
 
-import "@semio-tech/ui-react/globals.css";
+import "@semio-tech/ui-react/🎨globals.css";
 import { createRoot } from "react-dom/client";
 import { mountMcpDesignViewer, mountMcpDiagramViewer, mountMcpKitViewer, mountMcpSceneViewer } from "../../lib/react/ui";
 

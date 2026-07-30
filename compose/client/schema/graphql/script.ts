@@ -5,7 +5,7 @@ import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCmd 
 
 class BuildScript extends BundleScript {
   run(): void {
-    const out = join(this.root, "schema.graphql");
+    const out = join(this.root, "🔗schema.graphql");
     const cargoTargetDir = join(this.root, "target");
     runCmd(
       "cargo",

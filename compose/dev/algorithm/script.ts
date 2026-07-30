@@ -22,7 +22,7 @@ class BuildScript extends BundleScript {
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
-    runVitest(this.root, rest, "js/vitest.config.ts");
+    runVitest(this.root, rest, "js/🧪vitest.config.ts");
   }
 }
 

@@ -12,7 +12,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { createHash } from "node:crypto";
 //#endregion 🔌Adapters
 
-import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/🤖generated/playgrounds.ts";
+import type { PlaygroundBuildTarget as PlaygroundVariant } from "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/🤖generated/🟦🟦playgrounds.ts";
 
 export type PlaygroundHostKind = string;
 
@@ -462,7 +462,7 @@ const INTERNAL_PREFIXES = ["@compose/", "@ui/", "@cad/", "@puzzle/", "@framework
 export function isAdapterBoundaryFile(filePath: string, content: string): boolean {
   const n = normalize(filePath).replaceAll("\\", "/").toLowerCase();
   if (n.includes("/adapters/") || n.includes("/external_adapters")) return true;
-  if (n.includes("-transport.") || n.endsWith(".worker.ts") || n.includes("kit-store.worker")) return true;
+  if (n.includes("-transport.") || n.endsWith(".🟦worker.ts") || n.includes("kit-store.worker")) return true;
   if (n.includes("adapter")) return true;
   const lower = content.toLowerCase();
   return ADAPTER_MARKERS.some((m) => lower.includes(m));
@@ -1540,7 +1540,7 @@ export function runViteBuild(bundleRoot: string, segments: string[], config: str
  * `Profiler.startPreciseCoverage`, which Bun's `node:inspector` shim doesn't implement (observed: "Coverage
  * APIs are not supported"); non-coverage runs keep using bun for its faster startup.
  */
-export async function runVitest(bundleRoot: string, segments: string[], config = "vitest.config.ts"): Promise<void> {
+export async function runVitest(bundleRoot: string, segments: string[], config = "🧪vitest.config.ts"): Promise<void> {
   const collectingCoverage = coverageEnabled();
   const coverageArgs = collectingCoverage
     ? ["--coverage.enabled", "--coverage.provider=v8", "--coverage.reporter=lcovonly", `--coverage.reportsDirectory=${join(coverageDir(findRepoRoot(bundleRoot), "js"), coverageSlug(bundleRoot))}`]
@@ -1745,13 +1745,13 @@ export function playgroundEmbedUrl(kind: PlaygroundSiteKind, isDev: boolean): st
 //#region 🖥️FrameworkOsPlaygroundDev
 /**
  * 📚 Loads the generated framework OS playground catalog (variant/plugin/aliases/ports rows).
- * Reads `🧰/🛍️/💻/🔨/plugin/⚡️/🟦/registry/generated/playgrounds.json` directly (rather than a static
+ * Reads `🧰/🛍️/💻/🔨/plugin/⚡️/🟦/registry/generated/🔣🔣playgrounds.json` directly (rather than a static
  * TS import of the gitignored generated module) so this shared kernel never fails to load on a
  * fresh clone before `bun nx run @semio-tech/plugin-registry:generate` has ever run — callers get
  * an empty catalog in that case instead of a hard module-resolution error.
  */
 export function loadFrameworkOsPlaygroundCatalog(): readonly PlaygroundVariant[] {
-  const catalogPath = join(getWorkspaceRoot(), "./🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/🤖generated/playgrounds.json");
+  const catalogPath = join(getWorkspaceRoot(), "./🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/🤖generated/🔣🔣playgrounds.json");
   if (!existsSync(catalogPath)) return [];
   return JSON.parse(readFileSync(catalogPath, "utf8")) as readonly PlaygroundVariant[];
 }
@@ -1933,7 +1933,7 @@ export function resolveDevPort(host: string, preferredPort: number, maxAttempts 
   process.exit(1);
 }
 
-/** ▶️Vite dev via `bunx` with root-level `vite.config.ts`. */
+/** ▶️Vite dev via `bunx` with root-level `⚙️⚙️vite.config.ts`. */
 export function runViteBunxDev(
   bundleRoot: string,
   segments: string[],
@@ -1985,7 +1985,7 @@ export function runViteBunxDev(
     if (existsSync(viteCache)) rmSync(viteCache, { recursive: true, force: true });
   }
   const wantStrictPort = opts.strictPort ?? true;
-  const viteArgs = ["vite", "--config", "vite.config.ts", "--host", host, "--port", String(port)];
+  const viteArgs = ["vite", "--config", "⚙️⚙️vite.config.ts", "--host", host, "--port", String(port)];
   if (wantStrictPort && !segments.includes("--strictPort") && !segments.includes("--no-strictPort")) {
     viteArgs.push("--strictPort");
   }

@@ -29,18 +29,18 @@
     { "componentType": 5126, "type": "VEC3", "byteOffset": 0, "bufferView": 23, "count": 4262, "max": [5.25, 2.4778189659118652, 4.800000190734863], "min": [0.0, -0.20000000298023224, 0.0] }
   ],
   "meshes": [
-    { "name": "base.glb", "extras": { "name": "base.glb" }, "primitives": [{ "attributes": { "POSITION": 1 }, "indices": 0, "mode": 4 }] },
-    { "name": "capital.glb", "extras": { "name": "capital.glb" }, "primitives": [{ "attributes": { "POSITION": 3 }, "indices": 2, "mode": 4 }] },
-    { "name": "tambour_first-storey.glb", "extras": { "name": "tambour_first-storey.glb" }, "primitives": [{ "attributes": { "POSITION": 5 }, "indices": 4, "mode": 4 }] },
-    { "name": "tambour.glb", "extras": { "name": "tambour.glb" }, "primitives": [{ "attributes": { "POSITION": 7 }, "indices": 6, "mode": 4 }] },
-    { "name": "tambour_last-storey.glb", "extras": { "name": "tambour_last-storey.glb" }, "primitives": [{ "attributes": { "POSITION": 9 }, "indices": 8, "mode": 4 }] },
-    { "name": "capsule_backslash.glb", "extras": { "name": "capsule_backslash.glb" }, "primitives": [{ "attributes": { "POSITION": 11 }, "indices": 10, "mode": 4 }] },
-    { "name": "capsule_L.glb", "extras": { "name": "capsule_L.glb" }, "primitives": [{ "attributes": { "POSITION": 13 }, "indices": 12, "mode": 4 }] },
-    { "name": "capsule_J.glb", "extras": { "name": "capsule_J.glb" }, "primitives": [{ "attributes": { "POSITION": 15 }, "indices": 14, "mode": 4 }] },
-    { "name": "capsule_slash.glb", "extras": { "name": "capsule_slash.glb" }, "primitives": [{ "attributes": { "POSITION": 17 }, "indices": 16, "mode": 4 }] },
-    { "name": "capsule_s.glb", "extras": { "name": "capsule_s.glb" }, "primitives": [{ "attributes": { "POSITION": 19 }, "indices": 18, "mode": 4 }] },
-    { "name": "capsule_p.glb", "extras": { "name": "capsule_p.glb" }, "primitives": [{ "attributes": { "POSITION": 21 }, "indices": 20, "mode": 4 }] },
-    { "name": "bridge.glb", "extras": { "name": "bridge.glb" }, "primitives": [{ "attributes": { "POSITION": 23 }, "indices": 22, "mode": 4 }] }
+    { "name": "🧊base.glb", "extras": { "name": "🧊base.glb" }, "primitives": [{ "attributes": { "POSITION": 1 }, "indices": 0, "mode": 4 }] },
+    { "name": "🧊capital.glb", "extras": { "name": "🧊capital.glb" }, "primitives": [{ "attributes": { "POSITION": 3 }, "indices": 2, "mode": 4 }] },
+    { "name": "🧊tambour_first-storey.glb", "extras": { "name": "🧊tambour_first-storey.glb" }, "primitives": [{ "attributes": { "POSITION": 5 }, "indices": 4, "mode": 4 }] },
+    { "name": "🧊tambour.glb", "extras": { "name": "🧊tambour.glb" }, "primitives": [{ "attributes": { "POSITION": 7 }, "indices": 6, "mode": 4 }] },
+    { "name": "🧊tambour_last-storey.glb", "extras": { "name": "🧊tambour_last-storey.glb" }, "primitives": [{ "attributes": { "POSITION": 9 }, "indices": 8, "mode": 4 }] },
+    { "name": "🧊capsule_backslash.glb", "extras": { "name": "🧊capsule_backslash.glb" }, "primitives": [{ "attributes": { "POSITION": 11 }, "indices": 10, "mode": 4 }] },
+    { "name": "🧊capsule_L.glb", "extras": { "name": "🧊capsule_L.glb" }, "primitives": [{ "attributes": { "POSITION": 13 }, "indices": 12, "mode": 4 }] },
+    { "name": "🧊capsule_J.glb", "extras": { "name": "🧊capsule_J.glb" }, "primitives": [{ "attributes": { "POSITION": 15 }, "indices": 14, "mode": 4 }] },
+    { "name": "🧊capsule_slash.glb", "extras": { "name": "🧊capsule_slash.glb" }, "primitives": [{ "attributes": { "POSITION": 17 }, "indices": 16, "mode": 4 }] },
+    { "name": "🧊capsule_s.glb", "extras": { "name": "🧊capsule_s.glb" }, "primitives": [{ "attributes": { "POSITION": 19 }, "indices": 18, "mode": 4 }] },
+    { "name": "🧊capsule_p.glb", "extras": { "name": "🧊capsule_p.glb" }, "primitives": [{ "attributes": { "POSITION": 21 }, "indices": 20, "mode": 4 }] },
+    { "name": "🧊bridge.glb", "extras": { "name": "🧊bridge.glb" }, "primitives": [{ "attributes": { "POSITION": 23 }, "indices": 22, "mode": 4 }] }
   ],
   "nodes": [
     { "name": "world", "children": [1] },

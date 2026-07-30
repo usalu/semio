@@ -1,0 +1,10 @@
+$ bun ./script.ts nx show projects
+@semio-tech/infinite-cavas-react-renderer
+@semio-tech/framework-renderer-react
+@semio-tech/repo-coordinator
+@semio-tech/infinite-world-r3f
+@semio-tech/framework-renderer-wgpu
+@semio-tech/animate-present-renderer-react
+@semio-tech/flow-module-dictionary
+@semio-tech/db-storage-postgres-rs
+@semio-tech/cad-js-module-aec-building-structure

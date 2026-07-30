@@ -4,7 +4,7 @@ use note::{NoteBlockNode, NoteCamera, NoteDocument, NoteImageAsset, NoteTableCel
 use std::collections::BTreeMap;
 
 /// 📄 The `semio` example document, handcrafted in the `.note` DSL.
-pub const SEMIO_NOTE_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🗒️note/📚example/semio.note");
+pub const SEMIO_NOTE_EXAMPLE_TEXT: &str = include_str!("../../../../../../../../../✏️s/🔌plugin/🗒️note/📚example/🗒️semio.note");
 
 /// 📖 Parses `.note` DSL text into a `NoteDocument`.
 pub fn parse_dsl(text: &str) -> Result<NoteDocument, store::TextError> {

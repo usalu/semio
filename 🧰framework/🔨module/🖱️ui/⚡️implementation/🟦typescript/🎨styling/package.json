@@ -7,10 +7,10 @@
   "type": "module",
   "exports": {
     ".": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/🎨styling/📦index.ts",
-    "./ui.css": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/🎨styling/ui.css",
-    "./palette.css": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/🎨styling/palette.css",
-    "./tailwind.config": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/🎨styling/tailwind.config.ts",
-    "./tokens.generated": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/🎨styling/tokens.generated.ts"
+    "./🎨ui.css": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/🎨styling/🎨ui.css",
+    "./🎨palette.css": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/🎨styling/🎨palette.css",
+    "./tailwind.config": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/🎨styling/🎨tailwind.config.ts",
+    "./tokens.generated": "../../../../../../🧰framework/🔨module/🖱️ui/⚡️implementation/🟦typescript/🎨styling/🟦tokens.generated.ts"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.19",

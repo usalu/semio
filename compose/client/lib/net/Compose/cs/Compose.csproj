@@ -20,14 +20,14 @@
     <Copyright>GNU Affero General Public License v3 or later</Copyright>
     <PackageProjectUrl>https://docs.semio-tech.com</PackageProjectUrl>
     <RepositoryUrl>https://github.com/usalu/semio</RepositoryUrl>
-    <PackageIcon>emblem_dark_round.png</PackageIcon>
+    <PackageIcon>🖼️emblem_dark_round.png</PackageIcon>
     <PackageTags>building information representationing,computer aided architectural design,parametric design,procedural representationing,generative design,kit-of-parts,connector-based thinking,shape grammar,graph-based design,graph transformations,graph rewriting,design prototypes,design systems,computer-based design synthesis,computer-generated architecture</PackageTags>
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\..\..\assets\logo\emblem_dark_round.png">
+    <None Include="..\..\..\..\assets\logo\🖼️emblem_dark_round.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>

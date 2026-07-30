@@ -3,8 +3,8 @@
 /** @emoji 🧭 `@semio-tech/framework-core` — shared canvas pick helpers, layout factories, and inspector utilities for UI renderers. */
 // #endregion 🧲Header
 
-import { PLAYGROUND_BUILD_TARGETS, type PlaygroundBuildTarget } from "../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/🤖generated/playgrounds.ts";
-import { PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS, pluginModuleUrl } from "../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/🤖generated/plugins.ts";
+import { PLAYGROUND_BUILD_TARGETS, type PlaygroundBuildTarget } from "../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/🤖generated/🟦playgrounds.ts";
+import { PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS, pluginModuleUrl } from "../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🟦typescript/📇registry/🤖generated/🟦plugins.ts";
 import type { IconName } from "@semio-tech/ui-asset";
 export type { IconName };
 
@@ -1643,7 +1643,7 @@ export type ShellBrand = {
   readonly assetsDir?: string;
   /** 📦 Repo-root-relative directory this brand's build output lands in instead of the shared playground `dist/` — keeps a brand's specialization (including its build artifact) self-contained. */
   readonly distDir?: string;
-  /** 🌐 Custom domain this brand's static build deploys to (e.g. GitHub Pages) — written verbatim into a `CNAME` file at the build root. */
+  /** 🌐 Custom domain this brand's static build deploys to (e.g. GitHub Pages) — written verbatim into a `🌐CNAME` file at the build root. */
   readonly cnameHost?: string;
 };
 //#endregion 🏷️ShellBrand
@@ -2369,7 +2369,7 @@ export function withSerializedPluginWasmHandle(handle: PluginWasmHandle): Plugin
 //#endregion SerializedPluginWasm
 
 //#region PluginWorkerClient
-/** @emoji 🧵 Message types the generated `plugin-worker.js` dispatches (framework/os/dev/script.ts `pluginWorkerSource`). */
+/** @emoji 🧵 Message types the generated `🟨plugin-worker.js` dispatches (framework/os/dev/script.ts `pluginWorkerSource`). */
 type PluginWorkerMessageType = "init" | "manifest" | "createApp" | "handleAction" | "handleCommand" | "render" | "destroy" | "refreshUi" | "error";
 
 /** @emoji ⏱️ Logs only, never kills the worker — a plugin action owns in-flight, possibly undo-relevant
@@ -2377,12 +2377,12 @@ type PluginWorkerMessageType = "init" | "manifest" | "createApp" | "handleAction
 const PLUGIN_WORKER_UNRESPONSIVE_MS = 10000;
 
 function pluginWorkerUrl(moduleUrl: string): string {
-  return moduleUrl.replace(/\/[^/]+\.js$/, "/plugin-worker.js");
+  return moduleUrl.replace(/\/[^/]+\.js$/, "/🟨plugin-worker.js");
 }
 
 /**
  * @emoji 🧵 Runs a component-model plugin's WASM inside a Web Worker so `handleAction` — including
- * long-running precompute — never blocks the UI thread. Mirrors `framework/os/renderer/wgpu/js/boot.ts`'s
+ * long-running precompute — never blocks the UI thread. Mirrors `framework/os/renderer/wgpu/js/🟦boot.ts`'s
  * `PluginWorkerClient`, minus its 5s timeout+restart.
  */
 class PluginWorkerClient {
@@ -2497,8 +2497,8 @@ class PluginWorkerClient {
 
 /**
  * @emoji 🧵 Worker-backed `PluginWasmHandle` for component-model plugins (the ABI the generated
- * `plugin-worker.js` supports). Caller falls back to the direct main-thread import on failure (no
- * `plugin-worker.js` alongside this module, wasm-bindgen-only program, or `Worker` unavailable).
+ * `🟨plugin-worker.js` supports). Caller falls back to the direct main-thread import on failure (no
+ * `🟨plugin-worker.js` alongside this module, wasm-bindgen-only program, or `Worker` unavailable).
  */
 const pluginWorkerClients = new Map<string, PluginWorkerClient>();
 
@@ -2530,13 +2530,13 @@ export function relayPluginBackboneOutbound(uri: string, messageJson: string): v
   pluginBackboneOutboundRelay?.(uri, messageJson);
 }
 
-/** @emoji 🌉 A direct-import (main-thread, no-worker) plugin's generated `host-shim.js` runs in this
+/** @emoji 🌉 A direct-import (main-thread, no-worker) plugin's generated `🟨host-shim.js` runs in this
  * same realm but can't import from this module, so it reaches the outbound relay through this
  * well-known global instead — the same relay a worker-backed program reaches via `postMessage`. */
 (globalThis as unknown as { __semioMainThreadPluginBackboneOutbound?: (uri: string, messageJson: string) => void }).__semioMainThreadPluginBackboneOutbound = relayPluginBackboneOutbound;
 
 /** @emoji 🌉 Inbound counterpart: pushes straight into the same global queue a direct-import plugin's
- * `host-shim.js` `backbonePoll` drains, keyed by `uri` (globally unique per document, so no pluginId
+ * `🟨host-shim.js` `backbonePoll` drains, keyed by `uri` (globally unique per document, so no pluginId
  * scoping is needed even though several plugins may share this realm). */
 function pushMainThreadPluginBackboneInbound(uri: string, messages: readonly string[]): void {
   const bridge = globalThis as unknown as { __semioBackboneInbound?: Map<string, string[]> };
@@ -2578,7 +2578,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string): Pro
 async function loadPluginModuleUncached(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
   // 🧵 Worker-backed by default so a plugin's `handleAction` (e.g. puzzle-3d's collision precompute) can
   // never block the UI thread. Falls back to the direct main-thread import below when unavailable: no
-  // `Worker` global (vitest/node), no `plugin-worker.js` alongside this module, or a wasm-bindgen-only
+  // `Worker` global (vitest/node), no `🟨plugin-worker.js` alongside this module, or a wasm-bindgen-only
   // program (the worker template only supports the `createPluginApi` component-model ABI).
   if (typeof Worker !== "undefined") {
     try {
@@ -2760,7 +2760,7 @@ export type PlaygroundBoot = {
 };
 
 /** @emoji 🎮 Resolves the wasm plugin list and default app for one playground variant; when the on-disk
- * `generated/session.ts` was overwritten by another concurrent dev variant, rebuilds from the generated
+ * `generated/🟦session.ts` was overwritten by another concurrent dev variant, rebuilds from the generated
  * program catalog instead of trusting the stale program rows. */
 export function resolvePlaygroundBoot(variant: string, session?: PlaygroundBootSession): PlaygroundBoot {
   const defaultAppId = resolvePlaygroundDefaultAppId(variant);
@@ -3049,7 +3049,7 @@ if (import.meta.vitest) {
       });
       expect(boot.variant).toBe("aggregator");
       expect(boot.defaultAppId).toBe("puzzle3d-play");
-      expect(boot.plugins).toEqual([{ pluginId: "puzzle", moduleUrl: "/plugin-modules/puzzle/puzzle_plugin.js", contributes: [], consumes: [] }]);
+      expect(boot.plugins).toEqual([{ pluginId: "puzzle", moduleUrl: "/plugin-modules/puzzle/🟨puzzle_plugin.js", contributes: [], consumes: [] }]);
     });
   });
 }
