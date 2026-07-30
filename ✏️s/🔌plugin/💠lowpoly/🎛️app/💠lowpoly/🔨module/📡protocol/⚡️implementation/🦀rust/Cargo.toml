@@ -1,0 +1,20 @@
+[package]
+name = "semio-s-app-lowpoly-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Lowpoly app - binary command protocol surface + laws (constitutional: protocol)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌plugin/💠lowpoly/🎛️app/💠lowpoly/🔨module/📡protocol/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+lowpoly = { path = "../../../../../../../../../✏️s/🔌plugin/💠lowpoly/🎛️app/💠lowpoly/⚡️implementation/🦀rust", package = "semio-s-app-lowpoly" }
+lowpoly_op = { path = "../../../../../../../../../✏️s/🔌plugin/💠lowpoly/🎛️app/💠lowpoly/🔨module/🔧op/⚡️implementation/🦀rust", package = "semio-s-app-lowpoly-op" }
+protocol = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+lowpoly_engine = { path = "../../../../../../../../../✏️s/🔌plugin/💠lowpoly/🎛️app/💠lowpoly/🔨module/⚙️engine/⚡️implementation/🦀rust", package = "semio-s-app-lowpoly-engine" }

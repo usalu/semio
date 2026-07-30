@@ -1,0 +1,5 @@
+{
+  "name": "repo/graphql",
+  "bundleKind": "schema",
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json"
+}

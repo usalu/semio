@@ -1,0 +1,20 @@
+[package]
+name = "semio-framework-os-kernel-math-graph-generate-random"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+name = "mathematical_graph_generate_random"
+crate-type = ["rlib"]
+path = "../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🕸️graph/🎲generate/🎲random/📦lib.rs"
+
+[dependencies]
+mathematical_graph = { path = "../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🕸️graph", package = "semio-framework-os-kernel-math-graph" }
+mathematical_graph_generate = { path = "../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🕸️graph/🎲generate", package = "semio-framework-os-kernel-math-graph-generate" }
+mathematical_random = { path = "../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🎲random", package = "semio-framework-os-kernel-math-random" }
+mathematical_graph_structure = { path = "../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🕸️graph/🏗️structure", package = "semio-framework-os-kernel-math-graph-structure" }
+mathematical_algebra = { path = "../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/➕algebra", package = "semio-framework-os-kernel-math-algebra" }

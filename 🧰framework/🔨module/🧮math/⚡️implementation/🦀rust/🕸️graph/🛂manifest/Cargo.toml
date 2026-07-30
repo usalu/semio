@@ -1,0 +1,24 @@
+[package]
+name = "semio-framework-os-kernel-math-graph-manifest"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+build = "build.rs"
+
+
+[lints]
+workspace = true
+[lib]
+name = "mathematical_graph_manifest"
+crate-type = ["rlib"]
+path = "../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🕸️graph/🛂manifest/📦lib.rs"
+
+[dependencies]
+dsl = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🗣️dsl/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-dsl" }
+neural_engine = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🧠neural/⚡️implementation/🦀rust/⚙️engine", package = "semio-framework-os-kernel-neural-engine" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+thiserror = "2.0.12"
+
+[build-dependencies]
+serde_json = "1.0.140"

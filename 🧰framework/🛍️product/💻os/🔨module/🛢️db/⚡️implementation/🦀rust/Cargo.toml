@@ -1,0 +1,87 @@
+[package]
+name = "semio-framework-os-kernel-db"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db facade — re-exports the full db_* family, Database::open_at zero-touch convenience"
+
+[lints]
+workspace = true
+[lib]
+name = "db"
+path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+db_core = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🫀core", package = "semio-framework-os-kernel-db-core" }
+db_actor = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🎭actor", package = "semio-framework-os-kernel-db-actor" }
+db_state = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🔘state", package = "semio-framework-os-kernel-db-state" }
+db_storage = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🗄️storage", package = "semio-framework-os-kernel-db-storage" }
+db_wal = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/📝wal", package = "semio-framework-os-kernel-db-wal" }
+db_snapshot = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/📸snapshot", package = "semio-framework-os-kernel-db-snapshot" }
+db_index = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🔢index", package = "semio-framework-os-kernel-db-index" }
+db_conflict = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/⚔️conflict", package = "semio-framework-os-kernel-db-conflict" }
+db_projection = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/📽️projection", package = "semio-framework-os-kernel-db-projection" }
+db_query = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🔍query", package = "semio-framework-os-kernel-db-query" }
+db_preview = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/👁️preview", package = "semio-framework-os-kernel-db-preview" }
+db_security = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🔒security", package = "semio-framework-os-kernel-db-security" }
+db_document = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/📄document", package = "semio-framework-os-kernel-db-document" }
+db_compact = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🗜️compact", package = "semio-framework-os-kernel-db-compact" }
+db_sync = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🔄sync", package = "semio-framework-os-kernel-db-sync" }
+db_cluster = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🌐cluster", package = "semio-framework-os-kernel-db-cluster" }
+db_observe = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/👁️observe", package = "semio-framework-os-kernel-db-observe" }
+db_engine = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/⚙️engine", package = "semio-framework-os-kernel-db-engine" }
+# 🎯 Genuinely missing addition (this facade's non-test code names `pack_core::ContentHash`
+# directly — `CommandReceipt.state_hash`'s type — and re-exports it as `db::ContentHash`; `pack`
+# (not `pack_core` directly) because `pack`'s own facade already re-exports `ContentHash` plus the
+# `deflate` feature this crate forwards, one dependency edge instead of two).
+pack = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🎒pack/⚡️implementation/🦀rust", default-features = false, package = "semio-framework-os-kernel-pack" }
+
+[features]
+default = ["fs", "thread", "deflate", "vcs"]
+fs = ["db_storage/fs"]
+thread = ["db_actor/thread"]
+# 🎯 `pack`'s own default is `["deflate"]`, and `db_storage` (a mandatory dependency of this
+# facade, transitively of every other db crate that touches pack files) depends on `pack` with
+# its own default features — deflate is therefore already unification-enabled workspace-wide
+# regardless of this flag. This feature still forwards explicitly (mirroring `pack`'s own
+# `deflate = ["pack_format/deflate"]` and `protocol`'s `deflate = ["protocol_format/deflate"]`)
+# so the toggle stays real and load-bearing if `db_storage`'s own pack edge ever gains
+# `default-features = false`.
+deflate = ["pack/deflate"]
+vcs = ["db_engine/vcs"]
+tokio = ["db_engine/tokio"]
+# 🎯 `db_cluster` is already a mandatory (non-optional) dependency of `db_engine` — its own
+# Cargo.toml has no cluster-shaped feature toggle to forward into, and this crate's scope this
+# wave is only its own `Cargo.toml` + `lib.rs`. This feature therefore gates this facade's own
+# `db_cluster` RE-EXPORTS (API surface), not `db_cluster`'s compilation — it is still compiled
+# unconditionally as a transitive dependency either way.
+cluster = []
+otel = ["db_observe/otel"]
+sqlite = ["dep:db_storage_sqlite"]
+postgres = ["dep:db_storage_postgres"]
+neo4j = ["dep:db_storage_neo4j"]
+
+[dependencies.db_storage_sqlite]
+path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🗄️storage/🪶sqlite"
+package = "semio-framework-os-kernel-db-storage-sqlite"
+optional = true
+
+[dependencies.db_storage_postgres]
+path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🗄️storage/🐘postgres"
+package = "semio-framework-os-kernel-db-storage-postgres"
+optional = true
+
+[dependencies.db_storage_neo4j]
+path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🗄️storage/🌐neo4j"
+package = "semio-framework-os-kernel-db-storage-neo4j"
+optional = true
+
+# 🎯 Genuinely missing addition (not in the stub's dependency list), noted per the wave's
+# instructions: the facade's own `//#region 🧪Tests` exercises a full submit -> durable -> query
+# round trip purely through this crate's re-exported names, which requires constructing a real
+# `protocol::OperationEnvelope` fixture directly (mirroring `db_engine`'s own test fixtures) —
+# `protocol` is not otherwise named anywhere in this crate's non-test code.
+[dev-dependencies]
+protocol = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol" }
+serde_json = "1"
+

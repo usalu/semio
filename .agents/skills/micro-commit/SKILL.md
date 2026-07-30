@@ -84,8 +84,8 @@ Example shape (each line is its own line in the fence):
 🐙ueli🎆26🌙06☀️04🚩300
 🎆26🌙07☀️17⏰14⌚20⏱️03
 🪣First bullet from stdout
-📊uloc➕12✏️3➖1🟰16
-🟦803k
+📊uloc💯803k📈11➗0.0001➕12✏️3➖1🟰16
+📊uloc🟦typescript💯803k📈11➗0.0001➕12✏️3➖1🟰16
 
 Signed-off-by: Name <email@example.com>
 ```
@@ -108,7 +108,7 @@ Signed-off-by: Name <email@example.com>
 
 ## Script (deterministic)
 
-Counter (from formatted `…🚩NNN` **or** numeric GitKraken subjects + WIP epoch from history/tags), timestamp line, bullets, **📊uloc** metrics (first line is **`📊uloc➕…✏️…➖…🟰…`** — staged git deltas for the whole repo, **🟰** = ➕+✏️+➖; then **every** language with repo `{loc}` plus the same delta shape, largest first), Signed-off-by, validation, GitKraken files. You only author bullets; do not hand-write the metrics block or line 1.
+Counter (from formatted `…🚩NNN` **or** numeric GitKraken subjects + WIP epoch from history/tags), timestamp line, bullets, **📊uloc** metrics (each line is full explicit shape: `📊uloc💯{bloc}` total, then `📊uloc{emoji}{slug}💯{bloc}` per language — optional `📈`/`📉` net (`➕−➖`), `➗` ratio vs previous bloc, then `➕` `✏️` `➖` `🟰` with zeros omitted; **🟰** = ➕+✏️+➖; languages largest bloc first), Signed-off-by, validation, GitKraken files. You only author bullets; do not hand-write the metrics block or line 1.
 
 After commit, hooks reset to an **empty** `.git/gkcommittemplate.txt` and point `commit.template` at it (GitKraken reuses the last message if that file is missing). Run `g` / `prepare` for the next change set. `bun ./script.ts setup git` installs hooks (post-commit, post-checkout, post-merge, post-rewrite, prepare-commit-msg).
 

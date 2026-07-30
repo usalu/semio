@@ -1,0 +1,15 @@
+[package]
+name = "semio-s-app-playbook-pack"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Playbook-play app - binary document surface (constitutional: pack)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌plugin/📖playbook/🎛️app/📖playbook/🔨module/🎒pack/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+playbook = { path = "../../../../../../../../../✏️s/🔌plugin/📖playbook/🎛️app/📖playbook/⚡️implementation/🦀rust", package = "semio-s-app-playbook" }
+store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }

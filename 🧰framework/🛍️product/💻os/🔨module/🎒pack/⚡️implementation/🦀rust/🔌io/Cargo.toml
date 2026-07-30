@@ -1,0 +1,17 @@
+[package]
+name = "semio-framework-os-kernel-pack-io"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Pack binary document format native IO — file source/sink, atomic writes, streaming writer, recovery"
+
+
+[lints]
+workspace = true
+[lib]
+name = "pack_io"
+path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🎒pack/⚡️implementation/🦀rust/🔌io/📦lib.rs"
+
+[dependencies]
+pack_core = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🎒pack/⚡️implementation/🦀rust/🫀core", package = "semio-framework-os-kernel-pack-core" }
+pack_format = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🎒pack/⚡️implementation/🦀rust/📐format", package = "semio-framework-os-kernel-pack-format" }

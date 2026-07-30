@@ -1,0 +1,20 @@
+{
+  "name": "@semio-tech/repo-lib",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "../../../../../../../🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/📦index.ts",
+    "./nx-plugin": "../../../../../../../🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/nx-plugin.mjs"
+  },
+  "scripts": {
+    "lint": "bun ./script.ts lint",
+    "test": "bun ./script.ts test"
+  },
+  "devDependencies": {
+    "@nx/devkit": "21.4.1",
+    "@types/node": "^22.19.6",
+    "nx": "^21.4.1",
+    "typescript": "^5.9.3"
+  }
+}

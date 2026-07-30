@@ -2,7 +2,7 @@
   "name": "workspace",
   "$schema": "node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "sourceRoot": ".",
+  "sourceRoot": "",
   "targets": {
     "setup": {
       "executor": "nx:run-commands",
@@ -365,7 +365,9 @@
     },
     "cpp-configure": {
       "executor": "nx:run-commands",
-      "dependsOn": ["cpp-setup"],
+      "dependsOn": [
+        "cpp-setup"
+      ],
       "cache": false,
       "options": {
         "command": "bun ./script.ts cpp configure",
@@ -374,7 +376,9 @@
     },
     "cpp-build": {
       "executor": "nx:run-commands",
-      "dependsOn": ["cpp-configure"],
+      "dependsOn": [
+        "cpp-configure"
+      ],
       "cache": false,
       "options": {
         "command": "bun ./script.ts cpp build",
@@ -383,7 +387,9 @@
     },
     "cpp-test": {
       "executor": "nx:run-commands",
-      "dependsOn": ["cpp-build"],
+      "dependsOn": [
+        "cpp-build"
+      ],
       "cache": false,
       "options": {
         "command": "bun ./script.ts cpp test",

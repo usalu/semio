@@ -1,0 +1,20 @@
+[package]
+name = "semio-s-app-fem-2d-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "FEM 2D app - headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌plugin/🏗️fem/🎛️app/◻️2d/🔨module/⚙️engine/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+fem2d = { path = "../../../../../../../../../✏️s/🔌plugin/🏗️fem/🎛️app/◻️2d/⚡️implementation/🦀rust", package = "semio-s-app-fem-2d" }
+fem_core = { path = "../../../../../../../../../✏️s/🔌plugin/🏗️fem/🔨module/🫀core/⚡️implementation/🦀rust", package = "fem_core" }
+thiserror = "2.0.12"
+
+[dev-dependencies]
+fem2d_dsl = { path = "../../../../../../../../../✏️s/🔌plugin/🏗️fem/🎛️app/◻️2d/🔨module/🗣️dsl/⚡️implementation/🦀rust", package = "semio-s-app-fem-2d-dsl" }
+store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }

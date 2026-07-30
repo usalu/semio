@@ -1,0 +1,22 @@
+[package]
+name = "semio-s-app-process-3d-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Process 3d app - headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌plugin/🏭process/🎛️app/🧊3d/🔨module/⚙️engine/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+process_3d = { path = "../../../../../../../../../✏️s/🔌plugin/🏭process/🎛️app/🧊3d/⚡️implementation/🦀rust", package = "semio-s-app-process-3d" }
+process_3d_dsl = { path = "../../../../../../../../../✏️s/🔌plugin/🏭process/🎛️app/🧊3d/🔨module/🗣️dsl/⚡️implementation/🦀rust", package = "semio-s-app-process-3d-dsl" }
+store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }
+semio-framework-plugin = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🦀rust", package = "semio-framework-plugin" }
+kernel_3d_brepkit = { path = "../../../../../../../../../✏️s/🔨module/🧊3d/⚡️implementation/🦀rust/📐brep", package = "semio-framework-os-kernel-3d-brep" }
+kernel_3d_engine = { path = "../../../../../../../../../✏️s/🔨module/🧊3d/⚡️implementation/🦀rust/📐brep/⚙️engine", features = ["parallel"], package = "semio-framework-os-kernel-3d-brep-engine" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+base64 = "0.22.1"

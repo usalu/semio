@@ -1,0 +1,18 @@
+[package]
+name = "semio-framework-os-kernel-math-graph-cliques"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+name = "mathematical_graph_cliques"
+crate-type = ["rlib"]
+path = "../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🕸️graph/🔺cliques/📦lib.rs"
+
+[dependencies]
+mathematical_graph = { path = "../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🕸️graph", package = "semio-framework-os-kernel-math-graph" }
+mathematical_graph_traversal = { path = "../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🕸️graph/🚶traversal", package = "semio-framework-os-kernel-math-graph-traversal" }
+mathematical_graph_components = { path = "../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🕸️graph/🧩components", package = "semio-framework-os-kernel-math-graph-components" }

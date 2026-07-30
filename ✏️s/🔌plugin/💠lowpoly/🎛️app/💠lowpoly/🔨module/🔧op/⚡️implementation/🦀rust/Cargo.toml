@@ -1,0 +1,23 @@
+[package]
+name = "semio-s-app-lowpoly-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Lowpoly app - operation enum + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌plugin/💠lowpoly/🎛️app/💠lowpoly/🔨module/🔧op/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+lowpoly = { path = "../../../../../../../../../✏️s/🔌plugin/💠lowpoly/🎛️app/💠lowpoly/⚡️implementation/🦀rust", package = "semio-s-app-lowpoly" }
+lowpoly_engine = { path = "../../../../../../../../../✏️s/🔌plugin/💠lowpoly/🎛️app/💠lowpoly/🔨module/⚙️engine/⚡️implementation/🦀rust", package = "semio-s-app-lowpoly-engine" }
+dsl = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🗣️dsl/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }
+base64 = "0.22.1"
+
+[dev-dependencies]
+kernel_3d_mesh = { path = "../../../../../../../../../✏️s/🔨module/🧊3d/⚡️implementation/🦀rust/🥽mesh", package = "semio-framework-os-kernel-3d-mesh" }

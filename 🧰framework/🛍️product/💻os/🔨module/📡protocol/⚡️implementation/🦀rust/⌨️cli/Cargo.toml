@@ -1,0 +1,19 @@
+[package]
+name = "semio-framework-os-kernel-protocol-cli"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Protocol CLI — inspect, verify, hash, log, compile/decompile, diff, compact, repair, upgrade"
+
+
+[lints]
+workspace = true
+[lib]
+name = "protocol_cli"
+path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust/⌨️cli/📦lib.rs"
+[[bin]]
+name = "protocol"
+path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust/⌨️cli/📦lib.rs"
+
+[dependencies]
+protocol = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol" }

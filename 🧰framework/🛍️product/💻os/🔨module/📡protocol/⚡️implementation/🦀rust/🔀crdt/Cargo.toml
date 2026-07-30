@@ -1,0 +1,20 @@
+[package]
+name = "semio-framework-os-kernel-protocol-crdt"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Protocol CRDT merge strategies — LWW, ordered-sequence, text-sequence, tombstoned-graph-set, content-addressed-blob"
+
+
+[lints]
+workspace = true
+[lib]
+name = "protocol_crdt"
+path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust/🔀crdt/📦lib.rs"
+
+[dependencies]
+protocol_core = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust/🫀core", package = "semio-framework-os-kernel-protocol-core" }
+protocol_command = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust/🎮command", package = "semio-framework-os-kernel-protocol-command" }
+
+[dev-dependencies]
+serde = { version = "1", features = ["derive"] }

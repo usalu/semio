@@ -43,7 +43,7 @@ import {
   type BreachRecord,
   type LcovFileRecord,
   type TestLevel,
-} from "./🧰/🛍️/🦑/🔨/lib/⚡️/🟦/📦.ts";
+} from "./🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/📦index.ts";
 import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, copyFileSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, extname, join, relative, resolve } from "node:path";
@@ -53,7 +53,8 @@ import { resolveActiveScopes } from "./.storybook/scopes.ts";
 
 const WORKSPACE_ROOT = import.meta.dir;
 const BUN = process.execPath;
-const NATIVE_BOOTSTRAP_DIR = join(WORKSPACE_ROOT, "repo", "native", "bootstrap");
+const NATIVE_BOOTSTRAP_DIR = join(WORKSPACE_ROOT, "./🧰framework/🛍️product/🦑repo/🔨module/🔩native/🥾bootstrap");
+process.env.NX_ISOLATE_PLUGINS ??= "false";
 
 export { Script };
 
@@ -574,7 +575,7 @@ export class LintScript extends Script {
       return;
     }
     runCmd("bun", ["nx", "run-many", "-t", "lint", "--all", "--exclude", "workspace"], { cwd: this.root, ...orchestratorBudgetOpts() });
-    runCmd("bunx", ["dependency-cruiser@16", "compose", "framework", "flow", "layout", "puzzle", "framework/ui", "draw", "note", "sequence", "s", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
+    runCmd("bunx", ["dependency-cruiser@16", "compose", "🧰framework", "✏️s", "🌎hub", "♻️mit-bestand", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
   }
 }
 //#endregion 🔖LintScript
@@ -594,7 +595,7 @@ export class VerifyScript extends Script {
     // and framework-renderer-wgpu:lint has known pending color-literal violations (see spawn_task follow-ups) —
     // this gate must stay a meaningful, currently-green signal for refactor sessions, not inherit that noise.
     console.log("[verify] dependency-cruiser boundaries…");
-    runCmd("bunx", ["dependency-cruiser@16", "compose", "framework", "flow", "layout", "puzzle", "framework/ui", "draw", "note", "sequence", "s", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
+    runCmd("bunx", ["dependency-cruiser@16", "compose", "🧰framework", "✏️s", "🌎hub", "♻️mit-bestand", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
     console.log("[verify] generated catalog freshness…");
     // nx orchestrators: exempt — leaves individually budgeted.
     runCmd("bun", ["nx", "run", "@semio-tech/plugin-registry:check"], { cwd: this.root, ...orchestratorBudgetOpts() });
@@ -1561,43 +1562,43 @@ const POLICY_PACK_COMPLETENESS_ALLOWLIST = new Set<string>([]);
  * once that file adds the command-envelope-round-trip call.
  */
 const POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST = new Set<string>([
-  "s/plugin/architect/module/spine/rs/lib.rs",
+  "./✏️s/🔌plugin/🏛️architect/🔨module/🦴spine/⚡️implementation/🦀rust/📦lib.rs",
   "compose/client/lib/rs/lib.rs",
-  "framework/product/os/module/dsl/rs/lib.rs",
-  "framework/product/os/module/infinite/board/port/directed/dag/rs/lib.rs",
-  "framework/product/os/rs/lib.rs",
-  "s/plugin/lowpoly/app/lowpoly/protocol/rs/lib.rs",
-  "s/plugin/playbook/extension/procedural/rs/lib.rs",
-  "framework/product/os/module/flow/core/rs/lib.rs",
-  "framework/product/os/module/workflow/rs/lib.rs",
-  "s/plugin/animate/app/present/protocol/rs/lib.rs",
-  "s/plugin/gis/manifest/artifact/rs/lib.rs",
-  "s/plugin/mathematical/manifest/artifact/rs/lib.rs",
-  "s/plugin/norm/module/core/rs/lib.rs",
-  "s/plugin/note/manifest/artifact/rs/lib.rs",
-  "s/plugin/procedural/app/2d/dsl/rs/lib.rs",
-  "s/plugin/procedural/app/2d/pack/rs/lib.rs",
-  "s/plugin/procedural/app/2d/protocol/rs/lib.rs",
-  "s/plugin/procedural/app/3d/dsl/rs/lib.rs",
-  "s/plugin/procedural/app/3d/pack/rs/lib.rs",
-  "s/plugin/procedural/app/3d/protocol/rs/lib.rs",
-  "s/plugin/puzzle/app/2d/dsl/rs/lib.rs",
-  "s/plugin/puzzle/app/2d/pack/rs/lib.rs",
-  "s/plugin/puzzle/app/2d/ui/rs/lib.rs",
-  "s/plugin/puzzle/app/3d/dsl/rs/lib.rs",
-  "s/plugin/puzzle/app/3d/pack/rs/lib.rs",
-  "s/plugin/puzzle/app/3d/ui/rs/lib.rs",
-  "s/plugin/puzzle/app/5d/dsl/rs/lib.rs",
-  "s/plugin/puzzle/app/5d/pack/rs/lib.rs",
-  "s/plugin/puzzle/app/5d/ui/rs/lib.rs",
-  "s/plugin/raster/manifest/artifact/rs/lib.rs",
-  "s/plugin/reasoning/manifest/artifact/rs/lib.rs",
-  "s/plugin/space/manifest/artifact/rs/lib.rs",
-  "s/plugin/trinity/module/ram/rs/lib.rs",
-  "s/plugin/trinity/app/rewrite/dsl/rs/lib.rs",
-  "s/plugin/trinity/app/rewrite/pack/rs/lib.rs",
-  "s/plugin/trinity/app/rewrite/protocol/rs/lib.rs",
-  "s/plugin/vcs/manifest/artifact/rs/lib.rs",
+  "./🧰framework/🛍️product/💻os/🔨module/🗣️dsl/⚡️implementation/🦀rust/📦lib.rs",
+  "./🧰framework/🛍️product/💻os/🔨module/♾️infinite/⚡️implementation/🦀rust/🎲board/🔌port/➡️directed/🕸️dag/📦lib.rs",
+  "./🧰framework/🛍️product/💻os/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/💠lowpoly/🎛️app/💠lowpoly/🔨module/📡protocol/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/📖playbook/🧩extension/🌀procedural/⚡️implementation/🦀rust/📦lib.rs",
+  "./🧰framework/🛍️product/💻os/🔨module/🌊flow/⚡️implementation/🦀rust/🫀core/📦lib.rs",
+  "./🧰framework/🛍️product/💻os/🔨module/🔁workflow/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🎞️animate/🎛️app/🎬present/🔨module/📡protocol/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🌍gis/🛂manifest/🗿artifact/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/➗mathematical/🛂manifest/🗿artifact/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/📕norm/🔨module/🫀core/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🗒️note/🛂manifest/🗿artifact/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🌀procedural/🎛️app/◻️2d/🔨module/🗣️dsl/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🌀procedural/🎛️app/◻️2d/🔨module/🎒pack/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🌀procedural/🎛️app/◻️2d/🔨module/📡protocol/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🌀procedural/🎛️app/🧊3d/🔨module/🗣️dsl/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🌀procedural/🎛️app/🧊3d/🔨module/🎒pack/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🌀procedural/🎛️app/🧊3d/🔨module/📡protocol/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🧩puzzle/🎛️app/◻️2d/🔨module/🗣️dsl/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🧩puzzle/🎛️app/◻️2d/🔨module/🎒pack/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🧩puzzle/🎛️app/◻️2d/🔨module/🖱️ui/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🧩puzzle/🎛️app/🧊3d/🔨module/🗣️dsl/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🧩puzzle/🎛️app/🧊3d/🔨module/🎒pack/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🧩puzzle/🎛️app/🧊3d/🔨module/🖱️ui/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🧩puzzle/🎛️app/🖐️5d/🔨module/🗣️dsl/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🧩puzzle/🎛️app/🖐️5d/🔨module/🎒pack/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🧩puzzle/🎛️app/🖐️5d/🔨module/🖱️ui/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🖨️raster/🛂manifest/🗿artifact/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/💡reasoning/🛂manifest/🗿artifact/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🪐space/🛂manifest/🗿artifact/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🔱trinity/🔨module/🐏ram/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🔱trinity/🎛️app/✏️rewrite/🔨module/🗣️dsl/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🔱trinity/🎛️app/✏️rewrite/🔨module/🎒pack/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🔱trinity/🎛️app/✏️rewrite/🔨module/📡protocol/⚡️implementation/🦀rust/📦lib.rs",
+  "./✏️s/🔌plugin/🌿vcs/🛂manifest/🗿artifact/⚡️implementation/🦀rust/📦lib.rs",
 ]);
 
 /**
@@ -2367,7 +2368,7 @@ const POLICY_PROTOCOL_MIGRATION_USE_BLOCK_RE = /use\s+(?:::)?vcs::\{([^}]*)\}/gs
 function policyProtocolMigrationBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const relPath of policyAllRustFiles(repoRoot)) {
-    if (relPath === "framework/product/os/module/vcs/rs/lib.rs") continue; // the crate that used to own the shim; never reaches itself via "vcs::"
+    if (relPath === "./🧰framework/🛍️product/💻os/🔨module/🌿vcs/⚡️implementation/🦀rust/📦lib.rs") continue; // the crate that used to own the shim; never reaches itself via "vcs::"
     const content = readFileSync(join(repoRoot, relPath), "utf8");
     const seenLines = new Set<number>();
     const lineOf = (index: number): number => content.slice(0, index).split(/\r?\n/).length;
@@ -2540,7 +2541,7 @@ function policyNoPackFilesBreaches(repoRoot: string): BreachRecord[] {
 //#endregion 🔧PolicyRuleNoPackFiles
 
 //#region 🔧PolicyRuleNoRawSpawn
-const POLICY_RAW_SPAWN_EXEMPT = new Set(["🧰/🛍️/🦑/🔨/lib/⚡️/🟦/📦.ts"]);
+const POLICY_RAW_SPAWN_EXEMPT = new Set(["./🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🟦typescript/📦index.ts"]);
 const POLICY_RAW_SPAWN_RE = /\b(spawnSync|execSync|execFileSync|Bun\.spawn|spawn)\s*\(/g;
 
 /** 🔎Strips TS/JS comments and string literals so policy regexes only see executable code. */
@@ -2738,12 +2739,12 @@ function policyMcpConfigBreaches(repoRoot: string): BreachRecord[] {
     if (!entry || !policyMcpRepoServerUsesBunScript(entry)) continue;
     breaches.push({
       id: `mcp-config-${relPath}`,
-      summary: `"${relPath}" repo MCP server still uses bun script.ts mcp — point it at repo/client/client`,
+      summary: `"${relPath}" repo MCP server still uses bun script.ts mcp — point it at 🧰framework/🛍️product/🦑repo/🔨module/💻client/⌨️cli/⚡️implementation/🐹go/client`,
       kind: "budget/mcp-config-repo-binary",
       scope: relPath,
       priority: "high",
-      reason: "The repo MCP server must exec the prebuilt repo/client/client binary (args: mcp <kind>) so IDE tool calls skip bun script.ts and go run recompilation.",
-      solution: `In ${relPath}, set the repo server to command "repo/client/client" with args ["mcp", "<kind>"] (e.g. cursor, codex, client) and type stdio.`,
+      reason: "The repo MCP server must exec the prebuilt 🧰framework/🛍️product/🦑repo/🔨module/💻client/⌨️cli/⚡️implementation/🐹go/client binary (args: mcp <kind>) so IDE tool calls skip bun script.ts and go run recompilation.",
+      solution: `In ${relPath}, set the repo server to command "🧰framework/🛍️product/🦑repo/🔨module/💻client/⌨️cli/⚡️implementation/🐹go/client" with args ["mcp", "<kind>"] (e.g. cursor, codex, client) and type stdio.`,
     });
   }
   return breaches;

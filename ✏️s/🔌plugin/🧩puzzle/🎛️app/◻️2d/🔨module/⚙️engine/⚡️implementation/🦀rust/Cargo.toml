@@ -1,0 +1,36 @@
+[package]
+name = "semio-s-app-puzzle-2d-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Puzzle 2d app — headless compute (constitutional: engine)"
+build = "build.rs"
+
+[lints]
+workspace = true
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+path = "../../../../../../../../../✏️s/🔌plugin/🧩puzzle/🎛️app/◻️2d/🔨module/⚙️engine/⚡️implementation/🦀rust/📦lib.rs"
+
+[build-dependencies]
+serde_json = "1.0.140"
+
+[dependencies]
+puzzle_2d = { path = "../../../../../../../../../✏️s/🔌plugin/🧩puzzle/🎛️app/◻️2d/⚡️implementation/🦀rust", package = "semio-s-app-puzzle-2d" }
+store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }
+protocol = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol" }
+mathematical_geometry = { path = "../../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/📐geometry", package = "semio-framework-os-kernel-math-geometry" }
+infinite_board_port_directed_normal = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/♾️infinite/⚡️implementation/🦀rust/🎲board/🔌port/➡️directed/➕normal", package = "semio-framework-os-kernel-infinite-board-port-directed-normal" }
+reasoning_mindmap = { path = "../../../../../../../../../✏️s/🔨module/💭mindmap/⚡️implementation/🦀rust", package = "reasoning_mindmap" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+js-sys = "0.3.83"
+serde-wasm-bindgen = "0.6.5"
+wasm-bindgen = "0.2.106"
+wasm-bindgen-futures = "0.4.71"
+web-sys = { version = "0.3.98", features = ["HtmlCanvasElement"] }

@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-shooting-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Shooting app - textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌plugin/🎥shooting/🎛️app/🎥shooting/🔨module/🗣️dsl/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+shooting = { path = "../../../../../../../../../✏️s/🔌plugin/🎥shooting/🎛️app/🎥shooting/⚡️implementation/🦀rust", package = "semio-s-app-shooting" }
+store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+serde_json = "1.0.140"

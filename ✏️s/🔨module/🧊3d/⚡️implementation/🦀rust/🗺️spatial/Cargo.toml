@@ -1,0 +1,15 @@
+[package]
+name = "semio-framework-os-kernel-3d-spatial"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+name = "kernel_3d_spatial"
+path = "../../../../../../✏️s/🔨module/🧊3d/⚡️implementation/🦀rust/🗺️spatial/📦lib.rs"
+
+[dependencies]
+kernel_3d_engine = { path = "../../../../../../✏️s/🔨module/🧊3d/⚡️implementation/🦀rust/📐brep/⚙️engine", package = "semio-framework-os-kernel-3d-brep-engine" }

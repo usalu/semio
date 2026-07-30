@@ -1,0 +1,22 @@
+[package]
+name = "semio-s-app-trinity-jack-ui"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Trinity Jack app - DocumentApp impl, render, manifest (constitutional: ui)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌plugin/🔱trinity/🎛️app/🔌jack/🔨module/🖱️ui/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+trinity_ram = { path = "../../../../../../../../../✏️s/🔌plugin/🔱trinity/🔨module/🐏ram/⚡️implementation/🦀rust", package = "trinity_ram" }
+trinity_jack = { path = "../../../../../../../../../✏️s/🔌plugin/🔱trinity/🔨module/🔌jack/⚡️implementation/🦀rust", package = "trinity_jack" }
+trinity_rewrite = { path = "../../../../../../../../../✏️s/🔌plugin/🔱trinity/🎛️app/✏️rewrite/🔨module/⚙️engine/⚡️implementation/🦀rust", package = "semio-s-app-trinity-rewrite-engine" }
+mathematical_graph_drawing = { path = "../../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🕸️graph/🖊️drawing", package = "semio-framework-os-kernel-math-graph-drawing" }
+mathematical_geometry = { path = "../../../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/📐geometry", package = "semio-framework-os-kernel-math-geometry" }
+store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }
+semio-framework-plugin = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🦀rust", package = "semio-framework-plugin" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

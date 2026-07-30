@@ -1,0 +1,41 @@
+[package]
+name = "procedural-plugin"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[package.metadata.component]
+package = "semio:procedural"
+
+[package.metadata.semio]
+consumes = ["forms.questionKind"]
+
+[[package.metadata.semio.playground]]
+variant = "procedural2d"
+app = "procedural2d-play"
+aliases = ["procedural 2d"]
+ports = { react = 6021, wgpu = 6121 }
+
+[[package.metadata.semio.playground]]
+variant = "procedural3d"
+app = "procedural3d-play"
+aliases = ["procedural 3d"]
+ports = { react = 6018, wgpu = 6118 }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "../../../../../../../✏️s/🔌plugin/🌀procedural/🛂manifest/🗿artifact/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+semio-framework-os = { path = "../../../../../../../🧰framework/🛍️product/💻os/⚡️implementation/🦀rust", package = "semio-framework-os" }
+semio-framework-plugin = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🦀rust", features = ["component-guest"], package = "semio-framework-plugin" }
+procedural_2d = { path = "../../../../../../../✏️s/🔌plugin/🌀procedural/🎛️app/◻️2d/⚡️implementation/🦀rust", package = "semio-s-app-procedural-2d" }
+procedural_2d_engine = { path = "../../../../../../../✏️s/🔌plugin/🌀procedural/🎛️app/◻️2d/🔨module/⚙️engine/⚡️implementation/🦀rust", package = "semio-s-app-procedural-2d-engine" }
+procedural_2d_ui = { path = "../../../../../../../✏️s/🔌plugin/🌀procedural/🎛️app/◻️2d/🔨module/🖱️ui/⚡️implementation/🦀rust", package = "semio-s-app-procedural-2d-ui" }
+procedural_3d = { path = "../../../../../../../✏️s/🔌plugin/🌀procedural/🎛️app/🧊3d/⚡️implementation/🦀rust", package = "semio-s-app-procedural-3d" }
+procedural_3d_engine = { path = "../../../../../../../✏️s/🔌plugin/🌀procedural/🎛️app/🧊3d/🔨module/⚙️engine/⚡️implementation/🦀rust", package = "semio-s-app-procedural-3d-engine" }
+procedural_3d_ui = { path = "../../../../../../../✏️s/🔌plugin/🌀procedural/🎛️app/🧊3d/🔨module/🖱️ui/⚡️implementation/🦀rust", package = "semio-s-app-procedural-3d-ui" }
+

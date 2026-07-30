@@ -1,0 +1,22 @@
+[package]
+name = "semio-s-app-shooting-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Shooting app - operation enum + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌plugin/🎥shooting/🎛️app/🎥shooting/🔨module/🔧op/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+shooting = { path = "../../../../../../../../../✏️s/🔌plugin/🎥shooting/🎛️app/🎥shooting/⚡️implementation/🦀rust", package = "semio-s-app-shooting" }
+dsl = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🗣️dsl/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+
+[dev-dependencies]
+vcs = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌿vcs/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-vcs" }

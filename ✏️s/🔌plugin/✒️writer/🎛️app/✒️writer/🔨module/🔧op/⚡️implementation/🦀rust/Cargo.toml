@@ -1,0 +1,21 @@
+[package]
+name = "semio-s-app-writer-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Writer app - operation enum + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌plugin/✒️writer/🎛️app/✒️writer/🔨module/🔧op/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+writer = { path = "../../../../../../../../../✏️s/🔌plugin/✒️writer/🎛️app/✒️writer/⚡️implementation/🦀rust", package = "semio-s-app-writer" }
+dsl = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🗣️dsl/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]
+writer_engine = { path = "../../../../../../../../../✏️s/🔌plugin/✒️writer/🎛️app/✒️writer/🔨module/⚙️engine/⚡️implementation/🦀rust", package = "semio-s-app-writer-engine" }

@@ -1,0 +1,36 @@
+[package]
+name = "semio-framework-os-kernel-3d-brep"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+name = "kernel_3d_brepkit"
+path = "../../../../../../✏️s/🔨module/🧊3d/⚡️implementation/🦀rust/📐brep/📦lib.rs"
+
+[dependencies]
+async-trait = "0.1.88"
+kernel_3d_engine = { path = "../../../../../../✏️s/🔨module/🧊3d/⚡️implementation/🦀rust/📐brep/⚙️engine", package = "semio-framework-os-kernel-3d-brep-engine" }
+semio-framework-core = { path = "../../../../../../🧰framework/⚡️implementation/🦀rust", package = "semio-framework-core" }
+brepkit-topology = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" }
+brepkit-operations = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" }
+brepkit-io = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" }
+brepkit-math = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" }
+brepkit-geometry = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" }
+brepkit-check = { git = "https://github.com/andymai/brepkit", rev = "d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e" }
+base64 = "0.22"
+rayon = "1.10.0"
+serde = { version = "1.0.219", features = ["derive"] }
+mathematical_number = { path = "../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🔢number", package = "semio-framework-os-kernel-math-number" }
+
+[dev-dependencies]
+criterion = { version = "0.5", default-features = false, features = ["html_reports"] }
+serde_json = "1.0.140"
+mathematical_random = { path = "../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🎲random", package = "semio-framework-os-kernel-math-random" }
+
+[[bench]]
+name = "kernel"
+harness = false

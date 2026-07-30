@@ -1,0 +1,19 @@
+[package]
+name = "semio-s-app-writer-pack"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Writer app - binary document surface + laws (constitutional: pack)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌plugin/✒️writer/🎛️app/✒️writer/🔨module/🎒pack/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+writer = { path = "../../../../../../../../../✏️s/🔌plugin/✒️writer/🎛️app/✒️writer/⚡️implementation/🦀rust", package = "semio-s-app-writer" }
+pack = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🎒pack/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-pack" }
+store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+writer_engine = { path = "../../../../../../../../../✏️s/🔌plugin/✒️writer/🎛️app/✒️writer/🔨module/⚙️engine/⚡️implementation/🦀rust", package = "semio-s-app-writer-engine" }

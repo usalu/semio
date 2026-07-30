@@ -1,0 +1,22 @@
+warm 200 /📦.ts
+warm 200 /plugin-modules/puzzle/puzzle_plugin.js
+warm 200 /mesh/hexagonal-cut-concrete-forest-left.glb
+52961 |   if (error.error.name === "TargetClosedError") {
+52962 |     const e2 = new TargetClosedError2(error.error.message);
+52963 |     e2.stack = error.error.stack || "";
+52964 |     return e2;
+52965 |   }
+52966 |   const e = new Error(error.error.message);
+                        ^
+error: launch: Executable doesn't exist at /Users/ueli/Documents/semio/node_modules/.cache/ms-playwright/chromium_headless_shell-1223/chrome-headless-shell-mac-arm64/chrome-headless-shell
+╔════════════════════════════════════════════════════════════╗
+║ Looks like Playwright was just installed or updated.       ║
+║ Please run the following command to download new browsers: ║
+║                                                            ║
+║     npx playwright install                                 ║
+║                                                            ║
+║ <3 Playwright Team                                         ║
+╚════════════════════════════════════════════════════════════╝
+      at /Users/ueli/Documents/semio/node_modules/playwright-core/lib/coreBundle.js:52966:17
+
+Bun v1.3.14 (macOS arm64)

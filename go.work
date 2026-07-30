@@ -3,9 +3,9 @@ go 1.25.5
 use (
 	./coda/client/lib/blnbo/go
 	./coda/client/lib/programming/go
-	./repo/client/cli/go
-	./repo/client/mcp/go
-	./repo/lib/go
-	./repo/server/coordinator/go
+	./🧰framework/🛍️product/🦑repo/🔨module/💻client/⌨️cli/⚡️implementation/🐹go
+	./🧰framework/🛍️product/🦑repo/🔨module/💻client/🔌mcp/⚡️implementation/🐹go
+	./🧰framework/🛍️product/🦑repo/🔨module/📚lib/⚡️implementation/🐹go
+	./🧰framework/🛍️product/🦑repo/🔨module/🖥️server/🎛️coordinator/⚡️implementation/🐹go
 	./compose/client/lib/go
 )

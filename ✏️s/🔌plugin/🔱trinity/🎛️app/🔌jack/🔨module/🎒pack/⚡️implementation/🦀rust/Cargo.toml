@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-trinity-jack-pack"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Trinity Jack app - binary document surface + laws (constitutional: pack)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌plugin/🔱trinity/🎛️app/🔌jack/🔨module/🎒pack/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+trinity_ram = { path = "../../../../../../../../../✏️s/🔌plugin/🔱trinity/🔨module/🐏ram/⚡️implementation/🦀rust", package = "trinity_ram" }
+store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+trinity_jack_dsl = { path = "../../../../../../../../../✏️s/🔌plugin/🔱trinity/🎛️app/🔌jack/🔨module/🗣️dsl/⚡️implementation/🦀rust", package = "semio-s-app-trinity-jack-dsl" }

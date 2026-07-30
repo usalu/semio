@@ -1,0 +1,22 @@
+[package]
+name = "semio-s-app-animate-present-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Animate present app — operation enum + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌plugin/🎞️animate/🎛️app/🎬present/🔨module/🔧op/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+present = { path = "../../../../../../../../../✏️s/🔌plugin/🎞️animate/🎛️app/🎬present/⚡️implementation/🦀rust", package = "semio-s-app-animate-present" }
+dsl = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🗣️dsl/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]
+present_engine = { path = "../../../../../../../../../✏️s/🔌plugin/🎞️animate/🎛️app/🎬present/🔨module/⚙️engine/⚡️implementation/🦀rust", package = "semio-s-app-animate-present-engine" }
+vcs = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌿vcs/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-vcs" }

@@ -1,0 +1,286 @@
+[
+  {
+    "pluginId": "animate",
+    "cratePath": "✏️s/🔌plugin/🎞️animate/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "animate-plugin",
+    "wasmOut": "animate_plugin.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "architect",
+    "cratePath": "✏️s/🔌plugin/🏛️architect/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "architect-spine",
+    "wasmOut": "architect_spine.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "block",
+    "cratePath": "✏️s/🔌plugin/🧱block/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "block-plugin",
+    "wasmOut": "block_plugin.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "cad",
+    "cratePath": "✏️s/🔌plugin/📐cad/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "cad-plugin",
+    "wasmOut": "cad_plugin.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "dag",
+    "cratePath": "✏️s/🔌plugin/🕸️dag/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "dag-plugin",
+    "wasmOut": "dag_plugin.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "draw",
+    "cratePath": "✏️s/🔌plugin/🖍️draw/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "draw-plugin",
+    "wasmOut": "draw_plugin.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "fem",
+    "cratePath": "✏️s/🔌plugin/🏗️fem/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "semio-s-plugin-fem",
+    "wasmOut": "semio_s_plugin_fem.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "flow",
+    "cratePath": "✏️s/🔌plugin/🌊flow/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "flow-plugin",
+    "wasmOut": "flow_plugin.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "forms",
+    "cratePath": "✏️s/🔌plugin/📋forms/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "forms-plugin",
+    "wasmOut": "forms_plugin.wasm",
+    "contributes": [],
+    "consumes": [
+      "forms.questionKind"
+    ]
+  },
+  {
+    "pluginId": "gis",
+    "cratePath": "✏️s/🔌plugin/🌍gis/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "semio-s-plugin-gis",
+    "wasmOut": "semio_s_plugin_gis.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "imperative",
+    "cratePath": "✏️s/🔌plugin/📜imperative/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "imperative-plugin",
+    "wasmOut": "imperative_plugin.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "layout",
+    "cratePath": "✏️s/🔌plugin/📏layout/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "semio-s-plugin-layout",
+    "wasmOut": "semio_s_plugin_layout.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "lowpoly",
+    "cratePath": "✏️s/🔌plugin/💠lowpoly/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "lowpoly-plugin",
+    "wasmOut": "lowpoly_plugin.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "mathematical",
+    "cratePath": "✏️s/🔌plugin/➗mathematical/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "mathematical-plugin",
+    "wasmOut": "mathematical_plugin.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "norm",
+    "cratePath": "✏️s/🔌plugin/📕norm/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "norm-plugin",
+    "wasmOut": "norm_plugin.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "note",
+    "cratePath": "✏️s/🔌plugin/🗒️note/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "semio-s-plugin-note",
+    "wasmOut": "semio_s_plugin_note.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "playbook",
+    "cratePath": "✏️s/🔌plugin/📖playbook/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "playbook-plugin",
+    "wasmOut": "playbook_plugin.wasm",
+    "contributes": [],
+    "consumes": [
+      "playbook.blockKind"
+    ]
+  },
+  {
+    "pluginId": "playbook-module-procedural",
+    "cratePath": "✏️s/🔌plugin/📖playbook/🧩extension/🌀procedural/⚡️implementation/🦀rust",
+    "packageName": "playbook-module-procedural",
+    "wasmOut": "playbook_module_procedural.wasm",
+    "contributes": [
+      "playbook.blockKind"
+    ],
+    "consumes": []
+  },
+  {
+    "pluginId": "procedural",
+    "cratePath": "✏️s/🔌plugin/🌀procedural/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "procedural-plugin",
+    "wasmOut": "procedural_plugin.wasm",
+    "contributes": [],
+    "consumes": [
+      "forms.questionKind"
+    ]
+  },
+  {
+    "pluginId": "process",
+    "cratePath": "✏️s/🔌plugin/🏭process/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "process-plugin",
+    "wasmOut": "process_plugin.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "puzzle",
+    "cratePath": "✏️s/🔌plugin/🧩puzzle/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "puzzle-plugin",
+    "wasmOut": "puzzle_plugin.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "raster",
+    "cratePath": "✏️s/🔌plugin/🖨️raster/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "raster-plugin",
+    "wasmOut": "raster_plugin.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "reasoning-mindmap",
+    "cratePath": "✏️s/🔌plugin/💡reasoning/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "reasoning-mindmap-plugin",
+    "wasmOut": "reasoning_mindmap_plugin.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "remodel",
+    "cratePath": "✏️s/🔌plugin/📸remodel/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "remodel-plugin",
+    "wasmOut": "remodel_plugin.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "s",
+    "cratePath": "✏️s/🔌plugin/🪐space/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "s-plugin",
+    "wasmOut": "s_plugin.wasm",
+    "contributes": [],
+    "consumes": [],
+    "host": {
+      "landingAppId": "home",
+      "hostAppId": "studio"
+    }
+  },
+  {
+    "pluginId": "sequence",
+    "cratePath": "✏️s/🔌plugin/🎬sequence/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "sequence-plugin",
+    "wasmOut": "sequence_plugin.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "shooting",
+    "cratePath": "✏️s/🔌plugin/🎥shooting/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "shooting-plugin",
+    "wasmOut": "shooting_plugin.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "sourcing",
+    "cratePath": "✏️s/🔌plugin/🪵sourcing/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "sourcing-plugin",
+    "wasmOut": "sourcing_plugin.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "sourcing-module-beams",
+    "cratePath": "✏️s/🔌plugin/🪵sourcing/🧩extension/🪵beams/⚡️implementation/🦀rust",
+    "packageName": "sourcing-module-beams",
+    "wasmOut": "sourcing_module_beams.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "sourcing-module-slabs",
+    "cratePath": "✏️s/🔌plugin/🪵sourcing/🧩extension/🧱slabs/⚡️implementation/🦀rust",
+    "packageName": "sourcing-module-slabs",
+    "wasmOut": "sourcing_module_slabs.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "sourcing-module-windows",
+    "cratePath": "✏️s/🔌plugin/🪵sourcing/🧩extension/🪟windows/⚡️implementation/🦀rust",
+    "packageName": "sourcing-module-windows",
+    "wasmOut": "sourcing_module_windows.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "trinity",
+    "cratePath": "✏️s/🔌plugin/🔱trinity/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "trinity-plugin",
+    "wasmOut": "trinity_plugin.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "vcs",
+    "cratePath": "✏️s/🔌plugin/🌿vcs/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "semio-s-plugin-vcs",
+    "wasmOut": "semio_s_plugin_vcs.wasm",
+    "contributes": [],
+    "consumes": []
+  },
+  {
+    "pluginId": "writer",
+    "cratePath": "✏️s/🔌plugin/✒️writer/🛂manifest/🗿artifact/⚡️implementation/🦀rust",
+    "packageName": "writer-plugin",
+    "wasmOut": "writer_plugin.wasm",
+    "contributes": [],
+    "consumes": []
+  }
+]

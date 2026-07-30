@@ -8,7 +8,7 @@ description: >-
 
 # Commit (bundle)
 
-**Bundle squash only** — not `micro-commit`. Micro-commits have no bundle scopes or per-day sections; they keep one `📊uloc` block at the end of each message. Per-bundle and per-day `📊uloc➕…✏️…➖…🟰…` apply only here (`bun ./script.ts commit prepare`).
+**Bundle squash only** — not `micro-commit`. Micro-commits have no bundle scopes or per-day sections; they keep one `📊uloc` block at the end of each message. Per-bundle and per-day full `📊uloc💯…` apply only here (`bun ./script.ts commit prepare`).
 
 ## Rule (always)
 
@@ -23,8 +23,8 @@ description: >-
 | Script (automatic)                                                                                                                     | You (from analysis)                                                                                  |
 | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | Subject `🐙…🔀`                                                                                                                        | —                                                                                                    |
-| Per-bundle and per-day `📊uloc➕…✏️…➖…🟰…` from git **after** you name bundles (`🟰` = ➕+✏️+➖); **bundles sorted highest 🟰 first** | **Which bundles exist**, bundle scope lines (`🏘️compose✍️sketchpad`), **which changes belong where** |
-| Footer `📊uloc➕…✏️…➖…🟰…` (+ per-language rows) + `Signed-off-by`                                                                    | Date lines `🎆YY🌙MM☀️DD` (no uloc on stdin)                                                         |
+| Per-bundle and per-day full `📊uloc💯…` from git **after** you name bundles (`🟰` = ➕+✏️+➖); **bundles sorted highest 🟰 first** | **Which bundles exist**, bundle scope lines (`🏘️compose✍️sketchpad`), **which changes belong where** |
+| Footer `📊uloc💯…` (+ per-language `📊uloc{emoji}{slug}💯…` rows) + `Signed-off-by`                                                                    | Date lines `🎆YY🌙MM☀️DD` (no uloc on stdin)                                                         |
 | Four `git` commands on prepare stdout                                                                                                  | **New** bullets `{emoji}{description}`                                                               |
 
 **Nothing** in the script reads prior commit bullets and auto-fills the bundle body. Prior messages may be wrong or another format — **never** copy them.
@@ -46,8 +46,8 @@ Do not assume yesterday’s bundle boundaries still apply. Do not let path-token
 | Level                    | Must sum (➕ ✏️ ➖ 🟰)              |
 | ------------------------ | ----------------------------------- |
 | Each bundle’s `🎆` days  | That bundle’s scope header `📊uloc` |
-| All bundle headers       | Footer `📊uloc➕…` (full WIP range) |
-| Each footer language row | Same footer `📊uloc➕…`             |
+| All bundle headers       | Footer `📊uloc💯…` (full WIP range) |
+| Each footer language row | Same footer `📊uloc💯…` deltas     |
 
 Every changed path must belong to **exactly one** bundle. If days, bundles, or languages do not add up, attribution is wrong — fix scopes/dates and re-run check.
 
@@ -107,7 +107,7 @@ EOF
 ## Bundle body rules
 
 - **Scope:** emoji + area name (`🏘️compose✍️sketchpad`, `🥅framework`, `🖱️ui⚛️react`) — no paths, no `🔀` / `📊uloc`. You choose scopes after analyzing log + diff; stdin order does not matter — the script reorders bundles by **highest 🟰** once scopes exist.
-- **Dates:** group bullets by calendar day (`🎆YY🌙MM☀️DD`), **newest first** within each bundle. Script appends `📊uloc➕…✏️…➖…🟰…` to each date line from micro-commits that day (same bundle paths).
+- **Dates:** group bullets by calendar day (`🎆YY🌙MM☀️DD`), **newest first** within each bundle. Script appends full `📊uloc💯…` to each date line from micro-commits that day (same bundle paths).
 - **Bullets:** impact order; one leading emoji; written **after** reading the diff.
 - **Never** paste subject, uloc block, or `Signed-off-by` on stdin.
 - **Rejected:** bullets that verbatim-match a line from a prior commit in the range.

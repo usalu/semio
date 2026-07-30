@@ -1,0 +1,70 @@
+{
+  "name": "@semio-tech/animate-core-rs",
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/Cargo.toml",
+        "{projectRoot}/lib.rs",
+        "{projectRoot}/src/**",
+        "{projectRoot}/script.ts",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌plugin/🎞️animate/🔨module/🫀core/⚡️implementation/🦀rust",
+        "command": "bun ./script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/Cargo.toml",
+        "{projectRoot}/lib.rs",
+        "{projectRoot}/src/**",
+        "{projectRoot}/script.ts",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌plugin/🎞️animate/🔨module/🫀core/⚡️implementation/🦀rust",
+        "command": "bun ./script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/Cargo.toml",
+        "{projectRoot}/lib.rs",
+        "{projectRoot}/src/**",
+        "{projectRoot}/script.ts",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌plugin/🎞️animate/🔨module/🫀core/⚡️implementation/🦀rust",
+        "command": "bun ./script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/Cargo.toml",
+        "{projectRoot}/lib.rs",
+        "{projectRoot}/src/**",
+        "{projectRoot}/script.ts",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌plugin/🎞️animate/🔨module/🫀core/⚡️implementation/🦀rust",
+        "command": "bun ./script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

@@ -1,0 +1,7 @@
+
+ NX   Resetting the Nx cache and stopping the daemon.
+
+
+
+ NX   Successfully reset the Nx workspace.
+

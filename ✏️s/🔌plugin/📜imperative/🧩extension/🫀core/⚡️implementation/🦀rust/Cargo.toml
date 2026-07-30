@@ -1,0 +1,16 @@
+[package]
+name = "imperative_module_core"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+crate-type = ["rlib"]
+path = "../../../../../../../✏️s/🔌plugin/📜imperative/🧩extension/🫀core/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+neural_engine = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🧠neural/⚡️implementation/🦀rust/⚙️engine", package = "semio-framework-os-kernel-neural-engine" }
+serde_json = "1.0.140"

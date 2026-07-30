@@ -1,0 +1,9 @@
+{
+  "title": "Get Aggregator Working End To End After Emoji Layout",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "Repo layout was heavily restructured (emoji product tree). Get aggregator working end to end again after the moves. MCP ticket tools unavailable (server not connected); managing ticket on disk. Goal association: 🎯r2602/🎯runningsketchpad (same as prior aggregator e2e tickets).",
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "summary": "Restored Aggregator end-to-end after the emoji product-tree restructure. Fixed nx (NX_ISOLATE_PLUGINS=false for emoji IPC corruption, plugin path, cross-dir project-name collisions, .nxignore for wasm pkg/), rewrote 191 project.json cwds to project roots, updated os-dev vite/script/globals/entry (📦.ts) paths, brand/footer asset URLs (♻️), playground/engine/asset Cargo.toml paths + registry regen, WIT/include/build.rs icon paths for puzzle wasm, and flow-core wasm script. Confirmed bun run dev:mit-bestand:aggregator serves :6023; e2e ok:true with brand title, Abbau Aufbau, 2 canvases (Top+Perspective with concrete slab), GLB 86112 bytes, no console errors.",
+  "sessions": []
+}

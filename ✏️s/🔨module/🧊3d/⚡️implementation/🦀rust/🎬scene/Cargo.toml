@@ -1,0 +1,15 @@
+[package]
+name = "semio-framework-os-kernel-3d-scene"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+name = "kernel_3d_scene"
+path = "../../../../../../✏️s/🔨module/🧊3d/⚡️implementation/🦀rust/🎬scene/📦lib.rs"
+
+[dependencies]
+mathematical_algebra = { path = "../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/➕algebra", package = "semio-framework-os-kernel-math-algebra" }

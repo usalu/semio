@@ -1,0 +1,14 @@
+[package]
+name = "semio-s-app-playbook"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Playbook-play app - document entities (constitutional: general)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../✏️s/🔌plugin/📖playbook/🎛️app/📖playbook/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+playbook = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔁workflow/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-workflow" }

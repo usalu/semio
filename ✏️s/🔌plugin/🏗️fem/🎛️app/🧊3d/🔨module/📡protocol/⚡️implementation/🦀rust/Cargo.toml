@@ -1,0 +1,20 @@
+[package]
+name = "semio-s-app-fem-3d-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "FEM 3D app - binary command protocol surface + laws (constitutional: protocol)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌plugin/🏗️fem/🎛️app/🧊3d/🔨module/📡protocol/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+fem3d = { path = "../../../../../../../../../✏️s/🔌plugin/🏗️fem/🎛️app/🧊3d/⚡️implementation/🦀rust", package = "semio-s-app-fem-3d" }
+fem3d_op = { path = "../../../../../../../../../✏️s/🔌plugin/🏗️fem/🎛️app/🧊3d/🔨module/🔧op/⚡️implementation/🦀rust", package = "semio-s-app-fem-3d-op" }
+protocol = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }
+
+[dev-dependencies]
+fem3d_engine = { path = "../../../../../../../../../✏️s/🔌plugin/🏗️fem/🎛️app/🧊3d/🔨module/⚙️engine/⚡️implementation/🦀rust", package = "semio-s-app-fem-3d-engine" }

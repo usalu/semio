@@ -1,0 +1,17 @@
+[package]
+name = "semio-s-app-norm-din18599-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "DIN V 18599 app - binary command protocol surface + laws (constitutional: protocol)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌plugin/📕norm/🎛️app/📙din18599/🔨module/📡protocol/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+din18599 = { path = "../../../../../../../../../✏️s/🔌plugin/📕norm/🎛️app/📙din18599/⚡️implementation/🦀rust", package = "semio-s-app-norm-din18599" }
+din18599_op = { path = "../../../../../../../../../✏️s/🔌plugin/📕norm/🎛️app/📙din18599/🔨module/🔧op/⚡️implementation/🦀rust", package = "semio-s-app-norm-din18599-op" }
+protocol = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }

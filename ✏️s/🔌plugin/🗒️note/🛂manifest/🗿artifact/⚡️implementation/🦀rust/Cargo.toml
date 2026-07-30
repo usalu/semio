@@ -1,0 +1,28 @@
+[package]
+name = "semio-s-plugin-note"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[package.metadata.component]
+package = "semio:note"
+
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "note"
+ports = { react = 6080, wgpu = 6180 }
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "../../../../../../../✏️s/🔌plugin/🗒️note/🛂manifest/🗿artifact/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+semio-framework-os = { path = "../../../../../../../🧰framework/🛍️product/💻os/⚡️implementation/🦀rust", package = "semio-framework-os" }
+semio-framework-plugin = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🦀rust", features = ["component-guest"], package = "semio-framework-plugin" }
+note = { path = "../../../../../../../✏️s/🔌plugin/🗒️note/🎛️app/🗒️note/⚡️implementation/🦀rust", package = "semio-s-app-note" }
+note_engine = { path = "../../../../../../../✏️s/🔌plugin/🗒️note/🎛️app/🗒️note/🔨module/⚙️engine/⚡️implementation/🦀rust", package = "semio-s-app-note-engine" }
+note_ui = { path = "../../../../../../../✏️s/🔌plugin/🗒️note/🎛️app/🗒️note/🔨module/🖱️ui/⚡️implementation/🦀rust", package = "semio-s-app-note-ui" }

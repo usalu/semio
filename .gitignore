@@ -17,14 +17,14 @@ target*
 .tmp*
 #--------------------------------------PRINT--------------------------------------
 print/asset/font/
-framework/print/asset/font/
+🧰framework/🛍️product/📓print/⚡️implementation/🟦typescript/🖼️asset/🔤font/
 **/.semio-panel-glass/
 **/*.panels
 # Generated dark variants (canonical source is the light .tex only)
 **/.semio-dark/
 *-dark.tex
 #--------------------------------------MIT-BESTAND--------------------------------------
-mit-bestand/bericht/**/dist/
+♻️mit-bestand/📋bericht/**/dist/
 #--------------------------------------REPO--------------------------------------
 .repo/cache
 .repo/coverage
@@ -33,10 +33,10 @@ SPECS.md
 DOCS.md
 TODOS.md
 #--------------------------------------GO--------------------------------------
-repo/client/client
-repo/client/client.exe
-repo/server/coordinator/server
-repo/server/coordinator/server.exe
+🧰framework/🛍️product/🦑repo/🔨module/💻client/⌨️cli/⚡️implementation/🐹go/client
+🧰framework/🛍️product/🦑repo/🔨module/💻client/⌨️cli/⚡️implementation/🐹go/client.exe
+🧰framework/🛍️product/🦑repo/🔨module/🖥️server/🎛️coordinator/⚡️implementation/🐹go/server
+🧰framework/🛍️product/🦑repo/🔨module/🖥️server/🎛️coordinator/⚡️implementation/🐹go/server.exe
 **/.coda/validators/programming
 **/.coda/validators/programming.exe
 #--------------------------------------MACOS--------------------------------------

@@ -1,0 +1,42 @@
+{
+  "name": "@semio-tech/cad-js-core",
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "✏️s/🔌plugin/📐cad/🔨module/🫀core/⚡️implementation/🟦typescript",
+        "command": "bun ./script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "✏️s/🔌plugin/📐cad/🔨module/🫀core/⚡️implementation/🟦typescript",
+        "command": "bun ./script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "✏️s/🔌plugin/📐cad/🔨module/🫀core/⚡️implementation/🟦typescript",
+        "command": "bun ./script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "✏️s/🔌plugin/📐cad/🔨module/🫀core/⚡️implementation/🟦typescript",
+        "command": "bun ./script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

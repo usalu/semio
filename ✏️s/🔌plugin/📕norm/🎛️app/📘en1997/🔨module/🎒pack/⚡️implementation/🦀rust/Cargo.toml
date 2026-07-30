@@ -1,0 +1,16 @@
+[package]
+name = "semio-s-app-norm-en1997-pack"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "EN 1997 app - binary document surface + laws (constitutional: pack)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌plugin/📕norm/🎛️app/📘en1997/🔨module/🎒pack/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+en1997 = { path = "../../../../../../../../../✏️s/🔌plugin/📕norm/🎛️app/📘en1997/⚡️implementation/🦀rust", package = "semio-s-app-norm-en1997" }
+pack = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🎒pack/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-pack" }
+store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }

@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-norm-din16798-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "DIN EN 16798 app - operation type + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌plugin/📕norm/🎛️app/📗din16798/🔨module/🔧op/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+din16798 = { path = "../../../../../../../../../✏️s/🔌plugin/📕norm/🎛️app/📗din16798/⚡️implementation/🦀rust", package = "semio-s-app-norm-din16798" }
+norm_core = { path = "../../../../../../../../../✏️s/🔌plugin/📕norm/🔨module/🫀core/⚡️implementation/🦀rust", package = "norm_core" }
+
+[dev-dependencies]
+store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }

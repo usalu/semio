@@ -1,0 +1,42 @@
+[package]
+name = "semio-framework-os-kernel-db-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db engine — Database supervisor, catalog actor, open/recovery, document lifecycle, VersionGraph impl over vcs, sagas, migration"
+
+[lints]
+workspace = true
+[lib]
+name = "db_engine"
+path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/⚙️engine/📦lib.rs"
+
+[dependencies]
+db_core = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🫀core", package = "semio-framework-os-kernel-db-core" }
+db_actor = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🎭actor", package = "semio-framework-os-kernel-db-actor" }
+db_document = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/📄document", package = "semio-framework-os-kernel-db-document" }
+db_storage = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🗄️storage", package = "semio-framework-os-kernel-db-storage" }
+db_wal = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/📝wal", package = "semio-framework-os-kernel-db-wal" }
+db_compact = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🗜️compact", package = "semio-framework-os-kernel-db-compact" }
+db_sync = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🔄sync", package = "semio-framework-os-kernel-db-sync" }
+db_security = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🔒security", package = "semio-framework-os-kernel-db-security" }
+db_observe = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/👁️observe", package = "semio-framework-os-kernel-db-observe" }
+db_cluster = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🛢️db/⚡️implementation/🦀rust/🌐cluster", package = "semio-framework-os-kernel-db-cluster" }
+protocol = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol" }
+vcs = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌿vcs/⚡️implementation/🦀rust", optional = true, package = "semio-framework-os-kernel-vcs" }
+store = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", optional = true, package = "semio-framework-os-kernel-store" }
+# 🎯 Genuinely missing additions (not in the stub's dependency list), noted per the wave's
+# instructions: `pack_core` because the frozen `CommandReceipt.state_hash` field is typed
+# `pack_core::ContentHash` verbatim in the contract, and this crate names that path directly
+# (not just via `db_document`/`db_wal`'s own re-exports); `serde`+`serde_json` because this crate's
+# catalog root encoding and its `vcs` feature's schema-erased `HashProjection`/`HashOperation`
+# (see `//#region 🔖VersionGraph`) need `derive(Serialize, Deserialize)` directly.
+pack_core = { path = "../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🎒pack/⚡️implementation/🦀rust/🫀core", package = "semio-framework-os-kernel-pack-core" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[features]
+default = ["vcs"]
+vcs = ["dep:vcs", "dep:store"]
+tokio = []
+

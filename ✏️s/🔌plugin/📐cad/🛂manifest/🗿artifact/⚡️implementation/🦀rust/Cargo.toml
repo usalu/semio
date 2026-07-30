@@ -1,0 +1,36 @@
+[package]
+name = "cad-plugin"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[package.metadata.component]
+package = "semio:cad"
+
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "cad"
+ports = { react = 6020, wgpu = 6120 }
+
+[[package.metadata.semio.assets]]
+kind = "static-dir"
+route = "/cad-fixture"
+root = "cad/fixture"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "../../../../../../../✏️s/🔌plugin/📐cad/🛂manifest/🗿artifact/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+cad_document = { path = "../../../../../../../✏️s/🔌plugin/📐cad/🎛️app/📐cad/⚡️implementation/🦀rust", package = "semio-s-app-cad" }
+cad_document_engine = { path = "../../../../../../../✏️s/🔌plugin/📐cad/🎛️app/📐cad/🔨module/⚙️engine/⚡️implementation/🦀rust", package = "semio-s-app-cad-engine" }
+cad_document_ui = { path = "../../../../../../../✏️s/🔌plugin/📐cad/🎛️app/📐cad/🔨module/🖱️ui/⚡️implementation/🦀rust", package = "semio-s-app-cad-ui" }
+semio-framework-plugin = { path = "../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🦀rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-os = { path = "../../../../../../../🧰framework/🛍️product/💻os/⚡️implementation/🦀rust", package = "semio-framework-os" }
+semio-framework-core = { path = "../../../../../../../🧰framework/⚡️implementation/🦀rust", package = "semio-framework-core" }
+kernel_3d_brepkit = { path = "../../../../../../../✏️s/🔨module/🧊3d/⚡️implementation/🦀rust/📐brep", package = "semio-framework-os-kernel-3d-brep" }
+serde_json = "1.0.140"

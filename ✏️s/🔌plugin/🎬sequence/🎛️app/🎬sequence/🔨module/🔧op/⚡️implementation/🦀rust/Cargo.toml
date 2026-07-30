@@ -1,0 +1,23 @@
+[package]
+name = "semio-s-app-sequence-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Sequence app - operation enum + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌plugin/🎬sequence/🎛️app/🎬sequence/🔨module/🔧op/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+sequence = { path = "../../../../../../../../../✏️s/🔌plugin/🎬sequence/🎛️app/🎬sequence/⚡️implementation/🦀rust", package = "semio-s-app-sequence" }
+dsl = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🗣️dsl/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }
+
+[dev-dependencies]
+sequence_engine = { path = "../../../../../../../../../✏️s/🔌plugin/🎬sequence/🎛️app/🎬sequence/🔨module/⚙️engine/⚡️implementation/🦀rust", package = "semio-s-app-sequence-engine" }
+vcs = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🌿vcs/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-vcs" }
+neural_engine = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🧠neural/⚡️implementation/🦀rust/⚙️engine", package = "semio-framework-os-kernel-neural-engine" }

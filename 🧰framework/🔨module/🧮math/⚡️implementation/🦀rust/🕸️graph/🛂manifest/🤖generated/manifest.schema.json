@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "manifest",
+  "title": "GraphManifestDocument",
+  "type": "object",
+  "required": [
+    "schema",
+    "id"
+  ],
+  "properties": {
+    "schema": {
+      "const": "manifest"
+    },
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "axes": {
+      "type": "object",
+      "properties": {
+        "portModel": {
+          "enum": [
+            "normal",
+            "ported"
+          ]
+        },
+        "directedness": {
+          "enum": [
+            "directed",
+            "undirected"
+          ]
+        }
+      }
+    },
+    "nodeKinds": {
+      "type": "array"
+    },
+    "edgeKinds": {
+      "type": "array"
+    },
+    "portKinds": {
+      "type": "array"
+    },
+    "wireKinds": {
+      "type": "array"
+    },
+    "layerKinds": {
+      "type": "array"
+    },
+    "languageKinds": {
+      "type": "array"
+    },
+    "surfaceKinds": {
+      "type": "array"
+    },
+    "windowKinds": {
+      "type": "array"
+    },
+    "fileNodeKinds": {
+      "type": "array"
+    },
+    "descriptorKinds": {
+      "type": "array"
+    },
+    "edgeTips": {
+      "type": "array"
+    },
+    "kindCompatibility": {
+      "type": "array"
+    }
+  }
+}

@@ -1,0 +1,3 @@
+# 📦 wasm-pack output packages share npm names with their parent crates; keep them out of the nx graph.
+**/pkg/**
+**/pkg/package.json

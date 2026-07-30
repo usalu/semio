@@ -1,0 +1,24 @@
+[package]
+name = "remodel_geo"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["rlib"]
+path = "../../../../../../../✏️s/🔌plugin/📸remodel/🔨module/🗺️geo/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+remodel_sfm = { path = "../../../../../../../✏️s/🔌plugin/📸remodel/🔨module/📸sfm/⚡️implementation/🦀rust", package = "remodel_sfm" }
+remodel_dense = { path = "../../../../../../../✏️s/🔌plugin/📸remodel/🔨module/🌫️dense/⚡️implementation/🦀rust", package = "remodel_dense" }
+remodel_mesh = { path = "../../../../../../../✏️s/🔌plugin/📸remodel/🔨module/🥽mesh/⚡️implementation/🦀rust", package = "remodel_mesh" }
+remodel_image = { path = "../../../../../../../✏️s/🔌plugin/📸remodel/🔨module/🖼️image/⚡️implementation/🦀rust", package = "remodel_image" }
+remodel_camera = { path = "../../../../../../../✏️s/🔌plugin/📸remodel/🔨module/📷camera/⚡️implementation/🦀rust", package = "remodel_camera" }
+mathematical_algebra = { path = "../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/➕algebra", package = "semio-framework-os-kernel-math-algebra" }
+mathematical_lie = { path = "../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🔷lie", package = "semio-framework-os-kernel-math-lie" }
+mathematical_spatial = { path = "../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🗺️spatial", package = "semio-framework-os-kernel-math-spatial" }
+mathematical_optimize = { path = "../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🎯optimize", package = "semio-framework-os-kernel-math-optimize" }
+mathematical_random = { path = "../../../../../../../🧰framework/🔨module/🧮math/⚡️implementation/🦀rust/🎲random", package = "semio-framework-os-kernel-math-random" }

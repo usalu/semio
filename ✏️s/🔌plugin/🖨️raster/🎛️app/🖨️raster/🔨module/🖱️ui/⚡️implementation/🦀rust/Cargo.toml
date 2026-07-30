@@ -1,0 +1,22 @@
+[package]
+name = "semio-s-app-raster-ui"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Raster app - DocumentApp impl, render, manifest (constitutional: ui)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌plugin/🖨️raster/🎛️app/🖨️raster/🔨module/🖱️ui/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+raster = { path = "../../../../../../../../../✏️s/🔌plugin/🖨️raster/🎛️app/🖨️raster/⚡️implementation/🦀rust", package = "semio-s-app-raster" }
+raster_engine = { path = "../../../../../../../../../✏️s/🔌plugin/🖨️raster/🎛️app/🖨️raster/🔨module/⚙️engine/⚡️implementation/🦀rust", package = "semio-s-app-raster-engine" }
+raster_op = { path = "../../../../../../../../../✏️s/🔌plugin/🖨️raster/🎛️app/🖨️raster/🔨module/🔧op/⚡️implementation/🦀rust", package = "semio-s-app-raster-op" }
+semio-framework-plugin = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🔌plugin/⚡️implementation/🦀rust", package = "semio-framework-plugin" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+
+[dev-dependencies]
+store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }

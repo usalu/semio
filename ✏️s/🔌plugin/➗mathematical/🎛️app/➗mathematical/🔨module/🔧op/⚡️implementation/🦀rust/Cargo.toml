@@ -1,0 +1,18 @@
+[package]
+name = "semio-s-app-mathematical-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Mathematical app - operation enum + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌plugin/➗mathematical/🎛️app/➗mathematical/🔨module/🔧op/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+mathematical = { path = "../../../../../../../../../✏️s/🔌plugin/➗mathematical/🎛️app/➗mathematical/⚡️implementation/🦀rust", package = "semio-s-app-mathematical" }
+dsl = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🗣️dsl/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-dsl" }
+protocol = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/📡protocol/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-protocol" }
+store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }

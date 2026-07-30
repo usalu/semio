@@ -1,0 +1,17 @@
+[package]
+name = "semio-s-app-norm-en1995-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "EN 1995 app - operation type + family + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "../../../../../../../../../✏️s/🔌plugin/📕norm/🎛️app/📘en1995/🔨module/🔧op/⚡️implementation/🦀rust/📦lib.rs"
+
+[dependencies]
+en1995 = { path = "../../../../../../../../../✏️s/🔌plugin/📕norm/🎛️app/📘en1995/⚡️implementation/🦀rust", package = "semio-s-app-norm-en1995" }
+en1995_engine = { path = "../../../../../../../../../✏️s/🔌plugin/📕norm/🎛️app/📘en1995/🔨module/⚙️engine/⚡️implementation/🦀rust", package = "semio-s-app-norm-en1995-engine" }
+norm_core = { path = "../../../../../../../../../✏️s/🔌plugin/📕norm/🔨module/🫀core/⚡️implementation/🦀rust", package = "norm_core" }
+store = { path = "../../../../../../../../../🧰framework/🛍️product/💻os/🔨module/🏪store/⚡️implementation/🦀rust", package = "semio-framework-os-kernel-store" }

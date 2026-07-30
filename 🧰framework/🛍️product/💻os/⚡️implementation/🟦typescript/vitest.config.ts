@@ -1,0 +1,26 @@
+// #region 🔌Adapters
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { defineConfig } from "vitest/config";
+// #endregion 🔌Adapters
+
+const root = dirname(fileURLToPath(import.meta.url));
+
+/** @emoji 🧪 Vitest for `@semio-tech/framework-os-core` (inline `import.meta.vitest`). */
+export default defineConfig({
+  root,
+  resolve: {
+    alias: {
+      "@semio-tech/framework-os-core": resolve(root, "📦index.ts"),
+    },
+  },
+  test: {
+    name: "@semio-tech/framework-os-core",
+    mode: "test",
+    environment: "node",
+    include: ["📦index.ts", "backbone-worker.ts"],
+    coverage: { include: ["📦index.ts", "backbone-worker.ts"] },
+    includeSource: ["📦index.ts", "backbone-worker.ts"],
+    passWithNoTests: false,
+  },
+});
