@@ -4,11 +4,14 @@
 \ProvideDocumentCommand \SemioCellList { O{;} m }
   {
     \seq_set_split:Nnn \l_tmpa_seq {#1} {#2}
+    \int_zero:N \l_tmpa_int
     \seq_map_inline:Nn \l_tmpa_seq
       {
-        { \hangindent=0.8em \hangafter=1 \noindent
-          \textcolor{semio-chrome-border-normal}{\textendash}~%
-          \tl_trim_spaces:n {##1} \par }
+        \int_incr:N \l_tmpa_int
+        \int_compare:nNnT \l_tmpa_int > 1 { \par \noindent }
+        \hangindent=0.8em \hangafter=1
+        \textcolor{semio-chrome-border-normal}{\textendash}~%
+        \tl_trim_spaces:n {##1}%
       }
   }
 \ExplSyntaxOff
