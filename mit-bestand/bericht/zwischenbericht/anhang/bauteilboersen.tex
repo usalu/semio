@@ -1,5 +1,18 @@
 \label{anlage:bauteilboersen}
 
+\ExplSyntaxOn
+\ProvideDocumentCommand \SemioCellList { O{;} m }
+  {
+    \seq_set_split:Nnn \l_tmpa_seq {#1} {#2}
+    \seq_map_inline:Nn \l_tmpa_seq
+      {
+        { \hangindent=0.8em \hangafter=1 \noindent
+          \textcolor{semio-chrome-border-normal}{\textendash}~%
+          \tl_trim_spaces:n {##1} \par }
+      }
+  }
+\ExplSyntaxOff
+
 Systematische Erhebung von Bauteilbörsen und Wiederverwendungsplattformen als Sekundärdatenquellen für die im Projekt entwickelte Schnittstellendefinition. Erfasst und ausgewertet wurden 50 Fälle aus acht Ländern und vier Plattformgruppen. Leseschlüssel und Begriffsabgrenzungen finden sich am Ende dieser Anlage.
 
 \begin{Table}[title=Überblick]
@@ -14,57 +27,57 @@ Systematische Erhebung von Bauteilbörsen und Wiederverwendungsplattformen als S
 24 Fälle.
 
 \SemioTableLong[text-size=7.2pt]{Marktplätze \textperiodcentered\ Zugang und Kanäle}{0.07,0.16,0.12,0.24,0.13,0.15,0.13}{ID & Plattform & Land & Angebotsform & Zugang & Digitaler Kanal & Physischer Zugang}{%
-  \SemioTableRow{BB-08 & Materialrest24 & Deutschland & n. p. & n. p. & Website & n. p.}
-  \SemioTableRow{BB-09 & Restado & Deutschland & Angebotsübersicht, Detailseite & öffentlich & Website & —}
-  \SemioTableRow{BB-11 & Articonnex & Frankreich & Angebotsübersicht, Detailseite & öffentlich & Website & —}
-  \SemioTableRow{BB-12 & Backacia & Frankreich & Angebotsübersicht, Detailseite & öffentlich & Website & —}
-  \SemioTableRow{BB-13 & BatRecup & Frankreich & Angebotsübersicht, Detailseite & öffentlich & App & —}
-  \SemioTableRow{BB-14 & Bâticycle & Frankreich & Angebotsübersicht & öffentlich & Website & Standort}
-  \SemioTableRow{BB-16 & Cycle Zéro & Frankreich & Angebotsübersicht, Detailseite & öffentlich & App & —}
-  \SemioTableRow{BB-17 & R-Place & Frankreich & Angebotsübersicht, Detailseite & öffentlich & Website & —}
-  \SemioTableRow{BB-20 & Réempro & Frankreich & Angebotsübersicht, Detailseite & öffentlich & externer Marktplatz & —}
-  \SemioTableRow{BB-21 & Skop Marketplace & Frankreich & Angebotsübersicht, Detailseite & öffentlich & Website & —}
-  \SemioTableRow{BB-22 & Gebruiktebouwmaterialen & Niederlande & Angebotsübersicht, Detailseite & öffentlich & Website & —}
-  \SemioTableRow{BB-23 & Insert Marketplace & Niederlande & Angebotsübersicht, Detailseite, Karte/GIS & öffentlich & Website & —}
-  \SemioTableRow{BB-24 & ReSource Marktplaats & Niederlande & Katalog & n. p. & App & —}
-  \SemioTableRow{BB-26 & Baumatpool.ch & Schweiz & Angebotsübersicht & öffentlich & Website & —}
-  \SemioTableRow{BB-38 & REUZI & Schweiz & Angebotsübersicht, Katalog & Mitgliedschaft & Website & —}
-  \SemioTableRow{BB-39 & Salza & Schweiz & Angebotsübersicht & öffentlich & Website & —}
-  \SemioTableRow{BB-41 & useagain / Bauteilclick & Schweiz & Angebotsübersicht, Detailseite & öffentlich & Website & —}
-  \SemioTableRow{BB-43 & Building Spares Market & Vereinigtes Königreich & Angebotsübersicht, Detailseite & öffentlich & Website & —}
-  \SemioTableRow{BB-44 & Enviromate & Vereinigtes Königreich & Angebotsübersicht, Detailseite & öffentlich & Website & —}
-  \SemioTableRow{BB-45 & Globechain & Vereinigtes Königreich & Angebotsübersicht & Mitgliedschaft & Website & —}
-  \SemioTableRow{BB-46 & Material Index & Vereinigtes Königreich & n. p. & n. p. & Website & —}
-  \SemioTableRow{BB-47 & SalvoWEB & Vereinigtes Königreich & Angebotsübersicht, Detailseite & öffentlich & Website & —}
-  \SemioTableRow{BB-48 & Surplus Building \& Plumbing Materials & Vereinigtes Königreich & Angebotsübersicht, Detailseite & öffentlich & Website & —}
-  \SemioTableRow{BB-49 & Sustainability Yard & Vereinigtes Königreich & Angebotsübersicht, Detailseite & öffentlich & Website, App & —}
+  \SemioTableRow{BB-08 & Materialrest24 & Deutschland & \SemioCellList[,]{n. p.} & n. p. & Website & n. p.}
+  \SemioTableRow{BB-09 & Restado & Deutschland & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & Website & —}
+  \SemioTableRow{BB-11 & Articonnex & Frankreich & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & Website & —}
+  \SemioTableRow{BB-12 & Backacia & Frankreich & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & Website & —}
+  \SemioTableRow{BB-13 & BatRecup & Frankreich & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & App & —}
+  \SemioTableRow{BB-14 & Bâticycle & Frankreich & \SemioCellList[,]{Angebotsübersicht} & öffentlich & Website & Standort}
+  \SemioTableRow{BB-16 & Cycle Zéro & Frankreich & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & App & —}
+  \SemioTableRow{BB-17 & R-Place & Frankreich & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & Website & —}
+  \SemioTableRow{BB-20 & Réempro & Frankreich & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & externer Marktplatz & —}
+  \SemioTableRow{BB-21 & Skop Marketplace & Frankreich & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & Website & —}
+  \SemioTableRow{BB-22 & Gebruiktebouwmaterialen & Niederlande & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & Website & —}
+  \SemioTableRow{BB-23 & Insert Marketplace & Niederlande & \SemioCellList[,]{Angebotsübersicht, Detailseite, Karte/GIS} & öffentlich & Website & —}
+  \SemioTableRow{BB-24 & ReSource Marktplaats & Niederlande & \SemioCellList[,]{Katalog} & n. p. & App & —}
+  \SemioTableRow{BB-26 & Baumatpool.ch & Schweiz & \SemioCellList[,]{Angebotsübersicht} & öffentlich & Website & —}
+  \SemioTableRow{BB-38 & REUZI & Schweiz & \SemioCellList[,]{Angebotsübersicht, Katalog} & Mitgliedschaft & Website & —}
+  \SemioTableRow{BB-39 & Salza & Schweiz & \SemioCellList[,]{Angebotsübersicht} & öffentlich & Website & —}
+  \SemioTableRow{BB-41 & useagain / Bauteilclick & Schweiz & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & Website & —}
+  \SemioTableRow{BB-43 & Building Spares Market & Vereinigtes Königreich & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & Website & —}
+  \SemioTableRow{BB-44 & Enviromate & Vereinigtes Königreich & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & Website & —}
+  \SemioTableRow{BB-45 & Globechain & Vereinigtes Königreich & \SemioCellList[,]{Angebotsübersicht} & Mitgliedschaft & Website & —}
+  \SemioTableRow{BB-46 & Material Index & Vereinigtes Königreich & \SemioCellList[,]{n. p.} & n. p. & Website & —}
+  \SemioTableRow{BB-47 & SalvoWEB & Vereinigtes Königreich & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & Website & —}
+  \SemioTableRow{BB-48 & Surplus Building \& Plumbing Materials & Vereinigtes Königreich & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & Website & —}
+  \SemioTableRow{BB-49 & Sustainability Yard & Vereinigtes Königreich & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & Website, App & —}
 }
 
 \SemioTableLong[text-size=7.2pt]{Marktplätze \textperiodcentered\ Datenfelder und Beschaffung}{0.07,0.45,0.22,0.14,0.12}{ID & Angebotsbezogene Datenfelder & Such- und Auswahlfunktionen & Beschaffungsschritte & Übergabe}{%
-  \SemioTableRow{BB-08 & n. p. & n. p. & n. p. & n. p.}
-  \SemioTableRow{BB-09 & Beschreibung, Bilder, Artikelnummer, Preis, Menge, Bestand, Maße, Material, Zustand, Farbe, Marke, Materialstandort, Versandoption & Kategorien, Suche, Filter, Suchbenachrichtigung, Verkäuferverzeichnis & Anfrage, Kauf & Abholung, Lieferung}
-  \SemioTableRow{BB-11 & Bilder, Artikelnummer, Preis, Bestand, Maße, Gewicht, Zustand, Materialstandort, Herkunft & Kategorien, Filter, Merkliste & Reservierung, Warenkorb & Abholung, Lieferung}
-  \SemioTableRow{BB-12 & Artikelnummer, Preis, Menge, Maße, Material, Verfügbarkeit, Materialstandort & Kategorien, Suche & Warenkorb & Abholung}
-  \SemioTableRow{BB-13 & Beschreibung, Bilder, Preis, Menge, Maße, Gewicht, Material, Zustand, Farbe, Verfügbarkeit, Materialstandort, Versandoption, Gewährleistung & Kategorien & Zahlung & Abholung, Lieferung}
-  \SemioTableRow{BB-14 & Beschreibung, Bilder, Preis, Menge, Maße, Marke, Verfügbarkeit, Versandoption, Herkunft & Kategorien, Suche & Warenkorb, Bestellung & Abholung, Lieferung}
-  \SemioTableRow{BB-16 & Verfügbarkeit, Materialstandort & Kategorien & Reservierung & Abholung}
-  \SemioTableRow{BB-17 & Beschreibung, Preis, Gewicht, Zustand, Verfügbarkeit, Datum, Materialstandort, Versandoption & — & Kontakt & Abholung, Lieferung}
-  \SemioTableRow{BB-20 & Beschreibung, Bilder, Preis, Menge, Bestand, Zustand, Verfügbarkeit, Datum, Materialstandort & — & Anfrage, Warenkorb, Zahlung & Abholung}
-  \SemioTableRow{BB-21 & Beschreibung, Bilder, Preis, Menge, Bestand, Maße, Gewicht, Material, Zustand, Farbe, Marke, Verfügbarkeit, Datum, Materialstandort, Herkunft, Anbieterangabe & Kategorien, Suche, Filter, Suchbenachrichtigung, Verkäuferverzeichnis & Anfrage, Warenkorb & Abholung}
-  \SemioTableRow{BB-22 & Beschreibung, Bilder, Artikelnummer, Preis, Bestand, Maße, Zustand, Marke, Versandoption & Kategorien & Warenkorb & Abholung, Lieferung}
-  \SemioTableRow{BB-23 & Beschreibung, Preis, Menge, Maße, Zustand, Farbe, Varianten, Marke, Materialstandort & Kategorien, Suche, Filter, Merkliste, Verkäuferverzeichnis & Kontakt & —}
-  \SemioTableRow{BB-24 & n. p. & n. p. & Kauf & n. p.}
-  \SemioTableRow{BB-26 & Beschreibung, Bilder, Artikelnummer, Preis, Menge, Bestand, Maße, Material, Marke, Verfügbarkeit, Materialstandort, Versandoption, Anbieterangabe, Gewährleistung & Kategorien, Suche, Filter, Merkliste, Suchbenachrichtigung & Bestellung, Zahlung & Abholung, Lieferung}
-  \SemioTableRow{BB-38 & Beschreibung, Menge, Maße, Material & n. p. & Reservierung & n. p.}
-  \SemioTableRow{BB-39 & n. p. & Suche, Filter, Merkliste, Suchbenachrichtigung & Kontakt & direkte Übergabe}
-  \SemioTableRow{BB-41 & Beschreibung, Artikelnummer, Preis, Menge, Maße, Verfügbarkeit, Materialstandort & Kategorien, Suche, Filter, Merkliste, Suchbenachrichtigung, Verkäuferverzeichnis & Warenkorb & Abholung}
-  \SemioTableRow{BB-43 & Beschreibung, Preis, Menge, Maße, Datum, Materialstandort & — & Kontakt & —}
-  \SemioTableRow{BB-44 & Beschreibung, Bilder, Preis, Menge, Maße, Material, Datum, Materialstandort, Versandoption, Anbieterangabe & Kategorien, Suche, Filter, Merkliste & Anfrage, Kauf & Abholung, Lieferung}
-  \SemioTableRow{BB-45 & n. p. & Suchbenachrichtigung & Anfrage & Abholung, Lieferung}
-  \SemioTableRow{BB-46 & n. p. & n. p. & n. p. & n. p.}
-  \SemioTableRow{BB-47 & Preis, Materialstandort, Anbieterangabe & Kategorien, Suche, Filter, Suchbenachrichtigung, Verkäuferverzeichnis & Kontakt, Kauf & Abholung, Lieferung}
-  \SemioTableRow{BB-48 & Beschreibung, Artikelnummer, Preis, Menge, Materialstandort, Versandoption, Anbieterangabe & Kategorien & Warenkorb, Zahlung & Abholung, Lieferung}
-  \SemioTableRow{BB-49 & Beschreibung, Bilder, Preis, Rabatt, Bestand, Maße, Gewicht, Material, Zustand, Marke, Verfügbarkeit, Datum, Materialstandort & Filter & Anfrage, Zahlung & Abholung, Lieferung}
+  \SemioTableRow{BB-08 & \SemioCellList[,]{n. p.} & \SemioCellList[,]{n. p.} & \SemioCellList[,]{n. p.} & \SemioCellList[,]{n. p.}}
+  \SemioTableRow{BB-09 & \SemioCellList[,]{Beschreibung, Bilder, Artikelnummer, Preis, Menge, Bestand, Maße, Material, Zustand, Farbe, Marke, Materialstandort, Versandoption} & \SemioCellList[,]{Kategorien, Suche, Filter, Suchbenachrichtigung, Verkäuferverzeichnis} & \SemioCellList[,]{Anfrage, Kauf} & \SemioCellList[,]{Abholung, Lieferung}}
+  \SemioTableRow{BB-11 & \SemioCellList[,]{Bilder, Artikelnummer, Preis, Bestand, Maße, Gewicht, Zustand, Materialstandort, Herkunft} & \SemioCellList[,]{Kategorien, Filter, Merkliste} & \SemioCellList[,]{Reservierung, Warenkorb} & \SemioCellList[,]{Abholung, Lieferung}}
+  \SemioTableRow{BB-12 & \SemioCellList[,]{Artikelnummer, Preis, Menge, Maße, Material, Verfügbarkeit, Materialstandort} & \SemioCellList[,]{Kategorien, Suche} & \SemioCellList[,]{Warenkorb} & \SemioCellList[,]{Abholung}}
+  \SemioTableRow{BB-13 & \SemioCellList[,]{Beschreibung, Bilder, Preis, Menge, Maße, Gewicht, Material, Zustand, Farbe, Verfügbarkeit, Materialstandort, Versandoption, Gewährleistung} & \SemioCellList[,]{Kategorien} & \SemioCellList[,]{Zahlung} & \SemioCellList[,]{Abholung, Lieferung}}
+  \SemioTableRow{BB-14 & \SemioCellList[,]{Beschreibung, Bilder, Preis, Menge, Maße, Marke, Verfügbarkeit, Versandoption, Herkunft} & \SemioCellList[,]{Kategorien, Suche} & \SemioCellList[,]{Warenkorb, Bestellung} & \SemioCellList[,]{Abholung, Lieferung}}
+  \SemioTableRow{BB-16 & \SemioCellList[,]{Verfügbarkeit, Materialstandort} & \SemioCellList[,]{Kategorien} & \SemioCellList[,]{Reservierung} & \SemioCellList[,]{Abholung}}
+  \SemioTableRow{BB-17 & \SemioCellList[,]{Beschreibung, Preis, Gewicht, Zustand, Verfügbarkeit, Datum, Materialstandort, Versandoption} & \SemioCellList[,]{—} & \SemioCellList[,]{Kontakt} & \SemioCellList[,]{Abholung, Lieferung}}
+  \SemioTableRow{BB-20 & \SemioCellList[,]{Beschreibung, Bilder, Preis, Menge, Bestand, Zustand, Verfügbarkeit, Datum, Materialstandort} & \SemioCellList[,]{—} & \SemioCellList[,]{Anfrage, Warenkorb, Zahlung} & \SemioCellList[,]{Abholung}}
+  \SemioTableRow{BB-21 & \SemioCellList[,]{Beschreibung, Bilder, Preis, Menge, Bestand, Maße, Gewicht, Material, Zustand, Farbe, Marke, Verfügbarkeit, Datum, Materialstandort, Herkunft, Anbieterangabe} & \SemioCellList[,]{Kategorien, Suche, Filter, Suchbenachrichtigung, Verkäuferverzeichnis} & \SemioCellList[,]{Anfrage, Warenkorb} & \SemioCellList[,]{Abholung}}
+  \SemioTableRow{BB-22 & \SemioCellList[,]{Beschreibung, Bilder, Artikelnummer, Preis, Bestand, Maße, Zustand, Marke, Versandoption} & \SemioCellList[,]{Kategorien} & \SemioCellList[,]{Warenkorb} & \SemioCellList[,]{Abholung, Lieferung}}
+  \SemioTableRow{BB-23 & \SemioCellList[,]{Beschreibung, Preis, Menge, Maße, Zustand, Farbe, Varianten, Marke, Materialstandort} & \SemioCellList[,]{Kategorien, Suche, Filter, Merkliste, Verkäuferverzeichnis} & \SemioCellList[,]{Kontakt} & \SemioCellList[,]{—}}
+  \SemioTableRow{BB-24 & \SemioCellList[,]{n. p.} & \SemioCellList[,]{n. p.} & \SemioCellList[,]{Kauf} & \SemioCellList[,]{n. p.}}
+  \SemioTableRow{BB-26 & \SemioCellList[,]{Beschreibung, Bilder, Artikelnummer, Preis, Menge, Bestand, Maße, Material, Marke, Verfügbarkeit, Materialstandort, Versandoption, Anbieterangabe, Gewährleistung} & \SemioCellList[,]{Kategorien, Suche, Filter, Merkliste, Suchbenachrichtigung} & \SemioCellList[,]{Bestellung, Zahlung} & \SemioCellList[,]{Abholung, Lieferung}}
+  \SemioTableRow{BB-38 & \SemioCellList[,]{Beschreibung, Menge, Maße, Material} & \SemioCellList[,]{n. p.} & \SemioCellList[,]{Reservierung} & \SemioCellList[,]{n. p.}}
+  \SemioTableRow{BB-39 & \SemioCellList[,]{n. p.} & \SemioCellList[,]{Suche, Filter, Merkliste, Suchbenachrichtigung} & \SemioCellList[,]{Kontakt} & \SemioCellList[,]{direkte Übergabe}}
+  \SemioTableRow{BB-41 & \SemioCellList[,]{Beschreibung, Artikelnummer, Preis, Menge, Maße, Verfügbarkeit, Materialstandort} & \SemioCellList[,]{Kategorien, Suche, Filter, Merkliste, Suchbenachrichtigung, Verkäuferverzeichnis} & \SemioCellList[,]{Warenkorb} & \SemioCellList[,]{Abholung}}
+  \SemioTableRow{BB-43 & \SemioCellList[,]{Beschreibung, Preis, Menge, Maße, Datum, Materialstandort} & \SemioCellList[,]{—} & \SemioCellList[,]{Kontakt} & \SemioCellList[,]{—}}
+  \SemioTableRow{BB-44 & \SemioCellList[,]{Beschreibung, Bilder, Preis, Menge, Maße, Material, Datum, Materialstandort, Versandoption, Anbieterangabe} & \SemioCellList[,]{Kategorien, Suche, Filter, Merkliste} & \SemioCellList[,]{Anfrage, Kauf} & \SemioCellList[,]{Abholung, Lieferung}}
+  \SemioTableRow{BB-45 & \SemioCellList[,]{n. p.} & \SemioCellList[,]{Suchbenachrichtigung} & \SemioCellList[,]{Anfrage} & \SemioCellList[,]{Abholung, Lieferung}}
+  \SemioTableRow{BB-46 & \SemioCellList[,]{n. p.} & \SemioCellList[,]{n. p.} & \SemioCellList[,]{n. p.} & \SemioCellList[,]{n. p.}}
+  \SemioTableRow{BB-47 & \SemioCellList[,]{Preis, Materialstandort, Anbieterangabe} & \SemioCellList[,]{Kategorien, Suche, Filter, Suchbenachrichtigung, Verkäuferverzeichnis} & \SemioCellList[,]{Kontakt, Kauf} & \SemioCellList[,]{Abholung, Lieferung}}
+  \SemioTableRow{BB-48 & \SemioCellList[,]{Beschreibung, Artikelnummer, Preis, Menge, Materialstandort, Versandoption, Anbieterangabe} & \SemioCellList[,]{Kategorien} & \SemioCellList[,]{Warenkorb, Zahlung} & \SemioCellList[,]{Abholung, Lieferung}}
+  \SemioTableRow{BB-49 & \SemioCellList[,]{Beschreibung, Bilder, Preis, Rabatt, Bestand, Maße, Gewicht, Material, Zustand, Marke, Verfügbarkeit, Datum, Materialstandort} & \SemioCellList[,]{Filter} & \SemioCellList[,]{Anfrage, Zahlung} & \SemioCellList[,]{Abholung, Lieferung}}
 }
 
 \appendixsection[D]{Depot-Shops}
@@ -72,41 +85,41 @@ Systematische Erhebung von Bauteilbörsen und Wiederverwendungsplattformen als S
 16 Fälle.
 
 \SemioTableLong[text-size=7.2pt]{Depot-Shops \textperiodcentered\ Zugang und Kanäle}{0.07,0.16,0.12,0.24,0.13,0.15,0.13}{ID & Plattform & Land & Angebotsform & Zugang & Digitaler Kanal & Physischer Zugang}{%
-  \SemioTableRow{BB-01 & BatiTerre & Belgien & Angebotsübersicht, Detailseite & öffentlich & Website & Standort}
-  \SemioTableRow{BB-02 & Cornermat / Retrival & Belgien & Angebotsübersicht, Detailseite & öffentlich & Website & Standort}
-  \SemioTableRow{BB-04 & RotorDC & Belgien & Angebotsübersicht, Detailseite & öffentlich & Website & Standort}
-  \SemioTableRow{BB-05 & Bauteilbörse Bremen & Deutschland & Angebotsübersicht, Katalog & öffentlich & Website & Standort}
-  \SemioTableRow{BB-07 & Concular Shop & Deutschland & Angebotsübersicht, Detailseite & öffentlich & Website & Standort}
-  \SemioTableRow{BB-10 & Genbyg & Dänemark & Angebotsübersicht, Detailseite & öffentlich & Website & Standort}
-  \SemioTableRow{BB-25 & Archipel Sion Ressourcerie & Schweiz & Angebotsübersicht, Detailseite & öffentlich & Website & Standort}
-  \SemioTableRow{BB-28 & Bauteilladen Winterthur & Schweiz & Angebotsübersicht & öffentlich & Website & —}
-  \SemioTableRow{BB-31 & GGZ@WORK Laden 2 Bauteile Zug & Schweiz & Katalog & öffentlich & — & Standort}
-  \SemioTableRow{BB-33 & La Ressourcerie Fribourg & Schweiz & Katalog & öffentlich & Website & Standort}
-  \SemioTableRow{BB-34 & Matériuum & Schweiz & Angebotsübersicht & öffentlich & Website & —}
-  \SemioTableRow{BB-35 & Matériuum Genève Ressourcerie & Schweiz & Angebotsübersicht, Detailseite & öffentlich & gemeinsamer Shop & Standort}
-  \SemioTableRow{BB-36 & Ressourcerie Lausanne / Matériuum / R-UUL & Schweiz & Angebotsübersicht, Detailseite & öffentlich & gemeinsamer Shop & Standort}
-  \SemioTableRow{BB-37 & ReUse Recycling Center Riedtwil / wiederverwendung.ch & Schweiz & Angebotsübersicht, Detailseite, Katalog & öffentlich & Website & —}
-  \SemioTableRow{BB-42 & Wick ReUse / ROTO Baumarkt & Schweiz & Katalog & öffentlich & Website, externer Marktplatz & Standort}
-  \SemioTableRow{BB-51 & re:Laden / HarvestMAP Vienna & Österreich & Angebotsübersicht, Detailseite & öffentlich & Website & —}
+  \SemioTableRow{BB-01 & BatiTerre & Belgien & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & Website & Standort}
+  \SemioTableRow{BB-02 & Cornermat / Retrival & Belgien & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & Website & Standort}
+  \SemioTableRow{BB-04 & RotorDC & Belgien & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & Website & Standort}
+  \SemioTableRow{BB-05 & Bauteilbörse Bremen & Deutschland & \SemioCellList[,]{Angebotsübersicht, Katalog} & öffentlich & Website & Standort}
+  \SemioTableRow{BB-07 & Concular Shop & Deutschland & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & Website & Standort}
+  \SemioTableRow{BB-10 & Genbyg & Dänemark & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & Website & Standort}
+  \SemioTableRow{BB-25 & Archipel Sion Ressourcerie & Schweiz & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & Website & Standort}
+  \SemioTableRow{BB-28 & Bauteilladen Winterthur & Schweiz & \SemioCellList[,]{Angebotsübersicht} & öffentlich & Website & —}
+  \SemioTableRow{BB-31 & GGZ@WORK Laden 2 Bauteile Zug & Schweiz & \SemioCellList[,]{Katalog} & öffentlich & — & Standort}
+  \SemioTableRow{BB-33 & La Ressourcerie Fribourg & Schweiz & \SemioCellList[,]{Katalog} & öffentlich & Website & Standort}
+  \SemioTableRow{BB-34 & Matériuum & Schweiz & \SemioCellList[,]{Angebotsübersicht} & öffentlich & Website & —}
+  \SemioTableRow{BB-35 & Matériuum Genève Ressourcerie & Schweiz & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & gemeinsamer Shop & Standort}
+  \SemioTableRow{BB-36 & Ressourcerie Lausanne / Matériuum / R-UUL & Schweiz & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & gemeinsamer Shop & Standort}
+  \SemioTableRow{BB-37 & ReUse Recycling Center Riedtwil / wiederverwendung.ch & Schweiz & \SemioCellList[,]{Angebotsübersicht, Detailseite, Katalog} & öffentlich & Website & —}
+  \SemioTableRow{BB-42 & Wick ReUse / ROTO Baumarkt & Schweiz & \SemioCellList[,]{Katalog} & öffentlich & Website, externer Marktplatz & Standort}
+  \SemioTableRow{BB-51 & re:Laden / HarvestMAP Vienna & Österreich & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & Website & —}
 }
 
 \SemioTableLong[text-size=7.2pt]{Depot-Shops \textperiodcentered\ Datenfelder und Beschaffung}{0.07,0.45,0.22,0.14,0.12}{ID & Angebotsbezogene Datenfelder & Such- und Auswahlfunktionen & Beschaffungsschritte & Übergabe}{%
-  \SemioTableRow{BB-01 & Bilder, Preis, Maße, Zustand, Varianten, Materialstandort & Kategorien, Filter & Kontakt, Warenkorb & Lieferung}
-  \SemioTableRow{BB-02 & Beschreibung, Preis, Maße, Gewicht, Zustand, Marke, Verfügbarkeit & Kategorien & Kontakt, Reservierung, Zahlung & Abholung, Lieferung}
-  \SemioTableRow{BB-04 & Bilder, Barcode, Preis, Bestand, Maße, Gewicht, Herkunft & Kategorien, Filter & Warenkorb, stationärer Kauf & —}
-  \SemioTableRow{BB-05 & Artikelnummer, Preis, Menge, Maße, Material & Kategorien, Suche, Merkliste & — & Abholung}
-  \SemioTableRow{BB-07 & Bilder, Preis, Bestand, Maße, Zustand, Farbe, Alter, Marke, Verfügbarkeit, Materialstandort, Gewährleistung & Kategorien, Suche & Anfrage, Warenkorb & Abholung, Lieferung}
-  \SemioTableRow{BB-10 & Bilder, Artikelnummer, Preis, Bestand, Maße & Kategorien, Suche, Suchbenachrichtigung & stationärer Kauf & Abholung, Lieferung}
-  \SemioTableRow{BB-25 & Beschreibung, Bilder, Preis, Maße, Zustand, Marke & — & stationärer Kauf & Abholung}
-  \SemioTableRow{BB-28 & Bilder, Preis & Kategorien & Kontakt, Warenkorb, Bestellung & Abholung, Lieferung}
-  \SemioTableRow{BB-31 & — & — & Kontakt, stationärer Kauf & Abholung}
-  \SemioTableRow{BB-33 & n. p. & n. p. & Kontakt, stationärer Kauf & Abholung}
-  \SemioTableRow{BB-34 & Preis, Menge, Bestand, Maße, Materialstandort & Kategorien, Suche, Filter & Kontakt, Reservierung & Abholung}
-  \SemioTableRow{BB-35 & Preis, Menge, Maße, Materialstandort & Kategorien, Suche, Filter & Reservierung & Abholung, Lieferung}
-  \SemioTableRow{BB-36 & Beschreibung, Preis, Menge, Maße, Materialstandort & Kategorien, Suche, Filter & Kontakt, Reservierung & Abholung}
-  \SemioTableRow{BB-37 & Beschreibung, Bilder, Artikelnummer, Preis, Menge, Bestand, Maße, Material, Marke & Kategorien, Filter, Merkliste & Anfrage, Warenkorb, Zahlung & Abholung}
-  \SemioTableRow{BB-42 & — & — & Kontakt, stationärer Kauf & Abholung}
-  \SemioTableRow{BB-51 & Beschreibung, Bilder, Preis, Zustand, Verfügbarkeit, Herkunft & — & Reservierung, Warenkorb, Bestellung, Zahlung & Lieferung}
+  \SemioTableRow{BB-01 & \SemioCellList[,]{Bilder, Preis, Maße, Zustand, Varianten, Materialstandort} & \SemioCellList[,]{Kategorien, Filter} & \SemioCellList[,]{Kontakt, Warenkorb} & \SemioCellList[,]{Lieferung}}
+  \SemioTableRow{BB-02 & \SemioCellList[,]{Beschreibung, Preis, Maße, Gewicht, Zustand, Marke, Verfügbarkeit} & \SemioCellList[,]{Kategorien} & \SemioCellList[,]{Kontakt, Reservierung, Zahlung} & \SemioCellList[,]{Abholung, Lieferung}}
+  \SemioTableRow{BB-04 & \SemioCellList[,]{Bilder, Barcode, Preis, Bestand, Maße, Gewicht, Herkunft} & \SemioCellList[,]{Kategorien, Filter} & \SemioCellList[,]{Warenkorb, stationärer Kauf} & \SemioCellList[,]{—}}
+  \SemioTableRow{BB-05 & \SemioCellList[,]{Artikelnummer, Preis, Menge, Maße, Material} & \SemioCellList[,]{Kategorien, Suche, Merkliste} & \SemioCellList[,]{—} & \SemioCellList[,]{Abholung}}
+  \SemioTableRow{BB-07 & \SemioCellList[,]{Bilder, Preis, Bestand, Maße, Zustand, Farbe, Alter, Marke, Verfügbarkeit, Materialstandort, Gewährleistung} & \SemioCellList[,]{Kategorien, Suche} & \SemioCellList[,]{Anfrage, Warenkorb} & \SemioCellList[,]{Abholung, Lieferung}}
+  \SemioTableRow{BB-10 & \SemioCellList[,]{Bilder, Artikelnummer, Preis, Bestand, Maße} & \SemioCellList[,]{Kategorien, Suche, Suchbenachrichtigung} & \SemioCellList[,]{stationärer Kauf} & \SemioCellList[,]{Abholung, Lieferung}}
+  \SemioTableRow{BB-25 & \SemioCellList[,]{Beschreibung, Bilder, Preis, Maße, Zustand, Marke} & \SemioCellList[,]{—} & \SemioCellList[,]{stationärer Kauf} & \SemioCellList[,]{Abholung}}
+  \SemioTableRow{BB-28 & \SemioCellList[,]{Bilder, Preis} & \SemioCellList[,]{Kategorien} & \SemioCellList[,]{Kontakt, Warenkorb, Bestellung} & \SemioCellList[,]{Abholung, Lieferung}}
+  \SemioTableRow{BB-31 & \SemioCellList[,]{—} & \SemioCellList[,]{—} & \SemioCellList[,]{Kontakt, stationärer Kauf} & \SemioCellList[,]{Abholung}}
+  \SemioTableRow{BB-33 & \SemioCellList[,]{n. p.} & \SemioCellList[,]{n. p.} & \SemioCellList[,]{Kontakt, stationärer Kauf} & \SemioCellList[,]{Abholung}}
+  \SemioTableRow{BB-34 & \SemioCellList[,]{Preis, Menge, Bestand, Maße, Materialstandort} & \SemioCellList[,]{Kategorien, Suche, Filter} & \SemioCellList[,]{Kontakt, Reservierung} & \SemioCellList[,]{Abholung}}
+  \SemioTableRow{BB-35 & \SemioCellList[,]{Preis, Menge, Maße, Materialstandort} & \SemioCellList[,]{Kategorien, Suche, Filter} & \SemioCellList[,]{Reservierung} & \SemioCellList[,]{Abholung, Lieferung}}
+  \SemioTableRow{BB-36 & \SemioCellList[,]{Beschreibung, Preis, Menge, Maße, Materialstandort} & \SemioCellList[,]{Kategorien, Suche, Filter} & \SemioCellList[,]{Kontakt, Reservierung} & \SemioCellList[,]{Abholung}}
+  \SemioTableRow{BB-37 & \SemioCellList[,]{Beschreibung, Bilder, Artikelnummer, Preis, Menge, Bestand, Maße, Material, Marke} & \SemioCellList[,]{Kategorien, Filter, Merkliste} & \SemioCellList[,]{Anfrage, Warenkorb, Zahlung} & \SemioCellList[,]{Abholung}}
+  \SemioTableRow{BB-42 & \SemioCellList[,]{—} & \SemioCellList[,]{—} & \SemioCellList[,]{Kontakt, stationärer Kauf} & \SemioCellList[,]{Abholung}}
+  \SemioTableRow{BB-51 & \SemioCellList[,]{Beschreibung, Bilder, Preis, Zustand, Verfügbarkeit, Herkunft} & \SemioCellList[,]{—} & \SemioCellList[,]{Reservierung, Warenkorb, Bestellung, Zahlung} & \SemioCellList[,]{Lieferung}}
 }
 
 \appendixsection[V]{Vermittlungsplattformen}
@@ -114,21 +127,21 @@ Systematische Erhebung von Bauteilbörsen und Wiederverwendungsplattformen als S
 6 Fälle.
 
 \SemioTableLong[text-size=7.2pt]{Vermittlungsplattformen \textperiodcentered\ Zugang und Kanäle}{0.07,0.16,0.12,0.24,0.13,0.15,0.13}{ID & Plattform & Land & Angebotsform & Zugang & Digitaler Kanal & Physischer Zugang}{%
-  \SemioTableRow{BB-03 & Materialenbank Leuven / Atelier Circuler & Belgien & Angebotsübersicht, Detailseite, Katalog & öffentlich & Website & Standort}
-  \SemioTableRow{BB-06 & bauteilnetz Deutschland & Deutschland & Katalog & öffentlich & Website & —}
-  \SemioTableRow{BB-15 & Cycle Up & Frankreich & — & öffentlich & Website & —}
-  \SemioTableRow{BB-29 & Bauteilvermittlung Zürichsee-Oberland & Schweiz & Angebotsübersicht, Detailseite & öffentlich & Website & —}
-  \SemioTableRow{BB-30 & Bauteilverwertung Köppel \& Klein & Schweiz & Angebotsübersicht, Detailseite & öffentlich & externer Marktplatz & —}
-  \SemioTableRow{BB-40 & Stiftung Chance BauTeile Zürich / Glattbrugg & Schweiz & Angebotsübersicht & öffentlich & externer Marktplatz & Standort}
+  \SemioTableRow{BB-03 & Materialenbank Leuven / Atelier Circuler & Belgien & \SemioCellList[,]{Angebotsübersicht, Detailseite, Katalog} & öffentlich & Website & Standort}
+  \SemioTableRow{BB-06 & bauteilnetz Deutschland & Deutschland & \SemioCellList[,]{Katalog} & öffentlich & Website & —}
+  \SemioTableRow{BB-15 & Cycle Up & Frankreich & \SemioCellList[,]{—} & öffentlich & Website & —}
+  \SemioTableRow{BB-29 & Bauteilvermittlung Zürichsee-Oberland & Schweiz & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & Website & —}
+  \SemioTableRow{BB-30 & Bauteilverwertung Köppel \& Klein & Schweiz & \SemioCellList[,]{Angebotsübersicht, Detailseite} & öffentlich & externer Marktplatz & —}
+  \SemioTableRow{BB-40 & Stiftung Chance BauTeile Zürich / Glattbrugg & Schweiz & \SemioCellList[,]{Angebotsübersicht} & öffentlich & externer Marktplatz & Standort}
 }
 
 \SemioTableLong[text-size=7.2pt]{Vermittlungsplattformen \textperiodcentered\ Datenfelder und Beschaffung}{0.07,0.45,0.22,0.14,0.12}{ID & Angebotsbezogene Datenfelder & Such- und Auswahlfunktionen & Beschaffungsschritte & Übergabe}{%
-  \SemioTableRow{BB-03 & Beschreibung, Bilder, Preis, Rabatt, Menge, Bestand, Maße, Material, Zustand, Herkunft & Kategorien, Suche, Filter & Warenkorb & —}
-  \SemioTableRow{BB-06 & n. p. & Kategorien & Kontakt & n. p.}
-  \SemioTableRow{BB-15 & — & — & Kontakt & —}
-  \SemioTableRow{BB-29 & Beschreibung, Bilder, Preis, Verfügbarkeit, Materialstandort & Kategorien & Anfrage & direkte Übergabe}
-  \SemioTableRow{BB-30 & Beschreibung, Bilder, Preis, Maße, Material, Zustand, Marke, Verfügbarkeit, Materialstandort & Kategorien, Suche, Filter, Merkliste, Suchbenachrichtigung & Kontakt, Kauf & Abholung, Lieferung}
-  \SemioTableRow{BB-40 & Beschreibung, Artikelnummer, Preis, Menge, Maße, Verfügbarkeit, Materialstandort & Kategorien, Suche, Filter, Merkliste, Suchbenachrichtigung & Kontakt & Abholung}
+  \SemioTableRow{BB-03 & \SemioCellList[,]{Beschreibung, Bilder, Preis, Rabatt, Menge, Bestand, Maße, Material, Zustand, Herkunft} & \SemioCellList[,]{Kategorien, Suche, Filter} & \SemioCellList[,]{Warenkorb} & \SemioCellList[,]{—}}
+  \SemioTableRow{BB-06 & \SemioCellList[,]{n. p.} & \SemioCellList[,]{Kategorien} & \SemioCellList[,]{Kontakt} & \SemioCellList[,]{n. p.}}
+  \SemioTableRow{BB-15 & \SemioCellList[,]{—} & \SemioCellList[,]{—} & \SemioCellList[,]{Kontakt} & \SemioCellList[,]{—}}
+  \SemioTableRow{BB-29 & \SemioCellList[,]{Beschreibung, Bilder, Preis, Verfügbarkeit, Materialstandort} & \SemioCellList[,]{Kategorien} & \SemioCellList[,]{Anfrage} & \SemioCellList[,]{direkte Übergabe}}
+  \SemioTableRow{BB-30 & \SemioCellList[,]{Beschreibung, Bilder, Preis, Maße, Material, Zustand, Marke, Verfügbarkeit, Materialstandort} & \SemioCellList[,]{Kategorien, Suche, Filter, Merkliste, Suchbenachrichtigung} & \SemioCellList[,]{Kontakt, Kauf} & \SemioCellList[,]{Abholung, Lieferung}}
+  \SemioTableRow{BB-40 & \SemioCellList[,]{Beschreibung, Artikelnummer, Preis, Menge, Maße, Verfügbarkeit, Materialstandort} & \SemioCellList[,]{Kategorien, Suche, Filter, Merkliste, Suchbenachrichtigung} & \SemioCellList[,]{Kontakt} & \SemioCellList[,]{Abholung}}
 }
 
 \appendixsection[R]{Ressourcenkataloge}
@@ -136,17 +149,17 @@ Systematische Erhebung von Bauteilbörsen und Wiederverwendungsplattformen als S
 4 Fälle.
 
 \SemioTableLong[text-size=7.2pt]{Ressourcenkataloge \textperiodcentered\ Zugang und Kanäle}{0.07,0.16,0.12,0.24,0.13,0.15,0.13}{ID & Plattform & Land & Angebotsform & Zugang & Digitaler Kanal & Physischer Zugang}{%
-  \SemioTableRow{BB-18 & RAEDIFICARE & Frankreich & Angebotsübersicht, Detailseite, Katalog, Karte/GIS & Registrierung & Website & —}
-  \SemioTableRow{BB-19 & REFAIR Bordeaux & Frankreich & Angebotsübersicht, Detailseite, Katalog, Karte/GIS & öffentlich & Website & Standort}
-  \SemioTableRow{BB-32 & Gruner ReUse & Schweiz & Angebotsübersicht, Detailseite, Katalog, Karte/GIS & öffentlich & Website & —}
-  \SemioTableRow{BB-50 & BauKarussell & Österreich & Detailseite, Katalog & öffentlich & Website & —}
+  \SemioTableRow{BB-18 & RAEDIFICARE & Frankreich & \SemioCellList[,]{Angebotsübersicht, Detailseite, Katalog, Karte/GIS} & Registrierung & Website & —}
+  \SemioTableRow{BB-19 & REFAIR Bordeaux & Frankreich & \SemioCellList[,]{Angebotsübersicht, Detailseite, Katalog, Karte/GIS} & öffentlich & Website & Standort}
+  \SemioTableRow{BB-32 & Gruner ReUse & Schweiz & \SemioCellList[,]{Angebotsübersicht, Detailseite, Katalog, Karte/GIS} & öffentlich & Website & —}
+  \SemioTableRow{BB-50 & BauKarussell & Österreich & \SemioCellList[,]{Detailseite, Katalog} & öffentlich & Website & —}
 }
 
 \SemioTableLong[text-size=7.2pt]{Ressourcenkataloge \textperiodcentered\ Datenfelder und Beschaffung}{0.07,0.45,0.22,0.14,0.12}{ID & Angebotsbezogene Datenfelder & Such- und Auswahlfunktionen & Beschaffungsschritte & Übergabe}{%
-  \SemioTableRow{BB-18 & Bilder, Menge, Maße, Zustand, Verfügbarkeit, Materialstandort & Kategorien, Suche, Filter & Bestellung & n. p.}
-  \SemioTableRow{BB-19 & Beschreibung, Bilder, Menge, Material, Zustand, Verfügbarkeit, Materialstandort, Dokumente, Anbieterangabe & Kategorien, Suche, Filter, Auswahlliste & Anfrage & —}
-  \SemioTableRow{BB-32 & Bilder, Artikelnummer, Preis, Menge, Bestand, Material, Zustand, Marke, Verfügbarkeit, Materialstandort, Dokumente & Kategorien, Filter & Reservierung & —}
-  \SemioTableRow{BB-50 & Bilder, Artikelnummer, Preis, Menge, Maße, Material, Zustand, Marke, Verfügbarkeit, Materialstandort, Herkunft, Dokumente & Kategorien, Filter & Anfrage, Reservierung, Warenkorb, Bestellung & Abholung}
+  \SemioTableRow{BB-18 & \SemioCellList[,]{Bilder, Menge, Maße, Zustand, Verfügbarkeit, Materialstandort} & \SemioCellList[,]{Kategorien, Suche, Filter} & \SemioCellList[,]{Bestellung} & \SemioCellList[,]{n. p.}}
+  \SemioTableRow{BB-19 & \SemioCellList[,]{Beschreibung, Bilder, Menge, Material, Zustand, Verfügbarkeit, Materialstandort, Dokumente, Anbieterangabe} & \SemioCellList[,]{Kategorien, Suche, Filter, Auswahlliste} & \SemioCellList[,]{Anfrage} & \SemioCellList[,]{—}}
+  \SemioTableRow{BB-32 & \SemioCellList[,]{Bilder, Artikelnummer, Preis, Menge, Bestand, Material, Zustand, Marke, Verfügbarkeit, Materialstandort, Dokumente} & \SemioCellList[,]{Kategorien, Filter} & \SemioCellList[,]{Reservierung} & \SemioCellList[,]{—}}
+  \SemioTableRow{BB-50 & \SemioCellList[,]{Bilder, Artikelnummer, Preis, Menge, Maße, Material, Zustand, Marke, Verfügbarkeit, Materialstandort, Herkunft, Dokumente} & \SemioCellList[,]{Kategorien, Filter} & \SemioCellList[,]{Anfrage, Reservierung, Warenkorb, Bestellung} & \SemioCellList[,]{Abholung}}
 }
 
 \appendixsection[B]{Begriffe und Abgrenzungen}

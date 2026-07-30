@@ -363,7 +363,10 @@ Der formale Durchführungszeitraum reicht vom 03.11.2025 bis 02.05.2027. Die ope
 
 \needspace{0.55\textheight}%
 \begin{Table}[title=Förderrechtliche Meilensteine]
-\begin{SemioTable}{@{}T{0.05\linewidth-2\tabcolsep}T{0.40\linewidth-2\tabcolsep}T{0.18\linewidth-2\tabcolsep}T{0.37\linewidth-2\tabcolsep}@{}}
+% Spalte 1 auf 0.07 verbreitert (Rest aus Spalte 2): bei 0.05 ist die Spalte
+% schmaler als die fette Kopfzeile „MS“, sodass „MS“ auf eine zweite Zeile
+% umbrach und dadurch ~3.6pt tiefer als die übrigen Kopfzellen saß.
+\begin{SemioTable}{@{}T{0.07\linewidth-2\tabcolsep}T{0.38\linewidth-2\tabcolsep}T{0.18\linewidth-2\tabcolsep}T{0.37\linewidth-2\tabcolsep}@{}}
   \SemioTableHeaderRow{MS & Formales Kriterium & Frist & Ist-Stand}
   \SemioTableRow{1 & Aus dem Erfahrungswissen wurden User Stories abgeleitet, die als Grundlage für das User-Experience-Design genutzt werden können. & M4\newline fällig & 35 User Stories und 17 funktionale Anforderungscluster liegen vor.}
   \SemioTableRow{2 & Die konkrete Ausgestaltung des User-Interfaces und die verwendbaren Technologien wurden festgelegt. & M9\newline noch nicht fällig & Systemarchitektur sowie erste Oberflächen- und Navigationsstände liegen vor.}
@@ -380,11 +383,14 @@ Der formale Durchführungszeitraum reicht vom 03.11.2025 bis 02.05.2027. Die ope
 
 Gegenüber dem Antrag sind drei Punkte relevant:
 
+\begingroup
+\setlength{\leftmargini}{1em}
 \begin{itemize}
 \item Operativer Projektbeginn: Die Bearbeitung begann später als im formalen Durchführungszeitraum vorgesehen.
 \item Methodische Präzisierung der Geometrieerzeugung: Die Arbeitsgeometrie der Baukomponenten wird parametrisch durch einen Generator erzeugt. Der Generator überführt die erfassten Angaben in eine einheitliche und anpassbare Arbeitsgeometrie. Fotografien und Scans können ergänzend als Referenz- und Belegquellen genutzt werden. Die methodische Präzisierung betrifft die technische Umsetzung, nicht das Ziel der digitalen Objektbildung.
 \item Interviews: Drei der acht genehmigten Fachgespräche sind ausgewertet. Die fünf weiteren Gespräche ergänzen in den nächsten Projektphasen die Architektur- und Ingenieurperspektiven und unterstützen die spätere Fach- und Nutzungsvalidierung.
 \end{itemize}
+\endgroup
 
 Projektziel und grundsätzliche Abfolge der Arbeitspakete bleiben unverändert. [ERGÄNZEN: formalen Status der Startverschiebung, Datum und Empfänger eintragen.]
 
