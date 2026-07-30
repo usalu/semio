@@ -1,0 +1,22 @@
+[package]
+name = "semio-s-app-puzzle-3d-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Puzzle 3d app — operation enum + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+puzzle_3d = { path = "../../rs", package = "semio-s-app-puzzle-3d" }
+dsl = { path = "../../../../../../../framework/kernel/dsl/rs", package = "semio-framework-kernel-dsl" }
+protocol = { path = "../../../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
+store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+
+[dev-dependencies]
+puzzle_3d_engine = { path = "../../engine/rs", package = "semio-s-app-puzzle-3d-engine" }

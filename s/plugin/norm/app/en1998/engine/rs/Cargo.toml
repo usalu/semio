@@ -1,0 +1,16 @@
+[package]
+name = "semio-s-app-norm-en1998-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "EN 1998 app - headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+en1998 = { path = "../../rs", package = "semio-s-app-norm-en1998" }
+norm_core = { path = "../../../../core/rs", package = "norm_core" }
+norm_en_1990 = { path = "../../../en1990/engine/rs", package = "semio-s-app-norm-en1990-engine" }

@@ -2,11 +2,11 @@ programs=[ draw writer raster note ]
 workflow {
   schema=s.workflow
   nodes [id:TEXT instance-id:TEXT x:NUM y:NUM width:NUM height:NUM inputs:LIST outputs:LIST] {
-    node-app-draw-1 app-draw-1 40 80 160 72 [ id="app-draw-1:out:in" resource-kind="2d.drawing" direction=in ] [ id="app-draw-1:out:out" resource-kind="2d.drawing" direction=out ]
-    node-app-draw-2 app-draw-2 220 80 160 72 [ id="app-draw-2:out:in" resource-kind="2d.drawing" direction=in ] [ id="app-draw-2:out:out" resource-kind="2d.drawing" direction=out ]
-    node-app-writer-1 app-writer-1 420 80 160 72 [ id="app-writer-1:out:in" resource-kind=text.document direction=in ] [ id="app-writer-1:out:out" resource-kind=text.document direction=out ]
-    node-app-raster-1 app-raster-1 40 200 160 72 [ id="app-raster-1:out:in" resource-kind="2d.raster" direction=in id="app-raster-1:param.param-brush-size:in" resource-kind=parameter.value direction=in ] [ id="app-raster-1:out:out" resource-kind="2d.raster" direction=out ]
-    node-app-note-2 app-note-2 220 220 160 72 [ id="app-note-2:out:in" resource-kind="2d.note" direction=in ] [ id="app-note-2:out:out" resource-kind="2d.note" direction=out ]
+    node-app-draw-1 app-draw-1 40 80 160 72 [ id="app-draw-1:out:in" artifact-kind="2d.drawing" direction=in ] [ id="app-draw-1:out:out" artifact-kind="2d.drawing" direction=out ]
+    node-app-draw-2 app-draw-2 220 80 160 72 [ id="app-draw-2:out:in" artifact-kind="2d.drawing" direction=in ] [ id="app-draw-2:out:out" artifact-kind="2d.drawing" direction=out ]
+    node-app-writer-1 app-writer-1 420 80 160 72 [ id="app-writer-1:out:in" artifact-kind=text.document direction=in ] [ id="app-writer-1:out:out" artifact-kind=text.document direction=out ]
+    node-app-raster-1 app-raster-1 40 200 160 72 [ id="app-raster-1:out:in" artifact-kind="2d.raster" direction=in id="app-raster-1:param.param-brush-size:in" artifact-kind=parameter.value direction=in ] [ id="app-raster-1:out:out" artifact-kind="2d.raster" direction=out ]
+    node-app-note-2 app-note-2 220 220 160 72 [ id="app-note-2:out:in" artifact-kind="2d.note" direction=in ] [ id="app-note-2:out:out" artifact-kind="2d.note" direction=out ]
   }
   edges [id:TEXT source-node-id:TEXT source-port-id:TEXT target-node-id:TEXT target-port-id:TEXT contract:BLOCK] {
     edge-draw-1-to-draw-2 node-app-draw-1 "app-draw-1:out:out" node-app-draw-2 "app-draw-2:out:in" {
@@ -14,7 +14,7 @@ workflow {
     }
   }
 }
-app-instances [id:TEXT program-id:TEXT app-id:TEXT label:TEXT yields:TEXT document:BLOCK] {
+app-instances [id:TEXT plugin-id:TEXT app-id:TEXT label:TEXT yields:TEXT document:BLOCK] {
   app-draw-1 draw draw "Semio Emblem" "2d.drawing" {
     document-id=doc-app-draw-1 schema=draw.document
   }

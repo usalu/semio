@@ -1,0 +1,127 @@
+[
+  {
+    "oldDir": "s/plugin/animate/plugin/rs",
+    "newDir": "s/plugin/animate/rs",
+    "newPkg": "animate-plugin"
+  },
+  {
+    "oldDir": "s/plugin/cad/plugin/rs",
+    "newDir": "s/plugin/cad/rs",
+    "newPkg": "cad-plugin"
+  },
+  {
+    "oldDir": "s/plugin/draw/plugin/rs",
+    "newDir": "s/plugin/draw/rs",
+    "newPkg": "draw-plugin"
+  },
+  {
+    "oldDir": "s/plugin/fem/plugin/rs",
+    "newDir": "s/plugin/fem/rs",
+    "newPkg": "semio-s-plugin-fem"
+  },
+  {
+    "oldDir": "s/plugin/flow/plugin/rs",
+    "newDir": "s/plugin/flow/rs",
+    "newPkg": "flow-plugin"
+  },
+  {
+    "oldDir": "s/plugin/forms/plugin/rs",
+    "newDir": "s/plugin/forms/rs",
+    "newPkg": "forms-plugin"
+  },
+  {
+    "oldDir": "s/plugin/gis/plugin/rs",
+    "newDir": "s/plugin/gis/rs",
+    "newPkg": "semio-s-plugin-gis"
+  },
+  {
+    "oldDir": "s/plugin/imperative/plugin/rs",
+    "newDir": "s/plugin/imperative/rs",
+    "newPkg": "imperative-plugin"
+  },
+  {
+    "oldDir": "s/plugin/layout/plugin/rs",
+    "newDir": "s/plugin/layout/rs",
+    "newPkg": "semio-s-plugin-layout"
+  },
+  {
+    "oldDir": "s/plugin/lowpoly/plugin/rs",
+    "newDir": "s/plugin/lowpoly/rs",
+    "newPkg": "lowpoly-plugin"
+  },
+  {
+    "oldDir": "s/plugin/mathematical/plugin/rs",
+    "newDir": "s/plugin/mathematical/rs",
+    "newPkg": "mathematical-plugin"
+  },
+  {
+    "oldDir": "s/plugin/norm/plugin/rs",
+    "newDir": "s/plugin/norm/rs",
+    "newPkg": "norm-plugin"
+  },
+  {
+    "oldDir": "s/plugin/procedural/plugin/rs",
+    "newDir": "s/plugin/procedural/rs",
+    "newPkg": "procedural-plugin"
+  },
+  {
+    "oldDir": "s/plugin/process/plugin/rs",
+    "newDir": "s/plugin/process/rs",
+    "newPkg": "process-plugin"
+  },
+  {
+    "oldDir": "s/plugin/puzzle/plugin/rs",
+    "newDir": "s/plugin/puzzle/rs",
+    "newPkg": "puzzle-plugin"
+  },
+  {
+    "oldDir": "s/plugin/raster/plugin/rs",
+    "newDir": "s/plugin/raster/rs",
+    "newPkg": "raster-plugin"
+  },
+  {
+    "oldDir": "s/plugin/reasoning/plugin/rs",
+    "newDir": "s/plugin/reasoning/rs",
+    "newPkg": "reasoning-mindmap-plugin"
+  },
+  {
+    "oldDir": "s/plugin/remodel/plugin/rs",
+    "newDir": "s/plugin/remodel/rs",
+    "newPkg": "remodel-plugin"
+  },
+  {
+    "oldDir": "s/plugin/sequence/plugin/rs",
+    "newDir": "s/plugin/sequence/rs",
+    "newPkg": "sequence-plugin"
+  },
+  {
+    "oldDir": "s/plugin/shooting/plugin/rs",
+    "newDir": "s/plugin/shooting/rs",
+    "newPkg": "shooting-plugin"
+  },
+  {
+    "oldDir": "s/plugin/sourcing/plugin/rs",
+    "newDir": "s/plugin/sourcing/rs",
+    "newPkg": "sourcing-plugin"
+  },
+  {
+    "oldDir": "s/plugin/space/plugin/rs",
+    "newDir": "s/plugin/space/rs",
+    "newPkg": "s-plugin"
+  },
+  {
+    "oldDir": "s/plugin/trinity/plugin/rs",
+    "newDir": "s/plugin/trinity/rs",
+    "newPkg": "trinity-plugin"
+  },
+  {
+    "oldDir": "s/plugin/vcs/plugin/rs",
+    "newDir": "s/plugin/vcs/rs",
+    "newPkg": "semio-s-plugin-vcs"
+  },
+  {
+    "oldDir": "s/plugin/writer/plugin/rs",
+    "newDir": "s/plugin/writer/rs",
+    "newPkg": "writer-plugin"
+  }
+]

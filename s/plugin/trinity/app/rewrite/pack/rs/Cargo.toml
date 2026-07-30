@@ -1,0 +1,19 @@
+[package]
+name = "semio-s-app-trinity-rewrite-pack"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Trinity Rewrite app - binary document surface + laws (constitutional: pack)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+rewrite = { path = "../../rs", package = "semio-s-app-trinity-rewrite" }
+pack = { path = "../../../../../../kernel/pack/rs", package = "semio-s-kernel-pack" }
+store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+
+[dev-dependencies]
+trinity_ram = { path = "../../../../ram/rs", package = "trinity_ram" }

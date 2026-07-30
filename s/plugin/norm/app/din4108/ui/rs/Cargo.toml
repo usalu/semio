@@ -1,0 +1,16 @@
+[package]
+name = "semio-s-app-norm-din4108-ui"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "DIN 4108 app - DocumentApp impl, render, manifest (constitutional: ui)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+din4108 = { path = "../../rs", package = "semio-s-app-norm-din4108" }
+din4108_engine = { path = "../../engine/rs", package = "semio-s-app-norm-din4108-engine" }
+din4108_op = { path = "../../op/rs", package = "semio-s-app-norm-din4108-op" }

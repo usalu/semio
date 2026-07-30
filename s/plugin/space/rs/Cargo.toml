@@ -1,30 +1,29 @@
 [package]
-name = "s_studio"
+name = "s-plugin"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.88"
-description = "S studio CQRS store — programs, app instances, workflow, checkpoints"
 
 
 [lints]
 workspace = true
-[package.metadata.wasm-pack.profile.release]
-wasm-opt = false
+[package.metadata.component]
+package = "semio:s"
+
+[package.metadata.semio]
+capabilities = ["localBackboneStorage"]
+host = { landing = "home", studio = "studio" }
+
+[[package.metadata.semio.playground]]
+variant = "s"
+ports = { react = 6070, wgpu = 6066 }
 
 [lib]
-crate-type = ["rlib", "cdylib"]
+crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
 
 [dependencies]
-vcs = { path = "../../../../framework/kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
-store = { path = "../../../kernel/store/rs", package = "semio-s-kernel-store" }
-protocol = { path = "../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
-dsl = { path = "../../../../framework/kernel/dsl/rs", package = "semio-framework-kernel-dsl" }
-serde = { version = "1.0.219", features = ["derive"] }
-serde_json = "1.0.140"
-thiserror = "2.0.12"
-
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-js-sys = "0.3.83"
-serde-wasm-bindgen = "0.6.5"
-wasm-bindgen = "0.2.106"
+semio-framework-plugin = { path = "../../../../framework/plugin/rs" }
+semio-framework-os = { path = "../../../../framework/product/os/core/rs" }
+home_ui = { path = "../app/home/ui/rs", package = "semio-s-app-space-home-ui" }
+space_ui = { path = "../app/space/ui/rs", package = "semio-s-app-space-space-ui" }

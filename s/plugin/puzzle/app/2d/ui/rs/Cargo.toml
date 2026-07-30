@@ -1,0 +1,24 @@
+[package]
+name = "semio-s-app-puzzle-2d-ui"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Puzzle 2d app — DocumentApp impl, render, manifest (constitutional: ui)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+puzzle_2d = { path = "../../rs", package = "semio-s-app-puzzle-2d" }
+puzzle_2d_engine = { path = "../../engine/rs", package = "semio-s-app-puzzle-2d-engine" }
+puzzle_2d_op = { path = "../../op/rs", package = "semio-s-app-puzzle-2d-op" }
+puzzle_2d_dsl = { path = "../../dsl/rs", package = "semio-s-app-puzzle-2d-dsl" }
+semio-framework-core = { path = "../../../../../../../framework/core/rs" }
+semio-framework-os = { path = "../../../../../../../framework/product/os/core/rs" }
+semio-framework-plugin = { path = "../../../../../../../framework/plugin/rs" }
+protocol = { path = "../../../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
+store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"

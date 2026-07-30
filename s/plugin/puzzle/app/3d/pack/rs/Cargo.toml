@@ -1,0 +1,19 @@
+[package]
+name = "semio-s-app-puzzle-3d-pack"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Puzzle 3d app — binary document surface + laws (constitutional: pack)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+puzzle_3d = { path = "../../rs", package = "semio-s-app-puzzle-3d" }
+pack = { path = "../../../../../../kernel/pack/rs", package = "semio-s-kernel-pack" }
+store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+
+[dev-dependencies]
+puzzle_3d_dsl = { path = "../../dsl/rs", package = "semio-s-app-puzzle-3d-dsl" }

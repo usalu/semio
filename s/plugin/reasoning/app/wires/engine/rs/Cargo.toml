@@ -13,7 +13,7 @@ path = "lib.rs"
 [dependencies]
 reasoning_wires = { path = "../../rs", package = "semio-s-app-reasoning-wires" }
 reasoning_wires_dsl = { path = "../../dsl/rs", package = "semio-s-app-reasoning-wires-dsl" }
-reasoning_mindmap = { path = "../../../../rs", package = "reasoning_mindmap" }
+reasoning_mindmap = { path = "../../../../shared/rs", package = "reasoning_mindmap" }
 infinite_board_normal_undirected = { path = "../../../../../../../framework/kernel/infinite/board/normal/undirected/rs", package = "semio-framework-kernel-infinite-board-normal-undirected" }
 infinite_cavas = { path = "../../../../../../../framework/kernel/infinite/canvas/rs", package = "semio-framework-kernel-infinite-canvas" }
 store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }

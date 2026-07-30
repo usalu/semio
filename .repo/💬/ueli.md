@@ -20,6 +20,23 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 # 🔍 Research
 
+##
+
+---
+
+We are building a collaborative plugin-based virtual operating system with multiple renderers (react, rs+wasm+wgpu, …).
+Every plugin has apps.
+Every app has modes.
+Every app works over CQRS instead of CRUD (materialization over initial pack + patch)
+Every app is defining a document.
+Every app has a headless engine.
+Every app has a ui that uses the headless engine.
+Every ui uses exclusively commands to communicate with the headless engine.
+Every app is defining a custom binary representation for a document (pack).
+Every app is defining a custom text representation for a document (dsl).
+
+---
+
 ## db
 
 ---

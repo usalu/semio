@@ -26,27 +26,35 @@ An entity inside a document.
 
 A stateful headless computational engine with bidirectional streaming.
 
-The engine maintains a pack buffer for the document. Alternative versions of the document are computed on the fly with operations.
+The engine maintains a pack buffer for the document. Alternative versions of the document are computed on the fly by materializing it with operations.
 
 # Command
 
 A command send to the engine.
 
-# Cmd
+# Protocol
 
 A native binary protocol for commands.
 
-Cmds are used for communication and storage.
+Protocols are used for communication and storage.
 
-# Cde
+# Cmd
 
-A native text representation for commands 
+An cmd is a native text representation for commands.
 
 Cdes are used for logging and llms.
 
 # Operation
 
-An operation is a command that modifies the document.
+An operation is a command that modifies a document.
+
+# Patch
+
+A patch is a protocol that modifies a document.
+
+# Op
+
+An op is protocol that modifies a document.
 
 # Document
 
@@ -56,8 +64,9 @@ A document is the data for an app.
 
 A pack is a binary representation of a document.
 
-
 # Dsl
+
+A dsl is a textual representation of a document.
 
 # Space
 
@@ -110,18 +119,22 @@ os
         workflow
         …
     renderer
-    s
+        js
+            react
+                index.tsx
+    <os> # e.g. s
         kernel
         plugin
-            <plugin> # puzzle, draw, shooting, fem, energy, …
+            <plugin> # e.g. puzzle, draw, shooting, procedural, fem, energy, …
                 app
                     <app> # single crate
-                        engine.rs
-                        manifest
-                            document.rs
-                            pack.rs
-                            command
-                                <command>.rs # each cd
+                        rs
+                            engine.rs
+                            manifest
+                                document.rs
+                                pack.rs
+                                command
+                                    <command>.rs # each cd
     hub
 
 ```

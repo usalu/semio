@@ -1,0 +1,14 @@
+[package]
+name = "semio-s-app-dag"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "DAG app - document entity facade (constitutional: general)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+infinite_board_port_directed_dag = { path = "../../../../../framework/kernel/infinite/board/port/directed/dag/rs", package = "semio-framework-kernel-infinite-board-port-directed-dag" }

@@ -1,0 +1,17 @@
+[package]
+name = "semio-s-app-norm-iso16757-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "ISO 16757 app - operation alias + norm family + laws (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+iso16757 = { path = "../../rs", package = "semio-s-app-norm-iso16757" }
+iso16757_engine = { path = "../../engine/rs", package = "semio-s-app-norm-iso16757-engine" }
+norm_core = { path = "../../../../core/rs", package = "norm_core" }
+store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }

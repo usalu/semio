@@ -1,0 +1,3 @@
+[
+  {"oldDir": "s/plugin/reasoning/rs", "newDir": "s/plugin/reasoning/shared/rs", "newPkg": "reasoning_mindmap"}
+]

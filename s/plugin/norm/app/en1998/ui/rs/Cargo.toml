@@ -1,0 +1,16 @@
+[package]
+name = "semio-s-app-norm-en1998-ui"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "EN 1998 app - DocumentApp facade (constitutional: ui)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+en1998 = { path = "../../rs", package = "semio-s-app-norm-en1998" }
+en1998_engine = { path = "../../engine/rs", package = "semio-s-app-norm-en1998-engine" }
+en1998_op = { path = "../../op/rs", package = "semio-s-app-norm-en1998-op" }

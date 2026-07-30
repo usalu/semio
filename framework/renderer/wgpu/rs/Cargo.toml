@@ -24,7 +24,7 @@ infinite_world = { path = "../../../kernel/infinite/world/rs", package = "semio-
 # `//#region 🎬Tutorial` in lib.rs.
 kernel_3d_scene = { path = "../../../../s/kernel/geometry/3d/scene/rs", package = "semio-s-kernel-geometry-3d-scene" }
 framework_surface_tiled_map = { path = "../../../surface/tiled-map/rs" }
-puzzle_2d = { path = "../../../../s/plugin/puzzle/2d/rs", package = "puzzle_2d" }
+puzzle_2d_engine = { path = "../../../../s/plugin/puzzle/app/2d/engine/rs", package = "semio-s-app-puzzle-2d-engine" }
 flow_core = { path = "../../../../s/kernel/flow/core/rs", package = "semio-s-kernel-flow-core" }
 ui_wgpu = { path = "../../../../ui/wgpu/rs", features = ["engine"] }
 semio-framework-plugin = { path = "../../../plugin/rs" }

@@ -1,0 +1,17 @@
+[package]
+name = "semio-s-app-space-home-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "S Home launcher app - binary command protocol surface + laws (constitutional: protocol)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+home = { path = "../../rs", package = "semio-s-app-space-home" }
+home_op = { path = "../../op/rs", package = "semio-s-app-space-home-op" }
+protocol = { path = "../../../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
+store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }

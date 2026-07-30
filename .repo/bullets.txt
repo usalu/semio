@@ -1,0 +1,3 @@
+🧩Restructure semio plugins into app subcrates (dsl, engine, op, pack, protocol, ui)
+📦Update Cargo workspace dependencies and lockfile for plugin crates
+⚙️Refactor repo script runner in script.ts

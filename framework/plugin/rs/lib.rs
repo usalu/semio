@@ -1940,6 +1940,49 @@ pub fn meta(actor: &str) -> ActionMeta {
     ActionMeta { actor: actor.into(), instance_id: 1 }
 }
 
+/// 🏛️ Gate 2 (test-time): asserts `manifest_dir` (pass `env!("CARGO_MANIFEST_DIR")` from the plugin
+/// bundle crate) sits next to an `app/` directory whose apps (either a single flattened
+/// `app/{slot}` when the plugin has exactly one app, or `app/<name>/{slot}` per app for multi-app
+/// plugins) each carry all seven constitutional-crate slots (`rs`, `engine`, `dsl`, `op`, `pack`,
+/// `protocol`, `ui`). Invoked automatically by `semio_plugin!`'s generated sanity test — see
+/// `.repo/🎫/26/07/29/MOVE-APPS-INTO-S-PRODUCT-TREE-WITH-CONSTITUTIONAL-CRATES/w31-constitutional-split-recipe.md`.
+/// The bundle crate itself lives at either `s/plugin/<p>/rs` (flattened) or `s/plugin/<p>/plugin/rs`
+/// (nested) — both `../app` and `../../app` are tried since callers don't know which shape they are.
+pub fn assert_constitutional_crates(manifest_dir: &str) {
+    const SLOTS: [&str; 6] = ["engine", "dsl", "op", "pack", "protocol", "ui"];
+    let base = std::path::Path::new(manifest_dir);
+    let app_root = [base.join("../app"), base.join("../../app")].into_iter().find(|candidate| candidate.is_dir());
+    let Some(app_root) = app_root else {
+        panic!("constitutional-crate gate: no `app/` directory found next to {manifest_dir} (tried ../app and ../../app)");
+    };
+    let is_flat = app_root.join("rs").join("Cargo.toml").is_file();
+    let app_dirs: Vec<std::path::PathBuf> = if is_flat {
+        vec![app_root.clone()]
+    } else {
+        std::fs::read_dir(&app_root)
+            .unwrap_or_else(|error| panic!("constitutional-crate gate: cannot read {}: {error}", app_root.display()))
+            .filter_map(|entry| entry.ok())
+            .map(|entry| entry.path())
+            .filter(|path| path.is_dir() && path.file_name().and_then(|name| name.to_str()) != Some("shared"))
+            .collect()
+    };
+    if app_dirs.is_empty() {
+        panic!("constitutional-crate gate: {} declares no apps", app_root.display());
+    }
+    for app_dir in &app_dirs {
+        let mut missing = Vec::new();
+        if !app_dir.join("rs").join("Cargo.toml").is_file() {
+            missing.push("rs".to_string());
+        }
+        for slot in SLOTS {
+            if !app_dir.join(slot).join("rs").join("Cargo.toml").is_file() {
+                missing.push(slot.to_string());
+            }
+        }
+        assert!(missing.is_empty(), "constitutional-crate gate: {} is missing slot(s): {}", app_dir.display(), missing.join(", "));
+    }
+}
+
 /// 🧬 A registry-less wrapper (`VcsDocumentApp::new`) — contract enforcement (required args, kind
 /// discipline) is skipped, matching most apps' plain unit tests.
 pub fn new_app<A: DocumentApp + Default>() -> VcsDocumentApp<A> {
@@ -4688,6 +4731,12 @@ macro_rules! semio_plugin {
                     stringify!($app_fn),
                 );
             )+
+        }
+
+        #[cfg(test)]
+        #[test]
+        fn __semio_plugin_sanity_constitutional_crates_present() {
+            $crate::testkit::assert_constitutional_crates(env!("CARGO_MANIFEST_DIR"));
         }
     };
 }

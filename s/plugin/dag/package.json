@@ -1,8 +1,0 @@
-{
-  "name": "@semio-tech/dag-core",
-  "private": true,
-  "type": "module",
-  "exports": {
-    ".": "./rs/pkg/infinite_board_port_directed_dag.js"
-  }
-}

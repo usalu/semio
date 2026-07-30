@@ -3,9 +3,9 @@
   "graph": {
     "schema": "s.workflow",
     "nodes": [
-      { "id": "node-1", "instanceId": "app-1", "x": 0, "y": 0, "width": 160, "height": 72, "inputs": [{ "id": "app-1:in", "resourceKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-1:out", "resourceKind": "2d.drawing", "direction": "out" }] },
-      { "id": "node-2", "instanceId": "app-2", "x": 200, "y": 0, "width": 160, "height": 72, "inputs": [{ "id": "app-2:in", "resourceKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-2:out", "resourceKind": "2d.drawing", "direction": "out" }] },
-      { "id": "node-3", "instanceId": "app-3", "x": 400, "y": 0, "width": 160, "height": 72, "inputs": [{ "id": "app-3:in", "resourceKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-3:out", "resourceKind": "2d.drawing", "direction": "out" }] }
+      { "id": "node-1", "instanceId": "app-1", "x": 0, "y": 0, "width": 160, "height": 72, "inputs": [{ "id": "app-1:in", "artifactKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-1:out", "artifactKind": "2d.drawing", "direction": "out" }] },
+      { "id": "node-2", "instanceId": "app-2", "x": 200, "y": 0, "width": 160, "height": 72, "inputs": [{ "id": "app-2:in", "artifactKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-2:out", "artifactKind": "2d.drawing", "direction": "out" }] },
+      { "id": "node-3", "instanceId": "app-3", "x": 400, "y": 0, "width": 160, "height": 72, "inputs": [{ "id": "app-3:in", "artifactKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-3:out", "artifactKind": "2d.drawing", "direction": "out" }] }
     ],
     "edges": [
       { "id": "edge-ab", "sourceNodeId": "node-1", "sourcePortId": "app-1:out", "targetNodeId": "node-2", "targetPortId": "app-2:in", "contract": { "kindId": "2d.drawing", "mediaType": { "class": "data", "form": "value" }, "wire": { "kind": "document", "schema": "2d.drawing" } } },

@@ -1,0 +1,16 @@
+[package]
+name = "semio-s-app-space-home-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "S Home launcher app - headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+home = { path = "../../rs", package = "semio-s-app-space-home" }
+home_dsl = { path = "../../dsl/rs", package = "semio-s-app-space-home-dsl" }
+store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }

@@ -2356,7 +2356,7 @@ export function langMetricsEmoji(lang: string): string {
 
 /** 🌳Resolves the git worktree root (never a subdirectory of the monorepo). */
 export function gitRepoRoot(start: string): string {
-  const r = spawnSync("git", ["rev-parse", "--show-toplevel"], { cwd: start, encoding: "utf8" });
+  const r = spawnSync("git", ["rev-parse", "--show-toplevel"], { cwd: start, encoding: "utf8", env: safeGitEnv() });
   if (r.status === 0) {
     const top = (r.stdout ?? "").trim();
     if (top) return top;
@@ -2810,14 +2810,29 @@ const GK_COMMIT_TEMPLATE_FILE = `${GK_TEMPLATE_BASENAME}.txt`;
 
 const MICRO_COMMIT_POST_WIPE_HOOKS = ["post-commit", "post-checkout", "post-merge", "post-rewrite"] as const;
 
+function safeGitEnv(extraEnv?: Record<string, string>): Record<string, string> {
+  const env: Record<string, string> = { ...process.env, ...extraEnv };
+  if (!env.GIT_CONFIG_GLOBAL) {
+    try {
+      const globalConfig = join(homedir(), ".gitconfig");
+      if (existsSync(globalConfig)) {
+        readFileSync(globalConfig, "utf8");
+      }
+    } catch {
+      env.GIT_CONFIG_GLOBAL = "/dev/null";
+    }
+  }
+  return env;
+}
+
 function git(root: string, args: string[]): { ok: boolean; out: string } {
-  const r = spawnSync("git", args, { cwd: root, encoding: "utf8", maxBuffer: 256 * 1024 * 1024 });
+  const r = spawnSync("git", args, { cwd: root, encoding: "utf8", maxBuffer: 256 * 1024 * 1024, env: safeGitEnv() });
   if (r.status !== 0) return { ok: false, out: (r.stderr ?? r.stdout ?? "").trim() };
   return { ok: true, out: (r.stdout ?? "").trim() };
 }
 
 function gitCachedNames(root: string, extra: string[] = []): string[] {
-  const r = spawnSync("git", ["diff", "--cached", "--name-only", "-z", ...extra], { cwd: root, maxBuffer: 256 * 1024 * 1024 });
+  const r = spawnSync("git", ["diff", "--cached", "--name-only", "-z", ...extra], { cwd: root, maxBuffer: 256 * 1024 * 1024, env: safeGitEnv() });
   if (r.status !== 0) return [];
   const raw = (r.stdout ?? Buffer.alloc(0)).toString("utf8");
   if (!raw) return [];
@@ -2835,16 +2850,33 @@ function gitEmail(root: string): string {
 
 function findContributor(root: string): Contributor | null {
   const email = gitEmail(root).toLowerCase();
-  if (!email) return null;
   const dir = join(root, ".repo", "🧑‍💻");
   if (!existsSync(dir)) return null;
-  for (const name of readdirSync(dir, { withFileTypes: true })) {
-    if (!name.isDirectory()) continue;
-    const path = join(dir, name.name, "contributor.json");
-    if (!existsSync(path)) continue;
-    const c = JSON.parse(readFileSync(path, "utf8")) as Contributor & { emails?: string[] };
-    const emails = [c.email, ...(c.emails ?? [])].filter((e): e is string => typeof e === "string" && e.length > 0).map((e) => e.toLowerCase());
-    if (emails.includes(email)) return c;
+  if (email) {
+    for (const name of readdirSync(dir, { withFileTypes: true })) {
+      if (!name.isDirectory()) continue;
+      const path = join(dir, name.name, "contributor.json");
+      if (!existsSync(path)) continue;
+      const c = JSON.parse(readFileSync(path, "utf8")) as Contributor & { emails?: string[] };
+      const emails = [c.email, ...(c.emails ?? [])].filter((e): e is string => typeof e === "string" && e.length > 0).map((e) => e.toLowerCase());
+      if (emails.includes(email)) return c;
+    }
+  }
+  const branchName = git(root, ["branch", "--show-current"]).out;
+  if (branchName) {
+    for (const name of readdirSync(dir, { withFileTypes: true })) {
+      if (!name.isDirectory()) continue;
+      const path = join(dir, name.name, "contributor.json");
+      if (!existsSync(path)) continue;
+      const c = JSON.parse(readFileSync(path, "utf8")) as Contributor & { emails?: string[] };
+      if (branchName.includes(c.alias) || (c.emoji && branchName.includes(c.emoji))) {
+        if (!email && c.email) {
+          git(root, ["config", "--local", "user.email", c.email]);
+          if (c.name) git(root, ["config", "--local", "user.name", c.name]);
+        }
+        return c;
+      }
+    }
   }
   return null;
 }
@@ -3049,7 +3081,7 @@ const STAGED_CHANGE_AREAS = [
   { id: ".devcontainer", match: (p: string) => p.startsWith(".devcontainer/"), keywords: ["devcontainer"] },
   {
     id: "product",
-    match: (p: string) => /^(framework|puzzle|compose|cad|ui|mathematical|infinite|elements|coda|reuse)\//.test(p),
+    match: (p: string) => /^(framework|puzzle|compose|cad|ui|mathematical|infinite|elements|coda|reuse|s)\//.test(p),
     keywords: [],
   },
 ] as const;

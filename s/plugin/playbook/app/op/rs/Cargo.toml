@@ -1,0 +1,14 @@
+[package]
+name = "semio-s-app-playbook-op"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Playbook-play app - operation enum + constructors (constitutional: op)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+playbook = { path = "../../../../../kernel/playbook/rs", package = "semio-s-kernel-playbook" }

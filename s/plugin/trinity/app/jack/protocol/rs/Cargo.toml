@@ -1,0 +1,20 @@
+[package]
+name = "semio-s-app-trinity-jack-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Trinity Jack app - binary command protocol surface + laws (constitutional: protocol)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+trinity_ram = { path = "../../../../ram/rs", package = "trinity_ram" }
+trinity_jack_op = { path = "../../op/rs", package = "semio-s-app-trinity-jack-op" }
+protocol = { path = "../../../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
+store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+
+[dev-dependencies]
+trinity_jack_engine = { path = "../../engine/rs", package = "semio-s-app-trinity-jack-engine" }

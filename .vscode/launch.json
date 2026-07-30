@@ -2848,7 +2848,7 @@
       "name": "🧪test🏗️fem",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo test -p fem_core -p fem_2d -p fem_3d -p fem-plugin",
+      "command": "cargo test -p fem_core -p semio-s-plugin-fem-shared -p semio-s-app-fem-2d -p semio-s-app-fem-2d-engine -p semio-s-app-fem-2d-dsl -p semio-s-app-fem-2d-op -p semio-s-app-fem-2d-pack -p semio-s-app-fem-2d-protocol -p semio-s-app-fem-2d-ui -p semio-s-app-fem-3d -p semio-s-app-fem-3d-engine -p semio-s-app-fem-3d-dsl -p semio-s-app-fem-3d-op -p semio-s-app-fem-3d-pack -p semio-s-app-fem-3d-protocol -p semio-s-app-fem-3d-ui -p semio-s-plugin-fem",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -3651,17 +3651,6 @@
       }
     },
     {
-      "name": "📦build🖥️s🔗studio",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/s-studio-rs:wasm",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 121
-      }
-    },
-    {
       "name": "📦build🏘️compose🔗graphql",
       "type": "node-terminal",
       "request": "launch",
@@ -3846,17 +3835,6 @@
       "presentation": {
         "group": "4_build",
         "order": 190
-      }
-    },
-    {
-      "name": "📦build🔺trinity⚙️core",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/trinity-core:wasm",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 200
       }
     },
     {

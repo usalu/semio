@@ -1,0 +1,29 @@
+[package]
+name = "semio-s-app-procedural-3d-ui"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Procedural 3D app - DocumentApp impl, render, manifest (constitutional: ui)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+procedural_3d = { path = "../../rs", package = "semio-s-app-procedural-3d" }
+procedural_3d_engine = { path = "../../engine/rs", package = "semio-s-app-procedural-3d-engine" }
+procedural_3d_op = { path = "../../op/rs", package = "semio-s-app-procedural-3d-op" }
+protocol = { path = "../../../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
+store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+flow_core = { path = "../../../../../../kernel/flow/core/rs", package = "semio-s-kernel-flow-core" }
+playbook = { path = "../../../../../../kernel/playbook/rs", package = "semio-s-kernel-playbook" }
+semio-framework-plugin = { path = "../../../../../../../framework/plugin/rs" }
+semio-framework-core = { path = "../../../../../../../framework/core/rs" }
+ui_wgpu = { path = "../../../../../../../ui/wgpu/rs" }
+ui_styling = { path = "../../../../../../../ui/styling/rs" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2.106"

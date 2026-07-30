@@ -3,10 +3,10 @@
   "graph": {
     "schema": "s.workflow",
     "nodes": [
-      { "id": "node-1", "instanceId": "app-a", "x": 0, "y": 0, "width": 160, "height": 72, "inputs": [{ "id": "app-a:in", "resourceKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-a:out", "resourceKind": "2d.drawing", "direction": "out" }] },
-      { "id": "node-2", "instanceId": "app-b", "x": 200, "y": -80, "width": 160, "height": 72, "inputs": [{ "id": "app-b:in", "resourceKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-b:out", "resourceKind": "2d.drawing", "direction": "out" }] },
-      { "id": "node-3", "instanceId": "app-c", "x": 200, "y": 80, "width": 160, "height": 72, "inputs": [{ "id": "app-c:in", "resourceKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-c:out", "resourceKind": "2d.drawing", "direction": "out" }] },
-      { "id": "node-4", "instanceId": "app-d", "x": 400, "y": 0, "width": 160, "height": 72, "inputs": [{ "id": "app-d:in", "resourceKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-d:out", "resourceKind": "2d.drawing", "direction": "out" }] }
+      { "id": "node-1", "instanceId": "app-a", "x": 0, "y": 0, "width": 160, "height": 72, "inputs": [{ "id": "app-a:in", "artifactKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-a:out", "artifactKind": "2d.drawing", "direction": "out" }] },
+      { "id": "node-2", "instanceId": "app-b", "x": 200, "y": -80, "width": 160, "height": 72, "inputs": [{ "id": "app-b:in", "artifactKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-b:out", "artifactKind": "2d.drawing", "direction": "out" }] },
+      { "id": "node-3", "instanceId": "app-c", "x": 200, "y": 80, "width": 160, "height": 72, "inputs": [{ "id": "app-c:in", "artifactKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-c:out", "artifactKind": "2d.drawing", "direction": "out" }] },
+      { "id": "node-4", "instanceId": "app-d", "x": 400, "y": 0, "width": 160, "height": 72, "inputs": [{ "id": "app-d:in", "artifactKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-d:out", "artifactKind": "2d.drawing", "direction": "out" }] }
     ],
     "edges": [
       { "id": "edge-ab", "sourceNodeId": "node-1", "sourcePortId": "app-a:out", "targetNodeId": "node-2", "targetPortId": "app-b:in", "contract": { "kindId": "2d.drawing", "mediaType": { "class": "data", "form": "value" }, "wire": { "kind": "document", "schema": "2d.drawing" } } },

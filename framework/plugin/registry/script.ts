@@ -600,6 +600,45 @@ function validatePlaygroundRegistry(playgrounds: PlaygroundEntry[]): string[] {
   return errors;
 }
 
+//#region 🏛️ConstitutionalCrateGate
+/** @emoji 🏛️ The seven mandatory constitutional-crate slots every `s/plugin/<p>/app/<a>/` must carry
+ * (see `.repo/🎫/26/07/29/MOVE-APPS-INTO-S-PRODUCT-TREE-WITH-CONSTITUTIONAL-CRATES/w31-constitutional-split-recipe.md`).
+ * `rs` sits directly at `<appDir>/rs`; every other slot sits at `<appDir>/<slot>/rs`. */
+const CONSTITUTIONAL_SLOTS = ["engine", "dsl", "op", "pack", "protocol", "ui"] as const;
+
+/** @emoji 🚦 Gate 1 (build-time): every `s/plugin/<p>/app/…` directory — whether a single flattened
+ * app (`app/rs/Cargo.toml` sits directly under `app/`) or a multi-app plugin (`app/<a>/rs/Cargo.toml`
+ * per subdirectory) — must carry all seven constitutional-crate slot manifests. Hard-fails `check` so
+ * a future split can never silently regress to a partial 4-of-7 or 5-of-7 crate set. Plugins that
+ * haven't reached `s/plugin/` yet (nothing under `app/`) are out of scope, not a violation — this gate
+ * only enforces completeness for plugins that have already started the split. */
+function validateConstitutionalCrates(repoRoot: string): string[] {
+  const errors: string[] = [];
+  const pluginRoot = join(repoRoot, "s", "plugin");
+  if (!existsSync(pluginRoot)) return errors;
+  for (const pluginName of readdirSync(pluginRoot).sort()) {
+    const appRoot = join(pluginRoot, pluginName, "app");
+    if (!existsSync(appRoot) || !statSync(appRoot).isDirectory()) continue;
+    const isFlatSingleApp = existsSync(join(appRoot, "rs", "Cargo.toml"));
+    const appDirs = isFlatSingleApp ? [{ label: pluginName, dir: appRoot }] : readdirSync(appRoot)
+      .filter((name) => statSync(join(appRoot, name)).isDirectory())
+      .filter((name) => name !== "shared")
+      .map((name) => ({ label: `${pluginName}/${name}`, dir: join(appRoot, name) }));
+    for (const { label, dir } of appDirs) {
+      const missing: string[] = [];
+      if (!existsSync(join(dir, "rs", "Cargo.toml"))) missing.push("rs");
+      for (const slot of CONSTITUTIONAL_SLOTS) {
+        if (!existsSync(join(dir, slot, "rs", "Cargo.toml"))) missing.push(slot);
+      }
+      if (missing.length > 0) {
+        errors.push(`s/plugin/${label} is missing constitutional crate slot(s): ${missing.join(", ")} (expected 7: rs, ${CONSTITUTIONAL_SLOTS.join(", ")})`);
+      }
+    }
+  }
+  return errors;
+}
+//#endregion 🏛️ConstitutionalCrateGate
+
 /** @emoji 🧪 Verifies that representative standalone and studio launches expand to complete sessions. */
 function validatePlaygroundSessions(repoRoot: string): string[] {
   const errors: string[] = [];
@@ -656,7 +695,7 @@ class CheckScript extends BundleScript {
       console.error("run `bun nx run @semio-tech/plugin-registry:generate` to refresh.");
       process.exit(1);
     }
-    const violations = [...validatePlaygroundRegistry(playgrounds), ...validatePlaygroundSessions(repoRoot)];
+    const violations = [...validatePlaygroundRegistry(playgrounds), ...validatePlaygroundSessions(repoRoot), ...validateConstitutionalCrates(repoRoot)];
     if (violations.length > 0) {
       console.error("plugin registry catalog has playground validation errors:");
       for (const violation of violations) console.error(`  - ${violation}`);

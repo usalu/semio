@@ -376,7 +376,20 @@ fn parse_shape(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<Field
             cursor.expect(TokenKind::LBracket)?;
             let mut items = Vec::new();
             while cursor.peek().kind != TokenKind::RBracket {
+                let pos_before = cursor.pos;
                 items.push(parse_shape(cursor, elem, depth + 1)?);
+                // A bare `Shape::Record` element (no keyword, no brackets of its own — e.g. a
+                // list of `key=value` port records) can legitimately parse to an empty record
+                // consuming zero tokens once its remaining keys stop matching whatever comes
+                // next: an unrecognized key (typo, wrong field name) looks identical to "this
+                // record legitimately ended" from `parse_record_body`'s point of view. Detecting
+                // it here — the one place with cursor before/after to compare — turns what would
+                // otherwise be an infinite zero-progress loop (silently bottoming out at the
+                // `check_nodes` safety limit, far from the actual offending token) into an
+                // immediate, correctly-spanned parse error.
+                if cursor.pos == pos_before {
+                    return Err(TextError::new(format!("list element made no progress at {:?} '{}' — likely an unrecognized field key", cursor.peek().kind, cursor.peek().text.as_str()), cursor.span()));
+                }
                 cursor.limits.check_nodes(items.len(), cursor.span())?;
             }
             cursor.expect(TokenKind::RBracket)?;

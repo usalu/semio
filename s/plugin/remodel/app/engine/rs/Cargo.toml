@@ -1,0 +1,25 @@
+[package]
+name = "semio-s-app-remodel-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Remodel app - headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+remodel = { path = "../../rs", package = "semio-s-app-remodel" }
+remodel_engine = { path = "../../../engine/rs", package = "remodel_engine" }
+remodel_camera = { path = "../../../camera/rs", package = "remodel_camera" }
+remodel_sfm = { path = "../../../sfm/rs", package = "remodel_sfm" }
+remodel_mesh = { path = "../../../mesh/rs", package = "remodel_mesh" }
+remodel_geo = { path = "../../../geo/rs", package = "remodel_geo" }
+remodel_video = { path = "../../../video/rs", package = "remodel_video" }
+remodel_image = { path = "../../../image/rs", package = "remodel_image" }
+semio-framework-plugin = { path = "../../../../../../framework/plugin/rs" }
+semio-framework-os = { path = "../../../../../../framework/product/os/core/rs" }
+serde_json = "1.0.140"
+base64 = "0.22.1"

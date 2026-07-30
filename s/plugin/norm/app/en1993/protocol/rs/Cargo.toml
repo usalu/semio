@@ -1,0 +1,17 @@
+[package]
+name = "semio-s-app-norm-en1993-protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Norm EN 1993 app - binary command protocol surface + laws (constitutional: protocol)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+en1993 = { path = "../../rs", package = "semio-s-app-norm-en1993" }
+en1993_op = { path = "../../op/rs", package = "semio-s-app-norm-en1993-op" }
+protocol = { path = "../../../../../../../framework/kernel/protocol/rs", package = "semio-framework-kernel-protocol" }
+store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }

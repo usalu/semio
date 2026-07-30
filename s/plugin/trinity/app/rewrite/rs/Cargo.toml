@@ -1,0 +1,20 @@
+[package]
+name = "semio-s-app-trinity-rewrite"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Trinity Rewrite app - document entities (constitutional: general)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+dsl = { path = "../../../../../../framework/kernel/dsl/rs", package = "semio-framework-kernel-dsl" }
+store = { path = "../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+trinity_ram = { path = "../../../ram/rs", package = "trinity_ram" }
+vcs = { path = "../../../../../../framework/kernel/vcs/rs", package = "semio-framework-kernel-vcs" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+thiserror = "2.0.12"

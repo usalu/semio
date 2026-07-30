@@ -1,0 +1,15 @@
+[package]
+name = "semio-s-app-fem-3d-dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "FEM 3D app - textual document grammar surface + laws (constitutional: dsl)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+fem3d = { path = "../../rs", package = "semio-s-app-fem-3d" }
+store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }

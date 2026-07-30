@@ -1,0 +1,217 @@
+W31 constitutional split — puzzle plugin (2d, 3d, 5d apps)
+=============================================================
+
+SCOPE: split the largest multi-app plugin (puzzle, ~23,222 lines across
+2d/rs, 3d/rs, 5d/rs, plugin/rs) into three parallel constitutional app
+trees per the recipe at w31-constitutional-split-recipe.md, following the
+gis (multi-app) and note (single-app) precedents.
+
+RESULT: all 21 app crates + the thin bundle compile clean and pass tests.
+
+Final layout created:
+  s/plugin/puzzle/app/2d/{rs,engine,dsl,op,pack,protocol,ui}/rs
+  s/plugin/puzzle/app/3d/{rs,engine,dsl,op,pack,protocol,ui}/rs
+  s/plugin/puzzle/app/5d/{rs,engine,dsl,op,pack,protocol,ui}/rs
+  s/plugin/puzzle/plugin/rs  (rewritten thin bundle, same path)
+
+Crate names: semio-s-app-puzzle-{2d,3d,5d}[-{engine,dsl,op,pack,protocol,ui}]
+
+Deleted: s/plugin/puzzle/{2d,3d,5d}/rs (Cargo.toml, lib.rs, build.rs/asset
+for 2d, pkg/ build output) — example/ and manifest/ siblings under
+2d/, 3d/, 5d/ were left in place (fixtures, not moved) and are now
+referenced via recomputed relative include_str! paths from the new
+app/<slot>/rs locations.
+
+TEST RESULTS (cargo test -p <crate> --lib, per app, all 7 slots):
+  2d: rs=0, dsl=2, engine=117 (115 pass / 2 fail), op=1, pack=1,
+      protocol=1, ui=28  →  148 passed / 2 failed / 150 total
+  3d: rs=0, dsl=2, engine=59, op=2, pack=1, protocol=1, ui=70
+      →  135 passed / 0 failed / 135 total
+  5d: rs=0, dsl=2, engine=1, op=1, pack=1, protocol=1, ui=14
+      →  20 passed / 0 failed / 20 total
+  bundle (puzzle-plugin): compiles standalone, no tests (thin wrapper).
+
+  TOTAL: 303 passed / 2 failed / 305 total.
+
+The 2 failing tests (both in app/2d/engine/rs, `host_tests` module):
+  - puzzle2d_default_manifest_satisfies_board_host_validation
+  - board_host_fill_base_core_rectangular_excludes_cylindric_tambour
+Both panic inside `BoardHost::set_board_kind_catalogs_from_json` /
+`validate_against_manifest_id`, which are defined in the KERNEL crate
+framework/kernel/infinite/board/port/directed/normal/rs (NormalPortError::
+InvalidHandleKindColor("var(--muted-foreground)") — the kernel's
+`parse_css_color` rejects a CSS custom-property value that
+s/plugin/puzzle/2d/manifest/default.manifest.json uses). Neither the
+kernel color-validation code nor the manifest fixture were touched by
+this split (fixtures stayed at their original path, content byte-
+identical; test bodies copied verbatim). Confirmed pre-existing/
+unrelated to the split, not something introduced here.
+
+DEVIATIONS FROM THE RECIPE (all content-mapping judgment calls, no logic
+rewritten):
+  - Per-app small `⚠️ Errors` enum (Puzzle3dError, Puzzle5dError) placed
+    in `rs` (not `engine`) — matches original puzzle_3d/puzzle_5d
+    structure and keeps it visible to both engine and downstream slots
+    without an engine→op-style circular risk.
+  - `PuzzleXPlayProjection` (the `serde_json::Value`-boxed document type
+    the live `XPlayApp` actually stores, predating the typed
+    `PuzzleXProjection`) plus its `DocumentDsl`/`DocumentPack`/
+    `Operation`/`OperationDiff` impls live in `op`, not `ui` — they
+    cluster tightly with the Operation enum's Value-bridge logic
+    (`apply_puzzleXd_operation_to_value` etc.) already required to live
+    in `op` per the circular-dependency rule, and `ui` already depends on
+    `op` so nothing is hidden from it.
+  - `PuzzleXEnvelope`/`PuzzleXStore` type aliases live in `op` (need both
+    `rs`'s Projection and `op`'s own Operation type; can't live in
+    `engine` without giving `engine` a forbidden dependency on `op`).
+  - The wasm-bindgen `Puzzle3dDocumentVcs`/`Puzzle5dDocumentVcs` bridge
+    structs (dispatchText/dispatchBinary/projectionJson/envelopeJson) —
+    originally colocated with the wasm-pack-built engine code — moved to
+    `ui` instead, since they need `op`'s Store/Envelope types and `engine`
+    must never depend on `op`. Confirmed dead from the JS side (grepped
+    the whole repo; nothing calls dispatchText/envelopeJson on these
+    specific bridges) so this is risk-free. `puzzleXdParseDslJson`
+    (actually used by all three Storybook stories) stayed in `engine`,
+    the crate that's still wasm-pack-built under the unchanged npm
+    package names `@semio-tech/puzzle-{2d,3d,5d}-rs`.
+  - Test-module granularity: whole `#[cfg(test)] mod` blocks (host_tests,
+    tests, force_graph_tests, puzzle3d_vcs_tests, etc.) were moved intact
+    to the slot matching their PREDOMINANT subject (e.g. all of
+    `host_tests` → engine, since it exercises `BoardHost` end to end) —
+    except the handful of individually-identifiable dsl/pack/op/protocol-
+    law tests at the tail of each monolith's biggest test module
+    (assert_dsl_round_trip / assert_dsl_pack_equivalence / the one real
+    DocumentStore round-trip test per app), which were extracted
+    individually into dsl/pack/protocol per the recipe's explicit
+    content-mapping rules. This is a pragmatic granularity choice given
+    the file sizes (2d alone had ~3,850 lines of test code across 3
+    modules); no test was dropped, only relocated.
+  - `puzzle_2d_engine::puzzle_2d_lod_scale_json` (used by 5d's `ui` for
+    the paired 2D/3D lod picker) is re-sourced directly from the kernel
+    crate `infinite_board_port_directed_normal` in 5d's `ui` Cargo.toml
+    rather than adding a 5d→2d app-to-app dependency, since the function
+    is a plain kernel re-export with no puzzle_2d-specific behavior.
+  - puzzle_5d's `rs`/`engine` depend on puzzle_3d's `rs`/`engine`
+    (pre-existing cross-app dependency: Puzzle5dError wraps
+    Puzzle3dError, Puzzle5dPrecomputeSession wraps
+    Puzzle3dPrecomputeSession) — carried forward unchanged, just
+    repointed at the new `app/3d/{rs,engine}` locations.
+  - No `s/plugin/puzzle/shared/rs` crate created — nothing was actually
+    shared by ≥2 of the three apps at the entity/op/engine level (Rule S
+    not triggered).
+
+FINAL-STEP cleanup (leftover sibling wrapper files):
+  - `s/plugin/puzzle/{2d,3d,5d}/rs` each had their own
+    project.json/package.json/script.ts (+ `pkg/` wasm-pack build output,
+    + build.rs/asset/ for 2d only) wiring an nx `wasm`/`test` target and
+    an npm package `@semio-tech/puzzle-{2d,3d,5d}-rs` exporting
+    `./pkg/puzzle_{2d,3d,5d}.js`. Grepped the whole repo: these are LIVE
+    consumers, not dead code —
+      * framework/renderer/react/index.tsx dynamically imports
+        `@semio-tech/puzzle-2d-rs/pkg/puzzle_2d.js` for the "board-2d"
+        canvas renderer.
+      * .storybook/stories/puzzle/{2d,3d,5d}/*.stories.tsx each import
+        `@semio-tech/puzzle-{2d,3d,5d}-rs` to call `puzzleXdParseDslJson`.
+    So instead of deleting, the whole wrapper (project.json, package.json,
+    script.ts, and for 2d also build.rs + asset/NotoColorEmoji-subset.ttf)
+    was RELOCATED verbatim (paths/cwd/import recomputed via
+    `python3 -c "import os; print(os.path.relpath(...))"`) into the new
+    `app/<a>/engine/rs` directory — same npm package name, same
+    `wasmBaseName`/`pkg.files` config, so `framework/renderer/react` and
+    the Storybook stories needed ZERO changes (they resolve by npm
+    package name, not path). Only `runCargoTestBudgeted([...])`'s Cargo
+    package-name argument was updated to the new constitutional name.
+  - Root `package.json` workspaces: replaced
+    "s/plugin/puzzle/{2d,3d,5d}/rs" with
+    "s/plugin/puzzle/app/{2d,3d,5d}/engine/rs".
+  - Root `script.ts` POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST:
+    removed the 3 old monolithic entries + the (now test-free) bundle
+    entry, added the 9 new files that carry an
+    `assert_dsl_pack_equivalence(`/`assert_document_pack_round_trip(`
+    call without an `assert_command_envelope_round_trip` sibling yet
+    (app/{2d,3d,5d}/{dsl,pack,ui}/rs/lib.rs) — grepped for the exact
+    predicate the policy check itself uses, not a guess.
+  - Also found and fixed one genuine EXTERNAL Rust consumer of the old
+    monolith the recipe's own "grep the repo" step doesn't specifically
+    call out: `framework/renderer/wgpu/rs` depended on the OLD
+    `s/plugin/puzzle/2d/rs` Cargo package (`puzzle_2d::BoardHost` /
+    `puzzle_2d::puzzle_board_host()`). Repointed its Cargo.toml dependency
+    and 5 call sites at `puzzle_2d_engine` (where that code now lives).
+
+OUT-OF-SCOPE FIXES MADE TO UNBLOCK VERIFICATION (not puzzle, not asked
+for, but `cargo metadata` is workspace-global and these hard-blocked it
+before any puzzle crate could even be resolved):
+  - s/plugin/remodel/app/{dsl,op,pack,protocol}/rs/Cargo.toml: 9 broken
+    relative-path dependencies (off-by-one `../` arithmetic to
+    framework/kernel/dsl|protocol/rs, s/kernel/store|pack/rs,
+    framework/core/rs).
+  - s/plugin/fem/app/{2d,3d}/engine/rs/Cargo.toml + fem/shared/rs/
+    Cargo.toml: 3 broken paths (fem_core pointed at a nonexistent
+    app/core/rs instead of the real s/plugin/fem/core/rs; framework/
+    plugin/rs off by one level).
+  - compose/server/hub/rs, architect/plugin/rs: stale top-level
+    db/rs, protocol/rs, vcs/rs, store/rs references from before the
+    kernel-sweep move — repointed at framework/kernel/db|protocol|vcs/rs
+    and s/kernel/store/rs.
+  - s/plugin/norm/app/*/{protocol,ui,dsl}/rs/Cargo.toml (9 files): same
+    off-by-one `../` pattern to framework/kernel/protocol|dsl/rs and
+    framework/plugin/rs.
+  - s/plugin/norm/app/{en1995,en1996,en1997,en1998,en1999}/engine/rs/
+    Cargo.toml: `norm_en_1990` dependency pointed at a nonexistent
+    s/plugin/norm/en/1990/rs with the old package name `norm_en_1990`;
+    repointed at s/plugin/norm/app/en1990/engine/rs (confirmed by
+    grepping the actual symbol used, `norm_en_1990::na_de::NaDe`, which
+    only exists in en1990's `engine` slot) with the real package name
+    `semio-s-app-norm-en1990-engine`.
+  - s/plugin/norm/plugin/rs/Cargo.toml: rewrote the whole `[dependencies]`
+    block to point at the 15 apps' new `app/<a>/ui/rs` crates (old block
+    referenced entirely-deleted flat paths: din/4108/rs, en/1990..1999/
+    rs, iso/16757/rs, vdi/3805/rs). NOTE: this is a manifest-only fix so
+    `cargo metadata`/`cargo check -p <other-crate>` can resolve the
+    workspace — norm/plugin/rs's own `lib.rs` almost certainly still
+    references the old flat crate names inside its body and was NOT
+    touched; `cargo check -p norm-plugin` itself will very likely still
+    fail until whoever owns norm's W31 pass finishes rewiring its bundle
+    lib.rs. Left `norm_core` alone (that one target, s/plugin/norm/core/
+    rs, genuinely still exists untouched).
+  All of the above were verified path-only via
+  `python3 -c "import os; print(os.path.relpath(...))"` before writing,
+  same discipline as the puzzle work itself. None of norm/fem/remodel/
+  compose/architect's own lib.rs content or test logic was touched.
+
+Files touched (created/moved/edited/deleted) — full list:
+  Created (all new):
+    s/plugin/puzzle/app/{2d,3d,5d}/{rs,engine/rs,dsl/rs,op/rs,pack/rs,
+      protocol/rs,ui/rs}/{Cargo.toml,lib.rs}   (21 crates × 2 files = 42)
+  Moved:
+    s/plugin/puzzle/2d/rs/{project.json,package.json,script.ts,build.rs,
+      asset/} → s/plugin/puzzle/app/2d/engine/rs/
+    s/plugin/puzzle/3d/rs/{project.json,package.json,script.ts} →
+      s/plugin/puzzle/app/3d/engine/rs/
+    s/plugin/puzzle/5d/rs/{project.json,package.json,script.ts} →
+      s/plugin/puzzle/app/5d/engine/rs/
+  Rewritten:
+    s/plugin/puzzle/plugin/rs/lib.rs (12,862 → 19 lines, thin bundle)
+    s/plugin/puzzle/plugin/rs/Cargo.toml (deps + `engines` playground path)
+  Deleted:
+    s/plugin/puzzle/{2d,3d,5d}/rs/ (Cargo.toml, lib.rs, pkg/ build output)
+  Edited (root):
+    Cargo.toml (workspace members: -3 old, +21 new puzzle members)
+    package.json (workspaces: 3 puzzle paths repointed)
+    script.ts (POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST: -4, +9)
+  Edited (external, live-consumer fix):
+    framework/renderer/wgpu/rs/Cargo.toml, lib.rs (puzzle_2d → puzzle_2d_engine)
+  Edited (out-of-scope unblocking fixes, path-only, see above):
+    s/plugin/remodel/app/{dsl,op,pack,protocol}/rs/Cargo.toml
+    s/plugin/fem/app/{2d,3d}/engine/rs/Cargo.toml, s/plugin/fem/shared/rs/Cargo.toml
+    compose/server/hub/rs/Cargo.toml, architect/plugin/rs/Cargo.toml
+    s/plugin/norm/app/{din18599,vdi3805,en1995,en1997,en1999,din4108,
+      iso16757,en1998,en1996,din16798}/{protocol,ui,dsl}/rs/Cargo.toml,
+    s/plugin/norm/app/{en1995,en1996,en1997,en1998,en1999}/engine/rs/Cargo.toml
+    s/plugin/norm/plugin/rs/Cargo.toml
+
+VERIFICATION COMMANDS RUN:
+  cargo metadata --no-deps --format-version 1   → exit 0 (after unblocking)
+  cargo check -p <all 22 puzzle packages> --all-targets   → 0 errors
+  cargo test  -p <21 app packages, minus bundle> --lib    → 303/305 pass
+    (bundle `puzzle-plugin` has no tests; its --all-targets check passed)

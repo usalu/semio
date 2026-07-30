@@ -1,0 +1,15 @@
+[package]
+name = "semio-s-plugin-space-shared"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "S Studio plugin - fixtures/document helpers shared by the home and space apps (non-constitutional)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+semio-framework-os = { path = "../../../../../framework/product/os/core/rs" }
+store = { path = "../../../../kernel/store/rs", package = "semio-s-kernel-store" }

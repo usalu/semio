@@ -1,0 +1,25 @@
+[package]
+name = "semio-s-app-space-space-ui"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "S Studio app - DocumentApp impl, render, manifest (constitutional: ui)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+space = { path = "../../rs", package = "semio-s-app-space-space" }
+space_engine = { path = "../../engine/rs", package = "semio-s-app-space-space-engine" }
+space_op = { path = "../../op/rs", package = "semio-s-app-space-space-op" }
+home_ui = { path = "../../../home/ui/rs", package = "semio-s-app-space-home-ui" }
+space_shared = { path = "../../../../shared/rs", package = "semio-s-plugin-space-shared" }
+store = { path = "../../../../../../kernel/store/rs", package = "semio-s-kernel-store" }
+semio-framework-os = { path = "../../../../../../../framework/product/os/core/rs" }
+semio-framework-core = { path = "../../../../../../../framework/core/rs" }
+semio-framework-plugin = { path = "../../../../../../../framework/plugin/rs" }
+infinite_board_port_directed_dag = { path = "../../../../../../../framework/kernel/infinite/board/port/directed/dag/rs", package = "semio-framework-kernel-infinite-board-port-directed-dag" }
+serde_json = "1.0.140"
+base64 = "0.22"

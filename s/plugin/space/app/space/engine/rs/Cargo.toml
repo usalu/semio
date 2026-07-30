@@ -1,0 +1,22 @@
+[package]
+name = "semio-s-app-space-space-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "S Studio app - headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+space = { path = "../../rs", package = "semio-s-app-space-space" }
+semio-framework-os = { path = "../../../../../../../framework/product/os/core/rs" }
+semio-framework-plugin = { path = "../../../../../../../framework/plugin/rs" }
+infinite_board_port_directed_dag = { path = "../../../../../../../framework/kernel/infinite/board/port/directed/dag/rs", package = "semio-framework-kernel-infinite-board-port-directed-dag" }
+serde_json = "1.0.140"
+
+[dev-dependencies]
+space_shared = { path = "../../../../shared/rs", package = "semio-s-plugin-space-shared" }
+

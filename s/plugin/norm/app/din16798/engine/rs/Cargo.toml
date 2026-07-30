@@ -1,0 +1,15 @@
+[package]
+name = "semio-s-app-norm-din16798-engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "DIN EN 16798 app - headless compute (constitutional: engine)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+din16798 = { path = "../../rs", package = "semio-s-app-norm-din16798" }
+norm_core = { path = "../../../../core/rs", package = "norm_core" }

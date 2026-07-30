@@ -1,0 +1,14 @@
+[package]
+name = "semio-s-app-trinity-jack"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Trinity Jack app - document entities (constitutional: general)"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+trinity_ram = { path = "../../../ram/rs", package = "trinity_ram" }

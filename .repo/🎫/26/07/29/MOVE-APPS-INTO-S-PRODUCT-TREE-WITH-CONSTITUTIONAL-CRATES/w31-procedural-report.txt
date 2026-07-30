@@ -1,0 +1,200 @@
+W31 constitutional split — procedural plugin (2d, 3d apps)
+=============================================================
+
+SCOPE: split the two-app `procedural` plugin (2d/rs 1168 lines, 3d/rs 1112
+lines, plugin/rs 3651 lines containing both apps' engine+ui logic in
+`pub mod app_2d { ... }` / `pub mod app_3d { ... }`) into two parallel
+constitutional app trees per the recipe at w31-constitutional-split-recipe.md,
+following the gis (multi-app, 2d/3d) precedent structurally and the fem
+(foreign-type DSL-mirror pattern) precedent for content-mapping judgment.
+
+RESULT: all 14 app crates + the thin bundle compile clean (0 errors,
+`cargo check --all-targets`) and the bundle compiles standalone.
+
+Final layout created:
+  s/plugin/procedural/app/2d/{rs,engine,dsl,op,pack,protocol,ui}/rs
+  s/plugin/procedural/app/3d/{rs,engine,dsl,op,pack,protocol,ui}/rs
+  s/plugin/procedural/plugin/rs  (rewritten thin bundle, same path)
+
+Crate names: semio-s-app-procedural-{2d,3d}[-{engine,dsl,op,pack,protocol,ui}]
+
+Deleted: s/plugin/procedural/{2d,3d}/rs (Cargo.toml, lib.rs, pkg/ wasm-pack
+build output, project.json, package.json, script.ts). example/ and play/
+siblings under 2d/, 3d/ were left in place (fixtures, not moved) and are now
+referenced via recomputed relative include_str! paths from the new
+app/{2d,3d}/{rs,dsl}/rs locations.
+
+TEST RESULTS (cargo test -p <crate> --lib, per app, all 7 slots):
+  2d: rs=0, dsl=12, engine=0, op=33, pack=4, protocol=1, ui=15
+      → 65 passed / 0 failed / 65 total
+  3d: rs=0, dsl=7, engine=3, op=26, pack=6, protocol=1, ui=24 (23 pass / 1 fail)
+      → 66 passed / 1 failed / 67 total
+  bundle (procedural-plugin): compiles standalone (`cargo check -p
+    procedural-plugin --all-targets`), no tests (thin wrapper).
+
+  TOTAL: 131 passed / 1 failed / 132 total.
+
+The 1 failing test (app/3d/ui/rs, `tests` module):
+  - node_graph_hover_updates_preview_selection_and_graph_scene
+Panics on `assert!(preview_json.contains(r#""hoveredId":"extrude""#) ||
+preview_json.contains(r#""hoveredId": "extrude""#))`. Root-caused via a
+temporary `[DEBUG]` eprintln (removed before finishing): the actual
+computed `selectionJson` value IS correct (`hoveredId":"extrude"` present
+with the right value) — but `ui_wgpu::World3dScene.selection_json` is a
+plain `String` field with `#[derive(Serialize)]` (no raw-JSON embedding),
+so when the outer `UiNode` is serialized the whole selection payload comes
+out double-escaped: `\"hoveredId\":\"extrude\"`. The test's plain (unescaped)
+substring assertion can never match against that escaped form, regardless
+of runtime state. This is a pre-existing test/serialization-shape mismatch
+in `ui_wgpu`/the original test body (both untouched, ported verbatim) —
+not something introduced by this split. The underlying app behavior
+(hover state correctly flows into the selection payload) is verified
+correct; only the test's string-matching methodology is broken.
+
+DEVIATIONS FROM THE RECIPE (all content-mapping judgment calls, no logic
+rewritten):
+  - Neither `Procedural2dDocument` nor `Procedural3dOperation` can derive
+    `dsl::Dsl*`/`protocol::OpText` directly (their fields — `FlowFixture`,
+    `Widget`, `GenerationPlayState`, etc — are foreign types from
+    `flow_core`/`playbook`, so the orphan rule blocks a direct derive).
+    The original file already solved this with a full parallel
+    `*Dsl`/`*OperationDsl` mirror-type region (`ValueDsl`, `WidgetDsl`,
+    `CameraJsonDsl`, `SynapseSpecDsl`, `FormGenerationDsl`,
+    `Procedural{2,3}dDocumentDsl`, `Procedural{2,3}dOperationDsl` — same
+    pattern as `fem_2d`'s `FemDof`, scaled up). Since `pack` must never
+    depend on the app's own `dsl` crate (recipe's own dependency graph) but
+    both the `DocumentDsl` and `DocumentPack` impls need the SAME mirror
+    types, the whole `DslMirror` region (types + to/from-dsl conversion
+    fns, made `pub`) went into `rs` alongside the manual
+    `impl store::DocumentDsl`/`impl store::DocumentPack` for the document
+    type — functionally identical to what a `#[derive]` would have given a
+    directly-derivable type in `rs`, just hand-written. The mirrored
+    `Procedural{2,3}dOperationDsl` (needed by the Operation enum's
+    `OpText`/`OpBinary` impls) went into `op` instead, since it embeds
+    `op`'s own `Procedural{2,3}dOperation` shape; it reuses `rs`'s
+    (now-`pub`) `WidgetDsl`/`CameraJsonDsl`/etc mirror types and
+    conversion fns rather than duplicating them.
+  - `engine` ended up asymmetric between the two apps: 2d's engine is
+    thin (fixture-diff JSON helpers, the DWG/SVG media-codec fns, the
+    default-projection builder) because 2d has almost no unique compute of
+    its own — it's mostly `flow_core`/`flow_module_draw` orchestration
+    already living outside this plugin. 3d's engine is much larger: the
+    entire `Procedural3dRuntime`/`Procedural3dPreviewCache` ephemeral-state
+    structs, the whole mesh-preview evaluation pipeline
+    (`evaluated_preview_payload`, `mesh_from_tessellation_json`,
+    `geometry_handle_for_widget`, fallback mesh builders), and the whole
+    `GumballTransforms` region moved to `engine` because they're pure
+    fixture/mesh compute with no dependency on `ActionDescriptor`/
+    `UiNode`/`ViewState`/other App-framework UI types — the same
+    "no App-framework types" line used to decide 2d's split, just with
+    much more content on the engine side of it for 3d. Only functions that
+    return App-framework types (`ActionDescriptor`, `WindowMeasure`) or
+    take the UI-only combined `Procedural{2,3}dPlayView` type stayed in
+    `ui`. This is NOT literally what the recipe's terse `engine` bullet
+    describes (tree helpers/id generation/media codecs) — it required
+    reading every function's own signature to classify it consistently,
+    since procedural's `plugin/rs` has no region boundary that lines up
+    with the engine/ui split the way `note`'s did.
+  - `Procedural2dPlayRuntime`/`Procedural3dRuntime` (ephemeral, never
+    persisted, plain `Default`-able structs) live in `engine`, not `ui`,
+    specifically so `engine`'s own mesh/preview functions (which take
+    `&Runtime`/`&mut Runtime`) don't need a forbidden `engine` → `ui`
+    dependency; `ui`'s `Procedural{2,3}dPlayApp` struct just holds one as
+    a field.
+  - `widget_id` (identical duplicate definition in both `{2,3}d/rs` AND
+    the plugin file's `app_{2,3}d` modules in the original) was
+    de-duplicated: kept once as `pub fn widget_id` in each app's `rs`
+    crate (matching fem_2d's `element_id`/`load_id` placement precedent),
+    with `op`/`engine`/`ui` all importing it rather than each carrying
+    their own copy.
+  - `dsl` crate tests intentionally KEEP both `assert_dsl_round_trip` AND
+    `assert_dsl_pack_equivalence` calls together in the same test body
+    (verbatim from the original file), rather than stripping the pack
+    half out per the recipe's terse per-slot bullet — `pack`'s own crate
+    ALSO independently re-derives the same fixtures and calls
+    `assert_dsl_pack_equivalence` on its own. Confirmed this is required,
+    not optional, by grepping the exact predicate
+    `POLICY_PACK_COMPLETENESS_ALLOWLIST`'s check uses in root `script.ts`
+    (any file with `assert_dsl_round_trip`/`assert_document_text_round_trip`
+    but no `assert_dsl_pack_equivalence`/`assert_document_pack_round_trip`
+    IN THE SAME FILE fails that policy check, and that allowlist is
+    currently empty — matches the already-landed `puzzle` split's dsl
+    crates, which do the same double-assertion thing verbatim).
+  - No `s/plugin/procedural/shared/rs` crate created — 2d and 3d's `rs`
+    files are structurally near-identical (same DSL-mirror pattern,
+    independently invented) but share zero actual code/types; neither app
+    imports anything from the other. Rule S not triggered.
+  - `empty_procedural{2,3}d_projection()` (trivial `Document::default()`
+    wrapper) added to each `engine` crate even though the original files
+    already had one — the original definitions lived beside
+    `Procedural{2,3}dDocumentVcs`'s wasm bridge in `{2,3}d/rs/lib.rs`,
+    which is now `rs`+`ui` split; per the recipe's own explicit engine
+    mapping (`empty_X_document()`) it belongs in `engine`, matching `note`/
+    `gis`/`fem`'s identical placement.
+
+FINAL-STEP cleanup (leftover sibling wrapper files):
+  - `s/plugin/procedural/{2d,3d}/rs` each had their own
+    project.json/package.json/script.ts (+ `pkg/` wasm-pack build output)
+    wiring an nx `wasm`/`test` target and an npm package
+    `@semio-tech/procedural-{2d,3d}-rs` exporting
+    `./pkg/procedural_{2d,3d}.js` (a standalone wasm-bindgen build of just
+    the old monolith's `Procedural{2,3}dDocumentVcs` VCS bridge — NOT
+    consumed via the plugin bundle's own `semio_plugin!` wasm build).
+    Grepped the whole repo (excluding node_modules/target/.repo/.claude)
+    for both npm package names: zero consumers anywhere except the
+    crates' own package.json/project.json/script.ts and the auto-generated
+    `bun.lock` (a workspace-only self-reference, never imported by name).
+    Unlike `puzzle`'s equivalent (which WAS live-consumed by
+    framework/renderer + Storybook and so got relocated), confirmed
+    genuinely dead — and no constitutional-split precedent (`note`, `gis`,
+    `fem`) carries a per-app-slot wasm-pack wrapper on any `ui` crate
+    (only the top-level plugin bundle itself is wasm-built). Deleted
+    rather than relocated.
+  - Root `package.json` workspaces: removed the 2 dead procedural entries
+    (no replacement — none of the 14 new crates carry a package.json).
+  - Root `script.ts` `POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST`:
+    removed the 2 old monolithic entries, added the 6 new files that carry
+    an `assert_dsl_pack_equivalence(`/`assert_document_pack_round_trip(`
+    call without an `assert_command_envelope_round_trip` sibling
+    (app/{2d,3d}/{dsl,pack,protocol}/rs/lib.rs) — grepped for the exact
+    predicate the policy check itself uses, not a guess.
+  - `.vscode/launch.json`: NO changes needed — every procedural dev/build
+    command (`dev:procedural:2d`, `build:procedural:3d:hexagonal-column`,
+    etc) routes through the app/variant names
+    (`procedural2d-play`/`procedural2d`/`procedural3d-play`/`procedural3d`)
+    declared in the plugin bundle's own `[[package.metadata.semio.playground]]`
+    entries, which are unchanged — none of them reference the deleted npm
+    packages or the old `{2d,3d}/rs` paths directly.
+  - No external Rust consumer of the old `procedural_2d`/`procedural_3d`
+    crate names found (grepped `framework/` + `s/` for the literal crate
+    names; the one hit, `s/plugin/fem/app/3d/op/rs/lib.rs`, is just a
+    docstring comparing patterns, not a real dependency) — unlike puzzle's
+    split, no external-crate repointing was needed.
+
+Files touched (created/moved/edited/deleted) — full list:
+  Created (all new):
+    s/plugin/procedural/app/{2d,3d}/{rs,engine/rs,dsl/rs,op/rs,pack/rs,
+      protocol/rs,ui/rs}/{Cargo.toml,lib.rs}   (14 crates × 2 files = 28)
+  Rewritten:
+    s/plugin/procedural/plugin/rs/lib.rs (3651 → 27 lines, thin bundle)
+    s/plugin/procedural/plugin/rs/Cargo.toml (deps trimmed to
+      semio-framework-os/-plugin + the 6 new app-slot crates per app,
+      metadata/playground/lib sections unchanged)
+  Deleted:
+    s/plugin/procedural/{2d,3d}/rs/ (Cargo.toml, lib.rs, package.json,
+      project.json, script.ts, pkg/ build output)
+  Edited (root):
+    Cargo.toml (workspace members: -2 old, +14 new procedural members)
+    package.json (workspaces: -2 dead procedural npm-package paths)
+    script.ts (POLICY_COMMAND_ENVELOPE_COMPLETENESS_ALLOWLIST: -2, +6)
+  Not touched (confirmed unaffected): .vscode/launch.json,
+    s/plugin/procedural/{2d,3d}/example, s/plugin/procedural/{2d,3d}/play,
+    s/plugin/procedural/{2d,3d}/AGENTS.md, s/plugin/procedural/{play,
+    README.md,AGENTS.md}
+
+VERIFICATION COMMANDS RUN:
+  cargo metadata --no-deps --format-version 1   → exit 0
+  cargo check -p <all 15 procedural packages> --all-targets   → 0 errors
+  cargo check -p procedural-plugin --all-targets (standalone)  → 0 errors
+  cargo test  -p <14 app packages, minus bundle> --lib    → 131/132 pass
+    (bundle `procedural-plugin` has no tests; its --all-targets check passed)
