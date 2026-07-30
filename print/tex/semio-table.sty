@@ -259,11 +259,14 @@
 % ~cellpad. This closer prepends exactly one cellpad of inset so the content abuts
 % the fill instead of hiding under it — the same inset every other cell already has.
 \newcommand{\semio@cell@strutbotR}{\hspace*{\semio@table@long@cellpad}\semio@cell@strutbot}
-% Last-column closer for the register colspec (below). Defaults to the plain strut
-% so the shared appendix register renders byte-identically to before; ONLY the
-% Inhaltsverzeichnis render group locally \renews this to \semio@cell@strutbotR
-% (see the TOC-only exception in semio-window.sty). No other table is affected.
-\newcommand{\semio@register@lastclose}{\semio@cell@strutbot}
+% Last-column closer for the register colspec (below). BOTH register tables — the
+% Inhaltsverzeichnis and the appendix Verzeichnisse — are right-aligned in their
+% page column and would otherwise lose their right ~cellpad under the seam-fill, so
+% this defaults to the inset closer. Kept as a named indirection (rather than
+% inlining \semio@cell@strutbotR) so a future register table could opt out without
+% editing the colspec. Only register@long uses it — glossary/project/data tables,
+% which have their own colspecs, are untouched.
+\newcommand{\semio@register@lastclose}{\semio@cell@strutbotR}
 % Unified cell openers: alignment + top strut + no-indent glue. The matching
 % bottom strut goes in the column's <{} slot.
 % 🪢 Hyphenation: the \hspace{0pt} glue MUST come *after* \semio@cell@struttop,
@@ -975,8 +978,45 @@
   \noalign{\global\semio@table@row@startedfalse}%
 }
 
+% Non-breaking card render. A project card is at most ~8 component rows tall, so
+% it always fits within one text column and never needs longtable's page-break /
+% repeated-header machinery. Rendering it as a plain \tabular (an unbreakable box)
+% means a card that does not fit in the space left on the page is carried to the
+% next page AS ONE UNIT, at the inter-card glue. That removes the orphaned, EMPTY
+% continuation head longtable stamps whenever \SemioCardKeep's soft \needspace
+% break pushes a card after \begin{longtable} has already claimed the current page
+% (the "two tables, one empty" artifact: a bare title + column-header band floats
+% above the real card). Same setup, colspec, title chrome, band, header and rows
+% as the longtable render — only the outer container and the now-unnecessary
+% firsthead/endhead slots differ.
+\newcommand{\semio@project@render}[3]{% #1 colspec  #2 firsthead(band+header)  #3 rows
+  \global\semio@table@long@mode=1\relax
+  \global\semio@table@row@startedfalse
+  \par\addvspace{\semio@spacing@table@outer}%
+  \begingroup
+  \SemioSans
+  \semio@table@fontsize@apply
+  \semio@table@setup@long
+  \color{semio-chrome-text-normal}%
+  \semio@table@long@inner@w@set
+  \semio@table@long@title@chrome@prepare
+  \nointerlineskip
+  \raggedright
+  \noindent
+  \begin{tabular}{#1}%
+  \semio@table@long@continuation@chrome{6}%
+  #2%
+  \noalign{\vskip\z@}%
+  #3%
+  \end{tabular}%
+  \endgroup
+  \par\addvspace{\semio@spacing@table@outer}%
+  \global\semio@table@long@mode=0\relax
+  \global\semio@table@row@startedfalse
+}
+
 \newcommand{\semio@project@long@render@call}[2]{%
-  \semio@table@long@render{#1}{\semio@project@firsthead}{\semio@project@head}{#2}{6}%
+  \semio@project@render{#1}{\semio@project@firsthead}{#2}%
 }
 
 % \SemioProject[bildrechte]{name}{label}{image}{ort & land & jahr & typ & status & quelle}{rows}
